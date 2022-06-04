@@ -8,71 +8,32 @@ $notes Some VODs are mp4 which may not stream, use -o to download
 import logging
 import re
 import time
+from typing import Iterator, List, Tuple
 from urllib.parse import urlparse, urlunparse
 
 from streamlink.exceptions import PluginError, StreamError
 from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.api import validate
 from streamlink.plugin.api.http_session import TLSSecLevel1Adapter
-from streamlink.stream.hls import HLSStream, HLSStreamReader, HLSStreamWorker, Sequence
-from streamlink.stream.hls_playlist import load as load_hls_playlist
+from streamlink.stream.hls import HLSStream, HLSStreamReader, HLSStreamWorker
 from streamlink.stream.http import HTTPStream
 
 log = logging.getLogger(__name__)
 
+_StreamData = Tuple[str, str, int]
+
 
 class FilmOnHLSStreamWorker(HLSStreamWorker):
-    def reload_playlist(self):
-        if self.closed:
-            return
-
-        self.reader.buffer.wait_free()
-        log.debug("Reloading playlist")
-
-        if self.stream.channel:
-            parsed = urlparse(self.stream.url)
-            if self.stream._first_netloc is None:
-                # save the first netloc
-                self.stream._first_netloc = parsed.netloc
-            # always use the first saved netloc
-            new_stream_url = parsed._replace(netloc=self.stream._first_netloc).geturl()
-        else:
-            new_stream_url = self.stream.url
-
+    def _fetch_playlist(self):
         try:
-            res = self.session.http.get(
-                new_stream_url,
-                exception=StreamError,
-                retries=self.playlist_reload_retries,
-                **self.reader.request_params)
+            return super()._fetch_playlist()
         except StreamError as err:
-            if (hasattr(self.stream, "watch_timeout")
-                    and any(x in str(err) for x in ("403 Client Error",
-                                                    "502 Server Error"))):
+            # noinspection PyUnresolvedReferences
+            if err.err.response.status_code in (403, 502):
                 self.stream.watch_timeout = 0
                 self.playlist_reload_time = 0
-                log.debug(f"Force reloading the channel playlist on error: {err}")
-                return
+                log.debug(f"Force-reloading the channel playlist on error: {err}")
             raise err
-
-        try:
-            playlist = load_hls_playlist(res.text, res.url)
-        except ValueError as err:
-            raise StreamError(err)
-
-        if playlist.is_master:
-            raise StreamError("Attempted to play a variant playlist, use "
-                              "'hls://{0}' instead".format(self.stream.url))
-
-        if playlist.iframes_only:
-            raise StreamError("Streams containing I-frames only is not playable")
-
-        media_sequence = playlist.media_sequence or 0
-        sequences = [Sequence(media_sequence + i, s)
-                     for i, s in enumerate(playlist.segments)]
-
-        if sequences:
-            self.process_sequences(playlist, sequences)
 
 
 class FilmOnHLSStreamReader(HLSStreamReader):
@@ -83,108 +44,106 @@ class FilmOnHLS(HLSStream):
     __shortname__ = "hls-filmon"
     __reader__ = FilmOnHLSStreamReader
 
-    def __init__(self, session_, channel=None, vod_id=None, quality="high", **args):
-        super().__init__(session_, None, **args)
+    def __init__(self, session_, url: str, api: "FilmOnAPI", channel=None, vod_id=None, quality="high", **args):
+        if channel is None and vod_id is None:
+            raise PluginError("Channel or vod_id must be set")
+
+        super().__init__(session_, url, **args)
+        self.api = api
         self.channel = channel
         self.vod_id = vod_id
-        if self.channel is None and self.vod_id is None:
-            raise ValueError("channel or vod_id must be set")
         self.quality = quality
-        self.api = FilmOnAPI(session_)
-        self._url = None
-        self.watch_timeout = 0
-        self._first_netloc = None
+        self._url = url
+        self.watch_timeout = 0.0
+        self._first_netloc = ""
 
-    def _get_stream_data(self):
+    def _get_stream_data(self) -> Iterator[_StreamData]:
         if self.channel:
             log.debug(f"Reloading FilmOn channel playlist: {self.channel}")
-            data = self.api.channel(self.channel)
-            yield from data["streams"]
+            yield from self.api.channel(self.channel)
         elif self.vod_id:
             log.debug(f"Reloading FilmOn VOD playlist: {self.vod_id}")
-            data = self.api.vod(self.vod_id)
-            for _, stream in data["streams"].items():
-                yield stream
+            yield from self.api.vod(self.vod_id)
 
     @property
-    def url(self):
-        # If the watch timeout has passed then refresh the playlist from the API
-        if int(time.time()) >= self.watch_timeout:
-            for stream in self._get_stream_data():
-                if stream["quality"] == self.quality:
-                    self.watch_timeout = int(time.time()) + stream["watch-timeout"]
-                    self._url = stream["url"]
-                    return self._url
-            raise StreamError("cannot refresh FilmOn HLS Stream playlist")
-        else:
+    def url(self) -> str:
+        if time.time() <= self.watch_timeout:
             return self._url
 
-    def to_url(self):
-        url = self.url
-        expires = self.watch_timeout - time.time()
-        if expires < 0:
-            raise TypeError("Stream has expired and cannot be translated to a URL")
-        return url
+        # If the watch timeout has passed then refresh the playlist from the API
+        for quality, url, timeout in self._get_stream_data():
+            if quality == self.quality:
+                self.watch_timeout = time.time() + timeout
+
+                if not self.channel:
+                    self._url = url
+                else:
+                    parsed = urlparse(url)
+                    if not self._first_netloc:
+                        # save the first netloc
+                        self._first_netloc = parsed.netloc
+                    # always use the first saved netloc
+                    self._url = parsed._replace(netloc=self._first_netloc).geturl()
+
+                return self._url
+
+        raise TypeError("Stream has expired and cannot be translated to a URL")
 
 
 class FilmOnAPI:
-    def __init__(self, session):
-        self.session = session
-
     channel_url = "https://www.filmon.com/ajax/getChannelInfo"
     vod_url = "https://vms-admin.filmon.com/api/video/movie?id={0}"
 
-    stream_schema = {
-        "quality": str,
-        "url": validate.url(),
-        "watch-timeout": int
-    }
-    channel_schema = validate.Schema(
+    ATTEMPTS = 5
+    TIMEOUT = 0.75
+
+    stream_schema = validate.all(
         {
-            "streams": validate.any(
-                {str: stream_schema},
-                [stream_schema]
-            )
-        }
-    )
-    vod_schema = validate.Schema(
-        {
-            "response": {
-                "streams": validate.any(
-                    {str: stream_schema},
-                    [stream_schema]
-                )
-            }
+            "quality": str,
+            "url": validate.url(),
+            "watch-timeout": int,
         },
-        validate.get("response")
+        validate.union_get("quality", "url", "watch-timeout")
     )
 
-    def channel(self, channel):
-        for _ in range(5):
-            if _ > 0:
-                log.debug("channel sleep {0}".format(_))
-                time.sleep(0.75)
+    def __init__(self, session):
+        self.session = session
 
-            # retry for 50X errors
+    def channel(self, channel) -> List[_StreamData]:
+        num = 1
+        while True:
+            # retry for 50X errors or validation errors at the same time
             try:
-                res = self.session.http.post(self.channel_url,
-                                             data={"channel_id": channel, "quality": "low"},
-                                             headers={"X-Requested-With": "XMLHttpRequest"})
-                if res:
-                    # retry for invalid response data
-                    try:
-                        return self.session.http.json(res, schema=self.channel_schema)
-                    except PluginError:
-                        log.debug("invalid or non-JSON data received")
-                        continue
-            except Exception:
-                log.debug("invalid server response")
+                return self.session.http.post(
+                    self.channel_url,
+                    data={
+                        "channel_id": channel,
+                        "quality": "low",
+                    },
+                    headers={"X-Requested-With": "XMLHttpRequest"},
+                    schema=validate.Schema(
+                        validate.parse_json(),
+                        {"streams": [self.stream_schema]},
+                        validate.get("streams"),
+                    ),
+                )
+            except PluginError:
+                log.debug(f"Received invalid or non-JSON data, attempt {num}/{self.ATTEMPTS}")
+                if num >= self.ATTEMPTS:
+                    raise
+                num = num + 1
+                time.sleep(self.TIMEOUT)
 
-        raise PluginError("Unable to find 'self.api.channel' for {0}".format(channel))
-
-    def vod(self, vod_id):
-        res = self.session.http.get(self.vod_url.format(vod_id))
-        return self.session.http.json(res, schema=self.vod_schema)
+    def vod(self, vod_id) -> List[_StreamData]:
+        return self.session.http.get(
+            self.vod_url.format(vod_id),
+            schema=validate.Schema(
+                validate.parse_json(),
+                {"response": {"streams": {str: self.stream_schema}}},
+                validate.get(("response", "streams")),
+                validate.transform(lambda d: d.values()),
+            ),
+        )
 
 
 @pluginmatcher(re.compile(r"""
@@ -206,12 +165,6 @@ class FilmOnAPI:
     )
 """, re.VERBOSE))
 class Filmon(Plugin):
-    _channel_id_re = re.compile(r"""channel_id\s*=\s*(?P<quote>['"]?)(?P<value>\d+)(?P=quote)""")
-    _channel_id_schema = validate.Schema(
-        validate.transform(_channel_id_re.search),
-        validate.any(None, validate.get("value"))
-    )
-
     quality_weights = {
         "high": 720,
         "low": 480
@@ -226,67 +179,66 @@ class Filmon(Plugin):
             self.url = urlunparse(parsed._replace(path=parsed.path.replace("/channel/", "/tv/")))
         self.api = FilmOnAPI(self.session)
 
+        adapter = TLSSecLevel1Adapter()
+        self.session.http.mount("https://filmon.com", adapter)
+        self.session.http.mount("https://www.filmon.com", adapter)
+        self.session.http.mount("https://vms-admin.filmon.com/", adapter)
+
+        self.session.options.set("hls-playlist-reload-time", "segment")
+
     @classmethod
     def stream_weight(cls, key):
         weight = cls.quality_weights.get(key)
         if weight:
             return weight, "filmon"
 
-        return Plugin.stream_weight(key)
+        return super().stream_weight(key)
 
     def _get_streams(self):
         channel = self.match.group("channel")
         vod_id = self.match.group("vod_id")
         is_group = self.match.group("is_group")
 
-        adapter = TLSSecLevel1Adapter()
-        self.session.http.mount("https://filmon.com", adapter)
-        self.session.http.mount("https://www.filmon.com", adapter)
-        self.session.http.mount("https://vms-admin.filmon.com/", adapter)
-
         # get cookies
         self.session.http.get(self.url)
 
         if vod_id:
-            data = self.api.vod(vod_id)
-            for _, stream in data["streams"].items():
-                if stream["url"].endswith(".m3u8"):
-                    streams = HLSStream.parse_variant_playlist(self.session, stream["url"])
-                    if not streams:
-                        yield stream["quality"], HLSStream(self.session, stream["url"])
-                    else:
+            for quality, url, timeout in self.api.vod(vod_id):
+                if url.endswith(".m3u8"):
+                    streams = HLSStream.parse_variant_playlist(self.session, url)
+                    if streams:
                         yield from streams.items()
-                elif stream["url"].endswith(".mp4"):
-                    yield stream["quality"], HTTPStream(self.session, stream["url"])
-                else:
-                    log.error("Unsupported stream type")
-                    return
+                        return
+                    yield quality, HLSStream(self.session, url)
+                elif url.endswith(".mp4"):
+                    yield quality, HTTPStream(self.session, url)
         else:
-            if channel and not channel.isdigit():
+            if not channel or channel.isdigit():
+                _id = channel
+            else:
                 _id = self.cache.get(channel)
-                if _id is None:
-                    _id = self.session.http.get(self.url, schema=self._channel_id_schema)
+                if _id is not None:
+                    log.debug(f"Found cached channel ID: {_id}")
+                else:
+                    _id = self.session.http.get(self.url, schema=validate.Schema(
+                        validate.transform(re.compile(r"""channel_id\s*=\s*(?P<q>['"]?)(?P<value>\d+)(?P=q)""").search),
+                        validate.any(None, validate.get("value")),
+                    ))
                     log.debug(f"Found channel ID: {_id}")
                     # do not cache a group url
                     if _id and not is_group:
                         self.cache.set(channel, _id, expires=self.TIME_CHANNEL)
-                else:
-                    log.debug(f"Found cached channel ID: {_id}")
-            else:
-                _id = channel
 
             if _id is None:
-                raise PluginError("Unable to find channel ID: {0}".format(channel))
+                raise PluginError(f"Unable to find channel ID: {channel}")
 
             try:
-                data = self.api.channel(_id)
-                for stream in data["streams"]:
-                    yield stream["quality"], FilmOnHLS(self.session, channel=_id, quality=stream["quality"])
+                for quality, url, timeout in self.api.channel(_id):
+                    yield quality, FilmOnHLS(self.session, url, self.api, channel=_id, quality=quality)
             except Exception:
                 if channel and not channel.isdigit():
                     self.cache.set(channel, None, expires=0)
                     log.debug(f"Reset cached channel: {channel}")
-
                 raise
 
 
