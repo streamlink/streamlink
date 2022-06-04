@@ -116,7 +116,9 @@ class Segment(NamedTuple):
 
 
 class M3U8:
-    def __init__(self):
+    def __init__(self, uri: Optional[str] = None):
+        self.uri = uri
+
         self.is_endlist: bool = False
         self.is_master: bool = False
 
@@ -160,8 +162,7 @@ class M3U8Parser:
     _res_re = re.compile(r"(\d+)x(\d+)")
 
     def __init__(self, base_uri: Optional[str] = None, m3u8: Type[M3U8] = M3U8):
-        self.base_uri: Optional[str] = base_uri
-        self.m3u8: M3U8 = m3u8()
+        self.m3u8: M3U8 = m3u8(base_uri)
         self.state: Dict[str, Any] = {}
 
         self._add_tag_callbacks()
@@ -566,8 +567,8 @@ class M3U8Parser:
     def uri(self, uri: str) -> str:
         if uri and urlparse(uri).scheme:
             return uri
-        elif self.base_uri and uri:
-            return urljoin(self.base_uri, uri)
+        elif uri and self.m3u8.uri:
+            return urljoin(self.m3u8.uri, uri)
         else:
             return uri
 
