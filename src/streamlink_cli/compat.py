@@ -3,6 +3,11 @@ import sys
 from pathlib import Path
 from typing import BinaryIO, TYPE_CHECKING
 
+try:
+    import importlib.metadata as importlib_metadata  # type: ignore[import]  # noqa: F401
+except ImportError:
+    import importlib_metadata  # type: ignore[import]  # noqa: F401
+
 
 is_darwin = sys.platform == "darwin"
 is_win32 = os.name == "nt"

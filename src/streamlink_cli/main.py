@@ -3,6 +3,7 @@ import errno
 import logging
 import os
 import platform
+import re
 import signal
 import sys
 from contextlib import closing
@@ -15,8 +16,6 @@ from time import sleep
 from typing import Any, Dict, List, Optional, Type, Union
 
 import requests
-from socks import __version__ as socks_version  # type: ignore[import]
-from websocket import __version__ as websocket_version  # type: ignore[import]
 
 import streamlink.logger as logger
 from streamlink import NoPluginError, PluginError, StreamError, Streamlink, __version__ as streamlink_version
@@ -26,7 +25,7 @@ from streamlink.plugin import Plugin, PluginOptions
 from streamlink.stream.stream import Stream, StreamIO
 from streamlink.utils.named_pipe import NamedPipe
 from streamlink_cli.argparser import build_parser
-from streamlink_cli.compat import DeprecatedPath, is_win32, stdout
+from streamlink_cli.compat import DeprecatedPath, importlib_metadata, is_win32, stdout
 from streamlink_cli.console import ConsoleOutput, ConsoleUserInputRequester
 from streamlink_cli.constants import CONFIG_FILES, DEFAULT_STREAM_METADATA, LOG_DIR, PLUGIN_DIRS, STREAM_SYNONYMS
 from streamlink_cli.output import FileOutput, PlayerOutput
@@ -943,9 +942,20 @@ def log_current_versions():
     log.debug(f"OS:         {os_version}")
     log.debug(f"Python:     {platform.python_version()}")
     log.debug(f"Streamlink: {streamlink_version}")
-    log.debug(f"Requests({requests.__version__}), "
-              f"Socks({socks_version}), "
-              f"Websocket({websocket_version})")
+
+    # https://peps.python.org/pep-0508/#names
+    re_name = re.compile(r"[A-Z\d](?:[A-Z\d._-]*[A-Z\d])?", re.IGNORECASE)
+    log.debug("Dependencies:")
+    for name in [
+        match.group(0)
+        for match in map(re_name.match, importlib_metadata.requires("streamlink"))
+        if match is not None
+    ]:
+        try:
+            version = importlib_metadata.version(name)
+        except importlib_metadata.PackageNotFoundError:
+            continue
+        log.debug(f" {name}: {version}")
 
 
 def log_current_arguments(session, parser):
