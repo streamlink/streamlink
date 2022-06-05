@@ -80,7 +80,7 @@ class Aloula(Plugin):
 
         log.trace(f"{vod_data!r}")
         if "cms_error" in vod_data and vod_data["cms_error"] == "auth":
-            log.error("This stream requires a logged-in session cookie to be supplied")
+            log.error("This stream requires a login; specify appropriate Authorization and profile HTTP headers")
             return
         if "cms_error" in vod_data:
             log.error(f"API error: {vod_data['cms_error']} ({vod_data['message']})")
