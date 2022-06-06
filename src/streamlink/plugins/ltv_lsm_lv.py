@@ -49,7 +49,7 @@ class LTVHLSStream(HLSStream):
         streams = super(LTVHLSStream, cls).parse_variant_playlist(*args, **kwargs)
 
         for stream in streams.values():
-            stream.args["url"] = copy_query_url(stream.args["url"], stream.url_master)
+            stream.args["url"] = copy_query_url(stream.args["url"], stream.multivariant.uri)
 
         return streams
 

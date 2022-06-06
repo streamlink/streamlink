@@ -33,8 +33,8 @@ LOW_LATENCY_MAX_LIVE_EDGE = 2
 
 
 class TwitchM3U8(M3U8):
-    def __init__(self):
-        super(TwitchM3U8, self).__init__()
+    def __init__(self, *args, **kwargs):
+        super(TwitchM3U8, self).__init__(*args, **kwargs)
         self.dateranges_ads = []
 
 

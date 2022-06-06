@@ -330,7 +330,28 @@ class HLSStreamReader(SegmentedStreamReader):
 class MuxedHLSStream(MuxedStream):
     __shortname__ = "hls-multi"
 
-    def __init__(self, session, video, audio, url_master=None, force_restart=False, ffmpeg_options=None, **args):
+    def __init__(
+        self,
+        session,
+        video,
+        audio,
+        url_master=None,
+        multivariant=None,
+        force_restart=False,
+        ffmpeg_options=None,
+        **args
+    ):
+        """
+        :param streamlink.Streamlink session: Streamlink session instance
+        :param video: Video stream URL
+        :param audio: Audio stream URL or list of URLs
+        :param url_master: The URL of the HLS playlist's multivariant playlist (deprecated)
+        :param multivariant: The parsed multivariant playlist
+        :param force_restart: Start from the beginning after reaching the playlist's end
+        :param ffmpeg_options: Additional keyword arguments passed to :class:`ffmpegmux.FFMPEGMuxer`
+        :param args: Additional keyword arguments passed to :class:`HLSStream`
+        """
+
         tracks = [video]
         maps = ["0:v?", "0:a?"]
         if audio:
@@ -345,12 +366,15 @@ class MuxedHLSStream(MuxedStream):
 
         super(MuxedHLSStream, self).__init__(session, *substreams, format="mpegts", maps=maps, **ffmpeg_options)
         self.url_master = url_master
+        self.multivariant = multivariant if multivariant and multivariant.is_master else None
 
     def to_manifest_url(self):
-        if self.url_master is None:
+        url = self.multivariant.uri if self.multivariant and self.multivariant.uri else self.url_master
+
+        if url is None:
             return super(MuxedHLSStream, self).to_manifest_url()
 
-        return self.url_master
+        return url
 
 
 class HLSStream(HTTPStream):
@@ -367,9 +391,30 @@ class HLSStream(HTTPStream):
     __shortname__ = "hls"
     __reader__ = HLSStreamReader
 
-    def __init__(self, session_, url, url_master=None, force_restart=False, start_offset=0, duration=None, **args):
+    def __init__(
+        self,
+        session_,
+        url,
+        url_master=None,
+        multivariant=None,
+        force_restart=False,
+        start_offset=0,
+        duration=None,
+        **args
+    ):
+        """
+        :param streamlink.Streamlink session_: Streamlink session instance
+        :param url: The URL of the HLS playlist
+        :param url_master: The URL of the HLS playlist's multivariant playlist (deprecated)
+        :param multivariant: The parsed multivariant playlist
+        :param force_restart: Start from the beginning after reaching the playlist's end
+        :param start_offset: Number of seconds to be skipped from the beginning
+        :param duration: Number of seconds until ending the stream
+        :param args: Additional keyword arguments passed to :meth:`requests.Session.request`
+        """
         super(HLSStream, self).__init__(session_, url, **args)
         self.url_master = url_master
+        self.multivariant = multivariant if multivariant and multivariant.is_master else None
         self.force_restart = force_restart
         self.start_offset = start_offset
         self.duration = duration
@@ -377,21 +422,24 @@ class HLSStream(HTTPStream):
     def __json__(self):
         json = HTTPStream.__json__(self)
 
-        if self.url_master:
+        try:
             json["master"] = self.to_manifest_url()
+        except TypeError:
+            pass
 
-        # Pretty sure HLS is GET only.
         del json["method"]
         del json["body"]
 
         return json
 
     def to_manifest_url(self):
-        if self.url_master is None:
+        url = self.multivariant.uri if self.multivariant and self.multivariant.uri else self.url_master
+
+        if url is None:
             return super(HLSStream, self).to_manifest_url()
 
         args = self.args.copy()
-        args.update(url=self.url_master)
+        args.update(url=url)
 
         return self.session.http.prepare_new_request(**args).url
 
@@ -429,12 +477,12 @@ class HLSStream(HTTPStream):
         res.encoding = "utf-8"
 
         try:
-            parser = cls._get_variant_playlist(res)
+            multivariant = cls._get_variant_playlist(res)
         except ValueError as err:
             raise IOError("Failed to parse playlist: {0}".format(err))
 
         streams = OrderedDict()
-        for playlist in filter(lambda p: not p.is_iframe, parser.playlists):
+        for playlist in filter(lambda p: not p.is_iframe, multivariant.playlists):
             names = dict(name=None, pixels=None, bitrate=None)
             audio_streams = []
             fallback_audio = []
@@ -525,7 +573,7 @@ class HLSStream(HTTPStream):
                 stream = MuxedHLSStream(session_,
                                         video=playlist.uri,
                                         audio=[x.uri for x in external_audio if x.uri],
-                                        url_master=url,
+                                        multivariant=multivariant,
                                         force_restart=force_restart,
                                         start_offset=start_offset,
                                         duration=duration,
@@ -533,7 +581,7 @@ class HLSStream(HTTPStream):
             else:
                 stream = cls(session_,
                              playlist.uri,
-                             url_master=url,
+                             multivariant=multivariant,
                              force_restart=force_restart,
                              start_offset=start_offset,
                              duration=duration,

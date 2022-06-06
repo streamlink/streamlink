@@ -4,7 +4,6 @@ import unittest
 import pytest
 import requests_mock
 
-from streamlink.compat import str
 from streamlink.session import Streamlink
 from streamlink.stream.hls import HLSStream, HLSStreamReader
 from streamlink.utils.crypto import AES, pad
@@ -92,12 +91,13 @@ class TestHLSVariantPlaylist(unittest.TestCase):
 
     def test_variant_playlist(self):
         streams = self.subject("hls/test_master.m3u8")
-        self.assertEqual(
-            [str(key) for key in streams.keys()],
-            [u"720p", u"720p_alt", u"480p", u"360p", u"160p", u"1080p (source)", u"90k"],
-            "Finds all streams in master playlist",
-        )
-        self.assertTrue(all([isinstance(stream, HLSStream) for stream in streams.values()]), "Returns HLSStream instances")
+        assert list(streams.keys()) == ["720p", "720p_alt", "480p", "360p", "160p", "1080p (source)", "90k"]
+        assert all(isinstance(stream, HLSStream) for stream in streams.values())
+        assert all(stream.multivariant is not None and stream.multivariant.is_master for stream in streams.values())
+
+        base = "http://mocked/{0}".format(self.id())
+        stream = next(iter(streams.values()))
+        assert repr(stream) == "<HLSStream ['hls', '{0}/720p.m3u8', '{0}/master.m3u8']>".format(base)
 
 
 class EventedHLSReader(HLSStreamReader):

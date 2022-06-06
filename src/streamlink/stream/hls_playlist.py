@@ -48,7 +48,9 @@ Segment = namedtuple("Segment", "uri duration title key discontinuity byterange 
 
 
 class M3U8(object):
-    def __init__(self):
+    def __init__(self, uri=None):
+        self.uri = uri
+
         self.is_endlist = False
         self.is_master = False
 
@@ -90,8 +92,7 @@ class M3U8Parser(object):
     _res_re = re.compile(r"(\d+)x(\d+)")
 
     def __init__(self, base_uri=None, m3u8=M3U8, **kwargs):
-        self.base_uri = base_uri
-        self.m3u8 = m3u8()
+        self.m3u8 = m3u8(base_uri)
         self.state = {}
 
     def create_stream_info(self, streaminf, cls=None):
@@ -336,8 +337,8 @@ class M3U8Parser(object):
     def uri(self, uri):
         if uri and urlparse(uri).scheme:
             return uri
-        elif self.base_uri and uri:
-            return urljoin(self.base_uri, uri)
+        elif uri and self.m3u8.uri:
+            return urljoin(self.m3u8.uri, uri)
         else:
             return uri
 
