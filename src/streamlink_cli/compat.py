@@ -4,6 +4,13 @@ import sys
 
 is_py2 = (sys.version_info[0] == 2)
 is_py3 = (sys.version_info[0] == 3)
+
+try:
+    import importlib.metadata as importlib_metadata  # type: ignore[import]  # noqa: F401
+except ImportError:
+    import importlib_metadata  # type: ignore[import]  # noqa: F401
+
+
 is_win32 = os.name == "nt"
 
 if is_py2:
