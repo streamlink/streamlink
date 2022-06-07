@@ -4,8 +4,8 @@ import freezegun
 import pytest
 
 from streamlink import Streamlink
-from streamlink.plugins.filmon import FilmOnHLS, Filmon
-from tests.mock import PropertyMock, patch
+from streamlink.plugins.filmon import FilmOnAPI, FilmOnHLS, Filmon
+from tests.mock import patch
 from tests.plugins import PluginCanHandleUrl
 
 
@@ -40,22 +40,41 @@ class TestPluginCanHandleUrlFilmon(PluginCanHandleUrl):
     ]
 
 
-@pytest.fixture()
+@pytest.fixture(scope="function")
 def filmonhls():
     with freezegun.freeze_time(datetime.datetime(2000, 1, 1, 0, 0, 0, 0)), \
-         patch("streamlink.plugins.filmon.FilmOnHLS.url", new_callable=PropertyMock) as url:
-        url.return_value = "http://filmon.tv/test.m3u8"
+         patch("streamlink.plugins.filmon.FilmOnHLS._get_stream_data", return_value=[]):
         session = Streamlink()
-        yield FilmOnHLS(session, channel="test")
+        api = FilmOnAPI(session)
+        yield FilmOnHLS(session, "http://fake/one.m3u8", api=api, channel="test")
 
 
 def test_filmonhls_to_url(filmonhls):
     filmonhls.watch_timeout = datetime.datetime(2000, 1, 1, 0, 0, 0, 0).timestamp()
-    assert filmonhls.to_url() == "http://filmon.tv/test.m3u8"
+    assert filmonhls.to_url() == "http://fake/one.m3u8"
 
 
-def test_filmonhls_to_url_expired(filmonhls):
+def test_filmonhls_to_url_updated(filmonhls):
     filmonhls.watch_timeout = datetime.datetime(1999, 12, 31, 23, 59, 59, 9999).timestamp()
+
+    filmonhls._get_stream_data.return_value = [
+        ("high", "http://fake/two.m3u8", datetime.datetime(2000, 1, 1, 0, 0, 0, 0).timestamp()),
+    ]
+    assert filmonhls.to_url() == "http://fake/two.m3u8"
+
+    filmonhls.watch_timeout = datetime.datetime(1999, 12, 31, 23, 59, 59, 9999).timestamp()
+    filmonhls._get_stream_data.return_value = [
+        ("high", "http://another-fake/three.m3u8", datetime.datetime(2000, 1, 1, 0, 0, 0, 0).timestamp()),
+    ]
+    assert filmonhls.to_url() == "http://fake/three.m3u8"
+
+
+def test_filmonhls_to_url_missing_quality(filmonhls):
+    filmonhls.watch_timeout = datetime.datetime(1999, 12, 31, 23, 59, 59, 9999).timestamp()
+
+    filmonhls._get_stream_data.return_value = [
+        ("low", "http://fake/two.m3u8", datetime.datetime(2000, 1, 1, 0, 0, 0, 0).timestamp()),
+    ]
     with pytest.raises(TypeError) as cm:
         filmonhls.to_url()
     assert str(cm.value) == "Stream has expired and cannot be translated to a URL"
