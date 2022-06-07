@@ -195,6 +195,18 @@ class HLSStreamWorker(SegmentedStreamWorker):
                       self.duration_offset_start, self.duration_limit,
                       self.playlist_sequence, self.playlist_end))
 
+    def _fetch_playlist(self):
+        res = self.session.http.get(
+            self.stream.url,
+            exception=StreamError,
+            retries=self.playlist_reload_retries,
+            **self.reader.request_params
+        )
+        res.encoding = "utf-8"
+
+        return res
+
+    # TODO: rename to _parse_playlist
     def _reload_playlist(self, *args, **kwargs):
         return load_hls_playlist(*args, **kwargs)
 
@@ -203,14 +215,10 @@ class HLSStreamWorker(SegmentedStreamWorker):
             return
 
         self.reader.buffer.wait_free()
+
         log.debug("Reloading playlist")
-        res = self.session.http.get(
-            self.stream.url,
-            exception=StreamError,
-            retries=self.playlist_reload_retries,
-            **self.reader.request_params
-        )
-        res.encoding = "utf-8"
+        res = self._fetch_playlist()
+
         try:
             playlist = self._reload_playlist(res)
         except ValueError as err:
@@ -450,6 +458,14 @@ class HLSStream(HTTPStream):
         return reader
 
     @classmethod
+    def _fetch_variant_playlist(cls, session, url, **request_params):
+        res = session.http.get(url, exception=OSError, **request_params)
+        res.encoding = "utf-8"
+
+        return res
+
+    # TODO: rename to _parse_variant_playlist
+    @classmethod
     def _get_variant_playlist(cls, *args, **kwargs):
         return load_hls_playlist(*args, **kwargs)
 
@@ -473,8 +489,7 @@ class HLSStream(HTTPStream):
         locale = session_.localization
         audio_select = session_.options.get("hls-audio-select") or []
 
-        res = session_.http.get(url, exception=IOError, **request_params)
-        res.encoding = "utf-8"
+        res = cls._fetch_variant_playlist(session_, url, **request_params)
 
         try:
             multivariant = cls._get_variant_playlist(res)
