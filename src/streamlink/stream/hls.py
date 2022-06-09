@@ -3,7 +3,7 @@ import re
 import struct
 from concurrent.futures import Future
 from threading import Event
-from typing import Any, Dict, List, NamedTuple, Optional, Tuple, Union
+from typing import Any, ClassVar, Dict, List, NamedTuple, Optional, Tuple, Type, Union
 from urllib.parse import urlparse
 
 # noinspection PyPackageRequirements
@@ -478,6 +478,7 @@ class MuxedHLSStream(MuxedStream):
         session,
         video: str,
         audio: Union[str, List[str]],
+        hlsstream: Optional[Type["HLSStream"]] = None,
         url_master: Optional[str] = None,
         multivariant: Optional[M3U8] = None,
         force_restart: bool = False,
@@ -488,6 +489,7 @@ class MuxedHLSStream(MuxedStream):
         :param streamlink.Streamlink session: Streamlink session instance
         :param video: Video stream URL
         :param audio: Audio stream URL or list of URLs
+        :param hlsstream: Custom :class:`HLSStream` class for each substream
         :param url_master: The URL of the HLS playlist's multivariant playlist (deprecated)
         :param multivariant: The parsed multivariant playlist
         :param force_restart: Start from the beginning after reaching the playlist's end
@@ -503,8 +505,8 @@ class MuxedHLSStream(MuxedStream):
             else:
                 tracks.append(audio)
         for i in range(1, len(tracks)):
-            maps.append("{0}:a".format(i))
-        substreams = map(lambda url: HLSStream(session, url, force_restart=force_restart, **args), tracks)
+            maps.append(f"{i}:a")
+        substreams = map(lambda url: (hlsstream or HLSStream)(session, url, force_restart=force_restart, **args), tracks)
         ffmpeg_options = ffmpeg_options or {}
 
         super().__init__(session, *substreams, format="mpegts", maps=maps, **ffmpeg_options)
@@ -526,7 +528,8 @@ class HLSStream(HTTPStream):
     """
 
     __shortname__ = "hls"
-    __reader__ = HLSStreamReader
+    __reader__: ClassVar[Type[HLSStreamReader]] = HLSStreamReader
+    __muxed__: ClassVar[Type[MuxedHLSStream]] = MuxedHLSStream
 
     def __init__(
         self,
@@ -629,10 +632,11 @@ class HLSStream(HTTPStream):
                                or :py:meth:`requests.Session.request`
         """
 
+        reqargs = session_.http.valid_request_args(**request_params)
         locale = session_.localization
         audio_select = session_.options.get("hls-audio-select") or []
 
-        res = cls._fetch_variant_playlist(session_, url, **request_params)
+        res = cls._fetch_variant_playlist(session_, url, **reqargs)
 
         try:
             multivariant = cls._get_variant_playlist(res)
@@ -727,7 +731,7 @@ class HLSStream(HTTPStream):
             if check_streams:
                 # noinspection PyBroadException
                 try:
-                    session_.http.get(playlist.uri, **request_params)
+                    session_.http.get(playlist.uri, **reqargs)
                 except KeyboardInterrupt:
                     raise
                 except Exception:
@@ -742,7 +746,7 @@ class HLSStream(HTTPStream):
                 ])
                 log.debug(f"Using external audio tracks for stream {stream_name} {external_audio_msg}")
 
-                stream = MuxedHLSStream(
+                stream = cls.__muxed__(
                     session_,
                     video=playlist.uri,
                     audio=[x.uri for x in external_audio if x.uri],
