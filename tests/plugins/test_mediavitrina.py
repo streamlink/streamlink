@@ -10,9 +10,6 @@ class TestPluginCanHandleUrlMediaVitrina(PluginCanHandleUrl):
         "https://ctc.ru/online/",
         "https://ctclove.ru/online/",
         "https://domashniy.ru/online",
-        "https://ren.tv/live",
-        "https://www.5-tv.ru/live/",
-        "https://www.5-tv.ru/online/",
         # player.mediavitrina.ru
         "https://player.mediavitrina.ru/5tv/moretv_web/player.html",
         "https://player.mediavitrina.ru/che/che_web/player.html",
@@ -41,4 +38,7 @@ class TestPluginCanHandleUrlMediaVitrina(PluginCanHandleUrl):
 
     should_not_match = [
         "https://1tv.ru/live",
+        "https://ren.tv/live",
+        "https://www.5-tv.ru/live/",
+        "https://www.5-tv.ru/online/",
     ]
