@@ -4,89 +4,57 @@ $url idf1.fr
 $type live, vod
 """
 
+import logging
 import re
 
 from streamlink.plugin import Plugin, pluginmatcher
-from streamlink.plugin.api import useragents, validate
+from streamlink.plugin.api import validate
 from streamlink.stream.hls import HLSStream
-from streamlink.utils.url import update_scheme
+
+log = logging.getLogger(__name__)
 
 
 @pluginmatcher(re.compile(
-    r'https?://www\.idf1\.fr/(videos/[^/]+/[^/]+\.html|live\b)'
+    r"https?://www\.idf1\.fr/(videos/[^/]+/[^/]+\.html|live\b)"
 ))
 class IDF1(Plugin):
-    DACAST_API_URL = 'https://json.dacast.com/b/{}/{}/{}'
-    DACAST_TOKEN_URL = 'https://services.dacast.com/token/i/b/{}/{}/{}'
-
-    _video_id_re = re.compile(r"""
-            dacast\('(?P<broadcaster_id>\d+)_(?P<video_type>[a-z]+)_(?P<video_id>\d+)',\s*'replay_content',\s*data\);
-        """, re.VERBOSE)
-    _video_id_alt_re = re.compile(r'''
-            <script\s+
-                src="https://player.dacast.com/js/player.js"\s+
-                id="(?P<broadcaster_id>\d+)_(?P<video_type>[cf])_(?P<video_id>\d+)"
-        ''', re.VERBOSE)
-    _player_url = 'http://ssl.p.jwpcdn.com/player/v/7.12.6/jwplayer.flash.swf'
-
-    _api_schema = validate.Schema(
-        validate.parse_json(),
-        {
-            validate.optional('html5'): validate.all(
-                [
-                    {
-                        'src': validate.url()
-                    },
-                ],
-            ),
-            'hls': validate.url(),
-            'hds': validate.url()
-        },
-        validate.transform(
-            lambda x: [update_scheme(IDF1.DACAST_API_URL, x['hls']), x['hds']] + [y['src'] for y in x.get('html5', [])]
-        )
-    )
-
-    _token_schema = validate.Schema(
-        validate.parse_json(),
-        {'token': validate.text},
-        validate.get('token')
-    )
-
-    _user_agent = useragents.IE_11
-
     def _get_streams(self):
-        res = self.session.http.get(self.url)
-        match = self._video_id_re.search(res.text) or self._video_id_alt_re.search(res.text)
-        if match is None:
+        self.id, self.title = self.session.http.get(
+            self.url,
+            schema=validate.Schema(
+                validate.parse_html(),
+                validate.union((
+                    validate.xml_xpath_string(".//script[@class='dacast-video'][@id]/@id"),
+                    validate.xml_xpath_string(".//head/title[1]/text()"),
+                ))
+            )
+        )
+
+        if not self.id:
             return
-        broadcaster_id = match.group('broadcaster_id')
-        video_type = match.group('video_type')
-        video_id = match.group('video_id')
 
-        videos = self.session.http.get(
-            self.DACAST_API_URL.format(broadcaster_id, video_type, video_id),
-            schema=self._api_schema
+        if re.match(r"\w+_\w+_\w+", self.id):
+            provider = "dacast"
+        else:
+            provider = "universe"
+
+        data = self.session.http.get(
+            "https://playback.dacast.com/content/access?contentId={0}&provider={1}".format(self.id, provider),
+            acceptable_status=(200, 400, 403, 404),
+            schema=validate.Schema(
+                validate.parse_json(),
+                validate.any(
+                    {"error": validate.text},
+                    {"hls": validate.url()},
+                )
+            )
         )
-        token = self.session.http.get(
-            self.DACAST_TOKEN_URL.format(broadcaster_id, video_type, video_id),
-            schema=self._token_schema,
-            headers={'referer': self.url}
-        )
-        parsed = []
 
-        for video_url in videos:
-            video_url += token
+        if data.get("error"):
+            log.error(data["error"])
+            return
 
-            # Ignore duplicate video URLs
-            if video_url in parsed:
-                continue
-            parsed.append(video_url)
-
-            # Ignore HDS streams (broken)
-            if '.m3u8' in video_url:
-                for s in HLSStream.parse_variant_playlist(self.session, video_url).items():
-                    yield s
+        return HLSStream.parse_variant_playlist(self.session, data["hls"])
 
 
 __plugin__ = IDF1
