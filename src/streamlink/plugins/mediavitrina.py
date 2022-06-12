@@ -18,18 +18,15 @@ log = logging.getLogger(__name__)
 
 
 @pluginmatcher(re.compile(r"""https?://(?:www\.)?(?:
-    5-tv
-    |
     chetv
     |
     ctc(?:love)?
     |
     domashniy
 )\.ru/(?:live|online)""", re.VERBOSE))
-@pluginmatcher(re.compile(r"https?://ren\.tv/live"))
 @pluginmatcher(re.compile(r"https?://player\.mediavitrina\.ru/.+/player\.html"))
 class MediaVitrina(Plugin):
-    _re_url_json = re.compile(r"https://media\.mediavitrina\.ru/(?:proxy)?api/v2/\w+/playlist/[\w-]+_as_array\.json")
+    _re_url_json = re.compile(r"https://media\.mediavitrina\.ru/(?:proxy)?api/v3/\w+/playlist/[\w-]+_as_array\.json[^\"']+")
 
     def _get_streams(self):
         self.session.http.headers.update({"Referer": self.url})
@@ -57,12 +54,10 @@ class MediaVitrina(Plugin):
             # https://chetv.ru/online/
             # https://ctclove.ru/online/
             # https://domashniy.ru/online/
-            # https://ren.tv/live
-            # https://www.5-tv.ru/online/
             url_player = self.session.http.get(self.url, schema=validate.Schema(
                 validate.parse_html(),
                 validate.xml_xpath_string(".//iframe[starts-with(@src,'https://player.mediavitrina.ru/')]/@src"),
-            ))
+            ), acceptable_status=(200, 403, 404))
 
         if not url_player:
             return
@@ -83,6 +78,9 @@ class MediaVitrina(Plugin):
 
         url_json = m.group(0)
         log.debug("url_json={}".format(url_json))
+        url_json = re.sub(r"\{\{PLAYER_REFERER_HOSTNAME\}\}", "mediavitrina.ru", url_json)
+        url_json = re.sub(r"\{\{[A-Za-z_]+\}\}", "", url_json)
+
         res_token = self.session.http.get(
             "https://media.mediavitrina.ru/get_token",
             schema=validate.Schema(
