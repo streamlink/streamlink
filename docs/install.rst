@@ -13,11 +13,11 @@ Windows
 ==================================== ===========================================
 Method                               Installing
 ==================================== ===========================================
-Installers (stable)                  See the `Windows stable installers`_ section below
+Installers                           See the `Windows binaries`_ section below
 
-Installers (nightly)                 See the `Windows nightly installers`_ section below
+Portable                             See the `Windows binaries`_ section below
 
-Portable                             See the `Windows portable builds`_ section below
+Nightly builds                       See the `Windows nightly builds`_ section below
 
 Python pip                           See the `PyPI package and source code`_ section below
 
@@ -326,61 +326,44 @@ optional  `FFmpeg`_                 Required for `muxing`_ multiple video/audio/
 Windows binaries
 ----------------
 
-Since late March 2022, Windows installers for Streamlink can be found at the `streamlink/windows-installer`_ repository
-on GitHub, with support for different architectures and different Python versions.
+Windows installers and portable builds for Streamlink can be found at `streamlink/windows-builds`_,
+with support for different architectures and different Python versions.
 
-These installers contain
+These installers and portable builds contain:
 
 - an embedded Python version, built at `streamlink/python-windows-embed`_
-- FFmpeg, for muxing streams, built at `streamlink/FFmpeg-Builds`_
+- Streamlink and its dependencies
+- FFmpeg, required for muxing streams, built at `streamlink/FFmpeg-Builds`_
 
-For further information, please see the README file of the `streamlink/windows-installer`_ repository.
+and they are available in the following flavors:
 
-Windows stable installers
-^^^^^^^^^^^^^^^^^^^^^^^^^
+- Python 3.10 - x86_64 (64 bit)
+- Python 3.10 - x86 (32 bit)
+- Python 3.8 - x86_64 (64 bit) - for Windows 7
+- Python 3.8 - x86 (32 bit) - for Windows 7
 
-.. rst-class:: table-custom-layout
+For further information, please see the README in the `streamlink/windows-builds`_ repository.
 
-================================================== ==================================================
-Installer flavor                                   Notes
-================================================== ==================================================
-`Python 3.10, x86_64 <windows-stable_>`_           for Windows 8+, 64-bit
-`Python 3.10, x86 <windows-stable_>`_              for Windows 8+, 32-bit
-`Python 3.8, x86_64 <windows-stable_>`_            for Windows 7, 64-bit
-`Python 3.8, x86 <windows-stable_>`_               for Windows 7, 32-bit
-================================================== ==================================================
+Windows stable builds
+^^^^^^^^^^^^^^^^^^^^^
 
-Windows nightly installers
-^^^^^^^^^^^^^^^^^^^^^^^^^^
+Stable installers and stable portable builds of Streamlink's latest release can be
+`downloaded from the releases page of the streamlink/windows-builds <windows-stable_>`_ repository.
+
+Windows nightly builds
+^^^^^^^^^^^^^^^^^^^^^^
 
 Built once each day at midnight UTC from Streamlink's master branch. |br|
 This includes the most recent changes, but is not considered "stable". |br|
 Download from the build-artifacts of the `scheduled nightly build runs <windows-nightly_>`_ (requires a GitHub login). |br|
 See the `commit log <streamlink-master_>`_ of Steamlink's master branch for all the recent changes.
 
-Windows portable builds
-^^^^^^^^^^^^^^^^^^^^^^^
-
-.. rst-class:: table-custom-layout
-
-==================================== ===========================================
-Maintainer                           Links
-==================================== ===========================================
-Beardypig                            `Latest precompiled stable release <windows-portable-beardypig-releases_>`_ |br|
-                                     `Latest builder <windows-portable-beardypig-latest_>`_ |br|
-                                     `More info <windows-portable-beardypig_>`_
-==================================== ===========================================
-
-.. _streamlink/windows-installer: https://github.com/streamlink/windows-installer
+.. _streamlink/windows-builds: https://github.com/streamlink/windows-builds
 .. _streamlink/python-windows-embed: https://github.com/streamlink/python-windows-embed
 .. _streamlink/FFmpeg-Builds: https://github.com/streamlink/FFmpeg-Builds
 .. _windows-stable: https://github.com/streamlink/windows-installer/releases
 .. _windows-nightly: https://github.com/streamlink/windows-installer/actions?query=event%3Aschedule+is%3Asuccess+branch%3Amaster
 .. _streamlink-master: https://github.com/streamlink/streamlink/commits/master
-
-.. _windows-portable-beardypig: https://github.com/beardypig/streamlink-portable
-.. _windows-portable-beardypig-releases: https://github.com/beardypig/streamlink-portable/releases
-.. _windows-portable-beardypig-latest: https://github.com/beardypig/streamlink-portable/archive/master.zip
 
 
 AppImages
