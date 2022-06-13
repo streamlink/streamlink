@@ -600,7 +600,7 @@ def handle_url():
     except NoPluginError:
         console.exit(f"No plugin can handle URL: {args.url}")
     except PluginError as err:
-        console.exit(err)
+        console.exit(str(err))
 
     if not streams:
         console.exit(f"No playable streams found on this URL: {args.url}")
