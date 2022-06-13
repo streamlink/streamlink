@@ -8,10 +8,11 @@ from textwrap import dedent
 from unittest.mock import Mock, call, patch
 
 import freezegun
+import pytest
 
 import streamlink_cli.main
 import tests.resources
-from streamlink.exceptions import StreamError
+from streamlink.exceptions import PluginError, StreamError
 from streamlink.session import Streamlink
 from streamlink.stream.stream import Stream
 from streamlink_cli.compat import DeprecatedPath, is_win32, stdout
@@ -109,6 +110,20 @@ class TestCLIMain(unittest.TestCase):
                 "1080p (best-unfiltered)"
             ])
         )
+
+
+class TestCLIMainHandleUrl:
+    @pytest.mark.parametrize("side_effect,expected", [
+        (NoPluginError("foo"), "No plugin can handle URL: fakeurl"),
+        (PluginError("bar"), "bar"),
+    ])
+    def test_error(self, side_effect, expected):
+        with patch("streamlink_cli.main.args", Mock(url="fakeurl")), \
+             patch("streamlink_cli.main.streamlink", resolve_url=Mock(side_effect=side_effect)), \
+             patch("streamlink_cli.main.console", exit=Mock(side_effect=SystemExit)) as mock_console:
+            with pytest.raises(SystemExit):
+                handle_url()
+            assert mock_console.exit.mock_calls == [call(expected)]
 
 
 class TestCLIMainJsonAndStreamUrl(unittest.TestCase):
