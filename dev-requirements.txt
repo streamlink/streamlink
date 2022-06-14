@@ -7,7 +7,7 @@ freezegun>=1.0.0
 flake8
 flake8-import-order
 shtab
-versioningit >=1.1.1, <2
+versioningit >=2.0.0, <3
 
 mypy
 lxml-stubs
