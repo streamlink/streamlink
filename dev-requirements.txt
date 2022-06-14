@@ -8,7 +8,7 @@ flake8
 flake8-import-order
 shtab
 js2py
-versioningit >=1.1.1, <2
+versioningit >=2.0.0, <3
 
 mypy
 lxml-stubs
