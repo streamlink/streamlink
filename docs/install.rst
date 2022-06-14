@@ -122,6 +122,10 @@ Python pip                           See the `PyPI package and source code`_ sec
 
                                         doas pkg_add streamlink
 
+`openSUSE`_                          .. code-block:: bash
+
+                                        sudo zypper install streamlink
+
 `Solus`_                             .. code-block:: bash
 
                                         sudo eopkg install streamlink
@@ -149,6 +153,7 @@ if a package is not available for your distro or platform, or if it's out of dat
 .. _NetBSD (pkgsrc): https://pkgsrc.se/multimedia/streamlink
 .. _NixOS: https://github.com/NixOS/nixpkgs/tree/master/pkgs/applications/video/streamlink
 .. _OpenBSD: https://openports.se/multimedia/streamlink
+.. _openSUSE: https://build.opensuse.org/package/show/multimedia:apps/streamlink
 .. _Solus: https://dev.getsol.us/source/streamlink/
 .. _Ubuntu: https://launchpad.net/~nilarimogard/+archive/ubuntu/webupd8/+packages?field.name_filter=streamlink&field.status_filter=published&field.series_filter=
 .. _Void: https://github.com/void-linux/void-packages/tree/master/srcpkgs/streamlink
@@ -175,6 +180,7 @@ Gentoo                               soredake <fdsfgs at krutt.org>
 NetBSD                               Maya Rashish <maya at netbsd.org>
 NixOS                                Tuomas Tynkkynen <tuomas.tynkkynen at iki.fi>
 OpenBSD                              Brian Callahan <bcallah at openbsd.org>
+openSUSE                             Simon Puchert <simonpuchert at alice.de>
 Solus                                Joey Riches <josephriches at gmail.com>
 Ubuntu                               Alin Andrei <andrew at webupd8.org>
 Void                                 Michal Vasilek <michal at vasilek.cz>
