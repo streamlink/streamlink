@@ -179,7 +179,6 @@ Solus                                Joey Riches <josephriches at gmail.com>
 Ubuntu                               Alin Andrei <andrew at webupd8.org>
 Void                                 Michal Vasilek <michal at vasilek.cz>
 Windows binaries                     Sebastian Meyer <mail at bastimeyer.de>
-Windows port. version                beardypig <beardypig at protonmail.com>
 ==================================== ===========================================
 
 
