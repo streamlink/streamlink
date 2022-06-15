@@ -27,6 +27,13 @@ Python pip                           See the `PyPI package and source code`_ sec
 
                                      `Installing Chocolatey packages`_
 
+`Scoop`_                             .. code-block::
+
+                                        scoop bucket add extras
+                                        scoop install streamlink
+
+                                     `Installing Scoop packages`_
+
 `Windows Package Manager`_           .. code-block:: bat
 
                                         winget install streamlink
@@ -35,8 +42,10 @@ Python pip                           See the `PyPI package and source code`_ sec
 ==================================== ===========================================
 
 .. _Chocolatey: https://chocolatey.org/packages/streamlink
+.. _Scoop: https://scoop.sh/#/apps?q=streamlink&s=0&d=1&o=true
 .. _Windows Package Manager: https://github.com/microsoft/winget-pkgs/tree/master/manifests/s/Streamlink/Streamlink
 .. _Installing Chocolatey packages: https://chocolatey.org
+.. _Installing Scoop packages: https://scoop.sh
 .. _Installing Winget packages: https://docs.microsoft.com/en-us/windows/package-manager/
 
 macOS
