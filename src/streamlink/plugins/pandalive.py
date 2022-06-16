@@ -19,7 +19,7 @@ log = logging.getLogger(__name__)
 ))
 class Pandalive(Plugin):
     def _get_streams(self):
-        re_media_code = re.compile(r"""routePath:\s*(["'])(\\u002F|/)live(\\u002F|/)play(\\u002F|/)(?P<id>\d+)\1""")
+        re_media_code = re.compile(r"""routePath:\s*(["'])(\\u002F|/)live(\\u002F|/)play(\\u002F|/)(?P<id>[^"']+)\1""")
         media_code = self.session.http.get(self.url, schema=validate.Schema(
             validate.transform(re_media_code.search),
             validate.any(None, validate.get("id"))
@@ -34,33 +34,40 @@ class Pandalive(Plugin):
             "https://api.pandalive.co.kr/v1/live/play",
             data={
                 "action": "watch",
-                "userIdx": media_code
+                "userId": media_code
             },
             schema=validate.Schema(
-                validate.parse_json(), {
-                    "media": {
-                        "title": validate.text,
-                        "userId": validate.text,
-                        "userNick": validate.text,
-                        "isPw": bool,
-                        "isLive": bool,
-                        "liveType": validate.text,
+                validate.parse_json(),
+                validate.any(
+                    {
+                        "media": {
+                            "title": validate.text,
+                            "userId": validate.text,
+                            "userNick": validate.text,
+                            "isPw": bool,
+                            "isLive": bool,
+                            "liveType": validate.text,
+                        },
+                        "PlayList": {
+                            validate.optional("hls"): [{
+                                "url": validate.url(),
+                            }],
+                            validate.optional("hls2"): [{
+                                "url": validate.url(),
+                            }],
+                            validate.optional("hls3"): [{
+                                "url": validate.url(),
+                            }],
+                        },
+                        "result": bool,
+                        "message": validate.text,
                     },
-                    "PlayList": {
-                        validate.optional("hls"): [{
-                            "url": validate.url(),
-                        }],
-                        validate.optional("hls2"): [{
-                            "url": validate.url(),
-                        }],
-                        validate.optional("hls3"): [{
-                            "url": validate.url(),
-                        }],
+                    {
+                        "result": bool,
+                        "message": validate.text,
                     },
-                    "result": bool,
-                    "message": validate.text,
-                },
-            )
+                ),
+            ),
         )
 
         if not json["result"]:
