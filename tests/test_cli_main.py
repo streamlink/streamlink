@@ -7,8 +7,10 @@ import tempfile
 import unittest
 from textwrap import dedent
 
+import pytest
+
 import streamlink_cli.main
-from streamlink.exceptions import StreamError
+from streamlink.exceptions import NoPluginError, PluginError, StreamError
 from streamlink.session import Streamlink
 from streamlink_cli.compat import is_py2, is_win32, stdout
 from streamlink_cli.main import (
@@ -155,6 +157,22 @@ class TestCLIMain(unittest.TestCase):
             ])
         )
 
+
+class TestCLIMainHandleUrl(object):
+    @pytest.mark.parametrize("side_effect,expected", [
+        (NoPluginError("foo"), "No plugin can handle URL: fakeurl"),
+        (PluginError("bar"), "bar"),
+    ])
+    def test_error(self, side_effect, expected):
+        with patch("streamlink_cli.main.args", Mock(url="fakeurl")), \
+             patch("streamlink_cli.main.streamlink", resolve_url=Mock(side_effect=side_effect)), \
+             patch("streamlink_cli.main.console", exit=Mock(side_effect=SystemExit)) as mock_console:
+            with pytest.raises(SystemExit):
+                handle_url()
+            assert mock_console.exit.mock_calls == [call(expected)]
+
+
+class TestCLIMainJsonAndStreamUrl(unittest.TestCase):
     @patch("streamlink_cli.main.args", json=True, stream_url=True, subprocess_cmdline=False)
     @patch("streamlink_cli.main.console", json=True)
     def test_handle_stream_with_json_and_stream_url(self, console, args):
