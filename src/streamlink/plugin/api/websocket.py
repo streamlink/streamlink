@@ -1,6 +1,6 @@
 import json
 import logging
-from threading import RLock, Thread
+from threading import RLock, Thread, current_thread
 from typing import Any, Dict, List, Optional, Tuple, Union
 from urllib.parse import unquote_plus, urlparse
 
@@ -129,10 +129,10 @@ class WebsocketClient(Thread):
             )
 
     def close(self, status: int = STATUS_NORMAL, reason: Union[str, bytes] = "", timeout: int = 3) -> None:
-        if type(reason) is str:  # pragma: no branch
+        if type(reason) is str:
             reason = bytes(reason, encoding="utf-8")
         self.ws.close(status=status, reason=reason, timeout=timeout)
-        if self.is_alive():  # pragma: no branch
+        if self.is_alive() and current_thread() is not self:
             self.join()
 
     def send(self, data: Union[str, bytes], opcode: int = ABNF.OPCODE_TEXT) -> None:
