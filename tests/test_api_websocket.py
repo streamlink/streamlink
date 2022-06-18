@@ -2,11 +2,24 @@ import unittest
 from threading import Event
 from unittest.mock import Mock, call, patch
 
+import pytest
 from websocket import ABNF, STATUS_NORMAL  # type: ignore[import]
 
 from streamlink.logger import DEBUG, TRACE
 from streamlink.plugin.api.websocket import WebsocketClient
 from streamlink.session import Streamlink
+
+
+@pytest.mark.parametrize("name,value", [
+    ("OPCODE_CONT", ABNF.OPCODE_CONT),
+    ("OPCODE_TEXT", ABNF.OPCODE_TEXT),
+    ("OPCODE_BINARY", ABNF.OPCODE_BINARY),
+    ("OPCODE_CLOSE", ABNF.OPCODE_CLOSE),
+    ("OPCODE_PING", ABNF.OPCODE_PING),
+    ("OPCODE_PONG", ABNF.OPCODE_PONG),
+])
+def test_opcode_export(name, value):
+    assert getattr(WebsocketClient, name) == value
 
 
 class TestWebsocketClient(unittest.TestCase):
