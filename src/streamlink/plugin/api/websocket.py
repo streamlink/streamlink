@@ -16,8 +16,16 @@ log = logging.getLogger(__name__)
 
 
 class WebsocketClient(Thread):
-    _id = 0
-    # type: int
+    OPCODE_CONT = ABNF.OPCODE_CONT      # type: int
+    OPCODE_TEXT = ABNF.OPCODE_TEXT      # type: int
+    OPCODE_BINARY = ABNF.OPCODE_BINARY  # type: int
+    OPCODE_CLOSE = ABNF.OPCODE_CLOSE    # type: int
+    OPCODE_PING = ABNF.OPCODE_PING      # type: int
+    OPCODE_PONG = ABNF.OPCODE_PONG      # type: int
+
+    _id = 0     # type: int
+
+    ws = None   # type: WebSocketApp
 
     def __init__(
         self,
@@ -179,11 +187,11 @@ class WebsocketClient(Thread):
         log.debug("Closed: {0}".format(wsapp.url))  # pragma: no cover
 
     def on_ping(self, wsapp, data):
-        # type: (WebSocketApp, str) -> None
+        # type: (WebSocketApp, bytes) -> None
         pass  # pragma: no cover
 
     def on_pong(self, wsapp, data):
-        # type: (WebSocketApp, str) -> None
+        # type: (WebSocketApp, bytes) -> None
         pass  # pragma: no cover
 
     def on_message(self, wsapp, data):
@@ -191,9 +199,9 @@ class WebsocketClient(Thread):
         pass  # pragma: no cover
 
     def on_cont_message(self, wsapp, data, cont):
-        # type: (WebSocketApp, str, Any) -> None
+        # type: (WebSocketApp, bytes, Any) -> None
         pass  # pragma: no cover
 
     def on_data(self, wsapp, data, data_type, cont):
-        # type: (WebSocketApp, str, int, Any) -> None
+        # type: (WebSocketApp, Union[bytes, str], int, Any) -> None
         pass  # pragma: no cover
