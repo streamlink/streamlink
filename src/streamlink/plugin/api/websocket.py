@@ -2,11 +2,8 @@ from __future__ import absolute_import
 
 import json
 import logging
-from threading import RLock, Thread
-try:
-    from typing import Any, Dict, List, Optional, Tuple, Union
-except ImportError:
-    pass
+from threading import RLock, Thread, current_thread
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 from websocket import ABNF, STATUS_NORMAL, WebSocketApp, enableTrace
 
@@ -145,11 +142,13 @@ class WebsocketClient(Thread):
 
     def close(self, status=STATUS_NORMAL, reason="", timeout=3):
         # type: (int, Union[str, bytes], int) -> None
-        if is_py2:
-            self.ws.close(status=status, reason=bytes(reason), timeout=timeout)
-        else:
-            self.ws.close(status=status, reason=bytes(reason, encoding="utf-8"), timeout=timeout)
-        if self.is_alive():  # pragma: no branch
+        if type(reason) is str:
+            if is_py2:
+                reason = bytes(reason)
+            else:
+                reason = bytes(reason, encoding="utf-8")
+        self.ws.close(status=status, reason=reason, timeout=timeout)
+        if self.is_alive() and current_thread() is not self:
             self.join()
 
     def send(self, data, opcode=ABNF.OPCODE_TEXT):
