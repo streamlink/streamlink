@@ -40,6 +40,35 @@ html {
   font-size: 100% !important;
 }
 
+h1, h2 {
+  margin-top: 1.5rem;
+  margin-bottom: 0.75rem;
+  font-weight: 300;
+}
+h3, h4, h5, h6 {
+  margin-top: 1.5rem;
+  margin-bottom: 0.5rem;
+  font-weight: 400;
+}
+h1 {
+  font-size: 2.25rem;
+}
+h2 {
+  font-size: 1.75rem;
+}
+h3 {
+  font-size: 1.25rem;
+}
+h4 {
+  font-size: 1rem;
+}
+h5 {
+  font-size: 0.875rem;
+}
+h6 {
+  font-size: 0.75rem;
+}
+
 code.literal {
   font-size: var(--font-size--small);
 }
@@ -56,14 +85,18 @@ strong.command {
   font: normal var(--font-size--small) var(--font-stack--monospace);
 }
 
-a[href^="http://"],
-a[href^="https://"]:not([href^="https://streamlink.github.io/"]) {
+.highlight .go {
+  font-style: normal;
+}
+
+a[href^="http://"]:not(.muted-link),
+a[href^="https://"]:not(.muted-link):not([href^="https://streamlink.github.io/"]) {
   display: inline-block;
   word-break: break-word;
 }
 
-a[href^="http://"]:not(.no-external-link-icon)::after,
-a[href^="https://"]:not(.no-external-link-icon):not([href^="https://streamlink.github.io/"])::after {
+a[href^="http://"]:not(.no-external-link-icon):not(.muted-link)::after,
+a[href^="https://"]:not(.no-external-link-icon):not(.muted-link):not([href^="https://streamlink.github.io/"])::after {
   content: "\f35d";
   display: inline-block;
   padding-left: .4em;
@@ -133,7 +166,7 @@ a[href^="https://"]:not(.no-external-link-icon):not([href^="https://streamlink.g
 }
 .sidebar-versions-others dd {
   width: 50%;
-  margin: 0;
+  margin: 0 !important;
 }
 .sidebar-versions-others dd:first-of-type {
   padding-right: .5rem;
