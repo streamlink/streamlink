@@ -24,7 +24,7 @@ extensions = [
     'ext_github',
     'ext_plugins',
     'ext_releaseref',
-    'recommonmark'
+    'myst_parser',
 ]
 
 autosectionlabel_prefix_document = True
