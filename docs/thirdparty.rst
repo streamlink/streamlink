@@ -85,3 +85,12 @@ OBS-Streamlink
 
 
 Help us extend this list by sending us a pull request on Github. Thanks!
+
+Streamproxy
+-----------
+:Description: A proxy for livestreams
+:Type: Server
+:OS: |Windows/docker/linux comming soon|
+:Author: `Alexander Sabino <https://github.com/asabino2>`_
+:Website: https://github.com/asabino2/streamproxy
+:Info: Stream Proxy is a proxy for live streams, with which you can watch live streams from youtube, twitch, RTP channels, and all services compatible with streamlink app in various apps: OBS Studio, SS-IPTV, TVHeadend, ProgTV, etc... It also has some APIs that allow you to check if a stream is online or not and have information about a specific livestream
