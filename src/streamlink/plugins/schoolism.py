@@ -77,7 +77,7 @@ class Schoolism(Plugin):
             help="""
         Play part number PART of the lesson, or assignment feedback video.
 
-        Defaults is 1.
+        Default is 1.
         """
         )
     )
