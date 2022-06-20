@@ -1,5 +1,5 @@
 """
-$description Russian live streaming and video hosting social platform.
+$description Russian live-streaming and video hosting social platform.
 $url vk.com
 $type live, vod
 """
@@ -67,10 +67,11 @@ class VK(Plugin):
             data = self.session.http.post(
                 self.API_URL,
                 params={
-                    "act": "show_inline",
+                    "act": "show",
                     "al": "1",
                     "video": video_id,
                 },
+                headers={"Referer": self.url},
                 schema=validate.Schema(
                     validate.transform(lambda text: re.sub(r"^\s*<!--\s*", "", text)),
                     validate.parse_json(),
