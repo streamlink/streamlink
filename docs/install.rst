@@ -65,7 +65,7 @@ Python pip                           See the `PyPI package and source code`_ sec
                                      `Installing Homebrew packages`_
 ==================================== ===========================================
 
-.. _Homebrew: https://github.com/Homebrew/homebrew-core/blob/master/Formula/streamlink.rb
+.. _Homebrew: https://formulae.brew.sh/formula/streamlink
 .. _Installing Homebrew packages: https://brew.sh
 
 
