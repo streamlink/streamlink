@@ -558,14 +558,14 @@ def build_parser():
         "-f", "--force",
         action="store_true",
         help="""
-        When using -o or -r, always write to file even if it already exists (overwrite).
+        When using --output or --record, always write to file even if it already exists (overwrite).
         """
     )
     output.add_argument(
         "--force-progress",
         action="store_true",
         help="""
-        When using -o or -r,
+        When using --output or --record,
         show the download progress bar even if there is no terminal.
         """
     )
