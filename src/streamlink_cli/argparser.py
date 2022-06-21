@@ -580,8 +580,8 @@ def build_parser():
         "-r", "--record",
         metavar="FILENAME",
         help="""
-        Open the stream in the player, while at the same time writing it to FILENAME. If FILENAME is set to ``-`` (dash), then the
-        stream data will be written to stdout, similar to the --stdout argument, while still opening the player.
+        Open the stream in the player, while at the same time writing it to FILENAME. If FILENAME is set to ``-`` (dash), then
+        the stream data will be written to stdout, similar to the --stdout argument, while still opening the player.
 
         Non-existent directories and subdirectories will be created if they do not exist, if filesystem permissions allow.
 
