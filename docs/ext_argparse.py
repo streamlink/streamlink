@@ -26,6 +26,7 @@ _option_line_re = re.compile(r"^(?!\s{2}|Example: )(.+)$", re.MULTILINE)
 _option_re = re.compile(r"(?:^|(?<=\s))(--\w[\w-]*\w)\b")
 _prog_re = re.compile(r"%\(prog\)s")
 _percent_re = re.compile(r"%%")
+_cli_metadata_variables_section_cross_link_re = re.compile(r"the \"Metadata variables\" section")
 
 
 def get_parser(module_name, attr):
@@ -86,6 +87,12 @@ class ArgparseDirective(Directive):
 
         # fix escaped chars for percent-formatted argparse help strings
         help = _percent_re.sub("%", help)
+
+        # create cross-link for the "Metadata variables" section
+        help = _cli_metadata_variables_section_cross_link_re.sub(
+            "the \":ref:`Metadata variables <cli/metadata:Variables>`\" section",
+            help
+        )
 
         return indent(help)
 
