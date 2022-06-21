@@ -153,7 +153,7 @@ def build_parser():
         help="""
         A URL to attempt to extract streams from.
 
-        Usually, the protocol of http(s) URLs can be omitted ("https://"),
+        Usually, the protocol of http(s) URLs can be omitted (``https://``),
         depending on the implementation of the plugin being used.
 
         Alternatively, the URL can also be specified by using the --url option.
@@ -261,7 +261,7 @@ def build_parser():
 
         User prompts and download progress won't be written to FILE.
 
-        A value of ``-`` will set the file name to an ISO8601-like string
+        A value of ``-`` (dash) will set the file name to an ISO8601-like string
         and will choose the following default log directories.
 
         Windows:
@@ -283,7 +283,7 @@ def build_parser():
         help="""
         Hide all log output.
 
-        Alias for "--loglevel none".
+        Alias for ``--loglevel none``.
         """
     )
     general.add_argument(
@@ -396,14 +396,14 @@ def build_parser():
         any of the player arguments to be logged.
 
         The value can contain formatting variables surrounded by curly braces,
-        {{ and }}. If you need to include a brace character, it can be escaped
-        by doubling, e.g. {{{{ and }}}}.
+        ``{{`` and ``}}``. If you need to include a brace character, it can be escaped
+        by doubling, e.g. ``{{{{`` and ``}}}}``.
 
         Formatting variables available:
 
         {{{PLAYER_ARGS_INPUT_DEFAULT}}}
             This is the input that the player will use. For standard input (stdin),
-            it is ``-``, but it can also be a URL, depending on the options used.
+            it is ``-`` (dash), but it can also be a URL, depending on the options used.
 
         {{{PLAYER_ARGS_INPUT_FALLBACK}}}
             The old fallback variable name with the same functionality.
@@ -521,11 +521,11 @@ def build_parser():
             VLC does support special formatting variables on its own:
             https://wiki.videolan.org/Documentation:Format_String/
 
-            These variables are accessible in the --title option by adding a backslash
+            These variables are accessible in the ``--title`` option by adding a backslash
             in front of the dollar sign which VLC uses as its formatting character.
 
             For example, to put the current date in your VLC window title,
-            the string "\\\\$A" could be inserted inside the --title string.
+            the string ``\\$A`` could be inserted inside the ``--title`` string.
 
         Example:
 
@@ -538,7 +538,7 @@ def build_parser():
         "-o", "--output",
         metavar="FILENAME",
         help="""
-        Write stream data to FILENAME instead of playing it. If FILENAME is set to - (dash), then the stream data will be
+        Write stream data to FILENAME instead of playing it. If FILENAME is set to ``-`` (dash), then the stream data will be
         written to stdout, similar to the --stdout argument.
 
         Non-existent directories and subdirectories will be created if they do not exist, if filesystem permissions allow.
@@ -580,7 +580,7 @@ def build_parser():
         "-r", "--record",
         metavar="FILENAME",
         help="""
-        Open the stream in the player, while at the same time writing it to FILENAME. If FILENAME is set to - (dash), then the
+        Open the stream in the player, while at the same time writing it to FILENAME. If FILENAME is set to ``-`` (dash), then the
         stream data will be written to stdout, similar to the --stdout argument, while still opening the player.
 
         Non-existent directories and subdirectories will be created if they do not exist, if filesystem permissions allow.
@@ -643,7 +643,7 @@ def build_parser():
         help="""
         A URL to attempt to extract streams from.
 
-        Usually, the protocol of http(s) URLs can be omitted (https://),
+        Usually, the protocol of http(s) URLs can be omitted (``https://``),
         depending on the implementation of the plugin being used.
 
         This is an alternative to setting the URL using a positional argument
@@ -720,7 +720,7 @@ def build_parser():
 
         The order will be used to separate streams when there are multiple
         streams with the same name but different stream types. Any stream type
-        not listed will be omitted from the available streams list.  A ``*`` can
+        not listed will be omitted from the available streams list.  An ``*`` (asterisk) can
         be used as a wildcard to match any other type of stream, eg. muxed-stream.
 
         Default is "hls,http,*".
@@ -900,7 +900,7 @@ def build_parser():
         help="""
         A comma-delimited list of segment names that will get filtered out.
 
-        Example: --hls-segment-ignore-names 000,001,002
+        Example: ``--hls-segment-ignore-names 000,001,002``
 
         This will ignore every segment that ends with 000.ts, 001.ts and 002.ts
 
@@ -934,7 +934,7 @@ def build_parser():
         metavar="CODE",
         help="""
         Selects a specific audio source or sources, by language code or name,
-        when multiple audio sources are available. Can be * to download all
+        when multiple audio sources are available. Can be ``*`` (asterisk) to download all
         audio sources.
 
         Examples:
@@ -995,7 +995,7 @@ def build_parser():
         can specify the location of the ffmpeg executable if it is not in your
         PATH.
 
-        Example: "/usr/local/bin/ffmpeg"
+        Example: ``--ffmpeg-ffmpeg /usr/local/bin/ffmpeg``
         """
     )
     transport_ffmpeg.add_argument(
@@ -1022,7 +1022,7 @@ def build_parser():
 
         Default is "matroska".
 
-        Example: "mpegts"
+        Example: ``--ffmpeg-fout mpegts``
         """
     )
     transport_ffmpeg.add_argument(
@@ -1033,7 +1033,7 @@ def build_parser():
 
         Default is "copy".
 
-        Example: "h264"
+        Example: ``--ffmpeg-video-transcode h264``
         """
     )
     transport_ffmpeg.add_argument(
@@ -1044,7 +1044,7 @@ def build_parser():
 
         Default is "copy".
 
-        Example: "aac"
+        Example: ``--ffmpeg-audio-transcode aac``
         """
     )
     transport_ffmpeg.add_argument(
@@ -1070,7 +1070,7 @@ def build_parser():
         help="""
         A HTTP proxy to use for all HTTP and HTTPS requests, including WebSocket connections.
 
-        Example: "http://hostname:port/"
+        Example: ``--http-proxy http://hostname:port/``
         """
     )
     http.add_argument("--https-proxy", help=argparse.SUPPRESS)
