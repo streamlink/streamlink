@@ -97,7 +97,7 @@ data_files = [
 
 
 if __name__ == "__main__":
-    from setuptools import setup
+    from setuptools import setup  # type: ignore[import]
     from versioningit import get_cmdclasses
 
     setup(
