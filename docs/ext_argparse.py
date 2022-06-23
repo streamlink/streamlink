@@ -1,15 +1,14 @@
-"""Convert a argparse parser to option directives.
+"""
+Convert an argparse parser to option directives.
 
 Inspired by sphinxcontrib.autoprogram but with a few differences:
 
 - Contains some simple pre-processing on the help messages to make
   the Sphinx version a bit prettier.
-
 """
 
 import argparse
 import re
-
 from textwrap import dedent
 
 from docutils import nodes

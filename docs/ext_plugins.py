@@ -22,7 +22,13 @@ class IDatalistItem(abc.ABC):
         raise NotImplementedError
 
 
-class MetadataItem(IDatalistItem):
+class IMetadataItem(IDatalistItem):
+    @abc.abstractmethod
+    def set(self, value: Any) -> None:
+        raise NotImplementedError
+
+
+class MetadataItem(IMetadataItem):
     def __init__(self, title: str):
         self.title = title
         self.value: Optional[str] = None
@@ -36,9 +42,9 @@ class MetadataItem(IDatalistItem):
         yield f":{self.title}: {self.value}"
 
 
-class MetadataList(MetadataItem):
+class MetadataList(IMetadataItem):
     def __init__(self, title: str):
-        super().__init__(title)
+        self.title = title
         self.value: List[str] = []
 
     def set(self, value: str) -> None:
@@ -136,7 +142,7 @@ class PluginArguments(ast.NodeVisitor, IDatalistItem):
 class PluginMetadata:
     def __init__(self, name: str, pluginast):
         self.name: str = name
-        self.items: Dict[str, MetadataItem] = dict(
+        self.items: Dict[str, IMetadataItem] = dict(
             description=MetadataItem("Description"),
             url=MetadataList("URL(s)"),
             type=MetadataItem("Type"),
@@ -195,7 +201,7 @@ class PluginFinder:
             for tokeninfo in tokenize.generate_tokens(handle.readline):
                 # the very first token needs to be a string / block comment with the metadata
                 if tokeninfo.type != tokenize.STRING or not self._re_metadata_item.search(tokeninfo.string):
-                    return
+                    return None
                 metadata = tokeninfo.string.strip()
                 break
 

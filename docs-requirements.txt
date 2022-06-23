@@ -2,3 +2,5 @@ sphinx >=4.0.0
 furo ==2022.06.04.1
 myst-parser >=0.18.0
 versioningit >=2.0.0, <3
+
+docutils-stubs

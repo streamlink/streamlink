@@ -44,7 +44,9 @@ jobs:
         with:
           python-version: "3.10"
       - name: Install dependencies
-        run: ./script/install-dependencies.sh
+        run: |
+          ./script/install-dependencies.sh
+          python -m pip install -r docs-requirements.txt
       - name: mypy
         run: >
           python -m mypy
@@ -52,3 +54,5 @@ jobs:
           src/streamlink/
           src/streamlink_cli/
           tests/
+          docs/
+          setup.py
