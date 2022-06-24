@@ -8,6 +8,7 @@ $notes :ref:`Low latency streaming <cli/plugins/twitch:Low latency streaming>` i
 import json
 import logging
 import re
+import sys
 from datetime import datetime
 from random import random
 from typing import List, NamedTuple, Optional
@@ -527,6 +528,12 @@ class Twitch(Plugin):
             """
         )
     )
+
+    @classmethod
+    def stream_weight(cls, stream):
+        if stream == "source":
+            return sys.maxsize, stream
+        return super().stream_weight(stream)
 
     def __init__(self, url):
         super().__init__(url)
