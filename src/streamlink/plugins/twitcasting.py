@@ -104,7 +104,7 @@ class TwitCastingWsClient(WebsocketClient):
 
     def on_data(self, wsapp, data, data_type, cont):
         if data_type == self.OPCODE_TEXT:
-            data = bytes(data, "utf-8")
+            return
 
         try:
             self.buffer.write(data)
