@@ -307,13 +307,13 @@ class TestDASHStreamWorker:
     @pytest.fixture
     def mock_time(self, monkeypatch: pytest.MonkeyPatch) -> Mock:
         mock = Mock(return_value=1)
-        monkeypatch.setattr("streamlink.stream.dash_manifest.time.time", mock)
+        monkeypatch.setattr("streamlink.stream.dash.time", mock)
         return mock
 
     @pytest.fixture(autouse=True)
-    def mock_sleep(self, monkeypatch: pytest.MonkeyPatch) -> Mock:
+    def mock_wait(self, monkeypatch: pytest.MonkeyPatch) -> Mock:
         mock = Mock(return_value=True)
-        monkeypatch.setattr("streamlink.stream.dash_manifest.time.sleep", mock)
+        monkeypatch.setattr("streamlink.stream.dash.DASHStreamWorker.wait", mock)
         return mock
 
     @pytest.fixture
@@ -370,11 +370,13 @@ class TestDASHStreamWorker:
         representation.segments.return_value = segments[:1]
         assert next(segment_iter) is segments[0]
         assert representation.segments.call_args_list == [call(init=True)]
+        assert not worker._wait.is_set()
 
         representation.segments.reset_mock()
         representation.segments.return_value = segments[1:]
         assert [next(segment_iter), next(segment_iter)] == segments[1:]
         assert representation.segments.call_args_list == [call(), call(init=False)]
+        assert not worker._wait.is_set()
 
     def test_static(
         self,
@@ -389,6 +391,7 @@ class TestDASHStreamWorker:
         representation.segments.return_value = segments
         assert list(worker.iter_segments()) == segments
         assert representation.segments.call_args_list == [call(init=True)]
+        assert worker._wait.is_set()
 
     @pytest.mark.parametrize("duration", [
         0,
@@ -397,7 +400,7 @@ class TestDASHStreamWorker:
     def test_static_refresh_wait(
         self,
         duration: float,
-        mock_sleep,
+        mock_wait: Mock,
         mock_time: Mock,
         worker: DASHStreamWorker,
         representation: Mock,
@@ -414,7 +417,8 @@ class TestDASHStreamWorker:
         representation.segments.return_value = segments
         assert list(worker.iter_segments()) == segments
         assert representation.segments.call_args_list == [call(init=True)]
-        assert mock_sleep.call_args_list == [call(5)]
+        assert mock_wait.call_args_list == [call(5)]
+        assert worker._wait.is_set()
 
     def test_duplicate_rep_id(self):
         representation_vid = Mock(id=1, mimeType="video/mp4", height=720)
