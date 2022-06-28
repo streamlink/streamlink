@@ -2,15 +2,15 @@ import copy
 import datetime
 import itertools
 import logging
-import os.path
 from collections import defaultdict
 from contextlib import contextmanager
+from pathlib import Path
 from time import time
 from typing import Dict, Optional
 from urllib.parse import urlparse, urlunparse
 
 from streamlink import PluginError, StreamError
-from streamlink.stream.dash_manifest import MPD, Representation, freeze_timeline, sleep_until, utc
+from streamlink.stream.dash_manifest import MPD, Representation, Segment, freeze_timeline, utc
 from streamlink.stream.ffmpegmux import FFMPEGMuxer
 from streamlink.stream.segmented import SegmentedStreamReader, SegmentedStreamWorker, SegmentedStreamWriter
 from streamlink.stream.stream import Stream
@@ -21,6 +21,10 @@ log = logging.getLogger(__name__)
 
 
 class DASHStreamWriter(SegmentedStreamWriter):
+    @staticmethod
+    def _get_segment_name(segment: Segment) -> str:
+        return Path(urlparse(segment.url).path).resolve().name
+
     def fetch(self, segment, retries=None):
         if self.closed or not retries:
             return
@@ -31,9 +35,11 @@ class DASHStreamWriter(SegmentedStreamWriter):
             now = datetime.datetime.now(tz=utc)
             if segment.available_at > now:
                 time_to_wait = (segment.available_at - now).total_seconds()
-                fname = os.path.basename(urlparse(segment.url).path)
-                log.debug("Waiting for segment: {fname} ({wait:.01f}s)".format(fname=fname, wait=time_to_wait))
-                sleep_until(segment.available_at)
+                fname = self._get_segment_name(segment)
+                log.debug(f"Waiting for segment: {fname} ({time_to_wait:.01f}s)")
+                if not self.wait(time_to_wait):
+                    log.debug(f"Waiting for segment: {fname} aborted")
+                    return
 
             if segment.range:
                 start, length = segment.range
@@ -41,7 +47,7 @@ class DASHStreamWriter(SegmentedStreamWriter):
                     end = start + length - 1
                 else:
                     end = ""
-                headers["Range"] = "bytes={0}-{1}".format(start, end)
+                headers["Range"] = f"bytes={start}-{end}"
 
             return self.session.http.get(segment.url,
                                          timeout=self.timeout,
@@ -53,14 +59,14 @@ class DASHStreamWriter(SegmentedStreamWriter):
             return self.fetch(segment, retries - 1)
 
     def write(self, segment, res, chunk_size=8192):
+        name = self._get_segment_name(segment)
         for chunk in res.iter_content(chunk_size):
-            if not self.closed:
-                self.reader.buffer.write(chunk)
-            else:
-                log.warning("Download of segment: {} aborted".format(segment.url))
+            if self.closed:
+                log.warning(f"Download of segment: {name} aborted")
                 return
+            self.reader.buffer.write(chunk)
 
-        log.debug("Download of segment: {} complete".format(segment.url))
+        log.debug(f"Download of segment: {name} complete")
 
 
 class DASHStreamWorker(SegmentedStreamWorker):
