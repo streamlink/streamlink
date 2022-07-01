@@ -1,3 +1,4 @@
+import concurrent.futures
 import logging
 import subprocess
 import sys
@@ -183,10 +184,13 @@ class FFMPEGMuxer(StreamIO):
             self.process.stdout.close()
 
             # close the streams
+            futures = []
+            executor = concurrent.futures.ThreadPoolExecutor()
             for stream in self.streams:
                 if hasattr(stream, "close") and callable(stream.close):
-                    stream.close()
+                    futures.append(executor.submit(stream.close))
 
+            concurrent.futures.wait(futures, return_when=concurrent.futures.ALL_COMPLETED)
             log.debug("Closed all the substreams")
 
         if self.close_errorlog:
