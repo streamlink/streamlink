@@ -5,64 +5,75 @@ $type live, vod
 """
 import logging
 import re
+from urllib.parse import urlsplit, urlunsplit
 
 from streamlink.plugin import Plugin, pluginmatcher
-from streamlink.plugin.api import useragents, validate
+from streamlink.plugin.api import validate
+from streamlink.stream.dash import DASHStream
 from streamlink.stream.hls import HLSStream
 
 log = logging.getLogger(__name__)
 
 
 @pluginmatcher(re.compile(
-    r"https?://(?:www\.)?vidio\.com/(?:en/)?(?P<type>live|watch)/(?P<id>\d+)-(?P<name>[^/?#&]+)"
+    r"https?://(?:www\.)?vidio\.com/"
 ))
 class Vidio(Plugin):
-    _playlist_re = re.compile(r'''hls-url=["'](?P<url>[^"']+)["']''')
-    _data_id_re = re.compile(r'''meta\s+data-id=["'](?P<id>[^"']+)["']''')
-
-    csrf_tokens_url = "https://www.vidio.com/csrf_tokens"
     tokens_url = "https://www.vidio.com/live/{id}/tokens"
-    token_schema = validate.Schema(validate.parse_json(),
-                                   {"token": validate.text},
-                                   validate.get("token"))
 
-    def get_csrf_tokens(self):
-        return self.session.http.get(
-            self.csrf_tokens_url,
-            schema=self.token_schema
-        )
-
-    def get_url_tokens(self, stream_id):
-        log.debug("Getting stream tokens")
-        csrf_token = self.get_csrf_tokens()
+    def _get_stream_token(self, stream_id, stream_type):
+        log.debug("Getting stream token")
         return self.session.http.post(
             self.tokens_url.format(id=stream_id),
-            files={"authenticity_token": (None, csrf_token)},
-            headers={
-                "User-Agent": useragents.CHROME,
-                "Referer": self.url
-            },
-            schema=self.token_schema
+            params={"type": stream_type},
+            headers={"Referer": self.url},
+            schema=validate.Schema(
+                validate.parse_json(),
+                {"token": str},
+                validate.get("token"),
+            ),
         )
 
     def _get_streams(self):
-        res = self.session.http.get(self.url)
+        stream_id, has_token, hls_url, dash_url = self.session.http.get(
+            self.url,
+            schema=validate.Schema(
+                validate.parse_html(),
+                validate.xml_find(".//*[@data-video-id]"),
+                validate.union((
+                    validate.get("data-video-id"),
+                    validate.all(
+                        validate.get("data-video-has-token"),
+                        validate.transform(lambda val: val and val != "false"),
+                    ),
+                    validate.get("data-vjs-clip-hls-url"),
+                    validate.get("data-vjs-clip-dash-url"),
+                )),
+            ),
+        )
 
-        plmatch = self._playlist_re.search(res.text)
-        idmatch = self._data_id_re.search(res.text)
+        if dash_url and has_token:
+            token = self._get_stream_token(stream_id, "dash")
+            parsed = urlsplit(dash_url)
+            dash_url = urlunsplit(parsed._replace(path=f"{token}{parsed.path}"))
+            return DASHStream.parse_manifest(
+                self.session,
+                dash_url,
+                headers={"Referer": self.url},
+            )
 
-        hls_url = plmatch and plmatch.group("url")
-        stream_id = idmatch and idmatch.group("id")
+        if not hls_url:
+            return
 
-        tokens = self.get_url_tokens(stream_id)
+        if has_token:
+            token = self._get_stream_token(stream_id, "hls")
+            hls_url = f"{hls_url}?{token}"
 
-        if hls_url:
-            log.debug("HLS URL: {0}".format(hls_url))
-            log.debug("Tokens: {0}".format(tokens))
-            return HLSStream.parse_variant_playlist(self.session,
-                                                    hls_url + "?" + tokens,
-                                                    headers={"User-Agent": useragents.CHROME,
-                                                             "Referer": self.url})
+        return HLSStream.parse_variant_playlist(
+            self.session,
+            hls_url,
+            headers={"Referer": self.url},
+        )
 
 
 __plugin__ = Vidio
