@@ -508,8 +508,13 @@ class MuxedHLSStream(MuxedStream):
         ffmpeg_options = ffmpeg_options or {}
 
         super().__init__(session, *substreams, format="mpegts", maps=maps, **ffmpeg_options)
-        self.url_master = url_master
+        self._url_master = url_master
         self.multivariant = multivariant if multivariant and multivariant.is_master else None
+
+    @property
+    def url_master(self):
+        """Deprecated"""
+        return self.multivariant.uri if self.multivariant and self.multivariant.uri else self._url_master
 
     def to_manifest_url(self):
         url = self.multivariant.uri if self.multivariant and self.multivariant.uri else self.url_master
@@ -551,7 +556,7 @@ class HLSStream(HTTPStream):
         """
 
         super().__init__(session_, url, **args)
-        self.url_master = url_master
+        self._url_master = url_master
         self.multivariant = multivariant if multivariant and multivariant.is_master else None
         self.force_restart = force_restart
         self.start_offset = start_offset
@@ -569,6 +574,11 @@ class HLSStream(HTTPStream):
         del json["body"]
 
         return json
+
+    @property
+    def url_master(self):
+        """Deprecated"""
+        return self.multivariant.uri if self.multivariant and self.multivariant.uri else self._url_master
 
     def to_manifest_url(self):
         url = self.multivariant.uri if self.multivariant and self.multivariant.uri else self.url_master
