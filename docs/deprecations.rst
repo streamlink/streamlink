@@ -1,6 +1,17 @@
 Deprecations
 ============
 
+streamlink 4.2.0
+----------------
+
+Deprecation of url_master in HLSStream
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The ``url_master`` parameter and attribute of the :py:class:`streamlink.stream.HLSStream`
+and :py:class:`streamlink.stream.MuxedHLSStream` classes have been deprecated in favor of the ``multivariant`` parameter
+and attribute. ``multivariant`` is an :py:class:`M3U8` reference of the parsed HLS multivariant playlist.
+
+
 streamlink 4.0.0
 ----------------
 
