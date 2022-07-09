@@ -1,5 +1,33 @@
 # Changelog
 
+## streamlink 4.2.0 (2022-07-09)
+
+Release highlights:
+
+- Added: new Windows portable builds ([#4581](https://github.com/streamlink/streamlink/pull/4581))
+- Added: more dependency versions to debug log header ([#4575](https://github.com/streamlink/streamlink/pull/4575))
+- Added: parsed multivariant playlist reference to `HLSStream` and `MuxedHLSStream` ([#4568](https://github.com/streamlink/streamlink/pull/4568))
+- Fixed: unnecessary delay when closing `DASHStream`s ([#4630](https://github.com/streamlink/streamlink/pull/4630))
+- Fixed: `FFmpegMuxer` not closing sub-streams concurrently ([#4634](https://github.com/streamlink/streamlink/pull/4634))
+- Fixed: threading issue when closing `WebsocketClient` connections ([#4608](https://github.com/streamlink/streamlink/pull/4608))
+- Fixed: handling of `PluginError`s when outputting JSON data via `--json` ([#4590](https://github.com/streamlink/streamlink/pull/4590))
+- Fixed: broken YouTube plugin when setting custom authentication headers ([#4576](https://github.com/streamlink/streamlink/pull/4576))
+- Fixed: "source" Twitch VODs not being considered "best" ([#4625](https://github.com/streamlink/streamlink/pull/4625))
+- Fixed: and rewritten FilmOn plugin ([#4573](https://github.com/streamlink/streamlink/pull/4573))
+- Fixed: websocket issue in Twitcasting plugin ([#4608](https://github.com/streamlink/streamlink/pull/4608), [#4628](https://github.com/streamlink/streamlink/pull/4628))
+- Fixed: VK plugin ([#4613](https://github.com/streamlink/streamlink/pull/4613), [#4638](https://github.com/streamlink/streamlink/pull/4638))
+- Fixed: various other plugin issues (see full changelog)
+- New plugins: Aloula ([#4572](https://github.com/streamlink/streamlink/pull/4572))
+- Removed plugins: Eltrecetv ([#4593](https://github.com/streamlink/streamlink/pull/4593))
+- Docs: added openSUSE ([#4596](https://github.com/streamlink/streamlink/pull/4596)) and Scoop ([#4600](https://github.com/streamlink/streamlink/pull/4600)) packages
+- Docs: improved some links in CLI docs ([#4623](https://github.com/streamlink/streamlink/pull/4623))
+- Docs: upgraded `furo` theme to `2022.06.04.1`, require `sphinx` `>=4`, and replace `recommonmark` with `myst-parser` ([#4610](https://github.com/streamlink/streamlink/pull/4610))
+- Build: fixed outdated `python_requires` value in `setup.cfg` ([#4580](https://github.com/streamlink/streamlink/pull/4580))
+- Build: upgraded `versioningit` build dependency to `>=2.0.0 <3` ([#4597](https://github.com/streamlink/streamlink/pull/4597))
+
+[Full changelog](https://github.com/streamlink/streamlink/compare/4.1.0...4.2.0)
+
+
 ## streamlink 4.1.0 (2022-05-30)
 
 Release highlights:
