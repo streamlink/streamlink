@@ -99,6 +99,18 @@ class TestHLSVariantPlaylist(unittest.TestCase):
         stream = next(iter(streams.values()))
         assert repr(stream) == "<HLSStream ['hls', '{0}/720p.m3u8', '{0}/master.m3u8']>".format(base)
 
+        assert stream.multivariant is not None
+        assert stream.multivariant.uri == "{0}/master.m3u8".format(base)
+        assert stream.url_master == "{0}/master.m3u8".format(base)
+
+    def test_url_master(self):
+        session = Streamlink()
+        stream = HLSStream(session, "http://mocked/foo", url_master="http://mocked/master.m3u8")
+
+        assert stream.multivariant is None
+        assert stream.url == "http://mocked/foo"
+        assert stream.url_master == "http://mocked/master.m3u8"
+
 
 class EventedHLSReader(HLSStreamReader):
     __writer__ = EventedHLSStreamWriter

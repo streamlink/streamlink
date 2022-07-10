@@ -1,6 +1,26 @@
 Deprecations
 ============
 
+streamlink 2.27.4.0
+-------------------
+
+Deprecation of url_master in HLSStream
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The ``url_master`` parameter and attribute of the :py:class:`streamlink.stream.HLSStream`
+and :py:class:`streamlink.stream.MuxedHLSStream` classes have been deprecated in favor of the ``multivariant`` parameter
+and attribute. ``multivariant`` is an :py:class:`M3U8` reference of the parsed HLS multivariant playlist.
+
+
+Removal of streamlink.plugin.api.utils
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The ``streamlink.plugin.api.utils`` module including the ``itertags`` function and export aliases for ``streamlink.utils.parse``
+has been removed. Import the parse functions directly and find data in XML/HTML by parsing it via ``parse_{xml,html}`` and
+applying XPath queries to the parsed result via the available methods provided by the ``lxml.etree`` API. The
+``streamlink.plugin.api.validate`` module also has the necessary validation schema functions for this.
+
+
 streamlink 2.27.0.0
 -------------------
 
