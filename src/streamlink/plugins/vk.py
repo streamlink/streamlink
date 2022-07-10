@@ -7,6 +7,7 @@ $type live, vod
 
 import logging
 import re
+from hashlib import md5
 
 from streamlink.compat import parse_qsl, unquote, urlparse
 from streamlink.exceptions import NoStreamsError
@@ -14,6 +15,7 @@ from streamlink.plugin import Plugin, PluginError, pluginmatcher
 from streamlink.plugin.api import validate
 from streamlink.stream.dash import DASHStream
 from streamlink.stream.hls import HLSStream
+from streamlink.utils.url import update_qsd
 
 log = logging.getLogger(__name__)
 
@@ -26,6 +28,22 @@ log = logging.getLogger(__name__)
 ))
 class VK(Plugin):
     API_URL = "https://vk.com/al_video.php"
+    HASH_COOKIE = "hash429"
+
+    def _get_cookies(self):
+        def on_response(res, **kwargs):
+            if res.headers.get("x-waf-redirect") == "1":
+                if not res.headers.get("X-WAF-Backend-Status"):
+                    log.debug("Getting WAF cookie")
+                    cookie = res.cookies.get(self.HASH_COOKIE)
+                    key = md5(cookie.encode("utf-8")).hexdigest()
+                    res.headers["Location"] = update_qsd(res.headers["Location"], qsd={"key": key})
+                    return res
+                elif res.headers.get("X-WAF-Backend-Status") == "challenge_success":
+                    self.session.http.cookies.update(res.cookies)
+                    return res
+
+        self.session.http.get("https://vk.com/", hooks={"response": on_response})
 
     def _has_video_id(self):
         return any(m for m in self.matches[:-1])
@@ -57,21 +75,19 @@ class VK(Plugin):
         raise NoStreamsError(self.url)
 
     def _get_streams(self):
+        self._get_cookies()
         self.follow_vk_redirect()
 
         video_id = self.match.group("video_id")
         if not video_id:
             return
 
-        log.debug("video ID: {0}".format(video_id))
+        log.debug("Video ID: {0}".format(video_id))
         try:
             data = self.session.http.post(
                 self.API_URL,
-                params={
-                    "act": "show",
-                    "al": "1",
-                    "video": video_id,
-                },
+                params={"act": "show"},
+                data={"act": "show", "al": "1", "video": video_id},
                 headers={"Referer": self.url},
                 schema=validate.Schema(
                     validate.transform(lambda text: re.sub(r"^\s*<!--\s*", "", text)),
