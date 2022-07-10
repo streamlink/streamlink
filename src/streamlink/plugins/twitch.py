@@ -9,6 +9,7 @@ $notes Low latency streaming is supported
 import json
 import logging
 import re
+import sys
 from collections import namedtuple
 from random import random
 
@@ -517,6 +518,12 @@ class Twitch(Plugin):
             """
         )
     )
+
+    @classmethod
+    def stream_weight(cls, stream):
+        if stream == "source":
+            return sys.maxsize, stream
+        return super(Twitch, cls).stream_weight(stream)
 
     def __init__(self, url):
         super(Twitch, self).__init__(url)
