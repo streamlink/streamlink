@@ -9,7 +9,7 @@ from time import time
 
 from streamlink import PluginError, StreamError
 from streamlink.compat import range, urlparse, urlunparse
-from streamlink.stream.dash_manifest import MPD, freeze_timeline, sleep_until, utc
+from streamlink.stream.dash_manifest import MPD, Segment, freeze_timeline, utc
 from streamlink.stream.ffmpegmux import FFMPEGMuxer
 from streamlink.stream.segmented import SegmentedStreamReader, SegmentedStreamWorker, SegmentedStreamWriter
 from streamlink.stream.stream import Stream
@@ -20,6 +20,11 @@ log = logging.getLogger(__name__)
 
 
 class DASHStreamWriter(SegmentedStreamWriter):
+    @staticmethod
+    def _get_segment_name(segment):
+        # type: (Segment) -> str
+        return os.path.basename(urlparse(segment.url).path)
+
     def fetch(self, segment, retries=None):
         if self.closed or not retries:
             return
@@ -30,9 +35,11 @@ class DASHStreamWriter(SegmentedStreamWriter):
             now = datetime.datetime.now(tz=utc)
             if segment.available_at > now:
                 time_to_wait = (segment.available_at - now).total_seconds()
-                fname = os.path.basename(urlparse(segment.url).path)
+                fname = self._get_segment_name(segment)
                 log.debug("Waiting for segment: {fname} ({wait:.01f}s)".format(fname=fname, wait=time_to_wait))
-                sleep_until(segment.available_at)
+                if not self.wait(time_to_wait):
+                    log.debug("Waiting for segment: {0} aborted".format(fname))
+                    return
 
             if segment.range:
                 start, length = segment.range
@@ -52,14 +59,14 @@ class DASHStreamWriter(SegmentedStreamWriter):
             return self.fetch(segment, retries - 1)
 
     def write(self, segment, res, chunk_size=8192):
+        name = self._get_segment_name(segment)
         for chunk in res.iter_content(chunk_size):
-            if not self.closed:
-                self.reader.buffer.write(chunk)
-            else:
-                log.warning("Download of segment: {} aborted".format(segment.url))
+            if self.closed:
+                log.warning("Download of segment: {0} aborted".format(name))
                 return
+            self.reader.buffer.write(chunk)
 
-        log.debug("Download of segment: {} complete".format(segment.url))
+        log.debug("Download of segment: {0} complete".format(name))
 
 
 class DASHStreamWorker(SegmentedStreamWorker):

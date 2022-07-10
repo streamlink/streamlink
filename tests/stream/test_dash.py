@@ -355,25 +355,20 @@ class TestDASHStreamWorker(object):
     def worker(self, mpd):
         reader = MagicMock(representation_id=1, mime_type="video/mp4")
         worker = DASHStreamWorker(reader)
-        reader.representation_id = 1
-        reader.mime_type = "video/mp4"
+        worker.mpd = mpd
+        return worker
 
-        representation = Mock(id=1, mimeType="video/mp4", height=720)
-        segments = [Mock(url="init_segment"), Mock(url="first_segment"), Mock(url="second_segment")]
-        representation.segments.return_value = [segments[0]]
-        mpdClass.return_value = worker.mpd = Mock(dynamic=True,
-                                                  publishTime=1,
-                                                  periods=[
-                                                      Mock(adaptationSets=[
-                                                          Mock(contentProtection=None,
-                                                               representations=[
-                                                                   representation
-                                                               ])
-                                                      ])
-                                                  ])
-        worker.mpd.type = "dynamic"
-        worker.mpd.minimumUpdatePeriod.total_seconds.return_value = 0
-        worker.mpd.periods[0].duration.total_seconds.return_value = 0
+    def test_dynamic_reload(
+        self,
+        monkeypatch,     # type: pytest.MonkeyPatch
+        worker,          # type: DASHStreamWorker
+        representation,  # type: Mock
+        segments,        # type: List[Mock]
+        mpd,             # type: Mock
+    ):
+        mpd.dynamic = True
+        mpd.type = "dynamic"
+        monkeypatch.setattr("streamlink.stream.dash.MPD", lambda *args, **kwargs: mpd)
 
         segment_iter = worker.iter_segments()
 
@@ -382,6 +377,7 @@ class TestDASHStreamWorker(object):
         assert representation.segments.call_args_list == [call(init=True)]
         assert not worker._wait.is_set()
 
+        representation.segments.reset_mock()
         representation.segments.return_value = segments[1:]
         assert [next(segment_iter), next(segment_iter)] == segments[1:]
         assert representation.segments.call_args_list == [call(), call(init=False)]
@@ -448,5 +444,5 @@ class TestDASHStreamWorker(object):
                        ])
                    ])
 
-        self.assertEqual(representation_vid, DASHStreamWorker.get_representation(mpd, 1, "video/mp4"))
-        self.assertEqual(representation_aud, DASHStreamWorker.get_representation(mpd, 1, "audio/aac"))
+        assert DASHStreamWorker.get_representation(mpd, 1, "video/mp4") is representation_vid
+        assert DASHStreamWorker.get_representation(mpd, 1, "audio/aac") is representation_aud

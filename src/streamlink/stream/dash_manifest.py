@@ -5,7 +5,6 @@ import datetime
 import logging
 import math
 import re
-import time
 from collections import defaultdict, namedtuple
 from contextlib import contextmanager
 from itertools import count, repeat
@@ -59,13 +58,6 @@ def freeze_timeline(mpd):
     timelines = copy.copy(mpd.timelines)
     yield
     mpd.timelines = timelines
-
-
-def sleep_until(walltime):
-    c = datetime.datetime.now(tz=utc)
-    time_to_wait = (walltime - c).total_seconds()
-    if time_to_wait > 0:
-        time.sleep(time_to_wait)
 
 
 class MPDParsers(object):
