@@ -9,7 +9,6 @@ import logging
 import re
 
 from streamlink.buffers import RingBuffer
-from streamlink.compat import is_py2
 from streamlink.plugin import Plugin, PluginArgument, PluginArguments, PluginError, pluginmatcher
 from streamlink.plugin.api import validate
 from streamlink.plugin.api.websocket import WebsocketClient
@@ -104,10 +103,7 @@ class TwitCastingWsClient(WebsocketClient):
 
     def on_data(self, wsapp, data, data_type, cont):
         if data_type == self.OPCODE_TEXT:
-            if is_py2:
-                data = bytes(data)
-            else:
-                data = bytes(data, "utf-8")
+            return
 
         try:
             self.buffer.write(data)
