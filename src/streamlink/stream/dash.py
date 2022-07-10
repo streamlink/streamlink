@@ -4,10 +4,12 @@ import itertools
 import logging
 import os.path
 from collections import defaultdict
+from contextlib import contextmanager
+from time import time
 
 from streamlink import PluginError, StreamError
 from streamlink.compat import range, urlparse, urlunparse
-from streamlink.stream.dash_manifest import MPD, freeze_timeline, sleep_until, sleeper, utc
+from streamlink.stream.dash_manifest import MPD, freeze_timeline, sleep_until, utc
 from streamlink.stream.ffmpegmux import FFMPEGMuxer
 from streamlink.stream.segmented import SegmentedStreamReader, SegmentedStreamWorker, SegmentedStreamWriter
 from streamlink.stream.stream import Stream
@@ -66,6 +68,17 @@ class DASHStreamWorker(SegmentedStreamWorker):
         self.mpd = self.stream.mpd
         self.period = self.stream.period
 
+    @contextmanager
+    def sleeper(self, duration):
+        """
+        Do something and then wait for a given duration minus the time it took doing something
+        """
+        s = time()
+        yield
+        time_to_sleep = duration - (time() - s)
+        if time_to_sleep > 0:
+            self.wait(time_to_sleep)
+
     @staticmethod
     def get_representation(mpd, representation_id, mime_type):
         for aset in mpd.periods[0].adaptationSets:
@@ -79,28 +92,35 @@ class DASHStreamWorker(SegmentedStreamWorker):
         while not self.closed:
             # find the representation by ID
             representation = self.get_representation(self.mpd, self.reader.representation_id, self.reader.mime_type)
-            refresh_wait = max(self.mpd.minimumUpdatePeriod.total_seconds(),
-                               self.mpd.periods[0].duration.total_seconds()) or 5
 
             if self.mpd.type == "static":
                 refresh_wait = 5
+            else:
+                refresh_wait = max(
+                    self.mpd.minimumUpdatePeriod.total_seconds(),
+                    self.mpd.periods[0].duration.total_seconds(),
+                ) or 5
 
-            with sleeper(refresh_wait * back_off_factor):
-                if representation:
-                    for segment in representation.segments(init=init):
-                        if self.closed:
-                            break
-                        yield segment
-                        # log.debug("Adding segment {0} to queue", segment.url)
+            with self.sleeper(refresh_wait * back_off_factor):
+                if not representation:
+                    continue
 
-                    if self.mpd.type == "dynamic":
-                        if not self.reload():
-                            back_off_factor = max(back_off_factor * 1.3, 10.0)
-                        else:
-                            back_off_factor = 1
-                    else:
-                        return
-                    init = False
+                for segment in representation.segments(init=init):
+                    if self.closed:
+                        break
+                    yield segment
+
+                # close worker if type is not dynamic (all segments were put into writer queue)
+                if self.mpd.type != "dynamic":
+                    self.close()
+                    return
+
+                if not self.reload():
+                    back_off_factor = max(back_off_factor * 1.3, 10.0)
+                else:
+                    back_off_factor = 1
+
+                init = False
 
     def reload(self):
         if self.closed:

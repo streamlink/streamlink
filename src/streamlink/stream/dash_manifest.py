@@ -61,15 +61,6 @@ def freeze_timeline(mpd):
     mpd.timelines = timelines
 
 
-@contextmanager
-def sleeper(duration):
-    s = time.time()
-    yield
-    time_to_sleep = duration - (time.time() - s)
-    if time_to_sleep > 0:
-        time.sleep(time_to_sleep)
-
-
 def sleep_until(walltime):
     c = datetime.datetime.now(tz=utc)
     time_to_wait = (walltime - c).total_seconds()
