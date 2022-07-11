@@ -4,7 +4,7 @@
 # https://docs.netlify.com/configure-builds/file-based-configuration/#build-settings
 [build]
   command = """\
-    git fetch --tags \
+    git fetch --tags https://github.com/streamlink/streamlink.git \
       && pip install -U pip setuptools \
       && pip install -e . \
       && pip install -U -r docs-requirements.txt \
