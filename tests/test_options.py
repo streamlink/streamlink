@@ -3,6 +3,7 @@ import unittest
 from unittest.mock import Mock, patch
 
 from streamlink.options import Argument, Arguments, Options
+from streamlink_cli.argparser import ArgumentParser
 from streamlink_cli.main import setup_plugin_args, setup_plugin_options
 
 
@@ -116,7 +117,7 @@ class TestSetupOptions(unittest.TestCase):
     def test_setup_plugin_args(self):
         session = Mock()
         plugin = Mock()
-        parser = argparse.ArgumentParser(add_help=False)
+        parser = ArgumentParser(add_help=False)
         parser.add_argument("--global-arg1", default=123)
         parser.add_argument("--global-arg2", default=456)
 
@@ -131,9 +132,11 @@ class TestSetupOptions(unittest.TestCase):
         setup_plugin_args(session, parser)
 
         group_plugins = next((grp for grp in parser._action_groups if grp.title == "Plugin options"), None)  # pragma: no branch
-        self.assertIsNotNone(group_plugins, "Adds the 'Plugin options' arguments group")
-        group_plugin = next((grp for grp in group_plugins._action_groups if grp.title == "Mock"), None)  # pragma: no branch
-        self.assertIsNotNone(group_plugin, "Adds the 'Mock' arguments group to the 'Plugin options' group")
+        assert group_plugins is not None, "Adds the 'Plugin options' arguments group"
+        assert group_plugins in parser.NESTED_ARGUMENT_GROUPS[None], "Adds the 'Plugin options' arguments group"
+        group_plugin = next((grp for grp in parser._action_groups if grp.title == "Mock"), None)  # pragma: no branch
+        assert group_plugin is not None, "Adds the 'Mock' arguments group"
+        assert group_plugin in parser.NESTED_ARGUMENT_GROUPS[group_plugins], "Adds the 'Mock' arguments group"
         self.assertEqual(
             [item for action in group_plugin._group_actions for item in action.option_strings],
             ["--mock-test1", "--mock-test2", "--mock-test3"],
@@ -154,7 +157,7 @@ class TestSetupOptions(unittest.TestCase):
     def test_setup_plugin_options(self):
         session = Mock()
         plugin = Mock(module="plugin")
-        parser = argparse.ArgumentParser()
+        parser = ArgumentParser()
         parser.add_argument("--foo-foo", default=123)
 
         session.plugins = {"plugin": plugin}
