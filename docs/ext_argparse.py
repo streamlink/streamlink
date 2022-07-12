@@ -131,21 +131,22 @@ class ArgparseDirective(Directive):
                 yield f"    **Supported plugins:** {', '.join(action.plugins)}"
                 yield ""
 
-    def generate_parser_rst(self, parser, depth=0):
+    def generate_parser_rst(self, parser, parent=None, depth=0):
         if depth >= len(self._headlines):
             return
-        for group in parser._action_groups:
+        for group in parser.NESTED_ARGUMENT_GROUPS[parent]:
+            is_parent = group in parser.NESTED_ARGUMENT_GROUPS
             # Exclude empty groups
-            if not group._group_actions and not group._action_groups:
+            if not group._group_actions and not is_parent:
                 continue
             title = group.title
             yield ""
             yield title
             yield self._headlines[depth] * len(title)
             yield from self.generate_group_rst(group)
-            if group._action_groups:
+            if is_parent:
                 yield ""
-                yield from self.generate_parser_rst(group, depth + 1)
+                yield from self.generate_parser_rst(parser, group, depth + 1)
 
     def run(self):
         module = self.options.get("module")

@@ -25,7 +25,8 @@ class TestPluginUStreamTV(unittest.TestCase):
         from streamlink_cli.main import setup_plugin_args
         session = Streamlink()
         parser = MagicMock()
-        group = parser.add_argument_group("Plugin Options").add_argument_group("UStreamTV")
+        plugins = parser.add_argument_group("Plugin Options")
+        group = parser.add_argument_group("UStreamTV", parent=plugins)
 
         session.plugins = {
             'ustreamtv': UStreamTV
