@@ -24,7 +24,7 @@ from streamlink.exceptions import FatalPluginError
 from streamlink.plugin import Plugin, PluginOptions
 from streamlink.stream.stream import Stream, StreamIO
 from streamlink.utils.named_pipe import NamedPipe
-from streamlink_cli.argparser import build_parser
+from streamlink_cli.argparser import ArgumentParser, build_parser
 from streamlink_cli.compat import DeprecatedPath, importlib_metadata, is_win32, stdout
 from streamlink_cli.console import ConsoleOutput, ConsoleUserInputRequester
 from streamlink_cli.constants import CONFIG_FILES, DEFAULT_STREAM_METADATA, LOG_DIR, PLUGIN_DIRS, STREAM_SYNONYMS
@@ -855,13 +855,13 @@ def setup_options():
     streamlink.set_option("locale", args.locale)
 
 
-def setup_plugin_args(session, parser):
+def setup_plugin_args(session: Streamlink, parser: ArgumentParser):
     """Sets Streamlink plugin options."""
 
     plugin_args = parser.add_argument_group("Plugin options")
     for pname, plugin in session.plugins.items():
         defaults = {}
-        group = plugin_args.add_argument_group(pname.capitalize())
+        group = parser.add_argument_group(pname.capitalize(), parent=plugin_args)
 
         for parg in plugin.arguments:
             if not parg.is_global:
