@@ -59,7 +59,7 @@ class Vidio(Plugin):
             return DASHStream.parse_manifest(
                 self.session,
                 dash_url,
-                headers={"Referer": self.url},
+                headers={"Referer": "https://www.vidio.com/"},
             )
 
         if not hls_url:
@@ -72,7 +72,7 @@ class Vidio(Plugin):
         return HLSStream.parse_variant_playlist(
             self.session,
             hls_url,
-            headers={"Referer": self.url},
+            headers={"Referer": "https://www.vidio.com/"},
         )
 
 
