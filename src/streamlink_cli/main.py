@@ -13,7 +13,7 @@ from gettext import gettext
 from itertools import chain
 from pathlib import Path
 from time import sleep
-from typing import Any, Dict, List, Optional, Type, Union
+from typing import Any, Dict, Iterator, List, Optional, Type, Union
 
 import requests
 
@@ -29,7 +29,9 @@ from streamlink_cli.compat import DeprecatedPath, importlib_metadata, is_win32, 
 from streamlink_cli.console import ConsoleOutput, ConsoleUserInputRequester
 from streamlink_cli.constants import CONFIG_FILES, DEFAULT_STREAM_METADATA, LOG_DIR, PLUGIN_DIRS, STREAM_SYNONYMS
 from streamlink_cli.output import FileOutput, PlayerOutput
-from streamlink_cli.utils import Formatter, HTTPServer, datetime, ignored, progress
+from streamlink_cli.utils import Formatter, HTTPServer, datetime, ignored
+from streamlink_cli.utils.progress import Progress
+from streamlink_cli.utils.terminal import TerminalOutput
 
 
 ACCEPTABLE_ERRNO = (errno.EPIPE, errno.EINVAL, errno.ECONNRESET)
@@ -385,20 +387,14 @@ def read_stream(stream, output, prebuffer, formatter: Formatter, chunk_size=8192
         and (sys.stdout.isatty() or args.force_progress)
     )
 
-    stream_iterator = chain(
+    progress: Optional[Progress] = None
+    stream_iterator: Iterator = chain(
         [prebuffer],
         iter(partial(stream.read, chunk_size), b"")
     )
-    if show_progress:
-        stream_iterator = progress(
-            stream_iterator,
-            prefix=os.path.basename(output.filename)
-        )
-    elif show_record_progress:
-        stream_iterator = progress(
-            stream_iterator,
-            prefix=os.path.basename(output.record.filename)
-        )
+    if show_progress or show_record_progress:
+        progress = Progress(output=TerminalOutput(sys.stderr))
+        stream_iterator = progress.iter(stream_iterator)
 
     try:
         for data in stream_iterator:
@@ -426,6 +422,8 @@ def read_stream(stream, output, prebuffer, formatter: Formatter, chunk_size=8192
     except OSError as err:
         console.exit(f"Error when reading from stream: {err}, exiting")
     finally:
+        if progress:
+            progress.close()
         stream.close()
         log.info("Stream ended")
 
