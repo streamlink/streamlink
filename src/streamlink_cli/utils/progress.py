@@ -1,153 +1,161 @@
-import sys
 from collections import deque
-from shutil import get_terminal_size
+from math import floor
+from threading import Event, RLock, Thread
 from time import time
+from typing import Deque, Iterable, Iterator, Optional, Tuple
 
-from streamlink_cli.compat import is_win32
-
-PROGRESS_FORMATS = (
-    "[download][{prefix}] Written {written} ({elapsed} @ {speed}/s)",
-    "[download] Written {written} ({elapsed} @ {speed}/s)",
-    "[download] {written} ({elapsed} @ {speed}/s)",
-    "[download] {written} ({elapsed})",
-    "[download] {written}"
-)
-
-# widths generated from
-# http://www.unicode.org/Public/4.0-Update/EastAsianWidth-4.0.0.txt
-widths = [
-    (13, 1),    (15, 0),    (126, 1),   (159, 0),   (687, 1),   (710, 0),    # noqa: E241
-    (711, 1),   (727, 0),   (733, 1),   (879, 0),   (1154, 1),  (1161, 0),   # noqa: E241
-    (4347, 1),  (4447, 2),  (7467, 1),  (7521, 0),  (8369, 1),  (8426, 0),   # noqa: E241
-    (9000, 1),  (9002, 2),  (11021, 1), (12350, 2), (12351, 1), (12438, 2),  # noqa: E241
-    (12442, 0), (19893, 2), (19967, 1), (55203, 2), (63743, 1), (64106, 2),  # noqa: E241
-    (65039, 1), (65059, 0), (65131, 2), (65279, 1), (65376, 2), (65500, 1),  # noqa: E241
-    (65510, 2), (120831, 1), (262141, 2), (1114109, 1)                       # noqa: E241
-]
+from streamlink_cli.utils.terminal import TerminalOutput
 
 
-def get_width(o):
-    """Returns the screen column width for unicode ordinal."""
-    for num, wid in widths:
-        if o <= num:
-            return wid
-    return 1
+class ProgressFormatter:
+    FORMATS: Iterable[str] = (
+        "[download] Written {written} ({elapsed} @ {speed})",
+        "[download] {written} ({elapsed} @ {speed})",
+        "[download] {written} ({elapsed})",
+        "[download] {written}",
+    )
+    FORMATS_NOSPEED: Iterable[str] = (
+        "[download] Written {written} ({elapsed})",
+        "[download] {written} ({elapsed})",
+        "[download] {written}",
+    )
 
+    @classmethod
+    def format(cls, max_size: int, formats: Iterable[str] = FORMATS, **params) -> str:
+        output = ""
 
-def terminal_width(value):
-    """Returns the width of the string it would be when displayed."""
-    if isinstance(value, bytes):
-        value = value.decode("utf8", "ignore")
-    return sum(map(get_width, map(ord, value)))
+        for fmt in formats:
+            output = fmt.format(**params)
+            if len(output) <= max_size:
+                break
 
+        return output
 
-def get_cut_prefix(value, max_len):
-    """Drops Characters by unicode not by bytes."""
-    should_convert = isinstance(value, bytes)
-    if should_convert:
-        value = value.decode("utf8", "ignore")
-    for i in range(len(value)):
-        if terminal_width(value[i:]) <= max_len:
-            break
-    return value[i:].encode("utf8", "ignore") if should_convert else value[i:]
+    @staticmethod
+    def _round(num: float, n: int = 2) -> float:
+        return floor(num * 10 ** n) / 10 ** n
 
+    @classmethod
+    def format_filesize(cls, size: float, suffix: str = "") -> str:
+        if size < 1024:
+            return f"{size:.0f} bytes{suffix}"
+        if size < 2**20:
+            return f"{cls._round(size / 2**10, 2):.2f} KiB{suffix}"
+        if size < 2**30:
+            return f"{cls._round(size / 2**20, 2):.2f} MiB{suffix}"
+        if size < 2**40:
+            return f"{cls._round(size / 2**30, 2):.2f} GiB{suffix}"
 
-def print_inplace(msg):
-    """Clears out the previous line and prints a new one."""
-    term_width = get_terminal_size().columns
-    spacing = term_width - terminal_width(msg)
+        return f"{cls._round(size / 2**40, 2):.2f} TiB{suffix}"
 
-    # On windows we need one less space or we overflow the line for some reason.
-    if is_win32:
-        spacing -= 1
+    @classmethod
+    def format_time(cls, elapsed: float) -> str:
+        if elapsed < 0:
+            elapsed = 0
 
-    sys.stderr.write("\r{0}".format(msg))
-    sys.stderr.write(" " * max(0, spacing))
-    sys.stderr.flush()
+        hours = ""
+        minutes = ""
 
-
-def format_filesize(size):
-    """Formats the file size into a human readable format."""
-    for suffix in ("bytes", "KB", "MB", "GB", "TB"):
-        if size < 1024.0:
-            if suffix in ("GB", "TB"):
-                return "{0:3.2f} {1}".format(size, suffix)
+        if elapsed >= 3600:
+            hours = f"{int(elapsed / (60 * 60))}h"
+        if elapsed >= 60:
+            if elapsed >= 3600:
+                minutes = f"{int((elapsed % (60 * 60)) / 60):02d}m"
             else:
-                return "{0:3.1f} {1}".format(size, suffix)
+                minutes = f"{int((elapsed % (60 * 60)) / 60):1d}m"
 
-        size /= 1024.0
-
-
-def format_time(elapsed):
-    """Formats elapsed seconds into a human readable format."""
-    hours = int(elapsed / (60 * 60))
-    minutes = int((elapsed % (60 * 60)) / 60)
-    seconds = int(elapsed % 60)
-
-    rval = ""
-    if hours:
-        rval += "{0}h".format(hours)
-
-    if elapsed > 60:
-        rval += "{0}m".format(minutes)
-
-    rval += "{0}s".format(seconds)
-    return rval
+        if elapsed >= 60:
+            return f"{hours}{minutes}{int(elapsed % 60):02d}s"
+        else:
+            return f"{hours}{minutes}{int(elapsed % 60):1d}s"
 
 
-def create_status_line(**params):
-    """Creates a status line with appropriate size."""
-    max_size = get_terminal_size().columns - 1
+class Progress(Thread):
+    def __init__(
+        self,
+        output: Optional[TerminalOutput] = None,
+        formatter: Optional[ProgressFormatter] = None,
+        interval: float = 0.25,
+        history: int = 20,
+        threshold: int = 2,
+    ):
+        """
+        :param output: The output class
+        :param formatter: The formatter class
+        :param interval: Time in seconds between updates
+        :param history: Number of seconds of how long download speed history is kept
+        :param threshold: Number of seconds until download speed is shown
+        """
 
-    for fmt in PROGRESS_FORMATS:
-        status = fmt.format(**params)
+        super().__init__(daemon=True)
+        self._wait = Event()
+        self._lock = RLock()
 
-        if len(status) <= max_size:
-            break
+        if output is None:
+            output = TerminalOutput()
+        if formatter is None:
+            formatter = ProgressFormatter()
 
-    return status
+        self.output: TerminalOutput = output
+        self.formatter: ProgressFormatter = formatter
 
+        self.interval: float = interval
+        self.history: Deque[Tuple[float, int]] = deque(maxlen=int(history / interval))
+        self.threshold: int = int(threshold / interval)
 
-def progress(iterator, prefix):
-    """Progress an iterator and updates a pretty status line to the terminal.
+        self.started: float = 0.0
+        self.overall: int = 0
+        self.written: int = 0
 
-    The status line contains:
-     - Amount of data read from the iterator
-     - Time elapsed
-     - Average speed, based on the last few seconds.
-    """
-    if terminal_width(prefix) > 25:
-        prefix = (".." + get_cut_prefix(prefix, 23))
-    speed_updated = start = time()
-    speed_written = written = 0
-    speed_history = deque(maxlen=5)
+    def close(self):
+        self._wait.set()
 
-    for data in iterator:
-        yield data
+    def put(self, chunk: bytes):
+        size = len(chunk)
+        with self._lock:
+            self.overall += size
+            self.written += size
 
-        now = time()
-        elapsed = now - start
-        written += len(data)
+    def iter(self, iterator: Iterator[bytes]) -> Iterator[bytes]:
+        self.start()
+        try:
+            for chunk in iterator:
+                self.put(chunk)
+                yield chunk
+        finally:
+            self.close()
 
-        speed_elapsed = now - speed_updated
-        if speed_elapsed >= 0.5:
-            speed_history.appendleft((
-                written - speed_written,
-                speed_updated,
-            ))
-            speed_updated = now
-            speed_written = written
+    def run(self):
+        self.started = time()
+        try:
+            while not self._wait.wait(self.interval):
+                self.update()
+        finally:
+            self.output.end()
 
-            speed_history_written = sum(h[0] for h in speed_history)
-            speed_history_elapsed = now - speed_history[-1][1]
-            speed = speed_history_written / speed_history_elapsed
+    def update(self):
+        with self._lock:
+            now = time()
+            formatter = self.formatter
+            history = self.history
 
-            status = create_status_line(
-                prefix=prefix,
-                written=format_filesize(written),
-                elapsed=format_time(elapsed),
-                speed=format_filesize(speed)
+            history.append((now, self.written))
+            self.written = 0
+
+            has_history = len(history) >= self.threshold
+            if not has_history:
+                formats = formatter.FORMATS_NOSPEED
+                speed = ""
+            else:
+                formats = formatter.FORMATS
+                speed = formatter.format_filesize(sum(size for _, size in history) / (now - history[0][0]), "/s")
+
+            status = self.formatter.format(
+                self.output.term_width() - 1,
+                formats,
+                written=formatter.format_filesize(self.overall),
+                elapsed=formatter.format_time(now - self.started),
+                speed=speed,
             )
-            print_inplace(status)
-    sys.stderr.write("\n")
-    sys.stderr.flush()
+
+            self.output.print_inplace(status)
