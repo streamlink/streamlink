@@ -769,13 +769,13 @@ def build_parser():
 
         For example this will exclude streams ranked higher than "480p":
 
-          ">480p"
+          --stream-sorting-excludes ">480p"
 
         Multiple filters can be used by separating each expression with a comma.
 
         For example this will exclude streams from two quality types:
 
-          ">480p,>medium"
+          --stream-sorting-excludes ">480p,>medium"
 
         """
     )
@@ -1073,7 +1073,7 @@ def build_parser():
         can specify the location of the ffmpeg executable if it is not in your
         PATH.
 
-        Example: "/usr/local/bin/ffmpeg"
+        Example: --ffmpeg-ffmpeg "/usr/local/bin/ffmpeg"
         """
     )
     transport_ffmpeg.add_argument(
@@ -1100,7 +1100,7 @@ def build_parser():
 
         Default is "matroska".
 
-        Example: "mpegts"
+        Example: --ffmpeg-fout "mpegts"
         """
     )
     transport_ffmpeg.add_argument(
@@ -1111,7 +1111,7 @@ def build_parser():
 
         Default is "copy".
 
-        Example: "h264"
+        Example: --ffmpeg-video-transcode "h264"
         """
     )
     transport_ffmpeg.add_argument(
@@ -1122,7 +1122,7 @@ def build_parser():
 
         Default is "copy".
 
-        Example: "aac"
+        Example: --ffmpeg-audio-transcode "aac"
         """
     )
     transport_ffmpeg.add_argument(
@@ -1148,7 +1148,7 @@ def build_parser():
         help="""
         A HTTP proxy to use for all HTTP and HTTPS requests, including WebSocket connections.
 
-        Example: "http://hostname:port/"
+        Example: --http-proxy "http://hostname:port/"
         """
     )
     http.add_argument("--https-proxy", help=argparse.SUPPRESS)
