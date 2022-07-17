@@ -1,19 +1,57 @@
+from typing import Dict, Optional
 from unittest.mock import ANY, patch
 
 import pytest
 
+from streamlink import Streamlink
 from streamlink.stream.ffmpegmux import FFMPEGMuxer
+
+
+class TestCommand:
+    @pytest.fixture(autouse=True)
+    def resolve_command_cache_clear(self):
+        FFMPEGMuxer.resolve_command.cache_clear()
+        yield
+        FFMPEGMuxer.resolve_command.cache_clear()
+
+    def test_cache(self):
+        session = Streamlink()
+        with patch("streamlink.stream.ffmpegmux.which", return_value="some_value") as mock:
+            assert FFMPEGMuxer.command(session) == "some_value"
+            assert FFMPEGMuxer.command(session) == "some_value"
+            assert len(mock.call_args_list) == 1
+        with patch("streamlink.stream.ffmpegmux.which", return_value="other_value") as mock:
+            assert FFMPEGMuxer.command(session) == "some_value"
+            assert len(mock.call_args_list) == 0
+
+    @pytest.mark.parametrize("command,which,expected", [
+        pytest.param(None, {"ffmpeg": None, "avconv": None}, None, id="resolver-negative"),
+        pytest.param(None, {"ffmpeg": None, "avconv": "avconv"}, "avconv", id="resolver-avconv"),
+        pytest.param(None, {"ffmpeg": "ffmpeg"}, "ffmpeg", id="resolver-posix"),
+        pytest.param(None, {"ffmpeg": "ffmpeg.exe"}, "ffmpeg.exe", id="resolver-windows"),
+        pytest.param("custom", {"ffmpeg": "ffmpeg"}, None, id="custom-negative"),
+        pytest.param("custom", {"ffmpeg": "ffmpeg", "custom": "custom"}, "custom", id="custom-positive"),
+    ])
+    def test_no_cache(self, command: Optional[str], which: Dict, expected: Optional[str]):
+        session = Streamlink({"ffmpeg-ffmpeg": command})
+        with patch("streamlink.stream.ffmpegmux.which", side_effect=lambda value: which.get(value)):
+            assert FFMPEGMuxer.command(session) == expected
+
+    @pytest.mark.parametrize("resolved,expected", [
+        pytest.param(None, False, id="negative"),
+        pytest.param("ffmpeg", True, id="positive"),
+    ])
+    def test_is_usable(self, resolved, expected):
+        session = Streamlink()
+        with patch("streamlink.stream.ffmpegmux.which", return_value=resolved):
+            assert FFMPEGMuxer.is_usable(session) is expected
 
 
 @pytest.fixture
 def session():
-    from streamlink import Streamlink
-    return Streamlink()
-
-
-def test_ffmpeg_command(session):
-    with patch('streamlink.stream.ffmpegmux.which', return_value="ffmpeg"):
-        assert FFMPEGMuxer.command(session) == "ffmpeg"
+    FFMPEGMuxer.resolve_command.cache_clear()
+    yield Streamlink()
+    FFMPEGMuxer.resolve_command.cache_clear()
 
 
 def test_ffmpeg_open(session):
