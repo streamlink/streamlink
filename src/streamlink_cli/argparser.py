@@ -653,8 +653,8 @@ def build_parser():
 
         These characters are replaced with an underscore for the rules in use:
 
-          POSIX  : \\x00-\\x1F /
-          Windows: \\x00-\\x1F \\x7F " * / : < > ? \\ |
+        - POSIX: \\x00-\\x1F /
+        - Windows: \\x00-\\x1F \\x7F " * / : < > ? \\ |
         """
     )
 
@@ -911,9 +911,9 @@ def build_parser():
         Set a custom HLS playlist reload time value, either in seconds
         or by using one of the following keywords:
 
-            segment: The duration of the last segment in the current playlist
-            live-edge: The sum of segment durations of the live edge value minus one
-            default: The playlist's target duration metadata
+        - segment: The duration of the last segment in the current playlist
+        - live-edge: The sum of segment durations of the live edge value minus one
+        - default: The playlist's target duration metadata
 
         Default is default.
         """
