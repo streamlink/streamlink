@@ -146,7 +146,11 @@ class NicoLive(Plugin):
             argument_name="niconico-timeshift-offset",
             metavar="[HH:]MM:SS",
             default=None,
-            help="Amount of time to skip from the beginning of a stream. Default is 00:00:00."
+            help="""
+            Amount of time to skip from the beginning of a stream.
+
+            Default is 00:00:00.
+            """
         )
     )
 
