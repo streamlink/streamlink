@@ -362,14 +362,14 @@ def build_parser():
         "-4", "--ipv4",
         action="store_true",
         help="""
-        Resolve address names to IPv4 only. This option overrides :option:`-6`.
+        Resolve address names to IPv4 only. This option overrides --ipv6.
         """
     )
     general.add_argument(
         "-6", "--ipv6",
         action="store_true",
         help="""
-        Resolve address names to IPv6 only. This option overrides :option:`-4`.
+        Resolve address names to IPv6 only. This option overrides --ipv4.
         """
     )
 
@@ -1082,7 +1082,7 @@ def build_parser():
         "--ffmpeg-start-at-zero",
         action="store_true",
         help="""
-        Enable the -start_at_zero ffmpeg option when using copyts.
+        Enable the -start_at_zero ffmpeg option when using --ffmpeg-copyts.
         """
     )
 
