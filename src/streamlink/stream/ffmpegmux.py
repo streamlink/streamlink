@@ -3,7 +3,9 @@ import logging
 import subprocess
 import sys
 import threading
+from functools import lru_cache
 from shutil import which
+from typing import Optional
 
 from streamlink import StreamError
 from streamlink.compat import devnull
@@ -69,10 +71,31 @@ class MuxedStream(Stream):
 
 
 class FFMPEGMuxer(StreamIO):
-    __commands__ = ['ffmpeg', 'ffmpeg.exe', 'avconv', 'avconv.exe']
+    __commands__ = ["ffmpeg", "avconv"]
+
     DEFAULT_OUTPUT_FORMAT = "matroska"
     DEFAULT_VIDEO_CODEC = "copy"
     DEFAULT_AUDIO_CODEC = "copy"
+
+    @classmethod
+    def is_usable(cls, session):
+        return cls.command(session) is not None
+
+    @classmethod
+    def command(cls, session):
+        return cls.resolve_command(session.options.get("ffmpeg-ffmpeg"))
+
+    @classmethod
+    @lru_cache(maxsize=128)
+    def resolve_command(cls, command: Optional[str] = None) -> Optional[str]:
+        if command:
+            return which(command)
+        resolved = None
+        for cmd in cls.__commands__:
+            resolved = which(cmd)
+            if resolved:
+                break
+        return resolved
 
     @staticmethod
     def copy_to_pipe(stream: StreamIO, pipe: NamedPipeBase):
@@ -155,19 +178,6 @@ class FFMPEGMuxer(StreamIO):
         self.process = subprocess.Popen(self._cmd, stdout=subprocess.PIPE, stdin=subprocess.PIPE, stderr=self.errorlog)
 
         return self
-
-    @classmethod
-    def is_usable(cls, session):
-        return cls.command(session) is not None
-
-    @classmethod
-    def command(cls, session):
-        command = []
-        if session.options.get("ffmpeg-ffmpeg"):
-            command.append(session.options.get("ffmpeg-ffmpeg"))
-        for cmd in command or cls.__commands__:
-            if which(cmd):
-                return cmd
 
     def read(self, size=-1):
         data = self.process.stdout.read(size)
