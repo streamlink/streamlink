@@ -284,7 +284,7 @@ def build_parser():
 
         User prompts and download progress won't be written to FILE.
 
-        A value of ``-`` will set the file name to an ISO8601-like string
+        A value of ``-`` (dash) will set the file name to an ISO8601-like string
         and will choose the following default log directories.
 
         Windows:
@@ -426,7 +426,7 @@ def build_parser():
 
         {{{0}}}
             This is the input that the player will use. For standard input (stdin),
-            it is ``-``, but it can also be a URL, depending on the options used.
+            it is ``-`` (dash), but it can also be a URL, depending on the options used.
 
         {{{1}}}
             The old fallback variable name with the same functionality.
@@ -743,7 +743,7 @@ def build_parser():
 
         The order will be used to separate streams when there are multiple
         streams with the same name but different stream types. Any stream type
-        not listed will be omitted from the available streams list.  A ``*`` can
+        not listed will be omitted from the available streams list.  An ``*`` (asterisk) can
         be used as a wildcard to match any other type of stream, eg. muxed-stream.
 
         Default is "rtmp,hls,http,*".
@@ -959,7 +959,7 @@ def build_parser():
         metavar="CODE",
         help="""
         Selects a specific audio source or sources, by language code or name,
-        when multiple audio sources are available. Can be * to download all
+        when multiple audio sources are available. Can be * (asterisk) to download all
         audio sources.
 
         Examples:
