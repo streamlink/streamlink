@@ -145,9 +145,9 @@ class Localization(object):
     @language_code.setter
     def language_code(self, language_code):
         is_system_locale = language_code is None
-        if language_code is None:
+        if is_system_locale:
             try:
-                language_code, _ = locale.getdefaultlocale()
+                language_code, _ = locale.getlocale()
             except ValueError:
                 language_code = None
             if language_code is None or language_code == "C":
@@ -158,13 +158,12 @@ class Localization(object):
             self.language, self.country = self._parse_locale_code(language_code)
             self._language_code = language_code
         except LookupError:
-            if is_system_locale:
-                # If the system locale returns an invalid code, use the default
-                self.language = self.get_language(DEFAULT_LANGUAGE)
-                self.country = self.get_country(DEFAULT_COUNTRY)
-                self._language_code = DEFAULT_LANGUAGE_CODE
-            else:
+            if not is_system_locale:
                 raise
+            # If the system locale returns an invalid code, use the default
+            self.language = self.get_language(DEFAULT_LANGUAGE)
+            self.country = self.get_country(DEFAULT_COUNTRY)
+            self._language_code = DEFAULT_LANGUAGE_CODE
         log.debug("Language code: {0}".format(self._language_code))
 
     def equivalent(self, language=None, country=None):
