@@ -26,14 +26,14 @@ class NBCNews(Plugin):
     token_url = 'https://tokens.playmakerservices.com/'
 
     api_schema = validate.Schema(
-        validate.transform(parse_json), 
+        validate.transform(parse_json),
         {
             'videoSources': [{
                 'cdnSources': {
                     'primary': [{
                         'sourceUrl': validate.url(),
                     }]
-                }                
+                }
             }],
         },
         validate.get('videoSources'),
