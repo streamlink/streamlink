@@ -27,6 +27,7 @@ _prog_re = re.compile(r"%\(prog\)s")
 _percent_re = re.compile(r"%%")
 _cli_metadata_variables_section_cross_link_re = re.compile(r"the \"Metadata variables\" section")
 _inline_code_block_re = re.compile(r"(?<!`)`([^`]+?)`")
+_example_inline_code_block_re = re.compile(r"(?<=^Example: )(.+)$", re.MULTILINE)
 
 
 def get_parser(module_name, attr):
@@ -60,6 +61,8 @@ class ArgparseDirective(Directive):
             ),
             help
         )
+
+        help = _example_inline_code_block_re.sub(r":code:`\1`", help)
 
         # Replace option references with links.
         # Do this before indenting blocks and notes.
