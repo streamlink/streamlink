@@ -292,12 +292,12 @@ class TestOpen:
     ])
     def test_ffmpeg_args(
         self,
-        session,    # type: Streamlink
-        popen,      # type: Mock
-        devnull,    # type: Mock
-        options,    # type: Dict
-        muxer_args, # type: Dict
-        expected,   # type: List
+        session,     # type: Streamlink
+        popen,       # type: Mock
+        devnull,     # type: Mock
+        options,     # type: Dict
+        muxer_args,  # type: Dict
+        expected,    # type: List
     ):
         session.options.update(options)
         streamio = FFMPEGMuxer(session, **muxer_args)
@@ -312,3 +312,28 @@ class TestOpen:
 
         streamio.close()
         assert not devnull.close.called
+
+    def test_stderr(self, session, popen):
+        # type: (Streamlink, Mock)
+        session.options.update({"ffmpeg-verbose": True})
+        with patch("streamlink.stream.ffmpegmux.sys.stderr") as mock_stderr:
+            streamio = FFMPEGMuxer(session)
+
+            streamio.open()
+            assert popen.call_args_list[0][1]["stderr"] is mock_stderr
+
+            streamio.close()
+            assert not mock_stderr.close.called
+
+    def test_stderr_path(self, session, popen):
+        # type: (Streamlink, Mock)
+        session.options.update({"ffmpeg-verbose-path": "foo"})
+        with patch("streamlink.stream.ffmpegmux.open") as mock_open:
+            file = mock_open("foo", "w")    # type: Mock
+            streamio = FFMPEGMuxer(session)
+
+            streamio.open()
+            assert popen.call_args_list[0][1]["stderr"] is file
+
+            streamio.close()
+            assert file.close.called
