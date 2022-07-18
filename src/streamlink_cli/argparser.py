@@ -3,6 +3,7 @@ import numbers
 import re
 from string import printable
 from textwrap import dedent
+from typing import Dict, List, Optional
 
 from streamlink import __version__ as streamlink_version, logger
 from streamlink.utils.args import (
@@ -26,6 +27,27 @@ _option_re = re.compile(r"""
 
 
 class ArgumentParser(argparse.ArgumentParser):
+    # noinspection PyUnresolvedReferences,PyProtectedMember
+    NESTED_ARGUMENT_GROUPS = None  # type: Dict[Optional[argparse._ArgumentGroup], List[argparse._ArgumentGroup]]
+
+    def __init__(self, *args, **kwargs):
+        self.NESTED_ARGUMENT_GROUPS = {}
+        super(ArgumentParser, self).__init__(*args, **kwargs)
+
+    # noinspection PyUnresolvedReferences,PyProtectedMember
+    def add_argument_group(
+        self,
+        *args,
+        **kwargs
+    ):
+        parent = kwargs.pop("parent", None)  # type: Optional[argparse._ArgumentGroup]
+        group = super(ArgumentParser, self).add_argument_group(*args, **kwargs)
+        if parent not in self.NESTED_ARGUMENT_GROUPS:
+            self.NESTED_ARGUMENT_GROUPS[parent] = [group]
+        else:
+            self.NESTED_ARGUMENT_GROUPS[parent].append(group)
+        return group
+
     def convert_arg_line_to_args(self, line):
         # Strip any non-printable characters that might be in the
         # beginning of the line (e.g. Unicode BOM marker).
@@ -87,16 +109,18 @@ class ArgumentParser(argparse.ArgumentParser):
         # description
         formatter.add_text(self.description)
 
-        def format_group(group):
+        def format_group(parent):
+            if parent not in self.NESTED_ARGUMENT_GROUPS:
+                return
             # positionals, optionals and user-defined groups
-            for action_group in group._action_groups:
+            for action_group in self.NESTED_ARGUMENT_GROUPS[parent]:
                 formatter.start_section(action_group.title)
                 formatter.add_text(action_group.description)
                 formatter.add_arguments(action_group._group_actions)
                 format_group(action_group)
                 formatter.end_section()
 
-        format_group(self)
+        format_group(None)
 
         # epilog
         formatter.add_text(self.epilog)
@@ -118,11 +142,10 @@ class HelpFormatter(argparse.RawDescriptionHelpFormatter):
     def __init__(self, max_help_position=4, *args, **kwargs):
         # A smaller indent for args help.
         kwargs["max_help_position"] = max_help_position
-        argparse.RawDescriptionHelpFormatter.__init__(self, *args, **kwargs)
+        super(HelpFormatter, self).__init__(*args, **kwargs)
 
     def _split_lines(self, text, width):
-        text = dedent(text).strip() + "\n\n"
-        return text.splitlines()
+        return "{0}\n\n".format(dedent(text).strip()).splitlines()
 
 
 def build_parser():
@@ -758,10 +781,10 @@ def build_parser():
     )
 
     transport = parser.add_argument_group("Stream transport options")
-    transport_hls = transport.add_argument_group("HLS options")
-    transport_rtmp = transport.add_argument_group("RTMP options")
-    transport_subprocess = transport.add_argument_group("Subprocess options")
-    transport_ffmpeg = transport.add_argument_group("FFmpeg options")
+    transport_hls = parser.add_argument_group("HLS options", parent=transport)
+    transport_rtmp = parser.add_argument_group("RTMP options", parent=transport)
+    transport_subprocess = parser.add_argument_group("Subprocess options", parent=transport)
+    transport_ffmpeg = parser.add_argument_group("FFmpeg options", parent=transport)
 
     transport.add_argument(
         "--ringbuffer-size",
@@ -1222,4 +1245,4 @@ def build_parser():
     return parser
 
 
-__all__ = ["build_parser"]
+__all__ = ["ArgumentParser", "build_parser"]

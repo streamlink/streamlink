@@ -23,7 +23,7 @@ from streamlink.plugin import PluginOptions
 from streamlink.stream.streamprocess import StreamProcess
 from streamlink.utils.encoding import get_filesystem_encoding, maybe_decode
 from streamlink.utils.named_pipe import NamedPipe
-from streamlink_cli.argparser import build_parser
+from streamlink_cli.argparser import ArgumentParser, build_parser
 from streamlink_cli.compat import importlib_metadata, is_py2, is_win32, stdout
 from streamlink_cli.console import ConsoleOutput, ConsoleUserInputRequester
 from streamlink_cli.constants import CONFIG_FILES, DEFAULT_STREAM_METADATA, LOG_DIR, PLUGINS_DIR, STREAM_SYNONYMS
@@ -865,12 +865,13 @@ def setup_options():
 
 
 def setup_plugin_args(session, parser):
+    # type: (Streamlink, ArgumentParser)
     """Sets Streamlink plugin options."""
 
     plugin_args = parser.add_argument_group("Plugin options")
     for pname, plugin in session.plugins.items():
         defaults = {}
-        group = plugin_args.add_argument_group(pname.capitalize())
+        group = parser.add_argument_group(pname.capitalize(), parent=plugin_args)
 
         for parg in plugin.arguments:
             if not parg.is_global:
