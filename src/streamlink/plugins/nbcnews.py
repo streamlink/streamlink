@@ -9,7 +9,8 @@ import re
 
 from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.api import validate
-from streamlink.stream.hls import HLSStream
+from streamlink.stream import HLSStream
+from streamlink.utils import parse_json
 
 log = logging.getLogger(__name__)
 
@@ -21,23 +22,30 @@ class NBCNews(Plugin):
     json_data_re = re.compile(
         r'<script type="application/ld\+json">({.*?})</script>'
     )
-    api_url = 'https://stream.nbcnews.com/data/live_sources_{}.json'
+    api_url = 'https://api-leap.nbcsports.com/feeds/assets/{}?application=NBCNews&format=nbc-player&platform=desktop'
     token_url = 'https://tokens.playmakerservices.com/'
 
     api_schema = validate.Schema(
-        validate.parse_json(),
+        validate.transform(parse_json), 
         {
             'videoSources': [{
-                'sourceUrl': validate.url(),
-                'type': validate.text,
+                'cdnSources': {
+                    'primary': [{
+                        'sourceUrl': validate.url(),
+                    }]
+                }                
             }],
         },
         validate.get('videoSources'),
         validate.get(0),
+        validate.get('cdnSources'),
+        validate.get('primary'),
+        validate.get(0),
+        validate.get('sourceUrl'),
     )
 
     token_schema = validate.Schema(
-        validate.parse_json(),
+        validate.transform(parse_json),
         {'akamai': [{
             'tokenizedUrl': validate.url(),
         }]},
@@ -50,7 +58,7 @@ class NBCNews(Plugin):
         validate.transform(json_data_re.search),
         validate.any(None, validate.all(
             validate.get(1),
-            validate.parse_json(),
+            validate.transform(parse_json),
             {"embedUrl": validate.url()},
             validate.get("embedUrl"),
             validate.transform(lambda url: url.split("/")[-1])
@@ -67,10 +75,6 @@ class NBCNews(Plugin):
 
         api_url = self.api_url.format(video_id)
         stream = self.session.http.get(api_url, schema=self.api_schema)
-        log.trace('{0!r}'.format(stream))
-        if stream['type'].lower() != 'live':
-            log.error('Invalid stream type "{0}"'.format(stream['type']))
-            return
 
         json_post_data = {
             'requestorId': 'nbcnews',
@@ -83,7 +87,7 @@ class NBCNews(Plugin):
             'inPath': 'false',
             'authenticationType': 'unauth',
             'cdn': 'akamai',
-            'url': stream['sourceUrl'],
+            'url': stream,
         }
         url = self.session.http.post(
             self.token_url,
