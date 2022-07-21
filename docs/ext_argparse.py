@@ -26,6 +26,8 @@ _option_line_re = re.compile(r"^(?!\s{2,}%\(prog\)s|\s{2,}--\w[\w-]*\w\b|Example
 _option_re = re.compile(r"(?:^|(?<=\s))(--\w[\w-]*\w)\b")
 _prog_re = re.compile(r"%\(prog\)s")
 _percent_re = re.compile(r"%%")
+_cli_metadata_variables_section_cross_link_re = re.compile(r"the \"Metadata variables\" section")
+_inline_code_block_re = re.compile(r"(?<!`)`([^`]+?)`")
 
 
 def get_parser(module_name, attr):
@@ -52,6 +54,13 @@ class ArgparseDirective(Directive):
         # Dedent the help to make sure we are always dealing with
         # non-indented text.
         help = dedent(help)
+
+        help = _inline_code_block_re.sub(
+            lambda m: (
+                ":code:`{0}`".format(m.group(1).replace('\\', '\\\\'))
+            ),
+            help
+        )
 
         # Replace option references with links.
         # Do this before indenting blocks and notes.
