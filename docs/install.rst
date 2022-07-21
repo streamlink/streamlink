@@ -375,8 +375,8 @@ See the `commit log <streamlink-master_>`_ of Steamlink's master branch for all 
 .. _streamlink/windows-builds: https://github.com/streamlink/windows-builds
 .. _streamlink/python-windows-embed: https://github.com/streamlink/python-windows-embed
 .. _streamlink/FFmpeg-Builds: https://github.com/streamlink/FFmpeg-Builds
-.. _windows-stable: https://github.com/streamlink/windows-installer/releases
-.. _windows-nightly: https://github.com/streamlink/windows-installer/actions?query=event%3Aschedule+is%3Asuccess+branch%3Amaster
+.. _windows-stable: https://github.com/streamlink/windows-builds/releases
+.. _windows-nightly: https://github.com/streamlink/windows-builds/actions?query=event%3Aschedule+is%3Asuccess+branch%3Amaster
 .. _streamlink-master: https://github.com/streamlink/streamlink/commits/master
 
 
