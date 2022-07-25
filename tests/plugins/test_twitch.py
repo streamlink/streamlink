@@ -8,6 +8,7 @@ from streamlink import Streamlink
 from streamlink.plugins.twitch import Twitch, TwitchHLSStream, TwitchHLSStreamReader, TwitchHLSStreamWriter
 from tests.mixins.stream_hls import EventedHLSStreamWriter, Playlist, Segment as _Segment, Tag, TestMixinStreamHLS
 from tests.plugins import PluginCanHandleUrl
+from tests.resources import text
 
 
 class TestPluginCanHandleUrlTwitch(PluginCanHandleUrl):
@@ -93,6 +94,25 @@ class _TwitchHLSStreamReader(TwitchHLSStreamReader):
 
 class _TwitchHLSStream(TwitchHLSStream):
     __reader__ = _TwitchHLSStreamReader
+
+
+def test_stream_weight():
+    session = Streamlink()
+    Twitch.bind(session, "tests.plugins.test_twitch")
+    plugin = Twitch("http://twitch.tv/foo")
+
+    with text("hls/test_master_twitch_vod.m3u8") as fh:
+        playlist = fh.read()
+    with requests_mock.Mocker() as mocker:
+        mocker.register_uri(requests_mock.ANY, requests_mock.ANY, exc=requests_mock.exceptions.InvalidRequest)
+        mocker.request(method="GET", url="http://mocked/master.m3u8", text=playlist)
+        streams = TwitchHLSStream.parse_variant_playlist(session, "http://mocked/master.m3u8")
+    with patch.object(plugin, "_get_streams", return_value=streams):
+        data = plugin.streams()
+
+    assert list(data.keys()) == ["audio", "160p30", "360p30", "480p30", "720p30", "720p60", "source", "worst", "best"]
+    assert data["best"] is data["source"]
+    assert data["worst"] is data["160p30"]
 
 
 @patch("streamlink.stream.hls.HLSStreamWorker.wait", MagicMock(return_value=True))

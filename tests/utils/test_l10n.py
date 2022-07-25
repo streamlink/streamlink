@@ -1,117 +1,156 @@
-import unittest
-from unittest.mock import patch
+from unittest.mock import Mock, patch
+
+import pytest
 
 import streamlink.utils.l10n as l10n
 
 
-class TestLocalization(unittest.TestCase):
-    def test_language_code_us(self):
-        locale = l10n.Localization("en_US")
-        self.assertEqual("en_US", locale.language_code)
+class TestLocalization:
+    @pytest.mark.parametrize("locale,expected", [
+        ("en_US", "en_US"),
+        ("ko_KR", "ko_KR"),
+    ])
+    def test_valid(self, locale, expected):
+        locale = l10n.Localization(locale)
+        assert locale.language_code == expected
 
-    def test_language_code_kr(self):
-        locale = l10n.Localization("ko_KR")
-        self.assertEqual("ko_KR", locale.language_code)
+    @pytest.mark.parametrize("locale", [
+        "enUS",
+        "eng_US",
+        "en_USA",
+    ])
+    def test_invalid(self, locale):
+        with pytest.raises(LookupError):
+            l10n.Localization(locale)
 
-    def test_bad_language_code(self):
-        self.assertRaises(LookupError, l10n.Localization, "enUS")
+    @pytest.mark.parametrize("mock_getlocale", [
+        Mock(return_value=(None, None)),
+        Mock(return_value=("en_150", None)),
+        Mock(side_effect=ValueError("unknown locale: foo_bar")),
+    ])
+    def test_default(self, mock_getlocale: Mock):
+        with patch("locale.getlocale", mock_getlocale):
+            locale = l10n.Localization()
+            assert locale.language_code == "en_US"
+            assert locale.equivalent(language="en", country="US")
 
-    def test_equivalent(self):
+    def test_setter(self):
+        with patch("locale.getlocale", Mock(return_value=(None, None))):
+            locale = l10n.Localization()
+            assert locale.language_code == "en_US"
+            assert locale.equivalent(language="en", country="US")
+
+            locale.language_code = "de_DE"
+            assert locale.language_code == "de_DE"
+            assert locale.equivalent(language="de", country="DE")
+
+
+class TestLocalizationEquality:
+    @pytest.mark.parametrize("language,country", [
+        (None, None),
+        ("eng", None),
+        ("en", None),
+        ("en", "CA"),
+        ("en", "CAN"),
+        ("en", "Canada"),
+    ])
+    def test_equivalent(self, language, country):
         locale = l10n.Localization("en_CA")
-        self.assertTrue(locale.equivalent())
-        self.assertTrue(locale.equivalent(language="eng"))
-        self.assertTrue(locale.equivalent(language="en"))
-        self.assertTrue(locale.equivalent(language="en", country="CA"))
-        self.assertTrue(locale.equivalent(language="en", country="CAN"))
-        self.assertTrue(locale.equivalent(language="en", country="Canada"))
+        assert locale.equivalent(language, country)
 
-    def test_equivalent_remap(self):
+    @pytest.mark.parametrize("language", [
+        "fra",
+        "fre",
+    ])
+    def test_equivalent_remap(self, language):
         locale = l10n.Localization("fr_FR")
-        self.assertTrue(locale.equivalent(language="fra"))
-        self.assertTrue(locale.equivalent(language="fre"))
+        assert locale.equivalent(language)
 
-    def test_not_equivalent(self):
+    @pytest.mark.parametrize("language,country", [
+        ("eng", None),
+        ("en", None),
+        ("en", "US"),
+        ("en", "Canada"),
+        ("en", "ES"),
+        ("en", "Spain"),
+        ("en", "UNKNOWN"),
+        ("UNKNOWN", "Spain"),
+    ])
+    def test_not_equivalent(self, language, country):
         locale = l10n.Localization("es_ES")
-        self.assertFalse(locale.equivalent(language="eng"))
-        self.assertFalse(locale.equivalent(language="en"))
-        self.assertFalse(locale.equivalent(language="en", country="US"))
-        self.assertFalse(locale.equivalent(language="en", country="Canada"))
-        self.assertFalse(locale.equivalent(language="en", country="ES"))
-        self.assertFalse(locale.equivalent(language="en", country="Spain"))
-        self.assertFalse(locale.equivalent(language="en", country="UNKNOWN"))
-        self.assertFalse(locale.equivalent(language="UNKNOWN", country="Spain"))
+        assert not locale.equivalent(language, country)
 
-    @patch("locale.getdefaultlocale")
-    def test_default(self, getdefaultlocale):
-        getdefaultlocale.return_value = (None, None)
-        locale = l10n.Localization()
-        self.assertEqual("en_US", locale.language_code)
-        self.assertTrue(locale.equivalent(language="en", country="US"))
 
-    @patch("locale.getdefaultlocale")
-    def test_default_invalid(self, getdefaultlocale):
-        getdefaultlocale.return_value = ("en_150", None)
-        locale = l10n.Localization()
-        self.assertEqual("en_US", locale.language_code)
-        self.assertTrue(locale.equivalent(language="en", country="US"))
+class TestCountry:
+    @pytest.mark.parametrize("country,attr,expected", [
+        ("USA", "alpha2", "US"),
+        ("GB", "alpha2", "GB"),
+        ("Canada", "name", "Canada"),
+    ])
+    def test_get_country(self, country, attr, expected):
+        assert getattr(l10n.Localization.get_country(country), attr) == expected
 
-    def test_get_country(self):
-        self.assertEqual("US",
-                         l10n.Localization.get_country("USA").alpha2)
-        self.assertEqual("GB",
-                         l10n.Localization.get_country("GB").alpha2)
-        self.assertEqual("Canada",
-                         l10n.Localization.get_country("Canada").name)
-
-    def test_get_country_miss(self):
-        self.assertRaises(LookupError, l10n.Localization.get_country, "XE")
-        self.assertRaises(LookupError, l10n.Localization.get_country, "XEX")
-        self.assertRaises(LookupError, l10n.Localization.get_country, "Nowhere")
-
-    def test_get_language(self):
-        self.assertEqual("eng",
-                         l10n.Localization.get_language("en").alpha3)
-        self.assertEqual("fre",
-                         l10n.Localization.get_language("fra").bibliographic)
-        self.assertEqual("fra",
-                         l10n.Localization.get_language("fre").alpha3)
-        self.assertEqual("gre",
-                         l10n.Localization.get_language("gre").bibliographic)
-
-    def test_get_language_miss(self):
-        self.assertRaises(LookupError, l10n.Localization.get_language, "00")
-        self.assertRaises(LookupError, l10n.Localization.get_language, "000")
-        self.assertRaises(LookupError, l10n.Localization.get_language, "0000")
+    @pytest.mark.parametrize("country", [
+        "XE",
+        "XEX",
+        "Nowhere",
+    ])
+    def test_get_country_miss(self, country):
+        with pytest.raises(LookupError):
+            l10n.Localization.get_country(country)
 
     def test_country_compare(self):
-        a = l10n.Country("AA", "AAA", "001", "Test")
-        b = l10n.Country("AA", "AAA", "001", "Test")
-        self.assertEqual(a, b)
+        assert l10n.Country("AA", "AAA", "001", "Test") == l10n.Country("AA", "AAA", "001", "Test")
+
+    def test_country_str(self):
+        assert str(l10n.Localization.get_country("Germany")) \
+               == "Country('DE', 'DEU', '276', 'Germany', official_name='Federal Republic of Germany')"
+
+
+class TestLanguage:
+    @pytest.mark.parametrize("language,attr,expected", [
+        ("en", "alpha3", "eng"),
+        ("fra", "bibliographic", "fre"),
+        ("fre", "alpha3", "fra"),
+        ("gre", "bibliographic", "gre"),
+    ])
+    def test_get_language(self, language, attr, expected):
+        assert getattr(l10n.Localization.get_language(language), attr) == expected
+
+    @pytest.mark.parametrize("language", [
+        "00",
+        "000",
+        "0000",
+    ])
+    def test_get_language_miss(self, language):
+        with pytest.raises(LookupError):
+            l10n.Localization.get_language(language)
 
     def test_language_compare(self):
-        a = l10n.Language("AA", "AAA", "Test")
-        b = l10n.Language("AA", None, "Test")
-        self.assertEqual(a, b)
+        assert l10n.Language("AA", "AAA", "Test") == l10n.Language("AA", None, "Test")
+        assert l10n.Language("BB", "BBB", "Test") != l10n.Language("AA", None, "Test")
 
-        a = l10n.Language("BB", "BBB", "Test")
-        b = l10n.Language("AA", None, "Test")
-        self.assertNotEqual(a, b)
+    def test_language_str(self):
+        assert str(l10n.Localization.get_language("German")) \
+               == "Language('de', 'deu', 'German', bibliographic='ger')"
 
     # issue #3517: language lookups without alpha2 but with alpha3 codes should not raise
     def test_language_a3_no_a2(self):
-        a = l10n.Localization.get_language("des")
-        self.assertEqual(a.alpha2, "")
-        self.assertEqual(a.alpha3, "des")
-        self.assertEqual(a.name, "Desano")
-        self.assertEqual(a.bibliographic, "")
+        lang = l10n.Localization.get_language("des")
+        assert lang.alpha2 == ""
+        assert lang.alpha3 == "des"
+        assert lang.name == "Desano"
+        assert lang.bibliographic == ""
 
     # issue #3057: generic "en" lookups via pycountry yield the "En" language, but not "English"
-    def test_language_en(self):
-        english_a = l10n.Localization.get_language("en")
-        english_b = l10n.Localization.get_language("eng")
-        english_c = l10n.Localization.get_language("English")
-        for lang in [english_a, english_b, english_c]:
-            self.assertEqual(lang.alpha2, "en")
-            self.assertEqual(lang.alpha3, "eng")
-            self.assertEqual(lang.name, "English")
-            self.assertEqual(lang.bibliographic, "")
+    @pytest.mark.parametrize("language", [
+        "en",
+        "eng",
+        "English",
+    ])
+    def test_language_en(self, language):
+        lang = l10n.Localization.get_language(language)
+        assert lang.alpha2 == "en"
+        assert lang.alpha3 == "eng"
+        assert lang.name == "English"
+        assert lang.bibliographic == ""

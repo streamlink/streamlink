@@ -2,13 +2,15 @@ import copy
 import datetime
 import itertools
 import logging
-import os.path
 from collections import defaultdict
+from contextlib import contextmanager
+from pathlib import Path
+from time import time
 from typing import Dict, Optional
 from urllib.parse import urlparse, urlunparse
 
 from streamlink import PluginError, StreamError
-from streamlink.stream.dash_manifest import MPD, Representation, freeze_timeline, sleep_until, sleeper, utc
+from streamlink.stream.dash_manifest import MPD, Representation, Segment, freeze_timeline, utc
 from streamlink.stream.ffmpegmux import FFMPEGMuxer
 from streamlink.stream.segmented import SegmentedStreamReader, SegmentedStreamWorker, SegmentedStreamWriter
 from streamlink.stream.stream import Stream
@@ -19,6 +21,10 @@ log = logging.getLogger(__name__)
 
 
 class DASHStreamWriter(SegmentedStreamWriter):
+    @staticmethod
+    def _get_segment_name(segment: Segment) -> str:
+        return Path(urlparse(segment.url).path).resolve().name
+
     def fetch(self, segment, retries=None):
         if self.closed or not retries:
             return
@@ -29,9 +35,11 @@ class DASHStreamWriter(SegmentedStreamWriter):
             now = datetime.datetime.now(tz=utc)
             if segment.available_at > now:
                 time_to_wait = (segment.available_at - now).total_seconds()
-                fname = os.path.basename(urlparse(segment.url).path)
-                log.debug("Waiting for segment: {fname} ({wait:.01f}s)".format(fname=fname, wait=time_to_wait))
-                sleep_until(segment.available_at)
+                fname = self._get_segment_name(segment)
+                log.debug(f"Waiting for segment: {fname} ({time_to_wait:.01f}s)")
+                if not self.wait(time_to_wait):
+                    log.debug(f"Waiting for segment: {fname} aborted")
+                    return
 
             if segment.range:
                 start, length = segment.range
@@ -39,7 +47,7 @@ class DASHStreamWriter(SegmentedStreamWriter):
                     end = start + length - 1
                 else:
                     end = ""
-                headers["Range"] = "bytes={0}-{1}".format(start, end)
+                headers["Range"] = f"bytes={start}-{end}"
 
             return self.session.http.get(segment.url,
                                          timeout=self.timeout,
@@ -51,14 +59,14 @@ class DASHStreamWriter(SegmentedStreamWriter):
             return self.fetch(segment, retries - 1)
 
     def write(self, segment, res, chunk_size=8192):
+        name = self._get_segment_name(segment)
         for chunk in res.iter_content(chunk_size):
-            if not self.closed:
-                self.reader.buffer.write(chunk)
-            else:
-                log.warning("Download of segment: {} aborted".format(segment.url))
+            if self.closed:
+                log.warning(f"Download of segment: {name} aborted")
                 return
+            self.reader.buffer.write(chunk)
 
-        log.debug("Download of segment: {} complete".format(segment.url))
+        log.debug(f"Download of segment: {name} complete")
 
 
 class DASHStreamWorker(SegmentedStreamWorker):
@@ -66,6 +74,17 @@ class DASHStreamWorker(SegmentedStreamWorker):
         SegmentedStreamWorker.__init__(self, *args, **kwargs)
         self.mpd = self.stream.mpd
         self.period = self.stream.period
+
+    @contextmanager
+    def sleeper(self, duration):
+        """
+        Do something and then wait for a given duration minus the time it took doing something
+        """
+        s = time()
+        yield
+        time_to_sleep = duration - (time() - s)
+        if time_to_sleep > 0:
+            self.wait(time_to_sleep)
 
     @staticmethod
     def get_representation(mpd, representation_id, mime_type):
@@ -80,28 +99,35 @@ class DASHStreamWorker(SegmentedStreamWorker):
         while not self.closed:
             # find the representation by ID
             representation = self.get_representation(self.mpd, self.reader.representation_id, self.reader.mime_type)
-            refresh_wait = max(self.mpd.minimumUpdatePeriod.total_seconds(),
-                               self.mpd.periods[0].duration.total_seconds()) or 5
 
             if self.mpd.type == "static":
                 refresh_wait = 5
+            else:
+                refresh_wait = max(
+                    self.mpd.minimumUpdatePeriod.total_seconds(),
+                    self.mpd.periods[0].duration.total_seconds(),
+                ) or 5
 
-            with sleeper(refresh_wait * back_off_factor):
-                if representation:
-                    for segment in representation.segments(init=init):
-                        if self.closed:
-                            break
-                        yield segment
-                        # log.debug(f"Adding segment {segment.url} to queue")
+            with self.sleeper(refresh_wait * back_off_factor):
+                if not representation:
+                    continue
 
-                    if self.mpd.type == "dynamic":
-                        if not self.reload():
-                            back_off_factor = max(back_off_factor * 1.3, 10.0)
-                        else:
-                            back_off_factor = 1
-                    else:
-                        return
-                    init = False
+                for segment in representation.segments(init=init):
+                    if self.closed:
+                        break
+                    yield segment
+
+                # close worker if type is not dynamic (all segments were put into writer queue)
+                if self.mpd.type != "dynamic":
+                    self.close()
+                    return
+
+                if not self.reload():
+                    back_off_factor = max(back_off_factor * 1.3, 10.0)
+                else:
+                    back_off_factor = 1
+
+                init = False
 
     def reload(self):
         if self.closed:

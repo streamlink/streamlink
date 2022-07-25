@@ -7,6 +7,7 @@ $type live, vod
 import logging
 import random
 import re
+import sys
 
 from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.api import validate
@@ -17,16 +18,15 @@ log = logging.getLogger(__name__)
 
 
 @pluginmatcher(re.compile(r"""
-        https?://(?:www\.)?trovo\.live/
-        (?:
-            (?:
-                (?:clip|video)/(?P<video_id>[^/?&]+)
-            )
-            |
-            (?P<user>[^/?&]+)
-        )
+    https?://(?:www\.)?trovo\.live/s/(?P<user>[^/?&]+)(?:/\d+\?vid=(?P<video_id>[^/?&]+))?
 """, re.VERBOSE))
 class Trovo(Plugin):
+    @classmethod
+    def stream_weight(cls, stream):
+        if stream == "source":
+            return sys.maxsize, stream
+        return super().stream_weight(stream)
+
     @staticmethod
     def generate_qid():
         return f"{random.getrandbits(40):010x}".upper()
@@ -96,7 +96,7 @@ class Trovo(Plugin):
         for s in json["vodInfo"]["playInfos"]:
             q = s["desc"]
             if "(source)" in q:
-                q = f"source_{q.replace('(source)', '')}"
+                q = "source"
             yield q, HLSStream(self.session, update_scheme("https:", s["playUrl"]))
 
     def get_live(self, user):

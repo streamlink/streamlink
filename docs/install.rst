@@ -13,11 +13,11 @@ Windows
 ==================================== ===========================================
 Method                               Installing
 ==================================== ===========================================
-Installers (stable)                  See the `Windows stable installers`_ section below
+Installers                           See the `Windows binaries`_ section below
 
-Installers (nightly)                 See the `Windows nightly installers`_ section below
+Portable                             See the `Windows binaries`_ section below
 
-Portable                             See the `Windows portable builds`_ section below
+Nightly builds                       See the `Windows nightly builds`_ section below
 
 Python pip                           See the `PyPI package and source code`_ section below
 
@@ -27,6 +27,13 @@ Python pip                           See the `PyPI package and source code`_ sec
 
                                      `Installing Chocolatey packages`_
 
+`Scoop`_                             .. code-block::
+
+                                        scoop bucket add extras
+                                        scoop install streamlink
+
+                                     `Installing Scoop packages`_
+
 `Windows Package Manager`_           .. code-block:: bat
 
                                         winget install streamlink
@@ -35,8 +42,10 @@ Python pip                           See the `PyPI package and source code`_ sec
 ==================================== ===========================================
 
 .. _Chocolatey: https://chocolatey.org/packages/streamlink
+.. _Scoop: https://scoop.sh/#/apps?q=streamlink&s=0&d=1&o=true
 .. _Windows Package Manager: https://github.com/microsoft/winget-pkgs/tree/master/manifests/s/Streamlink/Streamlink
 .. _Installing Chocolatey packages: https://chocolatey.org
+.. _Installing Scoop packages: https://scoop.sh
 .. _Installing Winget packages: https://docs.microsoft.com/en-us/windows/package-manager/
 
 macOS
@@ -56,7 +65,7 @@ Python pip                           See the `PyPI package and source code`_ sec
                                      `Installing Homebrew packages`_
 ==================================== ===========================================
 
-.. _Homebrew: https://github.com/Homebrew/homebrew-core/blob/master/Formula/streamlink.rb
+.. _Homebrew: https://formulae.brew.sh/formula/streamlink
 .. _Installing Homebrew packages: https://brew.sh
 
 
@@ -122,6 +131,10 @@ Python pip                           See the `PyPI package and source code`_ sec
 
                                         doas pkg_add streamlink
 
+`openSUSE`_                          .. code-block:: bash
+
+                                        sudo zypper install streamlink
+
 `Solus`_                             .. code-block:: bash
 
                                         sudo eopkg install streamlink
@@ -149,6 +162,7 @@ if a package is not available for your distro or platform, or if it's out of dat
 .. _NetBSD (pkgsrc): https://pkgsrc.se/multimedia/streamlink
 .. _NixOS: https://github.com/NixOS/nixpkgs/tree/master/pkgs/applications/video/streamlink
 .. _OpenBSD: https://openports.se/multimedia/streamlink
+.. _openSUSE: https://build.opensuse.org/package/show/multimedia:apps/streamlink
 .. _Solus: https://dev.getsol.us/source/streamlink/
 .. _Ubuntu: https://launchpad.net/~nilarimogard/+archive/ubuntu/webupd8/+packages?field.name_filter=streamlink&field.status_filter=published&field.series_filter=
 .. _Void: https://github.com/void-linux/void-packages/tree/master/srcpkgs/streamlink
@@ -175,11 +189,11 @@ Gentoo                               soredake <fdsfgs at krutt.org>
 NetBSD                               Maya Rashish <maya at netbsd.org>
 NixOS                                Tuomas Tynkkynen <tuomas.tynkkynen at iki.fi>
 OpenBSD                              Brian Callahan <bcallah at openbsd.org>
+openSUSE                             Simon Puchert <simonpuchert at alice.de>
 Solus                                Joey Riches <josephriches at gmail.com>
 Ubuntu                               Alin Andrei <andrew at webupd8.org>
 Void                                 Michal Vasilek <michal at vasilek.cz>
 Windows binaries                     Sebastian Meyer <mail at bastimeyer.de>
-Windows port. version                beardypig <beardypig at protonmail.com>
 ==================================== ===========================================
 
 
@@ -285,7 +299,7 @@ python    `Python`_                 At least version **3.7**.
 
 build     `setuptools`_             At least version **45.0.0**. |br| Used as build backend.
 build     `wheel`_                  Used by the build frontend for creating Python wheels.
-build     `versioningit`_           At least version **1.1.1**. |br| Used for generating the version string from git
+build     `versioningit`_           At least version **2.0.0**. |br| Used for generating the version string from git
                                     when building, or when running in an editable install.
 
 runtime   `isodate`_                Used for parsing ISO8601 strings
@@ -326,61 +340,44 @@ optional  `FFmpeg`_                 Required for `muxing`_ multiple video/audio/
 Windows binaries
 ----------------
 
-Since late March 2022, Windows installers for Streamlink can be found at the `streamlink/windows-installer`_ repository
-on GitHub, with support for different architectures and different Python versions.
+Windows installers and portable builds for Streamlink can be found at `streamlink/windows-builds`_,
+with support for different architectures and different Python versions.
 
-These installers contain
+These installers and portable builds contain:
 
 - an embedded Python version, built at `streamlink/python-windows-embed`_
-- FFmpeg, for muxing streams, built at `streamlink/FFmpeg-Builds`_
+- Streamlink and its dependencies
+- FFmpeg, required for muxing streams, built at `streamlink/FFmpeg-Builds`_
 
-For further information, please see the README file of the `streamlink/windows-installer`_ repository.
+and they are available in the following flavors:
 
-Windows stable installers
-^^^^^^^^^^^^^^^^^^^^^^^^^
+- Python 3.10 - x86_64 (64 bit)
+- Python 3.10 - x86 (32 bit)
+- Python 3.8 - x86_64 (64 bit) - for Windows 7
+- Python 3.8 - x86 (32 bit) - for Windows 7
 
-.. rst-class:: table-custom-layout
+For further information, please see the README in the `streamlink/windows-builds`_ repository.
 
-================================================== ==================================================
-Installer flavor                                   Notes
-================================================== ==================================================
-`Python 3.10, x86_64 <windows-stable_>`_           for Windows 8+, 64-bit
-`Python 3.10, x86 <windows-stable_>`_              for Windows 8+, 32-bit
-`Python 3.8, x86_64 <windows-stable_>`_            for Windows 7, 64-bit
-`Python 3.8, x86 <windows-stable_>`_               for Windows 7, 32-bit
-================================================== ==================================================
+Windows stable builds
+^^^^^^^^^^^^^^^^^^^^^
 
-Windows nightly installers
-^^^^^^^^^^^^^^^^^^^^^^^^^^
+Stable installers and stable portable builds of Streamlink's latest release can be
+`downloaded from the releases page of the streamlink/windows-builds <windows-stable_>`_ repository.
+
+Windows nightly builds
+^^^^^^^^^^^^^^^^^^^^^^
 
 Built once each day at midnight UTC from Streamlink's master branch. |br|
 This includes the most recent changes, but is not considered "stable". |br|
 Download from the build-artifacts of the `scheduled nightly build runs <windows-nightly_>`_ (requires a GitHub login). |br|
 See the `commit log <streamlink-master_>`_ of Steamlink's master branch for all the recent changes.
 
-Windows portable builds
-^^^^^^^^^^^^^^^^^^^^^^^
-
-.. rst-class:: table-custom-layout
-
-==================================== ===========================================
-Maintainer                           Links
-==================================== ===========================================
-Beardypig                            `Latest precompiled stable release <windows-portable-beardypig-releases_>`_ |br|
-                                     `Latest builder <windows-portable-beardypig-latest_>`_ |br|
-                                     `More info <windows-portable-beardypig_>`_
-==================================== ===========================================
-
-.. _streamlink/windows-installer: https://github.com/streamlink/windows-installer
+.. _streamlink/windows-builds: https://github.com/streamlink/windows-builds
 .. _streamlink/python-windows-embed: https://github.com/streamlink/python-windows-embed
 .. _streamlink/FFmpeg-Builds: https://github.com/streamlink/FFmpeg-Builds
-.. _windows-stable: https://github.com/streamlink/windows-installer/releases
-.. _windows-nightly: https://github.com/streamlink/windows-installer/actions?query=event%3Aschedule+is%3Asuccess+branch%3Amaster
+.. _windows-stable: https://github.com/streamlink/windows-builds/releases
+.. _windows-nightly: https://github.com/streamlink/windows-builds/actions?query=event%3Aschedule+is%3Asuccess+branch%3Amaster
 .. _streamlink-master: https://github.com/streamlink/streamlink/commits/master
-
-.. _windows-portable-beardypig: https://github.com/beardypig/streamlink-portable
-.. _windows-portable-beardypig-releases: https://github.com/beardypig/streamlink-portable/releases
-.. _windows-portable-beardypig-latest: https://github.com/beardypig/streamlink-portable/archive/master.zip
 
 
 AppImages

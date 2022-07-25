@@ -1,5 +1,8 @@
 import unittest
+from typing import List
 from unittest.mock import ANY, MagicMock, Mock, call, patch
+
+import pytest
 
 from streamlink import PluginError
 from streamlink.stream.dash import DASHStream, DASHStreamWorker
@@ -300,124 +303,145 @@ class TestDASHStream(unittest.TestCase):
         self.assertEqual(streams["1080p_alt2"].video_representation.bandwidth, 32.0)
 
 
-class TestDASHStreamWorker(unittest.TestCase):
-    @patch("streamlink.stream.dash_manifest.time.sleep")
-    @patch('streamlink.stream.dash.MPD')
-    def test_dynamic_reload(self, mpdClass, sleep):
-        reader = MagicMock()
-        worker = DASHStreamWorker(reader)
-        reader.representation_id = 1
-        reader.mime_type = "video/mp4"
+class TestDASHStreamWorker:
+    @pytest.fixture
+    def mock_time(self, monkeypatch: pytest.MonkeyPatch) -> Mock:
+        mock = Mock(return_value=1)
+        monkeypatch.setattr("streamlink.stream.dash.time", mock)
+        return mock
 
-        representation = Mock(id=1, mimeType="video/mp4", height=720)
-        segments = [Mock(url="init_segment"), Mock(url="first_segment"), Mock(url="second_segment")]
-        representation.segments.return_value = [segments[0]]
-        mpdClass.return_value = worker.mpd = Mock(dynamic=True,
-                                                  publishTime=1,
-                                                  periods=[
-                                                      Mock(adaptationSets=[
-                                                          Mock(contentProtection=None,
-                                                               representations=[
-                                                                   representation
-                                                               ])
-                                                      ])
-                                                  ])
-        worker.mpd.type = "dynamic"
-        worker.mpd.minimumUpdatePeriod.total_seconds.return_value = 0
-        worker.mpd.periods[0].duration.total_seconds.return_value = 0
+    @pytest.fixture(autouse=True)
+    def mock_wait(self, monkeypatch: pytest.MonkeyPatch) -> Mock:
+        mock = Mock(return_value=True)
+        monkeypatch.setattr("streamlink.stream.dash.DASHStreamWorker.wait", mock)
+        return mock
+
+    @pytest.fixture
+    def representation(self) -> Mock:
+        return Mock(id=1, mimeType="video/mp4", height=720)
+
+    @pytest.fixture
+    def segments(self) -> List[Mock]:
+        return [
+            Mock(url="init_segment"),
+            Mock(url="first_segment"),
+            Mock(url="second_segment"),
+        ]
+
+    @pytest.fixture
+    def mpd(self, representation) -> Mock:
+        return Mock(
+            publishTime=1,
+            minimumUpdatePeriod=Mock(total_seconds=Mock(return_value=0)),
+            periods=[
+                Mock(
+                    duration=Mock(total_seconds=Mock(return_value=0)),
+                    adaptationSets=[
+                        Mock(
+                            contentProtection=None,
+                            representations=[representation],
+                        ),
+                    ],
+                ),
+            ],
+        )
+
+    @pytest.fixture
+    def worker(self, mpd):
+        reader = MagicMock(representation_id=1, mime_type="video/mp4")
+        worker = DASHStreamWorker(reader)
+        worker.mpd = mpd
+        return worker
+
+    def test_dynamic_reload(
+        self,
+        monkeypatch: pytest.MonkeyPatch,
+        worker: DASHStreamWorker,
+        representation: Mock,
+        segments: List[Mock],
+        mpd: Mock,
+    ):
+        mpd.dynamic = True
+        mpd.type = "dynamic"
+        monkeypatch.setattr("streamlink.stream.dash.MPD", lambda *args, **kwargs: mpd)
 
         segment_iter = worker.iter_segments()
 
         representation.segments.return_value = segments[:1]
-        self.assertEqual(next(segment_iter), segments[0])
-        representation.segments.assert_called_with(init=True)
+        assert next(segment_iter) is segments[0]
+        assert representation.segments.call_args_list == [call(init=True)]
+        assert not worker._wait.is_set()
 
+        representation.segments.reset_mock()
         representation.segments.return_value = segments[1:]
-        self.assertSequenceEqual([next(segment_iter), next(segment_iter)], segments[1:])
-        representation.segments.assert_called_with(init=False)
+        assert [next(segment_iter), next(segment_iter)] == segments[1:]
+        assert representation.segments.call_args_list == [call(), call(init=False)]
+        assert not worker._wait.is_set()
 
-    @patch("streamlink.stream.dash_manifest.time.sleep")
-    def test_static(self, sleep):
-        reader = MagicMock()
-        worker = DASHStreamWorker(reader)
-        reader.representation_id = 1
-        reader.mime_type = "video/mp4"
-
-        representation = Mock(id=1, mimeType="video/mp4", height=720)
-        segments = [Mock(url="init_segment"), Mock(url="first_segment"), Mock(url="second_segment")]
-        representation.segments.return_value = [segments[0]]
-        worker.mpd = Mock(dynamic=False,
-                          publishTime=1,
-                          periods=[
-                              Mock(adaptationSets=[
-                                  Mock(contentProtection=None,
-                                       representations=[
-                                           representation
-                                       ])
-                              ])
-                          ])
-        worker.mpd.type = "static"
-        worker.mpd.minimumUpdatePeriod.total_seconds.return_value = 0
-        worker.mpd.periods[0].duration.total_seconds.return_value = 0
+    def test_static(
+        self,
+        worker: DASHStreamWorker,
+        representation: Mock,
+        segments: List[Mock],
+        mpd: Mock,
+    ):
+        mpd.dynamic = False
+        mpd.type = "static"
 
         representation.segments.return_value = segments
-        self.assertSequenceEqual(list(worker.iter_segments()), segments)
-        representation.segments.assert_called_with(init=True)
+        assert list(worker.iter_segments()) == segments
+        assert representation.segments.call_args_list == [call(init=True)]
+        assert worker._wait.is_set()
 
-    @patch("streamlink.stream.dash_manifest.time.time")
-    @patch("streamlink.stream.dash_manifest.time.sleep")
-    def test_static_refresh_wait(self, sleep, time):
+    @pytest.mark.parametrize("duration", [
+        0,
+        204.32,
+    ])
+    def test_static_refresh_wait(
+        self,
+        duration: float,
+        mock_wait: Mock,
+        mock_time: Mock,
+        worker: DASHStreamWorker,
+        representation: Mock,
+        segments: List[Mock],
+        mpd: Mock,
+    ):
         """
             Verify the fix for https://github.com/streamlink/streamlink/issues/2873
         """
-        time.return_value = 1
-        reader = MagicMock()
-        worker = DASHStreamWorker(reader)
-        reader.representation_id = 1
-        reader.mime_type = "video/mp4"
+        mpd.dynamic = False
+        mpd.type = "static"
+        mpd.periods[0].duration.total_seconds.return_value = duration
 
-        representation = Mock(id=1, mimeType="video/mp4", height=720)
-        segments = [Mock(url="init_segment"), Mock(url="first_segment"), Mock(url="second_segment")]
-        representation.segments.return_value = [segments[0]]
-        worker.mpd = Mock(dynamic=False,
-                          publishTime=1,
-                          periods=[
-                              Mock(adaptationSets=[
-                                  Mock(contentProtection=None,
-                                       representations=[
-                                           representation
-                                       ])
-                              ])
-                          ])
-        worker.mpd.type = "static"
-        for duration in (0, 204.32):
-            worker.mpd.minimumUpdatePeriod.total_seconds.return_value = 0
-            worker.mpd.periods[0].duration.total_seconds.return_value = duration
+        representation.segments.return_value = segments
+        assert list(worker.iter_segments()) == segments
+        assert representation.segments.call_args_list == [call(init=True)]
+        assert mock_wait.call_args_list == [call(5)]
+        assert worker._wait.is_set()
 
-            representation.segments.return_value = segments
-            self.assertSequenceEqual(list(worker.iter_segments()), segments)
-            representation.segments.assert_called_with(init=True)
-            sleep.assert_called_with(5)
-
-    @patch("streamlink.stream.dash_manifest.time.sleep")
-    def test_duplicate_rep_id(self, sleep):
+    def test_duplicate_rep_id(self):
         representation_vid = Mock(id=1, mimeType="video/mp4", height=720)
-        representation_aud = Mock(id=1, mimeType="audio/aac", lang='en')
+        representation_aud = Mock(id=1, mimeType="audio/aac", lang="en")
 
-        mpd = Mock(dynamic=False,
-                   publishTime=1,
-                   periods=[
-                       Mock(adaptationSets=[
-                           Mock(contentProtection=None,
-                                representations=[
-                                    representation_vid
-                                ]),
-                           Mock(contentProtection=None,
-                                representations=[
-                                    representation_aud
-                                ])
-                       ])
-                   ])
+        mpd = Mock(
+            dynamic=False,
+            publishTime=1,
+            periods=[
+                Mock(
+                    adaptationSets=[
+                        Mock(
+                            contentProtection=None,
+                            representations=[representation_vid],
+                        ),
+                        Mock(
+                            contentProtection=None,
+                            representations=[representation_aud],
+                        ),
+                    ],
+                ),
+            ],
+        )
 
-        self.assertEqual(representation_vid, DASHStreamWorker.get_representation(mpd, 1, "video/mp4"))
-        self.assertEqual(representation_aud, DASHStreamWorker.get_representation(mpd, 1, "audio/aac"))
+        assert DASHStreamWorker.get_representation(mpd, 1, "video/mp4") is representation_vid
+        assert DASHStreamWorker.get_representation(mpd, 1, "audio/aac") is representation_aud

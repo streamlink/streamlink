@@ -1,15 +1,14 @@
-"""Convert a argparse parser to option directives.
+"""
+Convert an argparse parser to option directives.
 
 Inspired by sphinxcontrib.autoprogram but with a few differences:
 
 - Contains some simple pre-processing on the help messages to make
   the Sphinx version a bit prettier.
-
 """
 
 import argparse
 import re
-
 from textwrap import dedent
 
 from docutils import nodes
@@ -22,10 +21,13 @@ from sphinx.util.nodes import nested_parse_with_titles
 _block_re = re.compile(r":\n{2}\s{2}")
 _default_re = re.compile(r"Default is (.+)\.\n")
 _note_re = re.compile(r"Note: (.*)(?:\n\n|\n*$)", re.DOTALL)
-_option_line_re = re.compile(r"^(?!\s{2}|Example: )(.+)$", re.MULTILINE)
+_option_line_re = re.compile(r"^(?!\s{2,}%\(prog\)s|\s{2,}--\w[\w-]*\w\b|Example: )(.+)$", re.MULTILINE)
 _option_re = re.compile(r"(?:^|(?<=\s))(--\w[\w-]*\w)\b")
 _prog_re = re.compile(r"%\(prog\)s")
 _percent_re = re.compile(r"%%")
+_cli_metadata_variables_section_cross_link_re = re.compile(r"the \"Metadata variables\" section")
+_inline_code_block_re = re.compile(r"(?<!`)`([^`]+?)`")
+_example_inline_code_block_re = re.compile(r"(?<=^Example: )(.+)$", re.MULTILINE)
 
 
 def get_parser(module_name, attr):
@@ -52,6 +54,15 @@ class ArgparseDirective(Directive):
         # Dedent the help to make sure we are always dealing with
         # non-indented text.
         help = dedent(help)
+
+        help = _inline_code_block_re.sub(
+            lambda m: (
+                ":code:`{0}`".format(m.group(1).replace('\\', '\\\\'))
+            ),
+            help
+        )
+
+        help = _example_inline_code_block_re.sub(r":code:`\1`", help)
 
         # Replace option references with links.
         # Do this before indenting blocks and notes.
@@ -86,6 +97,12 @@ class ArgparseDirective(Directive):
 
         # fix escaped chars for percent-formatted argparse help strings
         help = _percent_re.sub("%", help)
+
+        # create cross-link for the "Metadata variables" section
+        help = _cli_metadata_variables_section_cross_link_re.sub(
+            "the \":ref:`Metadata variables <cli/metadata:Variables>`\" section",
+            help
+        )
 
         return indent(help)
 
@@ -125,21 +142,22 @@ class ArgparseDirective(Directive):
                 yield f"    **Supported plugins:** {', '.join(action.plugins)}"
                 yield ""
 
-    def generate_parser_rst(self, parser, depth=0):
+    def generate_parser_rst(self, parser, parent=None, depth=0):
         if depth >= len(self._headlines):
             return
-        for group in parser._action_groups:
+        for group in parser.NESTED_ARGUMENT_GROUPS[parent]:
+            is_parent = group in parser.NESTED_ARGUMENT_GROUPS
             # Exclude empty groups
-            if not group._group_actions and not group._action_groups:
+            if not group._group_actions and not is_parent:
                 continue
             title = group.title
             yield ""
             yield title
             yield self._headlines[depth] * len(title)
             yield from self.generate_group_rst(group)
-            if group._action_groups:
+            if is_parent:
                 yield ""
-                yield from self.generate_parser_rst(group, depth + 1)
+                yield from self.generate_parser_rst(parser, group, depth + 1)
 
     def run(self):
         module = self.options.get("module")

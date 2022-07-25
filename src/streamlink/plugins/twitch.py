@@ -8,6 +8,7 @@ $notes :ref:`Low latency streaming <cli/plugins/twitch:Low latency streaming>` i
 import json
 import logging
 import re
+import sys
 from datetime import datetime
 from random import random
 from typing import List, NamedTuple, Optional
@@ -51,8 +52,8 @@ class TwitchSequence(NamedTuple):
 class TwitchM3U8(M3U8):
     segments: List[TwitchSegment]  # type: ignore[assignment]
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self.dateranges_ads = []
 
 
@@ -503,8 +504,8 @@ class Twitch(Plugin):
             action="store_true",
             help=f"""
             Enables low latency streaming by prefetching HLS segments.
-            Sets --hls-segment-stream-data to true and --hls-live-edge to {LOW_LATENCY_MAX_LIVE_EDGE}, if it is higher.
-            Reducing --hls-live-edge to 1 will result in the lowest latency possible, but will most likely cause buffering.
+            Sets --hls-segment-stream-data to true and --hls-live-edge to `{LOW_LATENCY_MAX_LIVE_EDGE}`, if it is higher.
+            Reducing --hls-live-edge to `1` will result in the lowest latency possible, but will most likely cause buffering.
 
             In order to achieve true low latency streaming during playback, the player's caching/buffering settings will
             need to be adjusted and reduced to a value as low as possible, but still high enough to not cause any buffering.
@@ -527,6 +528,12 @@ class Twitch(Plugin):
             """
         )
     )
+
+    @classmethod
+    def stream_weight(cls, stream):
+        if stream == "source":
+            return sys.maxsize, stream
+        return super().stream_weight(stream)
 
     def __init__(self, url):
         super().__init__(url)

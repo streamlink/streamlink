@@ -8,10 +8,11 @@ from textwrap import dedent
 from unittest.mock import Mock, call, patch
 
 import freezegun
+import pytest
 
 import streamlink_cli.main
 import tests.resources
-from streamlink.exceptions import StreamError
+from streamlink.exceptions import PluginError, StreamError
 from streamlink.session import Streamlink
 from streamlink.stream.stream import Stream
 from streamlink_cli.compat import DeprecatedPath, is_win32, stdout
@@ -109,6 +110,20 @@ class TestCLIMain(unittest.TestCase):
                 "1080p (best-unfiltered)"
             ])
         )
+
+
+class TestCLIMainHandleUrl:
+    @pytest.mark.parametrize("side_effect,expected", [
+        (NoPluginError("foo"), "No plugin can handle URL: fakeurl"),
+        (PluginError("bar"), "bar"),
+    ])
+    def test_error(self, side_effect, expected):
+        with patch("streamlink_cli.main.args", Mock(url="fakeurl")), \
+             patch("streamlink_cli.main.streamlink", resolve_url=Mock(side_effect=side_effect)), \
+             patch("streamlink_cli.main.console", exit=Mock(side_effect=SystemExit)) as mock_console:
+            with pytest.raises(SystemExit):
+                handle_url()
+            assert mock_console.exit.mock_calls == [call(expected)]
 
 
 class TestCLIMainJsonAndStreamUrl(unittest.TestCase):
@@ -574,18 +589,18 @@ class TestCLIMainSetupConfigArgs(unittest.TestCase):
 
 
 class _TestCLIMainLogging(unittest.TestCase):
+    # stop test execution at the setup_signals() call, as we're not interested in what comes afterwards
+    class StopTest(Exception):
+        pass
+
     @classmethod
     def subject(cls, argv, **kwargs):
         session = Streamlink()
         session.load_plugins(os.path.join(os.path.dirname(__file__), "plugin"))
 
-        # stop test execution at the setup_signals() call, as we're not interested in what comes afterwards
-        class StopTest(Exception):
-            pass
-
         with patch("streamlink_cli.main.os.geteuid", create=True, new=Mock(return_value=kwargs.get("euid", 1000))), \
              patch("streamlink_cli.main.streamlink", session), \
-             patch("streamlink_cli.main.setup_signals", side_effect=StopTest), \
+             patch("streamlink_cli.main.setup_signals", side_effect=cls.StopTest), \
              patch("streamlink_cli.main.CONFIG_FILES", []), \
              patch("streamlink_cli.main.setup_streamlink"), \
              patch("streamlink_cli.main.setup_plugins"), \
@@ -595,7 +610,7 @@ class _TestCLIMainLogging(unittest.TestCase):
             mock_argv.__getitem__.side_effect = lambda x: argv[x]
             try:
                 streamlink_cli.main.main()
-            except StopTest:
+            except cls.StopTest:
                 pass
 
     def tearDown(self):
@@ -712,55 +727,71 @@ class TestCLIMainLoggingInfos(_TestCLIMainLogging):
 
     @patch("streamlink_cli.main.log")
     @patch("streamlink_cli.main.streamlink_version", "streamlink")
-    @patch("streamlink_cli.main.requests.__version__", "requests")
-    @patch("streamlink_cli.main.socks_version", "socks")
-    @patch("streamlink_cli.main.websocket_version", "websocket")
+    @patch("streamlink_cli.main.importlib_metadata")
+    @patch("streamlink_cli.main.log_current_arguments", Mock(side_effect=_TestCLIMainLogging.StopTest))
     @patch("platform.python_version", Mock(return_value="python"))
-    def test_log_current_versions(self, mock_log):
+    def test_log_current_versions(self, mock_importlib_metadata: Mock, mock_log: Mock):
+        class FakePackageNotFoundError(Exception):
+            pass
+
+        def version(dist):
+            if dist == "foo":
+                return "1.2.3"
+            if dist == "bar-baz":
+                return "2.0.0"
+            raise FakePackageNotFoundError()
+
+        mock_importlib_metadata.PackageNotFoundError = FakePackageNotFoundError
+        mock_importlib_metadata.requires.return_value = ["foo>1", "bar-baz==2", "qux~=3"]
+        mock_importlib_metadata.version.side_effect = version
+
         self.subject(["streamlink", "--loglevel", "info"])
         self.assertEqual(mock_log.debug.mock_calls, [], "Doesn't log anything if not debug logging")
 
         with patch("sys.platform", "linux"), \
              patch("platform.platform", Mock(return_value="linux")):
             self.subject(["streamlink", "--loglevel", "debug"])
-            self.assertEqual(
-                mock_log.debug.mock_calls[:4],
-                [
-                    call("OS:         linux"),
-                    call("Python:     python"),
-                    call("Streamlink: streamlink"),
-                    call("Requests(requests), Socks(socks), Websocket(websocket)")
-                ]
-            )
+            assert mock_importlib_metadata.requires.mock_calls == [call("streamlink")]
+            assert mock_log.debug.mock_calls == [
+                call("OS:         linux"),
+                call("Python:     python"),
+                call("Streamlink: streamlink"),
+                call("Dependencies:"),
+                call(" foo: 1.2.3"),
+                call(" bar-baz: 2.0.0"),
+            ]
+            mock_importlib_metadata.requires.reset_mock()
             mock_log.debug.reset_mock()
 
         with patch("sys.platform", "darwin"), \
              patch("platform.mac_ver", Mock(return_value=["0.0.0"])):
             self.subject(["streamlink", "--loglevel", "debug"])
-            self.assertEqual(
-                mock_log.debug.mock_calls[:4],
-                [
-                    call("OS:         macOS 0.0.0"),
-                    call("Python:     python"),
-                    call("Streamlink: streamlink"),
-                    call("Requests(requests), Socks(socks), Websocket(websocket)")
-                ]
-            )
+            assert mock_importlib_metadata.requires.mock_calls == [call("streamlink")]
+            assert mock_log.debug.mock_calls == [
+                call("OS:         macOS 0.0.0"),
+                call("Python:     python"),
+                call("Streamlink: streamlink"),
+                call("Dependencies:"),
+                call(" foo: 1.2.3"),
+                call(" bar-baz: 2.0.0"),
+            ]
+            mock_importlib_metadata.requires.reset_mock()
             mock_log.debug.reset_mock()
 
         with patch("sys.platform", "win32"), \
              patch("platform.system", Mock(return_value="Windows")), \
              patch("platform.release", Mock(return_value="0.0.0")):
             self.subject(["streamlink", "--loglevel", "debug"])
-            self.assertEqual(
-                mock_log.debug.mock_calls[:4],
-                [
-                    call("OS:         Windows 0.0.0"),
-                    call("Python:     python"),
-                    call("Streamlink: streamlink"),
-                    call("Requests(requests), Socks(socks), Websocket(websocket)")
-                ]
-            )
+            assert mock_importlib_metadata.requires.mock_calls == [call("streamlink")]
+            assert mock_log.debug.mock_calls == [
+                call("OS:         Windows 0.0.0"),
+                call("Python:     python"),
+                call("Streamlink: streamlink"),
+                call("Dependencies:"),
+                call(" foo: 1.2.3"),
+                call(" bar-baz: 2.0.0"),
+            ]
+            mock_importlib_metadata.requires.reset_mock()
             mock_log.debug.reset_mock()
 
     @patch("streamlink_cli.main.log")

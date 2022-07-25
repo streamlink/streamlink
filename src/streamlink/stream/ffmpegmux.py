@@ -1,8 +1,11 @@
+import concurrent.futures
 import logging
 import subprocess
 import sys
 import threading
+from functools import lru_cache
 from shutil import which
+from typing import Optional
 
 from streamlink import StreamError
 from streamlink.compat import devnull
@@ -68,10 +71,31 @@ class MuxedStream(Stream):
 
 
 class FFMPEGMuxer(StreamIO):
-    __commands__ = ['ffmpeg', 'ffmpeg.exe', 'avconv', 'avconv.exe']
+    __commands__ = ["ffmpeg", "avconv"]
+
     DEFAULT_OUTPUT_FORMAT = "matroska"
     DEFAULT_VIDEO_CODEC = "copy"
     DEFAULT_AUDIO_CODEC = "copy"
+
+    @classmethod
+    def is_usable(cls, session):
+        return cls.command(session) is not None
+
+    @classmethod
+    def command(cls, session):
+        return cls.resolve_command(session.options.get("ffmpeg-ffmpeg"))
+
+    @classmethod
+    @lru_cache(maxsize=128)
+    def resolve_command(cls, command: Optional[str] = None) -> Optional[str]:
+        if command:
+            return which(command)
+        resolved = None
+        for cmd in cls.__commands__:
+            resolved = which(cmd)
+            if resolved:
+                break
+        return resolved
 
     @staticmethod
     def copy_to_pipe(stream: StreamIO, pipe: NamedPipeBase):
@@ -155,19 +179,6 @@ class FFMPEGMuxer(StreamIO):
 
         return self
 
-    @classmethod
-    def is_usable(cls, session):
-        return cls.command(session) is not None
-
-    @classmethod
-    def command(cls, session):
-        command = []
-        if session.options.get("ffmpeg-ffmpeg"):
-            command.append(session.options.get("ffmpeg-ffmpeg"))
-        for cmd in command or cls.__commands__:
-            if which(cmd):
-                return cmd
-
     def read(self, size=-1):
         data = self.process.stdout.read(size)
         return data
@@ -183,10 +194,13 @@ class FFMPEGMuxer(StreamIO):
             self.process.stdout.close()
 
             # close the streams
+            futures = []
+            executor = concurrent.futures.ThreadPoolExecutor()
             for stream in self.streams:
                 if hasattr(stream, "close") and callable(stream.close):
-                    stream.close()
+                    futures.append(executor.submit(stream.close))
 
+            concurrent.futures.wait(futures, return_when=concurrent.futures.ALL_COMPLETED)
             log.debug("Closed all the substreams")
 
         if self.close_errorlog:

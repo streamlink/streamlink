@@ -85,7 +85,7 @@ class TestHLSVariantPlaylist(unittest.TestCase):
 
     def subject(self, playlist, options=None):
         with requests_mock.Mocker() as mock:
-            url = "http://mocked/{0}/master.m3u8".format(self.id())
+            url = f"http://mocked/{self.id()}/master.m3u8"
             content = self.get_master_playlist(playlist)
             mock.get(url, text=content)
 
@@ -95,15 +95,25 @@ class TestHLSVariantPlaylist(unittest.TestCase):
 
     def test_variant_playlist(self):
         streams = self.subject("hls/test_master.m3u8")
-        self.assertEqual(
-            list(streams.keys()),
-            ["720p", "720p_alt", "480p", "360p", "160p", "1080p (source)", "90k"],
-            "Finds all streams in master playlist"
-        )
-        self.assertTrue(
-            all([isinstance(stream, HLSStream) for stream in streams.values()]),
-            "Returns HLSStream instances"
-        )
+        assert list(streams.keys()) == ["720p", "720p_alt", "480p", "360p", "160p", "1080p (source)", "90k"]
+        assert all(isinstance(stream, HLSStream) for stream in streams.values())
+        assert all(stream.multivariant is not None and stream.multivariant.is_master for stream in streams.values())
+
+        base = f"http://mocked/{self.id()}"
+        stream = next(iter(streams.values()))
+        assert repr(stream) == f"<HLSStream ['hls', '{base}/720p.m3u8', '{base}/master.m3u8']>"
+
+        assert stream.multivariant is not None
+        assert stream.multivariant.uri == f"{base}/master.m3u8"
+        assert stream.url_master == f"{base}/master.m3u8"
+
+    def test_url_master(self):
+        session = Streamlink()
+        stream = HLSStream(session, "http://mocked/foo", url_master="http://mocked/master.m3u8")
+
+        assert stream.multivariant is None
+        assert stream.url == "http://mocked/foo"
+        assert stream.url_master == "http://mocked/master.m3u8"
 
 
 class EventedHLSReader(HLSStreamReader):
