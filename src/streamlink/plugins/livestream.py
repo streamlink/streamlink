@@ -10,14 +10,17 @@ import re
 from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.api import validate
 from streamlink.stream.hls import HLSStream
-from streamlink.utils.parse import parse_json
 
 log = logging.getLogger(__name__)
 
+URL_API = "https://api.new.livestream.com/accounts/{}/events"
+
 
 @pluginmatcher(re.compile(
-    r"https?://(?:www\.|api\.new\.)?livestream\.com/"
+    r"https?://(?:api\.new\.)?livestream\.com/accounts/(?:(\w+))"
 ))
+
+
 class Livestream(Plugin):
     _config_re = re.compile(r"window.config = ({.+})")
     _stream_config_schema = validate.Schema(validate.any({
@@ -30,38 +33,32 @@ class Livestream(Plugin):
     }, {}), validate.get("event", {}), validate.get("stream_info", {}))
 
     def _get_streams(self):
-        # If the channel is hidden, you most likely will be with a single api.new.livestream.com JSON url.
-        # This workaround permits you to get the hidden streams.
-        if self.url.__contains__("api.new"):
+        # If the channel is hidden, you most likely will be with a precise api.new.livestream.com JSON url,
+        # including event number (only getting into the /events endpoint will show nothing.
+        # This workaround permits you to get access to the hidden streams via Streamlink.
+        if self.url.__contains__("api.new."):
             res = self.session.http.get(self.url).json()
-            stream_info = res["stream_info"]
-
-            log.trace("stream_info: {0!r}".format(stream_info))
-            if not (stream_info and stream_info["is_live"]):
-                log.debug("Stream might be Off Air")
-                return
-
-            m3u8_url = stream_info.get("secure_m3u8_url")
-            if m3u8_url:
-                yield from HLSStream.parse_variant_playlist(self.session, m3u8_url).items()
-            else:
-                log.debug("Unable to find URL.")
         else:
-            res = self.session.http.get(self.url)
-            m = self._config_re.search(res.text)
-            stream_info = parse_json(m.group(1), "config JSON",
-                                     schema=self._stream_config_schema)
+            account_no = self.match.group(2)
+            res = self.session.http.get(URL_API.format(account_no)).json()
 
-            log.trace("stream_info: {0!r}".format(stream_info))
-            if not (stream_info and stream_info["is_live"]):
-                log.debug("Stream might be Off Air")
-                return
+        # API verification from given URL if there's a live event / working VOD stream.
+        if "stream_info" not in res:
+            log.debug("No stream has been found with this URL.")
+            return
+        
+        stream_info = res["stream_info"]
 
-            m3u8_url = stream_info.get("secure_m3u8_url")
-            if m3u8_url:
-                yield from HLSStream.parse_variant_playlist(self.session, m3u8_url).items()
-            if not m:
-                log.debug("Unable to find _config_re")
-                return
+        log.debug("stream_info: {0!r}".format(stream_info))
+        if not (stream_info and stream_info["is_live"]):
+            log.debug("Stream might be Off Air")
+            return
+
+        m3u8_url = stream_info.get("secure_m3u8_url")
+        if m3u8_url:
+            yield from HLSStream.parse_variant_playlist(self.session, m3u8_url).items()
+        else:
+            log.debug("Unable to find URL.")
+
 
 __plugin__ = Livestream
