@@ -22,15 +22,6 @@ URL_API = "https://api.new.livestream.com/accounts/{}/events"
 
 
 class Livestream(Plugin):
-    _config_re = re.compile(r"window.config = ({.+})")
-    _stream_config_schema = validate.Schema(validate.any({
-        "event": {
-            "stream_info": validate.any({
-                "is_live": bool,
-                "secure_m3u8_url": validate.url(scheme="https"),
-            }, None),
-        }
-    }, {}), validate.get("event", {}), validate.get("stream_info", {}))
 
     def _get_streams(self):
         # If the channel is hidden, you most likely will be with a precise api.new.livestream.com JSON url,
