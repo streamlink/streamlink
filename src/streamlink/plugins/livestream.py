@@ -24,8 +24,8 @@ URL_API = "https://api.new.livestream.com/accounts/{}/events"
 class Livestream(Plugin):
 
     def _get_streams(self):
-        # If the channel is hidden, you most likely will be with a precise api.new.livestream.com JSON url,
-        # including event number (only getting into the /events endpoint will show nothing.
+        # If the channel is "hidden", you will most likely be with a precise api.new.livestream.com JSON url,
+        # including event number (only getting into the /events endpoint will show an almost blank JSON, no stream attached).
         # This workaround permits you to get access to the hidden streams via Streamlink.
         if self.url.__contains__("api.new."):
             res = self.session.http.get(self.url).json()
