@@ -1,10 +1,8 @@
-import unittest
-
-from streamlink.compat import is_win32
+from tests import posix_only, windows_only
 from tests.test_cmdline import CommandLineTestCase
 
 
-@unittest.skipIf(is_win32, "test only applicable in a POSIX OS")
+@posix_only
 class TestCommandLineWithTitlePOSIX(CommandLineTestCase):
     def test_open_player_with_title_vlc(self):
         self._test_args(["streamlink", "-p", "/usr/bin/vlc",
@@ -28,7 +26,7 @@ class TestCommandLineWithTitlePOSIX(CommandLineTestCase):
                         ["mpv", "--force-media-title=★ ★ ★", "-"])
 
 
-@unittest.skipIf(not is_win32, "test only applicable on Windows")
+@windows_only
 class TestCommandLineWithTitleWindows(CommandLineTestCase):
     def test_open_player_with_title_vlc(self):
         self._test_args(

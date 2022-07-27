@@ -8,7 +8,8 @@ from pathlib import Path
 from time import sleep
 from typing import BinaryIO, Optional
 
-from streamlink_cli.compat import is_win32, stdout
+from streamlink.compat import is_win32
+from streamlink_cli.compat import stdout
 from streamlink_cli.constants import PLAYER_ARGS_INPUT_DEFAULT, PLAYER_ARGS_INPUT_FALLBACK, SUPPORTED_PLAYERS
 from streamlink_cli.utils import Formatter, ignored
 

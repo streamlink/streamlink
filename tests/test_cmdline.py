@@ -4,7 +4,7 @@ from unittest.mock import ANY, Mock, patch
 
 import streamlink_cli.main
 from streamlink import Streamlink
-from streamlink_cli.compat import is_win32
+from tests import posix_only, windows_only
 
 
 class CommandLineTestCase(unittest.TestCase):
@@ -49,7 +49,7 @@ class CommandLineTestCase(unittest.TestCase):
             mock_call.assert_called_with(commandline, stderr=ANY, stdout=ANY)
 
 
-@unittest.skipIf(is_win32, "test only applicable in a POSIX OS")
+@posix_only
 class TestCommandLinePOSIX(CommandLineTestCase):
     """
     Commandline tests under POSIX-like operating systems
@@ -87,7 +87,7 @@ class TestCommandLinePOSIX(CommandLineTestCase):
                         ["/usr/bin/player", "-v", "-"])
 
 
-@unittest.skipIf(not is_win32, "test only applicable on Windows")
+@windows_only
 class TestCommandLineWindows(CommandLineTestCase):
     """
     Commandline tests for Windows

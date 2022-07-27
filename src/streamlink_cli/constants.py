@@ -3,7 +3,9 @@ import tempfile
 from pathlib import Path
 from typing import List
 
-from streamlink_cli.compat import DeprecatedPath, is_darwin, is_win32
+from streamlink.compat import is_darwin, is_win32
+from streamlink_cli.compat import DeprecatedPath
+
 
 PLAYER_ARGS_INPUT_DEFAULT = "playerinput"
 PLAYER_ARGS_INPUT_FALLBACK = "filename"

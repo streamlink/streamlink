@@ -2,7 +2,7 @@ from shutil import get_terminal_size
 from sys import stderr
 from typing import TextIO
 
-from streamlink_cli.compat import is_win32
+from streamlink.compat import is_win32
 
 
 class TerminalOutput:

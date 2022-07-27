@@ -1,11 +1,10 @@
-import unittest
 from unittest.mock import Mock, patch
 
-from streamlink.compat import is_win32
+from tests import posix_only, windows_only
 from tests.test_cmdline import CommandLineTestCase
 
 
-@unittest.skipIf(is_win32, "test only applicable in a POSIX OS")
+@posix_only
 @patch("streamlink_cli.main.NamedPipe", Mock(return_value=Mock(path="/tmp/streamlinkpipe")))
 class TestCommandLineWithPlayerFifoPosix(CommandLineTestCase):
     def test_player_fifo_default(self):
@@ -17,7 +16,7 @@ class TestCommandLineWithPlayerFifoPosix(CommandLineTestCase):
         )
 
 
-@unittest.skipIf(not is_win32, "test only applicable on Windows")
+@windows_only
 @patch("streamlink_cli.main.NamedPipe", Mock(return_value=Mock(path="\\\\.\\pipe\\streamlinkpipe")))
 class TestCommandLineWithPlayerFifoWindows(CommandLineTestCase):
     def test_player_fifo_default(self):
