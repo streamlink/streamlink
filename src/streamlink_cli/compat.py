@@ -1,4 +1,3 @@
-import os
 import sys
 from pathlib import Path
 from typing import BinaryIO, TYPE_CHECKING
@@ -8,9 +7,6 @@ try:
 except ImportError:
     import importlib_metadata  # type: ignore[import]  # noqa: F401
 
-
-is_darwin = sys.platform == "darwin"
-is_win32 = os.name == "nt"
 
 stdout: BinaryIO = sys.stdout.buffer
 
@@ -25,4 +21,8 @@ class DeprecatedPath(_BasePath):
     pass
 
 
-__all__ = ["is_darwin", "is_win32", "stdout", "DeprecatedPath"]
+__all__ = [
+    "importlib_metadata",
+    "stdout",
+    "DeprecatedPath",
+]

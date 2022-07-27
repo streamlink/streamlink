@@ -2,11 +2,13 @@ import threading
 import unittest
 from unittest.mock import Mock, call, patch
 
-from streamlink.compat import is_win32
 from streamlink.utils.named_pipe import NamedPipe, NamedPipeBase, NamedPipePosix, NamedPipeWindows
+from tests import posix_only, windows_only
 
-if is_win32:
+try:
     from ctypes import windll, create_string_buffer, c_ulong, byref  # type: ignore[attr-defined]
+except ImportError:
+    pass
 
 
 GENERIC_READ = 0x80000000
@@ -73,7 +75,7 @@ class TestNamedPipe(unittest.TestCase):
         ])
 
 
-@unittest.skipIf(is_win32, "test only applicable on a POSIX OS")
+@posix_only
 class TestNamedPipePosix(unittest.TestCase):
     def test_export(self):
         self.assertEqual(NamedPipe, NamedPipePosix)
@@ -116,7 +118,7 @@ class TestNamedPipePosix(unittest.TestCase):
         self.assertFalse(reader.is_alive())
 
 
-@unittest.skipIf(not is_win32, "test only applicable on Windows")
+@windows_only
 class TestNamedPipeWindows(unittest.TestCase):
     def test_export(self):
         self.assertEqual(NamedPipe, NamedPipeWindows)
