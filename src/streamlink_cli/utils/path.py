@@ -2,7 +2,7 @@ import re
 from pathlib import Path
 from typing import Callable, Optional, Union
 
-from streamlink_cli.compat import is_win32
+from streamlink.compat import is_win32
 
 
 REPLACEMENT = "_"

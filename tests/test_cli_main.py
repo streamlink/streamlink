@@ -15,7 +15,7 @@ import tests.resources
 from streamlink.exceptions import PluginError, StreamError
 from streamlink.session import Streamlink
 from streamlink.stream.stream import Stream
-from streamlink_cli.compat import DeprecatedPath, is_win32, stdout
+from streamlink_cli.compat import DeprecatedPath, stdout
 from streamlink_cli.main import (
     Formatter,
     NoPluginError,
@@ -29,6 +29,7 @@ from streamlink_cli.main import (
     setup_config_args
 )
 from streamlink_cli.output import FileOutput, PlayerOutput
+from tests import posix_only, windows_only
 from tests.plugin.testplugin import TestPlugin as _TestPlugin
 
 
@@ -719,7 +720,7 @@ class TestCLIMainLoggingStreams(_TestCLIMainLogging):
 
 
 class TestCLIMainLoggingInfos(_TestCLIMainLogging):
-    @unittest.skipIf(is_win32, "test only applicable on a POSIX OS")
+    @posix_only
     @patch("streamlink_cli.main.log")
     def test_log_root_warning(self, mock_log):
         self.subject(["streamlink"], euid=0)
@@ -859,7 +860,7 @@ class TestCLIMainLoggingLogfile(_TestCLIMainLogging):
         )
 
 
-@unittest.skipIf(is_win32, "test only applicable on a POSIX OS")
+@posix_only
 class TestCLIMainLoggingLogfilePosix(_TestCLIMainLogging):
     @patch("sys.stdout")
     @patch("builtins.open")
@@ -898,7 +899,7 @@ class TestCLIMainLoggingLogfilePosix(_TestCLIMainLogging):
         )
 
 
-@unittest.skipIf(not is_win32, "test only applicable on Windows")
+@windows_only
 class TestCLIMainLoggingLogfileWindows(_TestCLIMainLogging):
     @patch("sys.stdout")
     @patch("builtins.open")
