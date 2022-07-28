@@ -127,10 +127,6 @@ Python pip                           See the `PyPI package and source code`_ sec
 
                                      `NixOS channel`_
 
-`OpenBSD`_                           .. code-block:: bash
-
-                                        doas pkg_add streamlink
-
 `openSUSE`_                          .. code-block:: bash
 
                                         sudo zypper install streamlink
@@ -161,7 +157,6 @@ if a package is not available for your distro or platform, or if it's out of dat
 .. _Gentoo Linux: https://packages.gentoo.org/package/net-misc/streamlink
 .. _NetBSD (pkgsrc): https://pkgsrc.se/multimedia/streamlink
 .. _NixOS: https://github.com/NixOS/nixpkgs/tree/master/pkgs/applications/video/streamlink
-.. _OpenBSD: https://openports.se/multimedia/streamlink
 .. _openSUSE: https://build.opensuse.org/package/show/multimedia:apps/streamlink
 .. _Solus: https://dev.getsol.us/source/streamlink/
 .. _Ubuntu: https://launchpad.net/~nilarimogard/+archive/ubuntu/webupd8/+packages?field.name_filter=streamlink&field.status_filter=published&field.series_filter=
@@ -188,7 +183,6 @@ Fedora                               Mohamed El Morabity <melmorabity at fedorap
 Gentoo                               soredake <fdsfgs at krutt.org>
 NetBSD                               Maya Rashish <maya at netbsd.org>
 NixOS                                Tuomas Tynkkynen <tuomas.tynkkynen at iki.fi>
-OpenBSD                              Brian Callahan <bcallah at openbsd.org>
 openSUSE                             Simon Puchert <simonpuchert at alice.de>
 Solus                                Joey Riches <josephriches at gmail.com>
 Ubuntu                               Alin Andrei <andrew at webupd8.org>
