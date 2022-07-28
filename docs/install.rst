@@ -135,12 +135,6 @@ Python pip                           See the `PyPI package and source code`_ sec
 
                                         sudo eopkg install streamlink
 
-`Ubuntu`_                            .. code-block:: bash
-
-                                        sudo add-apt-repository ppa:nilarimogard/webupd8
-                                        sudo apt update
-                                        sudo apt install streamlink
-
 `Void`_                              .. code-block:: bash
 
                                         sudo xbps-install streamlink
@@ -159,7 +153,6 @@ if a package is not available for your distro or platform, or if it's out of dat
 .. _NixOS: https://github.com/NixOS/nixpkgs/tree/master/pkgs/applications/video/streamlink
 .. _openSUSE: https://build.opensuse.org/package/show/multimedia:apps/streamlink
 .. _Solus: https://dev.getsol.us/source/streamlink/
-.. _Ubuntu: https://launchpad.net/~nilarimogard/+archive/ubuntu/webupd8/+packages?field.name_filter=streamlink&field.status_filter=published&field.series_filter=
 .. _Void: https://github.com/void-linux/void-packages/tree/master/srcpkgs/streamlink
 
 .. _Installing AUR packages: https://wiki.archlinux.org/index.php/Arch_User_Repository#Installing_packages
@@ -185,7 +178,6 @@ NetBSD                               Maya Rashish <maya at netbsd.org>
 NixOS                                Tuomas Tynkkynen <tuomas.tynkkynen at iki.fi>
 openSUSE                             Simon Puchert <simonpuchert at alice.de>
 Solus                                Joey Riches <josephriches at gmail.com>
-Ubuntu                               Alin Andrei <andrew at webupd8.org>
 Void                                 Michal Vasilek <michal at vasilek.cz>
 Windows binaries                     Sebastian Meyer <mail at bastimeyer.de>
 ==================================== ===========================================
