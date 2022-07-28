@@ -140,9 +140,6 @@ Python pip                           See the `PyPI package and source code`_ sec
                                         sudo xbps-install streamlink
 ==================================== ===========================================
 
-Please see the `PyPI package and source code`_ or `AppImages`_ sections down below
-if a package is not available for your distro or platform, or if it's out of date.
-
 .. _Arch Linux: https://www.archlinux.org/packages/community/any/streamlink/
 .. _Arch Linux (aur, git): https://aur.archlinux.org/packages/streamlink-git/
 .. _Debian (sid, testing): https://packages.debian.org/unstable/streamlink
@@ -182,6 +179,24 @@ Void                                 Michal Vasilek <michal at vasilek.cz>
 Windows binaries                     Sebastian Meyer <mail at bastimeyer.de>
 Linux AppImages                      Sebastian Meyer <mail at bastimeyer.de>
 ==================================== ===========================================
+
+
+Package availability
+--------------------
+
+Packaging is not done by the Streamlink maintainers themselves except for
+the `PyPI package <PyPI package and source code_>`_,
+the `Windows installers + portable builds <Windows binaries_>`_,
+and the `Linux AppImages <AppImages_>`_.
+
+If a packaged release of Streamlink is not available for your operating system / distro or your system's architecture,
+or if it's out of date or broken, then please contact the respective package maintainers or package-repository maintainers
+of your operating system / distro, as it's up to them to add, update, or fix those packages.
+
+Users of glibc-based Linux distros can find up-to-date Streamlink releases via the available `AppImages`_.
+
+Please open an issue or pull request on GitHub if an **available**, **maintained** and **up-to-date** package is missing
+from the install docs.
 
 
 PyPI package and source code
