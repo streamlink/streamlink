@@ -180,6 +180,7 @@ openSUSE                             Simon Puchert <simonpuchert at alice.de>
 Solus                                Joey Riches <josephriches at gmail.com>
 Void                                 Michal Vasilek <michal at vasilek.cz>
 Windows binaries                     Sebastian Meyer <mail at bastimeyer.de>
+Linux AppImages                      Sebastian Meyer <mail at bastimeyer.de>
 ==================================== ===========================================
 
 
