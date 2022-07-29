@@ -19,7 +19,7 @@ log = logging.getLogger(__name__)
 
 
 @pluginmatcher(re.compile(
-    r"https?://(?P<url>w3\.mp\.lura\.live/player/prod/v3/anvload\.html\?)(?:(?P<params>.+))?"
+    r"https?://w3\.mp\.lura\.live/player/prod/v3/anvload\.html\?(?:(?P<params>.+))?"
 ))
 class Lura(Plugin):
 
