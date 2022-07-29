@@ -22,25 +22,25 @@ log = logging.getLogger(__name__)
     r"https?://(?P<url>w3\.mp\.lura\.live/player/prod/v3/anvload\.html\?)(?:(?P<params>.+))?"
 ))
 class Lura(Plugin):
+
     def _get_streams(self):
         data = self.match.groupdict()
         params = parse_params(data.get("params"))
         log.debug(f"params={params}")
-        if not "key" in params:
+        if "key" not in params:
             log.error("The Lura url does not have a key")
             return
 
-        b64 = urllib.parse.unquote(params["key"])
-        bytes = base64.b64decode(b64)
-        str = bytes.decode("utf-8")
-        j = json.loads(str)
+        key_b64 = urllib.parse.unquote(params["key"])
+        key_bytes = base64.b64decode(key_b64)
+        key_str = key_bytes.decode("utf-8")
+        key_json = json.loads(key_str)
 
-        if not "anvack" in j or not "v" in j:
+        if "anvack" not in key_json or "v" not in key_json:
             log.error("The Lura url does not have the expected data encoded")
             return
-        
-        url = f"https://tkx.mp.lura.live/rest/v2/mcp/video/{j['v']}?anvack={j['anvack']}"
-        print(url)
+
+        url = f"https://tkx.mp.lura.live/rest/v2/mcp/video/{key_json['v']}?anvack={key_json['anvack']}"
         postResult = self.session.http.post(
             url
         )
@@ -50,16 +50,19 @@ class Lura(Plugin):
             return
 
         schema_data = validate.Schema(
-                validate.parse_json(),
-                {
-                    "published_urls": [{
-                        "embed_url": validate.url(),
-                        "format":"m3u8-variant",
-                    }],
-                },
-                validate.get(("published_urls", 0, "embed_url")),
-            )
-        publishedUrl = schema_data.validate(resultMatch.group(2))
-        return HLSStream.parse_variant_playlist(self.session, publishedUrl)
+            validate.parse_json(),
+            {
+                "def_title": str,
+                "published_urls": [{
+                    "embed_url": validate.url(),
+                    "format": "m3u8-variant",
+                }],
+            },
+        )
+
+        data = schema_data.validate(resultMatch.group(2))
+        self.title = data["def_title"]
+        return HLSStream.parse_variant_playlist(self.session, data["published_urls"][0]["embed_url"])
+
 
 __plugin__ = Lura

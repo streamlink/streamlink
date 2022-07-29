@@ -1,7 +1,9 @@
 from streamlink.plugins.lura import Lura
 from tests.plugins import PluginCanHandleUrl
 
+
 class TestPluginCanHandleUrlLura(PluginCanHandleUrl):
+
     __plugin__ = Lura
 
     should_match = [
