@@ -19,29 +19,50 @@ log = logging.getLogger(__name__)
 
 
 @pluginmatcher(re.compile(
-    r"https?://(?:(\w+\.)?ardmediathek\.de/|mediathek\.daserste\.de/)"
+    r"""
+        https?://(\w+\.)?ardmediathek\.de/
+        (?:
+            live/(?:[^/]+/)?(?P<id_live>\w+)
+            |
+            video/(?:[^/]+/[^/]+/[^/]+/)?(?P<id_video>\w+)
+        )
+        (?:\?|$)
+    """,
+    re.VERBOSE,
 ))
 class ARDMediathek(Plugin):
+    _URL_API = "https://api.ardmediathek.de/page-gateway/pages/ard/item/{item}"
     _QUALITY_MAP = {
         4: "1080p",
         3: "720p",
         2: "540p",
         1: "360p",
-        0: "270p"
+        0: "270p",
     }
 
     def _get_streams(self):
         data_json = self.session.http.get(self.url, schema=validate.Schema(
             validate.parse_html(),
-            validate.xml_findtext(".//script[@id='fetchedContextValue'][@type='application/json']"),
-            validate.any(None, validate.all(
+            validate.xml_xpath_string(".//script[@type='application/json'][@id='fetchedContextValue2'][1]/text()"),
+            validate.none_or_all(
                 validate.parse_json(),
-                {str: dict},
-                validate.transform(lambda obj: list(obj.items())),
+                [validate.list(str, {"data": dict})],
                 validate.filter(lambda item: item[0].startswith("https://api.ardmediathek.de/page-gateway/pages/")),
-                validate.any(validate.get((0, 1)), [])
-            ))
+                validate.any(
+                    validate.get((0, 1, "data")),
+                    [],
+                ),
+            ),
         ))
+        if not data_json:
+            data_json = self.session.http.get(
+                self._URL_API.format(item=self.match.group("id_live") or self.match.group("id_video")),
+                params={
+                    "devicetype": "pc",
+                    "embedded": "false",
+                },
+                schema=validate.Schema(validate.parse_json()),
+            )
         if not data_json:
             return
 
