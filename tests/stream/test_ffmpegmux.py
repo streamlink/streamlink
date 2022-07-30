@@ -323,8 +323,8 @@ class TestOpen:
 
     def test_stderr_path(self, session: Streamlink, popen: Mock):
         session.options.update({"ffmpeg-verbose-path": "foo"})
-        with patch("streamlink.stream.ffmpegmux.open") as mock_open:
-            file: Mock = mock_open("foo", "w")
+        with patch("streamlink.stream.ffmpegmux.Path") as mock_path:
+            file: Mock = mock_path("foo").expanduser().open("w")
             streamio = FFMPEGMuxer(session)
 
             streamio.open()
