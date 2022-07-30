@@ -4,6 +4,7 @@ import subprocess
 import sys
 import threading
 from functools import lru_cache
+from pathlib import Path
 from shutil import which
 from typing import Optional
 
@@ -166,7 +167,7 @@ class FFMPEGMuxer(StreamIO):
         if session.options.get("ffmpeg-verbose"):
             self.errorlog = sys.stderr
         elif session.options.get("ffmpeg-verbose-path"):
-            self.errorlog = open(session.options.get("ffmpeg-verbose-path"), "w")
+            self.errorlog = Path(session.options.get("ffmpeg-verbose-path")).expanduser().open("w")
             self.close_errorlog = True
         else:
             self.errorlog = devnull()
