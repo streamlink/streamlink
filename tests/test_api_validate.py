@@ -268,6 +268,36 @@ class TestCallable:
         """)
 
 
+class TestPattern:
+    @pytest.mark.parametrize("pattern,data,expected", [
+        (r"\s(?P<bar>\S+)\s", "foo bar baz", {"bar": "bar"}),
+        (rb"\s(?P<bar>\S+)\s", b"foo bar baz", {"bar": b"bar"}),
+    ])
+    def test_success(self, pattern, data, expected):
+        result = validate.validate(re.compile(pattern), data)
+        assert type(result) is re.Match
+        assert result.groupdict() == expected
+
+    def test_failure(self):
+        assert validate.validate(re.compile(r"foo"), "bar") is None
+
+    def test_failure_type(self):
+        with pytest.raises(validate.ValidationError) as cm:
+            validate.validate(re.compile(r"foo"), b"foo")
+        assert_validationerror(cm.value, """
+            ValidationError(Pattern):
+              cannot use a string pattern on a bytes-like object
+        """)
+
+    def test_failure_schema(self):
+        with pytest.raises(validate.ValidationError) as cm:
+            validate.validate(re.compile(r"foo"), 123)
+        assert_validationerror(cm.value, """
+            ValidationError(Pattern):
+              Type of 123 should be str or bytes, but is int
+        """)
+
+
 class TestAllSchema:
     @pytest.fixture(scope="class")
     def schema(self):
