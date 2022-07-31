@@ -1,7 +1,7 @@
 from collections import abc
 from copy import copy, deepcopy
 from functools import singledispatch
-from re import Match
+from re import Match, Pattern
 
 from lxml.etree import Element, iselement
 
@@ -132,6 +132,24 @@ def _validate_callable(schema: abc.Callable, value):
         )
 
     return value
+
+
+@validate.register
+def _validate_pattern(schema: Pattern, value):
+    if type(value) not in (str, bytes):
+        raise ValidationError(
+            "Type of {value} should be str or bytes, but is {actual}",
+            value=repr(value),
+            actual=type(value).__name__,
+            schema=Pattern,
+        )
+
+    try:
+        result = schema.search(value)
+    except TypeError as err:
+        raise ValidationError(err, schema=Pattern)
+
+    return result
 
 
 @validate.register
