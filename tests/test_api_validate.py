@@ -386,6 +386,30 @@ class TestAnySchema:
         """)
 
 
+class TestNoneOrAllSchema:
+    @pytest.mark.parametrize("data,expected", [("foo", "FOO"), ("bar", None)])
+    def test_success(self, data, expected):
+        assert validate.validate(
+            validate.Schema(
+                re.compile(r"foo"),
+                validate.none_or_all(
+                    validate.get(0),
+                    validate.transform(str.upper),
+                ),
+            ),
+            data,
+        ) == expected
+
+    def test_failure(self):
+        with pytest.raises(validate.ValidationError) as cm:
+            validate.validate(validate.none_or_all(str, int), "foo")
+        assert_validationerror(cm.value, """
+            ValidationError(NoneOrAllSchema):
+              ValidationError(type):
+                Type of 'foo' should be int, but is str
+        """)
+
+
 class TestListSchema:
     def test_success(self):
         data = [1, 3.14, "foo"]
