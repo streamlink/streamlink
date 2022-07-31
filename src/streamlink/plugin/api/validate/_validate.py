@@ -13,6 +13,7 @@ from streamlink.plugin.api.validate._schemas import (
     AttrSchema,
     GetItemSchema,
     ListSchema,
+    NoneOrAllSchema,
     OptionalSchema,
     TransformSchema,
     UnionGetSchema,
@@ -170,6 +171,18 @@ def _validate_anyschema(schema: AnySchema, value):
             errors.append(err)
 
     raise ValidationError(*errors, schema=AnySchema)
+
+
+@validate.register
+def _validate_noneorallschema(schema: NoneOrAllSchema, value):
+    if value is not None:
+        try:
+            for schema in schema.schema:
+                value = validate(schema, value)
+        except ValidationError as err:
+            raise ValidationError(err, schema=NoneOrAllSchema)
+
+    return value
 
 
 @validate.register
