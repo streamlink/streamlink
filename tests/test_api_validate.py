@@ -356,6 +356,58 @@ class TestAnySchema:
         """)
 
 
+class TestListSchema:
+    def test_success(self):
+        data = [1, 3.14, "foo"]
+        result = validate.validate(validate.list(int, float, "foo"), data)
+        assert result is not data
+        assert result == [1, 3.14, "foo"]
+        assert type(result) is type(data)
+        assert len(result) == len(data)
+
+    @pytest.mark.parametrize("data", [[1, "foo"], [1.2, "foo"], [1, "bar"], [1.2, "bar"]])
+    def test_success_subschemas(self, data):
+        schema = validate.list(
+            validate.any(int, float),
+            validate.all(validate.any("foo", "bar"), validate.transform(str.upper)),
+        )
+        result = validate.validate(schema, data)
+        assert result is not data
+        assert result[0] is data[0]
+        assert result[1] is not data[1]
+        assert result[1].isupper()
+
+    def test_failure(self):
+        data = [1, 3.14, "foo"]
+        with pytest.raises(validate.ValidationError) as cm:
+            validate.validate(validate.list("foo", int, float), data)
+        assert_validationerror(cm.value, """
+            ValidationError(ListSchema):
+              ValidationError(equality):
+                1 does not equal 'foo'
+              ValidationError(type):
+                Type of 3.14 should be int, but is float
+              ValidationError(type):
+                Type of 'foo' should be float, but is str
+        """)
+
+    def test_failure_type(self):
+        with pytest.raises(validate.ValidationError) as cm:
+            validate.validate(validate.list(), {})
+        assert_validationerror(cm.value, """
+            ValidationError(ListSchema):
+              Type of {} should be list, but is dict
+        """)
+
+    def test_failure_length(self):
+        with pytest.raises(validate.ValidationError) as cm:
+            validate.validate(validate.list("foo", "bar", "baz"), ["foo", "bar"])
+        assert_validationerror(cm.value, """
+            ValidationError(ListSchema):
+              Length of list (2) does not match expectation (3)
+        """)
+
+
 class TestTransformSchema:
     def test_success(self):
         def callback(string: str, *args, **kwargs):
