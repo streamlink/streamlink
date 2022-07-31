@@ -33,7 +33,7 @@ _example_inline_code_block_re = re.compile(r"(?<=^Example: )(.+)$", re.MULTILINE
 def get_parser(module_name, attr):
     module = __import__(module_name, globals(), locals(), [attr])
     parser = getattr(module, attr)
-    return parser if not(callable(parser)) else parser.__call__()
+    return parser if not callable(parser) else parser()
 
 
 def indent(value, length=4):
