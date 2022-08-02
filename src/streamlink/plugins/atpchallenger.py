@@ -1,6 +1,6 @@
 """
-$description Professional tennis tournaments.
-$url www.atptour.com/en/atp-challenger-tour/challenger-tv
+$description Tennis tournaments organized by the Association of Tennis Professionals.
+$url atptour.com/en/atp-challenger-tour/challenger-tv
 $type live, vod
 """
 
@@ -15,7 +15,7 @@ log = logging.getLogger(__name__)
 
 
 @pluginmatcher(re.compile(
-    r"https?://(?:www\.)?atptour.com/en/atp-challenger-tour/challenger-tv"
+    r"https?://(?:www\.)?atptour\.com/(?:en|es)/atp-challenger-tour/challenger-tv"
 ))
 class AtpChallengerTour(Plugin):
     _re_window_config = re.compile(r""".*window.config\s*=\s*(?P<json>{.*?});""", re.DOTALL)
