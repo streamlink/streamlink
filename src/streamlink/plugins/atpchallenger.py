@@ -4,13 +4,10 @@ $url atptour.com/en/atp-challenger-tour/challenger-tv
 $type live, vod
 """
 
-import logging
 import re
 
 from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.api import validate
-
-log = logging.getLogger(__name__)
 
 
 @pluginmatcher(re.compile(
