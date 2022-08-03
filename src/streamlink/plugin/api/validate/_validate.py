@@ -53,6 +53,8 @@ def _validate_type(schema, value):
         value = str(value)
     if schema == text_type:
         schema = str
+    elif schema == int and is_py2 and isinstance(value, long):
+        schema = long
     if not isinstance(value, schema):
         raise ValidationError(
             "Type of {value} should be {expected}, but is {actual}",
