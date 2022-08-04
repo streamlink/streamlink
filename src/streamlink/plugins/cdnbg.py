@@ -47,8 +47,8 @@ class CDNBG(Plugin):
     @staticmethod
     def _find_url(regex: re.Pattern) -> validate.all:
         return validate.all(
-            validate.transform(regex.search),
-            validate.get("url")
+            validate.regex(regex),
+            validate.get("url"),
         )
 
     def _get_streams(self):

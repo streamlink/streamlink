@@ -132,15 +132,15 @@ class Rtve(Plugin):
 
     def _get_streams(self):
         self.id = self.session.http.get(self.url, schema=validate.Schema(
-            validate.transform(re.compile(r"\bdata-setup='({.+?})'", re.DOTALL).search),
-            validate.any(None, validate.all(
+            re.compile(r"\bdata-setup='({.+?})'", re.DOTALL),
+            validate.none_or_all(
                 validate.get(1),
                 validate.parse_json(),
                 {
                     "idAsset": validate.any(int, validate.all(str, validate.transform(int))),
                 },
-                validate.get("idAsset")
-            )),
+                validate.get("idAsset"),
+            ),
         ))
         if not self.id:
             return

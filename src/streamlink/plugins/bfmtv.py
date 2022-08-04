@@ -48,25 +48,22 @@ class BFMTV(Plugin):
 
     def _streams_brightcove_js(self, root):
         re_js_src = re.compile(r"^[\w/]+/main\.\w+\.js$")
-        re_js_brightcove_video = re.compile(
-            r'i\?\([A-Z]="[^"]+",y="(?P<video_id>[0-9]+).*"data-account"\s*:\s*"(?P<account_id>[0-9]+)',
-        )
         schema_brightcove_js = validate.Schema(
             validate.xml_findall(r".//script[@src]"),
-            validate.filter(lambda elem: re_js_src.search(elem.attrib.get("src"))),
+            validate.filter(lambda elem: re_js_src.search(elem.attrib.get("src")) is not None),
             validate.get(0),
             str,
             validate.transform(lambda src: urljoin(self.url, src))
         )
         schema_brightcove_js2 = validate.Schema(
-            validate.transform(re_js_brightcove_video.search),
+            re.compile(r"""i\?\([A-Z]="[^"]+",y="(?P<video_id>\d+).*"data-account"\s*:\s*"(?P<account_id>\d+)""",),
             validate.union_get("account_id", "video_id")
         )
         try:
             js_url = schema_brightcove_js.validate(root)
             log.debug(f"JS URL: {js_url}")
             account_id, video_id = self.session.http.get(js_url, schema=schema_brightcove_js2)
-        except (PluginError, TypeError):
+        except PluginError:
             return
 
         return self._brightcove(account_id, video_id)

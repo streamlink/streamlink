@@ -299,26 +299,24 @@ class Crunchyroll(Plugin):
         return Plugin.stream_weight(key)
 
     def _get_streams(self):
-        beta_json_re = re.compile(r"window.__INITIAL_STATE__\s*=\s*({.*});")
-
         beta_id = self.match.group("beta_id")
         if beta_id:
             json = self.session.http.get(self.url, schema=validate.Schema(
                 validate.parse_html(),
                 validate.xml_xpath_string(".//script[contains(text(), 'window.__INITIAL_STATE__')]/text()"),
-                validate.any(None, validate.all(
-                    validate.transform(beta_json_re.search),
-                    validate.any(None, validate.all(
+                validate.none_or_all(
+                    re.compile(r"window.__INITIAL_STATE__\s*=\s*({.*});"),
+                    validate.none_or_all(
                         validate.get(1),
                         validate.parse_json(),
-                        validate.any(None, validate.all(
+                        validate.none_or_all(
                             {"content": {"byId": {str: {"external_id": validate.all(
                                 validate.transform(lambda s: int(s.replace("EPI.", ""))),
                             )}}}},
                             validate.get(("content", "byId")),
-                        )),
-                    )),
-                )),
+                        ),
+                    ),
+                ),
             ))
             if not json or beta_id not in json:
                 return

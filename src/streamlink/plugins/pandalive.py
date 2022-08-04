@@ -1,5 +1,5 @@
 """
-$description South Korean live streaming platform for individual live streams.
+$description South Korean live-streaming platform for individual live streams.
 $url pandalive.co.kr
 $type live
 """
@@ -19,10 +19,9 @@ log = logging.getLogger(__name__)
 ))
 class Pandalive(Plugin):
     def _get_streams(self):
-        re_media_code = re.compile(r"""routePath:\s*(["'])(\\u002F|/)live(\\u002F|/)play(\\u002F|/)(?P<id>[^"']+)\1""")
         media_code = self.session.http.get(self.url, schema=validate.Schema(
-            validate.transform(re_media_code.search),
-            validate.any(None, validate.get("id"))
+            re.compile(r"""routePath:\s*(?P<q>["'])(\\u002F|/)live(\\u002F|/)play(\\u002F|/)(?P<id>.+?)(?P=q)"""),
+            validate.any(None, validate.get("id")),
         ))
 
         if not media_code:
@@ -34,7 +33,7 @@ class Pandalive(Plugin):
             "https://api.pandalive.co.kr/v1/live/play",
             data={
                 "action": "watch",
-                "userId": media_code
+                "userId": media_code,
             },
             schema=validate.Schema(
                 validate.parse_json(),

@@ -25,27 +25,27 @@ log = logging.getLogger(__name__)
 class Mediaklikk(Plugin):
     PLAYER_URL = "https://player.mediaklikk.hu/playernew/player.php"
 
-    _re_player_manager = re.compile(r"""
-        mtva_player_manager\.player\s*\(\s*
-            document\.getElementById\(\s*"\w+"\s*\)\s*,\s*
-            (?P<json>{.*?})\s*
-        \)\s*;
-    """, re.VERBOSE | re.DOTALL)
-    _re_player_json = re.compile(r"pl\.setup\s*\(\s*(?P<json>{.*?})\s*\)\s*;", re.DOTALL)
-
     def _get_streams(self):
         params = self.session.http.get(self.url, schema=validate.Schema(
-            validate.transform(self._re_player_manager.search),
-            validate.any(None, validate.all(
+            re.compile(
+                r"""
+                    mtva_player_manager\.player\s*\(\s*
+                        document\.getElementById\(\s*"\w+"\s*\)\s*,\s*
+                        (?P<json>{.*?})\s*
+                    \)\s*;
+                """,
+                re.VERBOSE | re.DOTALL,
+            ),
+            validate.none_or_all(
                 validate.get("json"),
                 validate.parse_json(),
                 {
                     "contentId": validate.any(str, int),
                     validate.optional("streamId"): str,
                     validate.optional("idec"): str,
-                    validate.optional("token"): str
-                }
-            ))
+                    validate.optional("token"): str,
+                },
+            ),
         ))
         if not params:
             log.error("Could not find player manager data")
@@ -64,19 +64,19 @@ class Mediaklikk(Plugin):
 
         self.session.http.headers.update({"Referer": self.url})
         playlists = self.session.http.get(self.PLAYER_URL, params=params, schema=validate.Schema(
-            validate.transform(self._re_player_json.search),
-            validate.any(None, validate.all(
+            re.compile(r"pl\.setup\s*\(\s*(?P<json>{.*?})\s*\)\s*;", re.DOTALL),
+            validate.none_or_all(
                 validate.get("json"),
                 validate.parse_json(),
                 {"playlist": [{
                     "file": validate.url(),
-                    "type": str
+                    "type": str,
                 }]},
                 validate.get("playlist"),
                 validate.filter(lambda p: p["type"] == "hls"),
                 validate.filter(lambda p: not skip_vods or "vod" not in p["file"]),
-                validate.map(lambda p: update_scheme("https://", p["file"]))
-            ))
+                validate.map(lambda p: update_scheme("https://", p["file"])),
+            ),
         ))
 
         for url in playlists or []:
