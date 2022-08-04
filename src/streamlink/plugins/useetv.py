@@ -41,10 +41,8 @@ class UseeTV(Plugin):
                         .//script[contains(text(), 'laylist.m3u8') or contains(text(), 'manifest.mpd')][1]/text()
                     """),
                     str,
-                    validate.transform(
-                        re.compile(r"""(?P<q>['"])(?P<url>https://.*?/(?:[Pp]laylist\.m3u8|manifest\.mpd).+?)(?P=q)""").search
-                    ),
-                    validate.any(None, validate.all(validate.get("url"), validate.url())),
+                    re.compile(r"""(?P<q>['"])(?P<url>https://.*?/(?:[Pp]laylist\.m3u8|manifest\.mpd).+?)(?P=q)"""),
+                    validate.none_or_all(validate.get("url"), validate.url()),
                 ),
                 validate.all(
                     validate.xml_xpath_string(".//video[@id='video-player']/source/@src"),

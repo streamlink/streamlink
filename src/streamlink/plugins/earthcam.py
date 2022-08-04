@@ -1,5 +1,5 @@
 """
-$description A network of live streaming webcams for tourism and entertainment.
+$description A network of live webcams for tourism and entertainment.
 $url earthcam.com
 $type live, vod
 $notes Only works for the cams hosted on EarthCam
@@ -21,12 +21,10 @@ log = logging.getLogger(__name__)
     r"https?://(?:www\.)?earthcam\.com/"
 ))
 class EarthCam(Plugin):
-    _re_json_base = re.compile(r"""var\s+json_base\s*=\s*(?P<json>{.*?});""", re.DOTALL)
-
     def _get_streams(self):
         data = self.session.http.get(self.url, schema=validate.Schema(
-            validate.transform(self._re_json_base.search),
-            validate.any(None, validate.all(
+            re.compile(r"""var\s+json_base\s*=\s*(?P<json>{.*?});""", re.DOTALL),
+            validate.none_or_all(
                 validate.get("json"),
                 validate.parse_json(),
                 {"cam": {
@@ -39,10 +37,10 @@ class EarthCam(Plugin):
                         "title": str,
                         "liveon": str,
                         "defaulttab": str,
-                    }
+                    },
                 }},
-                validate.get("cam")
-            ))
+                validate.get("cam"),
+            ),
         ))
         if not data:
             return

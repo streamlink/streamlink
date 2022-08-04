@@ -44,10 +44,10 @@ class Livestream(Plugin):
                         validate.parse_json(),
                         {"data": [dict]},
                         validate.get(("data", 0)),
-                        validate.any(None, validate.all(
+                        validate.none_or_all(
                             {"id": int},
                             validate.get("id"),
-                        )),
+                        ),
                     ),
                 )
             else:
@@ -56,16 +56,15 @@ class Livestream(Plugin):
                     schema=validate.Schema(
                         validate.parse_html(),
                         validate.xml_xpath_string(".//script[contains(text(), 'window.config = ')][1]/text()"),
-                        validate.any(None, validate.all(
-                            str,
-                            validate.transform(re.compile(r"^window\.config\s*=\s*(\{.+});?\s*$").match),
-                            validate.any(None, validate.all(
+                        validate.none_or_all(
+                            re.compile(r"^window\.config\s*=\s*(\{.+});?\s*$"),
+                            validate.none_or_all(
                                 validate.get(1),
                                 validate.parse_json(),
                                 {"event": {"id": int}},
                                 validate.get(("event", "id")),
-                            ))
-                        )),
+                            ),
+                        ),
                     ),
                 )
             if event is None:

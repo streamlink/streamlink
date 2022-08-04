@@ -25,17 +25,16 @@ class Showroom(Plugin):
         self.session.set_option("hls-playlist-reload-time", "segment")
 
     def _get_streams(self):
-        re_room_id = re.compile(r"share_url:\"https:[^?]+?\?room_id=(?P<room_id>\d+)\"")
         room_id = self.session.http.get(
             self.url,
             schema=validate.Schema(
                 validate.parse_html(),
                 validate.xml_xpath_string(".//script[contains(text(),'share_url:\"https:')][1]/text()"),
-                validate.any(None, validate.all(
-                    validate.transform(re_room_id.search),
-                    validate.any(None, validate.get("room_id"))
-                ))
-            )
+                validate.none_or_all(
+                    re.compile(r"share_url:\"https:[^?]+?\?room_id=(?P<room_id>\d+)\""),
+                    validate.any(None, validate.get("room_id")),
+                ),
+            ),
         )
         if not room_id:
             return
@@ -43,7 +42,7 @@ class Showroom(Plugin):
         live_status, self.title = self.session.http.get(
             "https://www.showroom-live.com/api/live/live_info",
             params={
-                "room_id": room_id
+                "room_id": room_id,
             },
             schema=validate.Schema(
                 validate.parse_json(),
@@ -54,8 +53,8 @@ class Showroom(Plugin):
                 validate.union_get(
                     "live_status",
                     "room_name",
-                )
-            )
+                ),
+            ),
         )
         if live_status != self.LIVE_STATUS:
             log.info("This stream is currently offline")
@@ -75,7 +74,7 @@ class Showroom(Plugin):
                 }]},
                 validate.get("streaming_url_list"),
                 validate.filter(lambda p: p["type"] == "hls_all"),
-                validate.get((0, "url"))
+                validate.get((0, "url")),
             ),
         )
 
