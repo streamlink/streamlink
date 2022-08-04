@@ -65,7 +65,6 @@ class OnePlusOneAPI:
     def __init__(self, session, url):
         self.session = session
         self.url = url
-        self._re_data = re.compile(r"ovva-player\",\"([^\"]*)\"\)")
 
     def get_hls_url(self):
         self.session.http.cookies.clear()
@@ -73,7 +72,9 @@ class OnePlusOneAPI:
             url=self.url,
             schema=validate.Schema(
                 validate.parse_html(),
-                validate.xml_xpath_string(".//iframe[contains(@src,'embed')]/@src")))
+                validate.xml_xpath_string(".//iframe[contains(@src,'embed')]/@src"),
+            ),
+        )
         if not url_parts:
             raise NoStreamsError("Missing url_parts")
 
@@ -87,14 +88,14 @@ class OnePlusOneAPI:
                     validate.parse_html(),
                     validate.xml_xpath_string(".//script[@type='text/javascript'][contains(text(),'ovva-player')]/text()"),
                     str,
-                    validate.transform(self._re_data.search),
+                    validate.regex(re.compile(r"ovva-player\",\"([^\"]*)\"\)")),
                     validate.get(1),
                     validate.transform(lambda x: b64decode(x).decode()),
                     validate.parse_json(),
                     {"balancer": validate.url()},
-                    validate.get("balancer")
+                    validate.get("balancer"),
                 ))
-        except (PluginError, TypeError) as err:
+        except PluginError as err:
             log.error(f"ovva-player: {err}")
             return
 
@@ -104,7 +105,9 @@ class OnePlusOneAPI:
             schema=validate.Schema(
                 validate.transform(lambda x: x.split("=")),
                 ["302", validate.url(path=validate.endswith(".m3u8"))],
-                validate.get(1)))
+                validate.get(1),
+            ),
+        )
         return url_hls
 
 

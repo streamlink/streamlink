@@ -200,12 +200,11 @@ class SteamBroadcastPlugin(Plugin):
         return self.session.http.get(url, schema=validate.Schema(
             validate.parse_html(),
             validate.xml_xpath_string(".//div[@id='webui_config']/@data-broadcast"),
-            validate.any(None, validate.all(
-                str,
+            validate.none_or_all(
                 validate.parse_json(),
                 {"steamid": str},
-                validate.get("steamid")
-            ))
+                validate.get("steamid"),
+            ),
         ))
 
     def _get_streams(self):

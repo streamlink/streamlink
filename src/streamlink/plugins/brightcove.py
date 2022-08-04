@@ -1,5 +1,5 @@
 """
-$description Global live streaming and video on-demand hosting platform.
+$description Global live-streaming and video on-demand hosting platform.
 $url players.brightcove.net
 $type live, vod
 """
@@ -41,7 +41,7 @@ class BrightcovePlayer:
             player_url,
             params={"videoId": video_id},
             schema=validate.Schema(
-                validate.transform(re.compile(r"""policyKey\s*:\s*(?P<q>['"])(?P<key>[\w-]+)(?P=q)""").search),
+                re.compile(r"""policyKey\s*:\s*(?P<q>['"])(?P<key>[\w-]+)(?P=q)"""),
                 validate.any(None, validate.get("key"))
             )
         )

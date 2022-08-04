@@ -20,31 +20,28 @@ log = logging.getLogger(__name__)
     r"https?://(?:\w+\.)*sportschau\.de/"
 ))
 class Sportschau(Plugin):
-    _re_player = re.compile(r"https?:(//deviceids-medp.wdr.de/ondemand/\S+\.js)")
-    _re_json = re.compile(r"\$mediaObject.jsonpHelper.storeAndPlay\(({.+})\);?")
-
     def _get_streams(self):
         player_js = self.session.http.get(self.url, schema=validate.Schema(
-            validate.transform(self._re_player.search),
-            validate.any(None, validate.Schema(
+            re.compile(r"https?:(//deviceids-medp.wdr.de/ondemand/\S+\.js)"),
+            validate.none_or_all(
                 validate.get(1),
-                validate.transform(lambda url: update_scheme("https:", url))
-            ))
+                validate.transform(lambda url: update_scheme("https://", url)),
+            ),
         ))
         if not player_js:
             return
 
         log.debug(f"Found player js {player_js}")
         data = self.session.http.get(player_js, schema=validate.Schema(
-            validate.transform(self._re_json.match),
+            validate.regex(re.compile(r"\$mediaObject\.jsonpHelper\.storeAndPlay\(({.+})\);?")),
             validate.get(1),
             validate.parse_json(),
             validate.get("mediaResource"),
             validate.get("dflt"),
             {
                 validate.optional("audioURL"): validate.url(),
-                validate.optional("videoURL"): validate.url()
-            }
+                validate.optional("videoURL"): validate.url(),
+            },
         ))
 
         if data.get("videoURL"):
