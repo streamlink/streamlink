@@ -2,16 +2,14 @@
 $description Turkish live TV channels from Ciner Group, including Haberturk TV and Show TV.
 $url showtv.com.tr
 $url haberturk.com
+$url haberturk.tv
 $url showmax.com.tr
 $url showturk.com.tr
-$url bloomberght.com
 $type live
 """
 
-import json
 import re
 
-from streamlink.compat import unquote
 from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.api import validate
 from streamlink.stream.hls import HLSStream
@@ -20,37 +18,28 @@ from streamlink.stream.hls import HLSStream
 @pluginmatcher(re.compile(r"""
     https?://(?:www\.)?
     (?:
-        showtv\.com\.tr/canli-yayin(/showtv)?|
-        haberturk\.com/canliyayin|
-        haberturk\.com/tv/canliyayin|
-        showmax\.com\.tr/canliyayin|
-        showturk\.com\.tr/canli-yayin/showturk|
-        bloomberght\.com/tv|
-        haberturk\.tv/canliyayin
+        showtv\.com\.tr/canli-yayin(/showtv)?
+        |
+        haberturk\.(?:com|tv)(?:/tv)?/canliyayin
+        |
+        showmax\.com\.tr/canliyayin
+        |
+        showturk\.com\.tr/canli-yayin/showturk
     )/?
 """, re.VERBOSE))
 class CinerGroup(Plugin):
-    stream_re = re.compile(r"""div .*? data-ht=(?P<quote>["'])(?P<data>.*?)(?P=quote)""", re.DOTALL)
-    stream_data_schema = validate.Schema(
-        validate.transform(stream_re.search),
-        validate.any(
-            None,
-            validate.all(
-                validate.get("data"),
-                validate.transform(unquote),
-                validate.transform(lambda x: x.replace("&quot;", '"')),
-                validate.transform(json.loads),
-                {
-                    "ht_stream_m3u8": validate.url()
-                },
-                validate.get("ht_stream_m3u8")
-            )
-        )
-    )
-
     def _get_streams(self):
-        res = self.session.http.get(self.url)
-        stream_url = self.stream_data_schema.validate(res.text)
+        stream_url = self.session.http.get(self.url, schema=validate.Schema(
+            validate.parse_html(),
+            validate.xml_xpath_string(".//div[@data-ht][1]/@data-ht"),
+            validate.none_or_all(
+                validate.parse_json(),
+                {
+                    "ht_stream_m3u8": validate.url(),
+                },
+                validate.get("ht_stream_m3u8"),
+            ),
+        ))
         if stream_url:
             return HLSStream.parse_variant_playlist(self.session, stream_url)
 
