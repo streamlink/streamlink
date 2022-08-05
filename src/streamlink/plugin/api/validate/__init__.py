@@ -6,6 +6,7 @@ from streamlink.plugin.api.validate._schemas import (  # noqa: I101, F401
     AnySchema as any,
     NoneOrAllSchema as none_or_all,
     ListSchema as list,
+    RegexSchema as regex,
     TransformSchema as transform,
     OptionalSchema as optional,
     GetItemSchema as get,
