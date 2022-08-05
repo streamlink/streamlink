@@ -278,6 +278,16 @@ class TestPattern:
         assert type(result) is re.Match
         assert result.groupdict() == expected
 
+    def test_stringsubclass(self):
+        assert validate.validate(
+            validate.all(
+                validate.xml_xpath_string(".//@bar"),
+                re.compile(r".+"),
+                validate.get(0),
+            ),
+            Element("foo", {"bar": "baz"}),
+        ) == "baz"
+
     def test_failure(self):
         assert validate.validate(re.compile(r"foo"), "bar") is None
 
