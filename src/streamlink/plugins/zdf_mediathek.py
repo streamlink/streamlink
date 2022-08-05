@@ -21,22 +21,20 @@ log = logging.getLogger(__name__)
     r"https?://(\w+\.)?(zdf\.de|3sat\.de)/"
 ))
 class ZDFMediathek(Plugin):
-    _re_api_json = re.compile(r"""data-zdfplayer-jsb=(["'])(?P<json>{.+?})\1""", re.DOTALL)
-
     PLAYER_ID = "ngplayer_2_4"
 
     def _get_streams(self):
         zdf_json = self.session.http.get(self.url, schema=validate.Schema(
-            validate.transform(self._re_api_json.search),
-            validate.any(None, validate.all(
-                validate.get("json"),
+            validate.parse_html(),
+            validate.xml_xpath_string(".//*[@data-zdfplayer-jsb][1]/@data-zdfplayer-jsb"),
+            validate.none_or_all(
                 validate.parse_json(),
                 {
                     "apiToken": str,
-                    "content": validate.url()
+                    "content": validate.url(),
                 },
-                validate.union_get("apiToken", "content")
-            ))
+                validate.union_get("apiToken", "content"),
+            ),
         ))
         if zdf_json is None:
             return
