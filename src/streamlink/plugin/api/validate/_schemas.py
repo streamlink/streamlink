@@ -1,4 +1,4 @@
-from typing import Any, Callable, FrozenSet, List, Optional, Sequence, Set, Tuple, Type, Union
+from typing import Any, Callable, FrozenSet, List, Optional, Pattern, Sequence, Set, Tuple, Type, Union
 
 
 class SchemaContainer:
@@ -61,6 +61,21 @@ class GetItemSchema:
         self.item = item
         self.default = default
         self.strict = strict
+
+
+class RegexSchema:
+    """
+    A regex pattern that must match using the provided method.
+    """
+
+    def __init__(
+        self,
+        pattern: Pattern,
+        # TODO: change type from str to Literal["search", "match", "fullmatch", "findall", "split", "sub", "subn"]
+        method: str = "search",
+    ):
+        self.pattern = pattern
+        self.method = method
 
 
 class TransformSchema:

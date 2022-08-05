@@ -15,6 +15,7 @@ from streamlink.plugin.api.validate._schemas import (
     ListSchema,
     NoneOrAllSchema,
     OptionalSchema,
+    RegexSchema,
     TransformSchema,
     UnionGetSchema,
     UnionSchema,
@@ -214,6 +215,32 @@ def _validate_listschema(schema: ListSchema, value):
         raise ValidationError(*errors, schema=ListSchema)
 
     return new
+
+
+@validate.register
+def _validate_regexschema(schema: RegexSchema, value):
+    if not isinstance(value, (str, bytes)):
+        raise ValidationError(
+            "Type of {value} should be str or bytes, but is {actual}",
+            value=repr(value),
+            actual=type(value).__name__,
+            schema=RegexSchema,
+        )
+
+    try:
+        result = getattr(schema.pattern, schema.method)(value)
+    except TypeError as err:
+        raise ValidationError(err, schema=RegexSchema)
+
+    if result is None:
+        raise ValidationError(
+            "Pattern {pattern} did not match {value}",
+            pattern=repr(schema.pattern.pattern),
+            value=repr(value),
+            schema=RegexSchema,
+        )
+
+    return result
 
 
 @validate.register
