@@ -39,7 +39,7 @@ class _HTTPResponse(urllib3.response.HTTPResponse):
 
 # override all urllib3.response.HTTPResponse references in requests.adapters.HTTPAdapter.send
 urllib3.connectionpool.HTTPConnectionPool.ResponseCls = _HTTPResponse  # type: ignore[attr-defined]
-requests.adapters.HTTPResponse = _HTTPResponse
+requests.adapters.HTTPResponse = _HTTPResponse  # type: ignore[misc]
 
 
 # Never convert percent-encoded characters to uppercase in urllib3>=1.25.4.
