@@ -8,7 +8,6 @@ $notes Only non-premium content is available
 
 import logging
 import re
-from html import unescape as html_unescape
 from time import time
 from urllib.parse import urljoin, urlparse
 
@@ -23,49 +22,49 @@ log = logging.getLogger(__name__)
     r"https?://(\w+\.)?(?:olympics|olympicchannel)\.com/(?:[\w-]+/)?../.+"
 ))
 class OlympicChannel(Plugin):
-    _token_api_path = "/tokenGenerator?url={url}&domain={netloc}&_ts={time}"
-    _api_schema = validate.Schema(
-        validate.parse_json(),
-        [{
-            validate.optional("src"): validate.url(),
-            validate.optional("srcType"): "HLS",
-        }],
-        validate.transform(lambda v: v[0].get("src")),
-    )
-    _data_url_re = re.compile(r'data-content-url="([^"]+)"')
-    _data_content_re = re.compile(r'data-d3vp-plugin="THEOplayer"\s*data-content="([^"]+)"')
-    _data_content_schema = validate.Schema(
-        validate.any(
-            validate.all(
-                validate.transform(_data_url_re.search),
-                validate.any(None, validate.get(1)),
-            ),
-            validate.all(
-                validate.transform(_data_content_re.search),
-                validate.any(None, validate.get(1)),
-            ),
-        ),
-        validate.any(None, validate.transform(html_unescape)),
-    )
-    _stream_schema = validate.Schema(
-        validate.parse_json(),
-        validate.url(),
-    )
-
     def _get_streams(self):
-        api_url = self.session.http.get(self.url, schema=self._data_content_schema)
-        if api_url and (api_url.startswith("/") or api_url.startswith("http")):
-            api_url = urljoin(self.url, api_url)
-            stream_url = self.session.http.get(api_url, schema=self._api_schema, headers={"Referer": self.url})
-        elif api_url and api_url.startswith("[{"):
-            stream_url = self._api_schema.validate(api_url)
-        else:
+        data = self.session.http.get(self.url, schema=validate.Schema(
+            validate.parse_html(),
+            validate.union((
+                validate.xml_xpath_string(".//*[@data-content-url][1]/@data-content-url"),
+                validate.xml_xpath_string(".//*[@data-d3vp-plugin='THEOplayer'][@data-content][1]/@data-content"),
+            )),
+        ))
+        if not data:
             return
 
+        api_url, api_data = data
+        api_schema = validate.Schema(
+            validate.parse_json(),
+            [{
+                validate.optional("src"): validate.url(),
+                validate.optional("srcType"): "HLS",
+            }],
+            validate.get((0, "src")),
+        )
+        if api_data:
+            stream_url = api_schema.validate(api_data)
+        else:
+            stream_url = self.session.http.get(
+                urljoin(self.url, api_url),
+                headers={"Referer": self.url},
+                schema=api_schema,
+            )
+
         parsed = urlparse(stream_url)
-        api_url = urljoin(self.url, self._token_api_path.format(url=stream_url,
-                          netloc="{0}://{1}".format(parsed.scheme, parsed.netloc), time=int(time())))
-        stream_url = self.session.http.get(api_url, schema=self._stream_schema, headers={"Referer": self.url})
+        stream_url = self.session.http.get(
+            urljoin(self.url, "/tokenGenerator"),
+            params={
+                "url": stream_url,
+                "domain": f"{parsed.scheme}://{parsed.netloc}",
+                "_ts": int(time()),
+            },
+            headers={"Referer": self.url},
+            schema=validate.Schema(
+                validate.parse_json(),
+                validate.url(),
+            ),
+        )
         return HLSStream.parse_variant_playlist(self.session, stream_url)
 
 
