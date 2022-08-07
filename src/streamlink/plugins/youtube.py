@@ -147,7 +147,7 @@ class YouTube(Plugin):
             validate.get("playabilityStatus"),
             validate.union_get("status", "reason")
         )
-        return validate.validate(schema, data)
+        return schema.validate(data)
 
     @classmethod
     def _schema_videodetails(cls, data):
@@ -187,7 +187,7 @@ class YouTube(Plugin):
                 ("videoDetails", "isLive")
             )
         )
-        videoDetails = validate.validate(schema, data)
+        videoDetails = schema.validate(data)
         log.trace(f"videoDetails = {videoDetails!r}")
         return videoDetails
 
@@ -221,7 +221,7 @@ class YouTube(Plugin):
             validate.get("streamingData"),
             validate.union_get("hlsManifestUrl", "formats", "adaptiveFormats")
         )
-        hls_manifest, formats, adaptive_formats = validate.validate(schema, data)
+        hls_manifest, formats, adaptive_formats = schema.validate(data)
         return hls_manifest, formats or [], adaptive_formats or []
 
     def _create_adaptive_streams(self, adaptive_formats):

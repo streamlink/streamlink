@@ -85,7 +85,7 @@ class Albavision(Plugin):
         schema = validate.Schema(
             validate.xml_xpath_string(".//script[contains(text(), 'jQuery.get')]/text()"),
         )
-        is_token_based_site = validate.validate(schema, self.page) is not None
+        is_token_based_site = schema.validate(self.page) is not None
         log.debug(f"is_token_based_site={is_token_based_site}")
         return is_token_based_site
 
@@ -100,7 +100,7 @@ class Albavision(Plugin):
                 ),
             ),
         )
-        live_url = validate.validate(schema, self.page)
+        live_url = schema.validate(self.page)
         log.debug(f"live_url={live_url}")
         return live_url
 
@@ -115,7 +115,7 @@ class Albavision(Plugin):
                 ),
             ),
         )
-        token_req_host = validate.validate(schema, self.page)
+        token_req_host = schema.validate(self.page)
         log.debug(f"token_req_host={token_req_host}")
 
         schema = validate.Schema(
@@ -125,7 +125,7 @@ class Albavision(Plugin):
                 validate.none_or_all(validate.get(1)),
             ),
         )
-        token_req_str = validate.validate(schema, self.page)
+        token_req_str = schema.validate(self.page)
         log.debug(f"token_req_str={token_req_str}")
         if not token_req_str:
             return
