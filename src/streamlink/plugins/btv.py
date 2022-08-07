@@ -11,7 +11,6 @@ import re
 from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.api import validate
 from streamlink.stream.hls import HLSStream
-from streamlink.utils.parse import parse_json
 
 log = logging.getLogger(__name__)
 
@@ -20,38 +19,51 @@ log = logging.getLogger(__name__)
     r"https?://(?:www\.)?btvplus\.bg/live/?"
 ))
 class BTV(Plugin):
-    api_url = "https://btvplus.bg/lbin/v3/btvplus/player_config.php"
-
-    media_id_re = re.compile(r"media_id=(\d+)")
-    src_re = re.compile(r"src: \"(http.*?)\"")
-    api_schema = validate.Schema(
-        validate.all(
-            {"status": "ok", "config": validate.text},
-            validate.get("config"),
-            validate.all(
-                validate.transform(src_re.search),
-                validate.any(
-                    None,
-                    validate.get(1),
-                    validate.url()
-                )
-            )
-        )
-    )
-
-    def get_hls_url(self, media_id):
-        res = self.session.http.get(self.api_url, params=dict(media_id=media_id))
-        return parse_json(res.text, schema=self.api_schema)
+    URL_API = "https://btvplus.bg/lbin/v3/btvplus/player_config.php"
 
     def _get_streams(self):
-        res = self.session.http.get(self.url)
-        media_match = self.media_id_re.search(res.text)
-        media_id = media_match and media_match.group(1)
-        if media_id:
-            log.debug(f"Found media id: {media_id}")
-            stream_url = self.get_hls_url(media_id)
-            if stream_url:
-                return HLSStream.parse_variant_playlist(self.session, stream_url)
+        media_id = self.session.http.get(self.url, schema=validate.Schema(
+            re.compile(r"media_id=(\d+)"),
+            validate.any(None, validate.get(1)),
+        ))
+        if media_id is None:
+            return
+
+        stream_url = self.session.http.get(
+            self.URL_API,
+            params={
+                "media_id": media_id,
+            },
+            schema=validate.Schema(
+                validate.any(
+                    validate.all(
+                        validate.regex(re.compile(r"geo_blocked_stream")),
+                        validate.get(0),
+                    ),
+                    validate.all(
+                        validate.parse_json(),
+                        {
+                            "status": "ok",
+                            "config": str,
+                        },
+                        validate.get("config"),
+                        re.compile(r"src: \"(http.*?)\""),
+                        validate.none_or_all(
+                            validate.get(1),
+                            validate.url(),
+                        ),
+                    ),
+                ),
+            ),
+        )
+        if not stream_url:
+            return
+
+        if stream_url == "geo_blocked_stream":
+            log.error("The content is not available in your region")
+            return
+
+        return HLSStream.parse_variant_playlist(self.session, stream_url)
 
 
 __plugin__ = BTV
