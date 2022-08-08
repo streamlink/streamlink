@@ -34,6 +34,7 @@ Release highlights:
 
 - Improved: decryption of HLS streams ([#4533](https://github.com/streamlink/streamlink/pull/4533))
 - Improved: HLS playlist parsing ([#4540](https://github.com/streamlink/streamlink/pull/4540), [#4552](https://github.com/streamlink/streamlink/pull/4552))
+- Improved: validation schemas and error handling/printing ([#4514](https://github.com/streamlink/streamlink/pull/4514))
 - Improved: string representations of `Stream` implementations ([#4521](https://github.com/streamlink/streamlink/pull/4521))
 - Fixed: new YouTube consent dialog ([#4515](https://github.com/streamlink/streamlink/pull/4515))
 - Fixed: crunchyroll plugin ([#4510](https://github.com/streamlink/streamlink/pull/4510))
