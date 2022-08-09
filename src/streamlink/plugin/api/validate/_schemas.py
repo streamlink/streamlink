@@ -29,6 +29,13 @@ class AnySchema(_CollectionSchemaContainer):
     """
 
 
+class NoneOrAllSchema(_CollectionSchemaContainer):
+    """
+    Collection of schemas where every schema must be valid. If the initial input is None, all validations will be skipped.
+    The last validation result gets returned.
+    """
+
+
 class ListSchema(_CollectionSchemaContainer):
     """
     Collection of schemas where every indexed schema must be valid, as well as the input type and length.
