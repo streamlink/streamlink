@@ -10,22 +10,21 @@ class SchemaContainer(object):
         self.schema = schema
 
 
-class AllSchema(SchemaContainer):
+class _CollectionSchemaContainer(SchemaContainer):
+    def __init__(self, *schemas):
+        super(_CollectionSchemaContainer, self).__init__(schemas)
+
+
+class AllSchema(_CollectionSchemaContainer):
     """
     Collection of schemas where every schema must be valid.
     """
 
-    def __init__(self, *schemas):
-        super(AllSchema, self).__init__(schemas)
 
-
-class AnySchema(SchemaContainer):
+class AnySchema(_CollectionSchemaContainer):
     """
     Collection of schemas where at least one schema must be valid.
     """
-
-    def __init__(self, *schemas):
-        super(AnySchema, self).__init__(schemas)
 
 
 class GetItemSchema(object):
