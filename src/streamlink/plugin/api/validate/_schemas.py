@@ -18,12 +18,21 @@ class _CollectionSchemaContainer(SchemaContainer):
 class AllSchema(_CollectionSchemaContainer):
     """
     Collection of schemas where every schema must be valid.
+    The last validation result gets returned.
     """
 
 
 class AnySchema(_CollectionSchemaContainer):
     """
     Collection of schemas where at least one schema must be valid.
+    The first successful validation result gets returned.
+    """
+
+
+class ListSchema(_CollectionSchemaContainer):
+    """
+    Collection of schemas where every indexed schema must be valid, as well as the input type and length.
+    A new list of the validated input gets returned.
     """
 
 

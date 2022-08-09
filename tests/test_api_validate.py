@@ -5,7 +5,7 @@ from textwrap import dedent
 import pytest
 from lxml.etree import Element, tostring as etree_tostring
 
-from streamlink.compat import str as text_type
+from streamlink.compat import Match, is_py2, str as text_type
 from streamlink.exceptions import PluginError
 from streamlink.plugin.api import validate
 
@@ -276,6 +276,37 @@ class TestCallable(object):
             """)
 
 
+class TestPattern(object):
+    @pytest.mark.parametrize("pattern,data,expected", [
+        (r"\s(?P<bar>\S+)\s", "foo bar baz", {"bar": "bar"}),
+        # (rb"\s(?P<bar>\S+)\s", b"foo bar baz", {"bar": b"bar"}),
+    ])
+    def test_success(self, pattern, data, expected):
+        result = validate.validate(re.compile(pattern), data)
+        assert type(result) is Match
+        assert result.groupdict() == expected
+
+    def test_failure(self):
+        assert validate.validate(re.compile(r"foo"), "bar") is None
+
+    @pytest.mark.skipif(is_py2, reason='only on PY3')
+    def test_failure_type(self):
+        with pytest.raises(validate.ValidationError) as cm:
+            result = validate.validate(re.compile(r"foo"), b"foo")
+            assert_validationerror(cm.value, """
+                ValidationError(Pattern):
+                cannot use a string pattern on a bytes-like object
+            """)
+
+    def test_failure_schema(self):
+        with pytest.raises(validate.ValidationError) as cm:
+            validate.validate(re.compile(r"foo"), 123)
+            assert_validationerror(cm.value, """
+                ValidationError(Pattern):
+                Type of 123 should be str or bytes, but is int
+            """)
+
+
 class TestAllSchema(object):
     @pytest.fixture(scope="class")
     def schema(self):
@@ -353,18 +384,70 @@ class TestAnySchema(object):
     def test_failure(self, schema):
         with pytest.raises(validate.ValidationError) as cm:
             validate.validate(schema, None)
-            assert_validationerror(cm.value, """
-                ValidationError(AnySchema):
-                ValidationError(equality):
-                    None does not equal 'foo'
-                ValidationError(type):
-                    Type of None should be str, but is NoneType
-                ValidationError(Callable):
-                    <lambda>(None) is not true
-            """)
+        assert_validationerror(cm.value, """
+            ValidationError(AnySchema):
+              ValidationError(equality):
+                None does not equal 'foo'
+              ValidationError(type):
+                Type of None should be str, but is NoneType
+              ValidationError(Callable):
+                <lambda>(None) is not true
+        """)
 
 
-class TestTransformSchema(object):
+class TestListSchema:
+    def test_success(self):
+        data = [1, 3.14, "foo"]
+        result = validate.validate(validate.list(int, float, "foo"), data)
+        assert result is not data
+        assert result == [1, 3.14, "foo"]
+        assert type(result) is type(data)
+        assert len(result) == len(data)
+
+    @pytest.mark.parametrize("data", [[1, "foo"], [1.2, "foo"], [1, "bar"], [1.2, "bar"]])
+    def test_success_subschemas(self, data):
+        schema = validate.list(
+            validate.any(int, float),
+            validate.all(validate.any("foo", "bar"), validate.transform(str.upper)),
+        )
+        result = validate.validate(schema, data)
+        assert result is not data
+        assert result[0] is data[0]
+        assert result[1] is not data[1]
+        assert result[1].isupper()
+
+    def test_failure(self):
+        data = [1, 3.14, "foo"]
+        with pytest.raises(validate.ValidationError) as cm:
+            validate.validate(validate.list("foo", int, float), data)
+        assert_validationerror(cm.value, """
+            ValidationError(ListSchema):
+              ValidationError(equality):
+                1 does not equal 'foo'
+              ValidationError(type):
+                Type of 3.14 should be int, but is float
+              ValidationError(type):
+                Type of 'foo' should be float, but is str
+        """)
+
+    def test_failure_type(self):
+        with pytest.raises(validate.ValidationError) as cm:
+            validate.validate(validate.list(), {})
+        assert_validationerror(cm.value, """
+            ValidationError(ListSchema):
+              Type of {} should be list, but is dict
+        """)
+
+    def test_failure_length(self):
+        with pytest.raises(validate.ValidationError) as cm:
+            validate.validate(validate.list("foo", "bar", "baz"), ["foo", "bar"])
+        assert_validationerror(cm.value, """
+            ValidationError(ListSchema):
+              Length of list (2) does not match expectation (3)
+        """)
+
+
+class TestTransformSchema:
     def test_success(self):
         def callback(string, *args, **kwargs):
             # type: (str)

@@ -3,7 +3,7 @@ from copy import copy, deepcopy
 
 from lxml.etree import Element, iselement
 
-from streamlink.compat import Callable, Match, is_py2, singledispatch, str as text_type
+from streamlink.compat import Callable, Match, Pattern, is_py2, singledispatch, str as text_type
 from streamlink.exceptions import PluginError
 from streamlink.plugin.api.validate._exception import ValidationError
 from streamlink.plugin.api.validate._schemas import (
@@ -11,6 +11,7 @@ from streamlink.plugin.api.validate._schemas import (
     AnySchema,
     AttrSchema,
     GetItemSchema,
+    ListSchema,
     OptionalSchema,
     TransformSchema,
     UnionGetSchema,
@@ -139,6 +140,25 @@ def _validate_callable(schema, value):
     return value
 
 
+@validate.register(Pattern)
+def _validate_pattern(schema, value):
+    # type: (Pattern)
+    if type(value) not in (str, bytes):
+        raise ValidationError(
+            "Type of {value} should be str or bytes, but is {actual}",
+            value=repr(value),
+            actual=type(value).__name__,
+            schema=Pattern,
+        )
+
+    try:
+        result = schema.search(value)
+    except TypeError as err:
+        raise ValidationError(err, schema=Pattern)
+
+    return result
+
+
 @validate.register(AllSchema)
 def _validate_allschema(schema, value):
     # type: (AllSchema)
@@ -159,6 +179,38 @@ def _validate_anyschema(schema, value):
             errors.append(err)
 
     raise ValidationError(*errors, schema=AnySchema)
+
+
+@validate.register(ListSchema)
+def _validate_listschema(schema, value):
+    # type: (ListSchema)
+    if type(value) is not list:
+        raise ValidationError(
+            "Type of {value} should be list, but is {actual}",
+            value=repr(value),
+            actual=type(value).__name__,
+            schema=ListSchema,
+        )
+    if len(value) != len(schema.schema):
+        raise ValidationError(
+            "Length of list ({length}) does not match expectation ({expected})",
+            length=len(value),
+            expected=len(schema.schema),
+            schema=ListSchema,
+        )
+
+    new = []
+    errors = []
+    for k, v in enumerate(schema.schema):
+        try:
+            new.append(validate(v, value[k]))
+        except ValidationError as err:
+            errors.append(err)
+
+    if errors:
+        raise ValidationError(*errors, schema=ListSchema)
+
+    return new
 
 
 @validate.register(TransformSchema)
