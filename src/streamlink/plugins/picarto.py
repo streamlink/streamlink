@@ -104,7 +104,7 @@ class Picarto(Plugin):
             validate.parse_json(),
             {"data": {
                 "video": validate.any(None, {
-                    "id": str,
+                    "id": int,
                     "title": str,
                     "file_name": str,
                     "video_recording_image_url": str,
