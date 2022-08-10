@@ -33,29 +33,31 @@ class Picarto(Plugin):
     HLS_URL = "https://{netloc}/stream/hls/{file_name}/index.m3u8"
 
     def get_live(self, username):
-        channel, multistreams, loadbalancer = self.session.http.get(self.API_URL_LIVE.format(username=username), schema=validate.Schema(
-            validate.parse_json(),
-            {
-                "channel": validate.any(None, {
-                    "stream_name": str,
-                    "title": str,
-                    "online": bool,
-                    "private": bool,
-                    "categories": [{"label": str}],
-                }),
-                "getMultiStreams": validate.any(None, {
-                    "multistream": bool,
-                    "streams": [{
-                        "name": str,
+        channel, multistreams, loadbalancer = self.session.http.get(
+            self.API_URL_LIVE.format(username=username), schema=validate.Schema(
+                validate.parse_json(),
+                {
+                    "channel": validate.any(None, {
+                        "stream_name": str,
+                        "title": str,
                         "online": bool,
-                    }],
-                }),
-                "getLoadBalancerUrl": validate.any(None, {
-                    "url": validate.any(None, validate.transform(lambda url: urlparse(url).netloc))
-                })
-            },
-            validate.union_get("channel", "getMultiStreams", "getLoadBalancerUrl"),
-        ))
+                        "private": bool,
+                        "categories": [{"label": str}],
+                    }),
+                    "getMultiStreams": validate.any(None, {
+                        "multistream": bool,
+                        "streams": [{
+                            "name": str,
+                            "online": bool,
+                        }],
+                    }),
+                    "getLoadBalancerUrl": validate.any(None, {
+                        "url": validate.any(None, validate.transform(lambda url: urlparse(url).netloc))
+                    })
+                },
+                validate.union_get("channel", "getMultiStreams", "getLoadBalancerUrl"),
+            )
+        )
         if not channel or not multistreams or not loadbalancer:
             log.debug("Missing channel or streaming data")
             return
