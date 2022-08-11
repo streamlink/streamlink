@@ -144,7 +144,7 @@ def _validate_callable(schema, value):
 @validate.register(Pattern)
 def _validate_pattern(schema, value):
     # type: (Pattern)
-    if type(value) not in (str, bytes):
+    if not isinstance(value, (str, bytes)):
         raise ValidationError(
             "Type of {value} should be str or bytes, but is {actual}",
             value=repr(value),

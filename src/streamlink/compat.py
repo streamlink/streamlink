@@ -51,7 +51,6 @@ elif is_py3:
 try:
     from re import Match, Pattern
 except ImportError:
-    #from typing import Match, Pattern
     import re
     Match = type(re.match("", ""))
     Pattern = type(re.compile(""))

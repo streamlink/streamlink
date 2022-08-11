@@ -286,13 +286,23 @@ class TestPattern(object):
         assert type(result) is Match
         assert result.groupdict() == expected
 
+    def test_stringsubclass(self):
+        assert validate.validate(
+            validate.all(
+                validate.xml_xpath_string(".//@bar"),
+                re.compile(r".+"),
+                validate.get(0),
+            ),
+            Element("foo", {"bar": "baz"}),
+        ) == "baz"
+
     def test_failure(self):
         assert validate.validate(re.compile(r"foo"), "bar") is None
 
     @pytest.mark.skipif(is_py2, reason='only on PY3')
     def test_failure_type(self):
         with pytest.raises(validate.ValidationError) as cm:
-            result = validate.validate(re.compile(r"foo"), b"foo")
+            validate.validate(re.compile(r"foo"), b"foo")
             assert_validationerror(cm.value, """
                 ValidationError(Pattern):
                 cannot use a string pattern on a bytes-like object
