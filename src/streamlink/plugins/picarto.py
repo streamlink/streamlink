@@ -34,7 +34,8 @@ class Picarto(Plugin):
 
     def get_live(self, username):
         channel, multistreams, loadbalancer = self.session.http.get(
-            self.API_URL_LIVE.format(username=username), schema=validate.Schema(
+            self.API_URL_LIVE.format(username=username),
+            schema=validate.Schema(
                 validate.parse_json(),
                 {
                     "channel": validate.any(None, {
