@@ -1,5 +1,5 @@
 """
-$description Chinese, global live streaming platform run by Huya Live.
+$description Chinese, global live-streaming platform run by Huya Live.
 $url nimo.tv
 $type live
 """
@@ -19,21 +19,6 @@ log = logging.getLogger(__name__)
 ))
 class NimoTV(Plugin):
     data_url = 'https://m.nimo.tv/{0}'
-    data_re = re.compile(r'<script>var G_roomBaseInfo = ({.*?});</script>')
-
-    data_schema = validate.Schema(
-        validate.transform(data_re.search),
-        validate.any(None, validate.all(
-            validate.get(1),
-            validate.parse_json(), {
-                'title': validate.text,
-                'nickname': validate.text,
-                'game': validate.text,
-                'liveStreamStatus': int,
-                validate.optional('mStreamPkg'): validate.text,
-            },
-        )),
-    )
 
     video_qualities = {
         250: '240p',
@@ -53,11 +38,25 @@ class NimoTV(Plugin):
         if not username:
             return
 
-        headers = {'User-Agent': useragents.ANDROID}
         data = self.session.http.get(
             self.data_url.format(username),
-            headers=headers,
-            schema=self.data_schema,
+            headers={
+                "User-Agent": useragents.ANDROID,
+            },
+            schema=validate.Schema(
+                re.compile(r"<script>var G_roomBaseInfo = ({.*?});</script>"),
+                validate.none_or_all(
+                    validate.get(1),
+                    validate.parse_json(),
+                    {
+                        "title": validate.text,
+                        "nickname": validate.text,
+                        "game": validate.text,
+                        "liveStreamStatus": int,
+                        validate.optional("mStreamPkg"): validate.text,
+                    },
+                ),
+            ),
         )
 
         if data['liveStreamStatus'] == 0:

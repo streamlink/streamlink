@@ -22,49 +22,47 @@ log = logging.getLogger(__name__)
     r"https?://(?:www\.)?atresplayer\.com/"
 ))
 class AtresPlayer(Plugin):
-    state_re = re.compile(r"""window.__PRELOADED_STATE__\s*=\s*({.*?});""", re.DOTALL)
-    channel_id_schema = validate.Schema(
-        validate.transform(state_re.search),
-        validate.any(
-            None,
-            validate.all(
+    def _get_streams(self):
+        self.url = update_scheme("https://", self.url)
+
+        api_url = self.session.http.get(self.url, schema=validate.Schema(
+            re.compile(r"""window.__PRELOADED_STATE__\s*=\s*({.*?});""", re.DOTALL),
+            validate.none_or_all(
                 validate.get(1),
                 validate.parse_json(),
                 validate.transform(search_dict, key="href"),
-            )
-        )
-    )
-    player_api_schema = validate.Schema(
-        validate.any(
-            None,
-            validate.all(
-                validate.parse_json(),
-                validate.transform(search_dict, key="urlVideo"),
-            )
-        )
-    )
-    stream_schema = validate.Schema(
-        validate.parse_json(),
-        {"sources": [
-            validate.all({
-                "src": validate.url(),
-                validate.optional("type"): validate.text
-            })
-        ]}, validate.get("sources"))
+                [validate.url()],
+                validate.get(0),
+            ),
+        ))
+        if not api_url:
+            return
+        log.debug("API URL: {0}".format(api_url))
 
-    def __init__(self, url):
-        # must be HTTPS
-        super(AtresPlayer, self).__init__(update_scheme("https://", url))
+        player_api_url = self.session.http.get(api_url, schema=validate.Schema(
+            validate.parse_json(),
+            validate.transform(search_dict, key="urlVideo"),
+        ))
 
-    def _get_streams(self):
-        api_urls = self.session.http.get(self.url, schema=self.channel_id_schema)
-        _api_url = list(api_urls)[0]
-        log.debug("API URL: {0}".format(_api_url))
-        player_api_url = self.session.http.get(_api_url, schema=self.player_api_schema)
+        stream_schema = validate.Schema(
+            validate.parse_json(),
+            {
+                "sources": [
+                    validate.all(
+                        {
+                            "src": validate.url(),
+                            validate.optional("type"): validate.text,
+                        },
+                    ),
+                ],
+            },
+            validate.get("sources"),
+        )
+
         for api_url in player_api_url:
             log.debug("Player API URL: {0}".format(api_url))
-            for source in self.session.http.get(api_url, schema=self.stream_schema):
-                log.debug("Stream source: {0} ({1})".format(source['src'], source.get("type", "n/a")))
+            for source in self.session.http.get(api_url, schema=stream_schema):
+                log.debug("Stream source: {0} ({1})".format(source['src'], source.get('type', 'n/a')))
 
                 if "type" not in source or source["type"] == "application/vnd.apple.mpegurl":
                     streams = HLSStream.parse_variant_playlist(self.session, source["src"])

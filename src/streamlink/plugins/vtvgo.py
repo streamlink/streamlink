@@ -15,46 +15,46 @@ log = logging.getLogger(__name__)
 
 
 @pluginmatcher(re.compile(
-    r'https?://vtvgo\.vn/xem-truc-tuyen-kenh-'
+    r"https?://vtvgo\.vn/xem-truc-tuyen-kenh-"
 ))
 class VTVgo(Plugin):
-    AJAX_URL = 'https://vtvgo.vn/ajax-get-stream'
-
-    _params_re = re.compile(r'''var\s+(?P<key>(?:type_)?id|time|token)\s*=\s*["']?(?P<value>[^"']+)["']?;''')
-
-    _schema_params = validate.Schema(
-        validate.parse_html(),
-        validate.xml_xpath_string(".//script[contains(text(),'setplayer(')][1]/text()"),
-        validate.any(None, validate.all(
-            validate.text,
-            validate.transform(_params_re.findall),
-            [
-                ("id", int),
-                ("type_id", validate.text),
-                ("time", validate.text),
-                ("token", validate.text)
-            ]
-        ))
-    )
-    _schema_stream_url = validate.Schema(
-        validate.parse_json(),
-        {"stream_url": [validate.url()]},
-        validate.get("stream_url"),
-        validate.get(0)
-    )
 
     def _get_streams(self):
         self.session.http.headers.update({
-            'Origin': 'https://vtvgo.vn',
-            'Referer': self.url,
-            'X-Requested-With': 'XMLHttpRequest',
+            "Origin": "https://vtvgo.vn",
+            "Referer": self.url,
+            "X-Requested-With": "XMLHttpRequest",
         })
-        params = self.session.http.get(self.url, schema=self._schema_params)
+
+        params = self.session.http.get(self.url, schema=validate.Schema(
+            validate.parse_html(),
+            validate.xml_xpath_string(".//script[contains(text(),'setplayer(')][1]/text()"),
+            validate.none_or_all(
+                validate.regex(
+                    re.compile(r"""var\s+(?P<key>(?:type_)?id|time|token)\s*=\s*["']?(?P<value>[^"']+)["']?;"""),
+                    method="findall",
+                ),
+                [
+                    ("id", int),
+                    ("type_id", validate.text),
+                    ("time", validate.text),
+                    ("token", validate.text),
+                ],
+            ),
+        ))
         if not params:
             return
 
         log.trace("{0!r}".format(params))
-        hls_url = self.session.http.post(self.AJAX_URL, data=dict(params), schema=self._schema_stream_url)
+        hls_url = self.session.http.post(
+            self.AJAX_URL,
+            data=dict(params),
+            schema=validate.Schema(
+                validate.parse_json(),
+                {"stream_url": [validate.url()]},
+                validate.get(("stream_url", 0)),
+            ),
+        )
 
         return HLSStream.parse_variant_playlist(self.session, hls_url)
 

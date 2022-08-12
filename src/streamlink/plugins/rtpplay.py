@@ -18,49 +18,56 @@ from streamlink.stream.hls import HLSStream
     r"https?://www\.rtp\.pt/play/"
 ))
 class RTPPlay(Plugin):
-    _m3u8_re = re.compile(r"""
-        hls:\s*(?:(["'])(?P<string>[^"']+)\1
-        |
-        decodeURIComponent\((?P<obfuscated>\[.*?])\.join\()
-    """, re.VERBOSE)
-
-    _schema_hls = validate.Schema(
-        validate.transform(_m3u8_re.search),
-        validate.any(
-            None,
-            validate.all(
-                validate.get("string"),
-                validate.text,
-                validate.any(
-                    validate.length(0),
-                    validate.url()
-                )
-            ),
-            validate.all(
-                validate.get("obfuscated"),
-                validate.text,
-                validate.parse_json(),
-                validate.transform(lambda arr: unquote("".join(arr))),
-                validate.url()
-            ),
-            validate.all(
-                validate.get("obfuscated_b64"),
-                validate.text,
-                validate.parse_json(),
-                validate.transform(lambda arr: unquote("".join(arr))),
-                validate.transform(lambda b64: b64decode(b64).decode("utf-8")),
-                validate.url()
-            )
-        )
-    )
-
     def _get_streams(self):
-        self.session.http.headers.update({"User-Agent": useragents.CHROME,
-                                          "Referer": self.url})
-        hls_url = self.session.http.get(self.url, schema=self._schema_hls)
-        if not hls_url:
-            return
-        return HLSStream.parse_variant_playlist(self.session, hls_url)
+        self.session.http.headers.update({
+            "User-Agent": useragents.CHROME,
+            "Referer": self.url,
+        })
+
+        re_m3u8 = re.compile(
+            r"""
+                hls\s*:\s*(?:
+                    (?P<q>["'])(?P<string>.*?)(?P=q)
+                    |
+                    decodeURIComponent\s*\((?P<obfuscated>\[.*?])\.join\(
+                    |
+                    atob\s*\(\s*decodeURIComponent\s*\((?P<obfuscated_b64>\[.*?])\.join\(
+                )
+            """,
+            re.VERBOSE,
+        )
+
+        hls_url = self.session.http.get(self.url, schema=validate.Schema(
+            validate.transform(lambda text: next(reversed(list(re_m3u8.finditer(text))), None)),
+            validate.any(
+                None,
+                validate.all(
+                    validate.get("string"),
+                    validate.text,
+                    validate.any(
+                        "",
+                        validate.url(),
+                    ),
+                ),
+                validate.all(
+                    validate.get("obfuscated"),
+                    validate.text,
+                    validate.parse_json(),
+                    validate.transform(lambda arr: unquote("".join(arr))),
+                    validate.url(),
+                ),
+                validate.all(
+                    validate.get("obfuscated_b64"),
+                    validate.text,
+                    validate.parse_json(),
+                    validate.transform(lambda arr: unquote("".join(arr))),
+                    validate.transform(lambda b64: b64decode(b64).decode("utf-8")),
+                    validate.url(),
+                ),
+            ),
+        ))
+        if hls_url:
+            return HLSStream.parse_variant_playlist(self.session, hls_url)
 
 
 __plugin__ = RTPPlay
