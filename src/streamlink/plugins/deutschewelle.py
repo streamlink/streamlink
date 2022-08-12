@@ -7,7 +7,7 @@ $type live, vod
 import logging
 import re
 
-from streamlink.compat import parse_qsl, urlparse
+from streamlink.compat import parse_qsl, str, urlparse
 from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.api import validate
 from streamlink.stream.hls import HLSStream
@@ -21,62 +21,72 @@ log = logging.getLogger(__name__)
 ))
 class DeutscheWelle(Plugin):
     DEFAULT_CHANNEL = "1"
-    API_URL = "https://www.dw.com/playersources/v-{media_id}?hls=true"
 
-    def _find_metadata(self, elem):
-        self.author = elem.xpath("string(.//input[@name='channel_name'][1]/@value)") or None
-        self.title = elem.xpath("string(.//input[@name='media_title'][1]/@value)") or None
+    def _get_streams(self):
+        root, channel = self.session.http.get(self.url, schema=validate.Schema(
+            validate.parse_html(),
+            validate.union((
+                validate.xml_find("."),
+                validate.xml_xpath_string(".//a[@data-id][@class='ici'][1]/@data-id"),
+            )),
+        ))
 
-    def _get_live_streams(self, root):
         # check if a different language has been selected
-        channel = (
-            dict(parse_qsl(urlparse(self.url).query)).get("channel")
-            or root.xpath("string(.//a[@data-id][@class='ici'][1]/@data-id)")
+        channel = int(
+            dict(parse_qsl(str(urlparse(self.url).query))).get("channel")
+            or channel
             or self.DEFAULT_CHANNEL
         )
         log.debug("Using channel ID: {0}".format(channel))
 
-        media_item = root.find(".//*[@data-channel-id='{0}']".format(channel))
-        if media_item is None:
+        schema = validate.Schema(
+            validate.any(
+                # find the video element of the selected channel ID first
+                # node-sets are always ordered by the document order, so these queries can't be merged into one
+                validate.all(
+                    validate.xml_xpath(".//video[../@data-channel-id='{}'][1]".format(channel)),
+                    # validate.xml_element() can't be used here, because it discards parent nodes of the cloned return value
+                    lambda res: res is not None,
+                    validate.get(0),
+                ),
+                # just get the first video element if the above query fails (no channel selection)
+                validate.xml_find(".//video"),
+            ),
+            validate.union((
+                validate.xml_xpath_string("./source[@src][@type='application/x-mpegURL'][1]/@src"),
+                validate.xml_xpath_string("./source[@src][@type='audio/mpeg'][1]/@src"),
+                validate.xml_xpath_string("(../@data-channel-id | ../@data-media-id)[1]"),
+                validate.xml_xpath_string("../input[@name='media_title']/@value"),
+                validate.all(
+                    validate.xml_xpath_string("./@data-options"),
+                    validate.none_or_all(
+                        validate.text,
+                        validate.parse_json(),
+                        {
+                            "trackingInfo": {
+                                validate.optional("channelName"): validate.text,
+                                validate.optional("mediaTitle"): validate.text,
+                            },
+                        },
+                        validate.get("trackingInfo"),
+                        validate.union_get("channelName", "mediaTitle"),
+                    ),
+                ),
+            )),
+        )
+        data = schema.validate(root)
+        if not data:
             return
 
-        self._find_metadata(media_item)
-        stream_url = media_item.xpath("string(.//input[@name='file_name'][1]/@value)")
-        if stream_url:
-            return HLSStream.parse_variant_playlist(self.session, stream_url)
+        hls, audio, self.id, self.title, metadata = data
+        if metadata:
+            self.author, mediaTitle = metadata
+            self.title = self.title or mediaTitle
 
-    def _get_vod_streams(self, root):
-        media_id = root.xpath("string(.//input[@type='hidden'][@name='media_id'][1]/@value)")
-        if not media_id:
-            return
-
-        self._find_metadata(root)
-        api_url = self.API_URL.format(media_id=media_id)
-        stream_url = self.session.http.get(api_url, schema=validate.Schema(
-            validate.parse_json(),
-            [{"file": validate.url()}],
-            validate.get((0, "file"))
-        ))
-        return HLSStream.parse_variant_playlist(self.session, stream_url)
-
-    def _get_audio_streams(self, root):
-        self._find_metadata(root)
-        file_name = root.xpath("string(.//input[@type='hidden'][@name='file_name'][1]/@value)")
-        if file_name:
-            yield "audio", HTTPStream(self.session, file_name)
-
-    def _get_streams(self):
-        root = self.session.http.get(self.url, schema=validate.Schema(
-            validate.parse_html()
-        ))
-        player_type = root.xpath("string(.//input[@type='hidden'][@name='player_type'][1]/@value)")
-
-        if player_type == "dwlivestream":
-            return self._get_live_streams(root)
-        elif player_type == "video":
-            return self._get_vod_streams(root)
-        elif player_type == "audio":
-            return self._get_audio_streams(root)
+        if hls:
+            return HLSStream.parse_variant_playlist(self.session, hls)
+        if audio:
+            return {"audio": HTTPStream(self.session, audio)}
 
 
 __plugin__ = DeutscheWelle
