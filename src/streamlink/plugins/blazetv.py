@@ -20,21 +20,20 @@ log = logging.getLogger(__name__)
     r"https?://(?:watch\.)?blaze\.tv/(?:(?P<is_live>live)|watch/replay/\d+)"
 ))
 class BlazeTV(Plugin):
-    def _get_live_uvid(self, parsed_html):
-        return validate.validate(validate.Schema(
+    @staticmethod
+    def _get_live_uvid(parsed_html):
+        schema = validate.Schema(
             validate.xml_xpath_string(".//div[@id='live-player-root']/@data-player-uvid"),
-            validate.text,
-        ), parsed_html)
+        )
+        return schema.validate(parsed_html)
 
-    def _get_vod_uvid(self, parsed_html):
-        json_re = re.compile(r"window\.nowPlaying\.setData\(({.*?})\);")
-        return validate.validate(validate.Schema(
+    @staticmethod
+    def _get_vod_uvid(parsed_html):
+        schema = validate.Schema(
             validate.xml_xpath_string(".//script[contains(text(), 'window.nowPlaying.setData')]"),
-            validate.text,
-            validate.transform(json_re.search),
-            validate.any(
-                None,
-                validate.all(
+            validate.none_or_all(
+                re.compile(r"window\.nowPlaying\.setData\(({.*?})\);"),
+                validate.none_or_all(
                     validate.get(1),
                     validate.parse_json(),
                     {
@@ -46,11 +45,12 @@ class BlazeTV(Plugin):
                     },
                 ),
             ),
-        ), parsed_html)
+        )
+        return schema.validate(parsed_html)
 
-    def _get_tokenizer(self, type, uvid):
+    def _get_tokenizer(self, streamtype, uvid):
         return self.session.http.get(
-            "https://watch.blaze.tv/stream/{0}/widevine/{1}".format(type, uvid),
+            "https://watch.blaze.tv/stream/{0}/widevine/{1}".format(streamtype, uvid),
             schema=validate.Schema(
                 validate.parse_json(),
                 {
@@ -80,7 +80,7 @@ class BlazeTV(Plugin):
             self.category = "Live"
         else:
             data = self._get_vod_uvid(parsed_html)
-            if not data["id"] or not data["id"].isdecimal():
+            if not data or not data["id"] or not data["id"].isdecimal():
                 return
             token_data = self._get_tokenizer("replay", data["id"])
             self.id = data["id"]
