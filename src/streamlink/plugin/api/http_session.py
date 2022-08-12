@@ -20,6 +20,32 @@ from streamlink.utils.parse import parse_json, parse_xml
 urllib3_version = tuple(map(int, urllib3.__version__.split(".")[:3]))
 
 
+class _HTTPResponse(urllib3.response.HTTPResponse):
+    def __init__(self, *args, **kwargs):
+        # Always enforce content length validation!
+        # This fixes a bug in requests which doesn't raise errors on HTTP responses where
+        # the "Content-Length" header doesn't match the response's body length.
+        # https://github.com/psf/requests/issues/4956#issuecomment-573325001
+        #
+        # Summary:
+        # This bug is related to urllib3.response.HTTPResponse.stream() which calls urllib3.response.HTTPResponse.read() as
+        # a wrapper for http.client.HTTPResponse.read(amt=...), where no http.client.IncompleteRead exception gets raised
+        # due to "backwards compatiblity" of an old bug if a specific amount is attempted to be read on an incomplete response.
+        #
+        # urllib3.response.HTTPResponse.read() however has an additional check implemented via the enforce_content_length
+        # parameter, but it doesn't check by default and requests doesn't set the parameter for enabling it either.
+        #
+        # Fix this by overriding urllib3.response.HTTPResponse's constructor and always setting enforce_content_length to True,
+        # as there is no way to make requests set this parameter on its own.
+        kwargs.update({"enforce_content_length": True})
+        super(_HTTPResponse, self).__init__(*args, **kwargs)
+
+
+# override all urllib3.response.HTTPResponse references in requests.adapters.HTTPAdapter.send
+urllib3.connectionpool.HTTPConnectionPool.ResponseCls = _HTTPResponse  # type: ignore[attr-defined]
+requests.adapters.HTTPResponse = _HTTPResponse  # type: ignore[misc]
+
+
 # Never convert percent-encoded characters to uppercase in urllib3>=1.25.4.
 # This is required for sites which compare request URLs byte for byte and return different responses depending on that.
 # Older versions of urllib3 are not compatible with this override and will always convert to uppercase characters.
