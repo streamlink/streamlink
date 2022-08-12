@@ -42,12 +42,12 @@ class MDStrm(Plugin):
                 validate.none_or_all(validate.get(1)),
             ),
         )
-        _string = validate.validate(_schema, root)
+        _string = _schema.validate(root)
         if not _string:
             log.debug("Failed to find {0}".format(search_string))
         if custom_schema:
             try:
-                _string = validate.validate(custom_schema, _string)
+                _string = custom_schema.validate(_string)
             except ValueError:
                 pass
         return _string
@@ -75,7 +75,7 @@ class MDStrm(Plugin):
         )
 
         schema = validate.Schema(validate.xml_xpath_string(".//div[@id='message']/text()"))
-        error_msg = validate.validate(schema, root)
+        error_msg = schema.validate(root)
         if error_msg:
             log.error("{}".format(error_msg))
 
@@ -123,7 +123,7 @@ class MDStrm(Plugin):
                 "normalize-space(.//iframe[contains(@src,'mdstrm.com')][@id='programmatic']/@src)",
             ),
         )
-        programmatic_url = validate.validate(schema, root)
+        programmatic_url = schema.validate(root)
         if programmatic_url:
             programmatic_url = update_scheme("https://", programmatic_url, force=False)
             log.debug("programmatic_url={0}".format(programmatic_url))
