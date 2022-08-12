@@ -19,7 +19,6 @@ log = logging.getLogger(__name__)
     r"https?://(?:www\.)?watchstadium\.com/"
 ))
 class Stadium(Plugin):
-    _policy_key_re = re.compile(r"""options:\s*{.+policyKey:\s*"([^"]+)""", re.DOTALL)
     _API_URL = "https://edge.api.brightcove.com/playback/v1/accounts/{data_account}/videos/{data_video_id}"
     _PLAYER_URL = "https://players.brightcove.net/{data_account}/{data_player}_default/index.min.js"
 
@@ -36,7 +35,7 @@ class Stadium(Plugin):
 
         url = self._PLAYER_URL.format(data_account=data_account, data_player=data_player)
         policy_key = self.session.http.get(url, schema=validate.Schema(
-            validate.transform(self._policy_key_re.search),
+            re.compile(r"""options:\s*{.+policyKey:\s*"([^"]+)""", re.DOTALL),
             validate.any(None, validate.get(1))
         ))
         if not policy_key:

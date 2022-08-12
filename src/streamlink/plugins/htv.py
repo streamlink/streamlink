@@ -20,8 +20,6 @@ log = logging.getLogger(__name__)
     r"https?://(?:www\.)?htv\.com\.vn/truc-tuyen(?:\?channel=(?P<channel>\w+)&?|$)"
 ))
 class HTV(Plugin):
-    hls_url_re = re.compile(r'var\s+iosUrl\s*=\s*"([^"]+)"')
-
     def get_channels(self):
         data = self.session.http.get(self.url, schema=validate.Schema(
             validate.parse_html(),
@@ -81,10 +79,10 @@ class HTV(Plugin):
             schema=validate.Schema(
                 validate.parse_html(),
                 validate.xml_xpath_string(".//script[contains(text(), 'playlist.m3u8')]/text()"),
-                validate.any(None, validate.all(
-                    validate.transform(self.hls_url_re.search),
-                    validate.any(None, validate.all(validate.get(1), validate.url())),
-                )),
+                validate.none_or_all(
+                    re.compile(r"""var\s+iosUrl\s*=\s*(?P<q>")(.+?)(?P=q)"""),
+                    validate.none_or_all(validate.get(1), validate.url()),
+                ),
             ),
         )
 

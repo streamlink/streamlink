@@ -71,10 +71,9 @@ class Delfi(Plugin):
             data = self.session.http.get(src, schema=validate.Schema(
                 validate.parse_html(),
                 validate.xml_xpath_string(".//script[contains(text(),'embedJs.setAttribute(')][1]/text()"),
-                validate.any(None, validate.all(
-                    validate.text,
-                    validate.transform(re.compile(r"embedJs\.setAttribute\('src',\s*'(.+?)'").search),
-                    validate.any(None, validate.all(
+                validate.none_or_all(
+                    re.compile(r"embedJs\.setAttribute\('src',\s*'(.+?)'"),
+                    validate.none_or_all(
                         validate.get(1),
                         validate.transform(lambda url: parse_qsd(urlparse(url).fragment)),
                         {"stream": validate.text},
@@ -84,8 +83,8 @@ class Delfi(Plugin):
                             "hls": validate.text
                         }]},
                         validate.get("versions")
-                    ))
-                ))
+                    ),
+                ),
             ))
         except PluginError:
             log.error("Failed to get streams from iframe")

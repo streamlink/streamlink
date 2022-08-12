@@ -29,13 +29,12 @@ class NBCNews(Plugin):
             schema=validate.Schema(
                 validate.parse_html(),
                 validate.xml_xpath_string(".//script[@type='application/ld+json'][1]/text()"),
-                validate.any(None, validate.all(
-                    str,
+                validate.none_or_all(
                     validate.parse_json(),
                     {"embedUrl": validate.url()},
                     validate.get("embedUrl"),
-                    validate.transform(lambda embed_url: embed_url.split("/")[-1])
-                ))
+                    validate.transform(lambda embed_url: embed_url.split("/")[-1]),
+                ),
             ),
         )
         if self.id is None:

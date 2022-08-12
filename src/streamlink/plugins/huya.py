@@ -35,10 +35,10 @@ class Huya(Plugin):
         data = self.session.http.get(self.url, schema=validate.Schema(
             validate.parse_html(),
             validate.xml_xpath_string(".//script[contains(text(),'var hyPlayerConfig = {')][1]/text()"),
-            validate.any(None, validate.transform(
-                re.compile(r"""(?P<q>"?)stream(?P=q)\s*:\s*(?:"(?P<base64>.+?)"|(?P<json>\{.+?})\s*}\s*;)""").search,
-            )),
-            validate.any(None, validate.all(
+            validate.none_or_all(
+                re.compile(r"""(?P<q>"?)stream(?P=q)\s*:\s*(?:"(?P<base64>.+?)"|(?P<json>\{.+?})\s*}\s*;)"""),
+            ),
+            validate.none_or_all(
                 validate.any(
                     validate.all(
                         validate.get("base64"),
@@ -85,7 +85,7 @@ class Huya(Plugin):
                     ("gameLiveInfo", "roomName"),
                     "gameStreamInfoList",
                 ),
-            )),
+            ),
         ))
         if not data:
             return

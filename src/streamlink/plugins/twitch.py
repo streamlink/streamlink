@@ -365,14 +365,13 @@ class TwitchAPI:
             vodID=channel_or_vod if not is_live else "",
             playerType="embed"
         )
-        subschema = validate.any(None, validate.all(
+        subschema = validate.none_or_all(
             {
                 "value": validate.text,
                 "signature": validate.text,
-                "__typename": "PlaybackAccessToken"
             },
-            validate.union_get("signature", "value")
-        ))
+            validate.union_get("signature", "value"),
+        )
 
         return self.call(query, schema=validate.Schema(
             {"data": validate.any(

@@ -19,9 +19,6 @@ log = logging.getLogger(__name__)
     r'https?://([\w-]+\.)*reuters\.(com|tv)'
 ))
 class Reuters(Plugin):
-    _re_fusion_global_content = re.compile(r"Fusion\s*\.\s*globalContent\s*=\s*(?P<json>{.+?})\s*;\s*Fusion\s*\.", re.DOTALL)
-    _re_fusion_content_cache = re.compile(r"Fusion\s*\.\s*contentCache\s*=\s*(?P<json>{.+?})\s*;\s*Fusion\s*\.", re.DOTALL)
-
     def _get_data(self):
         root = self.session.http.get(self.url, schema=validate.Schema(
             validate.parse_html()
@@ -58,7 +55,7 @@ class Reuters(Plugin):
             log.debug("Trying to find source via fusion-metadata globalContent")
             schema = validate.Schema(
                 schema_fusion,
-                validate.transform(self._re_fusion_global_content.search),
+                validate.regex(re.compile(r"Fusion\s*\.\s*globalContent\s*=\s*(?P<json>{.+?})\s*;\s*Fusion\s*\.", re.DOTALL)),
                 validate.get("json"),
                 validate.parse_json(),
                 {"result": {"related_content": {"videos": list}}},
@@ -73,7 +70,7 @@ class Reuters(Plugin):
             log.debug("Trying to find source via fusion-metadata contentCache")
             schema = validate.Schema(
                 schema_fusion,
-                validate.transform(self._re_fusion_content_cache.search),
+                validate.regex(re.compile(r"Fusion\s*\.\s*contentCache\s*=\s*(?P<json>{.+?})\s*;\s*Fusion\s*\.", re.DOTALL)),
                 validate.get("json"),
                 validate.parse_json(),
                 {"videohub-by-guid-v1": {str: {"data": {"result": {"videos": list}}}}},

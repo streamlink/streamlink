@@ -34,9 +34,6 @@ class Pluzz(Plugin):
     GEO_URL = "https://geoftv-a.akamaihd.net/ws/edgescape.json"
     API_URL = "https://player.webservices.francetelevisions.fr/v1/videos/{video_id}"
 
-    _re_ftv_player_videos = re.compile(r"window\.FTVPlayerVideos\s*=\s*(?P<json>\[{.+?}])\s*;\s*(?:$|var)", re.DOTALL)
-    _re_player_load = re.compile(r"""player\.load\s*\(\s*{\s*src\s*:\s*(['"])(?P<video_id>.+?)\1\s*}\s*\)\s*;""")
-
     def _get_streams(self):
         self.session.http.headers.update({
             "User-Agent": useragents.CHROME

@@ -225,7 +225,7 @@ class Filmon(Plugin):
                     log.debug("Found cached channel ID: {0}".format(_id))
                 else:
                     _id = self.session.http.get(self.url, schema=validate.Schema(
-                        validate.transform(re.compile(r"""channel_id\s*=\s*(?P<q>['"]?)(?P<value>\d+)(?P=q)""").search),
+                        re.compile(r"""channel_id\s*=\s*(?P<q>['"]?)(?P<value>\d+)(?P=q)"""),
                         validate.any(None, validate.get("value")),
                     ))
                     log.debug("Found channel ID: {0}".format(_id))

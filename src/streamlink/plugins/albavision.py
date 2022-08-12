@@ -91,46 +91,40 @@ class Albavision(Plugin):
         return is_token_based_site
 
     def _get_live_url(self):
-        live_url_re = re.compile(r"""LIVE_URL\s*=\s*['"]([^'"]+)['"]""")
         schema = validate.Schema(
             validate.xml_xpath_string(".//script[contains(text(), 'LIVE_URL')]/text()"),
-            validate.any(None, validate.all(
-                validate.transform(live_url_re.search),
-                validate.any(None, validate.all(
+            validate.none_or_all(
+                re.compile(r"""LIVE_URL\s*=\s*(?P<q>['"])(.+?)(?P=q)"""),
+                validate.none_or_all(
                     validate.get(1),
                     validate.url(),
-                )),
-            )),
+                ),
+            ),
         )
         live_url = validate.validate(schema, self.page)
         log.debug("live_url={0}".format(live_url))
         return live_url
 
     def _get_token_req_url(self):
-        token_req_host_re = re.compile(r"""jQuery\.get\s*\(['"]([^'"]+)['"]""")
         schema = validate.Schema(
             validate.xml_xpath_string(".//script[contains(text(), 'LIVE_URL')]/text()"),
-            validate.any(None, validate.all(
-                validate.transform(token_req_host_re.search),
-                validate.any(None, validate.all(
+            validate.none_or_all(
+                re.compile(r"""jQuery\.get\s*\((?P<q>['"])(.+?)(?P=q)"""),
+                validate.none_or_all(
                     validate.get(1),
                     validate.url(),
-                )),
-            )),
+                ),
+            ),
         )
         token_req_host = validate.validate(schema, self.page)
         log.debug("token_req_host={0}".format(token_req_host))
 
-        token_req_str_re = re.compile(r"""Math\.floor\(Date\.now\(\)\s*/\s*3600000\),\s*['"]([^'"]+)['"]""")
         schema = validate.Schema(
             validate.xml_xpath_string(".//script[contains(text(), 'LIVE_URL')]/text()"),
-            validate.any(None, validate.all(
-                validate.transform(token_req_str_re.search),
-                validate.any(None, validate.all(
-                    validate.get(1),
-                    validate.text,
-                )),
-            )),
+            validate.none_or_all(
+                re.compile(r"""Math\.floor\(Date\.now\(\)\s*/\s*3600000\),\s*(?P<q>['"])(.+?)(?P=q)"""),
+                validate.none_or_all(validate.get(1)),
+            ),
         )
         token_req_str = validate.validate(schema, self.page)
         log.debug("token_req_str={0}".format(token_req_str))
