@@ -33,40 +33,37 @@ class Picarto(Plugin):
     HLS_URL = "https://{netloc}/stream/hls/{file_name}/index.m3u8"
 
     def get_live(self, username):
-        netloc = self.session.http.get(self.url, schema=validate.Schema(
-            validate.parse_html(),
-            validate.xml_xpath_string(".//script[contains(@src,'/stream/player.js')][1]/@src"),
-            validate.any(None, validate.transform(lambda src: urlparse(src).netloc))
-        ))
-        if not netloc:
-            log.error("Could not find server netloc")
-            return
-
-        channel, multistreams = self.session.http.get(self.API_URL_LIVE.format(username=username), schema=validate.Schema(
-            validate.parse_json(),
-            {
-                "channel": validate.any(None, {
-                    "stream_name": validate.text,
-                    "title": validate.text,
-                    "online": bool,
-                    "private": bool,
-                    "categories": [{"label": validate.text}],
-                }),
-                "getMultiStreams": validate.any(None, {
-                    "multistream": bool,
-                    "streams": [{
-                        "name": validate.text,
+        channel, multistreams, loadbalancer = self.session.http.get(
+            self.API_URL_LIVE.format(username=username),
+            schema=validate.Schema(
+                validate.parse_json(),
+                {
+                    "channel": validate.any(None, {
+                        "stream_name": validate.text,
+                        "title": validate.text,
                         "online": bool,
-                    }],
-                }),
-            },
-            validate.union_get("channel", "getMultiStreams")
-        ))
-        if not channel or not multistreams:
+                        "private": bool,
+                        "categories": [{"label": validate.text}],
+                    }),
+                    "getMultiStreams": validate.any(None, {
+                        "multistream": bool,
+                        "streams": [{
+                            "name": validate.text,
+                            "online": bool,
+                        }],
+                    }),
+                    "getLoadBalancerUrl": validate.any(None, {
+                        "url": validate.any(None, validate.transform(lambda url: urlparse(url).netloc))
+                    })
+                },
+                validate.union_get("channel", "getMultiStreams", "getLoadBalancerUrl"),
+            )
+        )
+        if not channel or not multistreams or not loadbalancer:
             log.debug("Missing channel or streaming data")
             return
 
-        log.trace("netloc={0!r}".format(netloc))
+        log.trace("loadbalancer={0!r}".format(loadbalancer))
         log.trace("channel={0!r}".format(channel))
         log.trace("multistreams={0!r}".format(multistreams))
 
@@ -83,7 +80,7 @@ class Picarto(Plugin):
         self.title = channel["title"]
 
         hls_url = self.HLS_URL.format(
-            netloc=netloc,
+            netloc=loadbalancer["url"],
             file_name=channel["stream_name"]
         )
 
