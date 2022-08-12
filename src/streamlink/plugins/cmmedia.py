@@ -7,7 +7,6 @@ $notes Content not licensed for digital distribution is unavailable via the live
 
 import logging
 import re
-from functools import partial
 
 from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.api import validate
@@ -18,11 +17,6 @@ log = logging.getLogger(__name__)
 
 @pluginmatcher(re.compile(r"https?://(?:www\.)?cmmedia\.es"))
 class CMMedia(Plugin):
-    iframe_url_re = re.compile(r'{getKs\("([^"]+)"')
-    json_re = re.compile(r"twindow\.kalturaIframePackageData\s*=\s*({.*});[\\nt]*var isIE8")
-    unescape_quotes = partial(re.compile(r'\\"').sub, r'"')
-    partner_ids_re = re.compile(r"/p/(\d+)/sp/(\d+)/")
-
     @staticmethod
     def is_restricted(data):
         items = {k: v for k, v in data.items() if k.startswith("is")}
@@ -37,26 +31,23 @@ class CMMedia(Plugin):
         return False
 
     def _get_streams(self):
-        parsed_html = self.session.http.get(self.url, schema=validate.Schema(validate.parse_html()))
-
-        iframe_url = validate.validate(
-            validate.Schema(
-                validate.xml_xpath_string(".//script[contains(text(), '/embedIframeJs/')]/text()"),
-                validate.any(
-                    None,
-                    validate.all(
-                        validate.transform(self.iframe_url_re.search),
-                        validate.any(None, validate.all(validate.get(1), validate.url())),
+        self.author, iframe_url = self.session.http.get(self.url, schema=validate.Schema(
+            validate.parse_html(),
+            validate.union((
+                validate.xml_xpath_string(".//h1[contains(@class, 'btn-title')]/text()"),
+                validate.all(
+                    validate.xml_xpath_string(".//script[contains(text(), '/embedIframeJs/')]/text()"),
+                    validate.none_or_all(
+                        re.compile(r"""{getKs\((?P<q>")(?P<url>.+?)(?P=q)"""),
+                        validate.none_or_all(validate.get("url"), validate.url()),
                     ),
                 ),
-            ),
-            parsed_html,
-        )
-
+            )),
+        ))
         if not iframe_url:
             return
 
-        m = self.partner_ids_re.search(iframe_url)
+        m = re.search(r"/p/(\d+)/sp/(\d+)/", iframe_url)
         if not m:
             log.error("Failed to find partner IDs in IFRAME URL")
             return
@@ -64,44 +55,33 @@ class CMMedia(Plugin):
         p = m.group(1)
         sp = m.group(2)
 
-        json = self.session.http.get(
-            iframe_url,
-            schema=validate.Schema(
-                validate.transform(self.json_re.search),
-                validate.any(
-                    None,
-                    validate.all(
-                        validate.get(1),
-                        validate.transform(self.unescape_quotes),
-                        validate.parse_json(),
-                        validate.any(
-                            {
-                                "entryResult": {
-                                    "contextData": {
-                                        "isSiteRestricted": bool,
-                                        "isCountryRestricted": bool,
-                                        "isSessionRestricted": bool,
-                                        "isIpAddressRestricted": bool,
-                                        "isUserAgentRestricted": bool,
-                                        "flavorAssets": [
-                                            {
-                                                "id": validate.text,
-                                            }
-                                        ],
-                                    },
-                                    "meta": {
-                                        "id": validate.text,
-                                        "name": validate.text,
-                                        "categories": validate.any(None, validate.text),
-                                    },
-                                },
-                            },
-                            {"error": validate.text},
-                        ),
-                    ),
-                ),
+        json = self.session.http.get(iframe_url, schema=validate.Schema(
+            re.compile(r"twindow\.kalturaIframePackageData\s*=\s*({.*});[\\nt]*var isIE8"),
+            validate.none_or_all(
+                validate.get(1),
+                validate.transform(lambda text: re.sub(r'\\"', r'"', text)),
+                validate.parse_json(),
+                validate.any({
+                    "entryResult": {
+                        "contextData": {
+                            "isSiteRestricted": bool,
+                            "isCountryRestricted": bool,
+                            "isSessionRestricted": bool,
+                            "isIpAddressRestricted": bool,
+                            "isUserAgentRestricted": bool,
+                            "flavorAssets": [{
+                                "id": validate.text,
+                            }],
+                        },
+                        "meta": {
+                            "id": validate.text,
+                            "name": validate.text,
+                            "categories": validate.any(None, validate.text),
+                        },
+                    },
+                }, {"error": validate.text}),
             ),
-        )
+        ))
 
         if not json:
             return
@@ -117,21 +97,15 @@ class CMMedia(Plugin):
 
         self.id = json["meta"]["id"]
         self.title = json["meta"]["name"]
-        self.author = validate.validate(
-            validate.Schema(
-                validate.xml_xpath_string(".//h1[contains(@class, 'btn-title')]/text()"),
-            ),
-            parsed_html,
-        )
-        if json["meta"]["categories"]:
-            self.category = json["meta"]["categories"]
+        self.category = json["meta"]["categories"]
 
         for asset in json["contextData"]["flavorAssets"]:
             for s in HLSStream.parse_variant_playlist(
-                self.session, (
-                    "https://cdnapisec.kaltura.com/p/{0}/sp/{1}/playManifest/entryId/{2}/flavorIds/{3}"
-                    "/format/applehttp/protocol/https/a.m3u8"
-                ).format(p, sp, json["meta"]["id"], asset["id"]),
+                self.session,
+                (
+                    "https://cdnapisec.kaltura.com/p/{0}/sp/{1}/playManifest/entryId/{2}"
+                    "/flavorIds/{3}/format/applehttp/protocol/https/a.m3u8"
+                ).format(p, sp, json['meta']['id'], asset['id']),
                 name_fmt="{pixels}_{bitrate}",
             ).items():
                 yield s
