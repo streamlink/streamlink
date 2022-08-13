@@ -1,7 +1,7 @@
-from typing import Any, Callable
+from typing import Any, Callable, Dict, Optional, Tuple
 from urllib.parse import urlparse
 
-from lxml.etree import iselement
+from lxml.etree import XPathError, iselement
 
 from streamlink.plugin.api.validate._exception import ValidationError
 from streamlink.plugin.api.validate._schemas import AllSchema, AnySchema, TransformSchema
@@ -210,68 +210,123 @@ def validator_map(func: Callable[..., Any]) -> TransformSchema:
 # lxml.etree related validators
 
 
-def validator_xml_find(xpath: str) -> TransformSchema:
+def validator_xml_find(
+    path: str,
+    namespaces: Optional[Dict[str, str]] = None,
+) -> TransformSchema:
     """
-    Find an XML element via xpath (:meth:`Element.find`).
+    Find an XML element (:meth:`Element.find`).
+    This method uses the ElementPath query language, which is a subset of XPath.
     """
 
     def xpath_find(value):
         validate(iselement, value)
-        value = value.find(xpath)
+
+        try:
+            value = value.find(path, namespaces=namespaces)
+        except SyntaxError as err:
+            raise ValidationError(
+                "ElementPath syntax error: {path}",
+                path=repr(path),
+                schema="xml_find",
+                context=err,
+            )
+
         if value is None:
             raise ValidationError(
-                "XPath {xpath} did not return an element",
-                xpath=repr(xpath),
+                "ElementPath query {path} did not return an element",
+                path=repr(path),
                 schema="xml_find",
             )
 
-        return validate(iselement, value)
+        return value
 
     return TransformSchema(xpath_find)
 
 
-def validator_xml_findall(xpath) -> TransformSchema:
+def validator_xml_findall(
+    path: str,
+    namespaces: Optional[Dict[str, str]] = None,
+) -> TransformSchema:
     """
-    Find a list of XML elements via xpath.
+    Find a list of XML elements (:meth:`Element.findall`).
+    This method uses the ElementPath query language, which is a subset of XPath.
     """
 
     def xpath_findall(value):
         validate(iselement, value)
-        return value.findall(xpath)
+        return value.findall(path, namespaces=namespaces)
 
     return TransformSchema(xpath_findall)
 
 
-def validator_xml_findtext(xpath) -> AllSchema:
+def validator_xml_findtext(
+    path: str,
+    namespaces: Optional[Dict[str, str]] = None,
+) -> AllSchema:
     """
-    Find an XML element via xpath and extract its text.
+    Find an XML element (:meth:`Element.find`) and return its text.
+    This method uses the ElementPath query language, which is a subset of XPath.
     """
 
     return AllSchema(
-        validator_xml_find(xpath),
+        validator_xml_find(path, namespaces=namespaces),
         validator_getattr("text"),
     )
 
 
-def validator_xml_xpath(xpath) -> TransformSchema:
+def validator_xml_xpath(
+    xpath: str,
+    namespaces: Optional[Dict[str, str]] = None,
+    extensions: Optional[Dict[Tuple[Optional[str], str], Callable[..., Any]]] = None,
+    smart_strings: bool = True,
+    **variables,
+) -> TransformSchema:
     """
-    Query XML elements via xpath (:meth:`Element.xpath`) and return None if the result is falsy.
+    Query XML elements via XPath (:meth:`Element.xpath`) and return None if the result is falsy.
     """
 
     def transform_xpath(value):
         validate(iselement, value)
-        return value.xpath(xpath) or None
+        try:
+            result = value.xpath(
+                xpath,
+                namespaces=namespaces,
+                extensions=extensions,
+                smart_strings=smart_strings,
+                **variables,
+            )
+        except XPathError as err:
+            raise ValidationError(
+                "XPath evaluation error: {xpath}",
+                xpath=repr(xpath),
+                schema="xml_xpath",
+                context=err,
+            )
+
+        return result or None
 
     return TransformSchema(transform_xpath)
 
 
-def validator_xml_xpath_string(xpath) -> TransformSchema:
+def validator_xml_xpath_string(
+    xpath: str,
+    namespaces: Optional[Dict[str, str]] = None,
+    extensions: Optional[Dict[Tuple[Optional[str], str], Callable[..., Any]]] = None,
+    **variables,
+) -> TransformSchema:
     """
-    Query XML elements via xpath (:meth:`Element.xpath`),
+    Query XML elements via XPath (:meth:`Element.xpath`),
     transform the result into a string and return None if the result is falsy.
     """
 
-    return validator_xml_xpath(f"string({xpath})")
+    return validator_xml_xpath(
+        f"string({xpath})",
+        namespaces=namespaces,
+        extensions=extensions,
+        smart_strings=False,
+        **variables,
+    )
 
 
 # Parse utility related validators
