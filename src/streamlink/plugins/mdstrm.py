@@ -35,7 +35,8 @@ class MDStrm(Plugin):
             pattern = fr"{search_string}\s*=\s*'([^']+)';"
         _schema = validate.Schema(
             validate.xml_xpath_string(
-                f".//script[@type='text/javascript'][contains(text(),'{search_string}')]/text()",
+                ".//script[@type='text/javascript'][contains(text(),$search_string)]/text()",
+                search_string=search_string,
             ),
             validate.none_or_all(
                 re.compile(pattern),
