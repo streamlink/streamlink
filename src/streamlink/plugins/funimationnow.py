@@ -146,7 +146,7 @@ class Experience:
     def login_csrf(self):
         return self.session.http.get(self.login_url, schema=validate.Schema(
             validate.parse_html(),
-            validate.xml_xpath_string(f".//input[@name='{self.CSRF_NAME}'][1]/@value")
+            validate.xml_xpath_string(".//input[@name=$name][1]/@value", name=self.CSRF_NAME)
         ))
 
     def login(self, email, password):

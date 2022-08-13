@@ -22,15 +22,15 @@ class UseeTV(Plugin):
 
         for needle, errormsg in (
             (
-                "This service is not available in your Country",
+                "\"This service is not available in your Country\"",
                 "The content is not available in your region",
             ),
             (
-                "Silahkan login Menggunakan akun MyIndihome dan berlangganan minipack",
+                "\"Silahkan login Menggunakan akun MyIndihome dan berlangganan minipack\"",
                 "The content is not available without a subscription",
             ),
         ):
-            if validate.Schema(validate.xml_xpath(f""".//script[contains(text(), '"{needle}"')]""")).validate(root):
+            if validate.Schema(validate.xml_xpath(".//script[contains(text(),$needle)]", needle=needle)).validate(root):
                 log.error(errormsg)
                 return
 

@@ -44,7 +44,7 @@ class DeutscheWelle(Plugin):
                 # find the video element of the selected channel ID first
                 # node-sets are always ordered by the document order, so these queries can't be merged into one
                 validate.all(
-                    validate.xml_xpath(f".//video[../@data-channel-id='{channel}'][1]"),
+                    validate.xml_xpath(".//video[../@data-channel-id=$channel][1]", channel=channel),
                     # validate.xml_element() can't be used here, because it discards parent nodes of the cloned return value
                     lambda res: res is not None,
                     validate.get(0),
