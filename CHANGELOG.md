@@ -1,5 +1,109 @@
 # Changelog
 
+## streamlink 2.27.4.0 (2022-08-13)
+
+```text
+Billy2011 <kschmidt2007@googlemail.com> (57):
+      plugins.mildom: fix/update (#4531)
+      stream.hls: refactor segment decryption (#4533)
+      plugins.useetv: geo+subscription error messages (#4550)
+      stream.hls: parse M3U8 from Response obj directly (#4552)
+      plugins.nicolive: fix email logins (#4553)
+      stream.hls: cache parsed multivariant playlist (#4568)
+      stream.hls: add methods for fetching playlists (#4571)
+      plugins.filmon: rewrite plugin (#4573)
+      cli: list all dependencies in debug output (#4575)
+      plugins.mediavitrina: fix invalid url_json (#4584)
+      plugins.idf1: fix plugin (#4585)
+      cli: fix pluginerror in handle_url if json is True (#4590)
+      plugins.pandalive: update/fix (#4591)
+      plugins.telefe: fix livestream (#4592)
+      plugin.api.websocket: don't join current thread (#4605)
+      plugin.api.websocket: fix typing, export opcodes (#4608)
+      plugins.twitcasting: fix websocket stream data (#4608)
+      plugins.twitch: fix stream weight (#4625)
+      plugins.twitcasting: discard text frames(#4628)
+      plugins.rtve: rewrite plugin (#4632)
+      stream.segmented: add AwaitableMixin(#4630)
+      stream.dash: update DASHStreamWorker.iter_segments(#4630)
+      stream.dash: update DASHStreamWriter.fetch(#4630)
+      plugins.trovo: update URL matching, tests(#4636)
+      plugins.vk: add support for WAF cookie(#4638)
+      stream.hls: turn url_master into property(#4643)
+      cli: refactor nested argparse argument groups(#4651)
+      utils.l10n: switch to locale.getlocale()(#4654)
+      docs: use single-backtick inline code block(#4659)
+      stream.ffmpegmux: cache executable lookups(#4660)
+      plugins.nbcnews: fix plugin(#4668)
+      stream.ffmpegmux: rewrite tests(#4669)
+      plugins.livestream: rewrite and fix plugin(#4679)
+      plugins.huya: rewrite and fix plugin(#4685)
+      plugin.api.validate: more DRY schema definitions(#4691)
+      plugin.api.validate: add ListSchema(#4691)
+      plugin.api.validate: add NoneOrAllSchema(#4691)
+      plugins.ard_mediathek: fix plugin(#4703)
+      plugins.zdf_mediathek: replace regex with XPath(#4704)
+      plugin.api.validate: fix pattern input type(#4708)
+      plugin.api.validate: add RegexSchema(#4709)
+      plugin.api.http_session: suppress type error(#4710)
+      plugins: refactor validation schemas(#4702)
+      plugins: move and refactor validation schemas(#4702)
+      plugins.dlive: refactor(#4713)
+      plugins.cmmedia: refactor(#4711)
+      plugins.ltv_lsm_lv: fix plugin(#4712)
+      plugins.olympicchannel: rewrite(#4717)
+      plugins.btv: rewrite(#4716)
+      plugins.blazetv: refactor(#4714)
+      plugins: call schema.validate(value)(#4718)
+      plugins.deutschewelle: rewrite and fix plugin(#4725)
+      plugins.picarto: fix streams and VODs (#4729)
+      Update .removed
+
+Ian Cameron <1661072+mkbloke@users.noreply.github.com> (5):
+      plugins.useetv: new plugin
+      plugins.blazetv: new plugin
+      plugin.api: update useragents
+      plugins.aloula: new plugin
+      plugins.vk: fix
+
+Mozi <29089388+pzhlkj6612@users.noreply.github.com> (7):
+      plugins.nicolive: docs: apply bold style to "--timeshift-offset"
+      docs: use valid or full-length options to create links
+      docs: use bulleted list to organize content
+      docs: include the option itself in its example
+      docs: apply option links in indented lines
+      docs: add names for special characters
+      docs: put inline code to code blocks in examples
+
+NeedMilk! <xiaoyu960522@sina.com> (1):
+      plugins.atpchallenger: new plugin (#4700)
+
+back-to <backto@protonmail.ch> (2):
+      plugins.rtpa: fix 401 error, added self.title
+      plugins.eltrecetv: removed
+
+bastimeyer <mail@bastimeyer.de> (14):
+      plugins.tvtoya: rewrite plugin
+      plugins.youtube: fix InitialPlayerResponse regex
+      stream.ffmpegmux: close sub-streams concurrently
+      plugins.vidio: rewrite plugin
+      plugins.vidio: fix referer HTTP header
+      stream.ffmpegmux: add ffmpeg-verbose{,-path} tests
+      plugins.tv360: rewrite plugin
+      plugins.huajiao: rewrite and fix plugin
+      plugins.cinergroup: rewrite and fix plugin
+      plugins.raiplay: refactor
+      plugins.bloomberg: fix default US live stream
+      plugins.theplatform: remove plugin
+      plugins.nbc: remove plugin
+      plugins.nbcsports: remove plugin
+
+streamlinkbot <streamlinkbot@users.noreply.github.com> (2):
+      plugin.api: update useragents
+      plugin.api: update useragents
+```
+
+
 ## streamlink 2.27.3.0 (2022-05-16)
 
 ```text
