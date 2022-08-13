@@ -1073,12 +1073,18 @@ class TestXmlFindValidator:
         element = Element("foo")
         assert validate.validate(validate.xml_find("."), element) is element
 
+    def test_namespaces(self):
+        root = Element("root")
+        child = Element("{http://a}foo")
+        root.append(child)
+        assert validate.validate(validate.xml_find("./a:foo", namespaces={"a": "http://a"}), root) is child
+
     def test_failure_no_element(self):
         with pytest.raises(validate.ValidationError) as cm:
             validate.validate(validate.xml_find("*"), Element("foo"))
         assert_validationerror(cm.value, """
             ValidationError(xml_find):
-              XPath '*' did not return an element
+              ElementPath query '*' did not return an element
         """)
 
     def test_failure_not_found(self):
@@ -1086,7 +1092,7 @@ class TestXmlFindValidator:
             validate.validate(validate.xml_find("invalid"), Element("foo"))
         assert_validationerror(cm.value, """
             ValidationError(xml_find):
-              XPath 'invalid' did not return an element
+              ElementPath query 'invalid' did not return an element
         """)
 
     def test_failure_schema(self):
@@ -1095,6 +1101,16 @@ class TestXmlFindValidator:
         assert_validationerror(cm.value, """
             ValidationError(Callable):
               iselement('not-an-element') is not true
+        """)
+
+    def test_failure_syntax(self):
+        with pytest.raises(validate.ValidationError) as cm:
+            validate.validate(validate.xml_find("["), Element("foo"))
+        assert_validationerror(cm.value, """
+            ValidationError(xml_find):
+              ElementPath syntax error: '['
+              Context:
+                invalid path
         """)
 
 
@@ -1112,6 +1128,12 @@ class TestXmlFindallValidator:
 
     def test_empty(self, element):
         assert validate.validate(validate.xml_findall("missing"), element) == []
+
+    def test_namespaces(self):
+        root = Element("root")
+        for child in Element("{http://a}foo"), Element("{http://unknown}bar"), Element("{http://a}baz"):
+            root.append(child)
+        assert validate.validate(validate.xml_findall("./a:*", namespaces={"a": "http://a"}), root) == [root[0], root[2]]
 
     def test_failure_schema(self):
         with pytest.raises(validate.ValidationError) as cm:
@@ -1131,6 +1153,13 @@ class TestXmlFindtextValidator:
     def test_empty(self):
         element = Element("foo")
         assert validate.validate(validate.xml_findtext("."), element) is None
+
+    def test_namespaces(self):
+        root = Element("root")
+        child = Element("{http://a}foo")
+        child.text = "bar"
+        root.append(child)
+        assert validate.validate(validate.xml_findtext("./a:foo", namespaces={"a": "http://a"}), root) == "bar"
 
     def test_failure_schema(self):
         with pytest.raises(validate.ValidationError) as cm:
@@ -1161,12 +1190,43 @@ class TestXmlXpathValidator:
     def test_other(self, element):
         assert validate.validate(validate.xml_xpath("local-name(.)"), element) == "root"
 
+    def test_namespaces(self):
+        nsmap = {"a": "http://a", "b": "http://b"}
+        root = Element("root", nsmap=nsmap)
+        for child in Element("{http://a}child"), Element("{http://b}child"):
+            root.append(child)
+        assert validate.validate(validate.xml_xpath("./b:child", namespaces=nsmap), root)[0] is root[1]
+
+    def test_extensions(self, element):
+        def foo(context, a, b):
+            return int(context.context_node.attrib.get("val")) + a + b
+
+        element = Element("root", attrib={"val": "3"})
+        assert validate.validate(validate.xml_xpath("foo(5, 7)", extensions={(None, "foo"): foo}), element) == 15.0
+
+    def test_smart_strings(self, element):
+        assert validate.validate(validate.xml_xpath("*/text()"), element)[0].getparent().tag == "foo"
+        assert not hasattr(validate.validate(validate.xml_xpath("*/text()", smart_strings=False), element)[0], "getparent")
+
+    def test_variables(self, element):
+        assert validate.validate(validate.xml_xpath("*[local-name() = $name]/text()", name="foo"), element) == ["FOO"]
+
     def test_failure_schema(self):
         with pytest.raises(validate.ValidationError) as cm:
             validate.validate(validate.xml_xpath("."), "not-an-element")
         assert_validationerror(cm.value, """
             ValidationError(Callable):
               iselement('not-an-element') is not true
+        """)
+
+    def test_failure_evaluation(self):
+        with pytest.raises(validate.ValidationError) as cm:
+            validate.validate(validate.xml_xpath("?"), Element("root"))
+        assert_validationerror(cm.value, """
+            ValidationError(xml_xpath):
+              XPath evaluation error: '?'
+              Context:
+                Invalid expression
         """)
 
 
@@ -1185,6 +1245,9 @@ class TestXmlXpathStringValidator:
 
     def test_empty(self, element):
         assert validate.validate(validate.xml_xpath_string("./text()"), element) is None
+
+    def test_smart_strings(self, element):
+        assert not hasattr(validate.validate(validate.xml_xpath_string("./foo/text()"), element)[0], "getparent")
 
     def test_failure_schema(self):
         with pytest.raises(validate.ValidationError) as cm:
