@@ -20,6 +20,7 @@ extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.autosectionlabel',
     'sphinx.ext.intersphinx',
+    'ext_html_template_vars',
     'ext_argparse',
     'ext_github',
     'ext_plugins',
@@ -128,6 +129,13 @@ html_theme_options = {
 
 # Add any paths that contain custom themes here, relative to this directory.
 #html_theme_path = []
+
+# HTML template variables via the custom ext_html_template_vars extension
+html_template_vars = {
+    "oneliner": (
+        "A command-line utility that extracts streams from various services and pipes them into a video player of choice."
+    ),
+}
 
 # The name for this set of Sphinx documents.  If None, it defaults to
 # "<project> v<release> documentation".
