@@ -1,5 +1,27 @@
 # Changelog
 
+## streamlink 4.3.0 (2022-08-15)
+
+Release highlights:
+
+- Improved: CLI download progress output ([#4656](https://github.com/streamlink/streamlink/pull/4656))
+- Fixed: consecutive FFmpeg executable lookups not being cached ([#4660](https://github.com/streamlink/streamlink/pull/4660))
+- Fixed: `--ffmpeg-verbose-path` not expanding `~` to the user's home directory ([#4688](https://github.com/streamlink/streamlink/pull/4688))
+- Fixed: deprecated stdlib API calls in the upcoming Python 3.11 release ([#4651](https://github.com/streamlink/streamlink/pull/4651), [#4654](https://github.com/streamlink/streamlink/pull/4654))
+- Fixed: huya plugin ([#4685](https://github.com/streamlink/streamlink/pull/4685))
+- Fixed: livestream plugin ([#4679](https://github.com/streamlink/streamlink/pull/4679))
+- Fixed: picarto plugin ([#4729](https://github.com/streamlink/streamlink/pull/4729))
+- Fixed: nbcnews plugin ([#4668](https://github.com/streamlink/streamlink/pull/4668))
+- Fixed: deutschewelle plugin ([#4725](https://github.com/streamlink/streamlink/pull/4725))
+- Added plugins: atpchallenger ([#4700](https://github.com/streamlink/streamlink/pull/4700))
+- Removed plugins: nbc + nbcsports + theplatform ([#4731](https://github.com/streamlink/streamlink/pull/4731)), common\_jwplayer ([#4733](https://github.com/streamlink/streamlink/pull/4733))
+- Docs: various CLI related improvements ([#4659](https://github.com/streamlink/streamlink/pull/4659))
+- Docs: removed OpenBSD and Ubuntu from install docs ([#4681](https://github.com/streamlink/streamlink/pull/4681))
+- Plugin API: added new validation schemas and updated validators ([#4691](https://github.com/streamlink/streamlink/pull/4691), [#4709](https://github.com/streamlink/streamlink/pull/4709), [#4732](https://github.com/streamlink/streamlink/pull/4732))
+
+[Full changelog](https://github.com/streamlink/streamlink/compare/4.2.0...4.3.0)
+
+
 ## streamlink 4.2.0 (2022-07-09)
 
 Release highlights:
