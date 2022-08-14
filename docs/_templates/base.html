@@ -6,4 +6,15 @@
   <link rel="icon" type="image/png" sizes="16x16" href="/_static/favicon-16x16.png">
   <link rel="shortcut icon" href="/_static/favicon.ico">
   <link rel="manifest" href="/_static/site.webmanifest">
+  {% if not docstitle -%}
+    <meta property="og:title" content="{{ title|striptags|e }}">
+  {%- elif pagename == master_doc -%}
+    <meta property="og:title" content="{{ docstitle|striptags|e }}">
+  {%- else -%}
+    <meta property="og:title" content="{{ title|striptags|e }} - {{ docstitle|striptags|e }}">
+  {%- endif %}
+  <meta property="og:description" content="{{ oneliner }}">
+  <meta property="og:image" content="/_static/opengraph-image.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
 {%- endblock -%}
