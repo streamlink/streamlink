@@ -145,7 +145,7 @@ def _validate_callable(schema, value):
 @validate.register(RE_PATTERN_TYPE)
 def _validate_pattern(schema, value):
     # type: (RE_PATTERN_TYPE)
-    if not isinstance(value, (str, bytes)):
+    if not isinstance(value, (text_type, bytes)):
         raise ValidationError(
             "Type of {value} should be str or bytes, but is {actual}",
             value=repr(value),
@@ -231,7 +231,7 @@ def _validate_listschema(schema, value):
 @validate.register(RegexSchema)
 def _validate_regexschema(schema, value):
     # type: (RegexSchema)
-    if not isinstance(value, (str, bytes)):
+    if not isinstance(value, (text_type, bytes)):
         raise ValidationError(
             "Type of {value} should be str or bytes, but is {actual}",
             value=repr(value),
