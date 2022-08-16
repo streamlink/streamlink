@@ -482,12 +482,31 @@ def build_parser():
         useful to allow external devices like smartphones or streaming boxes to
         watch streams they wouldn't be able to otherwise.
 
-        Behavior will be similar to the continuous HTTP option, but no player
-        program will be started, and the server will listen on all available
+        The default behavior is similar to the --player-continuous-http option,
+        but no player program will be started, and the server will listen on all available
         connections instead of just in the local (loopback) interface.
+
+        Optionally, the --player-external-http-continuous option allows for disabling
+        the continuous run-mode, so that Streamlink will stop when the stream ends.
 
         The URLs that can be used to access the stream will be printed to the
         console, and the server can be interrupted using CTRL-C.
+        """
+    )
+    player.add_argument(
+        "--player-external-http-continuous",
+        type=boolean,
+        metavar="{yes,true,1,on,no,false,0,off}",
+        default=True,
+        help="""
+        Set the run-mode of --player-external-http to continuous or non-continuous.
+
+        In the continuous run-mode, Streamlink will keep running after the stream has ended
+        and will wait for the next HTTP request being made unless it gets shut down via CTRL-C.
+
+        If set to non-continuous, Streamlink will stop once the stream has ended.
+
+        Default is true.
         """
     )
     player.add_argument(
