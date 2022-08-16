@@ -197,6 +197,7 @@ def output_stream_http(
     initial_streams: Dict[str, Stream],
     formatter: Formatter,
     external: bool = False,
+    continuous: bool = True,
     port: int = 0,
 ):
     """Continuously output the stream over HTTP."""
@@ -266,6 +267,9 @@ def output_stream_http(
         if stream_fd and prebuffer:
             log.debug("Writing stream to player")
             read_stream(stream_fd, server, prebuffer, formatter)
+
+        if not continuous:
+            break
 
         server.close(True)
 
@@ -474,8 +478,14 @@ def handle_stream(plugin: Plugin, streams: Dict[str, Stream], stream_name: str) 
                 log.info(f"Opening stream: {stream_name} ({stream_type})")
                 success = output_stream_passthrough(stream, formatter)
             elif args.player_external_http:
-                return output_stream_http(plugin, streams, formatter, external=True,
-                                          port=args.player_external_http_port)
+                return output_stream_http(
+                    plugin,
+                    streams,
+                    formatter,
+                    external=True,
+                    continuous=args.player_external_http_continuous,
+                    port=args.player_external_http_port,
+                )
             elif args.player_continuous_http and not file_output:
                 return output_stream_http(plugin, streams, formatter)
             else:
