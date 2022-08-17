@@ -1,5 +1,5 @@
 """
-$description 24-hour live streaming world news channel, based in the United States of America.
+$description 24-hour live-streaming world news channel, based in the United States of America.
 $url cbsnews.com
 $type live
 """
@@ -12,32 +12,33 @@ from streamlink.stream.hls import HLSStream
 
 
 @pluginmatcher(re.compile(
-    r"https?://www\.cbsnews\.com/live/"
+    r"https?://(?:www\.)?cbsnews\.com/(?:\w+/)?live/?"
 ))
 class CBSNews(Plugin):
     def _get_streams(self):
-        items = self.session.http.get(self.url, schema=validate.Schema(
-            re.compile(r"CBSNEWS.defaultPayload = (\{.*)"),
+        data = self.session.http.get(self.url, schema=validate.Schema(
+            re.compile(r"CBSNEWS\.defaultPayload\s*=\s*(\{.*?})\s*\n"),
             validate.none_or_all(
                 validate.get(1),
                 validate.parse_json(),
                 {
-                    "items": [
-                        validate.all(
-                            {
-                                "video": validate.url(),
-                                "format": "application/x-mpegURL",
-                            },
-                            validate.get("video"),
-                        ),
-                    ],
+                    "items": [{
+                        "id": str,
+                        "canonicalTitle": str,
+                        "video": validate.url(),
+                        "format": "application/x-mpegURL",
+                    }],
                 },
-                validate.get("items"),
+                validate.get(("items", 0)),
+                validate.union_get("id", "canonicalTitle", "video"),
             ),
         ))
-        if items:
-            for hls_url in items:
-                yield from HLSStream.parse_variant_playlist(self.session, hls_url).items()
+        if not data:
+            return
+
+        self.id, self.title, hls_url = data
+
+        return HLSStream.parse_variant_playlist(self.session, hls_url)
 
 
 __plugin__ = CBSNews
