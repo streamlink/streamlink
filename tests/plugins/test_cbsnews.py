@@ -6,9 +6,18 @@ class TestPluginCanHandleUrlCBSNews(PluginCanHandleUrl):
     __plugin__ = CBSNews
 
     should_match = [
-        "https://www.cbsnews.com/live/cbs-sports-hq/",
-        "https://www.cbsnews.com/live/cbsn-local-bay-area/",
+        "https://cbsnews.com/live",
+        "https://cbsnews.com/live/cbs-sports-hq",
+        "https://cbsnews.com/sanfrancisco/live",
+        "https://cbsnews.com/live/",
+        "https://cbsnews.com/live/cbs-sports-hq/",
+        "https://cbsnews.com/sanfrancisco/live/",
         "https://www.cbsnews.com/live/",
+        "https://www.cbsnews.com/live/cbs-sports-hq/",
+        "https://www.cbsnews.com/sanfrancisco/live/",
+        "https://www.cbsnews.com/live/#x",
+        "https://www.cbsnews.com/live/cbs-sports-hq/#x",
+        "https://www.cbsnews.com/sanfrancisco/live/#x",
     ]
 
     should_not_match = [
