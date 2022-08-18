@@ -22,13 +22,15 @@ import re
 import uuid
 
 from streamlink.cache import Cache
-from streamlink.plugin import Plugin, PluginArgument, PluginArguments, pluginmatcher
+from streamlink.plugin import Plugin, pluginargument, pluginmatcher
 from streamlink.plugin.api import validate
 from streamlink.stream.dash import DASHStream
 from streamlink.stream.hls import HLSStream
 from streamlink.utils.args import comma_list_filter
 
 log = logging.getLogger(__name__)
+
+STREAMS_ZATTOO = ["dash", "hls7"]
 
 
 @pluginmatcher(re.compile(r'''
@@ -63,50 +65,39 @@ log = logging.getLogger(__name__)
         ondemand(?:\?video=|/watch/)(?P<vod_id>[^-]+)
     )
 ''', re.VERBOSE))
-class Zattoo(Plugin):
-    STREAMS_ZATTOO = ['dash', 'hls7']
+@pluginargument(
+    "email",
+    requires=["password"],
+    metavar="EMAIL",
+    help="The email associated with your zattoo account, required to access any zattoo stream.",
+)
+@pluginargument(
+    "password",
+    sensitive=True,
+    metavar="PASSWORD",
+    help="A zattoo account password to use with --zattoo-email.",
+)
+@pluginargument(
+    "purge-credentials",
+    action="store_true",
+    help="Purge cached zattoo credentials to initiate a new session and reauthenticate.",
+)
+@pluginargument(
+    "stream-types",
+    metavar="TYPES",
+    type=comma_list_filter(STREAMS_ZATTOO),
+    default=["dash"],
+    help=f"""
+        A comma-delimited list of stream types which should be used.
 
+        The following types are allowed: {','.join(STREAMS_ZATTOO)}
+
+        Default is "dash".
+    """,
+)
+class Zattoo(Plugin):
     TIME_CONTROL = 60 * 60 * 2
     TIME_SESSION = 60 * 60 * 24 * 30
-
-    arguments = PluginArguments(
-        PluginArgument(
-            "email",
-            requires=["password"],
-            metavar="EMAIL",
-            help="""
-            The email associated with your zattoo account,
-            required to access any zattoo stream.
-            """),
-        PluginArgument(
-            "password",
-            sensitive=True,
-            metavar="PASSWORD",
-            help="""
-            A zattoo account password to use with --zattoo-email.
-            """),
-        PluginArgument(
-            "purge-credentials",
-            action="store_true",
-            help="""
-            Purge cached zattoo credentials to initiate a new session
-            and reauthenticate.
-            """),
-        PluginArgument(
-            'stream-types',
-            metavar='TYPES',
-            type=comma_list_filter(STREAMS_ZATTOO),
-            default=['dash'],
-            help='''
-            A comma-delimited list of stream types which should be used,
-            the following types are allowed:
-
-            - {0}
-
-            Default is "dash".
-            '''.format('\n            - '.join(STREAMS_ZATTOO))
-        )
-    )
 
     def __init__(self, url):
         super().__init__(url)

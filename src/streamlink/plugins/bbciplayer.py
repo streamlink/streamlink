@@ -12,7 +12,7 @@ from collections import defaultdict
 from hashlib import sha1
 from urllib.parse import urlparse, urlunparse
 
-from streamlink.plugin import Plugin, PluginArgument, PluginArguments, PluginError, pluginmatcher
+from streamlink.plugin import Plugin, PluginError, pluginargument, pluginmatcher
 from streamlink.plugin.api import validate
 from streamlink.stream.dash import DASHStream
 from streamlink.stream.hls import HLSStream
@@ -29,6 +29,24 @@ log = logging.getLogger(__name__)
         live/(?P<channel_name>\w+)
     )
 """, re.VERBOSE))
+@pluginargument(
+    "username",
+    requires=["password"],
+    metavar="USERNAME",
+    help="The username used to register with bbc.co.uk.",
+)
+@pluginargument(
+    "password",
+    prompt="Enter bbc.co.uk account password",
+    sensitive=True,
+    metavar="PASSWORD",
+    help="A bbc.co.uk account password to use with --bbciplayer-username.",
+)
+@pluginargument(
+    "hd",
+    action="store_true",
+    help="Prefer HD streams over local SD streams, some live programmes may not be broadcast in HD.",
+)
 class BBCiPlayer(Plugin):
     """
     Allows streaming of live channels from bbc.co.uk/iplayer/live/* and of iPlayer programmes from
@@ -64,29 +82,6 @@ class BBCiPlayer(Plugin):
         ]},
         validate.get("media"),
         validate.filter(lambda x: x["kind"] == "video")
-    )
-    arguments = PluginArguments(
-        PluginArgument(
-            "username",
-            requires=["password"],
-            metavar="USERNAME",
-            help="The username used to register with bbc.co.uk."
-        ),
-        PluginArgument(
-            "password",
-            sensitive=True,
-            metavar="PASSWORD",
-            help="A bbc.co.uk account password to use with --bbciplayer-username.",
-            prompt="Enter bbc.co.uk account password"
-        ),
-        PluginArgument(
-            "hd",
-            action="store_true",
-            help="""
-            Prefer HD streams over local SD streams, some live programmes may
-            not be broadcast in HD.
-            """
-        ),
     )
 
     def __init__(self, url):
