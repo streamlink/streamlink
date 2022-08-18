@@ -1,5 +1,5 @@
 """
-$description Japanese live streaming and video hosting social platform.
+$description Japanese live-streaming and video hosting social platform.
 $url openrec.tv
 $type live, vod
 """
@@ -7,7 +7,7 @@ $type live, vod
 import logging
 import re
 
-from streamlink.plugin import Plugin, PluginArgument, PluginArguments, pluginmatcher
+from streamlink.plugin import Plugin, pluginargument, pluginmatcher
 from streamlink.plugin.api import validate
 from streamlink.stream.hls import HLSStream
 
@@ -17,6 +17,18 @@ log = logging.getLogger(__name__)
 @pluginmatcher(re.compile(
     r"https?://(?:www\.)?openrec\.tv/(?:live|movie)/(?P<id>[^/]+)"
 ))
+@pluginargument(
+    "email",
+    requires=["password"],
+    metavar="EMAIL",
+    help="The email associated with your openrectv account, required to access any openrectv stream.",
+)
+@pluginargument(
+    "password",
+    sensitive=True,
+    metavar="PASSWORD",
+    help="An openrectv account password to use with --openrectv-email.",
+)
 class OPENRECtv(Plugin):
     _stores_re = re.compile(r"window.stores\s*=\s*({.*?});", re.DOTALL | re.MULTILINE)
     _config_re = re.compile(r"window.sharedConfig\s*=\s*({.*?});", re.DOTALL | re.MULTILINE)
@@ -58,24 +70,6 @@ class OPENRECtv(Plugin):
         "status": int,
         validate.optional("data"): object
     })
-
-    arguments = PluginArguments(
-        PluginArgument(
-            "email",
-            requires=["password"],
-            metavar="EMAIL",
-            help="""
-            The email associated with your openrectv account,
-            required to access any openrectv stream.
-            """),
-        PluginArgument(
-            "password",
-            sensitive=True,
-            metavar="PASSWORD",
-            help="""
-            An openrectv account password to use with --openrectv-email.
-            """)
-    )
 
     def __init__(self, url):
         super().__init__(url)

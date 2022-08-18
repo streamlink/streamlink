@@ -11,7 +11,7 @@ import re
 from functools import lru_cache
 from urllib.parse import parse_qsl, urlparse
 
-from streamlink.plugin import Plugin, PluginArgument, PluginArguments, PluginError, pluginmatcher
+from streamlink.plugin import Plugin, PluginError, pluginargument, pluginmatcher
 from streamlink.plugin.api import useragents
 from streamlink.stream.hls import HLSStream
 from streamlink.utils.times import seconds_to_hhmmss
@@ -22,6 +22,20 @@ log = logging.getLogger(__name__)
 @pluginmatcher(re.compile(
     r"https?://watch\.wwe\.com/(channel)?"
 ))
+@pluginargument(
+    "email",
+    required=True,
+    requires=["password"],
+    metavar="EMAIL",
+    help="The email associated with your WWE Network account, required to access any WWE Network stream.",
+)
+@pluginargument(
+    "password",
+    required=True,
+    sensitive=True,
+    metavar="PASSWORD",
+    help="A WWE Network account password to use with --wwenetwork-email.",
+)
 class WWENetwork(Plugin):
     site_config_re = re.compile(r'''">window.__data = (\{.*?\})</script>''')
     stream_url = "https://dce-frontoffice.imggaming.com/api/v2/stream/{id}"
@@ -31,26 +45,6 @@ class WWENetwork(Plugin):
     API_KEY = "cca51ea0-7837-40df-a055-75eb6347b2e7"
 
     customer_id = 16
-    arguments = PluginArguments(
-        PluginArgument(
-            "email",
-            required=True,
-            metavar="EMAIL",
-            requires=["password"],
-            help="""
-        The email associated with your WWE Network account,
-        required to access any WWE Network stream.
-        """
-        ),
-        PluginArgument(
-            "password",
-            sensitive=True,
-            metavar="PASSWORD",
-            help="""
-        A WWE Network account password to use with --wwenetwork-email.
-        """
-        )
-    )
 
     def __init__(self, url):
         super().__init__(url)

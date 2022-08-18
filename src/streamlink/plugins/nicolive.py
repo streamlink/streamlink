@@ -1,5 +1,5 @@
 """
-$description Japanese live streaming and video hosting social platform.
+$description Japanese live-streaming and video hosting social platform.
 $url live.nicovideo.jp
 $type live, vod
 $account Required by some streams
@@ -12,7 +12,7 @@ from threading import Event
 from urllib.parse import urljoin
 
 from streamlink.exceptions import FatalPluginError
-from streamlink.plugin import Plugin, PluginArgument, PluginArguments, PluginError, pluginmatcher
+from streamlink.plugin import Plugin, PluginError, pluginargument, pluginmatcher
 from streamlink.plugin.api import useragents, validate
 from streamlink.plugin.api.websocket import WebsocketClient
 from streamlink.stream.hls import HLSStream, HLSStreamReader
@@ -117,50 +117,50 @@ class NicoLiveHLSStream(HLSStream):
 @pluginmatcher(re.compile(
     r"https?://(?P<domain>live\d*\.nicovideo\.jp)/watch/(lv|co)\d+"
 ))
+@pluginargument(
+    "email",
+    sensitive=True,
+    argument_name="niconico-email",
+    metavar="EMAIL",
+    help="The email or phone number associated with your Niconico account",
+)
+@pluginargument(
+    "password",
+    sensitive=True,
+    argument_name="niconico-password",
+    metavar="PASSWORD",
+    help="The password of your Niconico account",
+)
+@pluginargument(
+    "user-session",
+    sensitive=True,
+    argument_name="niconico-user-session",
+    metavar="VALUE",
+    help="""
+        Value of the user-session token.
+
+        Can be used as an alternative to providing a password.
+    """,
+)
+@pluginargument(
+    "purge-credentials",
+    argument_name="niconico-purge-credentials",
+    action="store_true",
+    help="Purge cached Niconico credentials to initiate a new session and reauthenticate.",
+)
+@pluginargument(
+    "timeshift-offset",
+    type=hours_minutes_seconds,
+    argument_name="niconico-timeshift-offset",
+    metavar="[HH:]MM:SS",
+    default=None,
+    help="""
+        Amount of time to skip from the beginning of a stream.
+
+        Default is 00:00:00.
+    """,
+)
 class NicoLive(Plugin):
-    arguments = PluginArguments(
-        PluginArgument(
-            "email",
-            argument_name="niconico-email",
-            sensitive=True,
-            metavar="EMAIL",
-            help="The email or phone number associated with your Niconico account"
-        ),
-        PluginArgument(
-            "password",
-            argument_name="niconico-password",
-            sensitive=True,
-            metavar="PASSWORD",
-            help="The password of your Niconico account"
-        ),
-        PluginArgument(
-            "user-session",
-            argument_name="niconico-user-session",
-            sensitive=True,
-            metavar="VALUE",
-            help="Value of the user-session token \n(can be used in "
-                 "case you do not want to put your password here)"
-        ),
-        PluginArgument(
-            "purge-credentials",
-            argument_name="niconico-purge-credentials",
-            action="store_true",
-            help="Purge cached Niconico credentials to initiate a new session and reauthenticate."
-        ),
-        PluginArgument(
-            "timeshift-offset",
-            type=hours_minutes_seconds,
-            argument_name="niconico-timeshift-offset",
-            metavar="[HH:]MM:SS",
-            default=None,
-            help="""
-            Amount of time to skip from the beginning of a stream.
-
-            Default is 00:00:00.
-            """
-        )
-    )
-
     STREAM_READY_TIMEOUT = 6
     LOGIN_URL = "https://account.nicovideo.jp/login/redirector"
     LOGIN_URL_PARAMS = {
