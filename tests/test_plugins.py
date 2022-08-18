@@ -79,7 +79,7 @@ class TestPlugins:
         assert callable(pluginclass._get_streams), "Implements _get_streams()"
 
     def test_has_valid_global_args(self, global_arg_dests, plugin):
-        assert all(parg.dest in global_arg_dests for parg in plugin.__plugin__.arguments if parg.is_global), \
+        assert all(parg.dest in global_arg_dests for parg in plugin.__plugin__.arguments or [] if parg.is_global), \
             "All plugin arguments with is_global=True are valid global arguments"
 
 

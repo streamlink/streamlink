@@ -862,7 +862,7 @@ def setup_plugin_args(session: Streamlink, parser: ArgumentParser):
         defaults = {}
         group = parser.add_argument_group(pname.capitalize(), parent=plugin_args)
 
-        for parg in plugin.arguments:
+        for parg in plugin.arguments or []:
             if not parg.is_global:
                 group.add_argument(parg.argument_name(pname), **parg.options)
                 defaults[parg.dest] = parg.default
@@ -884,6 +884,9 @@ def setup_plugin_args(session: Streamlink, parser: ArgumentParser):
 
 def setup_plugin_options(session: Streamlink, plugin: Type[Plugin]):
     """Sets Streamlink plugin options."""
+    if plugin.arguments is None:
+        return
+
     pname = plugin.module
     required = {}
 
@@ -957,14 +960,14 @@ def log_current_versions():
         log.debug(f" {name}: {version}")
 
 
-def log_current_arguments(session, parser):
+def log_current_arguments(session: Streamlink, parser: argparse.ArgumentParser):
     global args
     if not logger.root.isEnabledFor(logging.DEBUG):
         return
 
     sensitive = set()
     for pname, plugin in session.plugins.items():
-        for parg in plugin.arguments:
+        for parg in plugin.arguments or []:
             if parg.sensitive:
                 sensitive.add(parg.argument_name(pname))
 
