@@ -194,7 +194,7 @@ class Plugin:
     logger = None
     module = "unknown"
     options = Options()
-    arguments = Arguments()
+    arguments: Optional[Arguments] = None
     session = None
     _url: Optional[str] = None
 
