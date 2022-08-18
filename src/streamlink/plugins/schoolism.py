@@ -9,7 +9,7 @@ import logging
 import re
 from functools import partial
 
-from streamlink.plugin import Plugin, PluginArgument, PluginArguments, pluginmatcher
+from streamlink.plugin import Plugin, pluginargument, pluginmatcher
 from streamlink.plugin.api import useragents, validate
 from streamlink.stream.hls import HLSStream
 from streamlink.stream.http import HTTPStream
@@ -20,6 +20,30 @@ log = logging.getLogger(__name__)
 @pluginmatcher(re.compile(
     r"https?://(?:www\.)?schoolism\.com/(viewAssignment|watchLesson)\.php"
 ))
+@pluginargument(
+    "email",
+    required=True,
+    requires=["password"],
+    metavar="EMAIL",
+    help="The email associated with your Schoolism account, required to access any Schoolism stream.",
+)
+@pluginargument(
+    "password",
+    sensitive=True,
+    metavar="PASSWORD",
+    help="A Schoolism account password to use with --schoolism-email.",
+)
+@pluginargument(
+    "part",
+    metavar="PART",
+    type=int,
+    default=1,
+    help="""
+        Play part number PART of the lesson, or assignment feedback video.
+
+        Default is 1.
+    """,
+)
 class Schoolism(Plugin):
     login_url = "https://www.schoolism.com/index.php"
     key_time_url = "https://www.schoolism.com/video-html/key-time.php"
@@ -49,36 +73,6 @@ class Schoolism(Plugin):
                     )
                 }]
             )
-        )
-    )
-
-    arguments = PluginArguments(
-        PluginArgument(
-            "email",
-            required=True,
-            requires=["password"],
-            metavar="EMAIL",
-            help="""
-        The email associated with your Schoolism account,
-        required to access any Schoolism stream.
-        """
-        ),
-        PluginArgument(
-            "password",
-            sensitive=True,
-            metavar="PASSWORD",
-            help="A Schoolism account password to use with --schoolism-email."
-        ),
-        PluginArgument(
-            "part",
-            type=int,
-            default=1,
-            metavar="PART",
-            help="""
-        Play part number PART of the lesson, or assignment feedback video.
-
-        Default is 1.
-        """
         )
     )
 

@@ -9,7 +9,7 @@ import logging
 import random
 import re
 
-from streamlink.plugin import Plugin, PluginArgument, PluginArguments, pluginmatcher
+from streamlink.plugin import Plugin, pluginargument, pluginmatcher
 from streamlink.plugin.api import validate
 from streamlink.stream.hls import HLSStream
 
@@ -19,6 +19,19 @@ log = logging.getLogger(__name__)
 @pluginmatcher(re.compile(
     r'https?://play\.sbs\.co\.kr/onair/pc/index\.html'
 ))
+@pluginargument(
+    "id",
+    metavar="CHANNELID",
+    type=str.upper,
+    help="""
+        Channel ID to play.
+
+        Example:
+
+            %(prog)s http://play.sbs.co.kr/onair/pc/index.html best --sbscokr-id S01
+
+    """,
+)
 class SBScokr(Plugin):
     api_channel = 'http://apis.sbs.co.kr/play-api/1.0/onair/channel/{0}'
     api_channels = 'http://static.apis.sbs.co.kr/play-api/1.0/onair/channels'
@@ -51,22 +64,6 @@ class SBScokr(Plugin):
             }
         },
         validate.get('onair'),
-    )
-
-    arguments = PluginArguments(
-        PluginArgument(
-            'id',
-            metavar='CHANNELID',
-            type=str.upper,
-            help='''
-            Channel ID to play.
-
-            Example:
-
-                %(prog)s http://play.sbs.co.kr/onair/pc/index.html best --sbscokr-id S01
-
-            '''
-        )
     )
 
     def _get_streams(self):

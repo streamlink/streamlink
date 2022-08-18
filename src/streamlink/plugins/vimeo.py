@@ -1,5 +1,5 @@
 """
-$description Global live streaming and video hosting social platform.
+$description Global live-streaming and video hosting social platform.
 $url vimeo.com
 $type live, vod
 $notes Password protected streams are not supported
@@ -10,7 +10,7 @@ import re
 from html import unescape as html_unescape
 from urllib.parse import urlparse
 
-from streamlink.plugin import Plugin, PluginArgument, PluginArguments, pluginmatcher
+from streamlink.plugin import Plugin, pluginargument, pluginmatcher
 from streamlink.plugin.api import validate
 from streamlink.stream.dash import DASHStream
 from streamlink.stream.ffmpegmux import MuxedStream
@@ -23,6 +23,10 @@ log = logging.getLogger(__name__)
 @pluginmatcher(re.compile(
     r"https?://(player\.vimeo\.com/video/\d+|(www\.)?vimeo\.com/.+)"
 ))
+@pluginargument(
+    "mux-subtitles",
+    is_global=True,
+)
 class Vimeo(Plugin):
     _config_url_re = re.compile(r'(?:"config_url"|\bdata-config-url)\s*[:=]\s*(".+?")')
     _config_re = re.compile(r"var\s+config\s*=\s*({.+?})\s*;")
@@ -58,10 +62,6 @@ class Vimeo(Plugin):
     _player_schema = validate.Schema(
         validate.transform(_config_re.search),
         validate.any(None, validate.Schema(validate.get(1), _config_schema)),
-    )
-
-    arguments = PluginArguments(
-        PluginArgument("mux-subtitles", is_global=True)
     )
 
     def _get_streams(self):

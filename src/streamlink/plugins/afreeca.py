@@ -7,7 +7,7 @@ $type live
 import logging
 import re
 
-from streamlink.plugin import Plugin, PluginArgument, PluginArguments, pluginmatcher
+from streamlink.plugin import Plugin, pluginargument, pluginmatcher
 from streamlink.plugin.api import validate
 from streamlink.stream.hls import HLSStream, HLSStreamReader, HLSStreamWriter
 
@@ -30,6 +30,24 @@ class AfreecaHLSStream(HLSStream):
 @pluginmatcher(re.compile(
     r"https?://play\.afreecatv\.com/(?P<username>\w+)(?:/(?P<bno>:\d+))?"
 ))
+@pluginargument(
+    "username",
+    sensitive=True,
+    requires=["password"],
+    metavar="USERNAME",
+    help="The username used to register with afreecatv.com.",
+)
+@pluginargument(
+    "password",
+    sensitive=True,
+    metavar="PASSWORD",
+    help="A afreecatv.com account password to use with --afreeca-username.",
+)
+@pluginargument(
+    "purge-credentials",
+    action="store_true",
+    help="Purge cached AfreecaTV credentials to initiate a new session and reauthenticate.",
+)
 class AfreecaTV(Plugin):
     _re_bno = re.compile(r"var nBroadNo = (?P<bno>\d+);")
 
@@ -62,29 +80,6 @@ class AfreecaTV(Plugin):
             ),
             "stream_status": str,
         }
-    )
-
-    arguments = PluginArguments(
-        PluginArgument(
-            "username",
-            sensitive=True,
-            requires=["password"],
-            metavar="USERNAME",
-            help="The username used to register with afreecatv.com."
-        ),
-        PluginArgument(
-            "password",
-            sensitive=True,
-            metavar="PASSWORD",
-            help="A afreecatv.com account password to use with --afreeca-username."
-        ),
-        PluginArgument(
-            "purge-credentials",
-            action="store_true",
-            help="""
-        Purge cached AfreecaTV credentials to initiate a new session
-        and reauthenticate.
-        """),
     )
 
     def __init__(self, url):
