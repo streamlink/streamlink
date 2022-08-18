@@ -3,7 +3,7 @@ from getpass import getpass
 from json import dumps
 from typing import Any, Dict, List, Optional, TextIO, Union
 
-from streamlink.plugin.plugin import UserInputRequester
+from streamlink.user_input import UserInputRequester
 from streamlink_cli.utils import JSONEncoder
 
 
