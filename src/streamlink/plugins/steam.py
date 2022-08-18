@@ -57,9 +57,13 @@ class SteamBroadcastPlugin(Plugin):
             """
         ))
 
+    @property
+    def donotcache(self):
+        return str(int(time.time() * 1000))
+
     def encrypt_password(self, email, password):
         """
-        Get the RSA key for the user and encrypt the users password
+        Get the RSA key for the user and encrypt the user's password
         :param email: steam account
         :param password: password for account
         :return: encrypted password
@@ -68,7 +72,7 @@ class SteamBroadcastPlugin(Plugin):
             self._get_rsa_key_url,
             params=dict(
                 username=email,
-                donotcache=str(int(time.time() * 1000))
+                donotcache=self.donotcache,
             ),
             schema=validate.Schema(
                 validate.parse_json(),
@@ -100,7 +104,7 @@ class SteamBroadcastPlugin(Plugin):
             "rsatimestamp": rsatimestamp,
             "remember_login": True,
             "donotcache": self.donotcache,
-            "twofactorcode": twofactorcode
+            "twofactorcode": twofactorcode,
         }
 
         resp = self.session.http.post(
@@ -213,7 +217,12 @@ class SteamBroadcastPlugin(Plugin):
         email = self.get_option("email")
         if email:
             log.info(f"Attempting to login to Steam as {email}")
-            if self.dologin(email, self.get_option("password")):
+            try:
+                success = self.dologin(email, self.get_option("password"))
+            except SteamLoginFailed as err:
+                log.error(err)
+                return
+            if success:
                 log.info(f"Logged in as {email}")
                 self.save_cookies(lambda c: "steamMachineAuth" in c.name)
 
