@@ -3,7 +3,7 @@ from io import BytesIO
 
 from streamlink import NoStreamsError
 from streamlink.options import Options
-from streamlink.plugin import PluginArgument, PluginArguments, pluginmatcher
+from streamlink.plugin import pluginargument, pluginmatcher
 from streamlink.plugins import Plugin
 from streamlink.stream.hls import HLSStream
 from streamlink.stream.http import HTTPStream
@@ -20,19 +20,16 @@ class TestStream(Stream):
 @pluginmatcher(re.compile(
     r"https?://test\.se"
 ))
+@pluginargument(
+    "bool",
+    action="store_true",
+)
+@pluginargument(
+    "password",
+    sensitive=True,
+    metavar="PASSWORD",
+)
 class TestPlugin(Plugin):
-    arguments = PluginArguments(
-        PluginArgument(
-            "bool",
-            action="store_true"
-        ),
-        PluginArgument(
-            "password",
-            metavar="PASSWORD",
-            sensitive=True
-        )
-    )
-
     options = Options({
         "a_option": "default"
     })

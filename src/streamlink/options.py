@@ -1,4 +1,4 @@
-from typing import Optional, Sequence, Union
+from typing import Iterator, Optional, Sequence, Union
 
 
 def _normalise_option_name(name):
@@ -135,12 +135,18 @@ class Arguments:
     """
 
     def __init__(self, *args):
-        self.arguments = dict((arg.name, arg) for arg in args)
+        # keep the initial arguments of the constructor in reverse order (see __iter__())
+        self.arguments = {arg.name: arg for arg in reversed(args)}
 
-    def __iter__(self):
-        return iter(self.arguments.values())
+    def __iter__(self) -> Iterator[Argument]:
+        # iterate in reverse order due to add() being called by multiple pluginargument decorators in reverse order
+        # TODO: Python 3.7 removal: remove list()
+        return reversed(list(self.arguments.values()))
 
-    def get(self, name):
+    def add(self, argument: Argument) -> None:
+        self.arguments[argument.name] = argument
+
+    def get(self, name: str) -> Optional[Argument]:
         return self.arguments.get(name)
 
     def requires(self, name):
