@@ -71,7 +71,6 @@ class PluginArguments(ast.NodeVisitor, IDatalistItem):
         super().__init__()
         self.pluginname = pluginname
         self.arguments = []
-        self.found = False
         self.visit(pluginast)
 
     def generate(self) -> Iterator[str]:
@@ -101,21 +100,29 @@ class PluginArguments(ast.NodeVisitor, IDatalistItem):
 
         get_string = get_bool
 
-    # loosely find all PluginArgument() calls inside the args list of the first PluginArguments() call
-    # and assume that no plugin is defining arguments incorrectly
-    def visit_Call(self, node: ast.Call) -> None:
-        if getattr(node.func, "id", None) != "PluginArguments" or self.found:
+    def visit_ClassDef(self, node: ast.ClassDef) -> None:
+        for base in node.bases:
+            if not isinstance(base, ast.Name):
+                continue
+            if base.id == "Plugin":
+                break
+        else:
             return
-        self.found = True
-        for arg in node.args:
-            if type(arg) is not ast.Call or getattr(arg.func, "id", None) != "PluginArgument":
+
+        for decorator in node.decorator_list:
+            if (
+                not isinstance(decorator, ast.Call)
+                or not isinstance(decorator.func, ast.Name)
+                or decorator.func.id != "pluginargument"
+                or (len(decorator.args) == 0 and len(decorator.keywords) == 0)
+            ):
                 continue
 
-            if any(self.get_bool(arg.keywords, lambda kw: kw.arg == "is_global", lambda kw: kw.value)):
+            if any(self.get_bool(decorator.keywords, lambda kw: kw.arg == "is_global", lambda kw: kw.value)):
                 continue
 
             custom_name: Optional[str] = next(
-                self.get_string(arg.keywords, lambda kw: kw.arg == "argument_name", lambda kw: kw.value),
+                self.get_string(decorator.keywords, lambda kw: kw.arg == "argument_name", lambda kw: kw.value),
                 None
             )
             if custom_name:
@@ -123,11 +130,11 @@ class PluginArguments(ast.NodeVisitor, IDatalistItem):
                 continue
 
             name: Optional[str] = next(
-                self.get_string(arg.keywords, lambda kw: kw.arg == "name", lambda kw: kw.value),
-                None
+                self.get_string(decorator.keywords, lambda kw: kw.arg == "name", lambda kw: kw.value),
+                None,
             ) or next(
-                self.get_string(arg.args[:1], lambda a: True, lambda a: a),
-                None
+                self.get_string(decorator.args[:1], lambda a: True, lambda a: a),
+                None,
             )
             if name:
                 self.arguments.append(f"{self.pluginname}-{name}")
