@@ -30,8 +30,7 @@ from tests.plugins.testplugin import TestPlugin as _TestPlugin
 
 class FakePlugin(_TestPlugin):
     module = "fake"
-    arguments = []
-    _streams = {}
+    _streams = {}  # type: ignore
 
     def streams(self, *args, **kwargs):
         return self._streams
