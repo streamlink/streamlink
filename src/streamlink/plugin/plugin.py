@@ -556,7 +556,10 @@ class Plugin:
         raise FatalPluginError("This plugin requires user input, however it is not supported on this platform")
 
 
-def pluginmatcher(pattern: Pattern, priority: int = NORMAL_PRIORITY) -> Callable[[Type[Plugin]], Type[Plugin]]:
+def pluginmatcher(
+    pattern: Pattern,
+    priority: int = NORMAL_PRIORITY,
+) -> Callable[[Type[Plugin]], Type[Plugin]]:
     matcher = Matcher(pattern, priority)
 
     def decorator(cls: Type[Plugin]) -> Type[Plugin]:
@@ -581,7 +584,7 @@ def pluginargument(
     dest: Optional[str] = None,
     is_global: bool = False,
     **options,
-):
+) -> Callable[[Type[Plugin]], Type[Plugin]]:
     arg = Argument(
         name,
         required=required,
