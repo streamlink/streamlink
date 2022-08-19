@@ -16,6 +16,8 @@ from streamlink.cache import Cache
 from streamlink.compat import str
 from streamlink.exceptions import FatalPluginError, NoStreamsError, PluginError
 from streamlink.options import Arguments, Options
+from streamlink.user_input import UserInputRequester
+
 
 log = logging.getLogger(__name__)
 
@@ -159,33 +161,6 @@ def parse_params(params=None):
     return rval
 
 
-class UserInputRequester(object):
-    """
-    Base Class / Interface for requesting user input
-
-    eg. From the console
-    """
-    def ask(self, prompt):
-        """
-        Ask the user for a text input, the input is not sensitive
-        and can be echoed to the user
-
-        :param prompt: message to display when asking for the input
-        :return: the value the user input
-        """
-        raise NotImplementedError
-
-    def ask_password(self, prompt):
-        """
-        Ask the user for a text input, the input _is_ sensitive
-        and should be masked as the user gives the input
-
-        :param prompt: message to display when asking for the input
-        :return: the value the user input
-        """
-        raise NotImplementedError
-
-
 Matcher = namedtuple("Matcher", "pattern priority")
 
 
@@ -222,22 +197,15 @@ class Plugin(object):
     options = Options()
     arguments = Arguments()
     session = None
-    # _url: str = None
-    _url = None
-    _user_input_requester = None
+    _url = None  # type: Optional[str]
 
     @classmethod
-    def bind(cls, session, module, user_input_requester=None):
+    def bind(cls, session, module):
         cls.cache = Cache(filename="plugin-cache.json",
                           key_prefix=module)
         cls.logger = logging.getLogger("streamlink.plugins." + module)
         cls.module = module
         cls.session = session
-        if user_input_requester is not None:
-            if isinstance(user_input_requester, UserInputRequester):
-                cls._user_input_requester = user_input_requester
-            else:
-                raise RuntimeError("user-input-requester must be an instance of UserInputRequester")
 
     @property
     def url(self):
@@ -555,23 +523,23 @@ class Plugin(object):
         return removed
 
     def input_ask(self, prompt):
-        if self._user_input_requester:
+        # type: (str) -> str
+        user_input_requester = self.session.get_option("user-input-requester")  # type: Optional[UserInputRequester]
+        if user_input_requester:
             try:
-                return self._user_input_requester.ask(prompt)
-            except IOError as e:
-                raise FatalPluginError("User input error: {0}".format(e))
-            except NotImplementedError:  # ignore this and raise a FatalPluginError
-                pass
+                return user_input_requester.ask(prompt)
+            except (IOError, OSError) as err:
+                raise FatalPluginError("User input error: {0}".format(err))
         raise FatalPluginError("This plugin requires user input, however it is not supported on this platform")
 
     def input_ask_password(self, prompt):
-        if self._user_input_requester:
+        # type: (str) -> str
+        user_input_requester = self.session.get_option("user-input-requester")  # type: Optional[UserInputRequester]
+        if user_input_requester:
             try:
-                return self._user_input_requester.ask_password(prompt)
-            except IOError as e:
-                raise FatalPluginError("User input error: {0}".format(e))
-            except NotImplementedError:  # ignore this and raise a FatalPluginError
-                pass
+                return user_input_requester.ask_password(prompt)
+            except (IOError, OSError) as err:
+                raise FatalPluginError("User input error: {0}".format(err))
         raise FatalPluginError("This plugin requires user input, however it is not supported on this platform")
 
 

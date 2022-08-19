@@ -5,7 +5,7 @@ import random
 import tempfile
 import threading
 
-from streamlink.compat import is_py3, is_win32
+from streamlink.compat import ABC, is_py3, is_win32
 
 if is_win32:
     from ctypes import windll, cast, c_ulong, c_void_p, byref
@@ -15,7 +15,6 @@ log = logging.getLogger(__name__)
 
 _lock = threading.Lock()
 _id = 0
-ABC = abc.ABCMeta('ABC', (object,), {'__slots__': ()})
 
 
 class NamedPipeBase(ABC):

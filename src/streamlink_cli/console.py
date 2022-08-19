@@ -3,7 +3,7 @@ import logging
 import sys
 from getpass import getpass
 
-from streamlink.plugin.plugin import UserInputRequester
+from streamlink.user_input import UserInputRequester
 from streamlink_cli.compat import input
 from streamlink_cli.utils import JSONEncoder
 

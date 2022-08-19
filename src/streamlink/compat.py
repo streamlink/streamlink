@@ -1,3 +1,4 @@
+import abc
 import inspect
 import os
 import sys
@@ -84,10 +85,11 @@ except ImportError:
 
 getargspec = getattr(inspect, "getfullargspec", inspect.getargspec)
 
+ABC = abc.ABCMeta('ABC', (object,), {'__slots__': ()})
 
 __all__ = [
-    "Callable", "Mapping", "Match", "RE_PATTERN_TYPE", "indent", "is_py2", "is_py3", "is_py33", "is_win32", "str", "bytes",
-    "urlparse", "urlunparse", "urljoin", "parse_qs", "parse_qsl", "quote", "quote_plus",
+    "ABC", "Callable", "Mapping", "Match", "RE_PATTERN_TYPE", "indent", "is_py2", "is_py3", "is_py33", "is_win32", "str",
+    "bytes", "urlparse", "urlunparse", "urljoin", "parse_qs", "parse_qsl", "quote", "quote_plus",
     "unquote", "unquote_plus", "queue", "range", "singledispatch", "urlencode", "devnull", "which",
     "izip", "urlsplit", "urlunsplit", "getargspec", "html_unescape", "lru_cache"
 ]

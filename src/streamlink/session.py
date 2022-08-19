@@ -87,7 +87,7 @@ class Streamlink(object):
             "ffmpeg-start-at-zero": False,
             "mux-subtitles": False,
             "locale": None,
-            "user-input-requester": None
+            "user-input-requester": None,
         })
         if options:
             self.options.update(options)
@@ -233,9 +233,8 @@ class Streamlink(object):
                                  default: ``system locale``.
 
         user-input-requester     (UserInputRequester) instance of UserInputRequester
-                                 to collect input from the user at runtime. Must be
-                                 set before the plugins are loaded.
-                                 default: ``UserInputRequester``.
+                                 to collect input from the user at runtime.
+                                 default: ``None``.
         ======================== =========================================
 
         """
@@ -500,9 +499,6 @@ class Streamlink(object):
                 continue
 
     def load_plugin(self, name, file, pathname, desc):
-        # Set the global http session for this plugin
-        user_input_requester = self.get_option("user-input-requester")
-
         module = imp.load_module(name, file, pathname, desc)
 
         if hasattr(module, "__plugin__"):
@@ -510,7 +506,7 @@ class Streamlink(object):
             plugin_name = module_name.split(".")[-1]  # get the plugin part of the module name
 
             plugin = getattr(module, "__plugin__")
-            plugin.bind(self, plugin_name, user_input_requester)
+            plugin.bind(self, plugin_name)
 
             if plugin.module in self.plugins:
                 log.debug("Plugin {0} is being overridden by {1}".format(plugin.module, pathname))
