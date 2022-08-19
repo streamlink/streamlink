@@ -8,7 +8,15 @@ import freezegun
 import pytest
 import requests.cookies
 
-from streamlink.plugin import HIGH_PRIORITY, NORMAL_PRIORITY, Plugin, pluginmatcher
+from streamlink.plugin import (
+    HIGH_PRIORITY,
+    NORMAL_PRIORITY,
+    Plugin,
+    PluginArgument,
+    PluginArguments,
+    pluginargument,
+    pluginmatcher,
+)
 from streamlink.plugin.plugin import Matcher
 
 
@@ -206,6 +214,46 @@ class TestPluginMatcher(unittest.TestCase):
         self.assertEqual([m is not None for m in plugin.matches], [False, False, False])
         self.assertEqual(plugin.matcher, None)
         self.assertEqual(plugin.match, None)
+
+
+class TestPluginArguments:
+    @pluginargument("foo", dest="_foo", help="FOO")
+    @pluginargument("bar", dest="_bar", help="BAR")
+    @pluginargument("baz", dest="_baz", help="BAZ")
+    class DecoratedPlugin(FakePlugin):
+        pass
+
+    class ClassAttrPlugin(FakePlugin):
+        arguments = PluginArguments(
+            PluginArgument("foo", dest="_foo", help="FOO"),
+            PluginArgument("bar", dest="_bar", help="BAR"),
+            PluginArgument("baz", dest="_baz", help="BAZ"),
+        )
+
+    @pytest.mark.parametrize("pluginclass", [DecoratedPlugin, ClassAttrPlugin])
+    def test_arguments(self, pluginclass):
+        assert pluginclass.arguments is not None
+        assert tuple(arg.name for arg in pluginclass.arguments) == ("foo", "bar", "baz"), "Argument name"
+        assert tuple(arg.dest for arg in pluginclass.arguments) == ("_foo", "_bar", "_baz"), "Argument keyword"
+        assert tuple(arg.options.get("help") for arg in pluginclass.arguments) == ("FOO", "BAR", "BAZ"), "argparse keyword"
+
+    def test_mixed(self):
+        @pluginargument("qux")
+        class MixedPlugin(self.ClassAttrPlugin):
+            pass
+
+        assert tuple(arg.name for arg in MixedPlugin.arguments) == ("qux", "foo", "bar", "baz")
+
+    def test_decorator_typerror(self):
+        with pytest.raises(TypeError) as cm:
+            with patch("builtins.repr", Mock(side_effect=lambda obj: obj.__name__)):
+                @pluginargument("foo")
+                class Foo:
+                    pass
+        assert str(cm.value) == "Foo is not a Plugin"
+
+    def test_empty(self):
+        assert Plugin.arguments is None
 
 
 @pytest.mark.parametrize("attr", ["id", "author", "category", "title"])
