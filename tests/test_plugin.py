@@ -1,4 +1,3 @@
-import datetime
 import re
 import time
 import unittest
@@ -17,150 +16,14 @@ from streamlink.plugin import (
     pluginargument,
     pluginmatcher,
 )
-from streamlink.plugin.plugin import Matcher
+# noinspection PyProtectedMember
+from streamlink.plugin.plugin import Matcher, _COOKIE_KEYS
+from streamlink.session import Streamlink
 
 
 class FakePlugin(Plugin):
     def _get_streams(self):
         pass  # pragma: no cover
-
-
-class TestPlugin(unittest.TestCase):
-    def _create_cookie_dict(self, name, value, expires):
-        return {'version': 0, 'name': name, 'value': value,
-                'port': None, 'domain': "test.se", 'path': "/", 'secure': False,
-                'expires': expires, 'discard': True, 'comment': None,
-                'comment_url': None, 'rest': {"HttpOnly": None}, 'rfc2109': False}
-
-    def _cookie_to_dict(self, cookie):
-        r = {}
-        for name in ("version", "name", "value", "port", "domain", "path",
-                     "secure", "expires", "discard", "comment", "comment_url"):
-            r[name] = getattr(cookie, name, None)
-        r["rest"] = getattr(cookie, "rest", getattr(cookie, "_rest", None))
-        return r
-
-    def tearDown(self):
-        Plugin.session = None
-        Plugin.cache = None
-        Plugin.module = None
-        Plugin.logger = None
-
-    def test_cookie_store_save(self):
-        session = Mock()
-        session.http.cookies = [
-            requests.cookies.create_cookie("test-name", "test-value", domain="test.se")
-        ]
-
-        Plugin.bind(session, 'tests.test_plugin')
-        Plugin.cache = Mock()
-        Plugin.cache.get_all.return_value = {}
-
-        plugin = Plugin("http://test.se")
-        plugin.save_cookies(default_expires=3600)
-
-        Plugin.cache.set.assert_called_with("__cookie:test-name:test.se:80:/",
-                                            self._create_cookie_dict("test-name", "test-value", None),
-                                            3600)
-
-    def test_cookie_store_save_expires(self):
-        with freezegun.freeze_time(datetime.datetime(2018, 1, 1)):
-            session = Mock()
-            session.http.cookies = [
-                requests.cookies.create_cookie("test-name", "test-value", domain="test.se", expires=time.time() + 3600,
-                                               rest={'HttpOnly': None})
-            ]
-
-            Plugin.bind(session, 'tests.test_plugin')
-            Plugin.cache = Mock()
-            Plugin.cache.get_all.return_value = {}
-
-            plugin = Plugin("http://test.se")
-            plugin.save_cookies(default_expires=60)
-
-            Plugin.cache.set.assert_called_with("__cookie:test-name:test.se:80:/",
-                                                self._create_cookie_dict("test-name", "test-value", 1514768400),
-                                                3600)
-
-    def test_cookie_store_load(self):
-        session = Mock()
-        session.http.cookies = requests.cookies.RequestsCookieJar()
-
-        Plugin.bind(session, 'tests.test_plugin')
-        Plugin.cache = Mock()
-        Plugin.cache.get_all.return_value = {
-            "__cookie:test-name:test.se:80:/": self._create_cookie_dict("test-name", "test-value", None)
-        }
-        Plugin("http://test.se")
-
-        self.assertSequenceEqual(
-            list(map(self._cookie_to_dict, session.http.cookies)),
-            [self._cookie_to_dict(requests.cookies.create_cookie("test-name", "test-value", domain="test.se"))]
-        )
-
-    def test_cookie_store_clear(self):
-        session = Mock()
-        session.http.cookies = requests.cookies.RequestsCookieJar()
-
-        Plugin.bind(session, 'tests.test_plugin')
-        Plugin.cache = Mock()
-        Plugin.cache.get_all.return_value = {
-            "__cookie:test-name:test.se:80:/": self._create_cookie_dict("test-name", "test-value", None),
-            "__cookie:test-name2:test.se:80:/": self._create_cookie_dict("test-name2", "test-value2", None)
-        }
-        plugin = Plugin("http://test.se")
-
-        # non-empty cookiejar
-        self.assertTrue(len(session.http.cookies.get_dict()) > 0)
-
-        plugin.clear_cookies()
-        self.assertSequenceEqual(
-            Plugin.cache.set.mock_calls,
-            [call("__cookie:test-name:test.se:80:/", None, 0),
-             call("__cookie:test-name2:test.se:80:/", None, 0)])
-        self.assertSequenceEqual(session.http.cookies, [])
-
-    def test_cookie_store_clear_filter(self):
-        session = Mock()
-        session.http.cookies = requests.cookies.RequestsCookieJar()
-
-        Plugin.bind(session, 'tests.test_plugin')
-        Plugin.cache = Mock()
-        Plugin.cache.get_all.return_value = {
-            "__cookie:test-name:test.se:80:/": self._create_cookie_dict("test-name", "test-value", None),
-            "__cookie:test-name2:test.se:80:/": self._create_cookie_dict("test-name2", "test-value2", None)
-        }
-        plugin = Plugin("http://test.se")
-
-        # non-empty cookiejar
-        self.assertTrue(len(session.http.cookies.get_dict()) > 0)
-
-        plugin.clear_cookies(lambda c: c.name.endswith("2"))
-        self.assertSequenceEqual(
-            Plugin.cache.set.mock_calls,
-            [call("__cookie:test-name2:test.se:80:/", None, 0)])
-        self.assertSequenceEqual(
-            list(map(self._cookie_to_dict, session.http.cookies)),
-            [self._cookie_to_dict(requests.cookies.create_cookie("test-name", "test-value", domain="test.se"))]
-        )
-
-    def test_cookie_load_unbound(self):
-        plugin = Plugin("http://test.se")
-        with self.assertRaises(RuntimeError) as cm:
-            plugin.load_cookies()
-        self.assertEqual(str(cm.exception), "Cannot load cached cookies in unbound plugin")
-
-    def test_cookie_save_unbound(self):
-        plugin = Plugin("http://test.se")
-        with self.assertRaises(RuntimeError) as cm:
-            plugin.save_cookies()
-        self.assertEqual(str(cm.exception), "Cannot cache cookies in unbound plugin")
-
-    def test_cookie_clear_unbound(self):
-        plugin = Plugin("http://test.se")
-        with self.assertRaises(RuntimeError) as cm:
-            plugin.clear_cookies()
-        self.assertEqual(str(cm.exception), "Cannot clear cached cookies in unbound plugin")
 
 
 class TestPluginMatcher(unittest.TestCase):
@@ -274,3 +137,154 @@ def test_plugin_metadata(attr):
 
     setattr(plugin, attr, Foo())
     assert getter() == "baz qux"
+
+
+# TODO: python 3.7 removal: move this as static method to the TestCookies class
+def _create_cookie_dict(name, value, expires=None):
+    return dict(
+        version=0,
+        name=name,
+        value=value,
+        port=None,
+        domain="test.se",
+        path="/",
+        secure=False,
+        expires=expires,
+        discard=True,
+        comment=None,
+        comment_url=None,
+        rest={"HttpOnly": None},
+        rfc2109=False,
+    )
+
+
+class TestCookies:
+    @pytest.fixture
+    def session(self):
+        return Streamlink()
+
+    @pytest.fixture
+    def pluginclass(self, session: Streamlink):
+        class MyPlugin(FakePlugin):
+            pass
+
+        MyPlugin.bind(session, "myplugin")
+        return MyPlugin
+
+    @pytest.fixture
+    def plugincache(self, request, pluginclass):
+        with patch.object(pluginclass, "cache", Mock(get_all=Mock(return_value=request.param))) as mock_cache:
+            yield mock_cache
+
+    @pytest.fixture
+    def logger(self, pluginclass):
+        with patch.object(pluginclass, "logger") as mock_logger:
+            yield mock_logger
+
+    @pytest.fixture
+    def plugin(self, pluginclass, plugincache: Mock, logger: Mock):
+        yield pluginclass("http://test.se")
+
+    @staticmethod
+    def _cookie_to_dict(cookie):
+        r = {name: getattr(cookie, name, None) for name in _COOKIE_KEYS}
+        r["rest"] = getattr(cookie, "rest", getattr(cookie, "_rest", None))
+        return r
+
+    def _cookies_to_list(self, cookies):
+        return list(self._cookie_to_dict(cookie) for cookie in cookies)
+
+    @pytest.mark.parametrize(
+        "plugincache",
+        [{
+            "__cookie:test-name1:test.se:80:/": _create_cookie_dict("test-name1", "test-value1"),
+            "__cookie:test-name2:test.se:80:/": _create_cookie_dict("test-name2", "test-value2"),
+            "unrelated": "data",
+        }],
+        indirect=True,
+    )
+    def test_load(self, session: Streamlink, plugin: Plugin, plugincache: Mock, logger: Mock):
+        assert self._cookies_to_list(session.http.cookies) == self._cookies_to_list([
+            requests.cookies.create_cookie("test-name1", "test-value1", domain="test.se"),
+            requests.cookies.create_cookie("test-name2", "test-value2", domain="test.se"),
+        ])
+        assert logger.debug.call_args_list == [call("Restored cookies: test-name1, test-name2")]
+
+    @pytest.mark.parametrize("plugincache", [{}], indirect=True)
+    def test_save(self, session: Streamlink, plugin: Plugin, plugincache: Mock, logger: Mock):
+        cookie1 = requests.cookies.create_cookie("test-name1", "test-value1", domain="test.se")
+        cookie2 = requests.cookies.create_cookie("test-name2", "test-value2", domain="test.se")
+        session.http.cookies.set_cookie(cookie1)
+        session.http.cookies.set_cookie(cookie2)
+
+        plugin.save_cookies(lambda cookie: cookie.name == "test-name1", default_expires=3600)
+        assert plugincache.set.call_args_list == [call(
+            "__cookie:test-name1:test.se:80:/",
+            _create_cookie_dict("test-name1", "test-value1", None),
+            3600,
+        )]
+        assert logger.debug.call_args_list == [call("Saved cookies: test-name1")]
+
+    @freezegun.freeze_time("1970-01-01T00:00:00Z")
+    @pytest.mark.parametrize("plugincache", [{}], indirect=True)
+    def test_save_expires(self, session: Streamlink, plugin: Plugin, plugincache: Mock):
+        cookie = requests.cookies.create_cookie(
+            "test-name",
+            "test-value",
+            domain="test.se",
+            expires=time.time() + 3600,
+            rest={"HttpOnly": None},
+        )
+        session.http.cookies.set_cookie(cookie)
+
+        plugin.save_cookies(default_expires=60)
+        assert plugincache.set.call_args_list == [call(
+            "__cookie:test-name:test.se:80:/",
+            _create_cookie_dict("test-name", "test-value", 3600),
+            3600,
+        )]
+
+    @pytest.mark.parametrize(
+        "plugincache",
+        [{
+            "__cookie:test-name1:test.se:80:/": _create_cookie_dict("test-name1", "test-value1", None),
+            "__cookie:test-name2:test.se:80:/": _create_cookie_dict("test-name2", "test-value2", None),
+            "unrelated": "data",
+        }],
+        indirect=True,
+    )
+    def test_clear(self, session: Streamlink, plugin: Plugin, plugincache: Mock):
+        assert tuple(session.http.cookies.keys()) == ("test-name1", "test-name2")
+
+        plugin.clear_cookies()
+        assert call("__cookie:test-name1:test.se:80:/", None, 0) in plugincache.set.call_args_list
+        assert call("__cookie:test-name2:test.se:80:/", None, 0) in plugincache.set.call_args_list
+        assert len(session.http.cookies.keys()) == 0
+
+    @pytest.mark.parametrize(
+        "plugincache",
+        [{
+            "__cookie:test-name1:test.se:80:/": _create_cookie_dict("test-name1", "test-value1", None),
+            "__cookie:test-name2:test.se:80:/": _create_cookie_dict("test-name2", "test-value2", None),
+            "unrelated": "data",
+        }],
+        indirect=True,
+    )
+    def test_clear_filter(self, session: Streamlink, plugin: Plugin, plugincache: Mock):
+        assert tuple(session.http.cookies.keys()) == ("test-name1", "test-name2")
+
+        plugin.clear_cookies(lambda cookie: cookie.name == "test-name2")
+        assert call("__cookie:test-name1:test.se:80:/", None, 0) not in plugincache.set.call_args_list
+        assert call("__cookie:test-name2:test.se:80:/", None, 0) in plugincache.set.call_args_list
+        assert tuple(session.http.cookies.keys()) == ("test-name1",)
+
+    @pytest.mark.parametrize("method,err", [
+        ("load_cookies", "load"),
+        ("save_cookies", "cache"),
+        ("clear_cookies", "clear"),
+    ])
+    def test_unbound(self, method: str, err: str):
+        plugin = Plugin("http://test.se")
+        with pytest.raises(RuntimeError) as cm:
+            getattr(plugin, method)()
+        assert str(cm.value), f"Cannot {err} cached cookies in unbound plugin"
