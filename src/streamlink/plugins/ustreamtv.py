@@ -462,13 +462,15 @@ class UStreamTVStream(Stream):
 
 
 @pluginmatcher(re.compile(r"""
-    https?://(?:(www\.)?ustream\.tv|video\.ibm\.com)
-        (?:
-            (/embed/|/channel/id/)(?P<channel_id>\d+)
-        )?
-        (?:
-            (/embed)?/recorded/(?P<video_id>\d+)
-        )?
+    https?://(?:(?:www\.)?ustream\.tv|video\.ibm\.com)
+    (?:
+        /combined-embed
+        /(?P<combined_channel_id>\d+)
+        (?:/video/(?P<combined_video_id>\d+))?
+        |
+        (?:(?:/embed/|/channel/(?:id/)?)(?P<channel_id>\d+))?
+        (?:(?:/embed)?/recorded/(?P<video_id>\d+))?
+    )
 """, re.VERBOSE))
 @pluginargument(
     "password",
@@ -481,11 +483,11 @@ class UStreamTV(Plugin):
     STREAM_READY_TIMEOUT = 15
 
     def _get_media_app(self):
-        video_id = self.match.group("video_id")
+        video_id = self.match.group("video_id") or self.match.group("combined_video_id")
         if video_id:
             return video_id, "recorded"
 
-        channel_id = self.match.group("channel_id")
+        channel_id = self.match.group("channel_id") or self.match.group("combined_channel_id")
         if not channel_id:
             channel_id = self.session.http.get(
                 self.url,
