@@ -9,14 +9,47 @@ from tests.plugins import PluginCanHandleUrl
 class TestPluginCanHandleUrlUStreamTV(PluginCanHandleUrl):
     __plugin__ = UStreamTV
 
-    should_match = [
-        "http://www.ustream.tv/streamlink",
-        "http://www.ustream.tv/channel/id/1234",
-        "http://www.ustream.tv/embed/1234",
-        "http://www.ustream.tv/recorded/6543",
-        "http://www.ustream.tv/embed/recorded/6543",
-        "https://video.ibm.com/channel/H5rQLwmTGrW",
-        "https://video.ibm.com/recorded/124680279",
+    should_match_groups = [
+        (
+            "https://www.ustream.tv/nasahdtv",
+            {},
+        ),
+        (
+            "https://www.ustream.tv/channel/6540154",
+            {"channel_id": "6540154"},
+        ),
+        (
+            "https://www.ustream.tv/channel/id/6540154",
+            {"channel_id": "6540154"},
+        ),
+        (
+            "https://www.ustream.tv/embed/6540154",
+            {"channel_id": "6540154"},
+        ),
+        (
+            "https://www.ustream.tv/recorded/132041157",
+            {"video_id": "132041157"},
+        ),
+        (
+            "https://www.ustream.tv/embed/recorded/132041157",
+            {"video_id": "132041157"},
+        ),
+        (
+            "https://www.ustream.tv/combined-embed/6540154",
+            {"combined_channel_id": "6540154"},
+        ),
+        (
+            "https://www.ustream.tv/combined-embed/6540154/video/132041157",
+            {"combined_channel_id": "6540154", "combined_video_id": "132041157"},
+        ),
+        (
+            "https://video.ibm.com/nasahdtv",
+            {},
+        ),
+        (
+            "https://video.ibm.com/recorded/132041157",
+            {"video_id": "132041157"},
+        ),
     ]
 
 
