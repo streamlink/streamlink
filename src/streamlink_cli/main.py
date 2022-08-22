@@ -32,7 +32,6 @@ from streamlink_cli.constants import CONFIG_FILES, DEFAULT_STREAM_METADATA, LOG_
 from streamlink_cli.output import FileOutput, PlayerOutput
 from streamlink_cli.utils import Formatter, HTTPServer, datetime, ignored
 from streamlink_cli.utils.progress import Progress
-from streamlink_cli.utils.terminal import TerminalOutput
 
 
 ACCEPTABLE_ERRNO = (errno.EPIPE, errno.EINVAL, errno.ECONNRESET)
@@ -398,7 +397,7 @@ def read_stream(stream, output, prebuffer, formatter: Formatter, chunk_size=8192
         iter(partial(stream.read, chunk_size), b"")
     )
     if show_progress or show_record_progress:
-        progress = Progress(output=TerminalOutput(sys.stderr))
+        progress = Progress(sys.stderr)
         stream_iterator = progress.iter(stream_iterator)
 
     try:

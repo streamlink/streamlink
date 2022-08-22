@@ -1,35 +1,158 @@
 from collections import deque
 from math import floor
+from shutil import get_terminal_size
+from string import Formatter as StringFormatter
 from threading import Event, RLock, Thread
 from time import time
-from typing import Deque, Iterable, Iterator, Optional, Tuple
+from typing import Callable, Deque, Dict, Iterable, Iterator, List, Optional, TextIO, Tuple, Union
 
-from streamlink_cli.utils.terminal import TerminalOutput
+from streamlink.compat import is_win32
+
+
+_stringformatter = StringFormatter()
+_TFormat = Iterable[Iterable[Tuple[str, Optional[str], Optional[str], Optional[str]]]]
 
 
 class ProgressFormatter:
-    FORMATS: Iterable[str] = (
+    # Store formats as a tuple of lists of parsed format strings,
+    # so when iterating, we don't have to parse over and over again.
+    FORMATS: _TFormat = tuple(list(_stringformatter.parse(fmt)) for fmt in (
         "[download] Written {written} ({elapsed} @ {speed})",
         "[download] {written} ({elapsed} @ {speed})",
         "[download] {written} ({elapsed})",
         "[download] {written}",
-    )
-    FORMATS_NOSPEED: Iterable[str] = (
+    ))
+    FORMATS_NOSPEED: _TFormat = tuple(list(_stringformatter.parse(fmt)) for fmt in (
         "[download] Written {written} ({elapsed})",
         "[download] {written} ({elapsed})",
         "[download] {written}",
+    ))
+
+    # widths generated from
+    # https://www.unicode.org/Public/4.0-Update/EastAsianWidth-4.0.0.txt
+    # See https://github.com/streamlink/streamlink/pull/2032
+    WIDTHS: Iterable[Tuple[int, int]] = (
+        (13, 1),
+        (15, 0),
+        (126, 1),
+        (159, 0),
+        (687, 1),
+        (710, 0),
+        (711, 1),
+        (727, 0),
+        (733, 1),
+        (879, 0),
+        (1154, 1),
+        (1161, 0),
+        (4347, 1),
+        (4447, 2),
+        (7467, 1),
+        (7521, 0),
+        (8369, 1),
+        (8426, 0),
+        (9000, 1),
+        (9002, 2),
+        (11021, 1),
+        (12350, 2),
+        (12351, 1),
+        (12438, 2),
+        (12442, 0),
+        (19893, 2),
+        (19967, 1),
+        (55203, 2),
+        (63743, 1),
+        (64106, 2),
+        (65039, 1),
+        (65059, 0),
+        (65131, 2),
+        (65279, 1),
+        (65376, 2),
+        (65500, 1),
+        (65510, 2),
+        (120831, 1),
+        (262141, 2),
+        (1114109, 1),
     )
 
+    # On Windows, we need one less space, or we overflow the line for some reason.
+    gap = 1 if is_win32 else 0
+
     @classmethod
-    def format(cls, max_size: int, formats: Iterable[str] = FORMATS, **params) -> str:
-        output = ""
+    def term_width(cls):
+        return get_terminal_size().columns - cls.gap
+
+    @classmethod
+    def _get_width(cls, ordinal: int) -> int:
+        """Return the width of a specific unicode character when it would be displayed."""
+        for unicode, width in cls.WIDTHS:  # pragma: no branch
+            if ordinal <= unicode:
+                return width
+        return 1  # pragma: no cover
+
+    @classmethod
+    def width(cls, value: str):
+        """Return the overall width of a string when it would be displayed."""
+        return sum(map(cls._get_width, map(ord, value)))
+
+    @classmethod
+    def cut(cls, value: str, max_width: int) -> str:
+        """Cut off the beginning of a string until its display width fits into the output size."""
+        current = value
+        for i in range(len(value)):  # pragma: no branch
+            current = value[i:]
+            if cls.width(current) <= max_width:
+                break
+        return current
+
+    @classmethod
+    def format(cls, formats: _TFormat, params: Dict[str, Union[str, Callable[[int], str]]]) -> str:
+        term_width = cls.term_width()
+        static: List[str] = []
+        variable: List[Tuple[int, Callable[[int], str], int]] = []
 
         for fmt in formats:
-            output = fmt.format(**params)
-            if len(output) <= max_size:
+            static.clear()
+            variable.clear()
+            length = 0
+            # Get literal texts, static segments and variable segments from the parsed format
+            # and calculate the overall length of the literal texts and static segments after substituting them.
+            for literal_text, field_name, format_spec, conversion in fmt:
+                static.append(literal_text)
+                length += len(literal_text)
+                if field_name is None:
+                    continue
+                if field_name not in params:
+                    break
+                value_or_callable = params[field_name]
+                if not callable(value_or_callable):
+                    static.append(value_or_callable)
+                    length += len(value_or_callable)
+                else:
+                    variable.append((len(static), value_or_callable, int(format_spec or 0)))
+                    static.append("")
+            else:
+                # No variable segments? Just check if the resulting string fits into the size constraints.
+                if not variable:
+                    if length > term_width:
+                        continue
+                    else:
+                        break
+
+                # Get the available space for each variable segment (share space equally and round down).
+                max_width = int((term_width - length) / len(variable))
+                # If at least one variable segment doesn't fit, continue with the next format.
+                if max_width < 1 or any(max_width < min_width for _, __, min_width in variable):
+                    continue
+                # All variable segments fit, so finally format them, but continue with the next format if there's an error.
+                # noinspection PyBroadException
+                try:
+                    for idx, fn, _ in variable:
+                        static[idx] = fn(max_width)
+                except Exception:
+                    continue
                 break
 
-        return output
+        return "".join(static)
 
     @staticmethod
     def _round(num: float, n: int = 2) -> float:
@@ -73,15 +196,13 @@ class ProgressFormatter:
 class Progress(Thread):
     def __init__(
         self,
-        output: Optional[TerminalOutput] = None,
-        formatter: Optional[ProgressFormatter] = None,
+        stream: TextIO,
         interval: float = 0.25,
         history: int = 20,
         threshold: int = 2,
     ):
         """
-        :param output: The output class
-        :param formatter: The formatter class
+        :param stream: The output stream
         :param interval: Time in seconds between updates
         :param history: Number of seconds of how long download speed history is kept
         :param threshold: Number of seconds until download speed is shown
@@ -91,14 +212,9 @@ class Progress(Thread):
         self._wait = Event()
         self._lock = RLock()
 
-        if output is None:
-            output = TerminalOutput()
-        if formatter is None:
-            formatter = ProgressFormatter()
+        self.formatter = ProgressFormatter()
 
-        self.output: TerminalOutput = output
-        self.formatter: ProgressFormatter = formatter
-
+        self.stream: TextIO = stream
         self.interval: float = interval
         self.history: Deque[Tuple[float, int]] = deque(maxlen=int(history / interval))
         self.threshold: int = int(threshold / interval)
@@ -131,7 +247,7 @@ class Progress(Thread):
             while not self._wait.wait(self.interval):
                 self.update()
         finally:
-            self.output.end()
+            self.print_end()
 
     def update(self):
         with self._lock:
@@ -150,12 +266,24 @@ class Progress(Thread):
                 formats = formatter.FORMATS
                 speed = formatter.format_filesize(sum(size for _, size in history) / (now - history[0][0]), "/s")
 
-            status = self.formatter.format(
-                self.output.term_width() - 1,
-                formats,
+            params = dict(
                 written=formatter.format_filesize(self.overall),
                 elapsed=formatter.format_time(now - self.started),
                 speed=speed,
             )
 
-            self.output.print_inplace(status)
+            status = formatter.format(formats, params)
+
+            self.print_inplace(status)
+
+    def print_inplace(self, msg: str):
+        """Clears the previous line and prints a new one."""
+        term_width = self.formatter.term_width()
+        spacing = term_width - self.formatter.width(msg)
+
+        self.stream.write(f"\r{msg}{' ' * max(0, spacing)}")
+        self.stream.flush()
+
+    def print_end(self):
+        self.stream.write("\n")
+        self.stream.flush()
