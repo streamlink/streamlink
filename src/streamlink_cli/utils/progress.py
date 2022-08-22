@@ -1,5 +1,7 @@
+import os
 from collections import deque
 from math import floor
+from pathlib import PurePath
 from shutil import get_terminal_size
 from string import Formatter as StringFormatter
 from threading import Event, RLock, Thread
@@ -16,17 +18,23 @@ _TFormat = Iterable[Iterable[Tuple[str, Optional[str], Optional[str], Optional[s
 class ProgressFormatter:
     # Store formats as a tuple of lists of parsed format strings,
     # so when iterating, we don't have to parse over and over again.
+    # Reserve at least 15 characters for the path, so it can be truncated with enough useful information.
     FORMATS: _TFormat = tuple(list(_stringformatter.parse(fmt)) for fmt in (
+        "[download] Written {written} to {path:15} ({elapsed} @ {speed})",
         "[download] Written {written} ({elapsed} @ {speed})",
         "[download] {written} ({elapsed} @ {speed})",
         "[download] {written} ({elapsed})",
         "[download] {written}",
     ))
     FORMATS_NOSPEED: _TFormat = tuple(list(_stringformatter.parse(fmt)) for fmt in (
+        "[download] Written {written} to {path:15} ({elapsed})",
         "[download] Written {written} ({elapsed})",
         "[download] {written} ({elapsed})",
         "[download] {written}",
     ))
+
+    # Use U+2026 (HORIZONTAL ELLIPSIS) to be able to distinguish between "." and ".." when truncating relative paths
+    ELLIPSIS: str = "…"
 
     # widths generated from
     # https://www.unicode.org/Public/4.0-Update/EastAsianWidth-4.0.0.txt
@@ -192,17 +200,37 @@ class ProgressFormatter:
         else:
             return f"{hours}{minutes}{int(elapsed % 60):1d}s"
 
+    @classmethod
+    def format_path(cls, path: PurePath, max_width: int) -> str:
+        # Quick check if the path fits
+        string = str(path)
+        width = cls.width(string)
+        if width <= max_width:
+            return string
+
+        # Since the path doesn't fit, we always need to add an ellipsis.
+        # On Windows, we also need to add the "drive" part (which is an empty string on PurePosixPath)
+        max_width -= cls.width(path.drive) + cls.width(cls.ELLIPSIS)
+
+        # Ignore the path's first part, aka the "anchor" (drive + root)
+        parts = os.path.sep.join(path.parts[1:])
+        truncated = cls.cut(parts, max_width)
+
+        return f"{path.drive}{cls.ELLIPSIS}{truncated}"
+
 
 class Progress(Thread):
     def __init__(
         self,
         stream: TextIO,
+        path: PurePath,
         interval: float = 0.25,
         history: int = 20,
         threshold: int = 2,
     ):
         """
         :param stream: The output stream
+        :param path: The path that's being written
         :param interval: Time in seconds between updates
         :param history: Number of seconds of how long download speed history is kept
         :param threshold: Number of seconds until download speed is shown
@@ -215,6 +243,7 @@ class Progress(Thread):
         self.formatter = ProgressFormatter()
 
         self.stream: TextIO = stream
+        self.path: PurePath = path
         self.interval: float = interval
         self.history: Deque[Tuple[float, int]] = deque(maxlen=int(history / interval))
         self.threshold: int = int(threshold / interval)
@@ -270,6 +299,7 @@ class Progress(Thread):
                 written=formatter.format_filesize(self.overall),
                 elapsed=formatter.format_time(now - self.started),
                 speed=speed,
+                path=lambda max_width: formatter.format_path(self.path, max_width),
             )
 
             status = formatter.format(formats, params)
