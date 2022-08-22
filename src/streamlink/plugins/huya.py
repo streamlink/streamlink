@@ -33,6 +33,7 @@ class Huya(Plugin):
 
     def _get_streams(self):
         data = self.session.http.get(self.url, schema=validate.Schema(
+            validate.transform(str.lstrip),
             validate.parse_html(),
             validate.xml_xpath_string(".//script[contains(text(),'var hyPlayerConfig = {')][1]/text()"),
             validate.none_or_all(
