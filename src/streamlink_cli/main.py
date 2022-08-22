@@ -397,7 +397,10 @@ def read_stream(stream, output, prebuffer, formatter: Formatter, chunk_size=8192
         iter(partial(stream.read, chunk_size), b"")
     )
     if show_progress or show_record_progress:
-        progress = Progress(sys.stderr)
+        progress = Progress(
+            sys.stderr,
+            output.filename or output.record.filename,
+        )
         stream_iterator = progress.iter(stream_iterator)
 
     try:
