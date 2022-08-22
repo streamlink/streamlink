@@ -1,18 +1,24 @@
+from io import StringIO
 from time import time
+from unittest.mock import Mock, call, patch
 
 import freezegun
 import pytest
 
 from streamlink_cli.utils.progress import Progress, ProgressFormatter
-from streamlink_cli.utils.terminal import TerminalOutput
+from tests import posix_only, windows_only
 
 
 class TestProgressFormatter:
     @pytest.fixture(scope="class")
     def params(self):
-        return dict(written="WRITTEN", elapsed="ELAPSED", speed="SPEED")
+        return dict(
+            written="WRITTEN",
+            elapsed="ELAPSED",
+            speed="SPEED",
+        )
 
-    @pytest.mark.parametrize("max_size,expected", [
+    @pytest.mark.parametrize("term_width,expected", [
         (99, "[download] Written WRITTEN (ELAPSED @ SPEED)"),
         (44, "[download] Written WRITTEN (ELAPSED @ SPEED)"),
         (43, "[download] WRITTEN (ELAPSED @ SPEED)"),
@@ -22,10 +28,11 @@ class TestProgressFormatter:
         (27, "[download] WRITTEN"),
         (1, "[download] WRITTEN"),
     ])
-    def test_format(self, max_size, params, expected):
-        assert ProgressFormatter.format(max_size, ProgressFormatter.FORMATS, **params) == expected
+    def test_format(self, params, term_width, expected):
+        with patch("streamlink_cli.utils.progress.ProgressFormatter.term_width", lambda: term_width):
+            assert ProgressFormatter.format(ProgressFormatter.FORMATS, params) == expected
 
-    @pytest.mark.parametrize("max_size,expected", [
+    @pytest.mark.parametrize("term_width,expected", [
         (99, "[download] Written WRITTEN (ELAPSED)"),
         (36, "[download] Written WRITTEN (ELAPSED)"),
         (35, "[download] WRITTEN (ELAPSED)"),
@@ -33,8 +40,19 @@ class TestProgressFormatter:
         (27, "[download] WRITTEN"),
         (1, "[download] WRITTEN"),
     ])
-    def test_format_nospeed(self, max_size, params, expected):
-        assert ProgressFormatter.format(max_size, ProgressFormatter.FORMATS_NOSPEED, **params) == expected
+    def test_format_nospeed(self, params, term_width, expected):
+        with patch("streamlink_cli.utils.progress.ProgressFormatter.term_width", lambda: term_width):
+            assert ProgressFormatter.format(ProgressFormatter.FORMATS_NOSPEED, params) == expected
+
+    def test_format_missing(self, params):
+        with patch("streamlink_cli.utils.progress.ProgressFormatter.term_width", lambda: 99):
+            assert ProgressFormatter.format(ProgressFormatter.FORMATS, {"written": "0"}) == "[download] 0"
+
+    def test_format_error(self, params):
+        with patch("streamlink_cli.utils.progress.ProgressFormatter.term_width", lambda: 99):
+            params = dict(**params)
+            params["speed"] = Mock(side_effect=ValueError("fail"))
+            assert ProgressFormatter.format(ProgressFormatter.FORMATS, params) == "[download] WRITTEN (ELAPSED)"
 
     @pytest.mark.parametrize("size,expected", [
         (0, "0 bytes"),
@@ -78,65 +96,109 @@ class TestProgressFormatter:
         assert ProgressFormatter.format_time(elapsed) == expected
 
 
-class FakeOutput(TerminalOutput):
-    def __init__(self):
-        super().__init__()
-        self.buffer = []
+class TestWidth:
+    @pytest.mark.parametrize("chars,expected", [
+        ("ABCDEFGHIJ", 10),
+        ("A你好世界こんにちは안녕하세요B", 30),
+        ("·「」『』【】-=！@#￥%……&×（）", 30),
+    ])
+    def test_width(self, chars, expected):
+        assert ProgressFormatter.width(chars) == expected
 
-    # noinspection PyMethodMayBeStatic
-    def term_width(self):
-        return 50
+    @pytest.mark.parametrize("prefix,max_len,expected", [
+        ("你好世界こんにちは안녕하세요CD", 10, "녕하세요CD"),
+        ("你好世界こんにちは안녕하세요CD", 9, "하세요CD"),
+        ("你好世界こんにちは안녕하세요CD", 23, "こんにちは안녕하세요CD"),
+    ])
+    def test_cut(self, prefix, max_len, expected):
+        assert ProgressFormatter.cut(prefix, max_len) == expected
 
-    def print_inplace(self, msg):
-        self.buffer.append(msg)
 
-    def end(self):  # pragma: no cover
-        self.buffer.append("\n")
+class TestPrint:
+    @pytest.fixture(autouse=True)
+    def _terminal_size(self):
+        with patch("streamlink_cli.utils.progress.get_terminal_size") as mock_get_terminal_size:
+            mock_get_terminal_size.return_value = Mock(columns=10)
+            yield
+
+    @pytest.fixture
+    def stream(self):
+        return StringIO()
+
+    @pytest.fixture
+    def progress(self, stream: StringIO):
+        yield Progress(stream)
+
+    @posix_only
+    def test_print_posix(self, progress: Progress, stream: StringIO):
+        progress.print_inplace("foo")
+        progress.print_inplace("barbaz")
+        progress.print_inplace("0123456789")
+        progress.print_inplace("abcdefghijk")
+        progress.print_end()
+        assert stream.getvalue() == "\rfoo       \rbarbaz    \r0123456789\rabcdefghijk\n"
+
+    @windows_only
+    def test_print_windows(self, progress: Progress, stream: StringIO):
+        progress.print_inplace("foo")
+        progress.print_inplace("barbaz")
+        progress.print_inplace("0123456789")
+        progress.print_inplace("abcdefghijk")
+        progress.print_end()
+        assert stream.getvalue() == "\rfoo      \rbarbaz   \r0123456789\rabcdefghijk\n"
 
 
 class TestProgress:
     def test_download_speed(self):
         kib = b"\x00" * 1024
-        output = FakeOutput()
+        output_write = Mock()
         progress = Progress(
-            output=output,
+            Mock(write=output_write),
             interval=1,
             history=3,
             threshold=2,
         )
 
-        with freezegun.freeze_time("2000-01-01T00:00:00Z") as frozen_time:
+        with freezegun.freeze_time("2000-01-01T00:00:00Z") as frozen_time, \
+             patch("streamlink_cli.utils.progress.ProgressFormatter.term_width", Mock(return_value=60)):
             progress.started = time()
-            assert not output.buffer
+            assert not output_write.call_args_list
 
             progress.update()
-            assert output.buffer[-1] == "[download] Written 0 bytes (0s)"
+            assert output_write.call_args_list[-1] \
+                   == call("\r[download] Written 0 bytes (0s)                             ")
 
             frozen_time.tick()
             progress.put(kib * 1)
             progress.update()
-            assert output.buffer[-1] == "[download] Written 1.00 KiB (1s @ 1.00 KiB/s)"
+            assert output_write.call_args_list[-1] \
+                   == call("\r[download] Written 1.00 KiB (1s @ 1.00 KiB/s)               ")
 
             frozen_time.tick()
             progress.put(kib * 3)
             progress.update()
-            assert output.buffer[-1] == "[download] Written 4.00 KiB (2s @ 2.00 KiB/s)"
+            assert output_write.call_args_list[-1] \
+                   == call("\r[download] Written 4.00 KiB (2s @ 2.00 KiB/s)               ")
 
             frozen_time.tick()
             progress.put(kib * 5)
             progress.update()
-            assert output.buffer[-1] == "[download] Written 9.00 KiB (3s @ 4.50 KiB/s)"
+            assert output_write.call_args_list[-1] \
+                   == call("\r[download] Written 9.00 KiB (3s @ 4.50 KiB/s)               ")
 
             frozen_time.tick()
             progress.put(kib * 7)
             progress.update()
-            assert output.buffer[-1] == "[download] Written 16.00 KiB (4s @ 7.50 KiB/s)"
+            assert output_write.call_args_list[-1] \
+                   == call("\r[download] Written 16.00 KiB (4s @ 7.50 KiB/s)              ")
 
             frozen_time.tick()
             progress.put(kib * 5)
             progress.update()
-            assert output.buffer[-1] == "[download] Written 21.00 KiB (5s @ 8.50 KiB/s)"
+            assert output_write.call_args_list[-1] \
+                   == call("\r[download] Written 21.00 KiB (5s @ 8.50 KiB/s)              ")
 
             frozen_time.tick()
             progress.update()
-            assert output.buffer[-1] == "[download] Written 21.00 KiB (6s @ 6.00 KiB/s)"
+            assert output_write.call_args_list[-1] \
+                   == call("\r[download] Written 21.00 KiB (6s @ 6.00 KiB/s)              ")
