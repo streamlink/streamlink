@@ -2,6 +2,7 @@ import argparse
 import unittest
 
 from streamlink.options import Argument, Arguments, Options
+from streamlink.plugin import Plugin, pluginargument
 from streamlink_cli.argparser import ArgumentParser
 from streamlink_cli.main import setup_plugin_args, setup_plugin_options
 from tests.mock import Mock, patch
@@ -113,7 +114,7 @@ class TestArguments(unittest.TestCase):
         self.assertRaises(RuntimeError, lambda: list(args.requires("test1")))
 
 
-class TestSetupOptions(unittest.TestCase):
+class TestSetupOptions:
     def test_setup_plugin_args(self):
         session = Mock()
         plugin = Mock()
@@ -137,36 +138,35 @@ class TestSetupOptions(unittest.TestCase):
         group_plugin = next((grp for grp in parser._action_groups if grp.title == "Mock"), None)  # pragma: no branch
         assert group_plugin is not None, "Adds the 'Mock' arguments group"
         assert group_plugin in parser.NESTED_ARGUMENT_GROUPS[group_plugins], "Adds the 'Mock' arguments group"
-        self.assertEqual(
-            [item for action in group_plugin._group_actions for item in action.option_strings],
-            ["--mock-test1", "--mock-test2", "--mock-test3"],
+        assert [item for action in group_plugin._group_actions for item in action.option_strings] \
+            == ["--mock-test1", "--mock-test2", "--mock-test3"], \
             "Only adds plugin arguments and ignores global argument references"
-        )
-        self.assertEqual(
-            [item for action in parser._actions for item in action.option_strings],
-            ["--global-arg1", "--global-arg2", "--mock-test1", "--mock-test2", "--mock-test3"],
+        assert [item for action in parser._actions for item in action.option_strings] \
+            == ["--global-arg1", "--global-arg2", "--mock-test1", "--mock-test2", "--mock-test3"], \
             "Parser has all arguments registered"
-        )
 
-        self.assertEqual(plugin.options.get("global-arg1"), 123)
-        self.assertEqual(plugin.options.get("global-arg2"), None)
-        self.assertEqual(plugin.options.get("test1"), "default1")
-        self.assertEqual(plugin.options.get("test2"), "default2")
-        self.assertEqual(plugin.options.get("test3"), None)
+        assert plugin.options.get("global-arg1") == 123
+        assert plugin.options.get("global-arg2") is None
+        assert plugin.options.get("test1") == "default1"
+        assert plugin.options.get("test2") == "default2"
+        assert plugin.options.get("test3") is None
 
     def test_setup_plugin_options(self):
+        @pluginargument("foo-foo", is_global=True)
+        @pluginargument("bar-bar", default=456)
+        @pluginargument("baz-baz", default=789, help=argparse.SUPPRESS)
+        class FakePlugin(Plugin):
+            module = "plugin"
+
+            def _get_streams(self):  # pragma: no cover
+                pass
+
         session = Mock()
-        plugin = Mock(module="plugin")
         parser = ArgumentParser()
         parser.add_argument("--foo-foo", default=123)
 
-        session.plugins = {"plugin": plugin}
+        session.plugins = {"plugin": FakePlugin}
         session.set_plugin_option = lambda name, key, value: session.plugins[name].options.update({key: value})
-        plugin.arguments = Arguments(
-            Argument("foo-foo", is_global=True),
-            Argument("bar-bar", default=456),
-            Argument("baz-baz", default=789, help=argparse.SUPPRESS)
-        )
 
         with patch("streamlink_cli.main.args") as args:
             args.foo_foo = 321
@@ -174,11 +174,11 @@ class TestSetupOptions(unittest.TestCase):
             args.plugin_baz_baz = 987  # this wouldn't be set by the parser if the argument is suppressed
 
             setup_plugin_args(session, parser)
-            self.assertEqual(plugin.options.get("foo_foo"), 123, "Sets the global-argument's default value")
-            self.assertEqual(plugin.options.get("bar_bar"), 456, "Sets the plugin-argument's default value")
-            self.assertEqual(plugin.options.get("baz_baz"), 789, "Sets the suppressed plugin-argument's default value")
+            assert FakePlugin.options.get("foo_foo") == 123, "Sets the global-argument's default value"
+            assert FakePlugin.options.get("bar_bar") == 456, "Sets the plugin-argument's default value"
+            assert FakePlugin.options.get("baz_baz") == 789, "Sets the suppressed plugin-argument's default value"
 
-            setup_plugin_options(session, plugin)
-            self.assertEqual(plugin.options.get("foo_foo"), 321, "Sets the provided global-argument value")
-            self.assertEqual(plugin.options.get("bar_bar"), 654, "Sets the provided plugin-argument value")
-            self.assertEqual(plugin.options.get("baz_baz"), 789, "Doesn't set values of suppressed plugin-arguments")
+            setup_plugin_options(session, FakePlugin)
+            assert FakePlugin.options.get("foo_foo") == 321, "Sets the provided global-argument value"
+            assert FakePlugin.options.get("bar_bar") == 654, "Sets the provided plugin-argument value"
+            assert FakePlugin.options.get("baz_baz") == 789, "Doesn't set values of suppressed plugin-arguments"
