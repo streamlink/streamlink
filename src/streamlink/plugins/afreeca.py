@@ -82,8 +82,8 @@ class AfreecaTV(Plugin):
         }
     )
 
-    def __init__(self, url):
-        super().__init__(url)
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self._authed = (
             self.session.http.cookies.get("PdboxBbs")
             and self.session.http.cookies.get("PdboxSaveTicket")

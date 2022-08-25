@@ -99,8 +99,8 @@ class Zattoo(Plugin):
     TIME_CONTROL = 60 * 60 * 2
     TIME_SESSION = 60 * 60 * 24 * 30
 
-    def __init__(self, url):
-        super().__init__(url)
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self.domain = self.match.group('base_url')
         self._session_attributes = Cache(
             filename='plugin-cache.json',

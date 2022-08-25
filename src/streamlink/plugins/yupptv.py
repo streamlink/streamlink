@@ -41,8 +41,8 @@ class YuppTV(Plugin):
     _m3u8_re = re.compile(r'''['"](http.+\.m3u8.*?)['"]''')
     _cookie_expiry = 3600 * 24 * 365
 
-    def __init__(self, url):
-        super().__init__(url)
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self._authed = (self.session.http.cookies.get("BoxId")
                         and self.session.http.cookies.get("YuppflixToken"))
 

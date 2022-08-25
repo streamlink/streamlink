@@ -84,8 +84,8 @@ class BBCiPlayer(Plugin):
         validate.filter(lambda x: x["kind"] == "video")
     )
 
-    def __init__(self, url):
-        super().__init__(url)
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self.url = urlunparse(urlparse(self.url)._replace(scheme="https"))
 
     @classmethod
