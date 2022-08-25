@@ -1,6 +1,7 @@
 import pkgutil
 import re
 import tokenize
+from inspect import Parameter, signature
 from pathlib import Path
 
 import pytest
@@ -66,6 +67,19 @@ class TestPlugins:
         classname = plugin.__plugin__.__name__
         assert classname == classname[0].upper() + classname[1:], "__plugin__ class name starts with uppercase letter"
         assert "_" not in classname, "__plugin__ class name does not contain underscores"
+
+    def test_constructor(self, plugin):
+        assert (
+            plugin.__plugin__.__init__ is Plugin.__init__
+            or tuple(
+                (param.name, param.kind)
+                for param in signature(plugin.__plugin__.__init__).parameters.values()
+            ) == (
+                ("self", Parameter.POSITIONAL_OR_KEYWORD),
+                ("args", Parameter.VAR_POSITIONAL),
+                ("kwargs", Parameter.VAR_KEYWORD),
+            )
+        )
 
     def test_matchers(self, plugin):
         pluginclass = plugin.__plugin__

@@ -160,8 +160,8 @@ class AbemaTV(Plugin):
 
     _SLOT_SCHEMA = validate.Schema({"slot": {"flags": {validate.optional("timeshiftFree"): bool}}})
 
-    def __init__(self, url):
-        super().__init__(url)
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self.session.http.headers.update({'User-Agent': useragents.CHROME})
 
     def _generate_applicationkeysecret(self, deviceid):
