@@ -48,8 +48,8 @@ class USTVNow(Plugin):
     _token_url = _api_url + "get/token"
     _signin_url = "https://www.ustvnow.com/signin"
 
-    def __init__(self, url):
-        super().__init__(url)
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self._encryption_config = {}
         self._token = None
 

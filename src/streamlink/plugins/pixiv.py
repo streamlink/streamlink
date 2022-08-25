@@ -80,8 +80,8 @@ class Pixiv(Plugin):
     login_url_get = "https://accounts.pixiv.net/login"
     login_url_post = "https://accounts.pixiv.net/api/login"
 
-    def __init__(self, url):
-        super().__init__(url)
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self._authed = (self.session.http.cookies.get("PHPSESSID")
                         and self.session.http.cookies.get("device_token"))
         self.session.http.headers.update({"Referer": self.url})

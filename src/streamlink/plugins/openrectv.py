@@ -71,8 +71,8 @@ class OPENRECtv(Plugin):
         validate.optional("data"): object
     })
 
-    def __init__(self, url):
-        super().__init__(url)
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self.video_id = None
 
     def login(self, email, password):
