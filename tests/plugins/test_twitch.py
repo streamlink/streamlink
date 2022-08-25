@@ -98,8 +98,7 @@ class _TwitchHLSStream(TwitchHLSStream):
 
 def test_stream_weight():
     session = Streamlink()
-    Twitch.bind(session, "tests.plugins.test_twitch")
-    plugin = Twitch("http://twitch.tv/foo")
+    plugin = Twitch(session, "http://twitch.tv/foo")
 
     with text("hls/test_master_twitch_vod.m3u8") as fh:
         playlist = fh.read()
@@ -359,8 +358,7 @@ class TestTwitchMetadata(unittest.TestCase):
     @staticmethod
     def subject(url):
         session = Streamlink()
-        Twitch.bind(session, "tests.plugins.test_twitch")
-        plugin = Twitch(url)
+        plugin = Twitch(session, url)
         return plugin.get_id(), plugin.get_author(), plugin.get_category(), plugin.get_title()
 
     def mock_request_channel(self, data=True):
@@ -563,8 +561,7 @@ class TestTwitchHosting(unittest.TestCase):
                 ])
 
             session = Streamlink()
-            Twitch.bind(session, "tests.plugins.test_twitch")
-            plugin = Twitch("https://twitch.tv/{0}".format(channel))
+            plugin = Twitch(session, f"https://twitch.tv/{channel}")
             plugin.options.set("disable-hosting", disable)
 
             res = plugin._switch_to_hosted_channel()
@@ -657,8 +654,7 @@ class TestTwitchReruns(unittest.TestCase):
         with patch("streamlink.plugins.twitch.TwitchAPI.stream_metadata") as mock:
             mock.return_value = None if params.pop("offline", False) else {"type": params.pop("stream_type", "live")}
             session = Streamlink()
-            Twitch.bind(session, "tests.plugins.test_twitch")
-            plugin = Twitch("https://www.twitch.tv/foo")
+            plugin = Twitch(session, "https://www.twitch.tv/foo")
             plugin.options.set("disable-reruns", params.pop("disable", True))
 
             return plugin._check_for_rerun()

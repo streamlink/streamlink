@@ -1,6 +1,8 @@
+import logging
 import re
 import time
 import unittest
+from typing import Type
 from unittest.mock import Mock, call, patch
 
 import freezegun
@@ -24,6 +26,36 @@ from streamlink.session import Streamlink
 class FakePlugin(Plugin):
     def _get_streams(self):
         pass  # pragma: no cover
+
+
+class RenamedPlugin(FakePlugin):
+    __module__ = "foo.bar.baz"
+
+
+class TestPlugin:
+    @pytest.mark.parametrize("pluginclass,module,logger", [
+        (Plugin, "plugin", "streamlink.plugin.plugin"),
+        (FakePlugin, "test_plugin", "tests.test_plugin"),
+        (RenamedPlugin, "baz", "foo.bar.baz"),
+    ])
+    def test_constructor(self, pluginclass: Type[Plugin], module: str, logger: str):
+        session = Mock()
+        with patch("streamlink.plugin.plugin.Cache") as mock_cache, \
+             patch.object(pluginclass, "load_cookies") as mock_load_cookies:
+            plugin = pluginclass(session, "http://localhost")
+
+        assert plugin.session is session
+        assert plugin.url == "http://localhost"
+
+        assert plugin.module == module
+
+        assert isinstance(plugin.logger, logging.Logger)
+        assert plugin.logger.name == logger
+
+        assert mock_cache.call_args_list == [call(filename="plugin-cache.json", key_prefix=module)]
+        assert plugin.cache == mock_cache()
+
+        assert mock_load_cookies.call_args_list == [call()]
 
 
 class TestPluginMatcher(unittest.TestCase):
@@ -52,9 +84,7 @@ class TestPluginMatcher(unittest.TestCase):
         class MyPlugin(FakePlugin):
             pass
 
-        MyPlugin.bind(Mock(), "tests.test_plugin")
-
-        plugin = MyPlugin("http://foo")
+        plugin = MyPlugin(Mock(), "http://foo")
         self.assertEqual(plugin.url, "http://foo")
         self.assertEqual([m is not None for m in plugin.matches], [True, False, False])
         self.assertEqual(plugin.matcher, plugin.matchers[0].pattern)
@@ -121,7 +151,7 @@ class TestPluginArguments:
 
 @pytest.mark.parametrize("attr", ["id", "author", "category", "title"])
 def test_plugin_metadata(attr):
-    plugin = FakePlugin("https://foo.bar/")
+    plugin = FakePlugin(Mock(), "https://foo.bar/")
     getter = getattr(plugin, f"get_{attr}")
     assert callable(getter)
 
@@ -164,26 +194,30 @@ class TestCookies:
         return Streamlink()
 
     @pytest.fixture
-    def pluginclass(self, session: Streamlink):
+    def pluginclass(self):
         class MyPlugin(FakePlugin):
-            pass
+            __module__ = "myplugin"
 
-        MyPlugin.bind(session, "myplugin")
         return MyPlugin
 
     @pytest.fixture
-    def plugincache(self, request, pluginclass):
-        with patch.object(pluginclass, "cache", Mock(get_all=Mock(return_value=request.param))) as mock_cache:
-            yield mock_cache
+    def plugincache(self, request):
+        with patch("streamlink.plugin.plugin.Cache") as mock_cache:
+            cache = mock_cache("plugin-cache.json", "myplugin")
+            cache.get_all.return_value = request.param
+            yield cache
 
     @pytest.fixture
-    def logger(self, pluginclass):
-        with patch.object(pluginclass, "logger") as mock_logger:
-            yield mock_logger
+    def logger(self, pluginclass: Type[Plugin]):
+        with patch("streamlink.plugin.plugin.logging") as mock_logging:
+            yield mock_logging.getLogger(pluginclass.__module__)
 
     @pytest.fixture
-    def plugin(self, pluginclass, plugincache: Mock, logger: Mock):
-        yield pluginclass("http://test.se")
+    def plugin(self, pluginclass: Type[Plugin], session: Streamlink, plugincache: Mock, logger: Mock):
+        plugin = pluginclass(session, "http://test.se")
+        assert plugin.cache is plugincache
+        assert plugin.logger is logger
+        yield plugin
 
     @staticmethod
     def _cookie_to_dict(cookie):
@@ -277,14 +311,3 @@ class TestCookies:
         assert call("__cookie:test-name1:test.se:80:/", None, 0) not in plugincache.set.call_args_list
         assert call("__cookie:test-name2:test.se:80:/", None, 0) in plugincache.set.call_args_list
         assert tuple(session.http.cookies.keys()) == ("test-name1",)
-
-    @pytest.mark.parametrize("method,err", [
-        ("load_cookies", "load"),
-        ("save_cookies", "cache"),
-        ("clear_cookies", "clear"),
-    ])
-    def test_unbound(self, method: str, err: str):
-        plugin = Plugin("http://test.se")
-        with pytest.raises(RuntimeError) as cm:
-            getattr(plugin, method)()
-        assert str(cm.value), f"Cannot {err} cached cookies in unbound plugin"

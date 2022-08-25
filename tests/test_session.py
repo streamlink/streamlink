@@ -1,18 +1,23 @@
-import os
 import re
 import unittest
+from pathlib import Path
 from socket import AF_INET, AF_INET6
 from unittest.mock import Mock, call, patch
 
+import pytest
 import requests_mock
 # noinspection PyPackageRequirements
 import urllib3
 
+import tests.plugin
 from streamlink import NoPluginError, Streamlink
 from streamlink.plugin import HIGH_PRIORITY, LOW_PRIORITY, NORMAL_PRIORITY, NO_PRIORITY, Plugin, pluginmatcher
 from streamlink.stream.hls import HLSStream
 from streamlink.stream.http import HTTPStream
 
+
+PATH_TESTPLUGINS = Path(tests.plugin.__path__[0])
+PATH_TESTPLUGINS_OVERRIDE = PATH_TESTPLUGINS / "override"
 
 # noinspection PyUnresolvedReferences
 _original_allowed_gai_family = urllib3.util.connection.allowed_gai_family  # type: ignore[attr-defined]
@@ -26,8 +31,6 @@ class EmptyPlugin(Plugin):
 class TestSession(unittest.TestCase):
     mocker: requests_mock.Mocker
 
-    plugin_path = os.path.join(os.path.dirname(__file__), "plugin")
-
     def setUp(self):
         self.mocker = requests_mock.Mocker()
         self.mocker.register_uri(requests_mock.ANY, requests_mock.ANY, text="")
@@ -40,79 +43,71 @@ class TestSession(unittest.TestCase):
     def subject(self, load_plugins=True):
         session = Streamlink()
         if load_plugins:
-            session.load_plugins(self.plugin_path)
+            session.load_plugins(str(PATH_TESTPLUGINS))
+            session.load_plugins(str(PATH_TESTPLUGINS_OVERRIDE))
 
         return session
-
-    @staticmethod
-    def _resolve_url(method, *args, **kwargs) -> Plugin:
-        pluginclass, resolved_url = method(*args, **kwargs)
-        return pluginclass(resolved_url)
-
-    def resolve_url(self, session: Streamlink, url: str, *args, **kwargs) -> Plugin:
-        return self._resolve_url(session.resolve_url, url, *args, **kwargs)
-
-    def resolve_url_no_redirect(self, session: Streamlink, url: str, *args, **kwargs) -> Plugin:
-        return self._resolve_url(session.resolve_url_no_redirect, url, *args, **kwargs)
 
     # ----
 
     def test_load_plugins(self):
         session = self.subject()
         plugins = session.get_plugins()
-        self.assertIn("testplugin", plugins)
-        self.assertNotIn("testplugin_missing", plugins)
-        self.assertNotIn("testplugin_invalid", plugins)
+        assert "testplugin" in plugins
+        assert "testplugin_missing" not in plugins
+        assert "testplugin_invalid" not in plugins
 
     def test_load_plugins_builtin(self):
         session = self.subject()
         plugins = session.get_plugins()
-        self.assertIn("twitch", plugins)
-        self.assertEqual(plugins["twitch"].__module__, "streamlink.plugins.twitch")
+        assert "twitch" in plugins
+        assert plugins["twitch"].__module__ == "streamlink.plugins.twitch"
 
     @patch("streamlink.session.log")
     def test_load_plugins_override(self, mock_log):
         session = self.subject()
         plugins = session.get_plugins()
-        file = os.path.join(os.path.dirname(__file__), "plugin", "testplugin_override.py")
-        self.assertIn("testplugin", plugins)
-        self.assertNotIn("testplugin_override", plugins)
-        self.assertEqual(plugins["testplugin"].__name__, "TestPluginOverride")
-        self.assertEqual(plugins["testplugin"].__module__, "streamlink.plugins.testplugin_override")
-        self.assertEqual(mock_log.debug.mock_calls, [call(f"Plugin testplugin is being overridden by {file}")])
+        assert "testplugin" in plugins
+        assert "testplugin_override" not in plugins
+        assert plugins["testplugin"].__name__ == "TestPluginOverride"
+        assert plugins["testplugin"].__module__ == "streamlink.plugins.testplugin"
+        assert mock_log.debug.call_args_list == [
+            call(f"Plugin testplugin is being overridden by {PATH_TESTPLUGINS_OVERRIDE / 'testplugin.py'}"),
+        ]
 
     @patch("streamlink.session.load_module")
     @patch("streamlink.session.log")
     def test_load_plugins_importerror(self, mock_log, mock_load_module):
         mock_load_module.side_effect = ImportError()
         session = self.subject()
-        plugins = session.get_plugins()
-        self.assertGreater(len(mock_log.exception.mock_calls), 0)
-        self.assertEqual(len(plugins.keys()), 0)
+        assert not session.get_plugins()
+        assert len(mock_log.exception.call_args_list) > 0
 
     @patch("streamlink.session.load_module")
     @patch("streamlink.session.log")
     def test_load_plugins_syntaxerror(self, mock_log, mock_load_module):
         mock_load_module.side_effect = SyntaxError()
-        with self.assertRaises(SyntaxError):
+        with pytest.raises(SyntaxError):
             self.subject()
 
     def test_resolve_url(self):
         session = self.subject()
         plugins = session.get_plugins()
 
-        pluginclass, resolved_url = session.resolve_url("http://test.se/channel")
-        self.assertTrue(issubclass(pluginclass, Plugin))
-        self.assertIs(pluginclass, plugins["testplugin"])
-        self.assertEqual(resolved_url, "http://test.se/channel")
-        self.assertTrue(hasattr(session.resolve_url, "cache_info"), "resolve_url has a lookup cache")
+        pluginname, pluginclass, resolved_url = session.resolve_url("http://test.se/channel")
+        assert issubclass(pluginclass, Plugin)
+        assert pluginclass is plugins["testplugin"]
+        assert resolved_url == "http://test.se/channel"
+        assert hasattr(session.resolve_url, "cache_info"), "resolve_url has a lookup cache"
 
     def test_resolve_url__noplugin(self):
         session = self.subject()
         self.mocker.get("http://invalid2", status_code=301, headers={"Location": "http://invalid3"})
 
-        self.assertRaises(NoPluginError, session.resolve_url, "http://invalid1")
-        self.assertRaises(NoPluginError, session.resolve_url, "http://invalid2")
+        with pytest.raises(NoPluginError):
+            session.resolve_url("http://invalid1")
+        with pytest.raises(NoPluginError):
+            session.resolve_url("http://invalid2")
 
     def test_resolve_url__redirected(self):
         session = self.subject()
@@ -121,23 +116,24 @@ class TestSession(unittest.TestCase):
         self.mocker.get("http://redirect1", status_code=301, headers={"Location": "http://redirect2"})
         self.mocker.head("http://redirect2", status_code=301, headers={"Location": "http://test.se/channel"})
 
-        pluginclass, resolved_url = session.resolve_url("http://redirect1")
-        self.assertTrue(issubclass(pluginclass, Plugin))
-        self.assertIs(pluginclass, plugins["testplugin"])
-        self.assertEqual(resolved_url, "http://test.se/channel")
+        pluginname, pluginclass, resolved_url = session.resolve_url("http://redirect1")
+        assert issubclass(pluginclass, Plugin)
+        assert pluginclass is plugins["testplugin"]
+        assert resolved_url == "http://test.se/channel"
 
     def test_resolve_url_no_redirect(self):
         session = self.subject()
         plugins = session.get_plugins()
 
-        pluginclass, resolved_url = session.resolve_url_no_redirect("http://test.se/channel")
-        self.assertTrue(issubclass(pluginclass, Plugin))
-        self.assertIs(pluginclass, plugins["testplugin"])
-        self.assertEqual(resolved_url, "http://test.se/channel")
+        pluginname, pluginclass, resolved_url = session.resolve_url_no_redirect("http://test.se/channel")
+        assert issubclass(pluginclass, Plugin)
+        assert pluginclass is plugins["testplugin"]
+        assert resolved_url == "http://test.se/channel"
 
     def test_resolve_url_no_redirect__noplugin(self):
         session = self.subject()
-        self.assertRaises(NoPluginError, session.resolve_url_no_redirect, "http://invalid")
+        with pytest.raises(NoPluginError):
+            session.resolve_url_no_redirect("http://invalid")
 
     def test_resolve_url_scheme(self):
         @pluginmatcher(re.compile("http://insecure"))
@@ -154,13 +150,16 @@ class TestSession(unittest.TestCase):
             "secure": PluginHttps,
         }
 
-        self.assertRaises(NoPluginError, self.resolve_url, session, "insecure")
-        self.assertIsInstance(self.resolve_url(session, "http://insecure"), PluginHttp)
-        self.assertRaises(NoPluginError, self.resolve_url, session, "https://insecure")
+        with pytest.raises(NoPluginError):
+            session.resolve_url("insecure")
+        assert session.resolve_url("http://insecure")[1] is PluginHttp
+        with pytest.raises(NoPluginError):
+            session.resolve_url("https://insecure")
 
-        self.assertIsInstance(self.resolve_url(session, "secure"), PluginHttps)
-        self.assertRaises(NoPluginError, self.resolve_url, session, "http://secure")
-        self.assertIsInstance(self.resolve_url(session, "https://secure"), PluginHttps)
+        assert session.resolve_url("secure")[1] is PluginHttps
+        with pytest.raises(NoPluginError):
+            session.resolve_url("http://secure")
+        assert session.resolve_url("https://secure")[1] is PluginHttps
 
     def test_resolve_url_priority(self):
         @pluginmatcher(priority=HIGH_PRIORITY, pattern=re.compile(
@@ -194,22 +193,22 @@ class TestSession(unittest.TestCase):
             "low": LowPriority,
             "no": NoPriority,
         }
-        no = self.resolve_url_no_redirect(session, "no")
-        low = self.resolve_url_no_redirect(session, "low")
-        normal = self.resolve_url_no_redirect(session, "normal")
-        high = self.resolve_url_no_redirect(session, "high")
+        no = session.resolve_url_no_redirect("no")[1]
+        low = session.resolve_url_no_redirect("low")[1]
+        normal = session.resolve_url_no_redirect("normal")[1]
+        high = session.resolve_url_no_redirect("high")[1]
 
-        self.assertIsInstance(no, HighPriority)
-        self.assertIsInstance(low, HighPriority)
-        self.assertIsInstance(normal, HighPriority)
-        self.assertIsInstance(high, HighPriority)
+        assert no is HighPriority
+        assert low is HighPriority
+        assert normal is HighPriority
+        assert high is HighPriority
 
         session.resolve_url.cache_clear()
         session.plugins = {
             "no": NoPriority,
         }
-        with self.assertRaises(NoPluginError):
-            self.resolve_url_no_redirect(session, "no")
+        with pytest.raises(NoPluginError):
+            session.resolve_url_no_redirect("no")
 
     @patch("streamlink.session.log")
     def test_resolve_deprecated(self, mock_log: Mock):
@@ -240,11 +239,11 @@ class TestSession(unittest.TestCase):
             "dep-high": DeprecatedHighPriority,
         }
 
-        self.assertIsInstance(self.resolve_url_no_redirect(session, "low"), DeprecatedHighPriority)
-        self.assertEqual(mock_log.info.mock_calls, [
+        assert session.resolve_url_no_redirect("low")[1] is DeprecatedHighPriority
+        assert mock_log.info.call_args_list == [
             call("Resolved plugin dep-normal-one with deprecated can_handle_url API"),
-            call("Resolved plugin dep-high with deprecated can_handle_url API")
-        ])
+            call("Resolved plugin dep-high with deprecated can_handle_url API"),
+        ]
 
     def test_options(self):
         session = self.subject()
@@ -258,74 +257,69 @@ class TestSession(unittest.TestCase):
         self.assertEqual(session.get_plugin_option("non_existing", "non_existing"), None)
         self.assertEqual(session.get_plugin_option("testplugin", "non_existing"), None)
 
-    def test_plugin(self):
+    def test_streams(self):
         session = self.subject()
-        plugin = self.resolve_url(session, "http://test.se/channel")
-        streams = plugin.streams()
+        streams = session.streams("http://test.se/channel")
 
-        self.assertTrue("best" in streams)
-        self.assertTrue("worst" in streams)
-        self.assertTrue(streams["best"] is streams["1080p"])
-        self.assertTrue(streams["worst"] is streams["350k"])
-        self.assertTrue(isinstance(streams["http"], HTTPStream))
-        self.assertTrue(isinstance(streams["hls"], HLSStream))
+        assert "best" in streams
+        assert "worst" in streams
+        assert streams["best"] is streams["1080p"]
+        assert streams["worst"] is streams["350k"]
+        assert isinstance(streams["http"], HTTPStream)
+        assert isinstance(streams["hls"], HLSStream)
 
-    def test_plugin_stream_types(self):
+    def test_streams_stream_types(self):
         session = self.subject()
-        plugin = self.resolve_url(session, "http://test.se/channel")
-        streams = plugin.streams(stream_types=["http", "hls"])
 
-        self.assertTrue(isinstance(streams["480p"], HTTPStream))
-        self.assertTrue(isinstance(streams["480p_hls"], HLSStream))
+        streams = session.streams("http://test.se/channel", stream_types=["http", "hls"])
+        assert isinstance(streams["480p"], HTTPStream)
+        assert isinstance(streams["480p_hls"], HLSStream)
 
-        streams = plugin.streams(stream_types=["hls", "http"])
+        streams = session.streams("http://test.se/channel", stream_types=["hls", "http"])
+        assert isinstance(streams["480p"], HLSStream)
+        assert isinstance(streams["480p_http"], HTTPStream)
 
-        self.assertTrue(isinstance(streams["480p"], HLSStream))
-        self.assertTrue(isinstance(streams["480p_http"], HTTPStream))
-
-    def test_plugin_stream_sorting_excludes(self):
+    def test_streams_stream_sorting_excludes(self):
         session = self.subject()
-        plugin = self.resolve_url(session, "http://test.se/channel")
 
-        streams = plugin.streams(sorting_excludes=[])
-        self.assertTrue("best" in streams)
-        self.assertTrue("worst" in streams)
-        self.assertFalse("best-unfiltered" in streams)
-        self.assertFalse("worst-unfiltered" in streams)
-        self.assertTrue(streams["worst"] is streams["350k"])
-        self.assertTrue(streams["best"] is streams["1080p"])
+        streams = session.streams("http://test.se/channel", sorting_excludes=[])
+        assert "best" in streams
+        assert "worst" in streams
+        assert "best-unfiltered" not in streams
+        assert "worst-unfiltered" not in streams
+        assert streams["worst"] is streams["350k"]
+        assert streams["best"] is streams["1080p"]
 
-        streams = plugin.streams(sorting_excludes=["1080p", "3000k"])
-        self.assertTrue("best" in streams)
-        self.assertTrue("worst" in streams)
-        self.assertFalse("best-unfiltered" in streams)
-        self.assertFalse("worst-unfiltered" in streams)
-        self.assertTrue(streams["worst"] is streams["350k"])
-        self.assertTrue(streams["best"] is streams["1500k"])
+        streams = session.streams("http://test.se/channel", sorting_excludes=["1080p", "3000k"])
+        assert "best" in streams
+        assert "worst" in streams
+        assert "best-unfiltered" not in streams
+        assert "worst-unfiltered" not in streams
+        assert streams["worst"] is streams["350k"]
+        assert streams["best"] is streams["1500k"]
 
-        streams = plugin.streams(sorting_excludes=[">=1080p", ">1500k"])
-        self.assertTrue(streams["best"] is streams["1500k"])
+        streams = session.streams("http://test.se/channel", sorting_excludes=[">=1080p", ">1500k"])
+        assert streams["best"] is streams["1500k"]
 
-        streams = plugin.streams(sorting_excludes=lambda q: not q.endswith("p"))
-        self.assertTrue(streams["best"] is streams["3000k"])
+        streams = session.streams("http://test.se/channel", sorting_excludes=lambda q: not q.endswith("p"))
+        assert streams["best"] is streams["3000k"]
 
-        streams = plugin.streams(sorting_excludes=lambda q: False)
-        self.assertFalse("best" in streams)
-        self.assertFalse("worst" in streams)
-        self.assertTrue("best-unfiltered" in streams)
-        self.assertTrue("worst-unfiltered" in streams)
-        self.assertTrue(streams["worst-unfiltered"] is streams["350k"])
-        self.assertTrue(streams["best-unfiltered"] is streams["1080p"])
+        streams = session.streams("http://test.se/channel", sorting_excludes=lambda q: False)
+        assert "best" not in streams
+        assert "worst" not in streams
+        assert "best-unfiltered" in streams
+        assert "worst-unfiltered" in streams
+        assert streams["worst-unfiltered"] is streams["350k"]
+        assert streams["best-unfiltered"] is streams["1080p"]
 
-        plugin = self.resolve_url(session, "http://test.se/UnsortableStreamNames")
-        streams = plugin.streams()
-        self.assertFalse("best" in streams)
-        self.assertFalse("worst" in streams)
-        self.assertFalse("best-unfiltered" in streams)
-        self.assertFalse("worst-unfiltered" in streams)
-        self.assertTrue("vod" in streams)
-        self.assertTrue("vod_alt" in streams)
-        self.assertTrue("vod_alt2" in streams)
+        streams = session.streams("http://test.se/UnsortableStreamNames")
+        assert "best" not in streams
+        assert "worst" not in streams
+        assert "best-unfiltered" not in streams
+        assert "worst-unfiltered" not in streams
+        assert "vod" in streams
+        assert "vod_alt" in streams
+        assert "vod_alt2" in streams
 
     def test_set_and_get_locale(self):
         session = Streamlink()

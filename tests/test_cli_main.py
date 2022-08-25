@@ -34,7 +34,7 @@ from tests.plugin.testplugin import TestPlugin as _TestPlugin
 
 
 class FakePlugin(_TestPlugin):
-    module = "fake"
+    __module__ = "fake"
     _streams = {}  # type: ignore
 
     def streams(self, *args, **kwargs):
@@ -133,7 +133,7 @@ class TestCLIMainJsonAndStreamUrl(unittest.TestCase):
         stream = Mock()
         streams = dict(best=stream)
 
-        plugin = FakePlugin("")
+        plugin = FakePlugin(Mock(), "")
         plugin._streams = streams
 
         handle_stream(plugin, streams, "best")
@@ -170,9 +170,10 @@ class TestCLIMainJsonAndStreamUrl(unittest.TestCase):
         streams = dict(worst=Mock(), best=stream)
 
         class _FakePlugin(FakePlugin):
+            __module__ = FakePlugin.__module__
             _streams = streams
 
-        with patch("streamlink_cli.main.streamlink", resolve_url=Mock(return_value=(_FakePlugin, ""))):
+        with patch("streamlink_cli.main.streamlink", resolve_url=Mock(return_value=("fake", _FakePlugin, ""))):
             handle_url()
             self.assertEqual(console.msg.mock_calls, [])
             self.assertEqual(console.msg_json.mock_calls, [call(
@@ -467,8 +468,9 @@ class TestCLIMainHandleStream(unittest.TestCase):
         args.player_continuous_http = False
         mock_output_stream.return_value = True
 
-        plugin = FakePlugin("")
-        stream = Stream(session=Mock())
+        session = Mock()
+        plugin = FakePlugin(session, "")
+        stream = Stream(session)
         streams = {"best": stream}
 
         handle_stream(plugin, streams, "best")
@@ -514,7 +516,7 @@ class TestCLIMainSetupConfigArgs(unittest.TestCase):
         def resolve_url(name):
             if name == "noplugin":
                 raise NoPluginError()
-            return Mock(module="testplugin"), name
+            return name, Mock(__module__="testplugin"), name
 
         session = Mock()
         session.resolve_url.side_effect = resolve_url

@@ -202,11 +202,7 @@ class Plugin:
     category: Optional[str] = None
     """Metadata 'category' attribute: name of a game being played, a music genre, etc."""
 
-    cache = None
-    logger = None
-    module = "unknown"
     options = Options()
-    session = None
     _url: Optional[str] = None
 
     # deprecated
@@ -214,13 +210,24 @@ class Plugin:
     # deprecated
     priority: Callable[[str], int]
 
-    @classmethod
-    def bind(cls, session, module):
-        cls.cache = Cache(filename="plugin-cache.json",
-                          key_prefix=module)
-        cls.logger = logging.getLogger("streamlink.plugins." + module)
-        cls.module = module
-        cls.session = session
+    def __init__(self, session, url: str):
+        """
+        :param session: The Streamlink session instance
+        :param url: The input URL used for finding and resolving streams
+        """
+
+        modulename = self.__class__.__module__
+        self.module = modulename.split(".")[-1]
+        self.logger = logging.getLogger(modulename)
+        self.cache = Cache(
+            filename="plugin-cache.json",
+            key_prefix=self.module,
+        )
+
+        self.session = session
+        self.url = url
+
+        self.load_cookies()
 
     @property
     def url(self) -> Optional[str]:
@@ -238,18 +245,6 @@ class Plugin:
         matches = [(pattern, pattern.match(value)) for pattern, priority in self.matchers or []]
         self.matches = tuple(m for p, m in matches)
         self.matcher, self.match = next(((p, m) for p, m in matches if m is not None), (None, None))
-
-    def __init__(self, url: str):
-        """
-        :param str url: URL that the plugin will operate on
-        """
-
-        self.url = url
-
-        try:
-            self.load_cookies()
-        except RuntimeError:
-            pass  # unbound cannot load
 
     @classmethod
     def set_option(cls, key, value):
@@ -473,9 +468,6 @@ class Plugin:
         :return: list of the saved cookie names
         """
 
-        if not self.session or not self.cache:
-            raise RuntimeError("Cannot cache cookies in unbound plugin")
-
         cookie_filter = cookie_filter or (lambda c: True)
         saved = []
 
@@ -509,9 +501,6 @@ class Plugin:
         :return: list of the restored cookie names
         """
 
-        if not self.session or not self.cache:
-            raise RuntimeError("Cannot load cached cookies in unbound plugin")
-
         restored = []
 
         for key, value in self.cache.get_all().items():
@@ -535,9 +524,6 @@ class Plugin:
         :return: list of the removed cookie names
         """
 
-        if not self.session or not self.cache:
-            raise RuntimeError("Cannot clear cached cookies in unbound plugin")
-
         cookie_filter = cookie_filter or (lambda c: True)
         removed = []
 
@@ -552,7 +538,7 @@ class Plugin:
         return removed
 
     def input_ask(self, prompt: str) -> str:
-        user_input_requester: Optional[UserInputRequester] = self.session.get_option("user-input-requester")  # type: ignore
+        user_input_requester: Optional[UserInputRequester] = self.session.get_option("user-input-requester")
         if user_input_requester:
             try:
                 return user_input_requester.ask(prompt)
@@ -561,7 +547,7 @@ class Plugin:
         raise FatalPluginError("This plugin requires user input, however it is not supported on this platform")
 
     def input_ask_password(self, prompt: str) -> str:
-        user_input_requester: Optional[UserInputRequester] = self.session.get_option("user-input-requester")  # type: ignore
+        user_input_requester: Optional[UserInputRequester] = self.session.get_option("user-input-requester")
         if user_input_requester:
             try:
                 return user_input_requester.ask_password(prompt)

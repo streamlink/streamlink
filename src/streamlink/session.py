@@ -349,8 +349,8 @@ class Streamlink:
     def resolve_url(
         self,
         url: str,
-        follow_redirect: bool = True
-    ) -> Tuple[Type[Plugin], str]:
+        follow_redirect: bool = True,
+    ) -> Tuple[str, Type[Plugin], str]:
         """
         Attempts to find a plugin that can use this URL.
 
@@ -366,24 +366,24 @@ class Streamlink:
         url = update_scheme("https://", url, force=False)
 
         matcher: Matcher
-        candidate: Optional[Type[Plugin]] = None
+        candidate: Optional[Tuple[str, Type[Plugin]]] = None
         priority = NO_PRIORITY
         for name, plugin in self.plugins.items():
             if plugin.matchers:
                 for matcher in plugin.matchers:
                     if matcher.priority > priority and matcher.pattern.match(url) is not None:
-                        candidate = plugin
+                        candidate = name, plugin
                         priority = matcher.priority
             # TODO: remove deprecated plugin resolver
             elif hasattr(plugin, "can_handle_url") and callable(plugin.can_handle_url) and plugin.can_handle_url(url):
                 prio = plugin.priority(url) if hasattr(plugin, "priority") and callable(plugin.priority) else NORMAL_PRIORITY
                 if prio > priority:
                     log.info(f"Resolved plugin {name} with deprecated can_handle_url API")
-                    candidate = plugin
+                    candidate = name, plugin
                     priority = prio
 
         if candidate:
-            return candidate, url
+            return candidate[0], candidate[1], url
 
         if follow_redirect:
             # Attempt to handle a redirect URL
@@ -401,7 +401,7 @@ class Streamlink:
 
         raise NoPluginError
 
-    def resolve_url_no_redirect(self, url: str) -> Tuple[Type[Plugin], str]:
+    def resolve_url_no_redirect(self, url: str) -> Tuple[str, Type[Plugin], str]:
         """
         Attempts to find a plugin that can use this URL.
 
@@ -423,8 +423,8 @@ class Streamlink:
         :return: A :class:`dict` of stream names and :class:`streamlink.stream.Stream` instances
         """
 
-        pluginclass, resolved_url = self.resolve_url(url)
-        plugin = pluginclass(resolved_url)
+        pluginname, pluginclass, resolved_url = self.resolve_url(url)
+        plugin = pluginclass(self, resolved_url)
 
         return plugin.streams(**params)
 
@@ -447,6 +447,7 @@ class Streamlink:
         success = False
         for loader, name, ispkg in pkgutil.iter_modules([path]):
             # set the full plugin module name
+            # use the "streamlink.plugins." prefix even for sideloaded plugins
             module_name = f"streamlink.plugins.{name}"
             try:
                 mod = load_module(module_name, path)
@@ -458,10 +459,9 @@ class Streamlink:
                 continue
             success = True
             plugin = mod.__plugin__
-            plugin.bind(self, name)
-            if plugin.module in self.plugins:
-                log.debug(f"Plugin {plugin.module} is being overridden by {mod.__file__}")
-            self.plugins[plugin.module] = plugin
+            if name in self.plugins:
+                log.debug(f"Plugin {name} is being overridden by {mod.__file__}")
+            self.plugins[name] = plugin
 
         return success
 
