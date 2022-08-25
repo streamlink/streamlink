@@ -1,4 +1,5 @@
 import ast
+import inspect
 import logging
 import operator
 import re
@@ -164,6 +165,16 @@ class Matcher(NamedTuple):
     priority: int
 
 
+# Add front- and back-wrappers to the deprecated plugin's method resolution order (see Plugin.__new__)
+class PluginWrapperMeta(type):
+    def mro(cls):
+        # cls.__base__ is the PluginWrapperFront which is based on the deprecated plugin class
+        mro = list(cls.__base__.__mro__)
+        # cls is the PluginWrapperBack and needs to be inserted after the deprecated plugin class
+        mro.insert(2, cls)
+        return mro
+
+
 class Plugin:
     """
     Plugin base class for retrieving streams and metadata from the URL specified.
@@ -209,6 +220,41 @@ class Plugin:
     can_handle_url: Callable[[str], bool]
     # deprecated
     priority: Callable[[str], int]
+
+    # Handle deprecated plugin constructors which only take the url argument
+    def __new__(cls, *args, **kwargs):
+        # Ignore plugins without custom constructors or wrappers
+        if cls.__init__ is Plugin.__init__ or hasattr(cls, "_IS_DEPRECATED_PLUGIN_WRAPPER"):
+            return super().__new__(cls)
+
+        # Ignore custom constructors which have a formal "session" parameter or a variable positional parameter
+        sig = inspect.signature(cls.__init__).parameters
+        if "session" in sig or any(param.kind == inspect.Parameter.VAR_POSITIONAL for param in sig.values()):
+            return super().__new__(cls)
+
+        # Wrapper class which overrides the very first constructor in the MRO
+        # noinspection PyAbstractClass
+        class PluginWrapperFront(cls):
+            _IS_DEPRECATED_PLUGIN_WRAPPER = True
+
+            # The __module__ value needs to be copied
+            __module__ = cls.__module__
+
+            def __init__(self, session, url):
+                # Take any arguments, but only pass the URL to the custom constructor of the deprecated plugin
+                # noinspection PyArgumentList
+                super().__init__(url)
+                log.info(f"Initialized {self.module} plugin with deprecated constructor")
+
+        # Wrapper class which comes after the deprecated plugin in the MRO
+        # noinspection PyAbstractClass
+        class PluginWrapperBack(PluginWrapperFront, metaclass=PluginWrapperMeta):
+            def __init__(self, *_, **__):
+                # Take any arguments from the super() call of the constructor of the deprecated plugin,
+                # but pass the right args and keywords to the Plugin constructor
+                super().__init__(*args, **kwargs)
+
+        return cls.__new__(PluginWrapperBack, *args, **kwargs)
 
     def __init__(self, session, url: str):
         """
