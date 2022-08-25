@@ -68,5 +68,4 @@ class TestPluginCanHandleUrlYouTube(PluginCanHandleUrl):
     ("http://www.youtube.com/watch?v=0123456789A", "https://www.youtube.com/watch?v=0123456789A"),
 ])
 def test_translate_url(url, expected):
-    YouTube.bind(Mock(), "tests.plugins.test_youtube")
-    assert YouTube(url).url == expected
+    assert YouTube(Mock(), url).url == expected

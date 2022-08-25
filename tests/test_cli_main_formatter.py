@@ -10,15 +10,16 @@ from streamlink_cli.utils import datetime
 @pytest.fixture(scope="module")
 def plugin():
     class FakePlugin(Plugin):
+        __module__ = "FAKE"
+
         def _get_streams(self):  # pragma: no cover
             pass
 
-    plugin = FakePlugin("https://foo/bar")
+    plugin = FakePlugin(Mock(), "https://foo/bar")
     plugin.id = "ID"
     plugin.author = "AUTHOR"
     plugin.category = "CATEGORY"
     plugin.title = "TITLE"
-    plugin.bind(Mock(), "FAKE")
 
     return plugin
 

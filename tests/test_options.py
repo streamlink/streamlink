@@ -156,8 +156,6 @@ class TestSetupOptions:
         @pluginargument("bar-bar", default=456)
         @pluginargument("baz-baz", default=789, help=argparse.SUPPRESS)
         class FakePlugin(Plugin):
-            module = "plugin"
-
             def _get_streams(self):  # pragma: no cover
                 pass
 
@@ -178,7 +176,7 @@ class TestSetupOptions:
             assert FakePlugin.options.get("bar_bar") == 456, "Sets the plugin-argument's default value"
             assert FakePlugin.options.get("baz_baz") == 789, "Sets the suppressed plugin-argument's default value"
 
-            setup_plugin_options(session, FakePlugin)
+            setup_plugin_options(session, "plugin", FakePlugin)
             assert FakePlugin.options.get("foo_foo") == 321, "Sets the provided global-argument value"
             assert FakePlugin.options.get("bar_bar") == 654, "Sets the provided plugin-argument value"
             assert FakePlugin.options.get("baz_baz") == 789, "Doesn't set values of suppressed plugin-arguments"

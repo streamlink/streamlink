@@ -11,13 +11,13 @@ from streamlink.stream.http import HTTPStream
 
 class TestPluginStream(unittest.TestCase):
     def setUp(self):
+        self.mocker = requests_mock.Mocker()
+        self.mocker.start()
+        self.mocker.register_uri(requests_mock.ANY, requests_mock.ANY, text="")
         self.session = Streamlink()
 
-    def resolve_url(self, url):
-        with requests_mock.Mocker() as mock:
-            mock.register_uri(requests_mock.ANY, requests_mock.ANY, text="")
-            pluginclass, resolved_url = self.session.resolve_url(url)
-            return pluginclass(resolved_url)
+    def tearDown(self):
+        self.mocker.stop()
 
     def assertDictHas(self, a, b):
         for key, value in a.items():
@@ -27,8 +27,7 @@ class TestPluginStream(unittest.TestCase):
     def _test_hls(self, surl, url, mock_parse):
         mock_parse.return_value = {}
 
-        plugin = self.resolve_url(surl)
-        streams = plugin.streams()
+        streams = self.session.streams(surl)
 
         self.assertIn("live", streams)
         mock_parse.assert_called_with(self.session, url)
@@ -41,8 +40,7 @@ class TestPluginStream(unittest.TestCase):
     def _test_hlsvariant(self, surl, url, mock_parse):
         mock_parse.return_value = {"best": HLSStream(self.session, url)}
 
-        plugin = self.resolve_url(surl)
-        streams = plugin.streams()
+        streams = self.session.streams(surl)
 
         mock_parse.assert_called_with(self.session, url)
 
@@ -54,8 +52,7 @@ class TestPluginStream(unittest.TestCase):
         self.assertEqual(stream.url, url)
 
     def _test_http(self, surl, url, params):
-        plugin = self.resolve_url(surl)
-        streams = plugin.streams()
+        streams = self.session.streams(surl)
 
         self.assertIn("live", streams)
 
