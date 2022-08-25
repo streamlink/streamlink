@@ -1,6 +1,33 @@
 Deprecations
 ============
 
+streamlink 5.0.0
+----------------
+
+Deprecation of Plugin.__init__(self, url)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+With the removal of the ``Plugin.bind()`` class method which was used for setting up the
+:py:class:`Streamlink <streamlink.session.Streamlink>` session instance and module name in each plugin class,
+the :py:class:`Plugin <streamlink.plugin.Plugin>` constructor's signature was changed and it now requires
+the ``session`` and ``url`` arguments. Implementors of custom plugins should define variable positional arguments and keyword
+arguments when subclassing and adding a custom constructor (``*args, **kwargs``), and the ``url`` should be accessed via
+``self.url`` after calling the constructor of the super class.
+
+Compatibility wrappers were added for old custom plugin implementations, and a deprecation message will be shown until
+the compatibility wrappers will get removed in a future release.
+
+
+Session.resolve_url() return type changes
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Due to the changes of the :py:class:`Plugin <streamlink.plugin.Plugin>` class mentioned above, the return value of
+:py:meth:`Streamlink.resolve_url <streamlink.Streamlink.resolve_url>` and
+:py:meth:`Streamlink.resolve_url_no_redirect <streamlink.Streamlink.resolve_url_no_redirect>` had to be changed
+from ``tuple[type[Plugin], str]`` to ``tuple[str, type[Plugin], str]``, and both methods now return the resolved plugin name
+as the first item, in addition to the plugin class and resolved URL.
+
+
 streamlink 4.2.0
 ----------------
 
