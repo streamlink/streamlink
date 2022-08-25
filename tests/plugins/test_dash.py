@@ -28,8 +28,6 @@ class TestPluginCanHandleUrlMPEGDASH(PluginCanHandleUrl):
     ("http://example.com/bar", NO_PRIORITY),
 ])
 def test_priority(url, priority):
-    session = Mock()
-    MPEGDASH.bind(session, "tests.plugins.test_dash")
     assert next((matcher.priority for matcher in MPEGDASH.matchers if matcher.pattern.match(url)), NO_PRIORITY) == priority
 
 
@@ -44,8 +42,7 @@ def test_priority(url, priority):
 @patch("streamlink.stream.DASHStream.parse_manifest")
 def test_get_streams(parse_manifest, url, expected):
     session = Mock()
-    MPEGDASH.bind(session, "tests.plugins.test_dash")
-    p = MPEGDASH(url)
+    p = MPEGDASH(session, url)
     p.streams()
     parse_manifest.assert_called_with(session, expected)
 

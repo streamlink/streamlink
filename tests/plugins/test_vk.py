@@ -61,8 +61,7 @@ class TestPluginCanHandleUrlVK(PluginCanHandleUrl):
 ])
 def test_url_redirect(url, newurl, raises, requests_mock):
     session = Streamlink()
-    VK.bind(session, "tests.plugins.test_vk")
-    plugin = VK(url)
+    plugin = VK(session, url)
     requests_mock.register_uri(rm.ANY, rm.ANY, exc=rm.exceptions.InvalidRequest)
     requests_mock.get(url, text=f"""<!DOCTYPE html><html><head><meta property="og:url" content="{newurl}"/></head></html>""")
     try:

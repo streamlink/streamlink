@@ -57,8 +57,7 @@ class TestRTPPlay(unittest.TestCase):
             mock.get("https://valid", text=self.playlist)
             mock.get("https://invalid", exc=AssertionError)
             session = Streamlink()
-            RTPPlay.bind(session, "tests.plugins.test_rtpplay")
-            plugin = RTPPlay(url)
+            plugin = RTPPlay(session, url)
             return plugin._get_streams()
 
     def test_empty(self):

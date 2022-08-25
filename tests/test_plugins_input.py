@@ -21,9 +21,7 @@ class TestPluginUserInput:
 
     @pytest.fixture
     def testplugin(self, session: Streamlink):
-        testplugin = _TestPlugin("http://example.com/stream")
-        testplugin.bind(session, "testplugin")
-        return testplugin
+        return _TestPlugin(session, "http://example.com/stream")
 
     @pytest.fixture
     def console_input(self, request, session: Streamlink):

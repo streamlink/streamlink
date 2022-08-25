@@ -592,10 +592,10 @@ def handle_url():
     """
 
     try:
-        pluginclass, resolved_url = streamlink.resolve_url(args.url)
-        setup_plugin_options(streamlink, pluginclass)
-        plugin = pluginclass(resolved_url)
-        log.info(f"Found matching plugin {plugin.module} for URL {args.url}")
+        pluginname, pluginclass, resolved_url = streamlink.resolve_url(args.url)
+        setup_plugin_options(streamlink, pluginname, pluginclass)
+        plugin = pluginclass(streamlink, resolved_url)
+        log.info(f"Found matching plugin {pluginname} for URL {args.url}")
 
         if args.retry_max or args.retry_streams:
             retry_streams = 1
@@ -715,9 +715,9 @@ def setup_config_args(parser, ignore_unknown=False):
     if streamlink and args.url:
         # Only load first available plugin config
         with ignored(NoPluginError):
-            pluginclass, resolved_url = streamlink.resolve_url(args.url)
+            pluginname, pluginclass, resolved_url = streamlink.resolve_url(args.url)
             for config_file in CONFIG_FILES:
-                config_file = config_file.with_name(f"{config_file.name}.{pluginclass.module}")
+                config_file = config_file.with_name(f"{config_file.name}.{pluginname}")
                 if not config_file.is_file():
                     continue
                 if type(config_file) is DeprecatedPath:
@@ -893,20 +893,19 @@ def setup_plugin_args(session: Streamlink, parser: ArgumentParser):
         plugin.options = PluginOptions(defaults)
 
 
-def setup_plugin_options(session: Streamlink, plugin: Type[Plugin]):
+def setup_plugin_options(session: Streamlink, pluginname: str, pluginclass: Type[Plugin]):
     """Sets Streamlink plugin options."""
-    if plugin.arguments is None:
+    if pluginclass.arguments is None:
         return
 
-    pname = plugin.module
     required = {}
 
-    for parg in plugin.arguments:
+    for parg in pluginclass.arguments:
         if parg.options.get("help") == argparse.SUPPRESS:
             continue
 
-        value = getattr(args, parg.dest if parg.is_global else parg.namespace_dest(pname))
-        session.set_plugin_option(pname, parg.dest, value)
+        value = getattr(args, parg.dest if parg.is_global else parg.namespace_dest(pluginname))
+        session.set_plugin_option(pluginname, parg.dest, value)
 
         if not parg.is_global:
             if parg.required:
@@ -914,18 +913,18 @@ def setup_plugin_options(session: Streamlink, plugin: Type[Plugin]):
             # if the value is set, check to see if any of the required arguments are not set
             if parg.required or value:
                 try:
-                    for rparg in plugin.arguments.requires(parg.name):
+                    for rparg in pluginclass.arguments.requires(parg.name):
                         required[rparg.name] = rparg
                 except RuntimeError:
-                    log.error(f"{pname} plugin has a configuration error and the arguments cannot be parsed")
+                    log.error(f"{pluginname} plugin has a configuration error and the arguments cannot be parsed")
                     break
 
     if required:
         for req in required.values():
-            if not session.get_plugin_option(pname, req.dest):
-                prompt = f"{req.prompt or f'Enter {pname} {req.name}'}: "
+            if not session.get_plugin_option(pluginname, req.dest):
+                prompt = f"{req.prompt or f'Enter {pluginname} {req.name}'}: "
                 session.set_plugin_option(
-                    pname,
+                    pluginname,
                     req.dest,
                     console.askpass(prompt) if req.sensitive else console.ask(prompt)
                 )

@@ -1,4 +1,6 @@
-import unittest
+from unittest.mock import Mock
+
+import pytest
 
 from streamlink.plugins.tvrby import TVRBy
 from tests.plugins import PluginCanHandleUrl
@@ -15,17 +17,16 @@ class TestPluginCanHandleUrlTVRBy(PluginCanHandleUrl):
     ]
 
 
-class TestPluginTVRBy(unittest.TestCase):
-    def test_url_fix(self):
-        self.assertTrue(
+class TestPluginTVRBy:
+    @pytest.mark.parametrize("url,expected", [
+        (
             "http://www.tvr.by/televidenie/belarus-1/",
-            TVRBy("http://www.tvr.by/televidenie/belarus-1/").url)
-        self.assertTrue(
             "http://www.tvr.by/televidenie/belarus-1/",
-            TVRBy("http://www.tvr.by/televidenie/belarus-1").url)
-        self.assertTrue(
-            "http://www.tvr.by/televidenie/belarus-24/",
-            TVRBy("http://www.tvr.by/televidenie/belarus-24/").url)
-        self.assertTrue(
-            "http://www.tvr.by/televidenie/belarus-24/",
-            TVRBy("http://www.tvr.by/televidenie/belarus-24").url)
+        ),
+        (
+            "http://www.tvr.by/televidenie/belarus-1",
+            "http://www.tvr.by/televidenie/belarus-1/",
+        ),
+    ])
+    def test_url_fix(self, url, expected):
+        assert TVRBy(Mock(), url).url == expected
