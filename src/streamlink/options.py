@@ -46,9 +46,11 @@ class Options:
 
 class Argument:
     """
-    :class:`Argument` accepts most of the parameters accepted by :func:`ArgumentParser.add_argument`,
+    Accepts most of the parameters accepted by :meth:`ArgumentParser.add_argument`,
     except that ``requires`` is a special case which is only enforced if the plugin is in use.
-    In addition, the ``argument_name`` parameter is the name relative to the plugin, e.g. username, password, etc.
+    In addition, the ``name`` parameter is the name relative to the plugin name, but can be overridden by ``argument_name``.
+
+    Should not be called directly, see the :func:`pluginargument <streamlink.plugin.pluginargument>` decorator.
     """
 
     def __init__(
@@ -64,12 +66,12 @@ class Argument:
         **options
     ):
         """
-        :param name: Argument name, without ``--`` or plugin name prefixes, e.g. ``"password"``, ``"mux-subtitles"``, etc.
+        :param name: Argument name, without leading ``--`` or plugin name prefixes, e.g. ``"username"``, ``"password"``, etc.
         :param required: Whether the argument is required for the plugin
         :param requires: List of arguments which this argument requires, eg ``["password"]``
         :param prompt: If the argument is required and not set, this prompt message will be shown instead
         :param sensitive: Whether the argument is sensitive (passwords, etc.) and should be masked
-        :param argument_name: Custom CLI argument name
+        :param argument_name: Custom CLI argument name without plugin name prefix
         :param dest: Custom plugin option name
         :param is_global: Whether this plugin argument refers to a global CLI argument
         :param options: Arguments passed to :meth:`ArgumentParser.add_argument`, excluding ``requires`` and ``dest``
@@ -107,31 +109,9 @@ class Argument:
 
 class Arguments:
     """
-    Provides a wrapper around a list of :class:`Argument`. For example
+    A collection of :class:`Argument` instances for :class:`Plugin <streamlink.plugin.Plugin>` classes.
 
-    .. code-block:: python
-
-        from streamlink.plugin import Plugin, PluginArgument, PluginArguments
-
-
-        class PluginExample(Plugin):
-            arguments = PluginArguments(
-                PluginArgument(
-                    "username",
-                    metavar="EMAIL",
-                    requires=["password"],
-                    help="The username for your account.",
-                ),
-                PluginArgument(
-                    "password",
-                    metavar="PASSWORD",
-                    sensitive=True,
-                    help="The password for your account.",
-                ),
-            )
-
-    This will add the ``--plugin-username`` and ``--plugin-password`` arguments to the CLI
-    (assuming the plugin module is ``plugin``).
+    Should not be called directly, see the :func:`pluginargument <streamlink.plugin.pluginargument>` decorator.
     """
 
     def __init__(self, *args):
@@ -149,21 +129,17 @@ class Arguments:
     def get(self, name: str) -> Optional[Argument]:
         return self.arguments.get(name)
 
-    def requires(self, name):
+    def requires(self, name: str) -> Iterator[Argument]:
         """
-        Find all the arguments required by name
-
-        :param name: name of the argument the find the dependencies
-
-        :return: list of dependant arguments
+        Find all :class:`Argument` instances required by name
         """
 
         results = {name}
         argument = self.get(name)
-        for reqname in argument.requires:
+        for reqname in (argument.requires if argument else []):
             required = self.get(reqname)
             if not required:
-                raise KeyError("{0} is not a valid argument for this plugin".format(reqname))
+                raise KeyError(f"{reqname} is not a valid argument for this plugin")
 
             if required.name in results:
                 raise RuntimeError("cycle detected in plugin argument config")
