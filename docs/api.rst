@@ -29,8 +29,15 @@ Plugin
     :private-members: _get_streams
     :member-order: bysource
 
-PluginArgument
-^^^^^^^^^^^^^^
+Plugin decorators
+^^^^^^^^^^^^^^^^^
+
+.. autodecorator:: pluginmatcher
+
+.. autodecorator:: pluginargument
+
+Plugin arguments
+^^^^^^^^^^^^^^^^
 
 .. module:: streamlink.options
 
