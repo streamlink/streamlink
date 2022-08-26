@@ -93,9 +93,9 @@ class Albavision(Plugin):
         schema = validate.Schema(
             validate.xml_xpath_string(".//script[contains(text(), 'LIVE_URL')]/text()"),
             validate.none_or_all(
-                re.compile(r"""LIVE_URL\s*=\s*(?P<q>['"])(.+?)(?P=q)"""),
+                re.compile(r"""LIVE_URL\s*=\s*(?P<q>['"])(?P<url>.+?)(?P=q)"""),
                 validate.none_or_all(
-                    validate.get(1),
+                    validate.get("url"),
                     validate.url(),
                 ),
             ),
@@ -108,9 +108,9 @@ class Albavision(Plugin):
         schema = validate.Schema(
             validate.xml_xpath_string(".//script[contains(text(), 'LIVE_URL')]/text()"),
             validate.none_or_all(
-                re.compile(r"""jQuery\.get\s*\((?P<q>['"])(.+?)(?P=q)"""),
+                re.compile(r"""jQuery\.get\s*\((?P<q>['"])(?P<token>.+?)(?P=q)"""),
                 validate.none_or_all(
-                    validate.get(1),
+                    validate.get("token"),
                     validate.url(),
                 ),
             ),
@@ -121,8 +121,8 @@ class Albavision(Plugin):
         schema = validate.Schema(
             validate.xml_xpath_string(".//script[contains(text(), 'LIVE_URL')]/text()"),
             validate.none_or_all(
-                re.compile(r"""Math\.floor\(Date\.now\(\)\s*/\s*3600000\),\s*(?P<q>['"])(.+?)(?P=q)"""),
-                validate.none_or_all(validate.get(1)),
+                re.compile(r"""Math\.floor\(Date\.now\(\)\s*/\s*3600000\),\s*(?P<q>['"])(?P<token>.+?)(?P=q)"""),
+                validate.none_or_all(validate.get("token")),
             ),
         )
         token_req_str = schema.validate(self.page)

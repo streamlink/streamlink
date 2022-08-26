@@ -80,8 +80,11 @@ class HTV(Plugin):
                 validate.parse_html(),
                 validate.xml_xpath_string(".//script[contains(text(), 'playlist.m3u8')]/text()"),
                 validate.none_or_all(
-                    re.compile(r"""var\s+iosUrl\s*=\s*(?P<q>")(.+?)(?P=q)"""),
-                    validate.none_or_all(validate.get(1), validate.url()),
+                    re.compile(r"""var\s+iosUrl\s*=\s*(?P<q>")(?P<url>.+?)(?P=q)"""),
+                    validate.none_or_all(
+                        validate.get("url"),
+                        validate.url(),
+                    ),
                 ),
             ),
         )
