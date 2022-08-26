@@ -38,8 +38,11 @@ class HiPlayer(Plugin):
                 validate.parse_html(),
                 validate.xml_xpath_string(".//script[contains(text(), 'https://hiplayer.hibridcdn.net/l/')]/text()"),
                 validate.none_or_all(
-                    re.compile(r"""(?P<q>['"])(https://hiplayer.hibridcdn.net/l/.+?)(?P=q)"""),
-                    validate.none_or_all(validate.get(1), validate.url()),
+                    re.compile(r"""(?P<q>['"])(?P<url>https://hiplayer.hibridcdn.net/l/.+?)(?P=q)"""),
+                    validate.none_or_all(
+                        validate.get("url"),
+                        validate.url(),
+                    ),
                 ),
             ),
         )
