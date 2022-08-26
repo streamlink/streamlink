@@ -172,7 +172,15 @@ class Plugin:
     matchers: ClassVar[Optional[List[Matcher]]] = None
     """
     The list of plugin matchers (URL pattern + priority).
-    Use the :meth:`streamlink.plugin.pluginmatcher` decorator for initializing this list.
+
+    Use the :func:`pluginmatcher` decorator to initialize this list.
+    """
+
+    arguments: ClassVar[Optional[Arguments]] = None
+    """
+    The plugin's :class:`Arguments <streamlink.options.Arguments>` collection.
+
+    Use the :func:`pluginargument` decorator to initialize this collection.
     """
 
     matches: Sequence[Optional[Match]]
@@ -198,7 +206,6 @@ class Plugin:
     logger = None
     module = "unknown"
     options = Options()
-    arguments: Optional[Arguments] = None
     session = None
     _url: Optional[str] = None
 
@@ -567,6 +574,38 @@ def pluginmatcher(
     pattern: Pattern,
     priority: int = NORMAL_PRIORITY,
 ) -> Callable[[Type[Plugin]], Type[Plugin]]:
+    """
+    Decorator for plugin URL matchers.
+
+    A matcher consists of a compiled regular expression pattern for the plugin's input URL and a priority value.
+    The priority value determines which plugin gets chosen by
+    :meth:`Streamlink.resolve_url <streamlink.Streamlink.resolve_url>` if multiple plugins match the input URL.
+
+    Plugins must at least have one matcher. If multiple matchers are defined, then the first matching one
+    according to the order of which they have been defined (top to bottom) will be responsible for setting the
+    :attr:`Plugin.matcher` and :attr:`Plugin.match` attributes on the :class:`Plugin` instance.
+    The :attr:`Plugin.matchers` and :attr:`Plugin.matches` attributes are affected by all defined matchers.
+
+    .. code-block:: python
+
+        import re
+
+        from streamlink.plugin import HIGH_PRIORITY, Plugin, pluginmatcher
+
+
+        @pluginmatcher(re.compile("https?://example:1234/(?:foo|bar)/(?P<name>[^/]+)"))
+        @pluginmatcher(priority=HIGH_PRIORITY, pattern=re.compile(\"\"\"
+            https?://(?:
+                 sitenumberone
+                |adifferentsite
+                |somethingelse
+            )
+            /.+\\.m3u8
+        \"\"\", re.VERBOSE))
+        class MyPlugin(Plugin):
+            ...
+    """
+
     matcher = Matcher(pattern, priority)
 
     def decorator(cls: Type[Plugin]) -> Type[Plugin]:
@@ -592,6 +631,33 @@ def pluginargument(
     is_global: bool = False,
     **options,
 ) -> Callable[[Type[Plugin]], Type[Plugin]]:
+    """
+    Decorator for plugin arguments. Takes the same arguments as :class:`streamlink.options.Argument`.
+
+    .. code-block:: python
+
+        from streamlink.plugin import Plugin, pluginargument
+
+
+        @pluginargument(
+            "username",
+            requires=["password"],
+            metavar="EMAIL",
+            help="The username for your account.",
+        )
+        @pluginargument(
+            "password",
+            sensitive=True,
+            metavar="PASSWORD",
+            help="The password for your account.",
+        )
+        class MyPlugin(Plugin):
+            ...
+
+    This will add the ``--myplugin-username`` and ``--myplugin-password`` arguments to the CLI,
+    assuming the plugin's module name is ``myplugin``.
+    """
+
     arg = Argument(
         name,
         required=required,
