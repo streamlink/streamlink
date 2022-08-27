@@ -77,7 +77,7 @@ class StringFormatter(logging.Formatter):
 
     def format(self, record):
         for rbase in self.remove_base:
-            record.name = record.name.replace(rbase + ".", "")
+            record.name = record.name.replace(f"{rbase}.", "")
         record.levelname = record.levelname.lower()
 
         return super().format(record)

@@ -19,7 +19,7 @@ class NTV(Plugin):
         mrl = None
         match = re.search(r'var camHlsURL = \'(.*)\'', body)
         if match:
-            mrl = 'http:' + match.group(1)
+            mrl = f"http:{match.group(1)}"
         else:
             match = re.search(r'var hlsURL = \'(.*)\'', body)
             if match:

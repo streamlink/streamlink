@@ -229,7 +229,7 @@ def output_stream_http(
 
         log.info("Starting server, access with one of:")
         for url in server.urls:
-            log.info(" " + url)
+            log.info(f" {url}")
 
     initial_streams_used = False
     for req in iter_http_requests(server, player):
@@ -462,12 +462,11 @@ def handle_stream(plugin: Plugin, streams: Dict[str, Stream], stream_name: str) 
         except TypeError:
             console.exit("The stream specified cannot be translated to a URL")
 
-    # Output the stream
     else:
         # Find any streams with a '_alt' suffix and attempt
         # to use these in case the main stream is not usable.
-        alt_streams = list(filter(lambda k: stream_name + "_alt" in k,
-                                  sorted(streams.keys())))
+        alt_streams = list(filter(lambda k: f"{stream_name}_alt" in k, sorted(streams.keys())))
+
         file_output = args.output or args.stdout
 
         formatter = get_formatter(plugin)

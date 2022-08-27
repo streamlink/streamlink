@@ -69,9 +69,8 @@ class MPDParsers:
         res = ""
         for m in re.compile(r"(.*?)\$(\w+)(?:%([\w.]+))?\$").finditer(url_template):
             _, end = m.span()
-            res += "{0}{{{1}{2}}}".format(m.group(1),
-                                          m.group(2),
-                                          (":" + m.group(3)) if m.group(3) else "")
+            res += "{0}{{{1}{2}}}".format(m.group(1), m.group(2), f":{m.group(3)}" if m.group(3) else "")
+
         return (res + url_template[end:]).format
 
     @staticmethod
