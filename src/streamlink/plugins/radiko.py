@@ -50,7 +50,7 @@ class Radiko(Plugin):
             'lsid': lsid,
             'type': 'b'
         }
-        url = live_url + '?' + urlencode(live_params)
+        url = f"{live_url}?{urlencode(live_params)}"
         return url, token
 
     def _timefree(self, station_id, start_at):
@@ -68,7 +68,7 @@ class Radiko(Plugin):
             'lsid': lsid,
             'type': 'b'
         }
-        url = m3u8_url + '?' + urlencode(m3u8_params)
+        url = f"{m3u8_url}?{urlencode(m3u8_params)}"
         return url, token
 
     def _authorize(self):

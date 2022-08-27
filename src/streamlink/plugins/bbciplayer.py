@@ -208,7 +208,7 @@ class BBCiPlayer(Plugin):
         elif channel_name:
             log.debug(f"Loading stream for live channel: {channel_name}")
             if self.get_option("hd"):
-                tvip = self.find_tvip(self.url, master=True) + "_hd"
+                tvip = f"{self.find_tvip(self.url, master=True)}_hd"
                 if tvip:
                     log.debug(f"Trying HD stream {tvip}...")
                     try:

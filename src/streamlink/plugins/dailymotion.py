@@ -80,7 +80,7 @@ class DailyMotion(Plugin):
         params = {
             "flags": "live_onair"
         }
-        api_user_videos = USER_INFO_URL.format(username) + "/videos"
+        api_user_videos = f"{USER_INFO_URL.format(username)}/videos"
         try:
             res = self.session.http.get(
                 api_user_videos.format(username),
