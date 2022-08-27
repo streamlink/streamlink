@@ -24,7 +24,7 @@ class TF1(Plugin):
     api_url = "https://mediainfo.tf1.fr/mediainfocombo/{}?context=MYTF1&pver=4001000"
 
     def api_call(self, channel, useragent=useragents.CHROME):
-        url = self.api_url.format("L_" + channel.upper())
+        url = self.api_url.format(f"L_{channel.upper()}")
         req = self.session.http.get(url,
                                     headers={"User-Agent": useragent})
         return self.session.http.json(req)

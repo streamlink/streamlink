@@ -74,7 +74,7 @@ class AbemaTVLicenseAdapter(BaseAdapter):
             "appId": "tv.abema",
             "appVersion": "3.27.1"
         }
-        auth_header = {"Authorization": "Bearer " + self.usertoken}
+        auth_header = {"Authorization": f"Bearer {self.usertoken}"}
         res = self._session.http.get(self._MEDIATOKEN_API, params=params,
                                      headers=auth_header)
         jsonres = self._session.http.json(res,
@@ -199,7 +199,7 @@ class AbemaTV(Plugin):
         return urlsafe_b64encode(tmp).rstrip(b"=").decode("utf-8")
 
     def _is_playable(self, vtype, vid):
-        auth_header = {"Authorization": "Bearer " + self.usertoken}
+        auth_header = {"Authorization": f"Bearer {self.usertoken}"}
         if vtype == "episode":
             res = self.session.http.get(self._PRGM_API.format(vid),
                                         headers=auth_header)

@@ -24,7 +24,7 @@ class MPEGDASH(Plugin):
             weight += int(match.group(2))
             return weight, group
         elif match and match.group(2):
-            return stream_weight(match.group(2) + 'k')
+            return stream_weight(f"{match.group(2)}k")
         else:
             return stream_weight(stream)
 

@@ -256,7 +256,7 @@ class M3U8Parser:
 
         value = value[2:]
         if len(value) % 2:
-            value = "0" + value
+            value = f"0{value}"
 
         return unhexlify(value)
 
