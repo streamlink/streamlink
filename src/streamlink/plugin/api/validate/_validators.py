@@ -22,7 +22,7 @@ def validator_length(number: int) -> Callable[[str], bool]:
     """
 
     def min_len(value):
-        if not len(value) >= number:
+        if len(value) < number:
             raise ValidationError(
                 "Minimum length is {number}, but value is {value}",
                 number=repr(number),
@@ -129,8 +129,7 @@ def validator_url(**attributes) -> Callable[[str], bool]:
                     "Unable to validate URL attribute {name}",
                     name=repr(name),
                     schema="url",
-                    context=err,
-                )
+                ) from err
 
         return True
 
@@ -229,8 +228,7 @@ def validator_xml_find(
                 "ElementPath syntax error: {path}",
                 path=repr(path),
                 schema="xml_find",
-                context=err,
-            )
+            ) from err
 
         if value is None:
             raise ValidationError(
@@ -301,8 +299,7 @@ def validator_xml_xpath(
                 "XPath evaluation error: {xpath}",
                 xpath=repr(xpath),
                 schema="xml_xpath",
-                context=err,
-            )
+            ) from err
 
         return result or None
 
