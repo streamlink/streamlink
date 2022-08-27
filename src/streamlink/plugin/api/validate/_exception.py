@@ -11,11 +11,9 @@ class ValidationError(ValueError):
         self,
         *errors,
         schema: Optional[Union[str, object]] = None,
-        context: Optional[Union[Exception]] = None,
         **errkeywords
     ):
         self.schema = schema
-        self.context = context
         if len(errors) == 1 and type(errors[0]) is str:
             self.errors = (self._truncate(errors[0], **errkeywords), )
         else:
@@ -25,9 +23,7 @@ class ValidationError(ValueError):
         return string if len(string) <= self.MAX_LENGTH else f"<{string[:self.MAX_LENGTH - 5]}...>"
 
     def _truncate(self, template: str, **kwargs):
-        return str(template).format(
-            **{k: self._ellipsis(str(v)) for k, v in kwargs.items()}
-        )
+        return template.format(**{k: self._ellipsis(str(v)) for k, v in kwargs.items()})
 
     def _get_schema_name(self) -> str:
         if not self.schema:
@@ -60,7 +56,7 @@ class ValidationError(ValueError):
                     append(indentation, f"{err.__class__.__name__}{err._get_schema_name()}:")
                     add(level + 1, err)
 
-            context = error.context
+            context = error.__cause__
             if context:
                 if not isinstance(context, cls):
                     append(indentation, "Context:")
