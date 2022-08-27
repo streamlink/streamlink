@@ -1,5 +1,6 @@
 """
 $description United Arab Emirates CDN hosting live content for various websites in The Middle East.
+$url alwasat.ly
 $url cnbcarabia.com
 $url media.gov.kw
 $url rotana.net
@@ -21,6 +22,8 @@ log = logging.getLogger(__name__)
 @pluginmatcher(re.compile(r"""
     https?://(?:www\.)?
     (
+        alwasat\.ly
+    |
         cnbcarabia\.com
     |
         media\.gov\.kw
