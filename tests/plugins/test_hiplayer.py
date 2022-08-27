@@ -6,6 +6,8 @@ class TestPluginCanHandleUrlHiPlayer(PluginCanHandleUrl):
     __plugin__ = HiPlayer
 
     should_match = [
+        "https://www.alwasat.ly/any",
+        "https://www.alwasat.ly/any/path",
         "https://www.cnbcarabia.com/any",
         "https://www.cnbcarabia.com/any/path",
         "https://www.media.gov.kw/any",
