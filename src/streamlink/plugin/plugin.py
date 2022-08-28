@@ -5,17 +5,14 @@ import re
 import time
 from collections import OrderedDict, namedtuple
 from functools import partial
-try:
-    from typing import Any, Callable, Dict, Optional, Pattern, Type
-except ImportError:
-    pass
+from typing import Any, Callable, Dict, Optional, Pattern, Sequence, Type, Union
 
 import requests.cookies
 
 from streamlink.cache import Cache
 from streamlink.compat import str
 from streamlink.exceptions import FatalPluginError, NoStreamsError, PluginError
-from streamlink.options import Arguments, Options
+from streamlink.options import Argument, Arguments, Options
 from streamlink.user_input import UserInputRequester
 
 
@@ -560,8 +557,45 @@ def pluginmatcher(pattern, priority=NORMAL_PRIORITY):
     return decorator
 
 
+def pluginargument(
+    name,                # type: str
+    required=False,      # type: bool
+    requires=None,       # type: Optional[Union[str, Sequence[str]]]
+    prompt=None,         # type: Optional[str]
+    sensitive=False,     # type: bool
+    argument_name=None,  # type: Optional[str]
+    dest=None,           # type: Optional[str]
+    is_global=False,     # type: bool
+    **options
+):
+    arg = Argument(
+        name,
+        required=required,
+        requires=requires,
+        prompt=prompt,
+        sensitive=sensitive,
+        argument_name=argument_name,
+        dest=dest,
+        is_global=is_global,
+        **options
+    )
+
+    def decorator(cls):
+        # type: (Type[Plugin]) -> Type[Plugin]
+        if not issubclass(cls, Plugin):
+            raise TypeError("{0} is not a Plugin".format(repr(cls)))
+        if cls.arguments is None:
+            cls.arguments = Arguments()
+        cls.arguments.add(arg)
+
+        return cls
+
+    return decorator
+
+
 __all__ = [
     "HIGH_PRIORITY", "NORMAL_PRIORITY", "LOW_PRIORITY", "NO_PRIORITY",
     "Plugin",
     "Matcher", "pluginmatcher",
+    "pluginargument",
 ]

@@ -1,4 +1,5 @@
 from collections import OrderedDict
+from typing import Iterator, Optional
 
 
 def _normalise_option_name(name):
@@ -69,7 +70,8 @@ class Argument(object):
         self.options = options
         self._argument_name = argument_name  # override the cli argument name
         self._dest = dest  # override for the plugin option name
-        self.requires = requires and (list(requires) if isinstance(requires, (list, tuple)) else [requires]) or []
+        requires = requires or []
+        self.requires = list(requires) if isinstance(requires, (list, tuple)) else [requires]
         self.prompt = prompt
         self.sensitive = sensitive
         self._default = options.get("default")
@@ -116,12 +118,21 @@ class Arguments(object):
 
     """
     def __init__(self, *args):
-        self.arguments = OrderedDict((arg.name, arg) for arg in args)
+        # keep the initial arguments of the constructor in reverse order (see __iter__())
+        self.arguments = OrderedDict((arg.name, arg) for arg in reversed(args))
 
     def __iter__(self):
-        return iter(self.arguments.values())
+        # type: () -> Iterator[Argument]
+        # iterate in reverse order due to add() being called by multiple pluginargument decorators in reverse order
+        # TODO: Python 3.7 removal: remove list()
+        return reversed(list(self.arguments.values()))
+
+    def add(self, argument):
+        # type: (Argument) -> None
+        self.arguments[argument.name] = argument
 
     def get(self, name):
+        # type: (str) -> Optional[Argument]
         return self.arguments.get(name)
 
     def requires(self, name):
@@ -132,7 +143,7 @@ class Arguments(object):
 
         :return: list of dependant arguments
         """
-        results = set([name])
+        results = {name}
         argument = self.get(name)
         for reqname in argument.requires:
             required = self.get(reqname)
