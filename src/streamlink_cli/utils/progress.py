@@ -92,10 +92,7 @@ class ProgressFormatter:
     @classmethod
     def _get_width(cls, ordinal: int) -> int:
         """Return the width of a specific unicode character when it would be displayed."""
-        for unicode, width in cls.WIDTHS:  # pragma: no branch
-            if ordinal <= unicode:
-                return width
-        return 1  # pragma: no cover
+        return next((width for unicode, width in cls.WIDTHS if ordinal <= unicode), 1)
 
     @classmethod
     def width(cls, value: str):
@@ -181,24 +178,14 @@ class ProgressFormatter:
 
     @classmethod
     def format_time(cls, elapsed: float) -> str:
-        if elapsed < 0:
-            elapsed = 0
+        elapsed = max(elapsed, 0)
 
-        hours = ""
-        minutes = ""
+        if elapsed < 60:
+            return f"{int(elapsed % 60):1d}s"
+        if elapsed < 3600:
+            return f"{int(elapsed % 3600 / 60):1d}m{int(elapsed % 60):02d}s"
 
-        if elapsed >= 3600:
-            hours = f"{int(elapsed / (60 * 60))}h"
-        if elapsed >= 60:
-            if elapsed >= 3600:
-                minutes = f"{int((elapsed % (60 * 60)) / 60):02d}m"
-            else:
-                minutes = f"{int((elapsed % (60 * 60)) / 60):1d}m"
-
-        if elapsed >= 60:
-            return f"{hours}{minutes}{int(elapsed % 60):02d}s"
-        else:
-            return f"{hours}{minutes}{int(elapsed % 60):1d}s"
+        return f"{int(elapsed / 3600)}h{int(elapsed % 3600 / 60):02d}m{int(elapsed % 60):02d}s"
 
     @classmethod
     def format_path(cls, path: PurePath, max_width: int) -> str:
