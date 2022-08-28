@@ -90,12 +90,16 @@ class FFMPEGMuxer(StreamIO):
     @lru_cache(maxsize=128)
     def resolve_command(cls, command: Optional[str] = None) -> Optional[str]:
         if command:
-            return which(command)
-        resolved = None
-        for cmd in cls.__commands__:
-            resolved = which(cmd)
-            if resolved:
-                break
+            resolved = which(command)
+        else:
+            resolved = None
+            for cmd in cls.__commands__:
+                resolved = which(cmd)
+                if resolved:
+                    break
+        if not resolved:
+            log.warning("FFmpeg was not found. See the --ffmpeg-ffmpeg option.")
+            log.warning("Muxing streams is unsupported! Only a subset of the available streams can be returned!")
         return resolved
 
     @staticmethod
