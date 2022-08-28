@@ -15,7 +15,7 @@ from random import random
 
 from streamlink.compat import str, urlparse
 from streamlink.exceptions import NoStreamsError, PluginError
-from streamlink.plugin import Plugin, PluginArgument, PluginArguments, pluginmatcher
+from streamlink.plugin import Plugin, pluginargument, pluginmatcher
 from streamlink.plugin.api import validate
 from streamlink.stream.hls import HLSStream, HLSStreamWorker
 from streamlink.stream.hls_filtered import FilteredHLSStreamReader, FilteredHLSStreamWriter
@@ -464,60 +464,53 @@ class TwitchAPI:
         )?
     )
 """, re.VERBOSE))
+@pluginargument(
+    "disable-ads",
+    action="store_true",
+    help="""
+        Skip embedded advertisement segments at the beginning or during a stream.
+        Will cause these segments to be missing from the output.
+    """,
+)
+@pluginargument(
+    "disable-hosting",
+    action="store_true",
+    help="Do not open the stream if the target channel is hosting another channel.",
+)
+@pluginargument(
+    "disable-reruns",
+    action="store_true",
+    help="Do not open the stream if the target channel is currently broadcasting a rerun.",
+)
+@pluginargument(
+    "low-latency",
+    action="store_true",
+    help="""
+        Enables low latency streaming by prefetching HLS segments.
+        Sets --hls-segment-stream-data to true and --hls-live-edge to `{0}`, if it is higher.
+        Reducing --hls-live-edge to `1` will result in the lowest latency possible, but will most likely cause buffering.
+
+        In order to achieve true low latency streaming during playback, the player's caching/buffering settings will
+        need to be adjusted and reduced to a value as low as possible, but still high enough to not cause any buffering.
+        This depends on the stream's bitrate and the quality of the connection to Twitch's servers. Please refer to the
+        player's own documentation for the required configuration. Player parameters can be set via --player-args.
+
+        Note: Low latency streams have to be enabled by the broadcasters on Twitch themselves.
+        Regular streams can cause buffering issues with this option enabled due to the reduced --hls-live-edge value.
+    """.format(LOW_LATENCY_MAX_LIVE_EDGE),
+)
+@pluginargument(
+    "api-header",
+    metavar="KEY=VALUE",
+    type=keyvalue,
+    action="append",
+    help="""
+        A header to add to each Twitch API HTTP request.
+
+        Can be repeated to add multiple headers.
+    """,
+)
 class Twitch(Plugin):
-    arguments = PluginArguments(
-        PluginArgument(
-            "disable-hosting",
-            action="store_true",
-            help="""
-            Do not open the stream if the target channel is hosting another channel.
-            """
-        ),
-        PluginArgument(
-            "disable-ads",
-            action="store_true",
-            help="""
-            Skip embedded advertisement segments at the beginning or during a stream.
-            Will cause these segments to be missing from the stream.
-            """
-        ),
-        PluginArgument(
-            "disable-reruns",
-            action="store_true",
-            help="""
-            Do not open the stream if the target channel is currently broadcasting a rerun.
-            """
-        ),
-        PluginArgument(
-            "low-latency",
-            action="store_true",
-            help="""
-            Enables low latency streaming by prefetching HLS segments.
-            Sets --hls-segment-stream-data to true and --hls-live-edge to '{0}`, if it is higher.
-            Reducing --hls-live-edge to `1` will result in the lowest latency possible, but will most likely cause buffering.
-
-            In order to achieve true low latency streaming during playback, the player's caching/buffering settings will
-            need to be adjusted and reduced to a value as low as possible, but still high enough to not cause any buffering.
-            This depends on the stream's bitrate and the quality of the connection to Twitch's servers. Please refer to the
-            player's own documentation for the required configuration. Player parameters can be set via --player-args.
-
-            Note: Low latency streams have to be enabled by the broadcasters on Twitch themselves.
-            Regular streams can cause buffering issues with this option enabled due to the reduced --hls-live-edge value.
-            """.format(LOW_LATENCY_MAX_LIVE_EDGE)
-        ),
-        PluginArgument(
-            "api-header",
-            metavar="KEY=VALUE",
-            type=keyvalue,
-            action="append",
-            help="""
-            A header to add to each Twitch API HTTP request.
-
-            Can be repeated to add multiple headers.
-            """
-        )
-    )
-
     @classmethod
     def stream_weight(cls, stream):
         if stream == "source":

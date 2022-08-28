@@ -9,7 +9,7 @@ import logging
 import re
 import time
 
-from streamlink.plugin import Plugin, PluginArgument, PluginArguments, pluginmatcher
+from streamlink.plugin import Plugin, pluginargument, pluginmatcher
 from streamlink.plugin.api import useragents
 from streamlink.stream.hls import HLSStream
 
@@ -19,36 +19,27 @@ log = logging.getLogger(__name__)
 @pluginmatcher(re.compile(
     r'https?://(?:www\.)?yupptv\.com'
 ))
+@pluginargument(
+    "boxid",
+    requires=["yuppflixtoken"],
+    sensitive=True,
+    metavar="BOXID",
+    help="The yupptv.com boxid that's used in the BoxId cookie.",
+)
+@pluginargument(
+    "yuppflixtoken",
+    sensitive=True,
+    metavar="YUPPFLIXTOKEN",
+    help="The yupptv.com yuppflixtoken that's used in the YuppflixToken cookie.",
+)
+@pluginargument(
+    "purge-credentials",
+    action="store_true",
+    help="Purge cached YuppTV credentials to initiate a new session and reauthenticate.",
+)
 class YuppTV(Plugin):
     _m3u8_re = re.compile(r'''['"](http.+\.m3u8.*?)['"]''')
     _cookie_expiry = 3600 * 24 * 365
-
-    arguments = PluginArguments(
-        PluginArgument(
-            "boxid",
-            requires=["yuppflixtoken"],
-            sensitive=True,
-            metavar="BOXID",
-            help="""
-        The yupptv.com boxid that's used in the BoxId cookie.
-        Can be used instead of the username/password login process.
-        """),
-        PluginArgument(
-            "yuppflixtoken",
-            sensitive=True,
-            metavar="YUPPFLIXTOKEN",
-            help="""
-        The yupptv.com yuppflixtoken that's used in the YuppflixToken cookie.
-        Can be used instead of the username/password login process.
-        """),
-        PluginArgument(
-            "purge-credentials",
-            action="store_true",
-            help="""
-        Purge cached YuppTV credentials to initiate a new session
-        and reauthenticate.
-        """),
-    )
 
     def __init__(self, url):
         super(YuppTV, self).__init__(url)

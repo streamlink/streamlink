@@ -11,7 +11,7 @@ import random
 import re
 
 from streamlink.compat import range
-from streamlink.plugin import Plugin, PluginArgument, PluginArguments, pluginmatcher
+from streamlink.plugin import Plugin, pluginargument, pluginmatcher
 from streamlink.plugin.api import useragents, validate
 from streamlink.stream.ffmpegmux import MuxedStream
 from streamlink.stream.hls import HLSStream
@@ -164,34 +164,34 @@ class Experience(object):
 @pluginmatcher(re.compile(
     r"https?://(?:www\.)?funimation(\.com|now\.uk)"
 ))
+@pluginargument(
+    "email",
+    argument_name="funimation-email",
+    requires=["password"],
+    help="Email address for your Funimation account.",
+)
+@pluginargument(
+    "password",
+    argument_name="funimation-password",
+    sensitive=True,
+    help="Password for your Funimation account.",
+)
+@pluginargument(
+    "language",
+    argument_name="funimation-language",
+    choices=["en", "ja", "english", "japanese"],
+    default="english",
+    help="""
+        The audio language to use for the stream; japanese or english.
+
+        Default is "english".
+    """,
+)
+@pluginargument(
+    "mux-subtitles",
+    is_global=True,
+)
 class FunimationNow(Plugin):
-    arguments = PluginArguments(
-        PluginArgument(
-            "email",
-            argument_name="funimation-email",
-            requires=["password"],
-            help="Email address for your Funimation account."
-        ),
-        PluginArgument(
-            "password",
-            argument_name="funimation-password",
-            sensitive=True,
-            help="Password for your Funimation account."
-        ),
-        PluginArgument(
-            "language",
-            argument_name="funimation-language",
-            choices=["en", "ja", "english", "japanese"],
-            default="english",
-            help="""
-            The audio language to use for the stream; japanese or english.
-
-            Default is "english".
-            """
-        ),
-        PluginArgument("mux-subtitles", is_global=True)
-    )
-
     experience_id_re = re.compile(r"/player/(\d+)")
     mp4_quality = "480p"
 

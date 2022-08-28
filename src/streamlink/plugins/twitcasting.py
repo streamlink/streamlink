@@ -9,7 +9,7 @@ import logging
 import re
 
 from streamlink.buffers import RingBuffer
-from streamlink.plugin import Plugin, PluginArgument, PluginArguments, PluginError, pluginmatcher
+from streamlink.plugin import Plugin, PluginError, pluginargument, pluginmatcher
 from streamlink.plugin.api import validate
 from streamlink.plugin.api.websocket import WebsocketClient
 from streamlink.stream.stream import Stream, StreamIO
@@ -21,15 +21,13 @@ log = logging.getLogger(__name__)
 @pluginmatcher(re.compile(
     r"https?://twitcasting\.tv/(?P<channel>[^/]+)"
 ))
+@pluginargument(
+    "password",
+    sensitive=True,
+    metavar="PASSWORD",
+    help="Password for private Twitcasting streams.",
+)
 class TwitCasting(Plugin):
-    arguments = PluginArguments(
-        PluginArgument(
-            "password",
-            sensitive=True,
-            metavar="PASSWORD",
-            help="Password for private Twitcasting streams."
-        )
-    )
     _STREAM_INFO_URL = "https://twitcasting.tv/streamserver.php?target={channel}&mode=client"
     _STREAM_REAL_URL = "{proto}://{host}/ws.app/stream/{movie_id}/fmp4/bd/1/1500?mode={mode}"
 

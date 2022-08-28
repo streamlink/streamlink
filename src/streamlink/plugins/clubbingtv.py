@@ -8,7 +8,7 @@ $account Login required
 import logging
 import re
 
-from streamlink.plugin import Plugin, PluginArgument, PluginArguments, pluginmatcher
+from streamlink.plugin import Plugin, pluginargument, pluginmatcher
 from streamlink.stream.hls import HLSStream
 
 log = logging.getLogger(__name__)
@@ -17,6 +17,18 @@ log = logging.getLogger(__name__)
 @pluginmatcher(re.compile(
     r"https?://(www\.)?clubbingtv\.com/"
 ))
+@pluginargument(
+    "username",
+    required=True,
+    requires=["password"],
+    help="The username used to register with Clubbing TV.",
+)
+@pluginargument(
+    "password",
+    required=True,
+    sensitive=True,
+    help="A Clubbing TV account password to use with --clubbingtv-username.",
+)
 class ClubbingTV(Plugin):
     _login_url = "https://www.clubbingtv.com/user/login"
 
@@ -25,21 +37,6 @@ class ClubbingTV(Plugin):
         re.DOTALL,
     )
     _vod_re = re.compile(r'<iframe src="(?P<stream_url>.+?)"')
-
-    arguments = PluginArguments(
-        PluginArgument(
-            "username",
-            required=True,
-            requires=["password"],
-            help="The username used to register with Clubbing TV.",
-        ),
-        PluginArgument(
-            "password",
-            required=True,
-            sensitive=True,
-            help="A Clubbing TV account password to use with --clubbingtv-username.",
-        ),
-    )
 
     def login(self):
         username = self.get_option("username")

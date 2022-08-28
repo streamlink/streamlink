@@ -16,7 +16,7 @@ from Crypto.PublicKey import RSA
 
 from streamlink.compat import str
 from streamlink.exceptions import FatalPluginError
-from streamlink.plugin import Plugin, PluginArgument, PluginArguments, pluginmatcher
+from streamlink.plugin import Plugin, pluginargument, pluginmatcher
 from streamlink.plugin.api import validate
 from streamlink.stream.dash import DASHStream
 
@@ -33,30 +33,24 @@ class SteamLoginFailed(Exception):
 @pluginmatcher(re.compile(
     r"https?://steam\.tv/(\w+)"
 ))
+@pluginargument(
+    "email",
+    requires=["password"],
+    metavar="EMAIL",
+    help="A Steam account email address to access friends/private streams",
+)
+@pluginargument(
+    "password",
+    sensitive=True,
+    metavar="PASSWORD",
+    help="A Steam account password to use with --steam-email.",
+)
 class SteamBroadcastPlugin(Plugin):
     _watch_broadcast_url = "https://steamcommunity.com/broadcast/watch/{steamid}"
     _get_broadcast_url = "https://steamcommunity.com/broadcast/getbroadcastmpd/"
     _get_rsa_key_url = "https://steamcommunity.com/login/getrsakey/"
     _dologin_url = "https://steamcommunity.com/login/dologin/"
     _captcha_url = "https://steamcommunity.com/public/captcha.php?gid={}"
-
-    arguments = PluginArguments(
-        PluginArgument(
-            "email",
-            metavar="EMAIL",
-            requires=["password"],
-            help="""
-            A Steam account email address to access friends/private streams
-            """
-        ),
-        PluginArgument(
-            "password",
-            metavar="PASSWORD",
-            sensitive=True,
-            help="""
-            A Steam account password to use with --steam-email.
-            """
-        ))
 
     @property
     def donotcache(self):

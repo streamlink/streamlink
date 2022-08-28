@@ -21,7 +21,7 @@ from requests import Response
 
 from streamlink.compat import Mapping, range, urljoin, urlunparse
 from streamlink.exceptions import PluginError, StreamError
-from streamlink.plugin import Plugin, PluginArgument, PluginArguments, pluginmatcher
+from streamlink.plugin import Plugin, pluginargument, pluginmatcher
 from streamlink.plugin.api import useragents, validate
 from streamlink.plugin.api.websocket import WebsocketClient
 from streamlink.stream.ffmpegmux import MuxedStream
@@ -490,17 +490,14 @@ class UStreamTVStream(Stream):
             (/embed)?/recorded/(?P<video_id>\d+)
         )?
 """, re.VERBOSE))
+@pluginargument(
+    "password",
+    sensitive=True,
+    argument_name="ustream-password",
+    metavar="PASSWORD",
+    help="A password to access password protected UStream.tv channels.",
+)
 class UStreamTV(Plugin):
-    arguments = PluginArguments(
-        PluginArgument(
-            "password",
-            argument_name="ustream-password",
-            sensitive=True,
-            metavar="PASSWORD",
-            help="A password to access password protected UStream.tv channels."
-        )
-    )
-
     STREAM_READY_TIMEOUT = 15
 
     def _get_media_app(self):
