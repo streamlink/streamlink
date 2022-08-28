@@ -52,6 +52,23 @@ class TestCommand:
         with patch("streamlink.stream.ffmpegmux.which", return_value=resolved):
             assert FFMPEGMuxer.is_usable(session) is expected
 
+    def test_log(self, session: Streamlink):
+        with patch("streamlink.stream.ffmpegmux.log") as mock_log, \
+             patch("streamlink.stream.ffmpegmux.which", return_value=None):
+            assert not FFMPEGMuxer.is_usable(session)
+            assert mock_log.warning.call_args_list == [
+                call("FFmpeg was not found. See the --ffmpeg-ffmpeg option."),
+                call("Muxing streams is unsupported! Only a subset of the available streams can be returned!"),
+            ]
+            assert not FFMPEGMuxer.is_usable(session)
+            assert len(mock_log.warning.call_args_list) == 2
+
+    def test_no_log(self, session: Streamlink):
+        with patch("streamlink.stream.ffmpegmux.log") as mock_log, \
+             patch("streamlink.stream.ffmpegmux.which", return_value="foo"):
+            assert FFMPEGMuxer.is_usable(session)
+            assert not mock_log.warning.call_args_list
+
 
 class TestOpen:
     FFMPEG_ARGS_DEFAULT_BASE = ["-nostats", "-y"]
