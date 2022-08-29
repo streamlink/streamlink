@@ -56,14 +56,13 @@ class TestPlugin:
         (CustomConstructorOnePlugin, "test_plugin", "tests.test_plugin"),
         (CustomConstructorTwoPlugin, "test_plugin", "tests.test_plugin"),
     ])
-    def test_constructor(self, pluginclass: Type[Plugin], module: str, logger: str):
+    def test_constructor(self, caplog: pytest.LogCaptureFixture, pluginclass: Type[Plugin], module: str, logger: str):
         session = Mock()
         with patch("streamlink.plugin.plugin.Cache") as mock_cache, \
-             patch("streamlink.plugin.plugin.log") as mock_log, \
              patch.object(pluginclass, "load_cookies") as mock_load_cookies:
             plugin = pluginclass(session, "http://localhost")
 
-        assert not mock_log.info.call_args_list
+        assert not caplog.records
 
         assert plugin.session is session
         assert plugin.url == "http://localhost"
@@ -78,16 +77,17 @@ class TestPlugin:
 
         assert mock_load_cookies.call_args_list == [call()]
 
-    def test_constructor_wrapper(self):
+    def test_constructor_wrapper(self, caplog: pytest.LogCaptureFixture):
         session = Mock()
         with patch("streamlink.plugin.plugin.Cache") as mock_cache, \
-             patch("streamlink.plugin.plugin.log") as mock_log, \
              patch.object(DeprecatedPlugin, "load_cookies") as mock_load_cookies:
             plugin = DeprecatedPlugin(session, "http://localhost")  # type: ignore[call-arg]
 
         assert isinstance(plugin, DeprecatedPlugin)
         assert plugin.custom_attribute == "HTTP://LOCALHOST"
-        assert mock_log.info.call_args_list == [call("Initialized test_plugin plugin with deprecated constructor")]
+        assert [(record.levelname, record.message) for record in caplog.records] == [
+            ("warning", "Initialized test_plugin plugin with deprecated constructor"),
+        ]
 
         assert plugin.session is session
         assert plugin.url == "http://localhost"

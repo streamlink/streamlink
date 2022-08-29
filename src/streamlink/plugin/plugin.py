@@ -244,7 +244,7 @@ class Plugin:
                 # Take any arguments, but only pass the URL to the custom constructor of the deprecated plugin
                 # noinspection PyArgumentList
                 super().__init__(url)
-                log.info(f"Initialized {self.module} plugin with deprecated constructor")
+                log.warning(f"Initialized {self.module} plugin with deprecated constructor")
 
         # Wrapper class which comes after the deprecated plugin in the MRO
         # noinspection PyAbstractClass

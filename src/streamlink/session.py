@@ -233,7 +233,7 @@ class Streamlink:
             self.http.proxies["http"] = update_scheme("https://", value, force=False)
             self.http.proxies["https"] = self.http.proxies["http"]
             if key == "https-proxy":
-                log.info("The https-proxy option has been deprecated in favour of a single http-proxy option")
+                log.warning("The https-proxy option has been deprecated in favor of a single http-proxy option")
 
         elif key == "http-cookies":
             if isinstance(value, dict):
@@ -378,7 +378,7 @@ class Streamlink:
             elif hasattr(plugin, "can_handle_url") and callable(plugin.can_handle_url) and plugin.can_handle_url(url):
                 prio = plugin.priority(url) if hasattr(plugin, "priority") and callable(plugin.priority) else NORMAL_PRIORITY
                 if prio > priority:
-                    log.info(f"Resolved plugin {name} with deprecated can_handle_url API")
+                    log.warning(f"Resolved plugin {name} with deprecated can_handle_url API")
                     candidate = name, plugin
                     priority = prio
 
