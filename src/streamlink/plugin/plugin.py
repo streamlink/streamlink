@@ -5,7 +5,8 @@ import re
 import time
 from collections import OrderedDict, namedtuple
 from functools import partial
-from typing import Any, Callable, Dict, Optional, Pattern, Sequence, Type, Union
+from http.cookiejar import Cookie
+from typing import Any, Callable, Dict, List, Optional, Pattern, Sequence, Type, Union
 
 import requests.cookies
 
@@ -53,6 +54,9 @@ HIGH_PRIORITY = 30
 NORMAL_PRIORITY = 20
 LOW_PRIORITY = 10
 NO_PRIORITY = 0
+
+_COOKIE_KEYS = \
+    "version", "name", "value", "port", "domain", "path", "secure", "expires", "discard", "comment", "comment_url", "rfc2109"
 
 
 def stream_weight(stream):
@@ -434,7 +438,12 @@ class Plugin(object):
         # type: () -> Optional[str]
         return None if self.category is None else str(self.category).strip()
 
-    def save_cookies(self, cookie_filter=None, default_expires=60 * 60 * 24 * 7):
+    def save_cookies(
+        self,
+        cookie_filter=None,
+        default_expires=60 * 60 * 24 * 7,
+    ):
+        # type: (Optional[Callable[[Cookie], bool]], int) -> List[str]
         """
         Store the cookies from ``http`` in the plugin cache until they expire. The cookies can be filtered
         by supplying a filter method. eg. ``lambda c: "auth" in c.name``. If no expiry date is given in the
@@ -454,23 +463,25 @@ class Plugin(object):
 
         for cookie in filter(cookie_filter, self.session.http.cookies):
             cookie_dict = {}
-            for attr in ("version", "name", "value", "port", "domain", "path", "secure", "expires", "discard",
-                         "comment", "comment_url", "rfc2109"):
-                cookie_dict[attr] = getattr(cookie, attr, None)
+            for key in _COOKIE_KEYS:
+                cookie_dict[key] = getattr(cookie, key, None)
             cookie_dict["rest"] = getattr(cookie, "rest", getattr(cookie, "_rest", None))
 
             expires = default_expires
-            if cookie_dict['expires']:
-                expires = int(cookie_dict['expires'] - time.time())
-            key = "__cookie:{0}:{1}:{2}:{3}".format(cookie.name,
-                                                    cookie.domain,
-                                                    cookie.port_specified and cookie.port or "80",
-                                                    cookie.path_specified and cookie.path or "*")
+            if cookie_dict["expires"]:
+                expires = int(cookie_dict["expires"] - time.time())
+            key = "__cookie:{0}:{1}:{2}:{3}".format(
+                cookie.name,
+                cookie.domain,
+                cookie.port_specified and cookie.port or "80",
+                cookie.path_specified and cookie.path or "*",
+            )
             self.cache.set(key, cookie_dict, expires)
             saved.append(cookie.name)
 
-        if saved:
-            self.logger.debug("Saved cookies: {0}".format(", ".join(saved)))
+        if saved:  # pragma: no branch
+            self.logger.debug("Saved cookies: {0}".format(', '.join(saved)))
+
         return saved
 
     def load_cookies(self):
@@ -490,8 +501,9 @@ class Plugin(object):
                 self.session.http.cookies.set_cookie(cookie)
                 restored.append(cookie.name)
 
-        if restored:
-            self.logger.debug("Restored cookies: {0}".format(", ".join(restored)))
+        if restored:  # pragma: no branch
+            self.logger.debug("Restored cookies: {0}".format(', '.join(restored)))
+
         return restored
 
     def clear_cookies(self, cookie_filter=None):
