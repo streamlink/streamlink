@@ -46,24 +46,25 @@ class Options(object):
 
 class Argument(object):
     """
-        :class:`Argument` accepts most of the same parameters as :func:`ArgumentParser.add_argument`,
-        except requires is a special case as in this case it is only enforced if the plugin is in use.
-        In addition the name parameter is the name relative to the plugin eg. username, password, etc.
+    Accepts most of the parameters accepted by :meth:`ArgumentParser.add_argument`,
+    except that ``requires`` is a special case which is only enforced if the plugin is in use.
+    In addition, the ``name`` parameter is the name relative to the plugin name, but can be overridden by ``argument_name``.
 
-
+    Should not be called directly, see the :func:`pluginargument <streamlink.plugin.pluginargument>` decorator.
     """
+
     def __init__(self, name, required=False, requires=None, prompt=None, sensitive=False, argument_name=None,
                  dest=None, is_global=False, **options):
         """
-        :param name: name of the argument, without -- or plugin name prefixes, eg. ``"password"``, ``"mux-subtitles"``, etc.
-        :param required (bool): if the argument is required for the plugin
-        :param requires: list of the arguments which this argument requires, eg ``["password"]``
-        :param prompt: if the argument is required and not given, this prompt will show at run time
-        :param sensitive (bool): if the argument is sensitive (passwords, etc) and should be masked in logs and if
-                              prompted use askpass
-        :param argument_name:
-        :param option_name:
-        :param options: arguments passed to :func:`ArgumentParser.add_argument`, excluding requires, and dest
+        :param name: Argument name, without leading ``--`` or plugin name prefixes, e.g. ``"username"``, ``"password"``, etc.
+        :param required: Whether the argument is required for the plugin
+        :param requires: List of arguments which this argument requires, eg ``["password"]``
+        :param prompt: If the argument is required and not set, this prompt message will be shown instead
+        :param sensitive: Whether the argument is sensitive (passwords, etc.) and should be masked
+        :param argument_name: Custom CLI argument name without plugin name prefix
+        :param dest: Custom plugin option name
+        :param is_global: Whether this plugin argument refers to a global CLI argument
+        :param options: Arguments passed to :meth:`ArgumentParser.add_argument`, excluding ``requires`` and ``dest``
         """
         self.required = required
         self.name = name
@@ -97,26 +98,11 @@ class Argument(object):
 
 class Arguments(object):
     """
-    Provides a wrapper around a list of :class:`Argument`. For example
+    A collection of :class:`Argument` instances for :class:`Plugin <streamlink.plugin.Plugin>` classes.
 
-    .. code-block:: python
-
-        class PluginExample(Plugin):
-            arguments = PluginArguments(
-                PluginArgument("username",
-                               help="The username for your account.",
-                               metavar="EMAIL",
-                               requires=["password"]),  // requires the password too
-                PluginArgument("password",
-                               sensitive=True,  // should be masked in logs, etc.
-                               help="The password for your account.",
-                               metavar="PASSWORD")
-            )
-
-    This will add the ``--plugin-username`` and ``--plugin-password`` arguments to the CLI
-    (assuming the plugin module is ``plugin``).
-
+    Should not be called directly, see the :func:`pluginargument <streamlink.plugin.pluginargument>` decorator.
     """
+
     def __init__(self, *args):
         # keep the initial arguments of the constructor in reverse order (see __iter__())
         self.arguments = OrderedDict((arg.name, arg) for arg in reversed(args))
@@ -136,16 +122,13 @@ class Arguments(object):
         return self.arguments.get(name)
 
     def requires(self, name):
+        # type: (str) -> Iterator[Argument]
         """
-        Find all the arguments required by name
-
-        :param name: name of the argument the find the dependencies
-
-        :return: list of dependant arguments
+        Find all :class:`Argument` instances required by name
         """
         results = {name}
         argument = self.get(name)
-        for reqname in argument.requires:
+        for reqname in (argument.requires if argument else []):
             required = self.get(reqname)
             if not required:
                 raise KeyError("{0} is not a valid argument for this plugin".format(reqname))
