@@ -185,7 +185,7 @@ def iter_http_requests(server, player):
             continue
 
 
-def output_stream_http(plugin, initial_streams, external=False, port=0):
+def output_stream_http(plugin, initial_streams, external=False, continuous=True, port=0):
     """Continuously output the stream over HTTP."""
     global output
 
@@ -250,6 +250,9 @@ def output_stream_http(plugin, initial_streams, external=False, port=0):
         if stream_fd and prebuffer:
             log.debug("Writing stream to player")
             read_stream(stream_fd, server, prebuffer)
+
+        if not continuous:
+            break
 
         server.close(True)
 
@@ -475,8 +478,13 @@ def handle_stream(plugin, streams, stream_name):
                                                             stream_type))
                 success = output_stream_passthrough(formatter, stream)
             elif args.player_external_http:
-                return output_stream_http(plugin, streams, external=True,
-                                          port=args.player_external_http_port)
+                return output_stream_http(
+                    plugin,
+                    streams,
+                    external=True,
+                    continuous=args.player_external_http_continuous,
+                    port=args.player_external_http_port
+                )
             elif args.player_continuous_http and not file_output:
                 return output_stream_http(plugin, streams)
             else:
