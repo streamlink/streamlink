@@ -568,6 +568,7 @@ def pluginargument(
     is_global=False,     # type: bool
     **options
 ):
+    # type: () -> Callable[[Type[Plugin]], Type[Plugin]]
     arg = Argument(
         name,
         required=required,
