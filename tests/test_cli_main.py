@@ -537,7 +537,7 @@ class TestCLIMainSetupConfigArgs(unittest.TestCase):
         )
         expected = [self.configdir / "primary"]
         mock_setup_args.assert_called_once_with(self.parser, expected, ignore_unknown=False)
-        self.assertEqual(mock_log.info.mock_calls, [])
+        assert not mock_log.warning.mock_calls
 
     def test_default_primary(self, mock_log):
         mock_setup_args = self.subject(
@@ -546,7 +546,7 @@ class TestCLIMainSetupConfigArgs(unittest.TestCase):
         )
         expected = [self.configdir / "primary", self.configdir / "primary.testplugin"]
         mock_setup_args.assert_called_once_with(self.parser, expected, ignore_unknown=False)
-        self.assertEqual(mock_log.info.mock_calls, [])
+        assert not mock_log.warning.mock_calls
 
     def test_default_secondary_deprecated(self, mock_log):
         mock_setup_args = self.subject(
@@ -555,10 +555,10 @@ class TestCLIMainSetupConfigArgs(unittest.TestCase):
         )
         expected = [self.configdir / "secondary", self.configdir / "secondary.testplugin"]
         mock_setup_args.assert_called_once_with(self.parser, expected, ignore_unknown=False)
-        self.assertEqual(mock_log.info.mock_calls, [
+        assert mock_log.warning.mock_calls == [
             call(f"Loaded config from deprecated path, see CLI docs for how to migrate: {expected[0]}"),
-            call(f"Loaded plugin config from deprecated path, see CLI docs for how to migrate: {expected[1]}")
-        ])
+            call(f"Loaded plugin config from deprecated path, see CLI docs for how to migrate: {expected[1]}"),
+        ]
 
     def test_custom_with_primary_plugin(self, mock_log):
         mock_setup_args = self.subject(
@@ -567,7 +567,7 @@ class TestCLIMainSetupConfigArgs(unittest.TestCase):
         )
         expected = [self.configdir / "custom", self.configdir / "primary.testplugin"]
         mock_setup_args.assert_called_once_with(self.parser, expected, ignore_unknown=False)
-        self.assertEqual(mock_log.info.mock_calls, [])
+        assert not mock_log.warning.mock_calls
 
     def test_custom_with_deprecated_plugin(self, mock_log):
         mock_setup_args = self.subject(
@@ -576,9 +576,9 @@ class TestCLIMainSetupConfigArgs(unittest.TestCase):
         )
         expected = [self.configdir / "custom", DeprecatedPath(self.configdir / "secondary.testplugin")]
         mock_setup_args.assert_called_once_with(self.parser, expected, ignore_unknown=False)
-        self.assertEqual(mock_log.info.mock_calls, [
-            call(f"Loaded plugin config from deprecated path, see CLI docs for how to migrate: {expected[1]}")
-        ])
+        assert mock_log.warning.mock_calls == [
+            call(f"Loaded plugin config from deprecated path, see CLI docs for how to migrate: {expected[1]}"),
+        ]
 
     def test_custom_multiple(self, mock_log):
         mock_setup_args = self.subject(
@@ -587,7 +587,7 @@ class TestCLIMainSetupConfigArgs(unittest.TestCase):
         )
         expected = [self.configdir / "secondary", self.configdir / "primary", self.configdir / "primary.testplugin"]
         mock_setup_args.assert_called_once_with(self.parser, expected, ignore_unknown=False)
-        self.assertEqual(mock_log.info.mock_calls, [])
+        assert not mock_log.warning.mock_calls
 
 
 class _TestCLIMainLogging(unittest.TestCase):

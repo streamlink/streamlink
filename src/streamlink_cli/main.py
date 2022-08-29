@@ -670,7 +670,7 @@ def load_plugins(dirs: List[Path], showwarning: bool = True):
         if directory.is_dir():
             success = streamlink.load_plugins(str(directory))
             if success and type(directory) is DeprecatedPath:
-                log.info(f"Loaded plugins from deprecated path, see CLI docs for how to migrate: {directory}")
+                log.warning(f"Loaded plugins from deprecated path, see CLI docs for how to migrate: {directory}")
         elif showwarning:
             log.warning(f"Plugin path {directory} does not exist or is not a directory!")
 
@@ -708,7 +708,7 @@ def setup_config_args(parser, ignore_unknown=False):
         # Only load first available default config
         for config_file in filter(lambda path: path.is_file(), CONFIG_FILES):
             if type(config_file) is DeprecatedPath:
-                log.info(f"Loaded config from deprecated path, see CLI docs for how to migrate: {config_file}")
+                log.warning(f"Loaded config from deprecated path, see CLI docs for how to migrate: {config_file}")
             config_files.append(config_file)
             break
 
@@ -721,7 +721,7 @@ def setup_config_args(parser, ignore_unknown=False):
                 if not config_file.is_file():
                     continue
                 if type(config_file) is DeprecatedPath:
-                    log.info(f"Loaded plugin config from deprecated path, see CLI docs for how to migrate: {config_file}")
+                    log.warning(f"Loaded plugin config from deprecated path, see CLI docs for how to migrate: {config_file}")
                 config_files.append(config_file)
                 break
 
