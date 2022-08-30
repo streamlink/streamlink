@@ -573,7 +573,7 @@ def format_valid_streams(plugin: Plugin, streams: Dict[str, Stream]) -> str:
     return delimiter.join(validstreams)
 
 
-def handle_url(plugin):
+def handle_url():
     """The URL handler.
 
     Attempts to resolve the URL to a plugin and then attempts
@@ -1101,10 +1101,9 @@ def main():
         except KeyboardInterrupt:
             error_code = 130
     elif args.url:
-        plugin = None
         try:
             setup_options()
-            plugin = handle_url(plugin)
+            plugin = handle_url()
         except KeyboardInterrupt:
             # Close output
             if output:
