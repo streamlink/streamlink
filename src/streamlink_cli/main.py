@@ -256,6 +256,7 @@ def output_stream_http(
 
             try:
                 log.info(f"Opening stream: {stream_name} ({type(stream).shortname()})")
+                plugin.stream_opening()
                 stream_fd, prebuffer = open_stream(stream)
             except StreamError as err:
                 log.error(err)
@@ -473,6 +474,7 @@ def handle_stream(plugin: Plugin, streams: Dict[str, Stream], stream_name: str) 
 
             if stream_type in args.player_passthrough and not file_output:
                 log.info(f"Opening stream: {stream_name} ({stream_type})")
+                plugin.stream_opening()
                 success = output_stream_passthrough(stream, formatter)
             elif args.player_external_http:
                 return output_stream_http(plugin, streams, formatter, external=True,
@@ -481,6 +483,7 @@ def handle_stream(plugin: Plugin, streams: Dict[str, Stream], stream_name: str) 
                 return output_stream_http(plugin, streams, formatter)
             else:
                 log.info(f"Opening stream: {stream_name} ({stream_type})")
+                plugin.stream_opening()
                 success = output_stream(stream, formatter)
 
             if success:
@@ -570,7 +573,7 @@ def format_valid_streams(plugin: Plugin, streams: Dict[str, Stream]) -> str:
     return delimiter.join(validstreams)
 
 
-def handle_url():
+def handle_url(plugin):
     """The URL handler.
 
     Attempts to resolve the URL to a plugin and then attempts
@@ -614,7 +617,7 @@ def handle_url():
             if stream_name in streams:
                 log.info(f"Available streams: {validstreams}")
                 handle_stream(plugin, streams, stream_name)
-                return
+                return plugin
 
         errmsg = f"The specified stream(s) '{', '.join(args.stream)}' could not be found"
         if args.json:
@@ -640,6 +643,8 @@ def handle_url():
     else:
         validstreams = format_valid_streams(plugin, streams)
         console.msg(f"Available streams: {validstreams}")
+
+    return plugin
 
 
 def print_plugins():
@@ -1096,9 +1101,10 @@ def main():
         except KeyboardInterrupt:
             error_code = 130
     elif args.url:
+        plugin = None
         try:
             setup_options()
-            handle_url()
+            plugin = handle_url(plugin)
         except KeyboardInterrupt:
             # Close output
             if output:
@@ -1110,6 +1116,8 @@ def main():
                 try:
                     log.info("Closing currently open stream...")
                     stream_fd.close()
+                    if plugin:
+                        plugin.stream_closing()
                 except KeyboardInterrupt:
                     error_code = 130
     else:

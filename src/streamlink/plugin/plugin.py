@@ -458,6 +458,12 @@ class Plugin:
 
         raise NotImplementedError
 
+    def stream_opening(self):
+        return
+
+    def stream_closing(self):
+        return
+
     def get_metadata(self) -> Dict[str, Optional[str]]:
         return dict(
             id=self.get_id(),

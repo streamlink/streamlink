@@ -2,6 +2,7 @@ import logging
 import re
 from urllib.parse import urljoin, urlparse
 
+from streamlink.TaskTimer import TaskTimer
 from streamlink.exceptions import (
     NoPluginError,
 )
@@ -27,6 +28,7 @@ class Skyline(Plugin):
 
     def __init__(self, url):
         super(Skyline, self).__init__(url)
+        self.timer = None
         self.referer = self.url
         self.session.http.headers.update({'Referer': self.referer})
 
@@ -96,6 +98,16 @@ class Skyline(Plugin):
             log.trace('No Playlists')
 
         raise NoPluginError
+
+    def stream_opening(self):
+        self.timer = TaskTimer()
+        # 把任务加入任务队列
+        self.timer.join_task(self._res_text, [self.url], interval=30)  # 每10秒执行1次
+        # 开始执行（此时才会创建线程）
+        self.timer.start()
+
+    def stream_closing(self):
+        self.timer.stop()
 
 
 __plugin__ = Skyline
