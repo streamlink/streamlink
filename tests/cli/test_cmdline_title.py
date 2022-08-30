@@ -1,5 +1,5 @@
 from tests import posix_only, windows_only
-from tests.test_cmdline import CommandLineTestCase
+from tests.cli.test_cmdline import CommandLineTestCase
 
 
 @posix_only
