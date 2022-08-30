@@ -58,5 +58,5 @@ class Formatter:
 
         return "".join(result)
 
-    def format(self, title: str, defaults: Optional[Dict[str, str]] = None) -> str:
-        return self._format(title, _identity, defaults or {})
+    def format(self, string: str, defaults: Optional[Dict[str, str]] = None) -> str:
+        return self._format(string, _identity, defaults or {})
