@@ -8,7 +8,7 @@ from streamlink_cli.utils.path import replace_chars, replace_path
 from tests import posix_only, windows_only
 
 
-@pytest.mark.parametrize("char", [i for i in range(32)])
+@pytest.mark.parametrize("char", list(range(32)))
 def test_replace_chars_unprintable(char: int):
     assert replace_chars(f"foo{chr(char)}{chr(char)}bar") == "foo_bar", "Replaces unprintable characters"
 

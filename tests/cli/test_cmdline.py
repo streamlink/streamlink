@@ -1,8 +1,9 @@
-import os.path
 import unittest
+from pathlib import Path
 from unittest.mock import ANY, Mock, patch
 
 import streamlink_cli.main
+import tests
 from streamlink import Streamlink
 from tests import posix_only, windows_only
 
@@ -14,6 +15,7 @@ class CommandLineTestCase(unittest.TestCase):
 
     @patch('streamlink_cli.main.CONFIG_FILES', [])
     @patch('streamlink_cli.main.setup_streamlink')
+    @patch('streamlink_cli.main.setup_logger_and_console', Mock())
     @patch('streamlink_cli.output.sleep')
     @patch('streamlink_cli.output.subprocess.call')
     @patch('streamlink_cli.output.subprocess.Popen')
@@ -32,7 +34,7 @@ class CommandLineTestCase(unittest.TestCase):
         mock_popen.return_value = Mock(poll=Mock(side_effect=side_effect([None, 0])))
 
         session = Streamlink()
-        session.load_plugins(os.path.join(os.path.dirname(__file__), "plugin"))
+        session.load_plugins(str(Path(tests.__path__[0]) / "plugin"))
 
         actual_exit_code = 0
         with patch('streamlink_cli.main.streamlink', session):
