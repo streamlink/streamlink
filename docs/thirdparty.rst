@@ -44,7 +44,7 @@ LiveProxy
 ---------
 
 :Description: Local proxy server between Streamlink and an URL
-:OS: |Windows| |MacOS| |Linux|
+:OS: |MacOS| |Linux|
 :Author: `back-to <https://github.com/back-to>`_
 :Website: https://liveproxy.github.io
 :Source code: https://github.com/back-to/liveproxy
