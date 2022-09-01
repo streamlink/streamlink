@@ -7,7 +7,6 @@ import re
 import signal
 import sys
 from contextlib import closing
-from distutils.version import StrictVersion
 from functools import partial
 from gettext import gettext
 from itertools import chain
@@ -15,11 +14,8 @@ from pathlib import Path
 from time import sleep
 from typing import Any, Dict, Iterator, List, Optional, Type, Union
 
-import requests
-
 import streamlink.logger as logger
 from streamlink import NoPluginError, PluginError, StreamError, Streamlink, __version__ as streamlink_version
-from streamlink.cache import Cache
 from streamlink.compat import is_win32
 from streamlink.exceptions import FatalPluginError
 from streamlink.plugin import Plugin, PluginOptions
@@ -32,6 +28,7 @@ from streamlink_cli.constants import CONFIG_FILES, DEFAULT_STREAM_METADATA, LOG_
 from streamlink_cli.output import FileOutput, PlayerOutput
 from streamlink_cli.utils import Formatter, HTTPServer, datetime, ignored
 from streamlink_cli.utils.progress import Progress
+from streamlink_cli.utils.versioncheck import check_version
 
 
 ACCEPTABLE_ERRNO = (errno.EPIPE, errno.EINVAL, errno.ECONNRESET)
@@ -994,33 +991,6 @@ def log_current_arguments(session: Streamlink, parser: argparse.ArgumentParser):
             log.debug(f" {name}={value if name not in sensitive else '*' * 8}")
 
 
-def check_version(force=False):
-    cache = Cache(filename="cli.json")
-    latest_version = cache.get("latest_version")
-
-    if force or not latest_version:
-        res = requests.get("https://pypi.python.org/pypi/streamlink/json")
-        data = res.json()
-        latest_version = data.get("info").get("version")
-        cache.set("latest_version", latest_version, (60 * 60 * 24))
-
-    version_info_printed = cache.get("version_info_printed")
-    if not force and version_info_printed:
-        return
-
-    installed_version = StrictVersion(streamlink.version)
-    latest_version = StrictVersion(latest_version)
-
-    if latest_version > installed_version:
-        log.info(f"A new version of Streamlink ({latest_version}) is available!")
-        cache.set("version_info_printed", True, (60 * 60 * 6))
-    elif force:
-        log.info(f"Your Streamlink version ({installed_version}) is up to date!")
-
-    if force:
-        sys.exit()
-
-
 def setup_logger_and_console(stream=sys.stdout, filename=None, level="info", json=False):
     global console
 
@@ -1086,10 +1056,14 @@ def main():
     setup_signals()
 
     if args.version_check or args.auto_version_check:
-        with ignored(Exception):
+        try:
             check_version(force=args.version_check)
+        except KeyboardInterrupt:
+            error_code = 130
 
-    if args.help:
+    if args.version_check:
+        pass
+    elif args.help:
         parser.print_help()
     elif args.plugins:
         print_plugins()
