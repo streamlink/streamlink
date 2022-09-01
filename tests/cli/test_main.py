@@ -606,7 +606,6 @@ class _TestCLIMainLogging(unittest.TestCase):
              patch("streamlink_cli.main.CONFIG_FILES", []), \
              patch("streamlink_cli.main.setup_streamlink"), \
              patch("streamlink_cli.main.setup_plugins"), \
-             patch("streamlink_cli.main.setup_http_session"), \
              patch("streamlink.session.Streamlink.load_builtin_plugins"), \
              patch("sys.argv") as mock_argv:
             mock_argv.__getitem__.side_effect = lambda x: argv[x]
@@ -951,15 +950,12 @@ class TestCLIMainPrint(unittest.TestCase):
                  patch("streamlink_cli.main.CONFIG_FILES", []), \
                  patch("streamlink_cli.main.setup_streamlink"), \
                  patch("streamlink_cli.main.setup_plugins"), \
-                 patch("streamlink_cli.main.setup_http_session"), \
-                 patch("streamlink_cli.main.setup_signals"), \
-                 patch("streamlink_cli.main.setup_options") as mock_setup_options:
+                 patch("streamlink_cli.main.setup_signals"):
                 with self.assertRaises(SystemExit) as cm:
                     streamlink_cli.main.main()
                 self.assertEqual(cm.exception.code, 0)
                 mock_resolve_url.assert_not_called()
                 mock_resolve_url_no_redirect.assert_not_called()
-                mock_setup_options.assert_not_called()
 
     @staticmethod
     def get_stdout(mock_stdout):
