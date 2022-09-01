@@ -24,7 +24,7 @@ def validator_length(number):
     """
 
     def min_len(value):
-        if not len(value) >= number:
+        if len(value) < number:
             raise ValidationError(
                 "Minimum length is {number}, but value is {value}",
                 number=repr(number),
