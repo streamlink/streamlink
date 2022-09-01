@@ -21,7 +21,7 @@ from streamlink.exceptions import FatalPluginError
 from streamlink.plugin import Plugin, PluginOptions
 from streamlink.stream.stream import Stream, StreamIO
 from streamlink.utils.named_pipe import NamedPipe
-from streamlink_cli.argparser import ArgumentParser, build_parser
+from streamlink_cli.argparser import ArgumentParser, build_parser, setup_session_options
 from streamlink_cli.compat import DeprecatedPath, importlib_metadata, stdout
 from streamlink_cli.console import ConsoleOutput, ConsoleUserInputRequester
 from streamlink_cli.constants import CONFIG_FILES, DEFAULT_STREAM_METADATA, LOG_DIR, PLUGIN_DIRS, STREAM_SYNONYMS
@@ -733,42 +733,6 @@ def setup_signals():
     signal.signal(signal.SIGTERM, signal.default_int_handler)
 
 
-def setup_http_session():
-    """Sets the global HTTP settings, such as proxy and headers."""
-    if args.http_proxy:
-        streamlink.set_option("http-proxy", args.http_proxy)
-
-    if args.https_proxy:
-        streamlink.set_option("https-proxy", args.https_proxy)
-
-    if args.http_cookie:
-        streamlink.set_option("http-cookies", dict(args.http_cookie))
-
-    if args.http_header:
-        streamlink.set_option("http-headers", dict(args.http_header))
-
-    if args.http_query_param:
-        streamlink.set_option("http-query-params", dict(args.http_query_param))
-
-    if args.http_ignore_env:
-        streamlink.set_option("http-trust-env", False)
-
-    if args.http_no_ssl_verify:
-        streamlink.set_option("http-ssl-verify", False)
-
-    if args.http_disable_dh:
-        streamlink.set_option("http-disable-dh", True)
-
-    if args.http_ssl_cert:
-        streamlink.set_option("http-ssl-cert", args.http_ssl_cert)
-
-    if args.http_ssl_cert_crt_key:
-        streamlink.set_option("http-ssl-cert", tuple(args.http_ssl_cert_crt_key))
-
-    if args.http_timeout:
-        streamlink.set_option("http-timeout", args.http_timeout)
-
-
 def setup_plugins(extra_plugin_dir=None):
     """Loads any additional plugins."""
     load_plugins(PLUGIN_DIRS, showwarning=False)
@@ -782,84 +746,6 @@ def setup_streamlink():
     global streamlink
 
     streamlink = Streamlink({"user-input-requester": ConsoleUserInputRequester(console)})
-
-
-def setup_options():
-    """Sets Streamlink options."""
-    if args.interface:
-        streamlink.set_option("interface", args.interface)
-    if args.ipv4:
-        streamlink.set_option("ipv4", args.ipv4)
-    if args.ipv6:
-        streamlink.set_option("ipv6", args.ipv6)
-
-    if args.ringbuffer_size:
-        streamlink.set_option("ringbuffer-size", args.ringbuffer_size)
-    if args.mux_subtitles:
-        streamlink.set_option("mux-subtitles", args.mux_subtitles)
-
-    if args.hls_live_edge:
-        streamlink.set_option("hls-live-edge", args.hls_live_edge)
-    if args.hls_segment_stream_data:
-        streamlink.set_option("hls-segment-stream-data", args.hls_segment_stream_data)
-
-    if args.hls_playlist_reload_attempts:
-        streamlink.set_option("hls-playlist-reload-attempts", args.hls_playlist_reload_attempts)
-    if args.hls_playlist_reload_time:
-        streamlink.set_option("hls-playlist-reload-time", args.hls_playlist_reload_time)
-    if args.hls_segment_ignore_names:
-        streamlink.set_option("hls-segment-ignore-names", args.hls_segment_ignore_names)
-    if args.hls_segment_key_uri:
-        streamlink.set_option("hls-segment-key-uri", args.hls_segment_key_uri)
-    if args.hls_audio_select:
-        streamlink.set_option("hls-audio-select", args.hls_audio_select)
-    if args.hls_start_offset:
-        streamlink.set_option("hls-start-offset", args.hls_start_offset)
-    if args.hls_duration:
-        streamlink.set_option("hls-duration", args.hls_duration)
-    if args.hls_live_restart:
-        streamlink.set_option("hls-live-restart", args.hls_live_restart)
-
-    # deprecated
-    if args.hls_segment_attempts:
-        streamlink.set_option("hls-segment-attempts", args.hls_segment_attempts)
-    if args.hls_segment_threads:
-        streamlink.set_option("hls-segment-threads", args.hls_segment_threads)
-    if args.hls_segment_timeout:
-        streamlink.set_option("hls-segment-timeout", args.hls_segment_timeout)
-    if args.hls_timeout:
-        streamlink.set_option("hls-timeout", args.hls_timeout)
-    if args.http_stream_timeout:
-        streamlink.set_option("http-stream-timeout", args.http_stream_timeout)
-
-    # generic stream- arguments take precedence over deprecated stream-type arguments
-    if args.stream_segment_attempts:
-        streamlink.set_option("stream-segment-attempts", args.stream_segment_attempts)
-    if args.stream_segment_threads:
-        streamlink.set_option("stream-segment-threads", args.stream_segment_threads)
-    if args.stream_segment_timeout:
-        streamlink.set_option("stream-segment-timeout", args.stream_segment_timeout)
-    if args.stream_timeout:
-        streamlink.set_option("stream-timeout", args.stream_timeout)
-
-    if args.ffmpeg_ffmpeg:
-        streamlink.set_option("ffmpeg-ffmpeg", args.ffmpeg_ffmpeg)
-    if args.ffmpeg_verbose:
-        streamlink.set_option("ffmpeg-verbose", args.ffmpeg_verbose)
-    if args.ffmpeg_verbose_path:
-        streamlink.set_option("ffmpeg-verbose-path", args.ffmpeg_verbose_path)
-    if args.ffmpeg_fout:
-        streamlink.set_option("ffmpeg-fout", args.ffmpeg_fout)
-    if args.ffmpeg_video_transcode:
-        streamlink.set_option("ffmpeg-video-transcode", args.ffmpeg_video_transcode)
-    if args.ffmpeg_audio_transcode:
-        streamlink.set_option("ffmpeg-audio-transcode", args.ffmpeg_audio_transcode)
-    if args.ffmpeg_copyts:
-        streamlink.set_option("ffmpeg-copyts", args.ffmpeg_copyts)
-    if args.ffmpeg_start_at_zero:
-        streamlink.set_option("ffmpeg-start-at-zero", args.ffmpeg_start_at_zero)
-
-    streamlink.set_option("locale", args.locale)
 
 
 def setup_plugin_args(session: Streamlink, parser: ArgumentParser):
@@ -1047,11 +933,11 @@ def main():
     log_level = args.loglevel if not silent_log else "none"
     logger.root.setLevel(log_level)
 
-    setup_http_session()
-
     log_root_warning()
     log_current_versions()
     log_current_arguments(streamlink, parser)
+
+    setup_session_options(streamlink, args)
 
     setup_signals()
 
@@ -1083,7 +969,6 @@ def main():
             error_code = 130
     elif args.url:
         try:
-            setup_options()
             handle_url()
         except KeyboardInterrupt:
             # Close output

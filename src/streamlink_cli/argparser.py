@@ -3,17 +3,20 @@ import numbers
 import re
 from string import printable
 from textwrap import dedent
-from typing import Dict, List, Optional
+from typing import Any, Callable, Dict, List, Optional, Tuple
 
 from streamlink import __version__ as streamlink_version, logger
-from streamlink.utils.args import (
-    boolean, comma_list, comma_list_filter, filesize, keyvalue, num
-)
+from streamlink.session import Streamlink
+from streamlink.utils.args import boolean, comma_list, comma_list_filter, filesize, keyvalue, num
 from streamlink.utils.times import hours_minutes_seconds
 from streamlink_cli.constants import (
-    PLAYER_ARGS_INPUT_DEFAULT, PLAYER_ARGS_INPUT_FALLBACK, STREAM_PASSTHROUGH, SUPPORTED_PLAYERS
+    PLAYER_ARGS_INPUT_DEFAULT,
+    PLAYER_ARGS_INPUT_FALLBACK,
+    STREAM_PASSTHROUGH,
+    SUPPORTED_PLAYERS,
 )
 from streamlink_cli.utils import find_default_player
+
 
 _printable_re = re.compile(r"[{0}]".format(printable))
 _option_re = re.compile(r"""
@@ -1209,4 +1212,74 @@ def build_parser():
     return parser
 
 
-__all__ = ["ArgumentParser", "build_parser"]
+def false(_): return False  # noqa: E704
+
+
+# The order of arguments determines if options get overridden by `Streamlink.set_option()`
+_ARGUMENT_TO_SESSIONOPTION: List[Tuple[str, str, Optional[Callable[[Any], Any]]]] = [
+    # generic arguments
+    ("locale", "locale", None),
+
+    # network arguments
+    ("interface", "interface", None),
+    ("ipv4", "ipv4", None),
+    ("ipv6", "ipv6", None),
+
+    # HTTP session arguments
+    ("https_proxy", "https-proxy", None),
+    ("http_proxy", "http-proxy", None),
+    ("http_cookie", "http-cookies", dict),
+    ("http_header", "http-headers", dict),
+    ("http_query_param", "http-query-params", dict),
+    ("http_ignore_env", "http-trust-env", false),
+    ("http_no_ssl_verify", "http-ssl-verify", false),
+    ("http_disable_dh", "http-disable-dh", None),
+    ("http_ssl_cert", "http-ssl-cert", None),
+    ("http_ssl_cert_crt_key", "http-ssl-cert", tuple),
+    ("http_timeout", "http-timeout", None),
+
+    # deprecated stream transport arguments (need to be defined first, so following ones can override values)
+    ("hls_segment_attempts", "hls-segment-attempts", None),
+    ("hls_segment_threads", "hls-segment-threads", None),
+    ("hls_segment_timeout", "hls-segment-timeout", None),
+    ("hls_timeout", "hls-timeout", None),
+    ("http_stream_timeout", "http-stream-timeout", None),
+
+    # stream transport arguments
+    ("ringbuffer_size", "ringbuffer-size", None),
+    ("mux_subtitles", "mux-subtitles", None),
+    ("stream_segment_attempts", "stream-segment-attempts", None),
+    ("stream_segment_threads", "stream-segment-threads", None),
+    ("stream_segment_timeout", "stream-segment-timeout", None),
+    ("stream_timeout", "stream-timeout", None),
+    ("hls_live_edge", "hls-live-edge", None),
+    ("hls_live_restart", "hls-live-restart", None),
+    ("hls_start_offset", "hls-start-offset", None),
+    ("hls_duration", "hls-duration", None),
+    ("hls_playlist_reload_attempts", "hls-playlist-reload-attempts", None),
+    ("hls_playlist_reload_time", "hls-playlist-reload-time", None),
+    ("hls_segment_stream_data", "hls-segment-stream-data", None),
+    ("hls_segment_ignore_names", "hls-segment-ignore-names", None),
+    ("hls_segment_key_uri", "hls-segment-key-uri", None),
+    ("hls_audio_select", "hls-audio-select", None),
+    ("ffmpeg_ffmpeg", "ffmpeg-ffmpeg", None),
+    ("ffmpeg_verbose", "ffmpeg-verbose", None),
+    ("ffmpeg_verbose_path", "ffmpeg-verbose-path", None),
+    ("ffmpeg_fout", "ffmpeg-fout", None),
+    ("ffmpeg_video_transcode", "ffmpeg-video-transcode", None),
+    ("ffmpeg_audio_transcode", "ffmpeg-audio-transcode", None),
+    ("ffmpeg_copyts", "ffmpeg-copyts", None),
+    ("ffmpeg_start_at_zero", "ffmpeg-start-at-zero", None),
+]
+
+
+def setup_session_options(session: Streamlink, args: argparse.Namespace):
+    for arg, option, mapper in _ARGUMENT_TO_SESSIONOPTION:
+        value = getattr(args, arg)
+        if value:
+            if mapper is not None:
+                value = mapper(value)
+            session.set_option(option, value)
+
+
+__all__ = ["ArgumentParser", "build_parser", "setup_session_options"]
