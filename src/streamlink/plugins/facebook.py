@@ -134,8 +134,7 @@ class Facebook(Plugin):
             data=urlencode(data).encode("ascii")
         )
 
-        for s in self._parse_streams(res):
-            yield s
+        yield from self._parse_streams(res)
 
 
 __plugin__ = Facebook

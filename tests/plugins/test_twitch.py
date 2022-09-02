@@ -181,7 +181,8 @@ class TestTwitchHLSStream(TestMixinStreamHLS, unittest.TestCase):
             self.content(segments, cond=lambda s: s.num >= 4),
             "Filters out preroll ad segments"
         )
-        self.assertTrue(all([self.called(s) for s in segments.values()]), "Downloads all segments")
+        self.assertTrue(all(self.called(s) for s in segments.values()), "Downloads all segments")
+
         self.assertEqual(mock_log.info.mock_calls, [
             call("Will skip ad segments"),
             call("Waiting for pre-roll ads to finish, be patient")
@@ -202,7 +203,8 @@ class TestTwitchHLSStream(TestMixinStreamHLS, unittest.TestCase):
             self.content(segments, cond=lambda s: s.num != 2 and s.num != 3),
             "Filters out mid-stream ad segments"
         )
-        self.assertTrue(all([self.called(s) for s in segments.values()]), "Downloads all segments")
+        self.assertTrue(all(self.called(s) for s in segments.values()), "Downloads all segments")
+
         self.assertEqual(mock_log.info.mock_calls, [
             call("Will skip ad segments")
         ])
@@ -221,7 +223,8 @@ class TestTwitchHLSStream(TestMixinStreamHLS, unittest.TestCase):
             self.content(segments),
             "Doesn't filter out segments"
         )
-        self.assertTrue(all([self.called(s) for s in segments.values()]), "Downloads all segments")
+        self.assertTrue(all(self.called(s) for s in segments.values()), "Downloads all segments")
+
         self.assertEqual(mock_log.info.mock_calls, [], "Doesn't log anything")
 
     @patch("streamlink.plugins.twitch.log")
@@ -240,8 +243,10 @@ class TestTwitchHLSStream(TestMixinStreamHLS, unittest.TestCase):
             self.content(segments, cond=lambda s: s.num >= 4),
             "Skips first four segments due to reduced live-edge"
         )
-        self.assertFalse(any([self.called(s) for s in segments.values() if s.num < 4]), "Doesn't download old segments")
-        self.assertTrue(all([self.called(s) for s in segments.values() if s.num >= 4]), "Downloads all remaining segments")
+        self.assertFalse(any(self.called(s) for s in segments.values() if s.num < 4), "Doesn't download old segments")
+
+        self.assertTrue(all(self.called(s) for s in segments.values() if s.num >= 4), "Downloads all remaining segments")
+
         self.assertEqual(mock_log.info.mock_calls, [
             call("Low latency streaming (HLS live edge: 2)")
         ])
@@ -262,8 +267,10 @@ class TestTwitchHLSStream(TestMixinStreamHLS, unittest.TestCase):
             self.content(segments, cond=lambda s: s.num < 8),
             "Ignores prefetch segments"
         )
-        self.assertTrue(all([self.called(s) for s in segments.values() if s.num <= 7]), "Ignores prefetch segments")
-        self.assertFalse(any([self.called(s) for s in segments.values() if s.num > 7]), "Ignores prefetch segments")
+        self.assertTrue(all(self.called(s) for s in segments.values() if s.num <= 7), "Ignores prefetch segments")
+
+        self.assertFalse(any(self.called(s) for s in segments.values() if s.num > 7), "Ignores prefetch segments")
+
         self.assertEqual(mock_log.info.mock_calls, [], "Doesn't log anything")
 
     @patch("streamlink.plugins.twitch.log")
@@ -297,8 +304,10 @@ class TestTwitchHLSStream(TestMixinStreamHLS, unittest.TestCase):
             self.content(segments, cond=lambda s: s.num > 1),
             "Skips first two segments due to reduced live-edge"
         )
-        self.assertFalse(any([self.called(s) for s in segments.values() if s.num < 2]), "Skips first two preroll segments")
-        self.assertTrue(all([self.called(s) for s in segments.values() if s.num >= 2]), "Downloads all remaining segments")
+        self.assertFalse(any(self.called(s) for s in segments.values() if s.num < 2), "Skips first two preroll segments")
+
+        self.assertTrue(all(self.called(s) for s in segments.values() if s.num >= 2), "Downloads all remaining segments")
+
         self.assertEqual(mock_log.info.mock_calls, [
             call("Low latency streaming (HLS live edge: 2)")
         ])
