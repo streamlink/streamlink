@@ -583,8 +583,7 @@ class Representation(MPDNode):
                     yield segment
         elif segmentLists:
             for segmentList in segmentLists:
-                for segment in segmentList.segments:
-                    yield segment
+                yield from segmentList.segments
         else:
             yield Segment(self.base_url, 0, True, True)
 

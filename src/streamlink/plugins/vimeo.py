@@ -111,8 +111,7 @@ class Vimeo(Plugin):
             for quality, stream in streams:
                 yield quality, MuxedStream(self.session, stream, subtitles=substreams)
         else:
-            for stream in streams:
-                yield stream
+            yield from streams
 
 
 __plugin__ = Vimeo
