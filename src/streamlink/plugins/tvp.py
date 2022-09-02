@@ -33,8 +33,7 @@ class TVP(Plugin):
 
         video_id = m.group('video_id')
         log.debug('Found video id: {0}'.format(video_id))
-        p_url = self.player_url.format(video_id)
-        return p_url
+        return self.player_url.format(video_id)
 
     def _get_streams(self):
         embed_url = self.get_embed_url()

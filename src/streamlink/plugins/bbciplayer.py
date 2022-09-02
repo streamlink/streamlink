@@ -107,8 +107,7 @@ class BBCiPlayer(Plugin):
         # Use pre-fetched page if available
         res = res or self.session.http.get(url)
         m = self.mediator_re.search(res.text)
-        vpid = m and parse_json(m.group(1), schema=self.mediator_schema)
-        return vpid
+        return m and parse_json(m.group(1), schema=self.mediator_schema)
 
     def find_tvip(self, url, master=False):
         log.debug("Looking for {0} tvip on {1}".format("master" if master else "", url))
