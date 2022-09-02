@@ -100,7 +100,7 @@ class OnePlusOneAPI:
             return
 
         log.debug(f"url_ovva={url_ovva}")
-        url_hls = self.session.http.get(
+        return self.session.http.get(
             url=url_ovva,
             schema=validate.Schema(
                 validate.transform(lambda x: x.split("=")),
@@ -108,7 +108,6 @@ class OnePlusOneAPI:
                 validate.get(1),
             ),
         )
-        return url_hls
 
 
 @pluginmatcher(re.compile(

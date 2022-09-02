@@ -589,9 +589,7 @@ class TestHlsExtAudio(unittest.TestCase):
         if audio_select:
             streamlink.set_option("hls-audio-select", audio_select)
 
-        master_stream = HLSStream.parse_variant_playlist(streamlink, playlist)
-
-        return master_stream
+        return HLSStream.parse_variant_playlist(streamlink, playlist)
 
     def test_hls_ext_audio_not_selected(self):
         master_url = "http://mocked/path/master.m3u8"
