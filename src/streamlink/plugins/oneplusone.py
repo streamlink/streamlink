@@ -56,7 +56,7 @@ class OnePlusOneHLS(HLSStream):
 
             self._url = parsed._replace(
                 netloc=self._first_netloc,
-                path="/".join([p for p in path_parts])
+                path="/".join(list(path_parts))
             ).geturl()
         return self._url
 
