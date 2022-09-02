@@ -105,9 +105,7 @@ class AbemaTVLicenseAdapter(BaseAdapter):
         enckey = h.digest()
 
         aes = AES.new(enckey, AES.MODE_ECB)
-        rawvideokey = aes.decrypt(encvideokey)
-
-        return rawvideokey
+        return aes.decrypt(encvideokey)
 
     def send(self, request, stream=False, timeout=None, verify=True, cert=None,
              proxies=None):

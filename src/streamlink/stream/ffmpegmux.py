@@ -185,8 +185,7 @@ class FFMPEGMuxer(StreamIO):
         return self
 
     def read(self, size=-1):
-        data = self.process.stdout.read(size)
-        return data
+        return self.process.stdout.read(size)
 
     def close(self):
         if self.closed:

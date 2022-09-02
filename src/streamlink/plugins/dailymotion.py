@@ -92,8 +92,7 @@ class DailyMotion(Plugin):
 
         data = self.session.http.json(res, schema=_live_id_schema)
         if data["total"] > 0:
-            media_id = data["list"][0]["id"]
-            return media_id
+            return data["list"][0]["id"]
         return False
 
     def _get_streams(self):
