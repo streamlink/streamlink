@@ -271,7 +271,7 @@ class TestCookies:
         return r
 
     def _cookies_to_list(self, cookies):
-        return list(self._cookie_to_dict(cookie) for cookie in cookies)
+        return [self._cookie_to_dict(cookie) for cookie in cookies]
 
     @pytest.mark.parametrize(
         "plugincache",

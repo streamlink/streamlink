@@ -102,7 +102,7 @@ class TestHLSPlaylist(unittest.TestCase):
         self.assertEqual(playlist.target_duration, 120)
 
         self.assertEqual(
-            [daterange for daterange in playlist.dateranges],
+            list(playlist.dateranges),
             [
                 DateRange(id="start-invalid",
                           start_date=None,
@@ -137,7 +137,7 @@ class TestHLSPlaylist(unittest.TestCase):
             ]
         )
         self.assertEqual(
-            [segment for segment in playlist.segments],
+            list(playlist.segments),
             [
                 Segment(uri="http://test.se/segment0-15.ts", duration=15.0, title="live", date=start_date,
                         key=None, discontinuity=False, byterange=None, map=None),

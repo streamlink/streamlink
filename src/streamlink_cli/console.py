@@ -62,8 +62,7 @@ class ConsoleOutput:
             out = []
             for obj in objs:
                 if isinstance(obj, list):
-                    for item in obj:
-                        out.append(item)
+                    out.extend(obj)
                 else:
                     if hasattr(obj, "__json__") and callable(obj.__json__):
                         obj = obj.__json__()
