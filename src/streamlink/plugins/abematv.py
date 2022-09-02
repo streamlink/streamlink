@@ -89,8 +89,8 @@ class AbemaTVLicenseAdapter(BaseAdapter):
         cid = jsonres['cid']
         k = jsonres['k']
 
-        res = sum([self.STRTABLE.find(k[i]) * (58 ** (len(k) - 1 - i))
-                  for i in range(len(k))])
+        res = sum(self.STRTABLE.find(k[i]) * (58 ** (len(k) - 1 - i)) for i in range(len(k)))
+
         encvideokey = struct.pack('>QQ', res >> 64, res & 0xffffffffffffffff)
 
         # HKEY:

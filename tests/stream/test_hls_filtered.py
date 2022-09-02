@@ -85,7 +85,7 @@ class TestFilteredHLSStream(TestMixinStreamHLS, unittest.TestCase):
             self.content(segments, cond=lambda s: s.num % 4 > 1),
             "Correctly filters out segments"
         )
-        self.assertTrue(all([self.called(s) for s in segments.values()]), "Downloads all segments")
+        self.assertTrue(all(self.called(s) for s in segments.values()), "Downloads all segments")
 
     @patch("streamlink.stream.hls.HLSStreamWriter.should_filter_sequence", new=filter_sequence)
     def test_filtered_timeout(self):

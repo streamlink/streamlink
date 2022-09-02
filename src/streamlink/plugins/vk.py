@@ -45,7 +45,7 @@ class VK(Plugin):
         self.session.http.get("https://vk.com/", hooks={"response": on_response})
 
     def _has_video_id(self):
-        return any(m for m in self.matches[:-1])
+        return any(self.matches[:-1])
 
     def follow_vk_redirect(self):
         if self._has_video_id():
