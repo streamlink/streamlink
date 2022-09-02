@@ -33,7 +33,7 @@ class _HTTPResponse(urllib3.response.HTTPResponse):
         #
         # Fix this by overriding urllib3.response.HTTPResponse's constructor and always setting enforce_content_length to True,
         # as there is no way to make requests set this parameter on its own.
-        kwargs.update({"enforce_content_length": True})
+        kwargs["enforce_content_length"] = True
         super().__init__(*args, **kwargs)
 
 

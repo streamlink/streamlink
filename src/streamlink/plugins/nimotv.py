@@ -90,11 +90,11 @@ class NimoTV(Plugin):
         log.debug(f'URL={url}')
         for k, v in self.video_qualities.items():
             _params = params.copy()
-            _params.update({'ratio': k})
+            _params["ratio"] = k
             if v == '1080p':
-                _params.update({'needwm': 0})
+                _params["needwm"] = 0
             elif v in ('720p', '480p', '360p'):
-                _params.update({'sphd': 1})
+                _params["sphd"] = 1
 
             log.trace(f'{v} params={_params!r}')
             # some qualities might not exist, but it will select a different lower quality
