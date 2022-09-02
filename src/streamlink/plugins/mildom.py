@@ -201,9 +201,10 @@ class Mildom(Plugin):
                 log.debug("User doesn't appear to be live")
                 return
 
-            qualities = []
-            for quality_info in data["ext"]["cmode_params"]:
-                qualities.append((quality_info["name"], "_" + quality_info["cmode"] if quality_info["cmode"] != "raw" else ""))
+            qualities = [
+                (quality_info["name"], f"_{quality_info['cmode']}" if quality_info["cmode"] != "raw" else "")
+                for quality_info in data["ext"]["cmode_params"]
+            ]
 
             server = api.get_server()
             token = api.get_token()

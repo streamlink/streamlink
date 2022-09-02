@@ -260,11 +260,12 @@ class Streamlink:
             self.http.verify = value
 
         elif key == "http-disable-dh":
-            default_ciphers = list(
+            default_ciphers = [
                 item
                 for item in urllib3_util_ssl.DEFAULT_CIPHERS.split(":")  # type: ignore[attr-defined]
                 if item != "!DH"
-            )
+            ]
+
             if value:
                 default_ciphers.append("!DH")
             urllib3_util_ssl.DEFAULT_CIPHERS = ":".join(default_ciphers)  # type: ignore[attr-defined]

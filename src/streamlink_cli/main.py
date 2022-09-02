@@ -698,9 +698,12 @@ def setup_config_args(parser, ignore_unknown=False):
 
     if args.config:
         # We want the config specified last to get highest priority
-        for config_file in map(lambda path: Path(path).expanduser(), reversed(args.config)):
-            if config_file.is_file():
-                config_files.append(config_file)
+        config_files.extend(
+            config_file
+            for config_file in map(lambda path: Path(path).expanduser(), reversed(args.config))
+            if config_file.is_file()
+        )
+
     else:
         # Only load first available default config
         for config_file in filter(lambda path: path.is_file(), CONFIG_FILES):

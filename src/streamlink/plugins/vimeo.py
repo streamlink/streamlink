@@ -83,8 +83,8 @@ class Vimeo(Plugin):
                 log.trace("{0!r}".format(video_data))
                 url = video_data.get("url")
                 if stream_type == "hls":
-                    for stream in HLSStream.parse_variant_playlist(self.session, url).items():
-                        streams.append(stream)
+                    streams.extend(HLSStream.parse_variant_playlist(self.session, url).items())
+
                 elif stream_type == "dash":
                     p = urlparse(url)
                     if p.path.endswith("dash.mpd"):
@@ -97,11 +97,12 @@ class Vimeo(Plugin):
                         log.error("Unsupported DASH path: {0}".format(p.path))
                         continue
 
-                    for stream in DASHStream.parse_manifest(self.session, url).items():
-                        streams.append(stream)
+                    streams.extend(DASHStream.parse_manifest(self.session, url).items())
 
-        for stream in videos.get("progressive", []):
-            streams.append((stream["quality"], HTTPStream(self.session, stream["url"])))
+        streams.extend(
+            (stream["quality"], HTTPStream(self.session, stream["url"]))
+            for stream in videos.get("progressive", [])
+        )
 
         if self.get_option("mux_subtitles") and data["request"].get("text_tracks"):
             substreams = {

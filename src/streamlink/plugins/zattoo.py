@@ -298,11 +298,7 @@ class Zattoo(Plugin):
             )
         )
 
-        c_list = []
-        for d in data:
-            for c in d['channels']:
-                c_list.append(c)
-
+        c_list = [channel for channel_group in data for channel in channel_group["channels"]]
         cid = None
         zattoo_list = []
         for c in c_list:

@@ -131,11 +131,7 @@ class Pixiv(Plugin):
         performers = streamer_data.get("performers")
         log.trace("{0!r}".format(streamer_data))
         if performers:
-            co_hosts = []
-            # create a list of all available performers
-            for p in performers:
-                co_hosts += [(p["user"]["unique_name"], p["user"]["name"])]
-
+            co_hosts = [(p["user"]["unique_name"], p["user"]["name"]) for p in performers]
             log.info("Available hosts: {0}".format(", ".join(
                 ["{0} ({1})".format(k, v) for k, v in co_hosts])))
 
