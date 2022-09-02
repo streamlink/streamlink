@@ -4,6 +4,7 @@ import re
 import shlex
 import subprocess
 import sys
+from contextlib import suppress
 from pathlib import Path
 from time import sleep
 from typing import BinaryIO, Optional
@@ -11,7 +12,7 @@ from typing import BinaryIO, Optional
 from streamlink.compat import is_win32
 from streamlink_cli.compat import stdout
 from streamlink_cli.constants import PLAYER_ARGS_INPUT_DEFAULT, PLAYER_ARGS_INPUT_FALLBACK, SUPPORTED_PLAYERS
-from streamlink_cli.utils import Formatter, ignored
+from streamlink_cli.utils import Formatter
 
 if is_win32:
     import msvcrt
@@ -263,7 +264,7 @@ class PlayerOutput(Output):
             self.record.close()
 
         if self.kill:
-            with ignored(Exception):
+            with suppress(Exception):
                 self.player.terminate()
                 if not is_win32:
                     t, timeout = 0.0, self.PLAYER_TERMINATE_TIMEOUT
