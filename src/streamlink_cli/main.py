@@ -6,7 +6,7 @@ import platform
 import re
 import signal
 import sys
-from contextlib import closing
+from contextlib import closing, suppress
 from functools import partial
 from gettext import gettext
 from itertools import chain
@@ -26,7 +26,7 @@ from streamlink_cli.compat import DeprecatedPath, importlib_metadata, stdout
 from streamlink_cli.console import ConsoleOutput, ConsoleUserInputRequester
 from streamlink_cli.constants import CONFIG_FILES, DEFAULT_STREAM_METADATA, LOG_DIR, PLUGIN_DIRS, STREAM_SYNONYMS
 from streamlink_cli.output import FileOutput, PlayerOutput
-from streamlink_cli.utils import Formatter, HTTPServer, datetime, ignored
+from streamlink_cli.utils import Formatter, HTTPServer, datetime
 from streamlink_cli.utils.progress import Progress
 from streamlink_cli.utils.versioncheck import check_version
 
@@ -711,7 +711,7 @@ def setup_config_args(parser, ignore_unknown=False):
 
     if streamlink and args.url:
         # Only load first available plugin config
-        with ignored(NoPluginError):
+        with suppress(NoPluginError):
             pluginname, pluginclass, resolved_url = streamlink.resolve_url(args.url)
             for config_file in CONFIG_FILES:
                 config_file = config_file.with_name(f"{config_file.name}.{pluginname}")
