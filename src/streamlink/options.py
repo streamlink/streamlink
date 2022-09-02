@@ -26,10 +26,7 @@ class Options:
 
     @classmethod
     def _normalise_dict(cls, src):
-        dest = {}
-        for key, value in src.items():
-            dest[_normalise_option_name(key)] = value
-        return dest
+        return {_normalise_option_name(key): value for key, value in src.items()}
 
     def set(self, key, value):
         self.options[_normalise_option_name(key)] = value

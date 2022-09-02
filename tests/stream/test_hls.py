@@ -48,13 +48,13 @@ class TagKey(Tag):
     def __init__(self, method="NONE", uri=None, iv=None, keyformat=None, keyformatversions=None):
         attrs = {"METHOD": method}
         if uri is not False:  # pragma: no branch
-            attrs.update({"URI": lambda tag, namespace: tag.val_quoted_string(tag.url(namespace))})
+            attrs["URI"] = lambda tag, namespace: tag.val_quoted_string(tag.url(namespace))
         if iv is not None:  # pragma: no branch
-            attrs.update({"IV": self.val_hex(iv)})
+            attrs["IV"] = self.val_hex(iv)
         if keyformat is not None:  # pragma: no branch
-            attrs.update({"KEYFORMAT": self.val_quoted_string(keyformat)})
+            attrs["KEYFORMAT"] = self.val_quoted_string(keyformat)
         if keyformatversions is not None:  # pragma: no branch
-            attrs.update({"KEYFORMATVERSIONS": self.val_quoted_string(keyformatversions)})
+            attrs["KEYFORMATVERSIONS"] = self.val_quoted_string(keyformatversions)
         super().__init__("EXT-X-KEY", attrs)
         self.uri = uri
 

@@ -141,7 +141,7 @@ class MDStrm(Plugin):
                 ),
             )
             if ad:
-                params.update({"adInsertionSessionId": ad})
+                params["adInsertionSessionId"] = ad
             else:
                 log.debug("Failed to find 'parent._dai_session'")
 

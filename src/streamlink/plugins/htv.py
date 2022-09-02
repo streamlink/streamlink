@@ -29,7 +29,7 @@ class HTV(Plugin):
             ],
         ))
 
-        return {k: v for k, v in data}
+        return dict(data)
 
     def _get_streams(self):
         channels = self.get_channels()

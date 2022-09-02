@@ -72,10 +72,11 @@ class SBScokr(Plugin):
         res = self.session.http.get(self.api_channels)
         res = self.session.http.json(res, schema=self._channels_schema)
 
-        channels = {}
-        for channel in sorted(res, key=lambda x: x['channelid']):
-            if channel.get('type') in ('TV', 'Radio'):
-                channels[channel['channelid']] = channel['channelname']
+        channels = {
+            channel["channelid"]: channel["channelname"]
+            for channel in sorted(res, key=lambda x: x["channelid"])
+            if channel.get("type") in ("TV", "Radio")
+        }
 
         log.info('Available IDs: {0}'.format(', '.join(
             '{0} ({1})'.format(key, value) for key, value in channels.items())))

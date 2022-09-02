@@ -221,7 +221,7 @@ class TwitchAPI:
         self.headers = {
             "Client-ID": "kimne78kx3ncx6brgo4mv6wki5h1ko",
         }
-        self.headers.update(**{k: v for k, v in session.get_plugin_option("twitch", "api-header") or []})
+        self.headers.update(**dict(session.get_plugin_option("twitch", "api-header") or []))
 
     def call(self, data, schema=None):
         res = self.session.http.post(
