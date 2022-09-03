@@ -40,14 +40,14 @@ class FileAdapter(BaseAdapter):
 
         # Check that the method makes sense. Only support GET
         if request.method not in ("GET", "HEAD"):
-            raise ValueError("Invalid request method %s" % request.method)
+            raise ValueError(f"Invalid request method {request.method}")
 
         # Parse the URL
         url_parts = urlparse(request.url)
 
         # Make the Windows URLs slightly nicer
         if is_win32 and url_parts.netloc.endswith(":"):
-            url_parts = url_parts._replace(path="/" + url_parts.netloc + url_parts.path, netloc='')
+            url_parts = url_parts._replace(path=f"/{url_parts.netloc}{url_parts.path}", netloc="")
 
         # Reject URLs with a hostname component
         if url_parts.netloc and url_parts.netloc not in ("localhost", ".", "..", "-"):
@@ -58,7 +58,7 @@ class FileAdapter(BaseAdapter):
             pwd = os.path.abspath(url_parts.netloc).replace(os.sep, "/") + "/"
             if is_win32:
                 # prefix the path with a / in Windows
-                pwd = "/" + pwd
+                pwd = f"/{pwd}"
             url_parts = url_parts._replace(path=urljoin(pwd, url_parts.path.lstrip("/")))
 
         resp = Response()
@@ -94,7 +94,7 @@ class FileAdapter(BaseAdapter):
                 if path_parts and (path_parts[0].endswith('|') or path_parts[0].endswith(':')):
                     path_drive = path_parts.pop(0)
                     if path_drive.endswith('|'):
-                        path_drive = path_drive[:-1] + ':'
+                        path_drive = f"{path_drive[:-1]}:"
 
                     while path_parts and not path_parts[0]:
                         path_parts.pop(0)
