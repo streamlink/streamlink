@@ -77,10 +77,7 @@ class Gulli(Plugin):
                     yield from HLSStream.parse_variant_playlist(self.session, video_url).items()
                 elif '.mp4' in video_url:
                     match = self._mp4_bitrate_re.match(video_url)
-                    if match is not None:
-                        bitrate = '%sk' % match.group('bitrate')
-                    else:
-                        bitrate = 'vod'
+                    bitrate = "vod" if match is None else f"{match.group('bitrate')}k"
                     yield bitrate, HTTPStream(self.session, video_url)
             except OSError as err:
                 if '403 Client Error' in str(err):
