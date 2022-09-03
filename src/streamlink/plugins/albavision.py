@@ -137,6 +137,9 @@ class Albavision(Plugin):
             return update_qsd(token_req_host, {"rsk": token_req_token})
 
     def _get_token(self):
+        if not self._is_token_based_site():
+            return
+
         token_req_url = self._get_token_req_url()
         if not token_req_url:
             return
@@ -183,13 +186,11 @@ class Albavision(Plugin):
             log.info("This stream may be off-air or not available in your country")
             return
 
-        if self._is_token_based_site():
-            token = self._get_token()
-            if not token:
-                return
-            return HLSStream.parse_variant_playlist(self.session, update_qsd(live_url, {"iut": token}))
-        else:
-            return HLSStream.parse_variant_playlist(self.session, live_url)
+        token = self._get_token()
+        if token:
+            live_url = update_qsd(live_url, {"iut": token})
+
+        return HLSStream.parse_variant_playlist(self.session, live_url)
 
 
 __plugin__ = Albavision

@@ -38,13 +38,13 @@ def update_scheme(current: str, target: str, force: bool = True) -> str:
         # py>=3.9: urlparse("127.0.0.1:1234") == ParseResult(scheme='127.0.0.1', netloc='', path='1234', ...)
         # py<3.9 : urlparse("127.0.0.1:1234") == ParseResult(scheme='', netloc='', path='127.0.0.1:1234', ...)
         not _re_uri_implicit_scheme.search(target) and not target.startswith("//")
-        # target URLs without scheme and netloc: ("http://", "foo.bar/foo") -> "http://foo.bar/foo"
+        # target URLs without scheme and without netloc: ("http://", "foo.bar/foo") -> "http://foo.bar/foo"
         or not target_p.scheme and not target_p.netloc
     ):
         return f"{urlparse(current).scheme}://{urlunparse(target_p)}"
 
     # target URLs without scheme but with netloc: ("http://", "//foo.bar/foo") -> "http://foo.bar/foo"
-    if not target_p.scheme and target_p.netloc:
+    if not target_p.scheme:
         return f"{urlparse(current).scheme}:{urlunparse(target_p)}"
 
     # target URLs with scheme

@@ -11,7 +11,6 @@ import re
 from threading import Event
 from urllib.parse import urljoin
 
-from streamlink.exceptions import FatalPluginError
 from streamlink.plugin import Plugin, PluginError, pluginargument, pluginmatcher
 from streamlink.plugin.api import useragents, validate
 from streamlink.plugin.api.websocket import WebsocketClient
@@ -276,19 +275,15 @@ class NicoLive(Plugin):
             for elem in root.xpath(".//form[@action]//input"):
                 if elem.attrib.get("value"):
                     input_with_value[elem.attrib.get("name")] = elem.attrib.get("value")
+                elif elem.attrib.get("id") == "oneTimePw":
+                    maxlength = int(elem.attrib.get("maxlength"))
+                    oneTimePw = self.input_ask("Enter the 6 digit number included in email")
+                    if len(oneTimePw) > maxlength:
+                        log.error("invalid user input")
+                        return
+                    input_with_value[elem.attrib.get("name")] = oneTimePw
                 else:
-                    if elem.attrib.get("id") == "oneTimePw":
-                        maxlength = int(elem.attrib.get("maxlength"))
-                        try:
-                            oneTimePw = self.input_ask("Enter the 6 digit number included in email")
-                            if len(oneTimePw) > maxlength:
-                                log.error("invalid user input")
-                                return
-                        except FatalPluginError:
-                            return
-                        input_with_value[elem.attrib.get("name")] = oneTimePw
-                    else:
-                        log.debug(f"unknown input: {elem.attrib.get('name')}")
+                    log.debug(f"unknown input: {elem.attrib.get('name')}")
 
             root = self.session.http.post(
                 urljoin("https://account.nicovideo.jp", root.xpath("string(.//form[@action]/@action)")),

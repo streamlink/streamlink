@@ -24,7 +24,7 @@ class HLSPlugin(Plugin):
 
         streams = HLSStream.parse_variant_playlist(self.session, url, **params)
 
-        return streams if streams else {"live": HLSStream(self.session, url, **params)}
+        return streams or {"live": HLSStream(self.session, url, **params)}
 
 
 __plugin__ = HLSPlugin

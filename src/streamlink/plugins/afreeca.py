@@ -163,11 +163,10 @@ class AfreecaTV(Plugin):
         res = self.session.http.post("https://login.afreecatv.com/app/LoginAction.php", data=data)
         data = self.session.http.json(res)
         log.trace(f"{data!r}")
-        if data["RESULT"] == self.CHANNEL_RESULT_OK:
-            self.save_cookies()
-            return True
-        else:
+        if data["RESULT"] != self.CHANNEL_RESULT_OK:
             return False
+        self.save_cookies()
+        return True
 
     def _get_streams(self):
         login_username = self.get_option("username")
