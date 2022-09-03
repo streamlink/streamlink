@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-$description Russian live streaming and video hosting social platform.
+$description Russian live-streaming and video hosting social platform.
 $url ok.ru
 $type live, vod
 """
@@ -8,7 +8,7 @@ $type live, vod
 import logging
 import re
 
-from streamlink.compat import unquote
+from streamlink.compat import unquote, urlparse, urlunparse
 from streamlink.plugin import Plugin, PluginError, pluginmatcher
 from streamlink.plugin.api import validate
 from streamlink.stream.dash import DASHStream
@@ -19,7 +19,7 @@ log = logging.getLogger(__name__)
 
 
 @pluginmatcher(re.compile(
-    r'https?://(?:www\.)?ok\.ru/'
+    r"https?://(?:\w+\.)?ok\.ru/"
 ))
 class OKru(Plugin):
     QUALITY_WEIGHTS = {
@@ -42,6 +42,11 @@ class OKru(Plugin):
             return weight, "okru"
 
         return super(OKru, cls).stream_weight(key)
+
+    def __init__(self, *args, **kwargs):
+        super(OKru, self).__init__(*args, **kwargs)
+        parsed = urlparse(self.url)
+        self.url = urlunparse(parsed._replace(netloc=re.sub(r"^m(obile)?\.", "", parsed.netloc)))
 
     def _get_streams(self):
         schema_metadata = validate.Schema(
