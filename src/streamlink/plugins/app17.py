@@ -52,12 +52,10 @@ class App17(Plugin):
         s = HLSStream.parse_variant_playlist(self.session, hls_url)
         if not s:
             yield "live", HLSStream(self.session, hls_url)
+        elif len(s) == 1:
+            yield "live", next(iter(s.values()))
         else:
-            if len(s) == 1:
-                for _n, _s in s.items():
-                    yield "live", _s
-            else:
-                yield from s.items()
+            yield from s.items()
 
 
 __plugin__ = App17

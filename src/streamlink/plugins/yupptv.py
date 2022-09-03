@@ -85,7 +85,7 @@ class YuppTV(Plugin):
 
         if self._authed:
             log.debug("Attempting to authenticate using cached cookies")
-        elif not self._authed and login_box_id and login_yuppflix_token:
+        elif login_box_id and login_yuppflix_token:
             self._login_using_box_id_and_yuppflix_token(
                 login_box_id,
                 login_yuppflix_token,

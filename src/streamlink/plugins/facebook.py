@@ -41,13 +41,12 @@ class Facebook(Plugin):
         ).validate(res.text)
         if not stream_url:
             log.debug("No meta og:video:url")
-        else:
-            if ".mpd" in stream_url:
-                yield from DASHStream.parse_manifest(self.session, stream_url).items()
-                return
-            elif ".mp4" in stream_url:
-                yield "vod", HTTPStream(self.session, stream_url)
-                return
+        elif ".mpd" in stream_url:
+            yield from DASHStream.parse_manifest(self.session, stream_url).items()
+            return
+        elif ".mp4" in stream_url:
+            yield "vod", HTTPStream(self.session, stream_url)
+            return
 
         for match in self._src_re.finditer(res.text):
             stream_url = match.group("url")
