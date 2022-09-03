@@ -33,7 +33,7 @@ def parse_timestamp(ts):
     return (
         datetime.datetime.strptime(ts[:-7], "%Y-%m-%dT%H:%M:%S")
         + datetime.timedelta(hours=int(ts[-5:-3]), minutes=int(ts[-2:]))
-        * int(ts[-6:-5] + "1")
+        * int(f"{ts[-6:-5]}1")
     )
 
 
