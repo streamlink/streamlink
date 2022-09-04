@@ -6,6 +6,7 @@ requests-mock
 freezegun>=1.0.0
 flake8
 flake8-import-order
+flake8-pyi
 shtab
 versioningit >=2.0.0, <3
 
@@ -14,3 +15,4 @@ lxml-stubs
 types-freezegun
 types-requests
 types-urllib3
+typing_extensions
