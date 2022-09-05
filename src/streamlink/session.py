@@ -2,7 +2,7 @@ import logging
 import pkgutil
 from functools import lru_cache
 from socket import AF_INET, AF_INET6
-from typing import Any, Dict, Optional, Tuple, Type
+from typing import Any, Dict, Iterator, Optional, Tuple, Type
 
 # noinspection PyPackageRequirements
 import urllib3.util.connection as urllib3_util_connection
@@ -26,6 +26,18 @@ log = logging.getLogger(__name__)
 
 # noinspection PyUnresolvedReferences
 _original_allowed_gai_family = urllib3_util_connection.allowed_gai_family  # type: ignore[attr-defined]
+
+# options which support `key1=value1;key2=value2;...` strings as value
+_OPTIONS_HTTP_KEYEQUALSVALUE = {"http-cookies": "cookies", "http-headers": "headers", "http-query-params": "params"}
+
+
+def _parse_keyvalue_string(value: str) -> Iterator[Tuple[str, str]]:
+    for keyval in value.split(";"):
+        try:
+            key, val = keyval.split("=", 1)
+            yield key.strip(), val.strip()
+        except ValueError:
+            continue
 
 
 class PythonDeprecatedWarning(UserWarning):
@@ -235,23 +247,10 @@ class Streamlink:
             if key == "https-proxy":
                 log.warning("The https-proxy option has been deprecated in favor of a single http-proxy option")
 
-        elif key == "http-cookies":
-            if isinstance(value, dict):
-                self.http.cookies.update(value)
-            else:
-                self.http.parse_cookies(value)
-
-        elif key == "http-headers":
-            if isinstance(value, dict):
-                self.http.headers.update(value)
-            else:
-                self.http.parse_headers(value)
-
-        elif key == "http-query-params":
-            if isinstance(value, dict):
-                self.http.params.update(value)
-            else:
-                self.http.parse_query_params(value)
+        elif key in _OPTIONS_HTTP_KEYEQUALSVALUE:
+            getattr(self.http, _OPTIONS_HTTP_KEYEQUALSVALUE[key]).update(
+                value if isinstance(value, dict) else dict(_parse_keyvalue_string(value))
+            )
 
         elif key == "http-trust-env":
             self.http.trust_env = value
