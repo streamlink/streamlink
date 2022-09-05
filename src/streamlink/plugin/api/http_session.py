@@ -80,15 +80,6 @@ if urllib3_version >= (1, 25, 4):
     urllib3.util.url.PERCENT_RE = Urllib3UtilUrlPercentReOverride  # type: ignore[attr-defined]
 
 
-def _parse_keyvalue_list(val):
-    for keyvalue in val.split(";"):
-        try:
-            key, value = keyvalue.split("=", 1)
-            yield key.strip(), value.strip()
-        except ValueError:
-            continue
-
-
 # requests.Request.__init__ keywords, except for "hooks"
 _VALID_REQUEST_ARGS = "method", "url", "headers", "files", "data", "params", "auth", "cookies", "json"
 
@@ -138,30 +129,6 @@ class HTTPSession(Session):
     def xml(cls, res, *args, **kwargs):
         """Parses XML from a response."""
         return parse_xml(res.text, *args, **kwargs)
-
-    def parse_cookies(self, cookies, **kwargs):
-        """Parses a semi-colon delimited list of cookies.
-
-        Example: foo=bar;baz=qux
-        """
-        for name, value in _parse_keyvalue_list(cookies):
-            self.cookies.set(name, value, **kwargs)
-
-    def parse_headers(self, headers):
-        """Parses a semi-colon delimited list of headers.
-
-        Example: foo=bar;baz=qux
-        """
-        for name, value in _parse_keyvalue_list(headers):
-            self.headers[name] = value
-
-    def parse_query_params(self, cookies, **kwargs):
-        """Parses a semi-colon delimited list of query parameters.
-
-        Example: foo=bar;baz=qux
-        """
-        for name, value in _parse_keyvalue_list(cookies):
-            self.params[name] = value
 
     def resolve_url(self, url):
         """Resolves any redirects and returns the final URL."""

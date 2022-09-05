@@ -23,6 +23,12 @@ PATH_TESTPLUGINS_OVERRIDE = PATH_TESTPLUGINS / "override"
 _original_allowed_gai_family = urllib3.util.connection.allowed_gai_family  # type: ignore[attr-defined]
 
 
+@pytest.fixture
+def session():
+    with patch("streamlink.session.Streamlink.load_builtin_plugins"):
+        yield Streamlink()
+
+
 class EmptyPlugin(Plugin):
     def _get_streams(self):
         pass  # pragma: no cover
@@ -410,11 +416,6 @@ class TestSession(unittest.TestCase):
 
 class TestSessionOptionHttpProxy:
     @pytest.fixture
-    def session(self):
-        with patch("streamlink.session.Streamlink.load_builtin_plugins"):
-            yield Streamlink()
-
-    @pytest.fixture
     def no_deprecation(self, caplog: pytest.LogCaptureFixture):
         yield
         assert not caplog.get_records("call")
@@ -463,3 +464,27 @@ class TestSessionOptionHttpProxy:
 
         assert session.http.proxies["http"] == "socks5://localhost:1234"
         assert session.http.proxies["https"] == "socks5://localhost:1234"
+
+
+@pytest.mark.parametrize("option", [
+    pytest.param(("http-cookies", "cookies"), id="http-cookies"),
+    pytest.param(("http-headers", "headers"), id="http-headers"),
+    pytest.param(("http-query-params", "params"), id="http-query-params"),
+], indirect=True)
+class TestOptionsKeyEqualsValue:
+    @pytest.fixture
+    def option(self, request, session: Streamlink):
+        option, attr = request.param
+        httpsessionattr = getattr(session.http, attr)
+        assert session.get_option(option) is httpsessionattr
+        assert "foo" not in httpsessionattr
+        assert "bar" not in httpsessionattr
+        yield option
+        assert httpsessionattr.get("foo") == "foo=bar"
+        assert httpsessionattr.get("bar") == "123"
+
+    def test_dict(self, session: Streamlink, option: str):
+        session.set_option(option, {"foo": "foo=bar", "bar": "123"})
+
+    def test_string(self, session: Streamlink, option: str):
+        session.set_option(option, "foo=foo=bar;bar=123;baz")
