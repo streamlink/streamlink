@@ -4,8 +4,7 @@ import pkgutil
 import re
 import tokenize
 from pathlib import Path
-from sys import version_info
-from typing import Any, Callable, Dict, Iterable, Iterator, List, Optional
+from typing import Any, Dict, Iterator, List, Optional
 
 from docutils import nodes
 from docutils.parsers.rst import Directive
@@ -87,25 +86,6 @@ class PluginArguments(ast.NodeVisitor, IDatalistItem):
         for arg in self.arguments[1:]:
             yield f"{indent} - :option:`--{arg}`"
 
-    @staticmethod
-    def _get_constant(iterable, condition, getval, ast_type, ast_attr) -> Iterator[Optional[Any]]:
-        for item in iterable:
-            if condition(item) and type(getval(item)) is ast_type:
-                yield getattr(getval(item), ast_attr)
-
-    if version_info[:2] < (3, 8):
-        def get_bool(self, iterable: Iterable, condition: Callable, getval: Callable):
-            return self._get_constant(iterable, condition, getval, ast.NameConstant, "value")
-
-        def get_string(self, iterable: Iterable, condition: Callable, getval: Callable):
-            return self._get_constant(iterable, condition, getval, ast.Str, "s")
-
-    else:
-        def get_bool(self, iterable: Iterable, condition: Callable, getval: Callable):
-            return self._get_constant(iterable, condition, getval, ast.Constant, "value")
-
-        get_string = get_bool
-
     def visit_ClassDef(self, node: ast.ClassDef) -> None:
         for base in node.bases:
             if not isinstance(base, ast.Name):
@@ -124,23 +104,37 @@ class PluginArguments(ast.NodeVisitor, IDatalistItem):
             ):
                 continue
 
-            if any(self.get_bool(decorator.keywords, lambda kw: kw.arg == "is_global", lambda kw: kw.value)):
+            if any(kw.value.value for kw in decorator.keywords if kw.arg == "is_global" and type(kw.value) is ast.Constant):
                 continue
 
-            custom_name: Optional[str] = next(
-                self.get_string(decorator.keywords, lambda kw: kw.arg == "argument_name", lambda kw: kw.value),
-                None
+            if any(
+                True
+                for kw in decorator.keywords
+                if (
+                    kw.arg == "help"
+                    and type(kw.value) is ast.Attribute
+                    and kw.value.attr == "SUPPRESS"
+                    and type(kw.value.value) is ast.Name
+                    and kw.value.value.id == "argparse"
+                )
+            ):
+                continue
+
+            custom_name = next(
+                (kw.value.value for kw in decorator.keywords if kw.arg == "argument_name" and type(kw.value) is ast.Constant),
+                None,
             )
             if custom_name:
                 self.arguments.append(custom_name)
                 continue
 
-            name: Optional[str] = next(
-                self.get_string(decorator.keywords, lambda kw: kw.arg == "name", lambda kw: kw.value),
+            name = next(
+                (kw.value.value for kw in decorator.keywords if kw.arg == "name" and type(kw.value) is ast.Constant),
                 None,
-            ) or next(
-                self.get_string(decorator.args[:1], lambda a: True, lambda a: a),
-                None,
+            ) or (
+                decorator.args
+                and type(decorator.args[0]) is ast.Constant
+                and decorator.args[0].value
             )
             if name:
                 self.arguments.append(f"{self.pluginname}-{name}")
