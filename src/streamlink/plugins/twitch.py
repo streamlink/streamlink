@@ -5,6 +5,7 @@ $type live, vod
 $notes :ref:`Low latency streaming <cli/plugins/twitch:Low latency streaming>` is supported
 """
 
+import argparse
 import json
 import logging
 import re
@@ -443,24 +444,6 @@ class TwitchAPI:
             validate.get(("data", "user", "stream"))
         ))
 
-    def hosted_channel(self, channel):
-        query = self._gql_persisted_query(
-            "UseHosting",
-            "427f55a3daca510f726c02695a898ef3a0de4355b39af328848876052ea6b337",
-            channelLogin=channel
-        )
-
-        return self.call(query, schema=validate.Schema(
-            {"data": {"user": {
-                "hosting": {
-                    "login": str,
-                    "displayName": str
-                }
-            }}},
-            validate.get(("data", "user", "hosting")),
-            validate.union_get("login", "displayName")
-        ))
-
 
 @pluginmatcher(re.compile(r"""
     https?://(?:(?P<subdomain>[\w-]+)\.)?twitch\.tv/
@@ -486,7 +469,7 @@ class TwitchAPI:
 @pluginargument(
     "disable-hosting",
     action="store_true",
-    help="Do not open the stream if the target channel is hosting another channel.",
+    help=argparse.SUPPRESS,
 )
 @pluginargument(
     "disable-reruns",
@@ -595,30 +578,6 @@ class Twitch(Plugin):
 
         return sig, token, restricted_bitrates
 
-    def _switch_to_hosted_channel(self):
-        disabled = self.options.get("disable_hosting")
-        hosted_chain = [self.channel]
-        while True:
-            try:
-                login, display_name = self.api.hosted_channel(self.channel)
-            except PluginError:
-                return False
-
-            log.info(f"{self.channel} is hosting {login}")
-            if disabled:
-                log.info("hosting was disabled by command line option")
-                return True
-
-            if login in hosted_chain:
-                loop = " -> ".join(hosted_chain + [login])
-                log.error(f"A loop of hosted channels has been detected, cannot find a playable stream. ({loop})")
-                return True
-
-            hosted_chain.append(login)
-            log.info(f"switching to {login}")
-            self.channel = login
-            self.author = display_name
-
     def _check_for_rerun(self):
         if not self.options.get("disable_reruns"):
             return False
@@ -634,8 +593,6 @@ class Twitch(Plugin):
         return False
 
     def _get_hls_streams_live(self):
-        if self._switch_to_hosted_channel():
-            return
         if self._check_for_rerun():
             return
 
