@@ -63,6 +63,9 @@ class ByteRangeOffset:
 class HLSStreamWriter(SegmentedStreamWriter):
     WRITE_CHUNK_SIZE = 8192
 
+    reader: "HLSStreamReader"
+    stream: "HLSStream"
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         options = self.session.options
@@ -74,7 +77,7 @@ class HLSStreamWriter(SegmentedStreamWriter):
         self.key_uri_override = options.get("hls-segment-key-uri")
         self.stream_data = options.get("hls-segment-stream-data")
 
-        self.ignore_names = False
+        self.ignore_names = None
         ignore_names = {*options.get("hls-segment-ignore-names")}
         if ignore_names:
             segments = "|".join(map(re.escape, ignore_names))
@@ -258,9 +261,12 @@ class HLSStreamWriter(SegmentedStreamWriter):
 
 
 class HLSStreamWorker(SegmentedStreamWorker):
+    reader: "HLSStreamReader"
+    writer: "HLSStreamWriter"
+    stream: "HLSStream"
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.stream = self.reader.stream
 
         self.playlist_changed = False
         self.playlist_end: Optional[int] = None
@@ -433,7 +439,11 @@ class HLSStreamReader(SegmentedStreamReader):
     __worker__ = HLSStreamWorker
     __writer__ = HLSStreamWriter
 
-    def __init__(self, stream):
+    worker: "HLSStreamWorker"
+    writer: "HLSStreamWriter"
+    stream: "HLSStream"
+
+    def __init__(self, stream: "HLSStream"):
         self.request_params = dict(stream.args)
         # These params are reserved for internal use
         self.request_params.pop("exception", None)
