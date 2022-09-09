@@ -33,26 +33,21 @@ class Trovo(Plugin):
 
     def get_vod(self, video_id):
         json = self.session.http.post(
-            f"https://gql.trovo.live/?qid={self.generate_qid()}",
+            f"https://api-web.trovo.live/graphql?qid={self.generate_qid()}",
             json=[{
-                "operationName": "batchGetVodDetailInfo",
+                "operationName": "vod_VodReaderService_BatchGetVodDetailInfo",
                 "variables": {
                     "params": {
                         "vids": [video_id],
                     },
                 },
-                "extensions": {
-                    "persistedQuery": {
-                        "version": 1,
-                        "sha256Hash": "ceae0355d66476e21a1dd8e8af9f68de95b4019da2cda8b177c9a2255dad31d0",
-                    },
-                },
+                "extensions": {},
             }],
             schema=validate.Schema(
                 validate.parse_json(),
                 [{
                     "data": {
-                        "batchGetVodDetailInfo": {
+                        "vod_VodReaderService_BatchGetVodDetailInfo": {
                             "VodDetailInfos": validate.any(
                                 {
                                     video_id: {
@@ -79,7 +74,7 @@ class Trovo(Plugin):
                         },
                     },
                 }],
-                validate.get((0, "data", "batchGetVodDetailInfo", "VodDetailInfos", video_id)),
+                validate.get((0, "data", "vod_VodReaderService_BatchGetVodDetailInfo", "VodDetailInfos", video_id)),
             ),
         )
 
