@@ -21,6 +21,9 @@ log = logging.getLogger(__name__)
 
 
 class DASHStreamWriter(SegmentedStreamWriter):
+    reader: "DASHStreamReader"
+    stream: "DASHStream"
+
     @staticmethod
     def _get_segment_name(segment: Segment) -> str:
         return Path(urlparse(segment.url).path).resolve().name
@@ -70,8 +73,12 @@ class DASHStreamWriter(SegmentedStreamWriter):
 
 
 class DASHStreamWorker(SegmentedStreamWorker):
+    reader: "DASHStreamReader"
+    writer: "DASHStreamWriter"
+    stream: "DASHStream"
+
     def __init__(self, *args, **kwargs):
-        SegmentedStreamWorker.__init__(self, *args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.mpd = self.stream.mpd
         self.period = self.stream.period
 
@@ -156,8 +163,12 @@ class DASHStreamReader(SegmentedStreamReader):
     __worker__ = DASHStreamWorker
     __writer__ = DASHStreamWriter
 
-    def __init__(self, stream, representation_id, mime_type, *args, **kwargs):
-        SegmentedStreamReader.__init__(self, stream, *args, **kwargs)
+    worker: "DASHStreamWorker"
+    writer: "DASHStreamWriter"
+    stream: "DASHStream"
+
+    def __init__(self, stream: "DASHStream", representation_id, mime_type, *args, **kwargs):
+        super().__init__(stream, *args, **kwargs)
         self.mime_type = mime_type
         self.representation_id = representation_id
         log.debug("Opening DASH reader for: {0} ({1})".format(self.representation_id, self.mime_type))

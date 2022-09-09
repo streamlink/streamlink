@@ -338,8 +338,8 @@ class UStreamTVWsClient(WebsocketClient):
 
 
 class UStreamTVStreamWriter(SegmentedStreamWriter):
-    stream: "UStreamTVStream"
     reader: "UStreamTVStreamReader"
+    stream: "UStreamTVStream"
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -394,6 +394,8 @@ class UStreamTVStreamWriter(SegmentedStreamWriter):
 
 
 class UStreamTVStreamWorker(SegmentedStreamWorker):
+    reader: "UStreamTVStreamReader"
+    writer: "UStreamTVStreamWriter"
     stream: "UStreamTVStream"
 
     def __init__(self, *args, **kwargs):
@@ -428,7 +430,10 @@ class UStreamTVStreamWorker(SegmentedStreamWorker):
 class UStreamTVStreamReader(SegmentedStreamReader):
     __worker__ = UStreamTVStreamWorker
     __writer__ = UStreamTVStreamWriter
+
     stream: "UStreamTVStream"
+    worker: "UStreamTVStreamWorker"
+    writer: "UStreamTVStreamWriter"
 
     def open(self):
         self.stream.wsclient.opened.set()

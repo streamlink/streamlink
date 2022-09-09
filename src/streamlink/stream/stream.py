@@ -2,6 +2,9 @@ import io
 import json
 import logging
 
+from streamlink.session import Streamlink
+
+
 log = logging.getLogger(__name__)
 
 
@@ -17,12 +20,12 @@ class Stream:
     def shortname(cls):
         return cls.__shortname__
 
-    def __init__(self, session):
+    def __init__(self, session: Streamlink):
         """
-        :param streamlink.Streamlink session: Streamlink session instance
+        :param session: Streamlink session instance
         """
 
-        self.session = session
+        self.session: Streamlink = session
 
     def __repr__(self):
         params = [repr(self.shortname())]
