@@ -5,8 +5,8 @@ $type live, vod
 """
 
 import logging
-import random
 import re
+import secrets
 import sys
 
 from streamlink.plugin import Plugin, pluginmatcher
@@ -29,7 +29,7 @@ class Trovo(Plugin):
 
     @staticmethod
     def generate_qid():
-        return f"{random.getrandbits(40):010x}".upper()
+        return f"{secrets.token_hex(8)}".upper()
 
     def get_vod(self, video_id):
         json = self.session.http.post(
