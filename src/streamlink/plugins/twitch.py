@@ -107,6 +107,10 @@ class TwitchM3U8Parser(M3U8Parser):
 
 
 class TwitchHLSStreamWorker(HLSStreamWorker):
+    reader: "TwitchHLSStreamReader"
+    writer: "TwitchHLSStreamWriter"
+    stream: "TwitchHLSStream"
+
     def __init__(self, reader, *args, **kwargs):
         self.had_content = False
         super().__init__(reader, *args, **kwargs)
@@ -146,6 +150,9 @@ class TwitchHLSStreamWorker(HLSStreamWorker):
 
 
 class TwitchHLSStreamWriter(HLSStreamWriter):
+    reader: "TwitchHLSStreamReader"
+    stream: "TwitchHLSStream"
+
     def should_filter_sequence(self, sequence: TwitchSequence):  # type: ignore[override]
         return self.stream.disable_ads and sequence.segment.ad
 
@@ -154,7 +161,11 @@ class TwitchHLSStreamReader(HLSStreamReader):
     __worker__ = TwitchHLSStreamWorker
     __writer__ = TwitchHLSStreamWriter
 
-    def __init__(self, stream):
+    worker: "TwitchHLSStreamWorker"
+    writer: "TwitchHLSStreamWriter"
+    stream: "TwitchHLSStream"
+
+    def __init__(self, stream: "TwitchHLSStream"):
         if stream.disable_ads:
             log.info("Will skip ad segments")
         if stream.low_latency:
