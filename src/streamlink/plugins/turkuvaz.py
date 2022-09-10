@@ -5,10 +5,12 @@ $url a2tv.com.tr
 $url ahaber.com.tr
 $url anews.com.tr
 $url aspor.com.tr
+$url apara.com.tr
 $url atvavrupa.tv
 $url minikacocuk.com.tr
 $url minikago.com.tr
 $url sabah.com.tr
+$url vavtv.com.tr
 $type live
 $region various
 """
@@ -32,10 +34,10 @@ log = logging.getLogger(__name__)
         )/webtv/(?:live-broadcast|canli-yayin)
         |
         (ahaber)\.com\.tr/video/canli-yayin
+		|
+		(apara|vavtv)\.com\.tr/canli-yayin
         |
         atv\.com\.tr/(a2tv)/canli-yayin
-        |
-        sabah\.com\.tr/(apara)/canli-yayin
     )
 """, re.VERBOSE))
 class Turkuvaz(Plugin):
@@ -58,7 +60,8 @@ class Turkuvaz(Plugin):
                    "apara": "aparahd",
                    "aspor": "asporhd",
                    "anews": "anewshd",
-                   "minikacocuk": "minikagococuk"}.get(domain, domain)
+                   "minikacocuk": "minikagococuk",
+				   "vavtv": "vavtv"}.get(domain, domain)
         hls_url = self._hls_url.format(channel=channel)
         # get the secure HLS URL
         res = self.session.http.get(self._token_url,

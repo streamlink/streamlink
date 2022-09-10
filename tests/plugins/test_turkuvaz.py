@@ -18,5 +18,6 @@ class TestPluginCanHandleUrlTurkuvaz(PluginCanHandleUrl):
         'http://www.atvavrupa.tv/webtv/canli-yayin',
         'http://www.minikacocuk.com.tr/webtv/canli-yayin',
         'http://www.minikago.com.tr/webtv/canli-yayin',
-        'https://www.sabah.com.tr/apara/canli-yayin',
+        'https://www.apara.com.tr/canli-yayin',
+        'https://www.vavtv.com.tr/canli-yayin',
     ]
