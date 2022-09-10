@@ -72,9 +72,12 @@ class CinerGroup(Plugin):
         return live_url
 
     def _get_streams(self):
-        live_url = self._get_live_url()
+        root = self.session.http.get(self.url, schema=validate.Schema(
+            validate.parse_html(),
+        ))
+        live_url = self._get_live_url(root) or self._get_live_url2(root)
         if not live_url:
-            live_url = self._get_live_url2()
+            return
         return HLSStream.parse_variant_playlist(self.session, live_url)
 
 
