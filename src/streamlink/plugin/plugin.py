@@ -231,7 +231,7 @@ class Plugin:
     """Metadata 'category' attribute: name of a game being played, a music genre, etc."""
 
     options = Options()
-    _url: Optional[str] = None
+    _url: str = ""
 
     # deprecated
     can_handle_url: Callable[[str], bool]
@@ -293,7 +293,7 @@ class Plugin:
         self.load_cookies()
 
     @property
-    def url(self) -> Optional[str]:
+    def url(self) -> str:
         """
         The plugin's input URL.
         Setting a new value will automatically update the :attr:`matches`, :attr:`matcher` and :attr:`match` data.
