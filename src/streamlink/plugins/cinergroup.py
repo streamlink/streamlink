@@ -54,11 +54,11 @@ class CinerGroup(Plugin):
                 ),
             ),
         )
-        live_url = schema.validate(self.page) 
-        return live_url
+        return schema.validate(self.page) 
+
         
     def _get_live_url2(self):
-        live_url = self.session.http.get(self.url, schema=validate.Schema(
+        return self.session.http.get(self.url, schema=validate.Schema(
             validate.parse_html(),
             validate.xml_xpath_string(".//div[@data-ht][1]/@data-ht"),
             validate.none_or_all(
@@ -69,7 +69,6 @@ class CinerGroup(Plugin):
                 validate.get("ht_stream_m3u8"),
             ),
         ))
-        return live_url
 
     def _get_streams(self):
         live_url = self._get_live_url() or self._get_live_url2()
