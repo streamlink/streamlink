@@ -31,20 +31,9 @@ from streamlink.stream.hls import HLSStream
     )/?
 """, re.VERBOSE))
 class CinerGroup(Plugin):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self._page = None
-
-    @property
-    def page(self):
-        if self._page is None:
-            self._page = self.session.http.get(self.url, schema=validate.Schema(
-                validate.parse_html(),
-            ))
-        return self._page
-
     def _get_live_url(self):
-        schema = validate.Schema(
+        return self.session.http.get(self.url, schema=validate.Schema(
+            validate.parse_html(),
             validate.xml_xpath_string(".//script[contains(text(), 'videoUrl')]/text()"),
             validate.none_or_all(
                 re.compile(r"""videoUrl\s*=\s*(?P<q>['"])(?P<url>.+?)(?P=q)"""),
@@ -53,8 +42,7 @@ class CinerGroup(Plugin):
                     validate.url(),
                 ),
             ),
-        )
-        return schema.validate(self.page) 
+        ))
 
         
     def _get_live_url2(self):
