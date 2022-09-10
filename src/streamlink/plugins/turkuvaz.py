@@ -60,8 +60,9 @@ class Turkuvaz(Plugin):
                    "apara": "aparahd",
                    "aspor": "asporhd",
                    "anews": "anewshd",
-                   "minikacocuk": "minikagococuk",
-				   "vavtv": "vavtv"}.get(domain, domain)
+                   "vavtv": "vavtv",
+				   "minikacocuk": "minikagococuk"
+                }.get(domain, domain)
         hls_url = self._hls_url.format(channel=channel)
         # get the secure HLS URL
         res = self.session.http.get(self._token_url,
