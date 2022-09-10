@@ -59,7 +59,7 @@ class CinerGroup(Plugin):
 
     def _get_streams(self):
         root = self.session.http.get(self.url, schema=validate.Schema(validate.parse_html()))
-        schema_getters = self._schema_data_ht, self._schema_videourl
+        schema_getters = self._schema_videourl, self._schema_data_ht
         stream_url = next(filter(lambda res: res, map(lambda get_schema: get_schema().validate(root), schema_getters)), None)
 
         if stream_url:
