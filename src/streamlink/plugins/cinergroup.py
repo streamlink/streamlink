@@ -25,9 +25,9 @@ from streamlink.stream.hls import HLSStream
         |
         bloomberght.com/tv
         |
-        showmax\.com\.tr/(canli-yayin|canliyayin)
+        showmax\.com\.tr/canli-?yayin
         |
-        showturk\.com\.tr/(canli-yayin|canliyayin)(/showtv)?
+        showturk\.com\.tr/canli-?yayin(?:/showtv)?
     )/?
 """, re.VERBOSE))
 class CinerGroup(Plugin):
