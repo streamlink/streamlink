@@ -1,51 +1,60 @@
 """
-$description Global live streaming platform for the creative community.
+$description Global live-streaming platform for the creative community.
 $url piczel.tv
 $type live
 """
 
-import logging
 import re
 
 from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.api import validate
 from streamlink.stream.hls import HLSStream
 
-log = logging.getLogger(__name__)
-
-
-STREAMS_URL = "https://piczel.tv/api/streams?followedStreams=false&live_only=false&sfw=false"
-HLS_URL = "https://piczel.tv/hls/{0}/index.m3u8"
-
-_streams_schema = validate.Schema([
-    {
-        "id": int,
-        "live": bool,
-        "slug": validate.text
-    }
-])
-
 
 @pluginmatcher(re.compile(
-    r"https?://piczel\.tv/watch/(\w+)"
+    r"https?://piczel\.tv/watch/(?P<channel>\w+)"
 ))
 class Piczel(Plugin):
+    _URL_STREAMS = "https://piczel.tv/api/streams"
+    _URL_HLS = "https://piczel.tv/hls/{id}/index.m3u8"
+
     def _get_streams(self):
-        channel_name = self.match.group(1)
+        channel = self.match.group("channel")
 
-        res = self.session.http.get(STREAMS_URL)
-        streams = self.session.http.json(res, schema=_streams_schema)
+        data = self.session.http.get(
+            self._URL_STREAMS,
+            params={
+                "followedStreams": "false",
+                "live_only": "false",
+                "sfw": "false",
+            },
+            schema=validate.Schema(
+                validate.parse_json(),
+                [{
+                    "slug": str,
+                    "live": bool,
+                    "id": int,
+                    "username": str,
+                    "title": str,
+                }],
+                validate.filter(lambda item: item["slug"] == channel),
+                validate.get(0),
+                validate.any(None, validate.union_get(
+                    "id",
+                    "username",
+                    "title",
+                    "live",
+                )),
+            ),
+        )
+        if not data:
+            return
 
-        for stream in streams:
-            if stream["slug"] != channel_name:
-                continue
+        self.id, self.author, self.title, is_live = data
+        if not is_live:
+            return
 
-            if not stream["live"]:
-                return
-
-            log.debug(f"HLS stream URL: {HLS_URL.format(stream['id'])}")
-
-            return {"live": HLSStream(self.session, HLS_URL.format(stream["id"]))}
+        return {"live": HLSStream(self.session, self._URL_HLS.format(id=self.id))}
 
 
 __plugin__ = Piczel
