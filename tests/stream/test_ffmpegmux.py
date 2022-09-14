@@ -32,8 +32,7 @@ class TestCommand:
             assert len(mock.call_args_list) == 0
 
     @pytest.mark.parametrize("command,which,expected", [
-        pytest.param(None, {"ffmpeg": None, "avconv": None}, None, id="resolver-negative"),
-        pytest.param(None, {"ffmpeg": None, "avconv": "avconv"}, "avconv", id="resolver-avconv"),
+        pytest.param(None, {"ffmpeg": None}, None, id="resolver-negative"),
         pytest.param(None, {"ffmpeg": "ffmpeg"}, "ffmpeg", id="resolver-posix"),
         pytest.param(None, {"ffmpeg": "ffmpeg.exe"}, "ffmpeg.exe", id="resolver-windows"),
         pytest.param("custom", {"ffmpeg": "ffmpeg"}, None, id="custom-negative"),
