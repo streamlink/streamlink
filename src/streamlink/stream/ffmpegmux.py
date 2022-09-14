@@ -72,7 +72,7 @@ class MuxedStream(Stream):
 
 
 class FFMPEGMuxer(StreamIO):
-    __commands__ = ["ffmpeg", "avconv"]
+    __commands__ = ["ffmpeg"]
 
     DEFAULT_OUTPUT_FORMAT = "matroska"
     DEFAULT_VIDEO_CODEC = "copy"
