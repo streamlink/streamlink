@@ -29,6 +29,7 @@ Streamlink is built upon a plugin system which allows support for new services t
 Most of the big streaming services are supported, such as:
 
 - [Twitch](https://www.twitch.tv)
+- [VidLii](https://www.vidlii.com)
 - [YouTube](https://www.youtube.com)
 - [Livestream](https://livestream.com)
 - [Dailymotion](https://www.dailymotion.com)
