@@ -1,5 +1,41 @@
 # Changelog
 
+## streamlink 5.0.0 (2022-09-16)
+
+Breaking changes:
+
+- BREAKING: removed `avconv` (libav) from FFmpeg fallback list ([#4826](https://github.com/streamlink/streamlink/pull/4826))
+- BREAKING/API: removed `Plugin.bind()` and changed the signature of the `Plugin` class constructor ([#4768](https://github.com/streamlink/streamlink/pull/4768))  
+  A compatibility wrapper for these interface changes has temporarily been added in order to keep third-party plugin implementations working.  
+  [Please see the deprecation docs for more details.](https://streamlink.github.io/deprecations.html#deprecation-of-plugin-init-self-url)
+- BREAKING/API: changed the return value of `Session.resolve_url()` ([#4768](https://github.com/streamlink/streamlink/pull/4768))  
+  [Please see the deprecation docs for more details.](https://streamlink.github.io/deprecations.html#session-resolve-url-return-type-changes)
+- BREAKING/API: removed `HTTPSession.parse_*()` methods ([#4803](https://github.com/streamlink/streamlink/pull/4803))
+
+Release highlights:
+
+- Added: official support for Python 3.11 ([#4806](https://github.com/streamlink/streamlink/pull/4806))
+- Added: `--player-external-http-continuous` ([#4739](https://github.com/streamlink/streamlink/pull/4739))
+- Added: file path to progress output (`--output`, `--record`, etc.) ([#4764](https://github.com/streamlink/streamlink/pull/4764))
+- Added: warning message when FFmpeg is not available and muxing is unsupported ([#4781](https://github.com/streamlink/streamlink/pull/4781))
+- Changed: logging channel of deprecation messages to "warning"  ([#4785](https://github.com/streamlink/streamlink/pull/4785))
+- Disabled: `--twitch-disable-hosting` and removed its logic ([#4805](https://github.com/streamlink/streamlink/pull/4805))
+- Fixed: memory leak when initializing the `Streamlink` session ([#4768](https://github.com/streamlink/streamlink/pull/4768))
+- Fixed: cbsnews plugin ([#4743](https://github.com/streamlink/streamlink/pull/4743))
+- Fixed: steam plugin authentication ([#4745](https://github.com/streamlink/streamlink/pull/4745))
+- Fixed: ustreamtv plugin ([#4761](https://github.com/streamlink/streamlink/pull/4761))
+- Fixed: huya plugin ([#4763](https://github.com/streamlink/streamlink/pull/4763))
+- Fixed: atresplayer, mitele and rtve plugins ([#4759](https://github.com/streamlink/streamlink/pull/4759), [#4760](https://github.com/streamlink/streamlink/pull/4760), [#4766](https://github.com/streamlink/streamlink/pull/4766))
+- Fixed: albavision, hiplayer and htv plugins ([#4770](https://github.com/streamlink/streamlink/pull/4770))
+- Fixed: OKru plugin with support for the mobile page ([#4780](https://github.com/streamlink/streamlink/pull/4780))
+- Fixed: trovo plugin VODs ([#4812](https://github.com/streamlink/streamlink/pull/4812))
+- API: added `Streamlink` and `HTTPSession` typing informations to `Plugin` and `Stream` (including its various subclasses) ([#4802](https://github.com/streamlink/streamlink/pull/4802), [#4814](https://github.com/streamlink/streamlink/pull/4814))
+- API: added `pluginargument` decorator ([#4747](https://github.com/streamlink/streamlink/pull/4747))
+- Docs: updated `pluginmatcher` and `pluginargument` documentation ([#4771](https://github.com/streamlink/streamlink/pull/4771))
+
+[Full changelog](https://github.com/streamlink/streamlink/compare/4.3.0...5.0.0)
+
+
 ## streamlink 4.3.0 (2022-08-15)
 
 Release highlights:
