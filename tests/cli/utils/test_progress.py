@@ -102,7 +102,8 @@ class TestProgressFormatter:
         assert ProgressFormatter.format_time(elapsed) == expected
 
     _path_posix = PurePosixPath("/foobar/baz/some file name")
-    _path_windows = PureWindowsPath("C:\\foobar\\baz\\some file name")
+    _path_windows_abs = PureWindowsPath("C:\\foobar\\baz\\some file name")
+    _path_windows_rel = PureWindowsPath("foobar\\baz\\some file name")
     _path_windows_unc = PureWindowsPath("\\\\?\\foobar\\baz\\some file name")
 
     @pytest.mark.parametrize("path,max_width,expected", [
@@ -117,17 +118,27 @@ class TestProgressFormatter:
         pytest.param(_path_posix, 16, "…/some file name", id="posix - truncated (all parts except name)"),
         pytest.param(_path_posix, 15, "…some file name", id="posix - truncated (name without separator)"),
         pytest.param(_path_posix, 14, "…ome file name", id="posix - truncated name"),
-        pytest.param(_path_windows, 28, "C:\\foobar\\baz\\some file name", id="windows - full path"),
-        pytest.param(_path_windows, 27, "C:…oobar\\baz\\some file name", id="windows - truncated by 1"),
-        pytest.param(_path_windows, 26, "C:…obar\\baz\\some file name", id="windows - truncated by 2"),
-        pytest.param(_path_windows, 25, "C:…bar\\baz\\some file name", id="windows - truncated by 3"),
-        pytest.param(_path_windows, 24, "C:…ar\\baz\\some file name", id="windows - truncated by 4"),
-        pytest.param(_path_windows, 23, "C:…r\\baz\\some file name", id="windows - truncated by 5"),
-        pytest.param(_path_windows, 22, "C:…\\baz\\some file name", id="windows - truncated by 6"),
-        pytest.param(_path_windows, 21, "C:…baz\\some file name", id="windows - truncated by 7 (cuts off separator)"),
-        pytest.param(_path_windows, 18, "C:…\\some file name", id="windows - truncated (all parts except name)"),
-        pytest.param(_path_windows, 17, "C:…some file name", id="windows - truncated (name without separator)"),
-        pytest.param(_path_windows, 16, "C:…ome file name", id="windows - truncated name"),
+        pytest.param(_path_windows_abs, 28, "C:\\foobar\\baz\\some file name", id="windows abs - full path"),
+        pytest.param(_path_windows_abs, 27, "C:…oobar\\baz\\some file name", id="windows abs - truncated by 1"),
+        pytest.param(_path_windows_abs, 26, "C:…obar\\baz\\some file name", id="windows abs - truncated by 2"),
+        pytest.param(_path_windows_abs, 25, "C:…bar\\baz\\some file name", id="windows abs - truncated by 3"),
+        pytest.param(_path_windows_abs, 24, "C:…ar\\baz\\some file name", id="windows abs - truncated by 4"),
+        pytest.param(_path_windows_abs, 23, "C:…r\\baz\\some file name", id="windows abs - truncated by 5"),
+        pytest.param(_path_windows_abs, 22, "C:…\\baz\\some file name", id="windows abs - truncated by 6"),
+        pytest.param(_path_windows_abs, 21, "C:…baz\\some file name", id="windows abs - truncated by 7 (cuts off separator)"),
+        pytest.param(_path_windows_abs, 18, "C:…\\some file name", id="windows abs - truncated (all parts except name)"),
+        pytest.param(_path_windows_abs, 17, "C:…some file name", id="windows abs - truncated (name without separator)"),
+        pytest.param(_path_windows_abs, 16, "C:…ome file name", id="windows abs - truncated name"),
+        pytest.param(_path_windows_rel, 25, "foobar\\baz\\some file name", id="windows rel - full path"),
+        pytest.param(_path_windows_rel, 24, "…obar\\baz\\some file name", id="windows rel - truncated by 1"),
+        pytest.param(_path_windows_rel, 23, "…bar\\baz\\some file name", id="windows rel - truncated by 2"),
+        pytest.param(_path_windows_rel, 22, "…ar\\baz\\some file name", id="windows rel - truncated by 3"),
+        pytest.param(_path_windows_rel, 21, "…r\\baz\\some file name", id="windows rel - truncated by 4"),
+        pytest.param(_path_windows_rel, 20, "…\\baz\\some file name", id="windows rel - truncated by 5"),
+        pytest.param(_path_windows_rel, 19, "…baz\\some file name", id="windows rel - truncated by 6 (cuts off separator)"),
+        pytest.param(_path_windows_rel, 16, "…\\some file name", id="windows rel - truncated (all parts except name)"),
+        pytest.param(_path_windows_rel, 15, "…some file name", id="windows rel - truncated (name without separator)"),
+        pytest.param(_path_windows_rel, 14, "…ome file name", id="windows rel - truncated name"),
         pytest.param(_path_windows_unc, 29, "\\\\?\\foobar\\baz\\some file name", id="windows UNC - full path"),
         pytest.param(_path_windows_unc, 28, "\\\\?\\…obar\\baz\\some file name", id="windows UNC - truncated by 1"),
         pytest.param(_path_windows_unc, 20, "\\\\?\\…\\some file name", id="windows UNC - truncated (all parts except name)"),

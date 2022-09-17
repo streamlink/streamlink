@@ -200,7 +200,7 @@ class ProgressFormatter:
         max_width -= cls.width(path.drive) + cls.width(cls.ELLIPSIS)
 
         # Ignore the path's first part, aka the "anchor" (drive + root)
-        parts = os.path.sep.join(path.parts[1:])
+        parts = os.path.sep.join(path.parts[1:] if path.drive else path.parts)
         truncated = cls.cut(parts, max_width)
 
         return f"{path.drive}{cls.ELLIPSIS}{truncated}"
