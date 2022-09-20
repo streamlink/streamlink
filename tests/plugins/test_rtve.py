@@ -8,7 +8,7 @@ class TestPluginCanHandleUrlRtve(PluginCanHandleUrl):
     should_match = [
         "https://www.rtve.es/play/videos/directo/la-1/",
         "https://www.rtve.es/play/videos/directo/canales-lineales/24h/",
-        "https://www.rtve.es/play/videos/rebelion-en-el-reino-salvaje/mata-reyes/5803959/",
+        "https://www.rtve.es/play/videos/informe-semanal/la-semilla-de-la-guerra/6670279/",
     ]
 
     should_not_match = [
@@ -21,7 +21,28 @@ class TestPluginCanHandleUrlRtve(PluginCanHandleUrl):
     ]
 
 
-def test_translate():
+def test_translate_no_content():
+    assert list(ZTNR.translate("")) == []
+
+
+def test_translate_no_streams():
+    # real payload without any tEXt chunks that match the expected format
+    data = \
+        "iVBORw0KGgoAAAANSUhEUgAAAsAAAAGMAQMAAADuk4YmAAAAA1BMVEX///+nxBvIAAAAAXRSTlMA" \
+        "QObYZgAAADlJREFUeF7twDEBAAAAwiD7p7bGDlgYAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" \
+        "AAAAAAAAwAGJrAABgPqdWQAAAcp0RVh0ak9lNmRyNkUtV2hmeEE0dERMdS9FOTlCT2d3MF9HMDdG" \
+        "RmxQNy1ZLTdFOFRac0MmbD93VEp5SENvUUlseVY1bjdrYmF2ZkhUUjc4aTBHAEBxY08zdk4yYldE" \
+        "bm09TDVaNGMyVVpNdklVbS5LVUNCUTdZNVpfSUZMVmRMNlN0VE14TmFPLUFGaTF6ai9YenE6PVg9" \
+        "dnJBb3BFU3BBJlpoWFViSER3MCZxbj9AS0d1Si5OSnAudiMwMTYxNDA2MDU2NjcyMDE3MzI4NTcw" \
+        "ODcwMDc3MDI3NjIwNjczMTA0ODEyNDY3MzMwNzgxMDQwMTE4NzQ4MDYwMjIwODgxNTI0ODEzNjQ4" \
+        "MjU0MTEyMzEyNjUxMzc2NTM3MTMzNzgwNTYwNDE0NjI4NDM1NjIzNTA1MTAxNjYwMDExNzE4MDQx" \
+        "MTc3MDMxNTQ2MDEzNDUwMDQ2MTg4MDgwNzMxNDM3MjgwMDQ4NDA3Mzg0MzYxODA0NjU0NDYzMTY1" \
+        "NDIxMzY4ODAzNTQ3MjMyMjYzODUwMzY5MTE3MTMwOTMzMjAwNDg1MDExNTE4MTgxMTgwMTAwNjU0" \
+        "NTg1MzcxNDQ5MDM5MzY2ODMxNTc0MjUyNDVZsdrfAAAAAElFTkSuQmCC"
+    assert list(ZTNR.translate(data)) == []
+
+
+def test_translate_has_streams():
     # real payload with modified end (IEND chunk of size 0), to reduce test size
     data = \
         "iVBORw0KGgoAAAANSUhEUgAAAVQAAAFUCAIAAAD08FPiAAACr3RFWHRXczlVSWdtM2ZPTGY4b2R4" \
