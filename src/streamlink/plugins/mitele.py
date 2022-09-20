@@ -45,11 +45,17 @@ class Mitele(Plugin):
                             [{
                                 "drm": bool,
                                 "format": str,
-                                "stream": validate.url(),
-                                "lid": validate.all(int, validate.transform(str)),
+                                "stream": validate.all(
+                                    validate.transform(str.strip),
+                                    validate.url(),
+                                ),
+                                "lid": validate.all(
+                                    int,
+                                    validate.transform(str),
+                                ),
                                 validate.optional("assetKey"): str,
                             }],
-                            validate.filter(lambda obj: obj["format"] == "hls")
+                            validate.filter(lambda obj: obj["format"] == "hls"),
                         ),
                     },
                 ),
@@ -86,7 +92,7 @@ class Mitele(Plugin):
                     {"code": int},
                     validate.all(
                         {"tokens": {str: {"cdn": str}}},
-                        validate.get("tokens")
+                        validate.get("tokens"),
                     ),
                 ),
             ),
