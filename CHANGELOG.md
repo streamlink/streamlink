@@ -1,5 +1,16 @@
 # Changelog
 
+## streamlink 5.0.1 (2022-09-22)
+
+Patch release:
+
+- Fixed: truncation of relative paths in progress output on Windows ([#4830](https://github.com/streamlink/streamlink/pull/4830))
+- Fixed: mitele plugin's validation schema ([#4839](https://github.com/streamlink/streamlink/pull/4839))
+- Fixed: infinite loop in rtve plugin ([#4840](https://github.com/streamlink/streamlink/pull/4840))
+
+[Full changelog](https://github.com/streamlink/streamlink/compare/5.0.0...5.0.1)
+
+
 ## streamlink 5.0.0 (2022-09-16)
 
 Breaking changes:
