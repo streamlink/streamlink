@@ -1,5 +1,6 @@
 import concurrent.futures
 import logging
+import re
 import subprocess
 import sys
 import threading
@@ -12,8 +13,12 @@ from streamlink import StreamError
 from streamlink.compat import devnull
 from streamlink.stream.stream import Stream, StreamIO
 from streamlink.utils.named_pipe import NamedPipe, NamedPipeBase
+from streamlink.utils.processoutput import ProcessOutput
+
 
 log = logging.getLogger(__name__)
+
+_lock_resolve_command = threading.Lock()
 
 
 class MuxedStream(Stream):
@@ -78,17 +83,24 @@ class FFMPEGMuxer(StreamIO):
     DEFAULT_VIDEO_CODEC = "copy"
     DEFAULT_AUDIO_CODEC = "copy"
 
+    FFMPEG_VERSION: Optional[str] = None
+    FFMPEG_VERSION_TIMEOUT = 4.0
+
     @classmethod
     def is_usable(cls, session):
         return cls.command(session) is not None
 
     @classmethod
     def command(cls, session):
-        return cls.resolve_command(session.options.get("ffmpeg-ffmpeg"))
+        with _lock_resolve_command:
+            return cls.resolve_command(
+                session.options.get("ffmpeg-ffmpeg"),
+                not session.options.get("ffmpeg-no-validation"),
+            )
 
     @classmethod
     @lru_cache(maxsize=128)
-    def resolve_command(cls, command: Optional[str] = None) -> Optional[str]:
+    def resolve_command(cls, command: Optional[str] = None, validate: bool = True) -> Optional[str]:
         if command:
             resolved = which(command)
         else:
@@ -97,9 +109,22 @@ class FFMPEGMuxer(StreamIO):
                 resolved = which(cmd)
                 if resolved:
                     break
+
+        if resolved and validate:
+            log.trace(f"Querying FFmpeg version: {[resolved, '-version']}")  # type: ignore[attr-defined]
+            versionoutput = FFmpegVersionOutput([resolved, "-version"], timeout=cls.FFMPEG_VERSION_TIMEOUT)
+            if not versionoutput.run():
+                log.error("Could not validate FFmpeg. Unexpected FFmpeg version output!")
+                resolved = None
+            else:
+                cls.FFMPEG_VERSION = versionoutput.version
+                for i, line in enumerate(versionoutput.output):
+                    log.debug(f"{' ' if i > 0 else ''}{line}")
+
         if not resolved:
-            log.warning("FFmpeg was not found. See the --ffmpeg-ffmpeg option.")
+            log.warning("No valid FFmpeg binary was not found. See the --ffmpeg-ffmpeg option.")
             log.warning("Muxing streams is unsupported! Only a subset of the available streams can be returned!")
+
         return resolved
 
     @staticmethod
@@ -213,3 +238,31 @@ class FFMPEGMuxer(StreamIO):
             self.errorlog = None
 
         super().close()
+
+
+class FFmpegVersionOutput(ProcessOutput):
+    # The version output format of the fftools hasn't been changed since n0.7.1 (2011-04-23):
+    # https://github.com/FFmpeg/FFmpeg/blame/n5.1.1/fftools/ffmpeg.c#L110
+    # https://github.com/FFmpeg/FFmpeg/blame/n5.1.1/fftools/opt_common.c#L201
+    # https://github.com/FFmpeg/FFmpeg/blame/c99b93c5d53d8f4a4f1fafc90f3dfc51467ee02e/fftools/cmdutils.c#L1156
+    # https://github.com/FFmpeg/FFmpeg/commit/89b503b55f2b2713f1c3cc8981102c1a7b663281
+    _re_version = re.compile(r"ffmpeg version (?P<version>\S+)")
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.version = None
+        self.output = []
+
+    def onexit(self, code: int) -> bool:
+        return code == 0 and self.version is not None
+
+    def onstdout(self, idx: int, line: str) -> Optional[bool]:
+        match = self._re_version.match(line)
+        if idx == 0:
+            # abort if the very first line of stdout doesn't match the expected format
+            if not match:
+                return False
+            self.version = match["version"]
+
+        # otherwise, gather the entire stdout
+        self.output.append(line)

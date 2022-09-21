@@ -18,7 +18,7 @@ def resolve_command_cache_clear():
 @pytest.fixture
 def session():
     with patch("streamlink.session.Streamlink.load_builtin_plugins"):
-        yield Streamlink()
+        yield Streamlink({"ffmpeg-no-validation": True})
 
 
 class TestCommand:
@@ -56,7 +56,7 @@ class TestCommand:
              patch("streamlink.stream.ffmpegmux.which", return_value=None):
             assert not FFMPEGMuxer.is_usable(session)
             assert mock_log.warning.call_args_list == [
-                call("FFmpeg was not found. See the --ffmpeg-ffmpeg option."),
+                call("No valid FFmpeg binary was not found. See the --ffmpeg-ffmpeg option."),
                 call("Muxing streams is unsupported! Only a subset of the available streams can be returned!"),
             ]
             assert not FFMPEGMuxer.is_usable(session)
