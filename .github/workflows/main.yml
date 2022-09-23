@@ -41,10 +41,10 @@ jobs:
     runs-on: ${{ matrix.os }}
     timeout-minutes: 60
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           fetch-depth: 300
-      - uses: actions/setup-python@v2
+      - uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python }}
       - name: Install dependencies
@@ -59,7 +59,7 @@ jobs:
       - name: Upload coverage data
         if: github.event_name != 'schedule'
         continue-on-error: ${{ matrix.continue || false }}
-        uses: codecov/codecov-action@v2
+        uses: codecov/codecov-action@v3
         with:
           name: os:${{ matrix.os }} py:${{ matrix.python }}
 
@@ -68,14 +68,14 @@ jobs:
     if: github.event_name != 'schedule'
     runs-on: ubuntu-20.04
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           fetch-depth: 300
       - name: Fetch tags
         run: git fetch --depth=300 origin +refs/tags/*:refs/tags/*
-      - uses: actions/setup-python@v1
+      - uses: actions/setup-python@v4
         with:
-          python-version: 3.9
+          python-version: "3.10"
       - name: Install dependencies
         run: |
           ./script/install-dependencies.sh
@@ -119,12 +119,12 @@ jobs:
     permissions:
       contents: write
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           fetch-depth: 0
       - name: Fetch tags
         run: git fetch --depth=300 origin +refs/tags/*:refs/tags/*
-      - uses: actions/setup-python@v2
+      - uses: actions/setup-python@v4
         with:
           python-version: "3.10"
       - name: Install dependencies
