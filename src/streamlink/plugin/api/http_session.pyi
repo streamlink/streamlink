@@ -1,5 +1,5 @@
 from collections.abc import Callable, Iterable, Mapping, MutableMapping, Sequence
-from typing import Any, IO, Union
+from typing import Any, Union
 
 from _typeshed import SupportsItems, SupportsRead
 from requests import PreparedRequest, Response, Session
@@ -13,9 +13,27 @@ from streamlink.session import Streamlink
 
 
 # START: borrowed from typeshed / types-requests
-# https://github.com/python/typeshed/blob/b6d28acb2368cdd8c87554e01e22e134061997d6/stubs/requests/requests/sessions.pyi
+# https://github.com/python/typeshed/blob/b3db49abbd563a8543783fcd2b4d6765b32812b0/stubs/requests/requests/sessions.pyi
 
-_Data: TypeAlias = str | bytes | Mapping[str, Any] | Iterable[tuple[str, str | None]] | IO[Any]
+_Data: TypeAlias = (
+    # used in requests.models.PreparedRequest.prepare_body
+    #
+    # case: is_stream
+    # see requests.adapters.HTTPAdapter.send
+    # will be sent directly to http.HTTPConnection.send(...) (through urllib3)
+    Iterable[bytes]
+    # case: not is_stream
+    # will be modified before being sent to urllib3.HTTPConnectionPool.urlopen(body=...)
+    # see requests.models.RequestEncodingMixin._encode_params
+    # see requests.models.RequestEncodingMixin._encode_files
+    # note that keys&values are converted from Any to str by urllib.parse.urlencode
+    | str
+    | bytes
+    | SupportsRead[str | bytes]
+    | list[tuple[Any, Any]]
+    | tuple[tuple[Any, Any], ...]
+    | Mapping[Any, Any]
+)
 _Auth: TypeAlias = Union[tuple[str, str], AuthBase, Callable[[PreparedRequest], PreparedRequest]]
 _Cert: TypeAlias = Union[str, tuple[str, str]]
 _FileName: TypeAlias = str | None
