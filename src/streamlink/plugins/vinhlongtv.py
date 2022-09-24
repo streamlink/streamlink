@@ -19,7 +19,7 @@ log = logging.getLogger(__name__)
     r'https?://(?:www\.)?thvli\.vn/live/(?P<channel>[^/]+)'
 ))
 class VinhLongTV(Plugin):
-    api_url = 'http://api.thvli.vn/backend/cm/detail/{0}/'
+    api_url = 'https://api.thvli.vn/backend/cm/get_detail/{0}/'
 
     _data_schema = validate.Schema(
         {
