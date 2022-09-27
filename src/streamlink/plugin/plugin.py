@@ -337,24 +337,6 @@ class Plugin:
 
         return stream_types
 
-    @classmethod
-    def broken(cls, issue=None):
-        def func(*args, **kwargs):
-            msg = (
-                "This plugin has been marked as broken. This is likely due to "
-                "changes to the service preventing a working implementation. "
-            )
-
-            if issue:
-                msg += "More info: https://github.com/streamlink/streamlink/issues/{0}".format(issue)
-
-            raise PluginError(msg)
-
-        def decorator(*args, **kwargs):
-            return func
-
-        return decorator
-
     def streams(self, stream_types=None, sorting_excludes=None):
         """
         Attempts to extract available streams.
