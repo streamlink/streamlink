@@ -319,7 +319,7 @@ class Plugin:
 
     @classmethod
     def get_argument(cls, key):
-        return cls.arguments.get(key)
+        return cls.arguments and cls.arguments.get(key)
 
     @classmethod
     def stream_weight(cls, stream):
