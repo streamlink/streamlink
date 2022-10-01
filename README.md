@@ -32,6 +32,7 @@ Most of the big streaming services are supported, such as:
 - [YouTube](https://www.youtube.com)
 - [Livestream](https://livestream.com)
 - [Dailymotion](https://www.dailymotion.com)
+- [Trovo](https://trovo.live)
 
 ... and many more. A full list of plugins currently included can be found on the [plugin page][streamlink-plugins].
 
