@@ -3,6 +3,7 @@ import sys
 from datetime import datetime
 from logging import CRITICAL, DEBUG, ERROR, INFO, WARNING
 from pathlib import Path
+from sys import version_info
 from threading import Lock
 from typing import IO, List, Optional, TYPE_CHECKING, Union
 
@@ -46,9 +47,18 @@ else:
 
 
 class StreamlinkLogger(_BaseLoggerClass):
-    def trace(self, message, *args, **kws):
-        if self.isEnabledFor(TRACE):
-            self._log(TRACE, message, args, **kws)
+    # fix module name that gets read from the call stack in the logging module
+    # https://github.com/python/cpython/commit/5ca6d7469be53960843df39bb900e9c3359f127f
+    if version_info >= (3, 11):
+        def trace(self, message, *args, **kws):
+            if self.isEnabledFor(TRACE):
+                # increase the stacklevel by one and skip the `trace()` call here
+                kws["stacklevel"] = 2
+                self._log(TRACE, message, args, **kws)
+    else:
+        def trace(self, message, *args, **kws):
+            if self.isEnabledFor(TRACE):
+                self._log(TRACE, message, args, **kws)
 
 
 class StringFormatter(logging.Formatter):
