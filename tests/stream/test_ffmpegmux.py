@@ -5,20 +5,26 @@ from unittest.mock import Mock, call, patch
 import pytest
 
 from streamlink import Streamlink
-from streamlink.stream.ffmpegmux import FFMPEGMuxer
+from streamlink.stream.ffmpegmux import FFMPEGMuxer, FFmpegVersionOutput
+
+
+# noinspection PyProtectedMember
+@pytest.fixture(autouse=True)
+def resolve_command_cache_clear():
+    FFMPEGMuxer._resolve_command.cache_clear()
+    yield
+    FFMPEGMuxer._resolve_command.cache_clear()
 
 
 @pytest.fixture(autouse=True)
-def resolve_command_cache_clear():
-    FFMPEGMuxer.resolve_command.cache_clear()
-    yield
-    FFMPEGMuxer.resolve_command.cache_clear()
+def _logger(caplog: pytest.LogCaptureFixture):
+    caplog.set_level(1, "streamlink")
 
 
 @pytest.fixture
 def session():
     with patch("streamlink.session.Streamlink.load_builtin_plugins"):
-        yield Streamlink()
+        yield Streamlink({"ffmpeg-no-validation": True})
 
 
 class TestCommand:
@@ -51,22 +57,112 @@ class TestCommand:
         with patch("streamlink.stream.ffmpegmux.which", return_value=resolved):
             assert FFMPEGMuxer.is_usable(session) is expected
 
-    def test_log(self, session: Streamlink):
-        with patch("streamlink.stream.ffmpegmux.log") as mock_log, \
-             patch("streamlink.stream.ffmpegmux.which", return_value=None):
+    def test_log(self, caplog: pytest.LogCaptureFixture, session: Streamlink):
+        with patch("streamlink.stream.ffmpegmux.which", return_value=None):
             assert not FFMPEGMuxer.is_usable(session)
-            assert mock_log.warning.call_args_list == [
-                call("FFmpeg was not found. See the --ffmpeg-ffmpeg option."),
-                call("Muxing streams is unsupported! Only a subset of the available streams can be returned!"),
+            assert [(record.module, record.levelname, record.message) for record in caplog.records] == [
+                (
+                    "ffmpegmux",
+                    "warning",
+                    "No valid FFmpeg binary was found. See the --ffmpeg-ffmpeg option.",
+                ),
+                (
+                    "ffmpegmux",
+                    "warning",
+                    "Muxing streams is unsupported! Only a subset of the available streams can be returned!",
+                ),
             ]
             assert not FFMPEGMuxer.is_usable(session)
-            assert len(mock_log.warning.call_args_list) == 2
+            assert len(caplog.records) == 2
 
-    def test_no_log(self, session: Streamlink):
-        with patch("streamlink.stream.ffmpegmux.log") as mock_log, \
-             patch("streamlink.stream.ffmpegmux.which", return_value="foo"):
+    def test_no_log(self, caplog: pytest.LogCaptureFixture, session: Streamlink):
+        with patch("streamlink.stream.ffmpegmux.which", return_value="foo"):
             assert FFMPEGMuxer.is_usable(session)
-            assert not mock_log.warning.call_args_list
+            assert not caplog.records
+
+    def test_validate_success(self, caplog: pytest.LogCaptureFixture, session: Streamlink):
+        session.options.update({"ffmpeg-no-validation": False})
+
+        class MyFFmpegVersionOutput(FFmpegVersionOutput):
+            def run(self):
+                self.onstdout(0, "ffmpeg version 0.0.0 suffix")
+                self.onstdout(1, "foo")
+                self.onstdout(2, "bar")
+                return True
+
+        with patch("streamlink.stream.ffmpegmux.which", return_value="/usr/bin/ffmpeg"), \
+             patch("streamlink.stream.ffmpegmux.FFmpegVersionOutput", side_effect=MyFFmpegVersionOutput) as mock_versionoutput:
+            result = FFMPEGMuxer.command(session)
+
+        assert result == "/usr/bin/ffmpeg"
+        assert mock_versionoutput.call_args_list == [
+            call(["/usr/bin/ffmpeg", "-version"], timeout=4.0),
+        ]
+        assert [(record.module, record.levelname, record.message) for record in caplog.records] == [
+            ("ffmpegmux", "trace", "Querying FFmpeg version: ['/usr/bin/ffmpeg', '-version']"),
+            ("ffmpegmux", "debug", "ffmpeg version 0.0.0 suffix"),
+            ("ffmpegmux", "debug", " foo"),
+            ("ffmpegmux", "debug", " bar"),
+        ]
+
+    def test_validate_failure(self, caplog: pytest.LogCaptureFixture, session: Streamlink):
+        session.options.update({"ffmpeg-no-validation": False})
+
+        class MyFFmpegVersionOutput(FFmpegVersionOutput):
+            def run(self):
+                return False
+
+        with patch("streamlink.stream.ffmpegmux.which", return_value="/usr/bin/ffmpeg"), \
+             patch("streamlink.stream.ffmpegmux.FFmpegVersionOutput", side_effect=MyFFmpegVersionOutput) as mock_versionoutput:
+            result = FFMPEGMuxer.command(session)
+
+        assert result is None
+        assert mock_versionoutput.call_args_list == [
+            call(["/usr/bin/ffmpeg", "-version"], timeout=4.0),
+        ]
+        assert [(record.module, record.levelname, record.message) for record in caplog.records] == [
+            ("ffmpegmux", "trace", "Querying FFmpeg version: ['/usr/bin/ffmpeg', '-version']"),
+            ("ffmpegmux", "error", "Could not validate FFmpeg!"),
+            ("ffmpegmux", "error", "Unexpected FFmpeg version output while running ['/usr/bin/ffmpeg', '-version']"),
+            ("ffmpegmux", "warning", "No valid FFmpeg binary was found. See the --ffmpeg-ffmpeg option."),
+            ("ffmpegmux", "warning", "Muxing streams is unsupported! Only a subset of the available streams can be returned!"),
+        ]
+
+
+class TestFFmpegVersionOutput:
+    @pytest.fixture
+    def output(self):
+        output = FFmpegVersionOutput(["/usr/bin/ffmpeg", "-version"], timeout=1.0)
+        assert output.command == ["/usr/bin/ffmpeg", "-version"]
+        assert output.timeout == 1.0
+        assert output.output == []
+        assert output.version is None
+
+        return output
+
+    def test_success(self, output: FFmpegVersionOutput):
+        output.onstdout(0, "ffmpeg version 0.0.0 suffix")
+        assert output.output == ["ffmpeg version 0.0.0 suffix"]
+        assert output.version == "0.0.0"
+
+        output.onstdout(1, "foo")
+        output.onstdout(2, "bar")
+        assert output.output == ["ffmpeg version 0.0.0 suffix", "foo", "bar"]
+        assert output.version == "0.0.0"
+
+        assert output.onexit(0)
+
+    def test_failure_stdout(self, output: FFmpegVersionOutput):
+        output.onstdout(0, "invalid")
+        assert output.output == []
+        assert output.version is None
+        assert not output.onexit(0)
+
+    def test_failure_exitcode(self, output: FFmpegVersionOutput):
+        output.onstdout(0, "ffmpeg version 0.0.0 suffix")
+        assert output.output == ["ffmpeg version 0.0.0 suffix"]
+        assert output.version == "0.0.0"
+        assert not output.onexit(1)
 
 
 class TestOpen:
