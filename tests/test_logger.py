@@ -87,6 +87,17 @@ class TestLogging:
         log.trace("test")  # type: ignore[attr-defined]
         assert output.getvalue() == ""
 
+    # https://github.com/streamlink/streamlink/issues/4862
+    def test_trace_module_name(self, caplog: pytest.LogCaptureFixture, log: logging.Logger):
+        caplog.set_level(1)
+        log = logging.getLogger(self.__class__.__module__)
+        log.trace("foo")  # type: ignore[attr-defined]
+        log.log(logger.TRACE, "bar")
+        assert [(record.module, record.levelname, record.message) for record in caplog.records] == [
+            ("test_logger", "trace", "foo"),
+            ("test_logger", "trace", "bar"),
+        ]
+
     def test_debug_out_at_trace(self, log: logging.Logger, output: StringIO):
         log.setLevel("trace")
         log.debug("test")
