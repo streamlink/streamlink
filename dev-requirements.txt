@@ -1,7 +1,9 @@
 pip>=9
 pytest
+pytest-asyncio
 pytest-cov
 coverage[toml]
+mock ; python_version<"3.8"
 requests-mock
 freezegun>=1.0.0
 flake8
