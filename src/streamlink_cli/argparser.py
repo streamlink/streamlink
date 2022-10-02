@@ -1044,6 +1044,13 @@ def build_parser():
         """
     )
     transport_ffmpeg.add_argument(
+        "--ffmpeg-no-validation",
+        action="store_true",
+        help="""
+        Disable FFmpeg validation and version logging.
+        """
+    )
+    transport_ffmpeg.add_argument(
         "--ffmpeg-verbose",
         action="store_true",
         help="""
@@ -1263,6 +1270,7 @@ _ARGUMENT_TO_SESSIONOPTION: List[Tuple[str, str, Optional[Callable[[Any], Any]]]
     ("hls_segment_key_uri", "hls-segment-key-uri", None),
     ("hls_audio_select", "hls-audio-select", None),
     ("ffmpeg_ffmpeg", "ffmpeg-ffmpeg", None),
+    ("ffmpeg_no_validation", "ffmpeg-no-validation", None),
     ("ffmpeg_verbose", "ffmpeg-verbose", None),
     ("ffmpeg_verbose_path", "ffmpeg-verbose-path", None),
     ("ffmpeg_fout", "ffmpeg-fout", None),
