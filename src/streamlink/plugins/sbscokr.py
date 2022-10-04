@@ -1,115 +1,105 @@
 """
 $description Live TV channels from SBS, a South Korean public broadcaster.
-$url play.sbs.co.kr
+$url www.sbs.co.kr/live
 $type live
 $region South Korea
 """
 
+import argparse
 import logging
-import random
 import re
 
 from streamlink.plugin import Plugin, pluginargument, pluginmatcher
 from streamlink.plugin.api import validate
 from streamlink.stream.hls import HLSStream
 
+
 log = logging.getLogger(__name__)
 
 
 @pluginmatcher(re.compile(
-    r'https?://play\.sbs\.co\.kr/onair/pc/index\.html'
+    r"https?://www\.sbs\.co\.kr/live/(?P<channel>[^/?]+)"
 ))
 @pluginargument(
     "id",
-    metavar="CHANNELID",
-    type=str.upper,
-    help="""
-        Channel ID to play.
-
-        Example:
-
-            %(prog)s http://play.sbs.co.kr/onair/pc/index.html best --sbscokr-id S01
-
-    """,
+    help=argparse.SUPPRESS,
 )
 class SBScokr(Plugin):
-    api_channel = 'http://apis.sbs.co.kr/play-api/1.0/onair/channel/{0}'
-    api_channels = 'http://static.apis.sbs.co.kr/play-api/1.0/onair/channels'
-
-    _channels_schema = validate.Schema({
-        'list': [{
-            'channelname': validate.all(
-                validate.text,
-            ),
-            'channelid': validate.text,
-            validate.optional('type'): validate.text,
-        }]},
-        validate.get('list'),
-    )
-
-    _channel_schema = validate.Schema(
-        {
-            'onair': {
-                'info': {
-                    'onair_yn': validate.text,
-                    'overseas_yn': validate.text,
-                    'overseas_text': validate.text,
-                },
-                'source': {
-                    'mediasourcelist': validate.any([{
-                        validate.optional('default'): validate.text,
-                        'mediaurl': validate.text,
-                    }], [])
-                },
-            }
-        },
-        validate.get('onair'),
-    )
+    _URL_API_CHANNELS = "https://static.apis.sbs.co.kr/play-api/1.0/onair{virtual}/channels"
+    _URL_API_CHANNEL = "https://apis.sbs.co.kr/play-api/1.0/onair{virtual}/channel/{channel}"
 
     def _get_streams(self):
-        user_channel_id = self.get_option('id')
+        channel = self.match["channel"]
 
-        res = self.session.http.get(self.api_channels)
-        res = self.session.http.json(res, schema=self._channels_schema)
-
-        channels = {
-            channel["channelid"]: channel["channelname"]
-            for channel in sorted(res, key=lambda x: x["channelid"])
-            if channel.get("type") in ("TV", "Radio")
-        }
-
-        log.info('Available IDs: {0}'.format(', '.join(
-            '{0} ({1})'.format(key, value) for key, value in channels.items())))
-        if not user_channel_id:
-            log.error('No channel selected, use --sbscokr-id CHANNELID')
+        for virtual in ("", "/virtual"):
+            channels = self.session.http.get(
+                self._URL_API_CHANNELS.format(virtual=virtual),
+                schema=validate.Schema(
+                    validate.parse_json(),
+                    {
+                        "list": [{
+                            "channelid": str,
+                        }],
+                    },
+                    validate.get("list"),
+                    validate.map(lambda item: item["channelid"]),
+                ),
+            )
+            if channel in channels:
+                break
+        else:
             return
-        elif user_channel_id not in channels.keys():
-            log.error('Channel ID "{0}" is not available.'.format(user_channel_id))
+
+        info, hls_url = self.session.http.get(
+            self._URL_API_CHANNEL.format(virtual=virtual, channel=channel),
+            params={
+                "v_type": "2",
+                "platform": "pcweb",
+                "protocol": "hls",
+                "jwt-token": "",
+                "ssl": "Y",
+                "rscuse": "",
+            },
+            schema=validate.Schema(
+                validate.parse_json(),
+                {
+                    "onair": {
+                        "info": {
+                            "channelid": str,
+                            "channelname": str,
+                            "title": str,
+                            "onair_yn": str,
+                            "overseas_yn": str,
+                            "overseas_text": str,
+                        },
+                        "source": {
+                            "mediasource": {
+                                validate.optional("mediaurl"): validate.url(path=validate.endswith(".m3u8")),
+                            },
+                        },
+                    },
+                },
+                validate.get("onair"),
+                validate.union_get(
+                    "info",
+                    ("source", "mediasource", "mediaurl"),
+                ),
+            ),
+        )
+
+        if info["overseas_yn"] != "Y":
+            log.error(f"Geo-restricted content: {info['overseas_text']}")
             return
-
-        params = {
-            'v_type': '2',
-            'platform': 'pcweb',
-            'protocol': 'hls',
-            'jwt-token': '',
-            'rnd': random.randint(50, 300)
-        }
-
-        res = self.session.http.get(self.api_channel.format(user_channel_id),
-                                    params=params)
-        res = self.session.http.json(res, schema=self._channel_schema)
-
-        streams = []
-        for media in res['source']['mediasourcelist']:
-            if media['mediaurl']:
-                streams.extend(HLSStream.parse_variant_playlist(self.session, media["mediaurl"]).items())
-        if streams:
-            return streams
-
-        if res["info"]["onair_yn"] != "Y":
+        if info["onair_yn"] != "Y":
             log.error("This channel is currently unavailable")
-        elif res["info"]["overseas_yn"] != "Y":
-            log.error(res["info"]["overseas_text"])
+            return
+
+        self.id = info["channelid"]
+        self.author = info["channelname"]
+        self.title = info["title"]
+
+        if hls_url:
+            return HLSStream.parse_variant_playlist(self.session, hls_url)
 
 
 __plugin__ = SBScokr
