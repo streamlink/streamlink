@@ -1,5 +1,5 @@
 """
-$description Chinese live streaming platform for live video game broadcasts and live sports game related streams.
+$description Chinese live-streaming platform for live video game broadcasts and live sports game related streams.
 $url live.qq.com
 $type live
 """
@@ -7,47 +7,70 @@ $type live
 import logging
 import re
 
-from streamlink.exceptions import NoStreamsError
 from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.api import validate
 from streamlink.stream.hls import HLSStream
-from streamlink.utils.parse import parse_json
+from streamlink.utils.url import update_scheme
+
 
 log = logging.getLogger(__name__)
 
 
 @pluginmatcher(re.compile(
-    r"https?://(m\.)?live\.qq\.com/(?P<room_id>\d+)"
+    r"https?://(m\.)?live\.qq\.com/(?P<room_id>\d+)?"
 ))
 class QQ(Plugin):
-    _data_schema = validate.Schema(
-        {
-            "data": {
-                "hls_url": validate.text
-            }
-        },
-        validate.get("data", {}),
-        validate.get("hls_url")
-    )
-
-    api_url = "http://live.qq.com/api/h5/room?room_id={0}"
-
-    _data_re = re.compile(r"""(?P<data>{.+})""")
+    _URL_API = "https://live.qq.com/api/h5/room"
 
     def _get_streams(self):
         room_id = self.match.group("room_id")
-        res = self.session.http.get(self.api_url.format(room_id))
 
-        data = self._data_re.search(res.text)
-        if not data:
+        if not room_id:
+            room_id = self.session.http.get(self.url, schema=validate.Schema(
+                validate.parse_html(),
+                validate.xml_xpath_string(".//*[@data-rid][1]/@data-rid"),
+            ))
+        if not room_id:
             return
 
-        try:
-            hls_url = parse_json(data.group("data"), schema=self._data_schema)
-        except Exception:
-            raise NoStreamsError(self.url)
+        error, data = self.session.http.get(
+            self._URL_API,
+            params={"room_id": room_id},
+            schema=validate.Schema(
+                validate.parse_json(),
+                validate.any(
+                    validate.all(
+                        {
+                            "error": 0,
+                            "data": {
+                                "nickname": str,
+                                "game_name": str,
+                                "room_name": str,
+                                "hls_url": validate.url(path=validate.endswith(".m3u8")),
+                            }
+                        },
+                    ),
+                    validate.all(
+                        {
+                            "error": int,
+                            "data": str,
+                        },
+                    ),
+                ),
+                validate.union_get("error", "data"),
+            ),
+        )
+        if error != 0:
+            log.error(data)
+            return
 
-        log.debug("URL={0}".format(hls_url))
+        self.id = room_id
+        self.author = data["nickname"]
+        self.category = data["game_name"]
+        self.title = data["room_name"]
+
+        hls_url = update_scheme("https://", data["hls_url"], force=True)
+
         return {"live": HLSStream(self.session, hls_url)}
 
 
