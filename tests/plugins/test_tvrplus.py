@@ -6,12 +6,16 @@ class TestPluginCanHandleUrlTVRPlus(PluginCanHandleUrl):
     __plugin__ = TVRPlus
 
     should_match = [
-        "http://tvrplus.ro/live/tvr-1",
-        "http://www.tvrplus.ro/live/tvr-1",
-        "http://www.tvrplus.ro/live/tvr-3",
-        "http://www.tvrplus.ro/live/tvr-international",
+        "https://tvrplus.ro",
+        "https://tvrplus.ro/",
+        "https://tvrplus.ro/live/tvr-1",
+        "https://www.tvrplus.ro",
+        "https://www.tvrplus.ro/",
+        "https://www.tvrplus.ro/live/tvr-1",
+        "https://www.tvrplus.ro/live/tvr-3",
+        "https://www.tvrplus.ro/live/tvr-international",
     ]
 
     should_not_match = [
-        "http://www.tvrplus.ro/",
+        "https://www.tvrplus.ro/emisiuni",
     ]
