@@ -5,37 +5,30 @@ $type live
 $region Romania
 """
 
-import logging
 import re
 
-from streamlink.plugin import Plugin, pluginmatcher
+from streamlink.plugin import Plugin, PluginError, pluginmatcher
 from streamlink.plugin.api import validate
 from streamlink.stream.hls import HLSStream
 
-log = logging.getLogger(__name__)
-
 
 @pluginmatcher(re.compile(
-    r"https?://(?:www\.)?tvrplus\.ro/live/"
+    r"https?://(?:www\.)?tvrplus\.ro(?:/live/.+|/?$)"
 ))
 class TVRPlus(Plugin):
-    hls_file_re = re.compile(r"""["'](?P<url>[^"']+\.m3u8(?:[^"']+)?)["']""")
-
-    stream_schema = validate.Schema(
-        validate.all(
-            validate.transform(hls_file_re.findall),
-            validate.any(None, [validate.text])
-        ),
-    )
-
     def _get_streams(self):
-        headers = {"Referer": self.url}
-        stream_url = self.stream_schema.validate(self.session.http.get(self.url).text)
-        if stream_url:
-            stream_url = list(set(stream_url))
-            for url in stream_url:
-                log.debug("URL={0}".format(url))
-                yield from HLSStream.parse_variant_playlist(self.session, url, headers=headers).items()
+        try:
+            hls_url = self.session.http.get(
+                self.url,
+                schema=validate.Schema(
+                    re.compile(r"""(?P<q>["'])(?P<url>https?://\S+?\.m3u8\S*?)(?P=q)"""),
+                    validate.get("url"),
+                ),
+            )
+        except PluginError:
+            return
+
+        return HLSStream.parse_variant_playlist(self.session, hls_url, headers={"Referer": self.url})
 
 
 __plugin__ = TVRPlus
