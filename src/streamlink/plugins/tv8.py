@@ -18,11 +18,9 @@ log = logging.getLogger(__name__)
     r"https?://www\.tv8\.com\.tr/canli-yayin"
 ))
 class TV8(Plugin):
-    title = "TV8"
-
     def _get_streams(self):
         hls_url = self.session.http.get(self.url, schema=validate.Schema(
-            re.compile(r"""file\s*:\s*(?P<q>["'])(?P<hls_url>https?://.*?\.m3u8.*?)(?P=q)"""),
+            re.compile(r"""var\s+videoUrl\s*=\s*(?P<q>["'])(?P<hls_url>https?://.*?\.m3u8.*?)(?P=q)"""),
             validate.any(None, validate.get("hls_url")),
         ))
         if hls_url is not None:
