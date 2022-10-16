@@ -17,11 +17,11 @@ from streamlink.stream.hls import HLSStream
 log = logging.getLogger(__name__)
 
 
-@pluginmatcher(re.compile(
-    r"""https?://(?:www\.)?(?:tf1\.fr/(?P<live>[\w-]+)/direct/?|
+@pluginmatcher(re.compile(r"""
+    https?://(?:www\.)?(?:tf1\.fr/(?P<live>[\w-]+)/direct/?|
     (?P<lci>tf1info|lci)\.fr/direct/?|
-    tf1.fr/stream/(?P<stream>[\w-]+))"""
-, re.VERBOSE))
+    tf1.fr/stream/(?P<stream>[\w-]+))
+""", re.VERBOSE))
 class TF1(Plugin):
     api_url = "https://mediainfo.tf1.fr/mediainfocombo/{}?context=MYTF1&pver=4001000"
 
