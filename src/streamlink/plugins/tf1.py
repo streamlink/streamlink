@@ -18,20 +18,20 @@ log = logging.getLogger(__name__)
 
 
 @pluginmatcher(re.compile(
-    r"https?://(?:www\.)?(?:tf1\.fr/([\w-]+)/direct|(lci)\.fr/direct)/?"
+    r"https?://(?:www\.)?(?:tf1\.fr/(?P<live>[\w-]+)/direct/?|(?P<lci>tf1info|lci)\.fr/direct/?|tf1.fr/stream/(?P<stream>[\w-]+))"
 ))
 class TF1(Plugin):
     api_url = "https://mediainfo.tf1.fr/mediainfocombo/{}?context=MYTF1&pver=4001000"
 
-    def api_call(self, channel, useragent=useragents.CHROME):
-        url = self.api_url.format(f"L_{channel.upper()}")
+    def api_call(self, channel_id, useragent=useragents.CHROME):
+        url = self.api_url.format(channel_id)
         req = self.session.http.get(url,
                                     headers={"User-Agent": useragent})
         return self.session.http.json(req)
 
-    def get_stream_urls(self, channel):
+    def get_stream_urls(self, channel_id):
         for useragent in [useragents.CHROME, useragents.IPHONE_6]:
-            data = self.api_call(channel, useragent)
+            data = self.api_call(channel_id, useragent)
 
             if 'delivery' not in data or 'url' not in data['delivery']:
                 continue
@@ -42,16 +42,30 @@ class TF1(Plugin):
     def _get_streams(self):
         m = self.match
         if m:
-            channel = m.group(1) or m.group(2)
+            channel = ""
+            channel_id = ""
+            if m.group("live"):
+                channel = m.group("live")
+                channel_id = "L_" + channel.upper()
+            elif m.group("lci"):
+                channel = "LCI"
+                channel_id = "L_LCI"
+            elif m.group("stream"):
+                channel = m.group("stream")
+                channel_id = "L_FAST_v2l-" + m.group("stream")
             log.debug("Found channel {0}".format(channel))
-            for sformat, url in self.get_stream_urls(channel):
+            for sformat, url in self.get_stream_urls(channel_id):
                 try:
                     if sformat == "dash":
-                        yield from DASHStream.parse_manifest(
-                            self.session,
-                            url,
-                            headers={"User-Agent": useragents.CHROME}
-                        ).items()
+                        if m.group("stream") is not None:
+                            # DASH stream is invalid for 'stream' live
+                            log.debug("TF1 'Stream' channel, DASH skipped")
+                        else:
+                            yield from DASHStream.parse_manifest(
+                                self.session,
+                                url,
+                                headers={"User-Agent": useragents.CHROME}
+                            ).items()
                     if sformat == "hls":
                         yield from HLSStream.parse_variant_playlist(
                             self.session,
