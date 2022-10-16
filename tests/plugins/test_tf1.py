@@ -13,6 +13,9 @@ class TestPluginCanHandleUrlTF1(PluginCanHandleUrl):
         "http://www.lci.fr/direct",
         "http://tf1.fr/tmc/direct",
         "http://tf1.fr/lci/direct",
+        "https://tf1info.fr/direct",
+        "https://www.tf1.fr/stream/chante-69061019",
+        "https://www.tf1.fr/stream/arsene-lupin-39652174"
     ]
 
     should_not_match = [
