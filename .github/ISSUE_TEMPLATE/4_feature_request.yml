@@ -1,5 +1,5 @@
-name: Feature request
-description: Discuss adding new functionality to Streamlink
+name: ⚙️ Feature request
+description: Discuss adding new functionality to Streamlink.
 title: "A very brief summary of your request"
 labels:
   - feature request
@@ -9,7 +9,9 @@ body:
       value: |
         ## Thanks for filing a feature request!
 
-        Open a plugin request if you're requesting a new plugin instead of a new feature.
+        Use the [plugin request template](https://github.com/streamlink/streamlink/issues/new/choose) if you're requesting a new plugin instead of a new feature.
+
+        ----
 
         **DON'T IGNORE this template and fill in all the required details.**
         **Issues that don't adhere to our request will be closed and ignored.**
@@ -29,13 +31,12 @@ body:
     attributes:
       label: Description
       description: |
-        Explain the feature as clearly as you can.
+        Explain the feature as clearly as you can. For example:
 
-        What is it?
-        How would you expect it to work?
-        What value does it bring to Streamlink?
-        Does it fit into the scope and aims of the project?
-        etc.
+        - What is it?
+        - How would you expect it to work?
+        - What value does it bring to Streamlink?
+        - Does it fit into the scope and aims of the project?
     validations:
       required: true
   - type: markdown
@@ -44,9 +45,9 @@ body:
         ### Before submitting
 
         Make sure that you have
-        - properly filled in the title of this feature request
-        - checked the rendered text previews to avoid unnecessary formatting errors
+        - [ ] properly filled in the title of this feature request (at the very top of this page)
+        - [ ] checked the rendered text previews to avoid unnecessary formatting errors
 
         ----
 
-        [Love Streamlink? Please consider supporting our collective. Thanks!](https://opencollective.com/streamlink/donate)
+        [❤️ Love Streamlink? Please consider supporting the project maintainers. Thanks! ❤️](https://streamlink.github.io/donate.html)

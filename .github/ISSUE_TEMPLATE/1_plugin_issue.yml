@@ -1,5 +1,5 @@
-name: Plugin issue
-description: One of Streamlink's plugins doesn't work correctly
+name: 🧩 Plugin issue
+description: One of Streamlink's plugins doesn't work correctly.
 title: "plugins.plugin-name-here: A very brief summary of what's broken"
 labels:
   - plugin issue
@@ -9,7 +9,9 @@ body:
       value: |
         ## Thanks for reporting a plugin issue!
 
-        Plugin issues describe broken functionality within a plugin's code base, eg. the streaming site has made breaking changes, streams don't get resolved correctly, or authentication has stopped working, etc.
+        Plugin issues describe broken functionality within a plugin's code base, e.g. the streaming site has made breaking changes, streams don't get resolved correctly, or authentication has stopped working, etc.
+
+        ----
 
         **DON'T IGNORE this template and fill in all the required details.**
         **Issues that don't adhere to our request will be closed and ignored.**
@@ -43,23 +45,23 @@ body:
       label: Description
       description: |
         Explain the plugin issue as thoroughly as you can.
-        Please also provide the exact steps for reproducing the issue, eg. a list of input URLs.
+        Please also provide the exact steps for reproducing the issue, e.g. a list of input URLs.
     validations:
       required: true
   - type: textarea
     attributes:
       label: Debug log
       description: |
-        DEBUG LOG OUTPUT IS REQUIRED for plugin issues!
+        **DEBUG LOG OUTPUT IS REQUIRED for plugin issues!**
         INCLUDE THE ENTIRE COMMAND LINE and make sure to **remove usernames and passwords**
 
-        Use the [`--loglevel debug`](https://streamlink.github.io/latest/cli.html#cmdoption-loglevel) parameter and avoid using parameters which suppress log output.
-        Debug log includes important details about your platform. Don't remove it.
+        Use the [`--loglevel=debug`](https://streamlink.github.io/latest/cli.html#cmdoption-loglevel) parameter and avoid using parameters which suppress log output.
+        Debug log includes important details about your platform and the version you're using. Don't remove it.
 
         If the log output is too long and repetitive parts can't be truncated, or if you have multiple log outputs to share, please post a link to a [GitHub gist](https://gist.github.com/) with the log output instead.
-      placeholder: |
-        Don't post screenshots of the log output and instead copy the text from your terminal application.
 
+        **DO NOT post screenshots of the log output and instead copy the text from your terminal application.**
+      placeholder: |
         The content will be rendered as code block.
       render: text
     validations:
@@ -70,9 +72,9 @@ body:
         ### Before submitting
 
         Make sure that you have
-        - properly filled in the title of this plugin issue
-        - checked the rendered text previews to avoid unnecessary formatting errors
+        - [ ] properly filled in the title of this plugin issue (at the very top of this page)
+        - [ ] checked the rendered text previews to avoid unnecessary formatting errors
 
         ----
 
-        [Love Streamlink? Please consider supporting our collective. Thanks!](https://opencollective.com/streamlink/donate)
+        [❤️ Love Streamlink? Please consider supporting the project maintainers. Thanks! ❤️](https://streamlink.github.io/donate.html)
