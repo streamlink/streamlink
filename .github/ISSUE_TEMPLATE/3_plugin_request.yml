@@ -1,5 +1,5 @@
-name: Plugin request
-description: Discuss adding a new plugin to Streamlink
+name: 🧩 Plugin request
+description: Discuss adding a new plugin to Streamlink.
 title: "Name of the website / streaming provider"
 labels:
   - plugin request
@@ -10,6 +10,8 @@ body:
         ## Thanks for requesting a plugin!
 
         [READ THE PLUGIN REQUEST REQUIREMENTS IN THE CONTRIBUTION GUIDELINES BEFORE POSTING!](https://github.com/streamlink/streamlink/blob/master/CONTRIBUTING.md#plugin-requests)
+
+        ----
 
         **DON'T IGNORE this template and fill in all the required details.**
         **Issues that don't adhere to our request will be closed and ignored.**
@@ -29,19 +31,21 @@ body:
     attributes:
       label: Description
       description: |
-        Explain the plugin and site as clearly as you can.
+        Explain the plugin and site as clearly as you can according to the plugin request guidelines. For example:
 
-        What is the site about?
-        Who is it run by?
-        What content does it provide?
-        etc.
+        - What is the site about?
+        - Who is it run by?
+        - What kind of content does it provide?
+        - Are there any access restrictions like logins or region checks?
     validations:
       required: true
   - type: textarea
     attributes:
       label: Input URLs
       description: |
-        Please provide a list of example stream input URLs
+        Please provide a list of example input URLs.
+
+        **DO NOT post screenshots of the site or your web browser.**
       placeholder: |
         1. ...
         2. ...
@@ -55,9 +59,9 @@ body:
         ### Before submitting
 
         Make sure that you have
-        - properly filled in the title of this plugin request
-        - checked the rendered text previews to avoid unnecessary formatting errors
+        - [ ] properly filled in the title of this plugin request (at the very top of this page)
+        - [ ] checked the rendered text previews to avoid unnecessary formatting errors
 
         ----
 
-        [Love Streamlink? Please consider supporting our collective. Thanks!](https://opencollective.com/streamlink/donate)
+        [❤️ Love Streamlink? Please consider supporting the project maintainers. Thanks! ❤️](https://streamlink.github.io/donate.html)
