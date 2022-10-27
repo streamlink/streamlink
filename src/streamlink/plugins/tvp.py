@@ -1,57 +1,138 @@
 """
-$description Live TV channels from TVP, a Polish public, state-owned broadcaster.
-$url tvpstream.vod.tvp.pl
-$type live
-$region Poland
+$description Live TV channels and VODs from TVP, a Polish public, state-owned broadcaster.
+$url stream.tvp.pl
+$type live, vod
+$notes Some VODs may be geo-restricted. Authentication is not supported.
 """
 
 import logging
 import re
 
-from streamlink.plugin import Plugin, PluginError, pluginmatcher
+from streamlink.plugin import Plugin, pluginmatcher
+from streamlink.plugin.api import validate
 from streamlink.stream.hls import HLSStream
-from streamlink.stream.http import HTTPStream
 
 log = logging.getLogger(__name__)
 
 
 @pluginmatcher(re.compile(
-    r'https?://tvpstream\.vod\.tvp\.pl'
+    r"""
+        https?://
+        (?:
+            (?:tvpstream\.vod|stream)\.tvp\.pl(?:/(?:\?channel_id=(?P<video_id>\d+))?)?$
+            |
+            vod\.tvp\.pl/[^/]+/.+,(?P<vod_id>\d+)$
+        )
+    """,
+    re.VERBOSE,
 ))
 class TVP(Plugin):
-    player_url = 'https://www.tvp.pl/sess/tvplayer.php?object_id={0}&autoplay=true'
+    _URL_PLAYER = "https://stream.tvp.pl/sess/TVPlayer2/embed.php"
+    _URL_VOD = "https://vod.tvp.pl/api/products/{vod_id}/videos/playlist"
 
-    _stream_re = re.compile(r'''src:["'](?P<url>[^"']+\.(?:m3u8|mp4))["']''')
-    _video_id_re = re.compile(r'''class=["']tvp_player["'][^>]+data-video-id=["'](?P<video_id>\d+)["']''')
+    def _get_video_id(self):
+        return self.session.http.get(
+            self.url,
+            headers={
+                # required, otherwise the next request for retrieving the HLS URL will be aborted by the server
+                "Connection": "close",
+            },
+            schema=validate.Schema(
+                re.compile(r"window\.__channels\s*=\s*(?P<json>\[.+?])\s*;", re.DOTALL),
+                validate.none_or_all(
+                    validate.get("json"),
+                    validate.parse_json(),
+                    [{
+                        "items": validate.none_or_all(
+                            [{
+                                "video_id": int,
+                            }],
+                        ),
+                    }],
+                    validate.get((0, "items", 0, "video_id")),
+                ),
+            ),
+        )
 
-    def get_embed_url(self):
-        res = self.session.http.get(self.url)
+    def _get_live(self, video_id):
+        video_id = video_id or self._get_video_id()
+        if not video_id:
+            log.error("Could not find video ID")
+            return
 
-        m = self._video_id_re.search(res.text)
-        if not m:
-            raise PluginError('Unable to find a video id')
+        log.debug(f"video ID: {video_id}")
 
-        video_id = m.group('video_id')
-        log.debug('Found video id: {0}'.format(video_id))
-        return self.player_url.format(video_id)
+        return self.session.http.get(
+            self._URL_PLAYER,
+            params={
+                "ID": video_id,
+                "autoPlay": "without_audio",
+            },
+            headers={
+                "Referer": self.url,
+            },
+            schema=validate.Schema(
+                re.compile(r"window\.__api__\s*=\s*(?P<json>\{.+?})\s*;", re.DOTALL),
+                validate.get("json"),
+                validate.parse_json(),
+                {
+                    "result": {
+                        "content": {
+                            "files": validate.all(
+                                [{
+                                    "type": str,
+                                    "url": validate.url(),
+                                }],
+                                validate.filter(lambda item: item["type"] == "hls"),
+                            ),
+                        },
+                    },
+                },
+                validate.get(("result", "content", "files", 0, "url")),
+            ),
+        )
+
+    def _get_vod(self, vod_id):
+        data = self.session.http.get(
+            self._URL_VOD.format(vod_id=vod_id),
+            params={
+                "platform": "BROWSER",
+                "videoType": "MOVIE",
+            },
+            acceptable_status=(200, 403),
+            schema=validate.Schema(
+                validate.parse_json(),
+                validate.any(
+                    {"code": "GEOIP_FILTER_FAILED"},
+                    validate.all(
+                        {
+                            "sources": {
+                                validate.optional("HLS"): [{
+                                    "src": validate.url(),
+                                }],
+                            },
+                        },
+                        validate.get("sources"),
+                    ),
+                ),
+            ),
+        )
+
+        if data.get("code") == "GEOIP_FILTER_FAILED":
+            log.error("The content is not available in your region")
+            return
+
+        if data.get("HLS"):
+            return data["HLS"][0]["src"]
 
     def _get_streams(self):
-        embed_url = self.get_embed_url()
-        res = self.session.http.get(embed_url)
-        m = self._stream_re.findall(res.text)
-        if not m:
-            raise PluginError('Unable to find a stream url')
+        if self.match["vod_id"]:
+            hls_url = self._get_vod(self.match["vod_id"])
+        else:
+            hls_url = self._get_live(self.match["video_id"])
 
-        streams = []
-        for url in m:
-            log.debug('URL={0}'.format(url))
-            if url.endswith('.m3u8'):
-                streams.extend(HLSStream.parse_variant_playlist(self.session, url, name_fmt="{pixels}_{bitrate}").items())
-
-            elif url.endswith('.mp4'):
-                streams.append(('vod', HTTPStream(self.session, url)))
-
-        return streams
+        if hls_url:
+            return HLSStream.parse_variant_playlist(self.session, hls_url)
 
 
 __plugin__ = TVP
