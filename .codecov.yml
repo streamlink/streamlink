@@ -3,7 +3,7 @@ codecov:
     require_ci_to_pass: true
     # wait until at all test runners have uploaded a report (see the test job's build matrix)
     # otherwise, coverage failures may be shown while some reports are still missing
-    after_n_builds: 8
+    after_n_builds: 10
 comment:
   # this also configures the layout of PR check summaries / comments
   layout: "reach, diff, flags, files"
