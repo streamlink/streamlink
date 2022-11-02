@@ -102,17 +102,7 @@ class Bloomberg(Plugin):
         return secureStreams or streams
 
     def _get_streams(self):
-        self.session.http.headers.update({
-            "authority": "www.bloomberg.com",
-            "upgrade-insecure-requests": "1",
-            "dnt": "1",
-            "accept": ";".join([
-                "text/html,application/xhtml+xml,application/xml",
-                "q=0.9,image/webp,image/apng,*/*",
-                "q=0.8,application/signed-exchange",
-                "v=b3"
-            ])
-        })
+        del self.session.http.headers["Accept-Encoding"]
 
         try:
             data = self.session.http.get(self.url, schema=validate.Schema(
