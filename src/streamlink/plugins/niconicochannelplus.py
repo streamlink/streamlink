@@ -6,12 +6,11 @@ $account Not required. Full-length videos are accessible.
 $notes Downloading non-free content is not recommended.
 """
 
-import json
 import logging
 import re
 
 from streamlink.plugin import Plugin, pluginmatcher
-from streamlink.plugin.api import HTTPSession
+from streamlink.plugin.api import validate
 from streamlink.stream.hls import HLSStream
 
 log = logging.getLogger(__name__)
@@ -23,34 +22,39 @@ log = logging.getLogger(__name__)
     )
 )
 class NicoNicoChannelPlus(Plugin):
-    def get_video_page_info(self, http: HTTPSession, video_id: str) -> dict:
-        video_page_json = json.loads(
-            http.get(
-                url=f'https://nfc-api.nicochannel.jp/fc/video_pages/{video_id}',
-            ).content
-        )['data']['video_page']
+    _URL_API_VIDEO_PAGE_INFO = 'https://nfc-api.nicochannel.jp/fc/video_pages/{video_id}'
+    _URL_API_SESSION_ID = 'https://nfc-api.nicochannel.jp/fc/video_pages/{video_id}/session_ids'
+    _URL_API_MASTER_PLAYLIST = 'https://hls-auth.cloud.stream.co.jp/auth/index.m3u8?session_id={session_id}'
 
-        return video_page_json
+    def get_video_page_info(self, video_id: str) -> dict:
+        return self.session.http.get(
+            self._URL_API_VIDEO_PAGE_INFO.format(video_id=video_id),
+            schema=validate.Schema(
+                validate.parse_json(),
+                {'data': {'video_page': {'title': str}}},
+                validate.get(('data', 'video_page')),
+            ),
+        )
 
-    def get_master_playlist_url(self, http: HTTPSession, video_id: str) -> str:
-        session_id = json.loads(
-            http.post(
-                url=f'https://nfc-api.nicochannel.jp/fc/video_pages/{video_id}/session_ids',
-                data=str({}).encode('ascii'),
-                headers={
-                    'content-type': 'application/json',
-                }
-            ).content
-        )['data']['session_id']
+    def get_master_playlist_url(self, video_id: str) -> str:
+        session_id = self.session.http.post(
+            self._URL_API_SESSION_ID.format(video_id=video_id),
+            json={},
+            schema=validate.Schema(
+                validate.parse_json(),
+                {'data': {'session_id': str}},
+                validate.get(('data', 'session_id')),
+            ),
+        )
 
-        return f'https://hls-auth.cloud.stream.co.jp/auth/index.m3u8?session_id={session_id}'
+        return self._URL_API_MASTER_PLAYLIST.format(session_id=session_id)
 
     def _get_streams(self):
         self.id = self.match.group('id')
         self.author = self.match.group('channel')
 
-        video_info = self.get_video_page_info(self.session.http, self.id)
-        playlist_url = self.get_master_playlist_url(self.session.http, self.id)
+        video_info = self.get_video_page_info(self.id)
+        playlist_url = self.get_master_playlist_url(self.id)
 
         self.title = video_info['title']
 
@@ -58,10 +62,7 @@ class NicoNicoChannelPlus(Plugin):
         log.info(f'Channel: {self.author}')
         log.info(f'Title:   {self.title}')
 
-        for name, stream in HLSStream.parse_variant_playlist(
-            self.session, playlist_url
-        ).items():
-            yield name, stream
+        return HLSStream.parse_variant_playlist(self.session, playlist_url)
 
 
 __plugin__ = NicoNicoChannelPlus
