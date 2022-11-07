@@ -672,7 +672,11 @@ def load_plugins(dirs: List[Path], showwarning: bool = True):
             log.warning(f"Plugin path {directory} does not exist or is not a directory!")
 
 
-def setup_args(parser: argparse.ArgumentParser, config_files: List[Path] = None, ignore_unknown: bool = False):
+def setup_args(
+    parser: argparse.ArgumentParser,
+    config_files: Optional[List[Path]] = None,
+    ignore_unknown: bool = False,
+):
     """Parses arguments."""
     global args
     arglist = sys.argv[1:]
