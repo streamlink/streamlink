@@ -115,7 +115,7 @@ class WebsocketClient(Thread):
 
     def reconnect(
         self,
-        url: str = None,
+        url: Optional[str] = None,
         subprotocols: Optional[List[str]] = None,
         header: Optional[Union[List, Dict]] = None,
         cookie: Optional[str] = None,
