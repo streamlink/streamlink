@@ -132,7 +132,7 @@ class UStreamTVWsClient(WebsocketClient):
         password=None,
         app_id=APP_ID,
         app_version=APP_VERSION
-    ):
+    ) -> None:
         self.opened = Event()
         self.ready = Event()
         self.stream_error = None
