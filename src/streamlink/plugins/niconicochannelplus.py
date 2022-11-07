@@ -2,8 +2,6 @@
 $description NicoNico Channel Plus (nicochannel+) is a new feature of Niconico Channel.
 $url nicochannel.jp
 $type vod
-$account Not required. Full-length videos are accessible.
-$notes Downloading non-free content is not recommended.
 """
 
 import logging
