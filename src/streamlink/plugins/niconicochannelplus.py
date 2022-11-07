@@ -58,9 +58,7 @@ class NicoNicoChannelPlus(Plugin):
 
         self.title = video_info['title']
 
-        log.info(f'ID:      {self.id}')
-        log.info(f'Channel: {self.author}')
-        log.info(f'Title:   {self.title}')
+        log.debug(f'Title: {self.title}')
 
         return HLSStream.parse_variant_playlist(self.session, playlist_url)
 
