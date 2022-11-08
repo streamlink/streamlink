@@ -110,6 +110,8 @@ performing these checks locally avoids unnecessary build failures.
 
     # check code for linting errors
     flake8
+    # check code for typing errors
+    mypy
 
     # build the documentation
     make --directory=docs clean html
