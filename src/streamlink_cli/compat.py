@@ -5,7 +5,7 @@ from typing import BinaryIO, TYPE_CHECKING
 try:
     import importlib.metadata as importlib_metadata  # type: ignore[import]  # noqa: F401
 except ImportError:
-    import importlib_metadata  # type: ignore[import]  # noqa: F401
+    import importlib_metadata  # type: ignore[import,no-redef]  # noqa: F401
 
 
 stdout: BinaryIO = sys.stdout.buffer
