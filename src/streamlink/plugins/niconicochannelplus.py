@@ -1,12 +1,13 @@
 """
 $description NicoNico Channel Plus (nicochannel+) is a new feature of Niconico Channel.
 $url nicochannel.jp
-$type vod
+$type live, vod
 """
 
 import logging
 import re
 
+from streamlink.exceptions import PluginError
 from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.api import validate
 from streamlink.stream.hls import HLSStream
@@ -16,7 +17,7 @@ log = logging.getLogger(__name__)
 
 @pluginmatcher(
     re.compile(
-        r'^https?://nicochannel\.jp/(?P<channel>[a-z0-9_-]+)/video/(?P<id>sm[a-zA-Z0-9]+)$'
+        r'^https?://nicochannel\.jp/(?P<channel>[a-z0-9_-]+)/(?:video|live)/(?P<id>sm[a-zA-Z0-9]+)$'
     )
 )
 class NicoNicoChannelPlus(Plugin):
@@ -29,15 +30,37 @@ class NicoNicoChannelPlus(Plugin):
             self._URL_API_VIDEO_PAGE_INFO.format(video_id=video_id),
             schema=validate.Schema(
                 validate.parse_json(),
-                {'data': {'video_page': {'title': str}}},
+                {'data': {'video_page': {
+                    'title': str,
+                    'type': str,
+                    'live_started_at': validate.any(str, None),
+                    'live_finished_at': validate.any(str, None),
+                }}},
                 validate.get(('data', 'video_page')),
             ),
         )
 
-    def get_master_playlist_url(self, video_id: str) -> str:
+    def get_master_playlist_url(self, video_id: str, video_info: dict) -> str:
+        video_type = video_info['type']
+
+        if video_type == 'vod':
+            payload = {}
+        elif video_type == 'live':
+            if not video_info['live_started_at']:
+                raise PluginError('Live is not started yet.')
+
+            if not video_info['live_finished_at']:
+                # Live is available.
+                payload = {}
+            else:
+                # Live is already ended, try DVR.
+                payload = {'broadcast_type': 'dvr'}
+        else:
+            raise PluginError(f'Unknown video type: {video_type}')
+
         session_id = self.session.http.post(
             self._URL_API_SESSION_ID.format(video_id=video_id),
-            json={},
+            json=payload,
             schema=validate.Schema(
                 validate.parse_json(),
                 {'data': {'session_id': str}},
@@ -52,7 +75,7 @@ class NicoNicoChannelPlus(Plugin):
         self.author = self.match.group('channel')
 
         video_info = self.get_video_page_info(self.id)
-        playlist_url = self.get_master_playlist_url(self.id)
+        playlist_url = self.get_master_playlist_url(self.id, video_info)
 
         self.title = video_info['title']
 

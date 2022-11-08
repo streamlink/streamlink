@@ -6,20 +6,23 @@ class TestPluginCanHandleUrlNicoNicoChannelPlus(PluginCanHandleUrl):
     __plugin__ = NicoNicoChannelPlus
 
     should_match = [
-        # normal channel name.
+        # video urls
+        #   normal channel name.
         'https://nicochannel.jp/olchannel/video/smq9UriUQ9PU65jTjVxh2PVo',
-
-        # numbers in channel name.
+        #   numbers in channel name.
         'https://nicochannel.jp/dateno8noba/video/smVGqtKpdmva4Mcrw7rbeQ8Y',
-
-        # hyphens in channel name.
+        #   hyphens in channel name.
         'https://nicochannel.jp/mimimoto-ayaka/video/smRS96YpmDJr24YpWFZziG4L',
-
-        # underscores in channel name.
+        #   underscores in channel name.
         'https://nicochannel.jp/sakaguchi_kugimiya/video/smnSFttxbkjZDBwZMMj8CgsJ',
+
+        # live urls
+        #   normal channel name.
+        'https://nicochannel.jp/example/live/sm3Xample',
     ]
 
     should_match_groups = [
+        # video urls
         (
             'https://nicochannel.jp/olchannel/video/smq9UriUQ9PU65jTjVxh2PVo',
             {
@@ -48,6 +51,14 @@ class TestPluginCanHandleUrlNicoNicoChannelPlus(PluginCanHandleUrl):
                 'channel': 'sakaguchi_kugimiya',
             }
         ),
+        # live urls
+        (
+            'https://nicochannel.jp/example/live/sm3Xample',
+            {
+                'id': 'sm3Xample',
+                'channel': 'example',
+            }
+        ),
     ]
 
     should_not_match = [
@@ -64,8 +75,6 @@ class TestPluginCanHandleUrlNicoNicoChannelPlus(PluginCanHandleUrl):
         'https://nicochannel.jp/'
         'https://nicochannel.jp/example/live',
         'https://nicochannel.jp/example/video',
-        #   live urls (move it to "should_match*" if the plugin supports live-streaming)
-        'https://nicochannel.jp/example/live/sm3Xample',
 
         # Niconico Channel
         #   portal
