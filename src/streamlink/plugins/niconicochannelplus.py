@@ -44,7 +44,7 @@ class NicoNicoChannelPlus(Plugin):
         video_type = video_info['type']
 
         if video_type == 'vod':
-            payload = {}
+            payload: dict = {}
         elif video_type == 'live':
             if not video_info['live_started_at']:
                 raise PluginError('Live is not started yet.')
