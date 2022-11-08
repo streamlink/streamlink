@@ -249,7 +249,7 @@ class FFmpegVersionOutput(ProcessOutput):
     # https://github.com/FFmpeg/FFmpeg/commit/89b503b55f2b2713f1c3cc8981102c1a7b663281
     _re_version = re.compile(r"ffmpeg version (?P<version>\S+)")
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
         self.version: Optional[str] = None
         self.output: List[str] = []
