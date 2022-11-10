@@ -30,24 +30,24 @@ the ``auth-token`` cookie, if it exists:
 
 Copy the resulting string consisting of 30 alphanumerical characters without any quotations.
 
-The final ``Authentication`` header which will identify your account while requesting a streaming access token can then be set
+The final ``Authorization`` header which will identify your account while requesting a streaming access token can then be set
 via Streamlink's :option:`--http-header` or :option:`--twitch-api-header` CLI arguments. The former will set the header on any
 HTTP request made by Streamlink, even HLS Streams, while the latter will only do that on Twitch API requests, which is what
 should be done when authenticating and which is the reason why this CLI argument was added.
 
-The value of the ``Authentication`` header must be in the format of ``OAuth YOUR_TOKEN``. Notice the space character in the
+The value of the ``Authorization`` header must be in the format of ``OAuth YOUR_TOKEN``. Notice the space character in the
 argument value, which requires quotation on command line shells:
 
 .. code-block:: console
 
-    $ streamlink "--twitch-api-header=Authentication=OAuth abcdefghijklmnopqrstuvwxyz0123" twitch.tv/CHANNEL best
+    $ streamlink "--twitch-api-header=Authorization=OAuth abcdefghijklmnopqrstuvwxyz0123" twitch.tv/CHANNEL best
 
 The entire argument can optionally be added to Streamlink's (Twitch plugin specific)
 :ref:`config file <cli/config:Plugin specific configuration file>`, which :ref:`doesn't require quotes <cli/config:Syntax>`:
 
 .. code-block:: text
 
-    twitch-api-header=Authentication=OAuth abcdefghijklmnopqrstuvwxyz0123
+    twitch-api-header=Authorization=OAuth abcdefghijklmnopqrstuvwxyz0123
 
 
 .. _restrictive changes: https://github.com/streamlink/streamlink/issues/2680#issuecomment-557605851
