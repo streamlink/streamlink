@@ -252,10 +252,13 @@ Version                              Installing
 .. _Specific tag/branch or commit: https://pip.pypa.io/en/stable/reference/pip_install/#git
 
 Virtual environment
-^^^^^^^^^^^^^^^^^^^
+-------------------
 
 Another method of installing Streamlink in a non-system-wide way is
 using `virtualenv`_, which creates a user owned Python environment instead.
+
+Install with ``virtualenv`` and ``pip`` commands
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. code-block:: bash
 
@@ -265,8 +268,11 @@ using `virtualenv`_, which creates a user owned Python environment instead.
     # Activate the environment
     source ~/myenv/bin/activate
 
-    # Install Streamlink in the environment
+    # *Either* install the latest Streamlink release from PyPI in the virtual environment
     pip install --upgrade streamlink
+
+    # *Or*, install the most up-to-date development version from master on GitHub
+    pip install --upgrade git+https://github.com/streamlink/streamlink.git
 
     # Use Streamlink in the environment
     streamlink ...
@@ -277,12 +283,25 @@ using `virtualenv`_, which creates a user owned Python environment instead.
     # Use Streamlink without activating the environment
     ~/myenv/bin/streamlink ...
 
-.. note::
+Install with ``pipx`` command
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-    This may also be required on some macOS versions that seem to have weird
-    permission issues.
+The `pipx`_ command combines the functionality of the ``virtualenv`` and ``pip`` commands. It may be necessary to
+install it first, either with a system package manager, or using ``pip``, as detailed in the `documentation <pipx_>`_.
+
+.. code-block:: bash
+
+    # *Either* install the latest Streamlink release from PyPI in a virtual environment
+    pipx install streamlink
+
+    # *Or*, install the most up-to-date development version from master on GitHub
+    pipx install git+https://github.com/streamlink/streamlink.git
+
+    # Use Streamlink
+    streamlink ...
 
 .. _virtualenv: https://virtualenv.readthedocs.io/en/latest/
+.. _pipx: https://pypa.github.io/pipx/
 
 Dependencies
 ^^^^^^^^^^^^
