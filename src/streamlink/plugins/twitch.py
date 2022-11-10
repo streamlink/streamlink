@@ -96,7 +96,7 @@ class TwitchM3U8Parser(M3U8Parser):
     def get_segment(self, uri: str) -> TwitchSegment:  # type: ignore[override]
         extinf: ExtInf = self.state.pop("extinf", None) or ExtInf(0, None)
         date = self.state.pop("date", None)
-        ad = self._is_segment_ad(date)
+        ad = self._is_segment_ad(date, extinf.title)
 
         return TwitchSegment(
             uri=uri,
@@ -111,8 +111,11 @@ class TwitchM3U8Parser(M3U8Parser):
             prefetch=False,
         )
 
-    def _is_segment_ad(self, date: datetime) -> bool:
-        return any(self.m3u8.is_date_in_daterange(date, daterange) for daterange in self.m3u8.dateranges_ads)
+    def _is_segment_ad(self, date: datetime, title: Optional[str] = None) -> bool:
+        return (
+            title is not None and "Amazon" in title
+            or any(self.m3u8.is_date_in_daterange(date, daterange) for daterange in self.m3u8.dateranges_ads)
+        )
 
     @staticmethod
     def _is_daterange_ad(daterange: DateRange) -> bool:
