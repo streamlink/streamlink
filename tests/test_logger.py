@@ -40,6 +40,7 @@ class TestLogging:
         ("info", logger.INFO),
         ("debug", logger.DEBUG),
         ("trace", logger.TRACE),
+        ("all", logger.ALL),
     ])
     def test_level_names(self, name: str, level: int):
         assert logging.getLevelName(level) == name
@@ -47,7 +48,7 @@ class TestLogging:
         assert logging.getLevelName(name.upper()) == level
 
     def test_levels_list(self):
-        assert logger.levels == ["none", "critical", "error", "warning", "info", "debug", "trace"]
+        assert logger.levels == ["none", "critical", "error", "warning", "info", "debug", "trace", "all"]
 
     def test_default_level(self):
         assert logging.getLogger("streamlink").level == logger.WARNING
@@ -70,6 +71,7 @@ class TestLogging:
         log.info("test")
         log.debug("test")
         log.trace("test")  # type: ignore[attr-defined]
+        log.trace("paranoid")  # type: ignore[attr-defined]
         assert not output.getvalue()
 
     def test_output(self, log: logging.Logger, output: StringIO):
@@ -77,25 +79,30 @@ class TestLogging:
         log.debug("test")
         assert output.getvalue() == "[test][debug] test\n"
 
-    def test_trace_output(self, log: logging.Logger, output: StringIO):
-        log.setLevel("trace")
-        log.trace("test")  # type: ignore[attr-defined]
-        assert output.getvalue() == "[test][trace] test\n"
-
-    def test_trace_no_output(self, log: logging.Logger, output: StringIO):
-        log.setLevel("debug")
-        log.trace("test")  # type: ignore[attr-defined]
-        assert output.getvalue() == ""
+    @pytest.mark.parametrize("loglevel,calllevel,expected", [
+        (logger.DEBUG, logger.TRACE, ""),
+        (logger.TRACE, logger.TRACE, "[test][trace] test\n"),
+        (logger.TRACE, logger.ALL, ""),
+        (logger.ALL, logger.ALL, "[test][all] test\n"),
+    ])
+    def test_custom_output(self, log: logging.Logger, output: StringIO, loglevel: int, calllevel: int, expected: str):
+        log.setLevel(loglevel)
+        log.log(calllevel, "test")
+        assert output.getvalue() == expected
 
     # https://github.com/streamlink/streamlink/issues/4862
-    def test_trace_module_name(self, caplog: pytest.LogCaptureFixture, log: logging.Logger):
+    @pytest.mark.parametrize("level,levelname", [
+        (logger.TRACE, "trace"),
+        (logger.ALL, "all"),
+    ])
+    def test_custom_module_name(self, caplog: pytest.LogCaptureFixture, log: logging.Logger, level: int, levelname: str):
         caplog.set_level(1)
         log = logging.getLogger(self.__class__.__module__)
-        log.trace("foo")  # type: ignore[attr-defined]
-        log.log(logger.TRACE, "bar")
+        getattr(log, levelname)("foo")
+        log.log(level, "bar")
         assert [(record.module, record.levelname, record.message) for record in caplog.records] == [
-            ("test_logger", "trace", "foo"),
-            ("test_logger", "trace", "bar"),
+            ("test_logger", levelname, "foo"),
+            ("test_logger", levelname, "bar"),
         ]
 
     def test_debug_out_at_trace(self, log: logging.Logger, output: StringIO):
