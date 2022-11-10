@@ -203,6 +203,7 @@ class HLSStreamWriter(SegmentedStreamWriter):
 
     def write(self, sequence: Sequence, result: Response, *data):
         if not self.should_filter_sequence(sequence):
+            log.debug(f"Writing segment {sequence.num} to output")
             try:
                 return self._write(sequence, result, *data)
             finally:
@@ -212,6 +213,8 @@ class HLSStreamWriter(SegmentedStreamWriter):
                     self.reader.filter_event.set()
 
         else:
+            log.debug(f"Discarding segment {sequence.num}")
+
             # Read and discard any remaining HTTP response data in the response connection.
             # Unread data in the HTTPResponse connection blocks the connection from being released back to the pool.
             result.raw.drain_conn()
