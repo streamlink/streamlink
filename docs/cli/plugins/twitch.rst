@@ -80,9 +80,9 @@ segments from Twitch's HLS streams and pauses the stream output until regular co
 logic has seen several iterations since then, with the latest big overhaul in
 :ref:`Streamlink 1.7.0 in 2020 <changelog:streamlink 1.7.0 (2020-10-18)>`.
 
-**In addition to that**, special API request headers can be set via :option:`--twitch-api-header` that can prevent ads from
-being embedded into the stream, either :ref:`authentication data <cli/plugins/twitch:Authentication>` or other data discovered
-by the community.
+**In addition to that**, special API request headers can be set via :option:`--twitch-api-header` or special API request
+parameters can be set via :option:`--twitch-access-token-param` that can prevent ads from being embedded into the stream,
+either :ref:`authentication data <cli/plugins/twitch:Authentication>` or other data discovered by the community.
 
 
 Low latency streaming
