@@ -5,11 +5,10 @@ import pytest
 import requests
 
 from streamlink.exceptions import PluginError
-from streamlink.plugin.api.http_session import HTTPSession, urllib3_version
+from streamlink.plugin.api.http_session import HTTPSession
 from streamlink.plugin.api.useragents import FIREFOX
 
 
-@pytest.mark.skipif(urllib3_version < (1, 25, 4), reason="test only applicable on urllib3 >=1.25.4")
 class TestUrllib3Overrides:
     @pytest.fixture(scope="class")
     def httpsession(self) -> HTTPSession:
