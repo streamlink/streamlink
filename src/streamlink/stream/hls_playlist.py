@@ -11,7 +11,10 @@ from urllib.parse import urljoin, urlparse
 from isodate import ISO8601Error, parse_datetime  # type: ignore[import]
 from requests import Response
 
-log = logging.getLogger(__name__)
+from streamlink.logger import ALL, StreamlinkLogger
+
+
+log: StreamlinkLogger = logging.getLogger(__name__)  # type: ignore[assignment]
 
 
 class Resolution(NamedTuple):
@@ -547,6 +550,8 @@ class M3U8Parser:
             if not line.startswith("#EXTM3U"):
                 log.warning(f"Malformed HLS Playlist. Expected #EXTM3U, but got {line[:250]}")
                 raise ValueError("Missing #EXTM3U header")
+
+        lines = log.iter(ALL, lines)
 
         parse_line = self.parse_line
         for line in lines:
