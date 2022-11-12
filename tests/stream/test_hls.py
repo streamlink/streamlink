@@ -11,6 +11,7 @@ from Crypto.Util.Padding import pad
 
 from streamlink.session import Streamlink
 from streamlink.stream.hls import HLSStream, HLSStreamReader
+from streamlink.stream.hls_playlist import M3U8Parser
 from tests.mixins.stream_hls import EventedHLSStreamWriter, Playlist, Segment, Tag, TestMixinStreamHLS
 from tests.resources import text
 
@@ -676,3 +677,16 @@ class TestHlsExtAudio(unittest.TestCase):
 
         # Check result
         self.assertEqual(result, expected)
+
+
+class TestM3U8ParserLogging:
+    @pytest.mark.parametrize("loglevel,has_logs", [("trace", False), ("all", True)])
+    def test_log(self, caplog: pytest.LogCaptureFixture, loglevel: str, has_logs: bool):
+        caplog.set_level(loglevel, "streamlink")
+
+        parser = M3U8Parser()
+        with text("hls/test_1.m3u8") as pl:
+            data = pl.read()
+        parser.parse(data)
+
+        assert bool(caplog.records) is has_logs
