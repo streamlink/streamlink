@@ -149,7 +149,7 @@ class PluginMetadata:
             type=MetadataItem("Type"),
             region=MetadataItem("Region"),
             account=MetadataItem("Account"),
-            notes=MetadataItem("Notes"),
+            notes=MetadataList("Notes"),
         )
         self.additional: List[IDatalistItem] = [
             PluginArguments(name, pluginast),
