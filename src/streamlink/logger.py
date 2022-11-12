@@ -5,7 +5,7 @@ from logging import CRITICAL, DEBUG, ERROR, INFO, WARNING
 from pathlib import Path
 from sys import version_info
 from threading import Lock
-from typing import IO, List, Optional, TYPE_CHECKING, Union
+from typing import IO, Iterator, List, Optional, TYPE_CHECKING, Union
 
 
 if TYPE_CHECKING:  # pragma: no cover
@@ -15,7 +15,17 @@ else:
 
 
 class StreamlinkLogger(_BaseLoggerClass):
-    pass
+    def iter(self, level: int, messages: Iterator[str], *args, **kwargs) -> Iterator[str]:
+        """
+        Iterator wrapper for logging multiple items in a single call and checking log level only once
+        """
+
+        if not self.isEnabledFor(level):
+            yield from messages
+
+        for message in messages:
+            self._log(level, message, args, **kwargs)
+            yield message
 
 
 FORMAT_STYLE = "{"
@@ -153,6 +163,7 @@ levels = list(_levelToNames.values())
 __all__ = [
     "NONE",
     "TRACE",
+    "ALL",
     "StreamlinkLogger",
     "basicConfig",
     "root",

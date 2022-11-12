@@ -82,8 +82,10 @@ class TestLogging:
     @pytest.mark.parametrize("loglevel,calllevel,expected", [
         (logger.DEBUG, logger.TRACE, ""),
         (logger.TRACE, logger.TRACE, "[test][trace] test\n"),
+        (logger.TRACE, logger.DEBUG, "[test][debug] test\n"),
         (logger.TRACE, logger.ALL, ""),
         (logger.ALL, logger.ALL, "[test][all] test\n"),
+        (logger.ALL, logger.TRACE, "[test][trace] test\n"),
     ])
     def test_custom_output(self, log: logging.Logger, output: StringIO, loglevel: int, calllevel: int, expected: str):
         log.setLevel(loglevel)
@@ -105,10 +107,18 @@ class TestLogging:
             ("test_logger", levelname, "bar"),
         ]
 
-    def test_debug_out_at_trace(self, log: logging.Logger, output: StringIO):
-        log.setLevel("trace")
-        log.debug("test")
-        assert output.getvalue() == "[test][debug] test\n"
+    @pytest.mark.parametrize("level,expected", [
+        (logger.DEBUG, ""),
+        (logger.INFO, "[test][info] foo\n[test][info] bar\n"),
+    ])
+    def test_iter(self, log: logger.StreamlinkLogger, output: StringIO, level: int, expected: str):
+        def iterator():
+            yield "foo"
+            yield "bar"
+
+        log.setLevel(logger.INFO)
+        assert list(log.iter(level, iterator())) == ["foo", "bar"]
+        assert output.getvalue() == expected
 
     @pytest.mark.parametrize("log", [
         {"style": "%", "format": "[%(name)s][%(levelname)s] %(message)s"},
