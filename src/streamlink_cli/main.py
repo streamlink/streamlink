@@ -895,13 +895,14 @@ def setup_logger_and_console(stream=sys.stdout, filename=None, level="info", jso
     if filename:
         filename.parent.mkdir(parents=True, exist_ok=True)
 
+    verbose = level in ("trace", "all")
     streamhandler = logger.basicConfig(
         stream=stream,
         filename=filename,
         level=level,
         style="{",
-        format=("[{asctime}]" if level == "trace" else "") + "[{name}][{levelname}] {message}",
-        datefmt="%H:%M:%S" + (".%f" if level == "trace" else "")
+        format=f"{'[{asctime}]' if verbose else ''}[{{name}}][{{levelname}}] {{message}}",
+        datefmt=f"%H:%M:%S{'.%f' if verbose else ''}",
     )
 
     console = ConsoleOutput(streamhandler.stream, json)
