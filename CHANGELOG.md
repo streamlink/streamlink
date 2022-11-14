@@ -1,5 +1,28 @@
 # Changelog
 
+## streamlink 5.1.0 (2022-11-14)
+
+- Added: debug log messages of the FFmpeg version in use ([#4861](https://github.com/streamlink/streamlink/pull/4861))  
+  Checking the FFmpeg version can be disabled via `--ffmpeg-no-validation`
+- Added: `--twitch-access-token-param` for changing access token API request params ([#4952](https://github.com/streamlink/streamlink/pull/4952))
+- Added: new log level `all` ([#4941](https://github.com/streamlink/streamlink/pull/4941))
+- Updated: sbscokr plugin and removed the `--sbscokr-id` parameter ([#4865](https://github.com/streamlink/streamlink/pull/4865))
+- Updated: Twitch authentication docs ([#4940](https://github.com/streamlink/streamlink/pull/4940), [#4956](https://github.com/streamlink/streamlink/pull/4956))
+- Fixed: broken `--twitch-disable-ads` mid-roll ad filering ([#4942](https://github.com/streamlink/streamlink/pull/4942))
+- Fixed: incorrect module name for trace logs on Python 3.11 ([#4863](https://github.com/streamlink/streamlink/pull/4863))
+- Fixed: bloomberg plugin ([#4919](https://github.com/streamlink/streamlink/pull/4919))
+- Fixed: dailymotion plugin ([#4910](https://github.com/streamlink/streamlink/pull/4910))
+- Fixed: raiplay plugin ([#4851](https://github.com/streamlink/streamlink/pull/4851))
+- Fixed: tvp plugin ([#4905](https://github.com/streamlink/streamlink/pull/4905))
+- Fixed: vinhlongtv plugin ([#4850](https://github.com/streamlink/streamlink/pull/4850))
+- Fixed: various other plugin issues (see full changelog)
+- Removed plugins: egame ([#4866](https://github.com/streamlink/streamlink/pull/4866))
+- Build: added `urllib3` as a direct dependency and set it to `>=1.26.0` ([#4950](https://github.com/streamlink/streamlink/pull/4950))
+- Build: added `pytest-asyncio` to dev-requirements ([#4861](https://github.com/streamlink/streamlink/pull/4861))
+
+[Full changelog](https://github.com/streamlink/streamlink/compare/5.0.1...5.1.0)
+
+
 ## streamlink 5.0.1 (2022-09-22)
 
 Patch release:
