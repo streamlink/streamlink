@@ -310,6 +310,7 @@ runtime   `pycountry`_              Used for localization settings, provides cou
 runtime   `pycryptodome`_           Used for decrypting encrypted streams
 runtime   `PySocks`_                Used for SOCKS Proxies
 runtime   `requests`_               Used for making any kind of HTTP/HTTPS request
+runtime   `urllib3`_                Used internally by `requests`_, defined as direct dependency
 runtime   `websocket-client`_       Used for making websocket connections
 
 optional  `FFmpeg`_                 Required for `muxing`_ multiple video/audio/subtitle streams into a single output stream.
@@ -332,7 +333,8 @@ optional  `FFmpeg`_                 Required for `muxing`_ multiple video/audio/
 .. _pycountry: https://pypi.org/project/pycountry/
 .. _pycryptodome: https://pycryptodome.readthedocs.io/en/latest/
 .. _PySocks: https://github.com/Anorov/PySocks
-.. _requests: https://docs.python-requests.org/en/master/
+.. _requests: https://requests.readthedocs.io/en/latest/
+.. _urllib3: https://urllib3.readthedocs.io/en/stable/
 .. _websocket-client: https://pypi.org/project/websocket-client/
 
 .. _FFmpeg: https://www.ffmpeg.org/
