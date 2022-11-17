@@ -4,6 +4,7 @@ from threading import RLock, Thread, current_thread
 from typing import Any, Dict, List, Optional, Tuple, Union
 from urllib.parse import unquote_plus, urlparse
 
+from certifi import where as certify_where
 from websocket import ABNF, STATUS_NORMAL, WebSocketApp, enableTrace  # type: ignore[import]
 
 from streamlink.logger import TRACE, root as rootlogger
@@ -64,6 +65,10 @@ class WebsocketClient(Thread):
 
         self._reconnect = False
         self._reconnect_lock = RLock()
+
+        if not sslopt:  # pragma: no cover
+            sslopt = {}
+        sslopt.setdefault("ca_certs", certify_where())
 
         self.session = session
         self._ws_init(url, subprotocols, header, cookie)

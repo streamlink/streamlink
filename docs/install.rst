@@ -304,6 +304,7 @@ build     `wheel`_                  Used by the build frontend for creating Pyth
 build     `versioningit`_           At least version **2.0.0**. |br| Used for generating the version string from git
                                     when building, or when running in an editable install.
 
+runtime   `certifi`_                Used for loading the CA bundle extracted from the Mozilla Included CA Certificate List
 runtime   `isodate`_                Used for parsing ISO8601 strings
 runtime   `lxml`_                   Used for processing HTML and XML data
 runtime   `pycountry`_              Used for localization settings, provides country and language data
@@ -328,6 +329,7 @@ optional  `FFmpeg`_                 Required for `muxing`_ multiple video/audio/
 .. _wheel: https://wheel.readthedocs.io/en/stable/
 .. _versioningit: https://versioningit.readthedocs.io/en/stable/
 
+.. _certifi: https://certifiio.readthedocs.io/en/latest/
 .. _isodate: https://pypi.org/project/isodate/
 .. _lxml: https://lxml.de/
 .. _pycountry: https://pypi.org/project/pycountry/
