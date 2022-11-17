@@ -55,6 +55,7 @@ class TestWebsocketClient(unittest.TestCase):
             "User-Agent: bar"
         ])
 
+    @patch("streamlink.plugin.api.websocket.certify_where", Mock(side_effect=lambda: "/path/to/cacert.pem"))
     def test_args_and_proxy(self):
         self.session.set_option("http-proxy", "https://username:password@hostname:1234")
         client = WebsocketClient(
@@ -81,7 +82,10 @@ class TestWebsocketClient(unittest.TestCase):
         self.assertEqual(mock_ws_run_forever.call_args_list, [
             call(
                 sockopt=("sockopt1", "sockopt2"),
-                sslopt={"ssloptkey": "ssloptval"},
+                sslopt={
+                    "ssloptkey": "ssloptval",
+                    "ca_certs": "/path/to/cacert.pem",
+                },
                 host="customhost",
                 origin="customorigin",
                 suppress_origin=True,
