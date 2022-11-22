@@ -1,6 +1,18 @@
 # Changelog
 
+## streamlink 5.1.1 (2022-11-23)
+
+Patch release:
+
+- Changed: `WebsocketClient` to use CA certificates bundled by `certifi` ([#4977](https://github.com/streamlink/streamlink/pull/4977))
+- Fixed: `SegmentedStreamReader` not properly getting closed ([#4972](https://github.com/streamlink/streamlink/pull/4972))
+- Fixed: CLI argument links throughout the entire docs ([#4989](https://github.com/streamlink/streamlink/pull/4989))
+- Build: added `certifi` as a direct dependency ([#4977](https://github.com/streamlink/streamlink/pull/4977))
+
+
 ## streamlink 5.1.0 (2022-11-14)
+
+Release highlights:
 
 - Added: debug log messages of the FFmpeg version in use ([#4861](https://github.com/streamlink/streamlink/pull/4861))  
   Checking the FFmpeg version can be disabled via `--ffmpeg-no-validation`
