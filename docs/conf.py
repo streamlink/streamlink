@@ -216,10 +216,22 @@ htmlhelp_basename = 'streamlinkdoc'
 
 # -- Options for manual page output --------------------------------------------
 
+# Only include the man page in builds with the "man" tag set: via `-t man` (see Makefile)
+
+# noinspection PyUnresolvedReferences
+if not tags.tags.get("man"):  # type: ignore[name-defined]
+    exclude_patterns.append("_man.rst")
+
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    ('_man', 'streamlink', 'extracts streams from various services and pipes them into a video player of choice', ['Streamlink Contributors'], 1)
+    (
+        "_man",
+        "streamlink",
+        "extracts streams from various services and pipes them into a video player of choice",
+        ["Streamlink Contributors"],
+        1,
+    ),
 ]
 
 # If true, show URL addresses after external links.
