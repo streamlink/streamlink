@@ -80,7 +80,7 @@ jobs:
       - name: Install dependencies
         run: |
           ./script/install-dependencies.sh
-          python -m pip install -r docs-requirements.txt sphinx==5.2.3
+          python -m pip install -r docs-requirements.txt
       - name: Build
         run: make --directory=docs html man
 
@@ -103,7 +103,7 @@ jobs:
       - name: Install dependencies
         run: |
           ./script/install-dependencies.sh
-          python -m pip install -r docs-requirements.txt sphinx==5.2.3
+          python -m pip install -r docs-requirements.txt
       - name: Build
         run: make --directory=docs html
       - name: Deploy
