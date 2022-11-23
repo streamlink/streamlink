@@ -9,6 +9,8 @@ Patch release:
 - Fixed: CLI argument links throughout the entire docs ([#4989](https://github.com/streamlink/streamlink/pull/4989))
 - Build: added `certifi` as a direct dependency ([#4977](https://github.com/streamlink/streamlink/pull/4977))
 
+[Full changelog](https://github.com/streamlink/streamlink/compare/5.1.0...5.1.1)
+
 
 ## streamlink 5.1.0 (2022-11-14)
 
