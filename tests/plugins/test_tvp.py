@@ -9,13 +9,13 @@ class TestPluginCanHandleUrlTVP(PluginCanHandleUrl):
         # live
         ("https://stream.tvp.pl", {}),
         ("https://stream.tvp.pl/", {}),
-        ("https://stream.tvp.pl/?channel_id=63759349", {"video_id": "63759349"}),
-        ("https://stream.tvp.pl/?channel_id=14812849", {"video_id": "14812849"}),
+        ("https://stream.tvp.pl/?channel_id=63759349", {"channel_id": "63759349"}),
+        ("https://stream.tvp.pl/?channel_id=14812849", {"channel_id": "14812849"}),
         # old live URLs
         ("https://tvpstream.vod.tvp.pl", {}),
         ("https://tvpstream.vod.tvp.pl/", {}),
-        ("https://tvpstream.vod.tvp.pl/?channel_id=63759349", {"video_id": "63759349"}),
-        ("https://tvpstream.vod.tvp.pl/?channel_id=14812849", {"video_id": "14812849"}),
+        ("https://tvpstream.vod.tvp.pl/?channel_id=63759349", {"channel_id": "63759349"}),
+        ("https://tvpstream.vod.tvp.pl/?channel_id=14812849", {"channel_id": "14812849"}),
 
         # VOD
         (
