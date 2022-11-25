@@ -139,7 +139,7 @@ class FFMPEGMuxer(StreamIO):
                     pipe.write(data)
                 else:
                     break
-            except OSError:
+            except (OSError, ValueError):
                 log.error(f"Pipe copy aborted: {pipe.path}")
                 break
         try:
