@@ -2,6 +2,10 @@
 
   <br />
 
+.. |icon-download| raw:: html
+
+  <i class="fa fa-download"></i>
+
 Installation
 ============
 
@@ -78,6 +82,8 @@ Linux and BSD
 Distribution                         Installing
 ==================================== ===========================================
 AppImage                             See the `AppImages`_ section below
+
+AppImage nightly builds              See the `AppImage nightly builds`_ section below
 
 Python pip                           See the `PyPI package and source code`_ section below
 
@@ -365,10 +371,10 @@ optional  `FFmpeg`_                 Required for `muxing`_ multiple video/audio/
 Windows binaries
 ----------------
 
-Windows installers and portable builds for Streamlink can be found at `streamlink/windows-builds`_,
+Windows installers and portable archives for Streamlink are built at `streamlink/windows-builds`_,
 with support for different architectures and different Python versions.
 
-These installers and portable builds contain:
+These installers and portable archives contain:
 
 - an embedded Python version, built at `streamlink/python-windows-embed`_
 - Streamlink and its dependencies
@@ -376,59 +382,102 @@ These installers and portable builds contain:
 
 and they are available in the following flavors:
 
-- Python 3.10 - x86_64 (64 bit)
-- Python 3.10 - x86 (32 bit)
+- Latest Python - x86_64 (64 bit) - recommended
+- Latest Python - x86 (32 bit)
 - Python 3.8 - x86_64 (64 bit) - for Windows 7
 - Python 3.8 - x86 (32 bit) - for Windows 7
 
-For further information, please see the README in the `streamlink/windows-builds`_ repository.
+.. note::
+
+   The installers automatically create a :ref:`config file <cli/config:Configuration file>` if it doesn't exist yet and set the
+   value of the :option:`--ffmpeg-ffmpeg` CLI parameter to the path of the included FFmpeg binary. The portable archives
+   can't do that, and users need to do that themselves.
+
+   Please see the README of the `streamlink/windows-builds`_ repository for further information.
 
 Windows stable builds
 ^^^^^^^^^^^^^^^^^^^^^
 
-Stable installers and stable portable builds of Streamlink's latest release can be
-`downloaded from the releases page of the streamlink/windows-builds <windows-stable_>`_ repository.
+|icon-download| `streamlink/windows-builds releases page <windows-stable_>`_
 
 Windows nightly builds
 ^^^^^^^^^^^^^^^^^^^^^^
 
-Built once each day at midnight UTC from Streamlink's master branch. |br|
+|icon-download| `streamlink/windows-builds nightly builds artifacts <windows-nightly_>`_
+
+Built once each day at midnight UTC from Streamlink's `master branch <streamlink-master_>`_. |br|
 This includes the most recent changes, but is not considered "stable". |br|
-Download from the build-artifacts of the `scheduled nightly build runs <windows-nightly_>`_ (requires a GitHub login). |br|
-See the `commit log <streamlink-master_>`_ of Steamlink's master branch for all the recent changes.
+A GitHub account is required in order to access build artifacts.
 
 .. _streamlink/windows-builds: https://github.com/streamlink/windows-builds
 .. _streamlink/python-windows-embed: https://github.com/streamlink/python-windows-embed
 .. _streamlink/FFmpeg-Builds: https://github.com/streamlink/FFmpeg-Builds
 .. _windows-stable: https://github.com/streamlink/windows-builds/releases
 .. _windows-nightly: https://github.com/streamlink/windows-builds/actions?query=event%3Aschedule+is%3Asuccess+branch%3Amaster
-.. _streamlink-master: https://github.com/streamlink/streamlink/commits/master
 
 
 AppImages
 ---------
 
-Download & Setup
-^^^^^^^^^^^^^^^^
+Linux AppImages for Streamlink are built at `streamlink/streamlink-appimage`_.
 
-First, download the latest `Streamlink AppImage`_ which matches your system's
-architecture from the `Streamlink AppImage releases page`_. Then simply set the
-executable flag and run the app.
+These AppImages contain:
 
-.. code-block:: bash
+- a Python environment
+- Streamlink and its dependencies
 
-   # Set the executable flag. Note that all AppImage release file names include
-   # the release version, Python version, platform name and CPU architecture
-   chmod +x streamlink-2.0.0-1-cp39-cp39-manylinux2014_x86_64.AppImage
+and they are available for the following CPU architectures:
 
-   # Run the Streamlink AppImage with any parameter supported by Streamlink
-   ./streamlink-2.0.0-1-cp39-cp39-manylinux2014_x86_64.AppImage --version
+- x86_64
+- i686
+- aarch64
+
+1. **Download the latest Streamlink AppImage matching your CPU architecture**
+
+   If unsure, run :command:`uname -m` to check the CPU's architecture.
+
+2. **Set the executable flag**
+
+   This can either be done in a regular file browser, or a command line shell via :command:`chmod +x filename`.
+
+   .. code-block:: bash
+
+      # AppImage file names include the release version, Python version, platform name and CPU architecture
+      chmod +x streamlink-2.0.0-1-cp39-cp39-manylinux2014_x86_64.AppImage
+
+3. **Run the AppImage**
+
+   Set any command-line parameters supported by Streamlink, e.g. :option:`--version`:
+
+   .. code-block:: bash
+
+      # Run the Streamlink AppImage with any parameter supported by Streamlink
+      ./streamlink-2.0.0-1-cp39-cp39-manylinux2014_x86_64.AppImage --version
+
+
+AppImage stable builds
+^^^^^^^^^^^^^^^^^^^^^^
+
+|icon-download| `streamlink/streamlink-appimage releases page <appimage-stable_>`_
+
+AppImage nightly builds
+^^^^^^^^^^^^^^^^^^^^^^^
+
+|icon-download| `streamlink/streamlink-appimage nightly builds artifacts <appimage-nightly_>`_
+
+Built once each day at midnight UTC from Streamlink's `master branch <streamlink-master_>`_. |br|
+This includes the most recent changes, but is not considered "stable". |br|
+A GitHub account is required in order to access build artifacts.
+
 
 What are AppImages?
 ^^^^^^^^^^^^^^^^^^^
 
-AppImages are portable apps for Linux which are independent of the distro and
-package management.
+AppImages are portable applications which are independent of the Linux distribution in use and its package management.
+Just set the executable flag on the AppImage file and run it.
+
+The only requirement is having `FUSE`_ installed for being able to mount the contents of the AppImage's SquashFS,
+which is done automatically. Also, only glibc-based systems are currently supported.
 
 Note: Check out `AppImageLauncher`_, which automates the setup and system
 integration of AppImages. AppImageLauncher may also be available via your
@@ -438,8 +487,11 @@ Additional information, like for example how to inspect the AppImage contents or
 how to extract the contents if `FUSE`_ is not available on your system, can be
 found in the `AppImage documentation`_.
 
-.. _Streamlink AppImage: https://github.com/streamlink/streamlink-appimage
-.. _Streamlink AppImage releases page: https://github.com/streamlink/streamlink-appimage/releases
+.. _streamlink/streamlink-appimage: https://github.com/streamlink/streamlink-appimage
+.. _appimage-stable: https://github.com/streamlink/streamlink-appimage/releases
+.. _appimage-nightly: https://github.com/streamlink/streamlink-appimage/actions?query=event%3Aschedule+is%3Asuccess+branch%3Amaster
 .. _AppImageLauncher: https://github.com/TheAssassin/AppImageLauncher
 .. _FUSE: https://docs.appimage.org/user-guide/troubleshooting/fuse.html
 .. _AppImage documentation: https://docs.appimage.org/user-guide/run-appimages.html
+
+.. _streamlink-master: https://github.com/streamlink/streamlink/commits/master
