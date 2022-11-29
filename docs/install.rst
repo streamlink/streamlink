@@ -214,13 +214,6 @@ Streamlink can be installed via `pip`_, the Python package manager.
 Before running :command:`pip`, make sure that it's the Python 3 version of `pip`_ (to check, run :command:`pip --version`).
 On some systems, this isn't the case by default and an alternative, like :command:`pip3` for example, needs to be run instead.
 
-.. note::
-
-    On some Linux distributions, the Python headers package needs to be installed before installing Streamlink
-    (``python-devel`` on RedHat, Fedora, etc.).
-
-    Ensure that you are using an up-to-date version of `pip`_. At least version **6** is required.
-
 .. warning::
 
     On Linux, when not using a virtual environment, it is recommended to **install custom python packages like this
