@@ -37,8 +37,8 @@ You can also specify the location yourself using the :option:`--config` option.
 
 .. warning::
 
-  On Windows, there is a default config created by the installer, but on any
-  other platform you must create the file yourself.
+  Streamlink's Windows installers automatically create a config file if it doesn't exist yet, but on any
+  other platform or installation method, you must create the file yourself.
 
 Syntax
 ------
