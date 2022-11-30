@@ -37,8 +37,19 @@ You can also specify the location yourself using the :option:`--config` option.
 
 .. warning::
 
-  On Windows, there is a default config created by the installer, but on any
-  other platform you must create the file yourself.
+  Streamlink's Windows installers automatically create a config file if it doesn't exist yet, but on any
+  other platform or installation method, you must create the file yourself.
+
+.. note::
+
+   The ``XDG_CONFIG_HOME`` environment variable is part of the `XDG base directory specification`_ (`Arch Wiki <xdg-base-dir-arch-wiki_>`_).
+
+   The ``${VARIABLENAME:-DEFAULTVALUE}`` syntax is explained `here <Parameter expansion_>`_.
+
+.. _XDG base directory specification: https://specifications.freedesktop.org/basedir-spec/basedir-spec-latest.html
+.. _xdg-base-dir-arch-wiki: https://wiki.archlinux.org/title/XDG_Base_Directory
+.. _Parameter expansion: https://wiki.bash-hackers.org/syntax/pe
+
 
 Syntax
 ------

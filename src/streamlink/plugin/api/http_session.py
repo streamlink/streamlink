@@ -1,6 +1,6 @@
 import ssl
 import time
-from typing import Any, Callable, Dict, List, Pattern, Tuple
+from typing import Any, Dict, Pattern, Tuple
 
 import requests.adapters
 # noinspection PyPackageRequirements
@@ -11,9 +11,6 @@ from streamlink.exceptions import PluginError
 from streamlink.packages.requests_file import FileAdapter
 from streamlink.plugin.api import useragents
 from streamlink.utils.parse import parse_json, parse_xml
-
-
-urllib3_version = tuple(map(int, urllib3.__version__.split(".")[:3]))
 
 
 class _HTTPResponse(urllib3.response.HTTPResponse):
@@ -42,8 +39,8 @@ urllib3.connectionpool.HTTPConnectionPool.ResponseCls = _HTTPResponse  # type: i
 requests.adapters.HTTPResponse = _HTTPResponse  # type: ignore[misc]
 
 
-# Never convert percent-encoded characters to uppercase in urllib3>=1.25.4.
-# This is required for sites which compare request URLs byte for byte and return different responses depending on that.
+# Never convert percent-encoded characters to uppercase in urllib3>=1.25.8.
+# This is required for sites which compare request URLs byte by byte and return different responses depending on that.
 # Older versions of urllib3 are not compatible with this override and will always convert to uppercase characters.
 #
 # https://datatracker.ietf.org/doc/html/rfc3986#section-2.1
@@ -53,31 +50,17 @@ requests.adapters.HTTPResponse = _HTTPResponse  # type: ignore[misc]
 # > octets, they are equivalent.  For consistency, URI producers and
 # > normalizers should use uppercase hexadecimal digits for all percent-
 # > encodings.
-if urllib3_version >= (1, 25, 4):
-    class Urllib3UtilUrlPercentReOverride:
-        _re_percent_encoding: Pattern = urllib3.util.url.PERCENT_RE  # type: ignore[attr-defined]
+class Urllib3UtilUrlPercentReOverride:
+    _re_percent_encoding: Pattern = urllib3.util.url.PERCENT_RE  # type: ignore[attr-defined]
 
-        @classmethod
-        def _num_percent_encodings(cls, string) -> int:
-            return len(cls._re_percent_encoding.findall(string))
+    # urllib3>=1.25.8
+    # https://github.com/urllib3/urllib3/blame/1.25.8/src/urllib3/util/url.py#L219-L227
+    @classmethod
+    def subn(cls, repl: Any, string: str, count: Any = None) -> Tuple[str, int]:
+        return string, len(cls._re_percent_encoding.findall(string))
 
-        # urllib3>=1.25.8
-        # https://github.com/urllib3/urllib3/blame/1.25.8/src/urllib3/util/url.py#L219-L227
-        @classmethod
-        def subn(cls, repl: Callable, string: str) -> Tuple[str, int]:
-            return string, cls._num_percent_encodings(string)
 
-        # urllib3>=1.25.4,<1.25.8
-        # https://github.com/urllib3/urllib3/blame/1.25.4/src/urllib3/util/url.py#L218-L228
-        @classmethod
-        def findall(cls, string: str) -> List[Any]:
-            class _List(list):
-                def __len__(self) -> int:
-                    return cls._num_percent_encodings(string)
-
-            return _List()
-
-    urllib3.util.url.PERCENT_RE = Urllib3UtilUrlPercentReOverride  # type: ignore[attr-defined]
+urllib3.util.url.PERCENT_RE = Urllib3UtilUrlPercentReOverride  # type: ignore[attr-defined]
 
 
 # requests.Request.__init__ keywords, except for "hooks"

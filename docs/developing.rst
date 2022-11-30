@@ -118,6 +118,64 @@ performing these checks locally avoids unnecessary build failures.
     $BROWSER ./docs/_build/html/index.html
 
 
+Code style
+----------
+
+Streamlink aims to use best practices, as detailed in `PEP 8`_ and implemented in tools such as `Black`_.
+
+These are the best practices most likely to be relevant to plugin authors:
+
+1. `Imports`_ (linted by flake8).
+
+2. `Indentation`_ (linted by flake8; 4 spaces per indentation level).
+
+3. `Quotes`_ (double quotes ``"`` and ``"""``).
+
+4.  Maximum line length (defined in the ``flake8`` section of `setup.cfg`_ via ``max-line-length``).
+
+5. `Horizontal vs vertical whitespace`_ (balance line length, readability and vertical whitespace).
+
+6. `Blank lines`_ (linted by flake8 for imports, class and method definitions).
+
+7. `Comments`_ (linted by flake8; use sparingly and where strictly useful).
+
+8. `Line breaks & binary operators`_ (break before binary operators).
+
+9. Don't use multiple parameters on the same line where line breaks are in use.
+
+   .. code-block:: python
+
+      # incorrect:
+      schema=validate.Schema(
+          validate.parse_json(), [{
+              ...
+          }],
+      )
+
+      # correct:
+      schema=validate.Schema(
+          validate.parse_json(),
+          [{
+              ...
+          }],
+      )
+
+It might be helpful to new plugin authors to pick a small and recently modified existing plugin to use as an initial
+template from which to work. If care is taken to preserve existing blank lines during modification, the main plugin
+structure should be compliant-ready for `linting <Validating changes_>`_.
+
+.. _PEP 8: https://peps.python.org/pep-0008/
+.. _Black: https://black.readthedocs.io/en/stable/the_black_code_style/current_style.html
+.. _Imports: https://peps.python.org/pep-0008/#imports
+.. _Indentation: https://peps.python.org/pep-0008/#indentation
+.. _Quotes: https://black.readthedocs.io/en/stable/the_black_code_style/current_style.html#strings
+.. _setup.cfg: https://github.com/streamlink/streamlink/blob/master/setup.cfg
+.. _Horizontal vs vertical whitespace: https://black.readthedocs.io/en/stable/the_black_code_style/current_style.html#how-black-wraps-lines
+.. _Blank lines: https://peps.python.org/pep-0008/#blank-lines
+.. _Comments: https://peps.python.org/pep-0008/#comments
+.. _Line breaks & binary operators: https://peps.python.org/pep-0008/#should-a-line-break-before-or-after-a-binary-operator
+
+
 Plugins
 -------
 

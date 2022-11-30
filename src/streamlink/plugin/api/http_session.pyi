@@ -71,9 +71,6 @@ _Exception: TypeAlias = type[Exception]
 # ----
 
 
-urllib3_version: tuple[int, int, int]
-
-
 class TLSSecLevel1Adapter(HTTPAdapter):
     ...
 

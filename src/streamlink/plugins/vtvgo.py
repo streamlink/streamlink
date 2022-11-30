@@ -21,6 +21,9 @@ class VTVgo(Plugin):
     AJAX_URL = "https://vtvgo.vn/ajax-get-stream"
 
     def _get_streams(self):
+        # get cookies
+        self.session.http.get("https://vtvgo.vn/")
+
         self.session.http.headers.update({
             "Origin": "https://vtvgo.vn",
             "Referer": self.url,

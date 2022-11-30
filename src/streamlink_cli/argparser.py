@@ -276,7 +276,7 @@ def build_parser():
         help="""
         Set the log message threshold.
 
-        Valid levels are: `none`, `error`, `warning`, `info`, `debug`, `trace`
+        Valid levels are: `none`, `error`, `warning`, `info`, `debug`, `trace`, `all`
         """
     )
     general.add_argument(

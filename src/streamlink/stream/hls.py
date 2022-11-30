@@ -2,7 +2,6 @@ import logging
 import re
 import struct
 from concurrent.futures import Future
-from threading import Event
 from typing import Any, Dict, List, NamedTuple, Optional, Tuple, Union
 from urllib.parse import urlparse
 
@@ -13,8 +12,10 @@ from Crypto.Util.Padding import unpad
 from requests import Response
 from requests.exceptions import ChunkedEncodingError, ConnectionError, ContentDecodingError
 
+from streamlink.buffers import RingBuffer
 from streamlink.exceptions import StreamError
 from streamlink.stream.ffmpegmux import FFMPEGMuxer, MuxedStream
+from streamlink.stream.filtered import FilteredStream
 from streamlink.stream.hls_playlist import ByteRange, Key, M3U8, Map, Media, Segment, load as load_hls_playlist
 from streamlink.stream.http import HTTPStream
 from streamlink.stream.segmented import SegmentedStreamReader, SegmentedStreamWorker, SegmentedStreamWriter
@@ -203,23 +204,26 @@ class HLSStreamWriter(SegmentedStreamWriter):
 
     def write(self, sequence: Sequence, result: Response, *data):
         if not self.should_filter_sequence(sequence):
+            log.debug(f"Writing segment {sequence.num} to output")
             try:
                 return self._write(sequence, result, *data)
             finally:
                 # unblock reader thread after writing data to the buffer
-                if not self.reader.filter_event.is_set():
+                if self.reader.is_paused():
                     log.info("Resuming stream output")
-                    self.reader.filter_event.set()
+                    self.reader.resume()
 
         else:
+            log.debug(f"Discarding segment {sequence.num}")
+
             # Read and discard any remaining HTTP response data in the response connection.
             # Unread data in the HTTPResponse connection blocks the connection from being released back to the pool.
             result.raw.drain_conn()
 
             # block reader thread if filtering out segments
-            if self.reader.filter_event.is_set():
+            if not self.reader.is_paused():
                 log.info("Filtering out segments and pausing stream output")
-                self.reader.filter_event.clear()
+                self.reader.pause()
 
     def _write(self, sequence: Sequence, result: Response, is_map: bool):
         if sequence.segment.key and sequence.segment.key.method != "NONE":
@@ -435,13 +439,14 @@ class HLSStreamWorker(SegmentedStreamWorker):
                     log.warning(f"Failed to reload playlist: {err}")
 
 
-class HLSStreamReader(SegmentedStreamReader):
+class HLSStreamReader(FilteredStream, SegmentedStreamReader):
     __worker__ = HLSStreamWorker
     __writer__ = HLSStreamWriter
 
     worker: "HLSStreamWorker"
     writer: "HLSStreamWriter"
     stream: "HLSStream"
+    buffer: RingBuffer
 
     def __init__(self, stream: "HLSStream"):
         self.request_params = dict(stream.args)
@@ -451,29 +456,7 @@ class HLSStreamReader(SegmentedStreamReader):
         self.request_params.pop("timeout", None)
         self.request_params.pop("url", None)
 
-        self.filter_event = Event()
-        self.filter_event.set()
-
         super().__init__(stream)
-
-    def read(self, size):
-        while True:
-            try:
-                return super().read(size)
-            except OSError:
-                # wait indefinitely until filtering ends
-                self.filter_event.wait()
-                if self.buffer.closed:
-                    return b""
-                # if data is available, try reading again
-                if self.buffer.length > 0:
-                    continue
-                # raise if not filtering and no data available
-                raise
-
-    def close(self):
-        super().close()
-        self.filter_event.set()
 
 
 class MuxedHLSStream(MuxedStream):
