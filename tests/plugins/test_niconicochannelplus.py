@@ -15,6 +15,8 @@ class TestPluginCanHandleUrlNicoNicoChannelPlus(PluginCanHandleUrl):
         "https://nicochannel.jp/mimimoto-ayaka/video/smRS96YpmDJr24YpWFZziG4L",
         #   underscores in channel name.
         "https://nicochannel.jp/sakaguchi_kugimiya/video/smnSFttxbkjZDBwZMMj8CgsJ",
+        #   dots in channel name.
+        "https://nicochannel.jp/kanase.ito/video/smWCdanZc5bJYMPYhpVp6Sn6",
 
         # live urls
         #   normal channel name.
