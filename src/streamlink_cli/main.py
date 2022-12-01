@@ -7,16 +7,14 @@ import re
 import signal
 import sys
 from contextlib import closing, suppress
-from functools import partial
 from gettext import gettext
-from itertools import chain
 from pathlib import Path
+from threading import Event, Lock, Thread
 from time import sleep
-from typing import Any, Dict, Iterator, List, Optional, Type, Union
+from typing import Any, Dict, List, Optional, Type, Union
 
 import streamlink.logger as logger
 from streamlink import NoPluginError, PluginError, StreamError, Streamlink, __version__ as streamlink_version
-from streamlink.compat import is_win32
 from streamlink.exceptions import FatalPluginError
 from streamlink.plugin import Plugin, PluginOptions
 from streamlink.stream.stream import Stream, StreamIO
@@ -262,7 +260,7 @@ def output_stream_http(
 
         if stream_fd and prebuffer:
             log.debug("Writing stream to player")
-            read_stream(stream_fd, server, prebuffer, formatter)
+            read_stream(stream_fd, server, prebuffer)
 
         if not continuous:
             break
@@ -366,57 +364,82 @@ def output_stream(stream, formatter: Formatter):
 
     with closing(output):
         log.debug("Writing stream to output")
-        read_stream(stream_fd, output, prebuffer, formatter)
+        read_stream(stream_fd, output, prebuffer)
 
     return True
 
 
-def read_stream(stream, output, prebuffer, formatter: Formatter, chunk_size=8192):
+def read_stream(
+    stream: StreamIO,
+    output: Union[PlayerOutput, FileOutput, HTTPServer],
+    prebuffer,
+    chunk_size=8192,
+):
     """Reads data from stream and then writes it to the output."""
+
     is_player = isinstance(output, PlayerOutput)
     is_http = isinstance(output, HTTPServer)
-    is_fifo = is_player and output.namedpipe
-    show_progress = (
-        isinstance(output, FileOutput)
-        and output.fd is not stdout
-        and (sys.stdout.isatty() or args.force_progress)
-    )
-    show_record_progress = (
-        hasattr(output, "record")
-        and isinstance(output.record, FileOutput)
-        and output.record.fd is not stdout
-        and (sys.stdout.isatty() or args.force_progress)
-    )
 
     progress: Optional[Progress] = None
-    stream_iterator: Iterator = chain(
-        [prebuffer],
-        iter(partial(stream.read, chunk_size), b"")
-    )
-    if show_progress or show_record_progress:
-        progress = Progress(
-            sys.stderr,
-            output.filename or output.record.filename,
+    output_filename: Optional[Path] = (
+        isinstance(output, FileOutput)
+        and (
+            output.filename
+            or output.record and output.record.filename
         )
-        stream_iterator = progress.iter(stream_iterator)
+        or None
+    )
+    if output_filename and (sys.stdout.isatty() or args.force_progress):
+        progress = Progress(sys.stderr, output_filename)
+        progress.start()
+
+    player_log_lock = Lock()
+    player_poll_event = Event()
+    player_poll_thread: Optional[Thread] = None
+
+    def player_log_closed():
+        # Ensure that "Player closed" does only get logged once, either when writing read stream data has failed,
+        # or when the player process was terminated/killed. Both cases depend on the timing of their threads.
+        with player_log_lock:
+            if not player_poll_event.is_set():
+                player_poll_event.set()
+                log.info("Player closed")
+
+    if is_player:
+        def player_poll():
+            # Poll the player process in a separate thread, to isolate it from the stream's read-loop in the main thread.
+            # Reading the stream can stall indefinitely when filtering content.
+            while not player_poll_event.wait(timeout=0.5):
+                if output.player.poll() is None:
+                    continue
+                player_log_closed()
+                stream.close()
+                break
+
+        player_poll_thread = Thread(daemon=True, target=player_poll)
+        player_poll_thread.start()
+
+    read = stream.read
+    write = output.write
+    progress_put = progress.put if progress else lambda _data: None
 
     try:
-        for data in stream_iterator:
-            # We need to check if the player process still exists when
-            # using named pipes on Windows since the named pipe is not
-            # automatically closed by the player.
-            if is_win32 and is_fifo:
-                output.player.poll()
+        write(prebuffer)
+        progress_put(prebuffer)
 
-                if output.player.returncode is not None:
-                    log.info("Player closed")
-                    break
+        # Stream read-loop
+        # Don't check for stream.closed, so the buffer's contents can be fully read after the stream ended or was closed
+        while True:
+            data = read(chunk_size)
+            if data == b"":
+                break
 
             try:
-                output.write(data)
+                write(data)
+                progress_put(data)
             except OSError as err:
                 if is_player and err.errno in ACCEPTABLE_ERRNO:
-                    log.info("Player closed")
+                    player_log_closed()
                 elif is_http and err.errno in ACCEPTABLE_ERRNO:
                     log.info("HTTP connection closed")
                 else:
@@ -426,8 +449,12 @@ def read_stream(stream, output, prebuffer, formatter: Formatter, chunk_size=8192
     except OSError as err:
         console.exit(f"Error when reading from stream: {err}, exiting")
     finally:
+        if player_poll_thread:
+            player_poll_event.set()
+            player_poll_thread.join()
         if progress:
             progress.close()
+            progress.join()
         stream.close()
         log.info("Stream ended")
 
