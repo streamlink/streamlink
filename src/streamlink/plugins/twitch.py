@@ -75,12 +75,15 @@ class TwitchM3U8Parser(M3U8Parser):
         # Use the last duration for extrapolating the start time of the prefetch segment, which is needed for checking
         # whether it is an ad segment and matches the parsed date ranges or not
         date = last.date + timedelta(seconds=last.duration)
-        ad = self._is_segment_ad(date)
+        # Don't pop() the discontinuity state in prefetch segments (at the bottom of the playlist)
+        discontinuity = self.state.get("discontinuity", False)
+        # Always treat prefetch segments after a discontinuity as ad segments
+        ad = discontinuity or self._is_segment_ad(date)
         segment = last._replace(
             uri=self.uri(value),
             duration=duration,
             title=None,
-            discontinuity=self.state.pop("discontinuity", False),
+            discontinuity=discontinuity,
             date=date,
             ad=ad,
             prefetch=True,
