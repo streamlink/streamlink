@@ -2,10 +2,12 @@ import unittest
 from datetime import datetime, timedelta
 from unittest.mock import MagicMock, call, patch
 
+import pytest
 import requests_mock
 
 from streamlink import Streamlink
-from streamlink.plugins.twitch import Twitch, TwitchHLSStream, TwitchHLSStreamReader, TwitchHLSStreamWriter
+from streamlink.exceptions import NoStreamsError
+from streamlink.plugins.twitch import Twitch, TwitchAPI, TwitchHLSStream, TwitchHLSStreamReader, TwitchHLSStreamWriter
 from tests.mixins.stream_hls import EventedHLSStreamWriter, Playlist, Segment as _Segment, Tag, TestMixinStreamHLS
 from tests.plugins import PluginCanHandleUrl
 from tests.resources import text
@@ -387,6 +389,154 @@ class TestTwitchHLSStream(TestMixinStreamHLS, unittest.TestCase):
         self.await_write(4)
         self.await_read(read_all=True)
         self.assertEqual(self.thread.reader.worker.playlist_reload_time, 23 / 3)
+
+
+class TestTwitchAPIAccessToken:
+    @pytest.fixture
+    def plugin(self, request):
+        session = Streamlink()
+        for param in getattr(request, "param", {}):
+            session.set_plugin_option("twitch", *param)
+        yield Twitch(session, "https://twitch.tv/channelname")
+        Twitch.options.clear()
+
+    @pytest.fixture
+    def mocker(self):
+        # The built-in requests_mock fixture is bad when trying to reference the following constants or classes
+        with requests_mock.Mocker() as mocker:
+            mocker.register_uri(requests_mock.ANY, requests_mock.ANY, exc=requests_mock.exceptions.InvalidRequest)
+            yield mocker
+
+    @pytest.fixture
+    def mock(self, request, mocker: requests_mock.Mocker):
+        mock = mocker.post("https://gql.twitch.tv/gql", **getattr(request, "param", {"json": {}}))
+        yield mock
+        assert mock.called_once
+        payload = mock.last_request.json()  # type: ignore[union-attr]
+        assert tuple(sorted(payload.keys())) == ("extensions", "operationName", "variables")
+        assert payload.get("operationName") == "PlaybackAccessToken"
+        assert payload.get("extensions") == {
+            "persistedQuery": {
+                "sha256Hash": "0828119ded1c13477966434e15800ff57ddacf13ba1911c129dc2200705b0712",
+                "version": 1,
+            },
+        }
+
+    @pytest.fixture
+    def assert_live(self, mock):
+        yield
+        assert mock.last_request.json().get("variables") == {  # type: ignore[union-attr]
+            "isLive": True,
+            "isVod": False,
+            "login": "channelname",
+            "vodID": "",
+            "playerType": "embed",
+        }
+
+    @pytest.fixture
+    def assert_vod(self, mock):
+        yield
+        assert mock.last_request.json().get("variables") == {  # type: ignore[union-attr]
+            "isLive": False,
+            "isVod": True,
+            "login": "",
+            "vodID": "vodid",
+            "playerType": "embed",
+        }
+
+    @pytest.mark.parametrize("plugin,exp_headers,exp_variables", [
+        (
+            [],
+            {"Client-ID": TwitchAPI.CLIENT_ID},
+            {
+                "isLive": True,
+                "isVod": False,
+                "login": "channelname",
+                "vodID": "",
+                "playerType": "embed",
+            },
+        ),
+        (
+            [
+                ("api-header", [
+                    ("Authorization", "invalid data"),
+                    ("Authorization", "OAuth 0123456789abcdefghijklmnopqrst"),
+                ]),
+                ("access-token-param", [
+                    ("specialVariable", "specialValue"),
+                    ("playerType", "frontpage"),
+                ]),
+            ],
+            {
+                "Client-ID": TwitchAPI.CLIENT_ID,
+                "Authorization": "OAuth 0123456789abcdefghijklmnopqrst",
+            },
+            {
+                "isLive": True,
+                "isVod": False,
+                "login": "channelname",
+                "vodID": "",
+                "playerType": "frontpage",
+                "specialVariable": "specialValue",
+            },
+        ),
+    ], indirect=["plugin"])
+    def test_plugin_options(self, plugin: Twitch, mock: requests_mock.Mocker, exp_headers: dict, exp_variables: dict):
+        with pytest.raises(NoStreamsError):
+            plugin._access_token(True, "channelname")
+        requestheaders = dict(mock.last_request._request.headers)  # type: ignore[union-attr]
+        for header in plugin.session.http.headers.keys():
+            del requestheaders[header]
+        del requestheaders["Content-Type"]
+        del requestheaders["Content-Length"]
+        assert requestheaders == exp_headers
+        assert mock.last_request.json().get("variables") == exp_variables  # type: ignore[union-attr]
+
+    @pytest.mark.parametrize("mock", [{
+        "json": {"data": {"streamPlaybackAccessToken": {"value": '{"channel":"foo"}', "signature": "sig"}}},
+    }], indirect=True)
+    def test_live_success(self, plugin: Twitch, mock: requests_mock.Mocker, assert_live):
+        data = plugin._access_token(True, "channelname")
+        assert data == ("sig", '{"channel":"foo"}', [])
+
+    @pytest.mark.parametrize("mock", [{
+        "json": {"data": {"streamPlaybackAccessToken": None}},
+    }], indirect=True)
+    def test_live_failure(self, plugin: Twitch, mock: requests_mock.Mocker, assert_live):
+        with pytest.raises(NoStreamsError):
+            plugin._access_token(True, "channelname")
+
+    @pytest.mark.parametrize("mock", [{
+        "json": {"data": {"videoPlaybackAccessToken": {"value": '{"channel":"foo"}', "signature": "sig"}}},
+    }], indirect=True)
+    def test_vod_success(self, plugin: Twitch, mock: requests_mock.Mocker, assert_vod):
+        data = plugin._access_token(False, "vodid")
+        assert data == ("sig", '{"channel":"foo"}', [])
+
+    @pytest.mark.parametrize("mock", [{
+        "json": {"data": {"videoPlaybackAccessToken": None}},
+    }], indirect=True)
+    def test_vod_failure(self, plugin: Twitch, mock: requests_mock.Mocker, assert_vod):
+        with pytest.raises(NoStreamsError):
+            plugin._access_token(False, "vodid")
+
+    @pytest.mark.parametrize("plugin,mock", [
+        (
+            [("api-header", [("Authorization", "OAuth invalid-token")])],
+            {
+                "status_code": 401,
+                "json": {"error": "Unauthorized", "status": 401, "message": "The \"Authorization\" token is invalid."},
+            },
+        ),
+    ], indirect=True)
+    def test_auth_failure(self, caplog: pytest.LogCaptureFixture, plugin: Twitch, mock: requests_mock.Mocker, assert_live):
+        with pytest.raises(NoStreamsError) as cm:
+            plugin._access_token(True, "channelname")
+        assert str(cm.value) == "No streams found on this URL: https://twitch.tv/channelname"
+        assert mock.last_request._request.headers["Authorization"] == "OAuth invalid-token"  # type: ignore[union-attr]
+        assert [(record.levelname, record.module, record.message) for record in caplog.records] == [
+            ("error", "twitch", "Unauthorized: The \"Authorization\" token is invalid."),
+        ]
 
 
 class TestTwitchMetadata(unittest.TestCase):
