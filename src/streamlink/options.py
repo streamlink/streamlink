@@ -28,6 +28,9 @@ class Options:
     def _normalise_dict(cls, src):
         return {_normalise_option_name(key): value for key, value in src.items()}
 
+    def clear(self):
+        self.options = self.defaults.copy()
+
     def set(self, key, value):
         self.options[_normalise_option_name(key)] = value
 
