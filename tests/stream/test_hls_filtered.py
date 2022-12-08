@@ -7,6 +7,7 @@ from tests.mixins.stream_hls import EventedHLSStreamWriter, Playlist, Segment, T
 
 
 FILTERED = "filtered"
+TIMEOUT_HANDSHAKE = 5
 
 
 class SegmentFiltered(Segment):
@@ -120,15 +121,13 @@ class TestFilteredHLSStream(TestMixinStreamHLS, unittest.TestCase):
         self.assertFalse(reader.filter_wait(timeout=0), "Is filtering")
 
         # make reader read (no data available yet)
-        thread.read_wait.set()
+        thread.handshake.go()
         # once data becomes available, the reader continues reading
         self.await_write()
         self.assertFalse(reader.is_paused(), "Reader is not waiting anymore")
 
-        thread.read_done.wait()
-        thread.read_done.clear()
-        self.assertFalse(thread.error, "Doesn't time out when filtering")
-        self.assertEqual(b"".join(thread.data), segments[2].content, "Reads next available buffer data")
+        assert thread.handshake.wait_done(TIMEOUT_HANDSHAKE), "Doesn't time out when filtering"
+        assert b"".join(thread.data) == segments[2].content, "Reads next available buffer data"
 
         self.await_write()
         data = self.await_read()
@@ -157,17 +156,14 @@ class TestFilteredHLSStream(TestMixinStreamHLS, unittest.TestCase):
             self.assertTrue(reader.is_paused(), "Lets the reader wait if filtering")
 
             # make reader read (no data available yet)
-            thread.read_wait.set()
+            thread.handshake.go()
             # before calling reader.close(), wait until reader thread's event_filter.wait was called
-            if not event_filter_wait_called.wait(timeout=5):  # pragma: no cover
-                raise RuntimeError("Missing event_filter.wait() call")
+            assert event_filter_wait_called.wait(TIMEOUT_HANDSHAKE), "Missing event_filter.wait() call"
 
             # close stream while reader is waiting for filtering to end
             thread.reader.close()
-            thread.read_done.wait()
-            thread.read_done.clear()
-            self.assertEqual(thread.data, [b""], "Stops reading on stream close")
-            self.assertFalse(thread.error, "Is not a read timeout on stream close")
+            assert thread.handshake.wait_done(TIMEOUT_HANDSHAKE), "Is not a read timeout on stream close"
+            assert thread.data == [b""], "Stops reading on stream close"
 
     def test_hls_segment_ignore_names(self):
         thread, reader, writer, segments = self.subject([
