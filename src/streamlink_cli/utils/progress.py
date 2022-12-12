@@ -242,7 +242,7 @@ class Progress(Thread):
     def close(self):
         self._wait.set()
 
-    def put(self, chunk: bytes):
+    def write(self, chunk: bytes):
         size = len(chunk)
         with self._lock:
             self.overall += size
@@ -252,7 +252,7 @@ class Progress(Thread):
         self.start()
         try:
             for chunk in iterator:
-                self.put(chunk)
+                self.write(chunk)
                 yield chunk
         finally:
             self.close()

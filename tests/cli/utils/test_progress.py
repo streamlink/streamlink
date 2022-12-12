@@ -225,33 +225,33 @@ class TestProgress:
                    == call("\r[download] Written 0 bytes to ../../the/path/where/we/write/to (0s)   ")
 
             frozen_time.tick()
-            progress.put(kib * 1)
+            progress.write(kib * 1)
             progress.update()
             assert output_write.call_args_list[-1] \
                    == call("\r[download] Written 1.00 KiB to …th/where/we/write/to (1s @ 1.00 KiB/s)")
 
             frozen_time.tick()
             mock_width.return_value = 65
-            progress.put(kib * 3)
+            progress.write(kib * 3)
             progress.update()
             assert output_write.call_args_list[-1] \
                    == call("\r[download] Written 4.00 KiB to …ere/we/write/to (2s @ 2.00 KiB/s)")
 
             frozen_time.tick()
             mock_width.return_value = 60
-            progress.put(kib * 5)
+            progress.write(kib * 5)
             progress.update()
             assert output_write.call_args_list[-1] \
                    == call("\r[download] Written 9.00 KiB (3s @ 4.50 KiB/s)               ")
 
             frozen_time.tick()
-            progress.put(kib * 7)
+            progress.write(kib * 7)
             progress.update()
             assert output_write.call_args_list[-1] \
                    == call("\r[download] Written 16.00 KiB (4s @ 7.50 KiB/s)              ")
 
             frozen_time.tick()
-            progress.put(kib * 5)
+            progress.write(kib * 5)
             progress.update()
             assert output_write.call_args_list[-1] \
                    == call("\r[download] Written 21.00 KiB (5s @ 8.50 KiB/s)              ")
