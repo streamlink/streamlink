@@ -27,6 +27,7 @@ class VTVgo(Plugin):
         self.session.http.headers.update({
             "Origin": "https://vtvgo.vn",
             "Referer": self.url,
+            "Sec-Fetch-Site": "same-origin",
             "X-Requested-With": "XMLHttpRequest",
         })
 
