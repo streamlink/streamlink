@@ -33,7 +33,7 @@ from streamlink.stream.hls import HLSStream
         |
         ahaber\.com\.tr/video/canli-yayin
         |
-        (?:apara|vavtv)\.com\.tr/canli-yayin
+        (?:atv|apara|vavtv)\.com\.tr/canli-yayin
         |
         atv\.com\.tr/a2tv/canli-yayin
     )

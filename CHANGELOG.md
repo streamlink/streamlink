@@ -1,5 +1,19 @@
 # Changelog
 
+## streamlink 5.1.2 (2022-12-03)
+
+Patch release:
+
+- Fixed: `ValueError` being raised while muxing streams ([#4998](https://github.com/streamlink/streamlink/pull/4998))
+- Fixed: ad filtering bug in Twitch plugin ([#5007](https://github.com/streamlink/streamlink/pull/5007))
+- Fixed: SVTPlay plugin ([#4994](https://github.com/streamlink/streamlink/pull/4994))
+- Fixed: TVP plugin ([#4997](https://github.com/streamlink/streamlink/pull/4997))
+- Docs: updated Linux AppImage and Windows builds install sections ([#4999](https://github.com/streamlink/streamlink/pull/4999))
+- Docs: fixed man page links in HTML docs ([#4995](https://github.com/streamlink/streamlink/pull/4995))
+
+[Full changelog](https://github.com/streamlink/streamlink/compare/5.1.1...5.1.2)
+
+
 ## streamlink 5.1.1 (2022-11-23)
 
 Patch release:

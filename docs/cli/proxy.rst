@@ -22,4 +22,4 @@ Both HTTP and SOCKS proxies are supported, as well as authentication in each of 
     $ streamlink --http-proxy "socks4a://address:port"
     $ streamlink --http-proxy "socks5h://address:port"
 
-.. _Requests Proxies Documentation: https://2.python-requests.org/en/master/user/advanced/#proxies
+.. _Requests Proxies Documentation: https://requests.readthedocs.io/en/latest/user/advanced/#proxies

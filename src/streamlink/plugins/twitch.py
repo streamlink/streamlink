@@ -8,7 +8,6 @@ $notes :ref:`Low latency streaming <cli/plugins/twitch:Low latency streaming>` i
 """
 
 import argparse
-import json
 import logging
 import re
 import sys
@@ -75,12 +74,15 @@ class TwitchM3U8Parser(M3U8Parser):
         # Use the last duration for extrapolating the start time of the prefetch segment, which is needed for checking
         # whether it is an ad segment and matches the parsed date ranges or not
         date = last.date + timedelta(seconds=last.duration)
-        ad = self._is_segment_ad(date)
+        # Don't pop() the discontinuity state in prefetch segments (at the bottom of the playlist)
+        discontinuity = self.state.get("discontinuity", False)
+        # Always treat prefetch segments after a discontinuity as ad segments
+        ad = discontinuity or self._is_segment_ad(date)
         segment = last._replace(
             uri=self.uri(value),
             duration=duration,
             title=None,
-            discontinuity=self.state.pop("discontinuity", False),
+            discontinuity=discontinuity,
             date=date,
             ad=ad,
             prefetch=True,
@@ -248,20 +250,23 @@ class UsherService:
 
 
 class TwitchAPI:
+    CLIENT_ID = "kimne78kx3ncx6brgo4mv6wki5h1ko"
+
     def __init__(self, session):
         self.session = session
         self.headers = {
-            "Client-ID": "kimne78kx3ncx6brgo4mv6wki5h1ko",
+            "Client-ID": self.CLIENT_ID,
         }
         self.headers.update(**dict(session.get_plugin_option("twitch", "api-header") or []))
         self.access_token_params = dict(session.get_plugin_option("twitch", "access-token-param") or [])
         self.access_token_params.setdefault("playerType", "embed")
 
-    def call(self, data, schema=None):
+    def call(self, data, schema=None, **kwargs):
         res = self.session.http.post(
             "https://gql.twitch.tv/gql",
-            data=json.dumps(data),
-            headers=self.headers
+            json=data,
+            headers={**self.headers, **kwargs.pop("headers", {})},
+            **kwargs,
         )
 
         return self.session.http.json(res, schema=schema)
@@ -418,18 +423,30 @@ class TwitchAPI:
             validate.union_get("signature", "value"),
         )
 
-        return self.call(query, schema=validate.Schema(
-            {"data": validate.any(
+        return self.call(query, acceptable_status=(200, 400, 401, 403), schema=validate.Schema(
+            validate.any(
                 validate.all(
-                    {"streamPlaybackAccessToken": subschema},
-                    validate.get("streamPlaybackAccessToken")
+                    {"error": str, "message": str},
+                    validate.union_get("error", "message"),
+                    validate.transform(lambda data: ("error", *data)),
                 ),
                 validate.all(
-                    {"videoPlaybackAccessToken": subschema},
-                    validate.get("videoPlaybackAccessToken")
-                )
-            )},
-            validate.get("data")
+                    {
+                        "data": validate.any(
+                            validate.all(
+                                {"streamPlaybackAccessToken": subschema},
+                                validate.get("streamPlaybackAccessToken"),
+                            ),
+                            validate.all(
+                                {"videoPlaybackAccessToken": subschema},
+                                validate.get("videoPlaybackAccessToken"),
+                            ),
+                        ),
+                    },
+                    validate.get("data"),
+                    validate.transform(lambda data: ("token", *data)),
+                ),
+            ),
         ))
 
     def clips(self, clipname):
@@ -613,7 +630,12 @@ class Twitch(Plugin):
 
     def _access_token(self, is_live, channel_or_vod):
         try:
-            sig, token = self.api.access_token(is_live, channel_or_vod)
+            response, *data = self.api.access_token(is_live, channel_or_vod)
+            if response != "token":
+                error, message = data
+                log.error(f"{error or 'Error'}: {message or 'Unknown error'}")
+                raise PluginError
+            sig, token = data
         except (PluginError, TypeError):
             raise NoStreamsError(self.url)
 
