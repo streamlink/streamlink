@@ -35,6 +35,10 @@ class NicoNicoChannelPlus(Plugin):
                     "type": str,
                     "live_started_at": validate.any(str, None),
                     "live_finished_at": validate.any(str, None),
+                    "video": {
+                        "allow_dvr_flg": bool,
+                        "convert_to_vod_flg": bool,
+                    },
                 }}},
                 validate.get(("data", "video_page")),
             ),
@@ -53,8 +57,18 @@ class NicoNicoChannelPlus(Plugin):
                 # Live is available.
                 payload = {}
             else:
-                # Live is already ended, try DVR.
-                payload = {"broadcast_type": "dvr"}
+                # Live is already ended.
+                video_allow_dvr_flg = video_info["video"]["allow_dvr_flg"]
+                video_convert_to_vod_flg = video_info["video"]["convert_to_vod_flg"]
+
+                # These two fields are not visible for normal users.
+                log.debug(f"allow_dvr_flg = {video_allow_dvr_flg}, convert_to_vod_flg = {video_convert_to_vod_flg}.")
+
+                if video_allow_dvr_flg and video_convert_to_vod_flg:
+                    # Try DVR.
+                    payload = {"broadcast_type": "dvr"}
+                else:
+                    raise PluginError("Live was ended.")
         else:
             raise PluginError(f"Unknown video type: {video_type}")
 
