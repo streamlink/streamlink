@@ -1,13 +1,8 @@
-import argparse
 import unittest
-from unittest.mock import Mock, patch
 
 import pytest
 
 from streamlink.options import Argument, Arguments, Options
-from streamlink.plugin import Plugin, pluginargument
-from streamlink_cli.argparser import ArgumentParser
-from streamlink_cli.main import setup_plugin_args, setup_plugin_options
 
 
 class TestOptions(unittest.TestCase):
@@ -190,65 +185,3 @@ class TestArguments(unittest.TestCase):
 
         with pytest.raises(RuntimeError):
             list(args.requires("test1"))
-
-
-class TestSetupOptions:
-    def test_setup_plugin_args(self):
-        session = Mock()
-        plugin = Mock()
-        parser = ArgumentParser(add_help=False)
-
-        session.plugins = {"mock": plugin}
-        plugin.arguments = Arguments(
-            Argument("test1", default="default1"),
-            Argument("test2", default="default2"),
-            Argument("test3"),
-        )
-
-        setup_plugin_args(session, parser)
-
-        group_plugins = next((grp for grp in parser._action_groups if grp.title == "Plugin options"), None)  # pragma: no branch
-        assert group_plugins is not None, "Adds the 'Plugin options' arguments group"
-        assert group_plugins in parser.NESTED_ARGUMENT_GROUPS[None], "Adds the 'Plugin options' arguments group"
-        group_plugin = next((grp for grp in parser._action_groups if grp.title == "Mock"), None)  # pragma: no branch
-        assert group_plugin is not None, "Adds the 'Mock' arguments group"
-        assert group_plugin in parser.NESTED_ARGUMENT_GROUPS[group_plugins], "Adds the 'Mock' arguments group"
-        assert [item for action in group_plugin._group_actions for item in action.option_strings] \
-            == ["--mock-test1", "--mock-test2", "--mock-test3"], \
-            "Only adds plugin arguments and ignores global argument references"
-        assert [item for action in parser._actions for item in action.option_strings] \
-            == ["--mock-test1", "--mock-test2", "--mock-test3"], \
-            "Parser has all arguments registered"
-
-        assert plugin.options.get("test1") == "default1"
-        assert plugin.options.get("test2") == "default2"
-        assert plugin.options.get("test3") is None
-
-    def test_setup_plugin_options(self):
-        @pluginargument("foo-foo")
-        @pluginargument("bar-bar", default=456)
-        @pluginargument("baz-baz", default=789, help=argparse.SUPPRESS)
-        class FakePlugin(Plugin):
-            def _get_streams(self):  # pragma: no cover
-                pass
-
-        session = Mock()
-        parser = ArgumentParser()
-
-        session.plugins = {"plugin": FakePlugin}
-        session.set_plugin_option = lambda name, key, value: session.plugins[name].options.update({key: value})
-
-        with patch("streamlink_cli.main.args") as args:
-            args.plugin_foo_foo = 123
-            args.plugin_bar_bar = 654
-            args.plugin_baz_baz = 987  # this wouldn't be set by the parser if the argument is suppressed
-
-            setup_plugin_args(session, parser)
-            assert FakePlugin.options.get("foo_foo") is None, "No default value"
-            assert FakePlugin.options.get("bar_bar") == 456, "Sets the plugin-argument's default value"
-            assert FakePlugin.options.get("baz_baz") == 789, "Sets the suppressed plugin-argument's default value"
-
-            setup_plugin_options(session, "plugin", FakePlugin)
-            assert FakePlugin.options.get("foo_foo") == 123, "Overrides the default plugin-argument value"
-            assert FakePlugin.options.get("bar_bar") == 654, "Sets the provided plugin-argument value"
-            assert FakePlugin.options.get("baz_baz") == 789, "Doesn't set values of suppressed plugin-arguments"

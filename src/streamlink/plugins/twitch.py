@@ -202,10 +202,10 @@ class TwitchHLSStreamReader(HLSStreamReader):
 class TwitchHLSStream(HLSStream):
     __reader__ = TwitchHLSStreamReader
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, disable_ads: bool = False, low_latency: bool = False, **kwargs):
         super().__init__(*args, **kwargs)
-        self.disable_ads = self.session.get_plugin_option("twitch", "disable-ads")
-        self.low_latency = self.session.get_plugin_option("twitch", "low-latency")
+        self.disable_ads = disable_ads
+        self.low_latency = low_latency
 
 
 class UsherService:
@@ -253,13 +253,13 @@ class UsherService:
 class TwitchAPI:
     CLIENT_ID = "kimne78kx3ncx6brgo4mv6wki5h1ko"
 
-    def __init__(self, session):
+    def __init__(self, session, api_header=None, access_token_param=None):
         self.session = session
         self.headers = {
             "Client-ID": self.CLIENT_ID,
         }
-        self.headers.update(**dict(session.get_plugin_option("twitch", "api-header") or []))
-        self.access_token_params = dict(session.get_plugin_option("twitch", "access-token-param") or [])
+        self.headers.update(**dict(api_header or []))
+        self.access_token_params = dict(access_token_param or [])
         self.access_token_params.setdefault("playerType", "embed")
 
     def call(self, data, schema=None, **kwargs):
@@ -604,7 +604,11 @@ class Twitch(Plugin):
             self.video_id = match.get("video_id") or match.get("videos_id")
             self.clip_name = match.get("clip_name")
 
-        self.api = TwitchAPI(session=self.session)
+        self.api = TwitchAPI(
+            session=self.session,
+            api_header=self.get_option("api-header"),
+            access_token_param=self.get_option("access-token-param"),
+        )
         self.usher = UsherService(session=self.session)
 
         def method_factory(parent_method):
@@ -698,7 +702,16 @@ class Twitch(Plugin):
                 time_offset = 0
 
         try:
-            streams = TwitchHLSStream.parse_variant_playlist(self.session, url, start_offset=time_offset, **extra_params)
+            streams = TwitchHLSStream.parse_variant_playlist(
+                self.session,
+                url,
+                start_offset=time_offset,
+                keywords={
+                    "disable_ads": self.get_option("disable-ads"),
+                    "low_latency": self.get_option("low-latency"),
+                },
+                **extra_params,
+            )
         except OSError as err:
             err = str(err)
             if "404 Client Error" in err or "Failed to parse playlist" in err:
