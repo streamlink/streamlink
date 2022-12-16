@@ -4,7 +4,6 @@ from unittest.mock import Mock, patch
 
 import pytest
 
-from streamlink.exceptions import StreamlinkDeprecationWarning
 from streamlink.options import Argument, Arguments, Options
 from streamlink.plugin import Plugin, pluginargument
 from streamlink_cli.argparser import ArgumentParser
@@ -194,24 +193,17 @@ class TestArguments(unittest.TestCase):
 
 
 class TestSetupOptions:
-    def test_setup_plugin_args(self, recwarn: pytest.WarningsRecorder):
+    def test_setup_plugin_args(self):
         session = Mock()
         plugin = Mock()
         parser = ArgumentParser(add_help=False)
-        parser.add_argument("--global-arg1", default=123)
-        parser.add_argument("--global-arg2", default=456)
 
         session.plugins = {"mock": plugin}
         plugin.arguments = Arguments(
-            Argument("global-arg1", is_global=True),
             Argument("test1", default="default1"),
             Argument("test2", default="default2"),
             Argument("test3"),
         )
-
-        assert [(record.category, str(record.message)) for record in recwarn.list] == [
-            (StreamlinkDeprecationWarning, "Defining global plugin arguments is deprecated. Use the session options instead."),
-        ]
 
         setup_plugin_args(session, parser)
 
@@ -225,49 +217,38 @@ class TestSetupOptions:
             == ["--mock-test1", "--mock-test2", "--mock-test3"], \
             "Only adds plugin arguments and ignores global argument references"
         assert [item for action in parser._actions for item in action.option_strings] \
-            == ["--global-arg1", "--global-arg2", "--mock-test1", "--mock-test2", "--mock-test3"], \
+            == ["--mock-test1", "--mock-test2", "--mock-test3"], \
             "Parser has all arguments registered"
 
-        assert plugin.options.get("global-arg1") == 123
-        assert plugin.options.get("global-arg2") is None
         assert plugin.options.get("test1") == "default1"
         assert plugin.options.get("test2") == "default2"
         assert plugin.options.get("test3") is None
 
-    def test_setup_plugin_options(self, recwarn: pytest.WarningsRecorder):
-        @pluginargument("foo-foo", is_global=True)
+    def test_setup_plugin_options(self):
+        @pluginargument("foo-foo")
         @pluginargument("bar-bar", default=456)
         @pluginargument("baz-baz", default=789, help=argparse.SUPPRESS)
         class FakePlugin(Plugin):
             def _get_streams(self):  # pragma: no cover
                 pass
 
-        assert [(record.category, str(record.message), record.filename) for record in recwarn.list] == [
-            (
-                StreamlinkDeprecationWarning,
-                "Defining global plugin arguments is deprecated. Use the session options instead.",
-                __file__,
-            ),
-        ]
-
         session = Mock()
         parser = ArgumentParser()
-        parser.add_argument("--foo-foo", default=123)
 
         session.plugins = {"plugin": FakePlugin}
         session.set_plugin_option = lambda name, key, value: session.plugins[name].options.update({key: value})
 
         with patch("streamlink_cli.main.args") as args:
-            args.foo_foo = 321
+            args.plugin_foo_foo = 123
             args.plugin_bar_bar = 654
             args.plugin_baz_baz = 987  # this wouldn't be set by the parser if the argument is suppressed
 
             setup_plugin_args(session, parser)
-            assert FakePlugin.options.get("foo_foo") == 123, "Sets the global-argument's default value"
+            assert FakePlugin.options.get("foo_foo") is None, "No default value"
             assert FakePlugin.options.get("bar_bar") == 456, "Sets the plugin-argument's default value"
             assert FakePlugin.options.get("baz_baz") == 789, "Sets the suppressed plugin-argument's default value"
 
             setup_plugin_options(session, "plugin", FakePlugin)
-            assert FakePlugin.options.get("foo_foo") == 321, "Sets the provided global-argument value"
+            assert FakePlugin.options.get("foo_foo") == 123, "Overrides the default plugin-argument value"
             assert FakePlugin.options.get("bar_bar") == 654, "Sets the provided plugin-argument value"
             assert FakePlugin.options.get("baz_baz") == 789, "Doesn't set values of suppressed plugin-arguments"
