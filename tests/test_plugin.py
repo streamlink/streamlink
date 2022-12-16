@@ -9,6 +9,7 @@ import freezegun
 import pytest
 import requests.cookies
 
+from streamlink.options import Options
 from streamlink.plugin import (
     HIGH_PRIORITY,
     NORMAL_PRIORITY,
@@ -106,6 +107,16 @@ class TestPlugin:
         assert plugin.cache == mock_cache()
 
         assert mock_load_cookies.call_args_list == [call()]
+
+    def test_constructor_options(self):
+        one = FakePlugin(Mock(), "https://mocked", Options({"key": "val"}))
+        two = FakePlugin(Mock(), "https://mocked")
+        assert one.get_option("key") == "val"
+        assert two.get_option("key") is None
+
+        one.set_option("key", "other")
+        assert one.get_option("key") == "other"
+        assert two.get_option("key") is None
 
 
 class TestPluginMatcher:

@@ -3,7 +3,7 @@ import re
 import struct
 from concurrent.futures import Future
 from datetime import datetime, timedelta
-from typing import Any, Dict, List, NamedTuple, Optional, Tuple, Union
+from typing import Any, Dict, List, Mapping, NamedTuple, Optional, Tuple, Union
 from urllib.parse import urlparse
 
 # noinspection PyPackageRequirements
@@ -601,6 +601,7 @@ class HLSStream(HTTPStream):
         force_restart: bool = False,
         start_offset: float = 0,
         duration: Optional[float] = None,
+        # TODO: turn args into dedicated keyword
         **args,
     ):
         """
@@ -680,6 +681,8 @@ class HLSStream(HTTPStream):
         name_fmt: Optional[str] = None,
         start_offset: float = 0,
         duration: Optional[float] = None,
+        keywords: Optional[Mapping] = None,
+        # TODO: turn request_params into a dedicated keyword
         **request_params,
     ) -> Dict[str, Union["HLSStream", "MuxedHLSStream"]]:
         """
@@ -694,6 +697,7 @@ class HLSStream(HTTPStream):
         :param name_fmt: A format string for the name, allowed format keys are: name, pixels, bitrate
         :param start_offset: Number of seconds to be skipped from the beginning
         :param duration: Number of second until ending the stream
+        :param keywords: Optional keywords to be passed to the :class:`HLSStream` or :class:`MuxedHLSStream`
         :param request_params: Additional keyword arguments passed to :class:`HLSStream`, :class:`MuxedHLSStream`,
                                or :py:meth:`requests.Session.request`
         """
@@ -711,6 +715,7 @@ class HLSStream(HTTPStream):
         stream_name: Optional[str]
         stream: Union["HLSStream", "MuxedHLSStream"]
         streams: Dict[str, Union["HLSStream", "MuxedHLSStream"]] = {}
+        keywords = keywords or {}
 
         for playlist in filter(lambda p: not p.is_iframe, multivariant.playlists):
             names: Dict[str, Optional[str]] = dict(name=None, pixels=None, bitrate=None)
@@ -819,6 +824,7 @@ class HLSStream(HTTPStream):
                     force_restart=force_restart,
                     start_offset=start_offset,
                     duration=duration,
+                    **keywords,
                     **request_params,
                 )
             else:
@@ -829,6 +835,7 @@ class HLSStream(HTTPStream):
                     force_restart=force_restart,
                     start_offset=start_offset,
                     duration=duration,
+                    **keywords,
                     **request_params,
                 )
 

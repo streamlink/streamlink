@@ -340,18 +340,6 @@ class TestStreams:
         assert "vod_alt2" in streams
 
 
-def test_pluginoptions(session: Streamlink):
-    assert session.get_plugin_option("testplugin", "a_option") is None
-
-    session.load_plugins(str(PATH_TESTPLUGINS))
-    assert session.get_plugin_option("testplugin", "a_option") == "default"
-
-    session.set_plugin_option("testplugin", "another_option", "test")
-    assert session.get_plugin_option("testplugin", "another_option") == "test"
-    assert session.get_plugin_option("non_existing", "non_existing") is None
-    assert session.get_plugin_option("testplugin", "non_existing") is None
-
-
 def test_options(session: Streamlink):
     session.set_option("test_option", "option")
     assert session.get_option("test_option") == "option"

@@ -270,7 +270,6 @@ class Plugin:
     category: Optional[str] = None
     """Metadata 'category' attribute: name of a game being played, a music genre, etc."""
 
-    options = Options()
     _url: str = ""
 
     # deprecated
@@ -317,15 +316,17 @@ class Plugin:
 
         return cls.__new__(PluginWrapperBack, *args, **kwargs)
 
-    def __init__(self, session: "Streamlink", url: str):
+    def __init__(self, session: "Streamlink", url: str, options: Optional[Options] = None):
         """
         :param session: The Streamlink session instance
         :param url: The input URL used for finding and resolving streams
+        :param options: An optional :class:`Options` instance
         """
 
         modulename = self.__class__.__module__
         self.module = modulename.split(".")[-1]
         self.logger = logging.getLogger(modulename)
+        self.options = Options() if options is None else options
         self.cache = Cache(
             filename="plugin-cache.json",
             key_prefix=self.module,
@@ -353,13 +354,11 @@ class Plugin:
         if self.matchers:
             self.matcher, self.match = self.matches.update(self.matchers, value)
 
-    @classmethod
-    def set_option(cls, key, value):
-        cls.options.set(key, value)
+    def set_option(self, key, value):
+        self.options.set(key, value)
 
-    @classmethod
-    def get_option(cls, key):
-        return cls.options.get(key)
+    def get_option(self, key):
+        return self.options.get(key)
 
     @classmethod
     def get_argument(cls, key):

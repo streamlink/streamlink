@@ -501,31 +501,6 @@ class Streamlink:
 
         return self.options.get(key)
 
-    def set_plugin_option(self, plugin: str, key: str, value: Any) -> None:
-        """
-        Sets plugin specific options used by plugins originating from this session object.
-
-        :param plugin: name of the plugin
-        :param key: key of the option
-        :param value: value to set the option to
-        """
-
-        if plugin in self.plugins:
-            plugincls = self.plugins[plugin]
-            plugincls.set_option(key, value)
-
-    def get_plugin_option(self, plugin: str, key: str) -> Optional[Any]:
-        """
-        Returns the current value of the plugin specific option.
-
-        :param plugin: name of the plugin
-        :param key: key of the option
-        """
-
-        if plugin in self.plugins:
-            plugincls = self.plugins[plugin]
-            return plugincls.get_option(key)
-
     @lru_cache(maxsize=128)  # noqa: B019
     def resolve_url(
         self,
