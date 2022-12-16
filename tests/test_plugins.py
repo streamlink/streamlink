@@ -84,9 +84,6 @@ class TestPlugins:
         assert not hasattr(pluginclass, "priority"), "Does not implement deprecated priority(url)"
         assert callable(pluginclass._get_streams), "Implements _get_streams()"
 
-    def test_no_global_args(self, plugin):
-        assert not [parg for parg in plugin.__plugin__.arguments or [] if parg.is_global], "Doesn't define global arguments"
-
 
 class TestPluginTests:
     @pytest.mark.parametrize("plugin", plugins)

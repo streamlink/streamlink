@@ -711,7 +711,7 @@ def setup_streamlink():
 
 
 def setup_plugin_args(session: Streamlink, parser: ArgumentParser):
-    """Sets Streamlink plugin options."""
+    """Adds plugin argument data to the argument parser and sets default plugin options."""
 
     plugin_args = parser.add_argument_group("Plugin options")
     for pname, plugin in session.plugins.items():
@@ -719,16 +719,8 @@ def setup_plugin_args(session: Streamlink, parser: ArgumentParser):
         group = parser.add_argument_group(pname.capitalize(), parent=plugin_args)
 
         for parg in plugin.arguments or []:
-            if not parg.is_global:
-                group.add_argument(parg.argument_name(pname), **parg.options)
-                defaults[parg.dest] = parg.default
-            else:
-                pargdest = parg.dest
-                for action in parser._actions:
-                    # find matching global argument
-                    if pargdest != action.dest:
-                        continue
-                    defaults[pargdest] = action.default
+            group.add_argument(parg.argument_name(pname), **parg.options)
+            defaults[parg.dest] = parg.default
 
         plugin.options = PluginOptions(defaults)
 
@@ -744,20 +736,19 @@ def setup_plugin_options(session: Streamlink, pluginname: str, pluginclass: Type
         if parg.options.get("help") == argparse.SUPPRESS:
             continue
 
-        value = getattr(args, parg.dest if parg.is_global else parg.namespace_dest(pluginname))
+        value = getattr(args, parg.namespace_dest(pluginname))
         session.set_plugin_option(pluginname, parg.dest, value)
 
-        if not parg.is_global:
-            if parg.required:
-                required[parg.name] = parg
-            # if the value is set, check to see if any of the required arguments are not set
-            if parg.required or value:
-                try:
-                    for rparg in pluginclass.arguments.requires(parg.name):
-                        required[rparg.name] = rparg
-                except RuntimeError:
-                    log.error(f"{pluginname} plugin has a configuration error and the arguments cannot be parsed")
-                    break
+        if parg.required:
+            required[parg.name] = parg
+        # if the value is set, check to see if any of the required arguments are not set
+        if parg.required or value:
+            try:
+                for rparg in pluginclass.arguments.requires(parg.name):
+                    required[rparg.name] = rparg
+            except RuntimeError:
+                log.error(f"{pluginname} plugin has a configuration error and the arguments cannot be parsed")
+                break
 
     if required:
         for req in required.values():

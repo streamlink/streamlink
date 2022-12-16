@@ -708,7 +708,6 @@ def pluginargument(
     sensitive: bool = False,
     argument_name: Optional[str] = None,
     dest: Optional[str] = None,
-    is_global: bool = False,
     **options,
 ) -> Callable[[Type[Plugin]], Type[Plugin]]:
     """
@@ -746,7 +745,6 @@ def pluginargument(
         sensitive=sensitive,
         argument_name=argument_name,
         dest=dest,
-        is_global=is_global,
         **options,
     )
 
