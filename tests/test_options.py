@@ -1,36 +1,47 @@
-import unittest
-
 import pytest
 
 from streamlink.options import Argument, Arguments, Options
 
 
-class TestOptions(unittest.TestCase):
-    def setUp(self):
-        self.options = Options({
+class TestOptions:
+    @pytest.fixture()
+    def options(self):
+        return Options({
             "a_default": "default",
             "another-default": "default2",
         })
 
-    def test_options(self):
-        assert self.options.get("a_default") == "default"
-        assert self.options.get("non_existing") is None
+    def test_empty(self):
+        options = Options()
+        assert not options.defaults
+        assert not options.options
 
-        self.options.set("a_option", "option")
-        assert self.options.get("a_option") == "option"
+    def test_set(self, options: Options):
+        assert options.get("a_default") == "default"
+        assert options.get("non_existing") is None
 
-    def test_options_update(self):
-        assert self.options.get("a_default") == "default"
-        assert self.options.get("non_existing") is None
+        options.set("an_option", "option")
+        assert options.get("an_option") == "option"
 
-        self.options.update({"a_option": "option"})
-        assert self.options.get("a_option") == "option"
+    def test_update(self, options: Options):
+        assert options.get("a_default") == "default"
+        assert options.get("non_existing") is None
 
-    def test_options_name_normalised(self):
-        assert self.options.get("a_default") == "default"
-        assert self.options.get("a-default") == "default"
-        assert self.options.get("another-default") == "default2"
-        assert self.options.get("another_default") == "default2"
+        options.update({"an_option": "option"})
+        assert options.get("an_option") == "option"
+
+    def test_name_normalised(self, options: Options):
+        assert options.get("a_default") == "default"
+        assert options.get("a-default") == "default"
+        assert options.get("another-default") == "default2"
+        assert options.get("another_default") == "default2"
+
+    def test_clear(self, options: Options):
+        assert options.get("a_default") == "default"
+        options.set("a_default", "other")
+        assert options.get("a_default") == "other"
+        options.clear()
+        assert options.get("a_default") == "default"
 
 
 class TestMappedOptions:
@@ -105,7 +116,7 @@ class TestMappedOptions:
         assert list(options.items()) == [("foo-bar", 123), ("baz", 1), ("key", "value")]
 
 
-class TestArgument(unittest.TestCase):
+class TestArgument:
     def test_name(self):
         assert Argument("test-arg").argument_name("plugin") == "--plugin-test-arg"
         assert Argument("test-arg").namespace_dest("plugin") == "plugin_test_arg"
@@ -121,8 +132,15 @@ class TestArgument(unittest.TestCase):
         assert Argument("test", argument_name="override-name").namespace_dest("plugin") == "override_name"
         assert Argument("test", argument_name="override-name").dest == "test"
 
+    def test_default(self):
+        arg = Argument("test", default=123)
+        assert arg.default == 123
+        with pytest.raises(AttributeError):
+            # noinspection PyPropertyAccess
+            arg.default = 456
 
-class TestArguments(unittest.TestCase):
+
+class TestArguments:
     def test_getter(self):
         test1 = Argument("test1")
         test2 = Argument("test2")
@@ -138,50 +156,59 @@ class TestArguments(unittest.TestCase):
         args = Arguments(test1, test2)
 
         i_args = iter(args)
-
         assert next(i_args) == test1
         assert next(i_args) == test2
+
+    def test_add(self):
+        test1 = Argument("test1")
+        test2 = Argument("test2")
+        test3 = Argument("test3")
+        args = Arguments(test1, test2)
+
+        assert list(iter(args)) == [test1, test2]
+        args.add(test3)
+        assert list(iter(args)) == [test3, test1, test2]
 
     def test_requires(self):
         test1 = Argument("test1", requires="test2")
         test2 = Argument("test2", requires="test3")
         test3 = Argument("test3")
-
         args = Arguments(test1, test2, test3)
 
         assert list(args.requires("test1")) == [test2, test3]
 
     def test_requires_invalid(self):
         test1 = Argument("test1", requires="test2")
-
         args = Arguments(test1)
 
-        with pytest.raises(KeyError):
+        with pytest.raises(KeyError) as cm:
             list(args.requires("test1"))
+        assert cm.value.args[0] == "test2 is not a valid argument for this plugin"
 
-    def test_requires_cycle(self):
-        test1 = Argument("test1", requires="test2")
-        test2 = Argument("test2", requires="test1")
-
-        args = Arguments(test1, test2)
-
-        with pytest.raises(RuntimeError):
+    @pytest.mark.parametrize("args", [
+        pytest.param(
+            Arguments(
+                Argument("test1", requires="test2"),
+                Argument("test2", requires="test1"),
+            ),
+            id="Cycle",
+        ),
+        pytest.param(
+            Arguments(
+                Argument("test1", requires="test2"),
+                Argument("test2", requires="test3"),
+                Argument("test3", requires="test1"),
+            ),
+            id="Cycle deep",
+        ),
+        pytest.param(
+            Arguments(
+                Argument("test1", requires="test1"),
+            ),
+            id="Cycle self",
+        ),
+    ])
+    def test_requires_cycle(self, args: Arguments):
+        with pytest.raises(RuntimeError) as cm:
             list(args.requires("test1"))
-
-    def test_requires_cycle_deep(self):
-        test1 = Argument("test1", requires="test-2")
-        test2 = Argument("test-2", requires="test3")
-        test3 = Argument("test3", requires="test1")
-
-        args = Arguments(test1, test2, test3)
-
-        with pytest.raises(RuntimeError):
-            list(args.requires("test1"))
-
-    def test_requires_cycle_self(self):
-        test1 = Argument("test1", requires="test1")
-
-        args = Arguments(test1)
-
-        with pytest.raises(RuntimeError):
-            list(args.requires("test1"))
+        assert cm.value.args[0] == "cycle detected in plugin argument config"
