@@ -137,10 +137,10 @@ class RingBuffer(Buffer):
             self._check_events()
 
     def wait_free(self, timeout=None):
-        self.event_free.wait(timeout)
+        return self.event_free.wait(timeout)
 
     def wait_used(self, timeout=None):
-        self.event_used.wait(timeout)
+        return self.event_used.wait(timeout)
 
     def close(self):
         Buffer.close(self)
