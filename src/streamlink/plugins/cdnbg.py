@@ -85,7 +85,7 @@ class CDNBG(Plugin):
             schema=validate.Schema(
                 validate.any(
                     self._find_url(
-                        re.compile(r"sdata\.src.*?=.*?(?P<q>[\"'])(?P<url>http.*?)(?P=q)")
+                        re.compile(r"sdata\.src.*?=.*?(?P<q>[\"'])(?P<url>.*?)(?P=q)")
                     ),
                     self._find_url(
                         re.compile(r"(src|file): (?P<q>[\"'])(?P<url>(https?:)?//.+?m3u8.*?)(?P=q)")
