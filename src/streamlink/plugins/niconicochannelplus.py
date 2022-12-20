@@ -17,7 +17,7 @@ log = logging.getLogger(__name__)
 
 @pluginmatcher(
     re.compile(
-        r"^https?://nicochannel\.jp/(?P<channel>[a-z0-9\._-]+)/(?:video|live)/(?P<id>sm[a-zA-Z0-9]+)$"
+        r"https?://nicochannel\.jp/(?P<channel>[a-z0-9\._-]+)/(?:video|live)/(?P<id>sm[a-zA-Z0-9]+)"
     )
 )
 class NicoNicoChannelPlus(Plugin):
