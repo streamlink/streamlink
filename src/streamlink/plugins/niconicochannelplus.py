@@ -36,8 +36,8 @@ class NicoNicoChannelPlus(Plugin):
                     "live_started_at": validate.any(str, None),
                     "live_finished_at": validate.any(str, None),
                     "video": {
-                        "allow_dvr_flg": bool,
-                        "convert_to_vod_flg": bool,
+                        "allow_dvr_flg": validate.any(bool, None),
+                        "convert_to_vod_flg": validate.any(bool, None),
                     },
                 }}},
                 validate.get(("data", "video_page")),
