@@ -30,21 +30,11 @@ from streamlink_cli.main import (
 )
 from streamlink_cli.output import FileOutput, PlayerOutput
 from tests import posix_only, windows_only
+from tests.cli import FakePlugin
 from tests.plugin.testplugin import TestPlugin as _TestPlugin
 
 
 # TODO: rewrite the entire mess
-
-
-class FakePlugin(_TestPlugin):
-    __module__ = "fake"
-    _streams = {}  # type: ignore
-
-    def streams(self, *args, **kwargs):
-        return self._streams
-
-    def _get_streams(self):  # pragma: no cover
-        pass
 
 
 class TestCLIMain(unittest.TestCase):
@@ -126,85 +116,6 @@ class TestCLIMainHandleUrl:
             with pytest.raises(CLIExit) as cm:
                 handle_url()
             assert str(cm.value) == expected
-
-
-class TestCLIMainJsonAndStreamUrl(unittest.TestCase):
-    @patch("streamlink_cli.main.args", json=True, stream_url=True, subprocess_cmdline=False)
-    @patch("streamlink_cli.main.console")
-    def test_handle_stream_with_json_and_stream_url(self, console, args):
-        stream = Mock()
-        streams = dict(best=stream)
-
-        plugin = FakePlugin(Mock(), "")
-        plugin._streams = streams
-
-        handle_stream(plugin, streams, "best")
-        self.assertEqual(console.msg.mock_calls, [])
-        self.assertEqual(console.msg_json.mock_calls, [call(
-            stream,
-            metadata=dict(
-                id="test-id-1234-5678",
-                author="Tѥst Āuƭhǿr",
-                category=None,
-                title="Test Title"
-            )
-        )])
-        self.assertEqual(console.error.mock_calls, [])
-        console.msg_json.mock_calls.clear()
-
-        args.json = False
-        handle_stream(plugin, streams, "best")
-        self.assertEqual(console.msg.mock_calls, [call(stream.to_url())])
-        self.assertEqual(console.msg_json.mock_calls, [])
-        self.assertEqual(console.error.mock_calls, [])
-        console.msg.mock_calls.clear()
-
-        stream.to_url.side_effect = TypeError()
-        with pytest.raises(CLIExit) as cm:
-            handle_stream(plugin, streams, "best")
-        self.assertEqual(console.msg.mock_calls, [])
-        self.assertEqual(console.msg_json.mock_calls, [])
-        self.assertEqual(str(cm.value), "The stream specified cannot be translated to a URL")
-
-    @patch("streamlink_cli.main.args", json=True, stream_url=True, stream=[], default_stream=[], retry_max=0, retry_streams=0)
-    @patch("streamlink_cli.main.console")
-    def test_handle_url_with_json_and_stream_url(self, console, args):
-        stream = Mock()
-        streams = dict(worst=Mock(), best=stream)
-
-        class _FakePlugin(FakePlugin):
-            __module__ = FakePlugin.__module__
-            _streams = streams
-
-        with patch("streamlink_cli.main.streamlink", resolve_url=Mock(return_value=("fake", _FakePlugin, ""))):
-            handle_url()
-            self.assertEqual(console.msg.mock_calls, [])
-            self.assertEqual(console.msg_json.mock_calls, [call(
-                plugin="fake",
-                metadata=dict(
-                    id="test-id-1234-5678",
-                    author="Tѥst Āuƭhǿr",
-                    category=None,
-                    title="Test Title"
-                ),
-                streams=streams
-            )])
-            self.assertEqual(console.error.mock_calls, [])
-            console.msg_json.mock_calls.clear()
-
-            args.json = False
-            handle_url()
-            self.assertEqual(console.msg.mock_calls, [call(stream.to_manifest_url())])
-            self.assertEqual(console.msg_json.mock_calls, [])
-            self.assertEqual(console.error.mock_calls, [])
-            console.msg.mock_calls.clear()
-
-            stream.to_manifest_url.side_effect = TypeError()
-            with pytest.raises(CLIExit) as cm:
-                handle_url()
-            self.assertEqual(console.msg.mock_calls, [])
-            self.assertEqual(console.msg_json.mock_calls, [])
-            self.assertEqual(str(cm.value), "The stream specified cannot be translated to a URL")
 
 
 class TestCLIMainCheckFileOutput(unittest.TestCase):
