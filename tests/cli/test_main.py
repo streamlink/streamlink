@@ -17,6 +17,7 @@ from streamlink.session import Streamlink
 from streamlink.stream.stream import Stream
 from streamlink_cli.compat import stdout
 from streamlink_cli.main import (
+    CLIExit,
     Formatter,
     NoPluginError,
     check_file_output,
@@ -121,11 +122,10 @@ class TestCLIMainHandleUrl:
     ])
     def test_error(self, side_effect, expected):
         with patch("streamlink_cli.main.args", Mock(url="fakeurl")), \
-             patch("streamlink_cli.main.streamlink", resolve_url=Mock(side_effect=side_effect)), \
-             patch("streamlink_cli.main.console", exit=Mock(side_effect=SystemExit)) as mock_console:
-            with pytest.raises(SystemExit):
+             patch("streamlink_cli.main.streamlink", resolve_url=Mock(side_effect=side_effect)):
+            with pytest.raises(CLIExit) as cm:
                 handle_url()
-            assert mock_console.exit.mock_calls == [call(expected)]
+            assert str(cm.value) == expected
 
 
 class TestCLIMainJsonAndStreamUrl(unittest.TestCase):
@@ -160,10 +160,11 @@ class TestCLIMainJsonAndStreamUrl(unittest.TestCase):
         console.msg.mock_calls.clear()
 
         stream.to_url.side_effect = TypeError()
-        handle_stream(plugin, streams, "best")
+        with pytest.raises(CLIExit) as cm:
+            handle_stream(plugin, streams, "best")
         self.assertEqual(console.msg.mock_calls, [])
         self.assertEqual(console.msg_json.mock_calls, [])
-        self.assertEqual(console.exit.mock_calls, [call("The stream specified cannot be translated to a URL")])
+        self.assertEqual(str(cm.value), "The stream specified cannot be translated to a URL")
 
     @patch("streamlink_cli.main.args", json=True, stream_url=True, stream=[], default_stream=[], retry_max=0, retry_streams=0)
     @patch("streamlink_cli.main.console")
@@ -199,11 +200,11 @@ class TestCLIMainJsonAndStreamUrl(unittest.TestCase):
             console.msg.mock_calls.clear()
 
             stream.to_manifest_url.side_effect = TypeError()
-            handle_url()
+            with pytest.raises(CLIExit) as cm:
+                handle_url()
             self.assertEqual(console.msg.mock_calls, [])
             self.assertEqual(console.msg_json.mock_calls, [])
-            self.assertEqual(console.exit.mock_calls, [call("The stream specified cannot be translated to a URL")])
-            console.exit.mock_calls.clear()
+            self.assertEqual(str(cm.value), "The stream specified cannot be translated to a URL")
 
 
 class TestCLIMainCheckFileOutput(unittest.TestCase):
@@ -278,7 +279,6 @@ class TestCLIMainCheckFileOutput(unittest.TestCase):
 # TODO: don't use Mock() for mocking args, use a custom argparse.Namespace instead
 class TestCLIMainCreateOutput(unittest.TestCase):
     @patch("streamlink_cli.main.args")
-    @patch("streamlink_cli.main.console", Mock())
     @patch("streamlink_cli.main.DEFAULT_STREAM_METADATA", {"title": "bar"})
     def test_create_output_no_file_output_options(self, args: Mock):
         formatter = Formatter({
@@ -432,30 +432,25 @@ class TestCLIMainCreateOutput(unittest.TestCase):
         assert output.record.record is None
 
     @patch("streamlink_cli.main.args")
-    @patch("streamlink_cli.main.console")
-    def test_create_output_record_and_other_file_output(self, console: Mock, args: Mock):
+    def test_create_output_record_and_other_file_output(self, args: Mock):
         formatter = Formatter({})
         args.output = None
         args.stdout = True
         args.record_and_pipe = True
-        create_output(formatter)
-        console.exit.assert_called_with("Cannot use record options with other file output options.")
+        with pytest.raises(CLIExit) as cm:
+            create_output(formatter)
+        assert str(cm.value) == "Cannot use record options with other file output options."
 
     @patch("streamlink_cli.main.args")
-    @patch("streamlink_cli.main.console")
-    def test_create_output_no_default_player(self, console: Mock, args: Mock):
+    def test_create_output_no_default_player(self, args: Mock):
         formatter = Formatter({})
         args.output = None
         args.stdout = False
         args.record_and_pipe = False
         args.player = None
-        console.exit.side_effect = SystemExit
-        with self.assertRaises(SystemExit):
+        with pytest.raises(CLIExit) as cm:
             create_output(formatter)
-        self.assertRegex(
-            console.exit.call_args_list[0][0][0],
-            r"^The default player \(\w+\) does not seem to be installed\."
-        )
+        assert str(cm.value).startswith("The default player")
 
 
 class TestCLIMainHandleStream(unittest.TestCase):
@@ -486,28 +481,25 @@ class TestCLIMainHandleStream(unittest.TestCase):
 
 class TestCLIMainOutputStream(unittest.TestCase):
     @patch("streamlink_cli.main.args", Mock(retry_open=2))
+    @patch("streamlink_cli.main.output", Mock())
     @patch("streamlink_cli.main.log")
-    @patch("streamlink_cli.main.console")
-    def test_stream_failure_no_output_open(self, mock_console: Mock, mock_log: Mock):
-        output = Mock()
+    @patch("streamlink_cli.main.create_output")
+    def test_stream_failure_no_output_open(self, mock_output: Mock, mock_log: Mock):
         stream = Mock(
             __str__=lambda _: "fake-stream",
             open=Mock(side_effect=StreamError("failure"))
         )
         formatter = Formatter({})
 
-        with patch("streamlink_cli.main.output", Mock()), \
-             patch("streamlink_cli.main.create_output", return_value=output):
+        with pytest.raises(CLIExit) as cm:
             output_stream(stream, formatter)
 
-        self.assertEqual(mock_log.error.call_args_list, [
+        assert mock_log.error.call_args_list == [
             call("Try 1/2: Could not open stream fake-stream (Could not open stream: failure)"),
             call("Try 2/2: Could not open stream fake-stream (Could not open stream: failure)"),
-        ])
-        self.assertEqual(mock_console.exit.call_args_list, [
-            call("Could not open stream fake-stream, tried 2 times, exiting")
-        ])
-        self.assertFalse(output.open.called, "Does not open the output on stream error")
+        ]
+        assert str(cm.value) == "Could not open stream fake-stream, tried 2 times, exiting"
+        assert not mock_output.open.called, "Does not open the output on stream error"
 
 
 class _TestCLIMainLogging(unittest.TestCase):

@@ -41,6 +41,10 @@ streamlink: Streamlink = None  # type: ignore[assignment]
 log = logging.getLogger("streamlink.cli")
 
 
+class CLIExit(Exception):
+    pass
+
+
 def get_formatter(plugin: Plugin):
     return Formatter(
         {
@@ -90,8 +94,7 @@ def create_output(formatter: Formatter) -> Union[FileOutput, PlayerOutput]:
     """
 
     if (args.output or args.stdout) and (args.record or args.record_and_pipe):
-        console.exit("Cannot use record options with other file output options.")
-        return  # type: ignore
+        raise CLIExit("Cannot use record options with other file output options.")
 
     if args.output:
         if args.output == "-":
@@ -107,14 +110,13 @@ def create_output(formatter: Formatter) -> Union[FileOutput, PlayerOutput]:
         return FileOutput(fd=stdout, record=record)
 
     elif not args.player:
-        console.exit(
+        raise CLIExit(
             "The default player (VLC) does not seem to be "
             "installed. You must specify the path to a player "
             "executable with --player, a file path to save the "
             "stream with --output, or pipe the stream to "
             "another program with --stdout."
         )
-        return  # type: ignore
 
     else:
         http = namedpipe = record = None
@@ -123,8 +125,7 @@ def create_output(formatter: Formatter) -> Union[FileOutput, PlayerOutput]:
             try:
                 namedpipe = NamedPipe()  # type: ignore[abstract]  # ???
             except OSError as err:
-                console.exit(f"Failed to create pipe: {err}")
-                return  # type: ignore
+                raise CLIExit(f"Failed to create pipe: {err}") from err
         elif args.player_http:
             http = create_http_server()
 
@@ -159,8 +160,7 @@ def create_http_server(*_args, **_kwargs):
         http = HTTPServer()
         http.bind(*_args, **_kwargs)
     except OSError as err:
-        console.exit(f"Failed to create HTTP server: {err}")
-        return
+        raise CLIExit(f"Failed to create HTTP server: {err}") from err
 
     return http
 
@@ -192,9 +192,11 @@ def output_stream_http(
 
     if not external:
         if not args.player:
-            console.exit("The default player (VLC) does not seem to be "
-                         "installed. You must specify the path to a player "
-                         "executable with --player.")
+            raise CLIExit(
+                "The default player (VLC) does not seem to be "
+                "installed. You must specify the path to a player "
+                "executable with --player."
+            )
 
         server = create_http_server()
         player = output = PlayerOutput(
@@ -210,7 +212,7 @@ def output_stream_http(
             if player:
                 player.open()
         except OSError as err:
-            console.exit(f"Failed to start player: {args.player} ({err})")
+            raise CLIExit(f"Failed to start player: {args.player} ({err})") from err
     else:
         server = create_http_server(host=None, port=port)
         player = None
@@ -257,8 +259,7 @@ def output_stream_http(
             try:
                 stream_runner.run(prebuffer)
             except OSError as err:
-                # TODO: refactor all console.exit() calls
-                console.exit(str(err))
+                raise CLIExit(err) from err
 
         if not continuous:
             break
@@ -277,8 +278,7 @@ def output_stream_passthrough(stream, formatter: Formatter):
     try:
         url = stream.to_url()
     except TypeError:
-        console.exit("The stream specified cannot be translated to a URL")
-        return False
+        raise CLIExit("The stream specified cannot be translated to a URL")
 
     output = PlayerOutput(
         args.player,
@@ -293,8 +293,7 @@ def output_stream_passthrough(stream, formatter: Formatter):
         log.info(f"Starting player: {args.player}")
         output.open()
     except OSError as err:
-        console.exit(f"Failed to start player: {args.player} ({err})")
-        return False
+        raise CLIExit(f"Failed to start player: {args.player} ({err})") from err
 
     return True
 
@@ -347,18 +346,17 @@ def output_stream(stream, formatter: Formatter):
             log.error(f"Try {i + 1}/{args.retry_open}: Could not open stream {stream} ({err})")
 
     if not success_open:
-        return console.exit(f"Could not open stream {stream}, tried {args.retry_open} times, exiting")
+        raise CLIExit(f"Could not open stream {stream}, tried {args.retry_open} times, exiting")
 
     try:
         output.open()
     except OSError as err:
         if isinstance(output, PlayerOutput):
-            console.exit(f"Failed to start player: {args.player} ({err})")
+            raise CLIExit(f"Failed to start player: {args.player} ({err})") from err
         elif output.filename:
-            console.exit(f"Failed to open output: {output.filename} ({err})")
+            raise CLIExit(f"Failed to open output: {output.filename} ({err})") from err
         else:
-            console.exit(f"Failed to open output ({err}")
-        return
+            raise CLIExit(f"Failed to open output ({err}") from err
 
     try:
         with closing(output):
@@ -369,8 +367,7 @@ def output_stream(stream, formatter: Formatter):
             # noinspection PyUnboundLocalVariable
             stream_runner.run(prebuffer)
     except OSError as err:
-        # TODO: refactor all console.exit() calls
-        console.exit(str(err))
+        raise CLIExit(err) from err
 
     return True
 
@@ -400,7 +397,7 @@ def handle_stream(plugin: Plugin, streams: Dict[str, Stream], stream_name: str) 
         try:
             console.msg(stream.to_url())
         except TypeError:
-            console.exit("The stream specified cannot be translated to a URL")
+            raise CLIExit("The stream specified cannot be translated to a URL")
 
     else:
         # Find any streams with a '_alt' suffix and attempt
@@ -548,12 +545,12 @@ def handle_url():
         else:
             streams = fetch_streams(plugin)
     except NoPluginError:
-        console.exit(f"No plugin can handle URL: {args.url}")
+        raise CLIExit(f"No plugin can handle URL: {args.url}")
     except PluginError as err:
-        console.exit(str(err))
+        raise CLIExit(str(err)) from err
 
     if not streams:
-        console.exit(f"No playable streams found on this URL: {args.url}")
+        raise CLIExit(f"No playable streams found on this URL: {args.url}")
 
     if args.default_stream and not args.stream and not args.json:
         args.stream = args.default_stream
@@ -567,15 +564,14 @@ def handle_url():
                 return
 
         errmsg = f"The specified stream(s) '{', '.join(args.stream)}' could not be found"
-        if args.json:
-            console.msg_json(
-                plugin=plugin.module,
-                metadata=plugin.get_metadata(),
-                streams=streams,
-                error=errmsg
-            )
-        else:
-            console.exit(f"{errmsg}.\n       Available streams: {validstreams}")
+        if not args.json:
+            raise CLIExit(f"{errmsg}.\n       Available streams: {validstreams}")
+        console.msg_json(
+            plugin=plugin.module,
+            metadata=plugin.get_metadata(),
+            streams=streams,
+            error=errmsg,
+        )
     elif args.json:
         console.msg_json(
             plugin=plugin.module,
@@ -586,7 +582,7 @@ def handle_url():
         try:
             console.msg(streams[list(streams)[-1]].to_manifest_url())
         except TypeError:
-            console.exit("The stream specified cannot be translated to a URL")
+            raise CLIExit("The stream specified cannot be translated to a URL")
     else:
         validstreams = format_valid_streams(plugin, streams)
         console.msg(f"Available streams: {validstreams}")
@@ -937,6 +933,8 @@ def main():
                 output.close()
             console.msg("Interrupted! Exiting...")
             error_code = 130
+        except CLIExit as err:
+            console.exit(str(err))
         finally:
             if stream_fd:
                 try:
