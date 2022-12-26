@@ -1,113 +1,154 @@
-import datetime
-import os.path
-import tempfile
-import unittest
-from shutil import rmtree
-from unittest.mock import patch
+from datetime import datetime, timedelta, timezone
+from json import JSONDecodeError
+from pathlib import Path
+from typing import Type, Union
+from unittest.mock import Mock, patch
 
-import streamlink.cache
+import freezegun
+import pytest
+
+from streamlink.cache import Cache
 
 
-class TestCache(unittest.TestCase):
-    def setUp(self):
-        self.tmp_dir = tempfile.mkdtemp("streamlink-test")
+@pytest.fixture(autouse=True)
+def cache_dir(tmp_path: Path):
+    with patch("streamlink.cache.CACHE_DIR", tmp_path):
+        yield tmp_path
 
-        streamlink.cache.cache_dir = self.tmp_dir
-        self.cache = streamlink.cache.Cache("cache.json")
 
-    def tearDown(self):
-        rmtree(self.tmp_dir)
+@pytest.fixture
+def cache(request: pytest.FixtureRequest, cache_dir: Path):
+    param = getattr(request, "param", {})
+    filename = param.get("filename", "cache.json")
+    key_prefix = param.get("key_prefix", None)
 
-    def test_get_no_file(self):
-        self.assertEqual(self.cache.get("missing-value"), None)
-        self.assertEqual(self.cache.get("missing-value", default="default"), "default")
+    cache = Cache(filename, key_prefix=key_prefix)
+    assert cache.filename == cache_dir / filename
+    # noinspection PyProtectedMember
+    assert not cache._cache
 
-    def test_put_get(self):
-        self.cache.set("value", 1)
-        self.assertEqual(self.cache.get("value"), 1)
+    return cache
 
-    def test_put_get_prefix(self):
-        self.cache.key_prefix = "test"
-        self.cache.set("value", 1)
-        self.assertEqual(self.cache.get("value"), 1)
 
-    def test_key_prefix(self):
-        self.cache.key_prefix = "test"
-        self.cache.set("value", 1)
-        self.assertTrue("test:value" in self.cache._cache)
-        self.assertEqual(1, self.cache._cache["test:value"]["value"])
+class TestPathlibAndStr:
+    @pytest.mark.parametrize("filename", [
+        pytest.param("foo", id="str"),
+        pytest.param(Path("foo"), id="Path"),
+    ])
+    def test_constructor(self, cache_dir: Path, filename: Union[str, Path]):
+        cache = Cache(filename)
+        assert cache.filename == cache_dir / Path(filename)
 
-    @patch('os.path.exists', return_value=True)
-    def test_load_fail(self, exists_mock):
-        patch('streamlink.cache.open', side_effect=IOError)
-        self.cache._load()
-        self.assertEqual({}, self.cache._cache)
 
-    def test_expired(self):
-        self.cache.set("value", 10, expires=-20)
-        self.assertEqual(None, self.cache.get("value"))
+class TestGetterSetter:
+    def test_get(self, cache: Cache):
+        assert cache.get("missing-value") is None
+        assert cache.get("missing-value", default="default") == "default"
 
-    def test_expired_at_before(self):
-        self.cache.set("value", 10, expires_at=datetime.datetime.now() - datetime.timedelta(seconds=20))
-        self.assertEqual(None, self.cache.get("value"))
+    def test_set(self, cache: Cache):
+        assert cache.get("value") is None
+        cache.set("value", 1)
+        assert cache.get("value") == 1
+        assert cache._cache
 
-    def test_expired_at_after(self):
-        self.cache.set("value", 10, expires_at=datetime.datetime.now() + datetime.timedelta(seconds=20))
-        self.assertEqual(10, self.cache.get("value"))
+    def test_get_all(self, cache: Cache):
+        cache.set("test1", 1)
+        cache.set("test2", 2)
+        assert cache.get_all() == {"test1": 1, "test2": 2}
 
-    @patch("streamlink.cache.mktime", side_effect=OverflowError)
-    def test_expired_at_raise_overflowerror(self, mock):
-        self.cache.set("value", 10, expires_at=datetime.datetime.now())
-        self.assertEqual(None, self.cache.get("value"))
+    def test_get_all_prune(self, cache: Cache):
+        cache.set("test1", 1)
+        cache.set("test2", 2, -1)
+        assert cache.get_all() == {"test1": 1}
 
-    def test_not_expired(self):
-        self.cache.set("value", 10, expires=20)
-        self.assertEqual(10, self.cache.get("value"))
 
-    def test_create_directory(self):
-        try:
-            streamlink.cache.cache_dir = os.path.join(tempfile.gettempdir(), "streamlink-test")
-            cache = streamlink.cache.Cache("cache.json")
-            self.assertFalse(os.path.exists(cache.filename))
-            cache.set("value", 10)
-            self.assertTrue(os.path.exists(cache.filename))
-        finally:
-            rmtree(streamlink.cache.cache_dir, ignore_errors=True)
+class TestPrefix:
+    @pytest.mark.parametrize("cache", [{"key_prefix": "test"}], indirect=["cache"])
+    def test_key_prefix(self, cache: Cache):
+        cache.set("key", 1)
+        assert cache.get("key") == 1
+        assert "test:key" in cache._cache
+        assert cache._cache["test:key"]["value"] == 1
 
-    @patch('os.makedirs', side_effect=OSError)
-    def test_create_directory_fail(self, makedirs):
-        try:
-            streamlink.cache.cache_dir = os.path.join(tempfile.gettempdir(), "streamlink-test")
-            cache = streamlink.cache.Cache("cache.json")
-            self.assertFalse(os.path.exists(cache.filename))
-            cache.set("value", 10)
-            self.assertFalse(os.path.exists(cache.filename))
-        finally:
-            rmtree(streamlink.cache.cache_dir, ignore_errors=True)
+    def test_get_all_prefix(self, cache: Cache):
+        cache.set("test1", 1)
+        cache.set("test2", 2)
+        cache.key_prefix = "test"
+        cache.set("test3", 3)
+        cache.set("test4", 4)
+        assert cache.get_all() == {"test3": 3, "test4": 4}
 
-    def test_get_all(self):
-        self.cache.set("test1", 1)
-        self.cache.set("test2", 2)
 
-        self.assertDictEqual(
-            {"test1": 1, "test2": 2},
-            self.cache.get_all())
+class TestExpiration:
+    @pytest.mark.parametrize("expires,expected", [
+        pytest.param(-20, None, id="past"),
+        pytest.param(20, "value", id="future"),
+    ])
+    def test_expires(self, cache: Cache, expires: float, expected):
+        with freezegun.freeze_time("2000-01-01T00:00:00Z"):
+            cache.set("key", "value", expires=expires)
+            assert cache.get("key") == expected
 
-    def test_get_all_prefix(self):
-        self.cache.set("test1", 1)
-        self.cache.set("test2", 2)
-        self.cache.key_prefix = "test"
-        self.cache.set("test3", 3)
-        self.cache.set("test4", 4)
+    @pytest.mark.parametrize("delta,expected", [
+        pytest.param(timedelta(seconds=-20), None, id="past"),
+        pytest.param(timedelta(seconds=20), "value", id="future"),
+    ])
+    def test_expires_at(self, cache: Cache, delta: timedelta, expected):
+        with freezegun.freeze_time("2000-01-01T00:00:00Z"):
+            cache.set("key", "value", expires_at=datetime.now(tz=timezone.utc) + delta)
+            assert cache.get("key") == expected
 
-        self.assertDictEqual(
-            {"test3": 3, "test4": 4},
-            self.cache.get_all())
+    def test_expires_at_overflowerror(self, cache: Cache):
+        expires_at = Mock(timestamp=Mock(side_effect=OverflowError))
+        cache.set("key", "value", expires_at=expires_at)
+        assert cache.get("key") is None
 
-    def test_get_all_prune(self):
-        self.cache.set("test1", 1)
-        self.cache.set("test2", 2, -1)
+    def test_expiration(self, cache: Cache):
+        with freezegun.freeze_time("2000-01-01T00:00:00Z") as frozen_time:
+            cache.set("key", "value", expires=20)
+            assert cache.get("key") == "value"
+            frozen_time.tick(timedelta(seconds=20))
+            assert cache.get("key") is None
 
-        self.assertDictEqual(
-            {"test1": 1},
-            self.cache.get_all())
+
+class TestIO:
+    @pytest.mark.parametrize("mockpath,side_effect", [
+        ("pathlib.Path.open", OSError),
+        ("json.load", JSONDecodeError),
+    ])
+    def test_load_fail(self, cache: Cache, mockpath: str, side_effect: Type[Exception]):
+        with patch("pathlib.Path.exists", return_value=True):
+            with patch(mockpath, side_effect=side_effect):
+                cache._load()
+        assert not cache._cache
+
+    @pytest.mark.parametrize("side_effect", [
+        RecursionError,
+        TypeError,
+        ValueError,
+    ])
+    def test_save_fail_jsondump(self, cache: Cache, side_effect: Type[Exception]):
+        with pytest.raises(side_effect):
+            with patch("json.dump", side_effect=side_effect):
+                cache.set("key", "value")
+        assert not cache.filename.exists()
+
+
+class TestCreateDirectory:
+    filepath = Path("dir1", "dir2", "cache.json")
+
+    def test_success(self, cache_dir: Path):
+        expected = cache_dir / self.filepath
+        cache = Cache(self.filepath)
+        assert not expected.exists()
+        cache.set("key", "value")
+        assert expected.exists()
+
+    def test_failure(self, cache_dir: Path):
+        with patch("pathlib.Path.mkdir", side_effect=OSError):
+            expected = cache_dir / self.filepath
+            cache = Cache(self.filepath)
+            assert not expected.exists()
+            cache.set("key", "value")
+            assert not expected.exists()
+            assert not list(cache_dir.iterdir())
