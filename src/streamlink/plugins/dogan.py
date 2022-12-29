@@ -30,9 +30,9 @@ log = logging.getLogger(__name__)
     )
 """, re.VERBOSE))
 class Dogan(Plugin):
-    playerctrl_re = re.compile(r'''<div\s+id="video-element".*?>''', re.DOTALL)
+    playerctrl_re = re.compile(r'''<div\s+id="(?:video-element|player-container(-\w+)?)".*?>''', re.DOTALL)
     data_id_re = re.compile(r'''data-id=(?P<quote>["'])/?(?P<id>\w+)(?P=quote)''')
-    content_id_re = re.compile(r'"content[Ii]d",\s*"(\w+)"')
+    content_id_re = re.compile(r'"?(?:data-)?content[_-]?[Ii]d(?:",|="|\s*?:)\s*?"?(\w+)(?:"|\s*/)')
     item_id_re = re.compile(r"_itemId\s+=\s+'(\w+)';")
     content_api = "/actions/media?id={id}"
     dream_api = "/actions/content/media/{id}"
@@ -71,12 +71,6 @@ class Dogan(Plugin):
 
     def _get_content_id(self):
         res = self.session.http.get(self.url)
-        # find the contentId
-        content_id_m = self.content_id_re.search(res.text)
-        if content_id_m:
-            log.debug("Found contentId by contentId regex")
-            return content_id_m.group(1)
-
         # find the PlayerCtrl div
         player_ctrl_m = self.playerctrl_re.search(res.text)
         if player_ctrl_m:
@@ -86,6 +80,12 @@ class Dogan(Plugin):
             if content_id_m:
                 log.debug("Found contentId by player data-id regex")
                 return content_id_m.group("id")
+        else:
+            # find the contentId
+            content_id_m = self.content_id_re.search(res.text)
+            if content_id_m:
+                log.debug("Found contentId by contentId regex")
+                return content_id_m.group(1)
 
         # find the itemId var
         item_id_m = self.item_id_re.search(res.text)
