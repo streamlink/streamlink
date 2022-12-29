@@ -2,7 +2,7 @@ from streamlink.plugins.vkplay import VKplay
 from tests.plugins import PluginCanHandleUrl
 
 
-class TestPluginCanHandleUrlAbemaTV(PluginCanHandleUrl):
+class TestPluginCanHandleUrlVKplay(PluginCanHandleUrl):
     __plugin__ = VKplay
 
     should_match = [
