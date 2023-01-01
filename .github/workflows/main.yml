@@ -24,7 +24,7 @@ jobs:
       # when changing the build matrix and changing the number of test runners
       matrix:
         os:
-          - ubuntu-20.04
+          - ubuntu-latest
           - windows-latest
         python:
           - "3.7"
@@ -67,7 +67,7 @@ jobs:
   documentation:
     name: Test docs
     if: github.event_name != 'schedule'
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
         with:
@@ -90,7 +90,7 @@ jobs:
     needs:
       - test
       - documentation
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
         with:
@@ -116,7 +116,7 @@ jobs:
     if: github.repository == 'streamlink/streamlink' && github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
     needs:
       - deploy-documentation
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     permissions:
       contents: write
     steps:
