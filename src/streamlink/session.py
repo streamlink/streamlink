@@ -1,5 +1,6 @@
 import logging
 import pkgutil
+import warnings
 from functools import lru_cache
 from socket import AF_INET, AF_INET6
 from typing import Any, Callable, ClassVar, Dict, Iterator, Mapping, Optional, Tuple, Type
@@ -62,7 +63,10 @@ class StreamlinkOptions(Options):
 
     def _get_http_proxy(self, key):
         if key == "https-proxy":
-            log.warning("The `https-proxy` option has been deprecated in favor of a single `http-proxy` option")
+            warnings.warn(
+                "The `https-proxy` option has been deprecated in favor of a single `http-proxy` option",
+                FutureWarning,
+            )
         return self.session.http.proxies.get("https" if key == "https-proxy" else "http")
 
     def _get_http_attr(self, key):
@@ -97,7 +101,10 @@ class StreamlinkOptions(Options):
             = self.session.http.proxies["https"] \
             = update_scheme("https://", value, force=False)
         if key == "https-proxy":
-            log.warning("The `https-proxy` option has been deprecated in favor of a single `http-proxy` option")
+            warnings.warn(
+                "The `https-proxy` option has been deprecated in favor of a single `http-proxy` option",
+                FutureWarning,
+            )
 
     def _set_http_attr_key_equals_value(self, key, value):
         getattr(self.session.http, self._OPTIONS_HTTP_ATTRS[key]).update(
@@ -122,7 +129,10 @@ class StreamlinkOptions(Options):
     def _factory_set_deprecated(name: str, mapper: Callable[[Any], Any]) -> Callable[["StreamlinkOptions", str, Any], None]:
         def inner(self: "StreamlinkOptions", key: str, value: Any) -> None:
             self.set_explicit(name, mapper(value))
-            log.warning(f"`{key}` has been deprecated in favor of the `{name}` option")
+            warnings.warn(
+                f"`{key}` has been deprecated in favor of the `{name}` option",
+                FutureWarning,
+            )
 
         return inner
 
@@ -415,7 +425,10 @@ class Streamlink:
             elif hasattr(plugin, "can_handle_url") and callable(plugin.can_handle_url) and plugin.can_handle_url(url):
                 prio = plugin.priority(url) if hasattr(plugin, "priority") and callable(plugin.priority) else NORMAL_PRIORITY
                 if prio > priority:
-                    log.warning(f"Resolved plugin {name} with deprecated can_handle_url API")
+                    warnings.warn(
+                        f"Resolved plugin {name} with deprecated can_handle_url API",
+                        FutureWarning,
+                    )
                     candidate = name, plugin
                     priority = prio
 
