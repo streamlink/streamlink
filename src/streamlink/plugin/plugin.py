@@ -4,6 +4,7 @@ import logging
 import operator
 import re
 import time
+import warnings
 from functools import partial
 from http.cookiejar import Cookie
 from typing import (
@@ -261,7 +262,10 @@ class Plugin:
                 # Take any arguments, but only pass the URL to the custom constructor of the deprecated plugin
                 # noinspection PyArgumentList
                 super().__init__(url)
-                log.warning(f"Initialized {self.module} plugin with deprecated constructor")
+                warnings.warn(
+                    f"Initialized {self.module} plugin with deprecated constructor",
+                    FutureWarning,
+                )
 
         # Wrapper class which comes after the deprecated plugin in the MRO
         # noinspection PyAbstractClass

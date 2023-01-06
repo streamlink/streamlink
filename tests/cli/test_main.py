@@ -15,7 +15,7 @@ import tests.resources
 from streamlink.exceptions import PluginError, StreamError
 from streamlink.session import Streamlink
 from streamlink.stream.stream import Stream
-from streamlink_cli.compat import DeprecatedPath, stdout
+from streamlink_cli.compat import stdout
 from streamlink_cli.main import (
     Formatter,
     NoPluginError,
@@ -26,7 +26,6 @@ from streamlink_cli.main import (
     handle_url,
     output_stream,
     resolve_stream_name,
-    setup_config_args
 )
 from streamlink_cli.output import FileOutput, PlayerOutput
 from tests import posix_only, windows_only
@@ -504,90 +503,6 @@ class TestCLIMainOutputStream(unittest.TestCase):
             call("Could not open stream fake-stream, tried 2 times, exiting")
         ])
         self.assertFalse(output.open.called, "Does not open the output on stream error")
-
-
-@patch("streamlink_cli.main.log")
-class TestCLIMainSetupConfigArgs(unittest.TestCase):
-    configdir = Path(tests.resources.__path__[0], "cli", "config")
-    parser = Mock()
-
-    @classmethod
-    def subject(cls, config_files, **args):
-        def resolve_url(name):
-            if name == "noplugin":
-                raise NoPluginError()
-            return name, Mock(__module__="testplugin"), name
-
-        session = Mock()
-        session.resolve_url.side_effect = resolve_url
-        args.setdefault("url", "testplugin")
-
-        with patch("streamlink_cli.main.setup_args") as mock_setup_args, \
-             patch("streamlink_cli.main.args", **args), \
-             patch("streamlink_cli.main.streamlink", session), \
-             patch("streamlink_cli.main.CONFIG_FILES", config_files):
-            setup_config_args(cls.parser)
-            return mock_setup_args
-
-    def test_no_plugin(self, mock_log):
-        mock_setup_args = self.subject(
-            [self.configdir / "primary", DeprecatedPath(self.configdir / "secondary")],
-            config=None,
-            url="noplugin"
-        )
-        expected = [self.configdir / "primary"]
-        mock_setup_args.assert_called_once_with(self.parser, expected, ignore_unknown=False)
-        assert not mock_log.warning.mock_calls
-
-    def test_default_primary(self, mock_log):
-        mock_setup_args = self.subject(
-            [self.configdir / "primary", DeprecatedPath(self.configdir / "secondary")],
-            config=None
-        )
-        expected = [self.configdir / "primary", self.configdir / "primary.testplugin"]
-        mock_setup_args.assert_called_once_with(self.parser, expected, ignore_unknown=False)
-        assert not mock_log.warning.mock_calls
-
-    def test_default_secondary_deprecated(self, mock_log):
-        mock_setup_args = self.subject(
-            [self.configdir / "non-existent", DeprecatedPath(self.configdir / "secondary")],
-            config=None
-        )
-        expected = [self.configdir / "secondary", self.configdir / "secondary.testplugin"]
-        mock_setup_args.assert_called_once_with(self.parser, expected, ignore_unknown=False)
-        assert mock_log.warning.mock_calls == [
-            call(f"Loaded config from deprecated path, see CLI docs for how to migrate: {expected[0]}"),
-            call(f"Loaded plugin config from deprecated path, see CLI docs for how to migrate: {expected[1]}"),
-        ]
-
-    def test_custom_with_primary_plugin(self, mock_log):
-        mock_setup_args = self.subject(
-            [self.configdir / "primary", DeprecatedPath(self.configdir / "secondary")],
-            config=[str(self.configdir / "custom")]
-        )
-        expected = [self.configdir / "custom", self.configdir / "primary.testplugin"]
-        mock_setup_args.assert_called_once_with(self.parser, expected, ignore_unknown=False)
-        assert not mock_log.warning.mock_calls
-
-    def test_custom_with_deprecated_plugin(self, mock_log):
-        mock_setup_args = self.subject(
-            [self.configdir / "non-existent", DeprecatedPath(self.configdir / "secondary")],
-            config=[str(self.configdir / "custom")]
-        )
-        expected = [self.configdir / "custom", DeprecatedPath(self.configdir / "secondary.testplugin")]
-        mock_setup_args.assert_called_once_with(self.parser, expected, ignore_unknown=False)
-        assert mock_log.warning.mock_calls == [
-            call(f"Loaded plugin config from deprecated path, see CLI docs for how to migrate: {expected[1]}"),
-        ]
-
-    def test_custom_multiple(self, mock_log):
-        mock_setup_args = self.subject(
-            [self.configdir / "primary", DeprecatedPath(self.configdir / "secondary")],
-            config=[str(self.configdir / "non-existent"), str(self.configdir / "primary"), str(self.configdir / "secondary")]
-        )
-        expected = [self.configdir / "secondary", self.configdir / "primary", self.configdir / "primary.testplugin"]
-        mock_setup_args.assert_called_once_with(self.parser, expected, ignore_unknown=False)
-        assert not mock_log.warning.mock_calls
 
 
 class _TestCLIMainLogging(unittest.TestCase):

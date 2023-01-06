@@ -77,7 +77,8 @@ class TestPlugin:
 
         assert mock_load_cookies.call_args_list == [call()]
 
-    def test_constructor_wrapper(self, caplog: pytest.LogCaptureFixture):
+    @pytest.mark.filterwarnings("always")
+    def test_constructor_wrapper(self, recwarn: pytest.WarningsRecorder):
         session = Mock()
         with patch("streamlink.plugin.plugin.Cache") as mock_cache, \
              patch.object(DeprecatedPlugin, "load_cookies") as mock_load_cookies:
@@ -85,8 +86,8 @@ class TestPlugin:
 
         assert isinstance(plugin, DeprecatedPlugin)
         assert plugin.custom_attribute == "HTTP://LOCALHOST"
-        assert [(record.levelname, record.message) for record in caplog.records] == [
-            ("warning", "Initialized test_plugin plugin with deprecated constructor"),
+        assert [(record.category, str(record.message)) for record in recwarn.list] == [
+            (FutureWarning, "Initialized test_plugin plugin with deprecated constructor"),
         ]
 
         assert plugin.session is session
