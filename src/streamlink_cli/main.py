@@ -845,6 +845,7 @@ def setup_logger_and_console(stream=sys.stdout, filename=None, level="info", jso
         style="{",
         format=f"{'[{asctime}]' if verbose else ''}[{{name}}][{{levelname}}] {{message}}",
         datefmt=f"%H:%M:%S{'.%f' if verbose else ''}",
+        capture_warnings=True,
     )
 
     console = ConsoleOutput(streamhandler.stream, json)
