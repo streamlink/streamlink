@@ -1,45 +1,42 @@
-from typing import Iterator, Optional, Sequence, Union
-
-
-def _normalise_option_name(name):
-    return name.replace('-', '_')
-
-
-def _normalise_argument_name(name):
-    return name.replace('_', '-').strip("-")
+from typing import Any, Dict, Iterator, Mapping, Optional, Sequence, Union
 
 
 class Options:
     """
-    For storing options to be used by plugins, with default values.
+    For storing options to be used by the Streamlink session and plugins, with default values.
 
-    Note: Option names are normalised by replacing "-" with "_". This means that the keys
-    ``example-one`` and ``example_one`` are equivalent.
+    Note: Option names are normalized by replacing "_" with "-".
+          This means that the keys ``example_one`` and ``example-one`` are equivalent.
     """
 
-    def __init__(self, defaults=None):
+    def __init__(self, defaults: Optional[Mapping[str, Any]] = None):
         if not defaults:
             defaults = {}
 
-        self.defaults = self._normalise_dict(defaults)
+        self.defaults = self._normalize_dict(defaults)
         self.options = self.defaults.copy()
+
+    @staticmethod
+    def _normalize_key(name: str) -> str:
+        return name.replace("_", "-")
 
     @classmethod
-    def _normalise_dict(cls, src):
-        return {_normalise_option_name(key): value for key, value in src.items()}
+    def _normalize_dict(cls, src: Mapping[str, Any]) -> Dict[str, Any]:
+        normalize_key = cls._normalize_key
+        return {normalize_key(key): value for key, value in src.items()}
 
-    def clear(self):
+    def clear(self) -> None:
         self.options = self.defaults.copy()
 
-    def set(self, key, value):
-        self.options[_normalise_option_name(key)] = value
+    def get(self, key: str) -> Any:
+        normalized = self._normalize_key(key)
+        return self.options.get(normalized)
 
-    def get(self, key):
-        key = _normalise_option_name(key)
-        if key in self.options:
-            return self.options[key]
+    def set(self, key: str, value: Any) -> None:
+        normalized = self._normalize_key(key)
+        self.options[normalized] = value
 
-    def update(self, options):
+    def update(self, options: Mapping[str, Any]) -> None:
         for key, value in options.items():
             self.set(key, value)
 
@@ -80,8 +77,8 @@ class Argument:
         self.required = required
         self.name = name
         self.options = options
-        self._argument_name = argument_name  # override the cli argument name
-        self._dest = dest  # override for the plugin option name
+        self._argument_name = self._normalize_name(argument_name) if argument_name else None
+        self._dest = self._normalize_dest(dest) if dest else None
         requires = requires or []
         self.requires = list(requires) if isinstance(requires, (list, tuple)) else [requires]
         self.prompt = prompt
@@ -89,18 +86,26 @@ class Argument:
         self._default = options.get("default")
         self.is_global = is_global
 
+    @staticmethod
+    def _normalize_name(name: str) -> str:
+        return name.replace("_", "-").strip("-")
+
+    @staticmethod
+    def _normalize_dest(name: str) -> str:
+        return name.replace("-", "_")
+
     def _name(self, plugin):
-        return self._argument_name or _normalise_argument_name("{0}-{1}".format(plugin, self.name))
+        return self._argument_name or self._normalize_name(f"{plugin}-{self.name}")
 
     def argument_name(self, plugin):
         return f"--{self.name if self.is_global else self._name(plugin)}"
 
     def namespace_dest(self, plugin):
-        return _normalise_option_name(self._name(plugin))
+        return self._normalize_dest(self._name(plugin))
 
     @property
     def dest(self):
-        return self._dest or _normalise_option_name(self.name)
+        return self._dest or self._normalize_dest(self.name)
 
     @property
     def default(self):  # read-only
