@@ -424,7 +424,7 @@ class TestSessionOptionHttpProxy:
     def logs_deprecation(self, caplog: pytest.LogCaptureFixture):
         yield
         assert [(record.levelname, record.message) for record in caplog.get_records("call")] == [
-            ("warning", "The https-proxy option has been deprecated in favor of a single http-proxy option"),
+            ("warning", "The `https-proxy` option has been deprecated in favor of a single `http-proxy` option"),
         ]
 
     def test_https_proxy_default(self, session: Streamlink, no_deprecation):
@@ -464,6 +464,16 @@ class TestSessionOptionHttpProxy:
 
         assert session.http.proxies["http"] == "socks5://localhost:1234"
         assert session.http.proxies["https"] == "socks5://localhost:1234"
+
+    def test_get_http_proxy(self, session: Streamlink, no_deprecation):
+        session.http.proxies["http"] = "http://testproxy1.com"
+        session.http.proxies["https"] = "http://testproxy2.com"
+        assert session.get_option("http-proxy") == "http://testproxy1.com"
+
+    def test_get_https_proxy(self, session: Streamlink, logs_deprecation):
+        session.http.proxies["http"] = "http://testproxy1.com"
+        session.http.proxies["https"] = "http://testproxy2.com"
+        assert session.get_option("https-proxy") == "http://testproxy2.com"
 
 
 @pytest.mark.parametrize("option", [
