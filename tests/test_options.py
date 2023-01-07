@@ -2,6 +2,8 @@ import argparse
 import unittest
 from unittest.mock import Mock, patch
 
+import pytest
+
 from streamlink.options import Argument, Arguments, Options
 from streamlink.plugin import Plugin, pluginargument
 from streamlink_cli.argparser import ArgumentParser
@@ -34,6 +36,59 @@ class TestOptions(unittest.TestCase):
         self.assertEqual(self.options.get("a-default"), "default")
         self.assertEqual(self.options.get("another-default"), "default2")
         self.assertEqual(self.options.get("another_default"), "default2")
+
+
+class TestMappedOptions:
+    class MappedOptions(Options):
+        def _get_uppercase(self, key):
+            return self.get_explicit(key.upper())
+
+        def _get_add(self, key):
+            return int(self.get_explicit(key)) + 1
+
+        def _set_uppercase(self, key, value):
+            self.set_explicit(key.upper(), value)
+
+        def _set_add(self, key, value):
+            self.set_explicit(key, int(value) + 1)
+
+        _MAP_GETTERS = {
+            "foo-bar": _get_uppercase,
+            "baz": _get_add,
+        }
+
+        _MAP_SETTERS = {
+            "foo-bar": _set_uppercase,
+            "baz": _set_add,
+        }
+
+    @pytest.fixture
+    def options(self):
+        return self.MappedOptions({"foo-bar": 123, "baz": 100})
+
+    def test_mapped_key(self, options: MappedOptions):
+        assert options.get("foo-bar") is None
+        assert options.get("foo_bar") is None
+        assert options.get_explicit("foo-bar") == 123
+        assert options.get_explicit("foo_bar") == 123
+        assert options.get_explicit("FOO-BAR") is None
+        assert options.get_explicit("FOO_BAR") is None
+
+        options.set("foo-bar", 321)
+        assert options.get("foo-bar") == 321
+        assert options.get("foo_bar") == 321
+        assert options.get_explicit("foo-bar") == 123
+        assert options.get_explicit("foo_bar") == 123
+        assert options.get_explicit("FOO-BAR") == 321
+        assert options.get_explicit("FOO_BAR") == 321
+
+    def test_mapped_value(self, options: MappedOptions):
+        assert options.get("baz") == 101
+        assert options.get_explicit("baz") == 100
+
+        options.set("baz", 0)
+        assert options.get("baz") == 2
+        assert options.get_explicit("baz") == 1
 
 
 class TestArgument(unittest.TestCase):

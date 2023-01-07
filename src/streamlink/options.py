@@ -1,4 +1,4 @@
-from typing import Any, Dict, Iterator, Mapping, Optional, Sequence, Union
+from typing import Any, Callable, ClassVar, Dict, Iterator, Mapping, Optional, Sequence, Union
 
 
 class Options:
@@ -8,6 +8,9 @@ class Options:
     Note: Option names are normalized by replacing "_" with "-".
           This means that the keys ``example_one`` and ``example-one`` are equivalent.
     """
+
+    _MAP_GETTERS: ClassVar[Mapping[str, Callable[[Any, str], Any]]] = {}
+    _MAP_SETTERS: ClassVar[Mapping[str, Callable[[Any, str, Any], None]]] = {}
 
     def __init__(self, defaults: Optional[Mapping[str, Any]] = None):
         if not defaults:
@@ -26,13 +29,30 @@ class Options:
         return {normalize_key(key): value for key, value in src.items()}
 
     def clear(self) -> None:
-        self.options = self.defaults.copy()
+        self.options.clear()
+        self.options.update(self.defaults.copy())
 
     def get(self, key: str) -> Any:
+        normalized = self._normalize_key(key)
+        method = self._MAP_GETTERS.get(normalized)
+        if method is not None:
+            return method(self, normalized)
+        else:
+            return self.options.get(normalized)
+
+    def get_explicit(self, key: str) -> Any:
         normalized = self._normalize_key(key)
         return self.options.get(normalized)
 
     def set(self, key: str, value: Any) -> None:
+        normalized = self._normalize_key(key)
+        method = self._MAP_SETTERS.get(normalized)
+        if method is not None:
+            method(self, normalized, value)
+        else:
+            self.options[normalized] = value
+
+    def set_explicit(self, key: str, value: Any) -> None:
         normalized = self._normalize_key(key)
         self.options[normalized] = value
 
