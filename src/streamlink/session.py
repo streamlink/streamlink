@@ -2,7 +2,7 @@ import logging
 import pkgutil
 from functools import lru_cache
 from socket import AF_INET, AF_INET6
-from typing import Any, Dict, Iterator, Optional, Tuple, Type
+from typing import Any, Callable, ClassVar, Dict, Iterator, Mapping, Optional, Tuple, Type
 
 # noinspection PyPackageRequirements
 import urllib3.util.connection as urllib3_util_connection
@@ -27,21 +27,146 @@ log = logging.getLogger(__name__)
 # noinspection PyUnresolvedReferences
 _original_allowed_gai_family = urllib3_util_connection.allowed_gai_family  # type: ignore[attr-defined]
 
-# options which support `key1=value1;key2=value2;...` strings as value
-_OPTIONS_HTTP_KEYEQUALSVALUE = {"http-cookies": "cookies", "http-headers": "headers", "http-query-params": "params"}
-
-
-def _parse_keyvalue_string(value: str) -> Iterator[Tuple[str, str]]:
-    for keyval in value.split(";"):
-        try:
-            key, val = keyval.split("=", 1)
-            yield key.strip(), val.strip()
-        except ValueError:
-            continue
-
 
 class PythonDeprecatedWarning(UserWarning):
     pass
+
+
+class StreamlinkOptions(Options):
+    _OPTIONS_HTTP_ATTRS = {
+        "http-cookies": "cookies",
+        "http-headers": "headers",
+        "http-query-params": "params",
+        "http-ssl-cert": "cert",
+        "http-ssl-trust-env": "trust_env",
+        "http-ssl-verify": "verify",
+        "http-timeout": "timeout",
+    }
+
+    def __init__(self, session: "Streamlink", *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.session = session
+
+    # ---- utils
+
+    @staticmethod
+    def _parse_key_equals_value_string(value: str) -> Iterator[Tuple[str, str]]:
+        for keyval in value.split(";"):
+            try:
+                key, val = keyval.split("=", 1)
+                yield key.strip(), val.strip()
+            except ValueError:
+                continue
+
+    # ---- getters
+
+    def _get_http_proxy(self, key):
+        if key == "https-proxy":
+            log.warning("The `https-proxy` option has been deprecated in favor of a single `http-proxy` option")
+        return self.session.http.proxies.get("https" if key == "https-proxy" else "http")
+
+    def _get_http_attr(self, key):
+        return getattr(self.session.http, self._OPTIONS_HTTP_ATTRS[key])
+
+    # ---- setters
+
+    def _set_interface(self, key, value):
+        for scheme, adapter in self.session.http.adapters.items():
+            if scheme not in ("http://", "https://"):
+                continue
+            if not value:
+                adapter.poolmanager.connection_pool_kw.pop("source_address")
+            else:
+                # https://docs.python.org/3/library/socket.html#socket.create_connection
+                adapter.poolmanager.connection_pool_kw.update(source_address=(value, 0))
+        self.set_explicit(key, None if not value else value)
+
+    def _set_ipv4_ipv6(self, key, value):
+        self.set_explicit(key, value)
+        if not value:
+            urllib3_util_connection.allowed_gai_family = _original_allowed_gai_family  # type: ignore[attr-defined]
+        elif key == "ipv4":
+            self.set_explicit("ipv6", False)
+            urllib3_util_connection.allowed_gai_family = (lambda: AF_INET)  # type: ignore[attr-defined]
+        else:
+            self.set_explicit("ipv4", False)
+            urllib3_util_connection.allowed_gai_family = (lambda: AF_INET6)  # type: ignore[attr-defined]
+
+    def _set_http_proxy(self, key, value):
+        self.session.http.proxies["http"] \
+            = self.session.http.proxies["https"] \
+            = update_scheme("https://", value, force=False)
+        if key == "https-proxy":
+            log.warning("The `https-proxy` option has been deprecated in favor of a single `http-proxy` option")
+
+    def _set_http_attr_key_equals_value(self, key, value):
+        getattr(self.session.http, self._OPTIONS_HTTP_ATTRS[key]).update(
+            value if isinstance(value, dict) else dict(self._parse_key_equals_value_string(value))
+        )
+
+    def _set_http_attr(self, key, value):
+        setattr(self.session.http, self._OPTIONS_HTTP_ATTRS[key], value)
+
+    def _set_http_disable_dh(self, key, value):
+        self.set_explicit(key, value)
+        default_ciphers = [
+            item
+            for item in urllib3_util_ssl.DEFAULT_CIPHERS.split(":")  # type: ignore[attr-defined]
+            if item != "!DH"
+        ]
+        if value:
+            default_ciphers.append("!DH")
+        urllib3_util_ssl.DEFAULT_CIPHERS = ":".join(default_ciphers)  # type: ignore[attr-defined]
+
+    @staticmethod
+    def _factory_set_deprecated(name: str, mapper: Callable[[Any], Any]) -> Callable[["StreamlinkOptions", str, Any], None]:
+        def inner(self: "StreamlinkOptions", key: str, value: Any) -> None:
+            self.set_explicit(name, mapper(value))
+            log.warning(f"`{key}` has been deprecated in favor of the `{name}` option")
+
+        return inner
+
+    # bind explicitly with dummy context, to prevent `TypeError: 'staticmethod' object is not callable` on py<310
+    _factory_set_deprecated = _factory_set_deprecated.__get__(object)
+
+    # ----
+
+    _MAP_GETTERS: ClassVar[Mapping[str, Callable[["StreamlinkOptions", str], Any]]] = {
+        "http-proxy": _get_http_proxy,
+        "https-proxy": _get_http_proxy,
+        "http-cookies": _get_http_attr,
+        "http-headers": _get_http_attr,
+        "http-query-params": _get_http_attr,
+        "http-ssl-cert": _get_http_attr,
+        "http-ssl-verify": _get_http_attr,
+        "http-trust-env": _get_http_attr,
+        "http-timeout": _get_http_attr,
+    }
+
+    _MAP_SETTERS: ClassVar[Mapping[str, Callable[["StreamlinkOptions", str, Any], None]]] = {
+        "interface": _set_interface,
+        "ipv4": _set_ipv4_ipv6,
+        "ipv6": _set_ipv4_ipv6,
+        "http-proxy": _set_http_proxy,
+        "https-proxy": _set_http_proxy,
+        "http-cookies": _set_http_attr_key_equals_value,
+        "http-headers": _set_http_attr_key_equals_value,
+        "http-query-params": _set_http_attr_key_equals_value,
+        "http-disable-dh": _set_http_disable_dh,
+        "http-ssl-cert": _set_http_attr,
+        "http-ssl-verify": _set_http_attr,
+        "http-trust-env": _set_http_attr,
+        "http-timeout": _set_http_attr,
+        "dash-segment-attempts": _factory_set_deprecated("stream-segment-attempts", int),
+        "hls-segment-attempts": _factory_set_deprecated("stream-segment-attempts", int),
+        "dash-segment-threads": _factory_set_deprecated("stream-segment-threads", int),
+        "hls-segment-threads": _factory_set_deprecated("stream-segment-threads", int),
+        "dash-segment-timeout": _factory_set_deprecated("stream-segment-timeout", float),
+        "hls-segment-timeout": _factory_set_deprecated("stream-segment-timeout", float),
+        "dash-timeout": _factory_set_deprecated("stream-timeout", float),
+        "hls-timeout": _factory_set_deprecated("stream-timeout", float),
+        "http-stream-timeout": _factory_set_deprecated("stream-timeout", float),
+    }
 
 
 class Streamlink:
@@ -64,7 +189,7 @@ class Streamlink:
         """
 
         self.http = HTTPSession()
-        self.options = Options({
+        self.options = StreamlinkOptions(self, {
             "interface": None,
             "ipv4": False,
             "ipv6": False,
@@ -96,7 +221,7 @@ class Streamlink:
         self.plugins: Dict[str, Type[Plugin]] = {}
         self.load_builtin_plugins()
 
-    def set_option(self, key: str, value: Any):
+    def set_option(self, key: str, value: Any) -> None:
         """
         Sets general options used by plugins and streams originating from this session object.
 
@@ -221,108 +346,16 @@ class Streamlink:
         ======================== =========================================
         """
 
-        if key == "interface":
-            for scheme, adapter in self.http.adapters.items():
-                if scheme not in ("http://", "https://"):
-                    continue
-                if not value:
-                    adapter.poolmanager.connection_pool_kw.pop("source_address")
-                else:
-                    adapter.poolmanager.connection_pool_kw.update(
-                        # https://docs.python.org/3/library/socket.html#socket.create_connection
-                        source_address=(value, 0)
-                    )
-            self.options.set(key, None if not value else value)
+        self.options.set(key, value)
 
-        elif key == "ipv4" or key == "ipv6":
-            self.options.set(key, value)
-            if not value:
-                urllib3_util_connection.allowed_gai_family = _original_allowed_gai_family  # type: ignore[attr-defined]
-            elif key == "ipv4":
-                self.options.set("ipv6", False)
-                urllib3_util_connection.allowed_gai_family = (lambda: AF_INET)  # type: ignore[attr-defined]
-            else:
-                self.options.set("ipv4", False)
-                urllib3_util_connection.allowed_gai_family = (lambda: AF_INET6)  # type: ignore[attr-defined]
-
-        elif key in ("http-proxy", "https-proxy"):
-            self.http.proxies["http"] = update_scheme("https://", value, force=False)
-            self.http.proxies["https"] = self.http.proxies["http"]
-            if key == "https-proxy":
-                log.warning("The https-proxy option has been deprecated in favor of a single http-proxy option")
-
-        elif key in _OPTIONS_HTTP_KEYEQUALSVALUE:
-            getattr(self.http, _OPTIONS_HTTP_KEYEQUALSVALUE[key]).update(
-                value if isinstance(value, dict) else dict(_parse_keyvalue_string(value))
-            )
-
-        elif key == "http-trust-env":
-            self.http.trust_env = value
-
-        elif key == "http-ssl-verify":
-            self.http.verify = value
-
-        elif key == "http-disable-dh":
-            default_ciphers = [
-                item
-                for item in urllib3_util_ssl.DEFAULT_CIPHERS.split(":")  # type: ignore[attr-defined]
-                if item != "!DH"
-            ]
-
-            if value:
-                default_ciphers.append("!DH")
-            urllib3_util_ssl.DEFAULT_CIPHERS = ":".join(default_ciphers)  # type: ignore[attr-defined]
-
-        elif key == "http-ssl-cert":
-            self.http.cert = value
-
-        elif key == "http-timeout":
-            self.http.timeout = value
-
-        # deprecated: {dash,hls}-segment-attempts
-        elif key in ("dash-segment-attempts", "hls-segment-attempts"):
-            self.options.set("stream-segment-attempts", int(value))
-        # deprecated: {dash,hls}-segment-threads
-        elif key in ("dash-segment-threads", "hls-segment-threads"):
-            self.options.set("stream-segment-threads", int(value))
-        # deprecated: {dash,hls}-segment-timeout
-        elif key in ("dash-segment-timeout", "hls-segment-timeout"):
-            self.options.set("stream-segment-timeout", float(value))
-        # deprecated: {hls,dash,http-stream}-timeout
-        elif key in ("dash-timeout", "hls-timeout", "http-stream-timeout"):
-            self.options.set("stream-timeout", float(value))
-
-        else:
-            self.options.set(key, value)
-
-    def get_option(self, key: str):
+    def get_option(self, key: str) -> Any:
         """
         Returns the current value of the specified option.
 
         :param key: key of the option
-
         """
 
-        if key == "http-proxy":
-            return self.http.proxies.get("http")
-        elif key == "https-proxy":
-            return self.http.proxies.get("https")
-        elif key == "http-cookies":
-            return self.http.cookies
-        elif key == "http-headers":
-            return self.http.headers
-        elif key == "http-query-params":
-            return self.http.params
-        elif key == "http-trust-env":
-            return self.http.trust_env
-        elif key == "http-ssl-verify":
-            return self.http.verify
-        elif key == "http-ssl-cert":
-            return self.http.cert
-        elif key == "http-timeout":
-            return self.http.timeout
-        else:
-            return self.options.get(key)
+        return self.options.get(key)
 
     def set_plugin_option(self, plugin: str, key: str, value: Any) -> None:
         """
