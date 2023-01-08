@@ -8,25 +8,22 @@ dist_dir=${STREAMLINK_DIST_DIR:-dist}
 
 
 if [[ "${1}" = "-n" ]] || [[ "${1}" = "--dry-run" ]]; then
-    echo "deploy: dry-run (${version})" >&2
+    echo >&2 "deploy: dry-run (${version})"
     for file in "${dist_dir}"/streamlink-"${version}"{.tar.gz,-*.whl}{,.asc}; do
-        echo "${file}" >&2
+        echo >&2 "${file}"
     done
 
 else
     if ! python -m pip -q show twine; then
-        echo "deploy: missing dependency 'twine'" >&2
+        echo >&2 "deploy: missing dependency 'twine'"
         exit 1
     fi
 
-    if [[ -z "${PYPI_USER}" ]] || [[ -z "${PYPI_PASSWORD}" ]]; then
-        echo "deploy: missing PYPI_USER or PYPI_PASSWORD env var" >&2
+    if [[ -z "${TWINE_USERNAME}" ]] || [[ -z "${TWINE_PASSWORD}" ]]; then
+        echo >&2 "deploy: missing TWINE_USERNAME or TWINE_PASSWORD env var"
         exit 1
     fi
 
-    echo "deploy: Uploading files to PyPI (${version})" >&2
-    twine upload \
-        --username "${PYPI_USER}" \
-        --password "${PYPI_PASSWORD}" \
-        "${dist_dir}"/streamlink-"${version}"{.tar.gz,-*.whl}{,.asc}
+    echo >&2 "deploy: Uploading files to PyPI (${version})"
+    twine upload "${dist_dir}"/streamlink-"${version}"{.tar.gz,-*.whl}{,.asc}
 fi
