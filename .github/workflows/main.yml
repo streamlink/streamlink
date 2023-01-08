@@ -132,7 +132,7 @@ jobs:
         run: |
           ./script/install-dependencies.sh
           python -m pip install -r docs-requirements.txt
-          python -m pip install --upgrade Jinja2 wheel twine
+          python -m pip install --upgrade Jinja2 build wheel twine
       - name: Build shell completions
         run: ./script/build-shell-completions.sh
       - name: Build man page
