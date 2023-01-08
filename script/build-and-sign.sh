@@ -35,9 +35,10 @@ done
 if [[ "${CI}" = true ]] || [[ -n "${GITHUB_ACTIONS}" ]]; then
     echo >&2 "build: Decrypting signing key"
     gpg --quiet --batch --yes --decrypt \
-        --passphrase="${RELEASE_KEY_PASSPHRASE}" \
+        --passphrase-fd 0 \
         --output "${KEY_FILE}" \
-        "${KEY_FILE_ENC}"
+        "${KEY_FILE_ENC}" \
+        <<< "${RELEASE_KEY_PASSPHRASE}"
 fi
 
 if ! [[ -f "${KEY_FILE}" ]]; then
