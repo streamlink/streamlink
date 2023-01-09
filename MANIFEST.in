@@ -6,7 +6,6 @@ include *requirements.txt
 
 recursive-include completions *
 recursive-include docs *
-recursive-include examples *
 recursive-include tests *
 
 prune docs/_build
