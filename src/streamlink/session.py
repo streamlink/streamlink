@@ -4,9 +4,7 @@ from functools import lru_cache
 from socket import AF_INET, AF_INET6
 from typing import Any, Callable, ClassVar, Dict, Iterator, Mapping, Optional, Tuple, Type
 
-# noinspection PyPackageRequirements
 import urllib3.util.connection as urllib3_util_connection
-# noinspection PyPackageRequirements
 import urllib3.util.ssl_ as urllib3_util_ssl
 
 from streamlink import __version__, plugins
@@ -24,7 +22,6 @@ logging.setLoggerClass(StreamlinkLogger)
 log = logging.getLogger(__name__)
 
 
-# noinspection PyUnresolvedReferences
 _original_allowed_gai_family = urllib3_util_connection.allowed_gai_family  # type: ignore[attr-defined]
 
 

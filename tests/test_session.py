@@ -6,7 +6,6 @@ from unittest.mock import Mock, call, patch
 
 import pytest
 import requests_mock
-# noinspection PyPackageRequirements
 import urllib3
 
 import tests.plugin
@@ -19,7 +18,6 @@ from streamlink.stream.http import HTTPStream
 PATH_TESTPLUGINS = Path(tests.plugin.__path__[0])
 PATH_TESTPLUGINS_OVERRIDE = PATH_TESTPLUGINS / "override"
 
-# noinspection PyUnresolvedReferences
 _original_allowed_gai_family = urllib3.util.connection.allowed_gai_family  # type: ignore[attr-defined]
 
 
