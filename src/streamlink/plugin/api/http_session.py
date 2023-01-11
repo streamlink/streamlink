@@ -3,7 +3,6 @@ import time
 from typing import Any, Dict, Pattern, Tuple
 
 import requests.adapters
-# noinspection PyPackageRequirements
 import urllib3
 from requests import PreparedRequest, Request, Session
 
