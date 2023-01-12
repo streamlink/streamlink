@@ -87,9 +87,11 @@ DASHStream
 Exceptions
 ----------
 
-Streamlink has three types of exceptions:
+Streamlink has multiple types of exceptions:
 
-.. autoexception:: streamlink.StreamlinkError
-.. autoexception:: streamlink.PluginError
-.. autoexception:: streamlink.NoPluginError
-.. autoexception:: streamlink.StreamError
+.. autoexception:: streamlink.exceptions.StreamlinkError
+.. autoexception:: streamlink.exceptions.PluginError
+.. autoexception:: streamlink.exceptions.FatalPluginError
+.. autoexception:: streamlink.exceptions.NoPluginError
+.. autoexception:: streamlink.exceptions.NoStreamsError
+.. autoexception:: streamlink.exceptions.StreamError
