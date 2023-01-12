@@ -35,10 +35,6 @@ class NoStreamsError(StreamlinkError):
     when returning ``None`` or an empty ``dict`` is not possible, e.g. in nested function calls.
     """
 
-    def __init__(self, url):
-        self.url = url
-        super().__init__(f"No streams found on this URL: {url}")
-
 
 class StreamError(StreamlinkError):
     """

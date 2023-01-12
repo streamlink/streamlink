@@ -71,7 +71,7 @@ class VK(Plugin):
         if self._has_video_id():
             return
 
-        raise NoStreamsError(self.url)
+        raise NoStreamsError
 
     def _get_streams(self):
         self._get_cookies()
