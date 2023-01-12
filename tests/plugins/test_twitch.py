@@ -530,9 +530,8 @@ class TestTwitchAPIAccessToken:
         ),
     ], indirect=True)
     def test_auth_failure(self, caplog: pytest.LogCaptureFixture, plugin: Twitch, mock: requests_mock.Mocker, assert_live):
-        with pytest.raises(NoStreamsError) as cm:
+        with pytest.raises(NoStreamsError):
             plugin._access_token(True, "channelname")
-        assert str(cm.value) == "No streams found on this URL: https://twitch.tv/channelname"
         assert mock.last_request._request.headers["Authorization"] == "OAuth invalid-token"  # type: ignore[union-attr]
         assert [(record.levelname, record.module, record.message) for record in caplog.records] == [
             ("error", "twitch", "Unauthorized: The \"Authorization\" token is invalid."),

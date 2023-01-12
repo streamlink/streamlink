@@ -111,7 +111,7 @@ class Pixiv(Plugin):
             if item["owner"]["user"]["unique_name"] == self.match.group("user"):
                 return item
 
-        raise NoStreamsError(self.url)
+        raise NoStreamsError
 
     def _get_streams(self):
         login_session_id = self.get_option("sessionid")

@@ -234,7 +234,7 @@ class AbemaTV(Plugin):
                 if onair == channel["id"]:
                     break
             else:
-                raise NoStreamsError(self.url)
+                raise NoStreamsError
             playlisturl = channel["playback"]["hls"]
         elif matchresult.group("episode"):
             episode = matchresult.group("episode")

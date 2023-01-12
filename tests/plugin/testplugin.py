@@ -51,7 +51,7 @@ class TestPlugin(Plugin):
             return gen()
 
         if "NoStreamsError" in self.url:
-            raise NoStreamsError(self.url)
+            raise NoStreamsError
 
         streams = {}
         streams["test"] = TestStream(self.session)

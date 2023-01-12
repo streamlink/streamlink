@@ -637,7 +637,7 @@ class Twitch(Plugin):
                 raise PluginError
             sig, token = data
         except (PluginError, TypeError):
-            raise NoStreamsError(self.url)
+            raise NoStreamsError
 
         try:
             restricted_bitrates = self.api.parse_token(token)
