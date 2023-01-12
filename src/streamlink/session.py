@@ -11,7 +11,7 @@ import urllib3.util.connection as urllib3_util_connection
 import urllib3.util.ssl_ as urllib3_util_ssl
 
 from streamlink import __version__, plugins
-from streamlink.exceptions import NoPluginError, PluginError
+from streamlink.exceptions import NoPluginError, PluginError, StreamlinkDeprecationWarning
 from streamlink.logger import StreamlinkLogger
 from streamlink.options import Options
 from streamlink.plugin.api.http_session import HTTPSession
@@ -65,7 +65,7 @@ class StreamlinkOptions(Options):
         if key == "https-proxy":
             warnings.warn(
                 "The `https-proxy` option has been deprecated in favor of a single `http-proxy` option",
-                FutureWarning,
+                StreamlinkDeprecationWarning,
             )
         return self.session.http.proxies.get("https" if key == "https-proxy" else "http")
 
@@ -103,7 +103,7 @@ class StreamlinkOptions(Options):
         if key == "https-proxy":
             warnings.warn(
                 "The `https-proxy` option has been deprecated in favor of a single `http-proxy` option",
-                FutureWarning,
+                StreamlinkDeprecationWarning,
             )
 
     def _set_http_attr_key_equals_value(self, key, value):
@@ -131,7 +131,7 @@ class StreamlinkOptions(Options):
             self.set_explicit(name, mapper(value))
             warnings.warn(
                 f"`{key}` has been deprecated in favor of the `{name}` option",
-                FutureWarning,
+                StreamlinkDeprecationWarning,
             )
 
         return inner
@@ -427,7 +427,7 @@ class Streamlink:
                 if prio > priority:
                     warnings.warn(
                         f"Resolved plugin {name} with deprecated can_handle_url API",
-                        FutureWarning,
+                        StreamlinkDeprecationWarning,
                     )
                     candidate = name, plugin
                     priority = prio

@@ -12,6 +12,7 @@ import urllib3
 
 import tests.plugin
 from streamlink import NoPluginError, Streamlink
+from streamlink.exceptions import StreamlinkDeprecationWarning
 from streamlink.plugin import HIGH_PRIORITY, LOW_PRIORITY, NORMAL_PRIORITY, NO_PRIORITY, Plugin, pluginmatcher
 from streamlink.stream.hls import HLSStream
 from streamlink.stream.http import HTTPStream
@@ -255,8 +256,8 @@ class TestSession(unittest.TestCase):
 
         assert plugin is DeprecatedHighPriority
         assert [(record.category, str(record.message)) for record in recwarn.list] == [
-            (FutureWarning, "Resolved plugin dep-normal-one with deprecated can_handle_url API"),
-            (FutureWarning, "Resolved plugin dep-high with deprecated can_handle_url API"),
+            (StreamlinkDeprecationWarning, "Resolved plugin dep-normal-one with deprecated can_handle_url API"),
+            (StreamlinkDeprecationWarning, "Resolved plugin dep-high with deprecated can_handle_url API"),
         ]
 
     def test_options(self):
@@ -428,7 +429,10 @@ class TestSessionOptionHttpProxy:
     def logs_deprecation(self, recwarn: pytest.WarningsRecorder):
         yield
         assert [(record.category, str(record.message)) for record in recwarn.list] == [
-            (FutureWarning, "The `https-proxy` option has been deprecated in favor of a single `http-proxy` option"),
+            (
+                StreamlinkDeprecationWarning,
+                "The `https-proxy` option has been deprecated in favor of a single `http-proxy` option",
+            ),
         ]
 
     def test_https_proxy_default(self, session: Streamlink, no_deprecation):

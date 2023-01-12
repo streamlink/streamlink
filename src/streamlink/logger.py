@@ -10,6 +10,8 @@ from typing import IO, Iterator, List, Optional, TYPE_CHECKING, Union
 # noinspection PyProtectedMember
 from warnings import WarningMessage
 
+from streamlink.exceptions import StreamlinkWarning
+
 
 if TYPE_CHECKING:  # pragma: no cover
     _BaseLoggerClass = logging.Logger
@@ -136,6 +138,8 @@ class WarningLogRecord(logging.LogRecord):
         self.lineno = self.msg.lineno
 
     def getMessage(self) -> str:
+        if self.msg.category and issubclass(self.msg.category, StreamlinkWarning):
+            return f"{self.msg.message}"
         return f"{self.msg.message}\n  {self.pathname}:{self.lineno}"
 
 

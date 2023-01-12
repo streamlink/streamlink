@@ -10,6 +10,7 @@ import freezegun
 import pytest
 
 from streamlink import logger
+from streamlink.exceptions import StreamlinkDeprecationWarning, StreamlinkWarning
 
 
 @pytest.fixture
@@ -180,10 +181,12 @@ class TestCaptureWarnings:
         assert output.getvalue() == ""
 
     @pytest.mark.parametrize("log", [{"capture_warnings": True}], indirect=["log"])
-    @pytest.mark.parametrize("warning,expected", [
-        (("Test warning", UserWarning), "[warnings][userwarning] Test warning"),
-        (("Test warning", DeprecationWarning), "[warnings][deprecationwarning] Test warning"),
-        (("Test warning", FutureWarning), "[warnings][futurewarning] Test warning"),
+    @pytest.mark.parametrize("warning,expected,origin", [
+        (("Test warning", UserWarning), "[warnings][userwarning] Test warning\n", True),
+        (("Test warning", DeprecationWarning), "[warnings][deprecationwarning] Test warning\n", True),
+        (("Test warning", FutureWarning), "[warnings][futurewarning] Test warning\n", True),
+        (("Test warning", StreamlinkWarning), "[warnings][streamlinkwarning] Test warning\n", False),
+        (("Test warning", StreamlinkDeprecationWarning), "[warnings][streamlinkdeprecation] Test warning\n", False),
     ])
     def test_capture(
         self,
@@ -192,10 +195,12 @@ class TestCaptureWarnings:
         output: StringIO,
         warning: Tuple[str, Type[Warning]],
         expected: str,
+        origin: bool,
     ):
         lineno = self._warn([warning])
+        expected += f"  {__file__}:{lineno}\n" if origin else ""
         assert recwarn.list == []
-        assert output.getvalue() == f"{expected}\n  {__file__}:{lineno}\n"
+        assert output.getvalue() == expected
 
     @pytest.mark.parametrize("log", [{"capture_warnings": True}], indirect=["log"])
     def test_capture_logrecord(
