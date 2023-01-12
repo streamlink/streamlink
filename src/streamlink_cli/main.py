@@ -14,7 +14,7 @@ from typing import Any, Dict, List, Optional, Type, Union
 
 import streamlink.logger as logger
 from streamlink import NoPluginError, PluginError, StreamError, Streamlink, __version__ as streamlink_version
-from streamlink.exceptions import FatalPluginError
+from streamlink.exceptions import FatalPluginError, StreamlinkDeprecationWarning
 from streamlink.plugin import Plugin, PluginOptions
 from streamlink.stream.stream import Stream, StreamIO
 from streamlink.utils.named_pipe import NamedPipe
@@ -612,7 +612,7 @@ def load_plugins(dirs: List[Path], showwarning: bool = True):
             if success and type(directory) is DeprecatedPath:
                 warnings.warn(
                     f"Loaded plugins from deprecated path, see CLI docs for how to migrate: {directory}",
-                    FutureWarning,
+                    StreamlinkDeprecationWarning,
                 )
         elif showwarning:
             log.warning(f"Plugin path {directory} does not exist or is not a directory!")
@@ -660,7 +660,7 @@ def setup_config_args(parser, ignore_unknown=False):
             if type(config_file) is DeprecatedPath:
                 warnings.warn(
                     f"Loaded config from deprecated path, see CLI docs for how to migrate: {config_file}",
-                    FutureWarning,
+                    StreamlinkDeprecationWarning,
                 )
             config_files.append(config_file)
             break
@@ -676,7 +676,7 @@ def setup_config_args(parser, ignore_unknown=False):
                 if type(config_file) is DeprecatedPath:
                     warnings.warn(
                         f"Loaded plugin config from deprecated path, see CLI docs for how to migrate: {config_file}",
-                        FutureWarning,
+                        StreamlinkDeprecationWarning,
                     )
                 config_files.append(config_file)
                 break

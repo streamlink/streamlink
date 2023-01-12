@@ -5,7 +5,7 @@ from unittest.mock import Mock, call, patch
 import pytest
 
 import tests.resources
-from streamlink.exceptions import NoPluginError
+from streamlink.exceptions import NoPluginError, StreamlinkDeprecationWarning
 from streamlink_cli.compat import DeprecatedPath
 from streamlink_cli.main import setup_config_args
 
@@ -135,12 +135,12 @@ def session():
         ],
         [
             (
-                FutureWarning,
+                StreamlinkDeprecationWarning,
                 "Loaded config from deprecated path, see CLI docs for how to migrate: "
                 + f"{configdir / 'secondary'}",
             ),
             (
-                FutureWarning,
+                StreamlinkDeprecationWarning,
                 "Loaded plugin config from deprecated path, see CLI docs for how to migrate: "
                 + f"{configdir / 'secondary.testplugin'}",
             ),
@@ -182,7 +182,7 @@ def session():
         ],
         [
             (
-                FutureWarning,
+                StreamlinkDeprecationWarning,
                 "Loaded plugin config from deprecated path, see CLI docs for how to migrate: "
                 + f"{configdir / 'secondary.testplugin'}",
             ),

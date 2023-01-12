@@ -42,6 +42,21 @@ class StreamError(StreamlinkError):
     """
 
 
+# https://stackoverflow.com/a/49797717
+class _StreamlinkWarningMeta(type):
+    def __new__(mcs, name, bases, namespace, **kw):
+        name = namespace.get("__name__", name)
+        return super().__new__(mcs, name, bases, namespace, **kw)
+
+
+class StreamlinkWarning(UserWarning, metaclass=_StreamlinkWarningMeta):
+    pass
+
+
+class StreamlinkDeprecationWarning(StreamlinkWarning):
+    __name__ = "StreamlinkDeprecation"
+
+
 __all__ = [
     "StreamlinkError",
     "PluginError",
@@ -49,4 +64,6 @@ __all__ = [
     "NoPluginError",
     "NoStreamsError",
     "StreamError",
+    "StreamlinkWarning",
+    "StreamlinkDeprecationWarning",
 ]
