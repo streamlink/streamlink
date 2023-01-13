@@ -54,10 +54,9 @@ class AbemaTVLicenseAdapter(BaseAdapter):
 
     _LICENSE_API = "https://license.abema.io/abematv-hls"
 
-    _MEDIATOKEN_SCHEMA = validate.Schema({"token": validate.text})
+    _MEDIATOKEN_SCHEMA = validate.Schema({"token": str})
 
-    _LICENSE_SCHEMA = validate.Schema({"k": validate.text,
-                                       "cid": validate.text})
+    _LICENSE_SCHEMA = validate.Schema({"k": str, "cid": str})
 
     def __init__(self, session, deviceid, usertoken):
         self._session = session
@@ -145,14 +144,18 @@ class AbemaTV(Plugin):
                  b"Rbp5KwY4hEmcj5#fykMjJ=AuWz5GSMY-d@H7DMEh3M@9n2G552Us$$"
                  b"k9cD=3TxwWe86!x#Zyhe")
 
-    _USER_SCHEMA = validate.Schema({"profile": {"userId": validate.text},
-                                    "token": validate.text})
+    _USER_SCHEMA = validate.Schema({"profile": {"userId": str}, "token": str})
 
-    _CHANNEL_SCHEMA = validate.Schema({"channels": [{"id": validate.text,
-                                      "name": validate.text,
-                                       "playback": {validate.optional("dash"):
-                                                    validate.text,
-                                                    "hls": validate.text}}]})
+    _CHANNEL_SCHEMA = validate.Schema({
+        "channels": [{
+            "id": str,
+            "name": str,
+            "playback": {
+                validate.optional("dash"): str,
+                "hls": str,
+            },
+        }],
+    })
 
     _PRGM_SCHEMA = validate.Schema({"terms": [{validate.optional("onDemandType"): int}]})
 

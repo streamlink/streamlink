@@ -45,7 +45,7 @@ class AdultSwim(Plugin):
     _api_schema = validate.Schema({
         'media': {
             'desktop': {
-                validate.text: {
+                str: {
                     'url': validate.url()
                 }
             }
@@ -57,8 +57,8 @@ class AdultSwim(Plugin):
 
     _stream_data_schema = validate.Schema({
         'props': {'__REDUX_STATE__': {'streams': [{
-            'id': validate.text,
-            'stream': validate.text,
+            'id': str,
+            'stream': str,
         }]}}},
         validate.get('props'),
         validate.get('__REDUX_STATE__'),
@@ -67,17 +67,17 @@ class AdultSwim(Plugin):
 
     _token_schema = validate.Schema(
         validate.any(
-            {'auth': {'token': validate.text}},
-            {'auth': {'error': {'message': validate.text}}},
+            {'auth': {'token': str}},
+            {'auth': {'error': {'message': str}}},
         ),
         validate.get('auth'),
     )
 
     _video_data_schema = validate.Schema({
         'props': {'pageProps': {'__APOLLO_STATE__': {
-            validate.text: {
-                validate.optional('id'): validate.text,
-                validate.optional('slug'): validate.text,
+            str: {
+                validate.optional('id'): str,
+                validate.optional('slug'): str,
             }
         }}}},
         validate.get('props'),

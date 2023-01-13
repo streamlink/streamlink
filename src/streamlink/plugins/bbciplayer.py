@@ -65,7 +65,7 @@ class BBCiPlayer(Plugin):
 
     mediator_schema = validate.Schema(
         {
-            "versions": [{"id": validate.text}]
+            "versions": [{"id": str}]
         },
         validate.get("versions"), validate.get(0),
         validate.get("id")
@@ -76,9 +76,9 @@ class BBCiPlayer(Plugin):
             {"connection":
                 validate.all([{
                     validate.optional("href"): validate.url(),
-                    validate.optional("transferFormat"): validate.text
+                    validate.optional("transferFormat"): str
                 }], validate.filter(lambda c: c.get("href"))),
-                "kind": validate.text}
+                "kind": str}
         ]},
         validate.get("media"),
         validate.filter(lambda x: x["kind"] == "video")

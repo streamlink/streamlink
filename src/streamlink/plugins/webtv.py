@@ -31,13 +31,13 @@ class WebTV(Plugin):
             "src": validate.any(
                 validate.contains("m3u8"),
                 validate.all(
-                    validate.text,
+                    str,
                     validate.transform(lambda x: WebTV.decrypt_stream_url(x)),
                     validate.contains("m3u8")
                 )
             ),
-            "type": validate.text,
-            "label": validate.text
+            "type": str,
+            "label": str,
         }
     ])
 

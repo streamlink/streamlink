@@ -63,10 +63,10 @@ class Schoolism(Plugin):
                 validate.parse_json(),
                 [{
                     "sources": validate.all([{
-                        validate.optional("playlistTitle"): validate.text,
-                        "title": validate.text,
-                        "src": validate.text,
-                        "type": validate.text,
+                        validate.optional("playlistTitle"): str,
+                        "title": str,
+                        "src": str,
+                        "type": str,
                     }],
                         # only include HLS streams
                         # validate.filter(lambda s: s["type"] == "application/x-mpegurl")
