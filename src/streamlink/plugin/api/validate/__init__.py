@@ -1,3 +1,5 @@
+from typing import TYPE_CHECKING
+
 # noinspection PyPep8Naming,PyShadowingBuiltins
 from streamlink.plugin.api.validate._schemas import (  # noqa: I101, F401
     SchemaContainer,
@@ -41,4 +43,37 @@ from streamlink.plugin.api.validate._validators import (  # noqa: I101, F401
 )
 
 
-text = str
+if TYPE_CHECKING:
+    from typing import Type
+
+    text: Type[str]
+
+
+def _deprecations():
+    import sys
+
+    deprecations = {
+        "text": (str, f"`{__name__}.text` is deprecated. Use `str` instead."),
+    }
+
+    def __getattr__(_attr: str):
+        if _attr in deprecations:
+            import warnings
+            from streamlink.exceptions import StreamlinkDeprecationWarning
+
+            val, msg = deprecations[_attr]
+            warnings.warn(msg, StreamlinkDeprecationWarning)
+
+            return val
+
+        raise AttributeError
+
+    __all__ = [k for k in globals().keys() if not k.startswith("_")]
+    __all__.extend(deprecations.keys())
+
+    setattr(sys.modules[__name__], "__getattr__", __getattr__)
+    setattr(sys.modules[__name__], "__all__", __all__)
+
+
+_deprecations()
+del _deprecations

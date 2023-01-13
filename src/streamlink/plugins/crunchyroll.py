@@ -39,26 +39,26 @@ def parse_timestamp(ts):
 
 _api_schema = validate.Schema({
     "error": bool,
-    validate.optional("code"): validate.text,
-    validate.optional("message"): validate.text,
+    validate.optional("code"): str,
+    validate.optional("message"): str,
     validate.optional("data"): object,
 })
 _media_schema = validate.Schema(
     {
-        validate.optional("name"): validate.any(validate.text, None),
-        validate.optional("series_name"): validate.any(validate.text, None),
-        validate.optional("media_type"): validate.any(validate.text, None),
+        validate.optional("name"): validate.any(str, None),
+        validate.optional("series_name"): validate.any(str, None),
+        validate.optional("media_type"): validate.any(str, None),
         "stream_data": validate.any(
             None,
             {
                 "streams": validate.all(
                     [{
-                        "quality": validate.any(validate.text, None),
+                        "quality": validate.any(str, None),
                         "url": validate.url(
                             scheme="http",
                             path=validate.endswith(".m3u8")
                         ),
-                        validate.optional("video_encode_id"): validate.text
+                        validate.optional("video_encode_id"): str
                     }]
                 )
             }
@@ -66,19 +66,19 @@ _media_schema = validate.Schema(
     }
 )
 _login_schema = validate.Schema({
-    "auth": validate.any(validate.text, None),
+    "auth": validate.any(str, None),
     "expires": validate.all(
-        validate.text,
+        str,
         validate.transform(parse_timestamp)
     ),
     "user": {
-        "username": validate.any(validate.text, None),
-        "email": validate.text
+        "username": validate.any(str, None),
+        "email": str,
     }
 })
 _session_schema = validate.Schema(
     {
-        "session_id": validate.text
+        "session_id": str,
     },
     validate.get("session_id")
 )

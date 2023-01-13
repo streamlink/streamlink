@@ -4,7 +4,7 @@ from textwrap import dedent
 import pytest
 from lxml.etree import Element, tostring as etree_tostring
 
-from streamlink.exceptions import PluginError
+from streamlink.exceptions import PluginError, StreamlinkDeprecationWarning
 from streamlink.plugin.api import validate
 # noinspection PyProtectedMember
 from streamlink.plugin.api.validate._exception import ValidationError
@@ -14,8 +14,16 @@ def assert_validationerror(exception, expected):
     assert str(exception) == dedent(expected).strip("\n")
 
 
-def test_text_is_str():
+def test_text_is_str(recwarn: pytest.WarningsRecorder):
+    assert "text" not in getattr(validate, "__dict__")
+    assert "text" in getattr(validate, "__all__")
     assert validate.text is str, "Exports text as str alias for backwards compatiblity"
+    assert [(record.category, str(record.message)) for record in recwarn.list] == [
+        (
+            StreamlinkDeprecationWarning,
+            "`streamlink.plugin.api.validate.text` is deprecated. Use `str` instead.",
+        ),
+    ]
 
 
 class TestSchema:

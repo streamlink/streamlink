@@ -48,11 +48,11 @@ class Pixiv(Plugin):
     _user_dict_schema = validate.Schema(
         {
             "user": {
-                "unique_name": validate.text,
-                "name": validate.text
+                "unique_name": str,
+                "name": str,
             },
             validate.optional("hls_movie"): {
-                "url": validate.text
+                "url": str,
             }
         }
     )

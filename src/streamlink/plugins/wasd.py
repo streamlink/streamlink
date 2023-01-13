@@ -20,14 +20,14 @@ log = logging.getLogger(__name__)
 class WASD(Plugin):
     _media_schema = validate.Schema({
         'user_id': int,
-        'media_container_online_status': validate.text,
-        'media_container_status': validate.text,
+        'media_container_online_status': str,
+        'media_container_status': str,
         'media_container_streams': [{
             'stream_media': [{
                 'media_id': int,
                 'media_meta': {
-                    'media_url': validate.any(validate.text, None),
-                    'media_archive_url': validate.any(validate.text, None),
+                    'media_url': validate.any(str, None),
+                    'media_archive_url': validate.any(str, None),
                 },
                 'media_status': validate.any('STOPPED', 'RUNNING'),
                 'media_type': 'HLS',

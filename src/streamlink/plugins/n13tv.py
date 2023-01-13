@@ -34,18 +34,18 @@ class N13TV(Plugin):
     ))
 
     vod_schema = validate.Schema(validate.all([{
-        'ShowTitle': validate.text,
+        'ShowTitle': str,
         'ProtocolType': validate.all(
-            validate.text,
+            str,
             validate.transform(lambda x: x.replace("://", ""))
         ),
-        'ServerAddress': validate.text,
-        'MediaRoot': validate.text,
-        'MediaFile': validate.text,
-        'Bitrates': validate.text,
-        'StreamingType': validate.text,
+        'ServerAddress': str,
+        'MediaRoot': str,
+        'MediaFile': str,
+        'Bitrates': str,
+        'StreamingType': str,
         'Token': validate.all(
-            validate.text,
+            str,
             validate.transform(lambda x: x.lstrip("?"))
         )
     }], validate.get(0)))

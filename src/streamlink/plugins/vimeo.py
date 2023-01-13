@@ -47,14 +47,14 @@ class Vimeo(Plugin):
         {
             "request": {
                 "files": {
-                    validate.optional("dash"): {"cdns": {validate.text: {"url": validate.url()}}},
-                    validate.optional("hls"): {"cdns": {validate.text: {"url": validate.url()}}},
+                    validate.optional("dash"): {"cdns": {str: {"url": validate.url()}}},
+                    validate.optional("hls"): {"cdns": {str: {"url": validate.url()}}},
                     validate.optional("progressive"): validate.all(
-                        [{"url": validate.url(), "quality": validate.text}]
+                        [{"url": validate.url(), "quality": str}]
                     ),
                 },
                 validate.optional("text_tracks"): validate.all(
-                    [{"url": validate.text, "lang": validate.text}]
+                    [{"url": str, "lang": str}]
                 ),
             }
         },

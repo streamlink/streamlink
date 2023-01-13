@@ -32,8 +32,8 @@ class Experience:
 
     login_schema = validate.Schema(validate.any(
         {"success": False,
-         "error": validate.text},
-        {"token": validate.text,
+         "error": str},
+        {"token": str,
          "user": {"id": int}}
     ))
 

@@ -36,9 +36,9 @@ class TV4Play(Plugin):
     _meta_schema = validate.Schema(
         {
             "metadata": {
-                "title": validate.text
+                "title": str,
             },
-            "mediaUri": validate.text
+            "mediaUri": str,
         }
     )
 

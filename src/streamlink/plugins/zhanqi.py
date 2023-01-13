@@ -23,10 +23,10 @@ _room_schema = validate.Schema(
     {
         "data": validate.any(None, {
             "status": validate.all(
-                validate.text,
+                str,
                 validate.transform(int)
             ),
-            "videoId": validate.text
+            "videoId": str,
         })
     },
     validate.get("data")

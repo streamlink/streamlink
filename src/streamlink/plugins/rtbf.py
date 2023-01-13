@@ -50,8 +50,8 @@ class RTBF(Plugin):
 
     _geo_schema = validate.Schema(
         {
-            'country': validate.text,
-            'zone': validate.text
+            'country': str,
+            'zone': str,
         }
     )
 
@@ -64,14 +64,14 @@ class RTBF(Plugin):
                 validate.transform(html_unescape),
                 validate.parse_json(),
                 {
-                    'geoLocRestriction': validate.text,
+                    'geoLocRestriction': str,
                     validate.optional('isLive'): bool,
-                    validate.optional('startDate'): validate.text,
-                    validate.optional('endDate'): validate.text,
+                    validate.optional('startDate'): str,
+                    validate.optional('endDate'): str,
                     'sources': validate.any(
                         [],
                         validate.Schema({
-                            validate.text: validate.any(None, '', validate.url())
+                            str: validate.any(None, '', validate.url())
                         })
                     ),
                     validate.optional('urlHls'): validate.any(None, '', validate.url()),
@@ -89,7 +89,7 @@ class RTBF(Plugin):
             'audioUrls': validate.all(
                 [{
                     'url': validate.url(),
-                    'mimeType': validate.text
+                    'mimeType': str,
                 }]
             )
         }

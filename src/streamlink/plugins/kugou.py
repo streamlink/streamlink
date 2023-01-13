@@ -38,7 +38,7 @@ class Kugou(Plugin):
         }],
     ))
     _stream_data_schema = validate.Schema({
-        "msg": validate.text,
+        "msg": str,
         "code": int,
         "data": {
             "status": int,

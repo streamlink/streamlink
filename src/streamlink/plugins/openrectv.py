@@ -38,11 +38,11 @@ class OPENRECtv(Plugin):
     login_url = "https://www.openrec.tv/viewapp/v4/mobile/user/login"
 
     _info_schema = validate.Schema({
-        validate.optional("id"): validate.text,
-        validate.optional("title"): validate.text,
-        validate.optional("movie_type"): validate.text,
+        validate.optional("id"): str,
+        validate.optional("title"): str,
+        validate.optional("movie_type"): str,
         validate.optional("onair_status"): validate.any(None, int),
-        validate.optional("public_type"): validate.text,
+        validate.optional("public_type"): str,
         validate.optional("media"): {
             "url": validate.any(None, validate.url()),
             "url_public": validate.any(None, validate.url()),
@@ -66,7 +66,7 @@ class OPENRECtv(Plugin):
     })
 
     _login_schema = validate.Schema({
-        validate.optional("error_message"): validate.text,
+        validate.optional("error_message"): str,
         "status": int,
         validate.optional("data"): object
     })
