@@ -1,6 +1,6 @@
 import unittest
 from pathlib import Path
-from unittest.mock import ANY, Mock, patch
+from unittest.mock import ANY, Mock, call, patch
 
 import streamlink_cli.main
 import tests
@@ -13,42 +13,42 @@ class CommandLineTestCase(unittest.TestCase):
     Test that when invoked for the command line arguments are parsed as expected
     """
 
-    @patch('streamlink_cli.main.CONFIG_FILES', [])
-    @patch('streamlink_cli.main.setup_streamlink')
-    @patch('streamlink_cli.main.setup_logger_and_console', Mock())
-    @patch('streamlink_cli.output.sleep')
-    @patch('streamlink_cli.output.subprocess.call')
-    @patch('streamlink_cli.output.subprocess.Popen')
-    @patch('sys.argv')
-    def _test_args(self, args, commandline, mock_argv, mock_popen, mock_call, mock_sleep, mock_setup_streamlink,
-                   passthrough=False, exit_code=0):
-        mock_argv.__getitem__.side_effect = lambda x: args[x]
-
-        def side_effect(results):
-            def fn(*args):
+    @staticmethod
+    def _test_args(args, commandline, passthrough=False, exit_code=0):
+        def poll_factory(results):
+            def fn(*_):
                 result = results.pop(0)
                 return result
 
             return fn
 
-        mock_popen.return_value = Mock(poll=Mock(side_effect=side_effect([None, 0])))
-
-        session = Streamlink()
+        with patch("streamlink.session.Streamlink.load_builtin_plugins"):
+            session = Streamlink()
         session.load_plugins(str(Path(tests.__path__[0]) / "plugin"))
 
         actual_exit_code = 0
-        with patch('streamlink_cli.main.streamlink', session):
+        with patch("sys.argv") as mock_argv, \
+             patch("streamlink_cli.main.CONFIG_FILES", []), \
+             patch("streamlink_cli.main.setup_logger_and_console"), \
+             patch("streamlink_cli.main.setup_plugins"), \
+             patch("streamlink_cli.main.setup_streamlink") as mock_setup_streamlink, \
+             patch("streamlink_cli.main.streamlink", session), \
+             patch("streamlink_cli.output.subprocess.Popen") as mock_popen, \
+             patch("streamlink_cli.output.subprocess.call") as mock_call, \
+             patch("streamlink_cli.output.sleep"):
+            mock_argv.__getitem__.side_effect = lambda x: args[x]
+            mock_popen.return_value = Mock(poll=Mock(side_effect=poll_factory([None, 0])))
             try:
                 streamlink_cli.main.main()
             except SystemExit as exc:
                 actual_exit_code = exc.code
 
-        self.assertEqual(exit_code, actual_exit_code)
-        mock_setup_streamlink.assert_called_with()
+        assert exit_code == actual_exit_code
+        assert mock_setup_streamlink.call_count == 1
         if not passthrough:
-            mock_popen.assert_called_with(commandline, stderr=ANY, stdout=ANY, bufsize=ANY, stdin=ANY)
+            assert mock_popen.call_args_list == [call(commandline, stderr=ANY, stdout=ANY, bufsize=ANY, stdin=ANY)]
         else:
-            mock_call.assert_called_with(commandline, stderr=ANY, stdout=ANY)
+            assert mock_call.call_args_list == [call(commandline, stderr=ANY, stdout=ANY)]
 
 
 @posix_only
