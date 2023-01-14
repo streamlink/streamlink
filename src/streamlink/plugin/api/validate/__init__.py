@@ -43,7 +43,7 @@ from streamlink.plugin.api.validate._validators import (  # noqa: I101, F401
 )
 
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from typing import Type
 
     text: Type[str]
