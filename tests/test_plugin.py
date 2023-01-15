@@ -77,7 +77,6 @@ class TestPlugin:
 
         assert mock_load_cookies.call_args_list == [call()]
 
-    @pytest.mark.filterwarnings("always")
     def test_constructor_wrapper(self, recwarn: pytest.WarningsRecorder):
         session = Mock()
         with patch("streamlink.plugin.plugin.Cache") as mock_cache, \

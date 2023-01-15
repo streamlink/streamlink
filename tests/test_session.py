@@ -104,7 +104,6 @@ class TestSession(unittest.TestCase):
         plugins = session.get_plugins()
 
         with warnings.catch_warnings(record=True) as record_warnings:
-            warnings.filterwarnings("always")
             pluginname, pluginclass, resolved_url = session.resolve_url("http://test.se/channel")
 
         assert issubclass(pluginclass, Plugin)
@@ -418,7 +417,6 @@ class TestSession(unittest.TestCase):
         assert mock_urllib3_util_ssl.DEFAULT_CIPHERS == "foo:!bar:baz"
 
 
-@pytest.mark.filterwarnings("always")
 class TestSessionOptionHttpProxy:
     @pytest.fixture
     def no_deprecation(self, recwarn: pytest.WarningsRecorder):

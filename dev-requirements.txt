@@ -1,5 +1,5 @@
 pip>=9
-pytest
+pytest >=6.0.0
 pytest-asyncio
 pytest-cov
 coverage[toml]
