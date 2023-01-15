@@ -27,6 +27,14 @@ source-file = "src/streamlink/_version.py"
 build-file = "streamlink/_version.py"
 
 
+# https://docs.pytest.org/en/latest/reference/customize.html#configuration
+# https://docs.pytest.org/en/latest/reference/reference.html#ini-options-ref
+[tool.pytest.ini_options]
+filterwarnings = [
+  "always",
+]
+
+
 # https://coverage.readthedocs.io/en/latest/config.html
 [tool.coverage.run]
 branch = true
