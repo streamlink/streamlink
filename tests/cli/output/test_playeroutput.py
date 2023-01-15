@@ -1,92 +1,136 @@
-from unittest.mock import ANY, Mock, patch
+from contextlib import suppress
+from unittest.mock import Mock, call, patch
+
+import pytest
 
 from streamlink_cli.output import PlayerOutput
 from tests import posix_only, windows_only
 
-UNICODE_TITLE = "기타치는소율 with UL섬 "
+
+@pytest.fixture
+def playeroutput(request: pytest.FixtureRequest):
+    playeroutput = PlayerOutput(**getattr(request, "param", {}))
+    yield playeroutput
+    for stream in playeroutput.stdout, playeroutput.stderr:
+        with suppress(OSError):
+            stream.close()
 
 
-@posix_only
-@patch("streamlink_cli.output.sleep", Mock())
-@patch("subprocess.Popen")
-def test_output_mpv_unicode_title_posix(popen):
-    po = PlayerOutput("mpv", title=UNICODE_TITLE)
-    popen().poll.side_effect = lambda: None
-    po.open()
-    popen.assert_called_with(["mpv", f"--force-media-title={UNICODE_TITLE}", "-"],
-                             bufsize=ANY, stderr=ANY, stdout=ANY, stdin=ANY)
+@pytest.fixture
+def mock_popen(playeroutput: PlayerOutput):
+    mock_popen = Mock(return_value=Mock(poll=Mock(side_effect=Mock(return_value=None))))
+    with patch("streamlink_cli.output.sleep"), \
+         patch("subprocess.Popen", mock_popen):
+        yield mock_popen
 
 
-@posix_only
-@patch("streamlink_cli.output.sleep", Mock())
-@patch("subprocess.Popen")
-def test_output_vlc_unicode_title_posix(popen):
-    po = PlayerOutput("vlc", title=UNICODE_TITLE)
-    popen().poll.side_effect = lambda: None
-    po.open()
-    popen.assert_called_with(["vlc", "--input-title-format", UNICODE_TITLE, "-"],
-                             bufsize=ANY, stderr=ANY, stdout=ANY, stdin=ANY)
+@pytest.mark.parametrize("playeroutput,expected", [
+    pytest.param(
+        dict(cmd="mpv", title="foo bar"),
+        ["mpv", "--force-media-title=foo bar", "-"],
+        marks=posix_only,
+        id="MPV title POSIX",
+    ),
+    pytest.param(
+        {"cmd": "mpv.exe", "title": "foo bar"},
+        "mpv.exe \"--force-media-title=foo bar\" -",
+        marks=windows_only,
+        id="MPV title Windows",
+    ),
+    pytest.param(
+        {"cmd": "vlc", "title": "foo bar"},
+        ["vlc", "--input-title-format", "foo bar", "-"],
+        marks=posix_only,
+        id="VLC title POSIX",
+    ),
+    pytest.param(
+        {"cmd": "vlc.exe", "title": "foo bar"},
+        "vlc.exe --input-title-format \"foo bar\" -",
+        marks=windows_only,
+        id="VLC title Windows",
+    ),
+], indirect=["playeroutput"])
+def test_playeroutput(mock_popen: Mock, playeroutput: PlayerOutput, expected):
+    playeroutput.open()
+    assert mock_popen.call_args_list == [
+        call(expected, bufsize=0, stdout=playeroutput.stdout, stderr=playeroutput.stderr, stdin=playeroutput.stdin),
+    ]
 
 
-@windows_only
-@patch("streamlink_cli.output.sleep", Mock())
-@patch("subprocess.Popen")
-def test_output_mpv_unicode_title_windows_py3(popen):
-    po = PlayerOutput("mpv.exe", title=UNICODE_TITLE)
-    popen().poll.side_effect = lambda: None
-    po.open()
-    popen.assert_called_with(f"mpv.exe \"--force-media-title={UNICODE_TITLE}\" -",
-                             bufsize=ANY, stderr=ANY, stdout=ANY, stdin=ANY)
-
-
-@windows_only
-@patch("streamlink_cli.output.sleep", Mock())
-@patch("subprocess.Popen")
-def test_output_vlc_unicode_title_windows_py3(popen):
-    po = PlayerOutput("vlc.exe", title=UNICODE_TITLE)
-    popen().poll.side_effect = lambda: None
-    po.open()
-    popen.assert_called_with(f"vlc.exe --input-title-format \"{UNICODE_TITLE}\" -",
-                             bufsize=ANY, stderr=ANY, stdout=ANY, stdin=ANY)
-
-
-@posix_only
-def test_output_args_posix():
-    po_none = PlayerOutput("foo")
-    assert po_none._create_arguments() == ["foo", "-"]
-
-    po_implicit = PlayerOutput("foo", args="--bar")
-    assert po_implicit._create_arguments() == ["foo", "--bar", "-"]
-
-    po_explicit = PlayerOutput("foo", args="--bar {playerinput}")
-    assert po_explicit._create_arguments() == ["foo", "--bar", "-"]
-
-    po_fallback = PlayerOutput("foo", args="--bar {filename}")
-    assert po_fallback._create_arguments() == ["foo", "--bar", "-"]
-
-    po_fallback = PlayerOutput("foo", args="--bar {playerinput} {filename}")
-    assert po_fallback._create_arguments() == ["foo", "--bar", "-", "-"]
-
-    po_fallback = PlayerOutput("foo", args="--bar {qux}")
-    assert po_fallback._create_arguments() == ["foo", "--bar", "{qux}", "-"]
-
-
-@windows_only
-def test_output_args_windows():
-    po_none = PlayerOutput("foo")
-    assert po_none._create_arguments() == "foo -"
-
-    po_implicit = PlayerOutput("foo", args="--bar")
-    assert po_implicit._create_arguments() == "foo --bar -"
-
-    po_explicit = PlayerOutput("foo", args="--bar {playerinput}")
-    assert po_explicit._create_arguments() == "foo --bar -"
-
-    po_fallback = PlayerOutput("foo", args="--bar {filename}")
-    assert po_fallback._create_arguments() == "foo --bar -"
-
-    po_fallback = PlayerOutput("foo", args="--bar {playerinput} {filename}")
-    assert po_fallback._create_arguments() == "foo --bar - -"
-
-    po_fallback = PlayerOutput("foo", args="--bar {qux}")
-    assert po_fallback._create_arguments() == "foo --bar {qux} -"
+@pytest.mark.parametrize("playeroutput,expected", [
+    pytest.param(
+        dict(cmd="foo"),
+        ["foo", "-"],
+        marks=posix_only,
+        id="None POSIX",
+    ),
+    pytest.param(
+        dict(cmd="foo", args="--bar"),
+        ["foo", "--bar", "-"],
+        marks=posix_only,
+        id="Implicit POSIX",
+    ),
+    pytest.param(
+        dict(cmd="foo", args="--bar {playerinput}"),
+        ["foo", "--bar", "-"],
+        marks=posix_only,
+        id="Explicit POSIX",
+    ),
+    pytest.param(
+        dict(cmd="foo", args="--bar {filename}"),
+        ["foo", "--bar", "-"],
+        marks=posix_only,
+        id="Fallback POSIX",
+    ),
+    pytest.param(
+        dict(cmd="foo", args="--bar {playerinput} {filename}"),
+        ["foo", "--bar", "-", "-"],
+        marks=posix_only,
+        id="Fallback duplicate POSIX",
+    ),
+    pytest.param(
+        dict(cmd="foo", args="--bar {qux}"),
+        ["foo", "--bar", "{qux}", "-"],
+        marks=posix_only,
+        id="Unknown POSIX",
+    ),
+    pytest.param(
+        dict(cmd="foo"),
+        "foo -",
+        marks=windows_only,
+        id="None Windows",
+    ),
+    pytest.param(
+        dict(cmd="foo", args="--bar"),
+        "foo --bar -",
+        marks=windows_only,
+        id="Implicit Windows",
+    ),
+    pytest.param(
+        dict(cmd="foo", args="--bar {playerinput}"),
+        "foo --bar -",
+        marks=windows_only,
+        id="Explicit Windows",
+    ),
+    pytest.param(
+        dict(cmd="foo", args="--bar {filename}"),
+        "foo --bar -",
+        marks=windows_only,
+        id="Fallback Windows",
+    ),
+    pytest.param(
+        dict(cmd="foo", args="--bar {playerinput} {filename}"),
+        "foo --bar - -",
+        marks=windows_only,
+        id="Fallback duplicate Windows",
+    ),
+    pytest.param(
+        dict(cmd="foo", args="--bar {qux}"),
+        "foo --bar {qux} -",
+        marks=windows_only,
+        id="Unknown Windows",
+    ),
+], indirect=["playeroutput"])
+def test_playeroutput_args(playeroutput: PlayerOutput, expected):
+    args = playeroutput._create_arguments()
+    assert args == expected
