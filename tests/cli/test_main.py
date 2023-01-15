@@ -32,6 +32,9 @@ from tests import posix_only, windows_only
 from tests.plugin.testplugin import TestPlugin as _TestPlugin
 
 
+# TODO: rewrite the entire mess
+
+
 class FakePlugin(_TestPlugin):
     __module__ = "fake"
     _streams = {}  # type: ignore
@@ -272,6 +275,7 @@ class TestCLIMainCheckFileOutput(unittest.TestCase):
         self.assertEqual(mock_console.ask.call_args_list, [])
 
 
+# TODO: don't use Mock() for mocking args, use a custom argparse.Namespace instead
 class TestCLIMainCreateOutput(unittest.TestCase):
     @patch("streamlink_cli.main.args")
     @patch("streamlink_cli.main.console", Mock())
@@ -285,6 +289,7 @@ class TestCLIMainCreateOutput(unittest.TestCase):
         args.record = None
         args.record_and_pipe = None
         args.player_fifo = False
+        args.player_http = False
         args.title = None
         args.url = "URL"
         args.player = "mpv"
