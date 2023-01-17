@@ -27,6 +27,11 @@ class TestPluginCanHandleUrlTVP(PluginCanHandleUrl):
             "https://vod.tvp.pl/programy,88/z-davidem-attenborough-dokola-swiata-odcinki,284703/odcinek-2,S01E02,319220",
             {"vod_id": "319220"},
         ),
+
+        # tvp.info
+        ("https://tvp.info/", {}),
+        ("https://www.tvp.info/", {}),
+        ("https://www.tvp.info/65275202/13012023-0823", {}),
     ]
 
     should_not_match = [
