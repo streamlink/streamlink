@@ -7,4 +7,5 @@ class TestPluginCanHandleUrlTV8(PluginCanHandleUrl):
 
     should_match = [
         'https://www.tv8.com.tr/canli-yayin',
+        "https://www.tv8bucuk.com/tv8-5-canli-yayin",
     ]
