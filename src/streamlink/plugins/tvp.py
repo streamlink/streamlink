@@ -1,6 +1,7 @@
 """
 $description Live TV channels and VODs from TVP, a Polish public, state-owned broadcaster.
-$url stream.tvp.pl
+$url tvp.info
+$url tvp.pl
 $type live, vod
 $notes Some VODs may be geo-restricted. Authentication is not supported.
 """
@@ -19,6 +20,7 @@ from streamlink.stream.http import HTTPStream
 log = logging.getLogger(__name__)
 
 
+@pluginmatcher(re.compile(r"""https?://(?:www\.)?tvp\.info/"""), name="tvp_info")
 @pluginmatcher(re.compile(
     r"""
         https?://
@@ -42,7 +44,7 @@ class TVP(Plugin):
                 "Connection": "close",
             },
             schema=validate.Schema(
-                re.compile(r"window\.__channels\s*=\s*(?P<json>\[.+?])\s*;", re.DOTALL),
+                validate.regex(re.compile(r"window\.__channels\s*=\s*(?P<json>\[.+?])\s*;", re.DOTALL)),
                 validate.none_or_all(
                     validate.get("json"),
                     validate.parse_json(),
@@ -91,7 +93,7 @@ class TVP(Plugin):
                 "Referer": self.url,
             },
             schema=validate.Schema(
-                re.compile(r"window\.__api__\s*=\s*(?P<json>\{.+?})\s*;", re.DOTALL),
+                validate.regex(re.compile(r"window\.__api__\s*=\s*(?P<json>\{.+?})\s*;", re.DOTALL)),
                 validate.get("json"),
                 validate.parse_json(),
                 {
@@ -169,8 +171,58 @@ class TVP(Plugin):
         if data.get("HLS"):
             return HLSStream.parse_variant_playlist(self.session, data["HLS"][0]["src"])
 
+    def _get_tvp_info_vod(self):
+        data = self.session.http.get(
+            self.url,
+            schema=validate.Schema(
+                validate.parse_html(),
+                validate.xml_xpath_string(".//script[contains(text(), 'window.__videoData')][1]/text()"),
+                validate.none_or_all(
+                    str,
+                    validate.regex(re.compile(r"window\.__videoData\s*=\s*(?P<json>{.*?})\s*;", re.DOTALL)),
+                    validate.get("json"),
+                    validate.parse_json(),
+                    {
+                        "_id": int,
+                        "title": str,
+                    },
+                ),
+            ),
+        )
+        if not data:
+            return
+
+        self.id = data.get("_id")
+        self.title = data.get("title")
+
+        data = self.session.http.get(
+            f"https://api.tvp.pl/tokenizer/token/{self.id}",
+            schema=validate.Schema(
+                validate.parse_json(),
+                {
+                    "status": "OK",
+                    "isGeoBlocked": bool,
+                    "formats": [{
+                        "mimeType": str,
+                        "url": validate.url(),
+                    }],
+                },
+            ),
+        )
+        log.debug(f"data={data}")
+
+        if data.get("isGeoBlocked"):
+            log.error("The content is not available in your region")
+            return
+
+        for format in data.get("formats"):
+            if format.get("mimeType") == "application/x-mpegurl":
+                return HLSStream.parse_variant_playlist(self.session, format.get("url"))
+
     def _get_streams(self):
-        if self.match["vod_id"]:
+        if self.matches["tvp_info"]:
+            return self._get_tvp_info_vod()
+        elif self.match["vod_id"]:
             return self._get_vod(self.match["vod_id"])
         else:
             return self._get_live(self.match["channel_id"])
