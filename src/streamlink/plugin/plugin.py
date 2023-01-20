@@ -19,7 +19,9 @@ from typing import (
     Pattern,
     Sequence,
     TYPE_CHECKING,
+    Tuple,
     Type,
+    TypeVar,
     Union,
 )
 
@@ -181,6 +183,40 @@ def parse_params(params: Optional[str] = None) -> Dict[str, Any]:
 class Matcher(NamedTuple):
     pattern: Pattern
     priority: int
+    name: Optional[str] = None
+
+
+MType = TypeVar("MType")
+
+
+class _MCollection(List[MType]):
+    def __init__(self, **kwargs) -> None:
+        super().__init__(**kwargs)
+        self._names: Dict[str, MType] = {}
+
+    def __getitem__(self, item):
+        return self._names[item] if type(item) is str else super().__getitem__(item)
+
+
+class Matchers(_MCollection[Matcher]):
+    def register(self, matcher: Matcher) -> None:
+        super().insert(0, matcher)
+        if matcher.name:
+            if matcher.name in self._names:
+                raise ValueError(f"A matcher named '{matcher.name}' has already been registered")
+            self._names[matcher.name] = matcher
+
+
+class Matches(_MCollection[Optional[Match]]):
+    def update(self, matchers: Matchers, value: str) -> Tuple[Optional[Pattern], Optional[Match]]:
+        matches = [(matcher, matcher.pattern.match(value)) for matcher in matchers]
+
+        self.clear()
+        self.extend(match for matcher, match in matches)
+        self._names.clear()
+        self._names.update((matcher.name, match) for matcher, match in matches if matcher.name)
+
+        return next(((matcher.pattern, match) for matcher, match in matches if match is not None), (None, None))
 
 
 # Add front- and back-wrappers to the deprecated plugin's method resolution order (see Plugin.__new__)
@@ -198,27 +234,31 @@ class Plugin:
     Plugin base class for retrieving streams and metadata from the URL specified.
     """
 
-    matchers: ClassVar[Optional[List[Matcher]]] = None
+    matchers: ClassVar[Optional[Matchers]] = None
     """
-    The list of plugin matchers (URL pattern + priority).
+    The list of plugin matchers (URL pattern + priority + optional name).
+    This list supports matcher lookups both by matcher index, as well as matcher name, if defined.
 
-    Use the :func:`pluginmatcher` decorator to initialize this list.
+    Use the :func:`pluginmatcher` decorator to initialize plugin matchers.
     """
 
     arguments: ClassVar[Optional[Arguments]] = None
     """
     The plugin's :class:`Arguments <streamlink.options.Arguments>` collection.
 
-    Use the :func:`pluginargument` decorator to initialize this collection.
+    Use the :func:`pluginargument` decorator to initialize plugin arguments.
     """
 
-    matches: Sequence[Optional[Match]]
-    """A tuple of :class:`re.Match` results of all defined matchers"""
+    matches: Matches
+    """
+    A list of optional :class:`re.Match` results of all defined matchers.
+    This list supports match lookups both by the respective matcher index, as well as matcher name, if defined.
+    """
 
-    matcher: Optional[Pattern]
+    matcher: Optional[Pattern] = None
     """A reference to the compiled :class:`re.Pattern` of the first matching matcher"""
 
-    match: Optional[Match]
+    match: Optional[Match] = None
     """A reference to the :class:`re.Match` result of the first matching matcher"""
 
     # plugin metadata attributes
@@ -292,6 +332,7 @@ class Plugin:
         )
 
         self.session: "Streamlink" = session
+        self.matches = Matches()
         self.url: str = url
 
         self.load_cookies()
@@ -309,9 +350,8 @@ class Plugin:
     def url(self, value: str):
         self._url = value
 
-        matches = [(pattern, pattern.match(value)) for pattern, priority in self.matchers or []]
-        self.matches = tuple(m for p, m in matches)
-        self.matcher, self.match = next(((p, m) for p, m in matches if m is not None), (None, None))
+        if self.matchers:
+            self.matcher, self.match = self.matches.update(self.matchers, value)
 
     @classmethod
     def set_option(cls, key, value):
@@ -608,18 +648,22 @@ class Plugin:
 def pluginmatcher(
     pattern: Pattern,
     priority: int = NORMAL_PRIORITY,
+    name: Optional[str] = None,
 ) -> Callable[[Type[Plugin]], Type[Plugin]]:
     """
     Decorator for plugin URL matchers.
 
-    A matcher consists of a compiled regular expression pattern for the plugin's input URL and a priority value.
+    A matcher consists of a compiled regular expression pattern for the plugin's input URL,
+    a priority value and an optional name.
     The priority value determines which plugin gets chosen by
     :meth:`Streamlink.resolve_url <streamlink.Streamlink.resolve_url>` if multiple plugins match the input URL.
+    The matcher name can be used for accessing it and its matching result when multiple matchers are defined.
 
     Plugins must at least have one matcher. If multiple matchers are defined, then the first matching one
     according to the order of which they have been defined (top to bottom) will be responsible for setting the
     :attr:`Plugin.matcher` and :attr:`Plugin.match` attributes on the :class:`Plugin` instance.
-    The :attr:`Plugin.matchers` and :attr:`Plugin.matches` attributes are affected by all defined matchers.
+    The :attr:`Plugin.matchers` and :attr:`Plugin.matches` attributes are affected by all defined matchers,
+    and both support referencing matchers and matches by matcher index and name.
 
     .. code-block:: python
 
@@ -641,14 +685,14 @@ def pluginmatcher(
             ...
     """
 
-    matcher = Matcher(pattern, priority)
+    matcher = Matcher(pattern, priority, name)
 
     def decorator(cls: Type[Plugin]) -> Type[Plugin]:
         if not issubclass(cls, Plugin):
-            raise TypeError(f"{repr(cls)} is not a Plugin")
+            raise TypeError(f"{cls.__name__} is not a Plugin")
         if cls.matchers is None:
-            cls.matchers = []
-        cls.matchers.insert(0, matcher)
+            cls.matchers = Matchers()
+        cls.matchers.register(matcher)
 
         return cls
 
