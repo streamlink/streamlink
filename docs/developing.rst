@@ -187,7 +187,8 @@ Adding plugins
    Check the git log for recently added or modified plugins to help you get an overview of what's needed to properly implement
    a plugin. A complete guide is currently not available.
 
-   Each plugin class requires at least one ``pluginmatcher`` decorator which defines the URL regex and matching priority.
+   Each plugin class requires at least one ``pluginmatcher`` decorator which defines the URL regex, matching priority
+   and an optional name.
 
    Plugins need to implement the ``_get_streams()`` method which either returns a list of ``Stream`` instances or which yields
    ``Stream`` instances. ``Stream`` is the base class of ``HTTPStream``, ``HLSStream`` and ``DASHStream``.
