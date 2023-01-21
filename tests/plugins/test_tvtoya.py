@@ -2,7 +2,7 @@ from streamlink.plugins.tvtoya import TVToya
 from tests.plugins import PluginCanHandleUrl
 
 
-class TestPluginCanHandleUrlTVRPlus(PluginCanHandleUrl):
+class TestPluginCanHandleUrlTVToya(PluginCanHandleUrl):
     __plugin__ = TVToya
 
     should_match = [
