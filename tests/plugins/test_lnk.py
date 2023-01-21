@@ -2,7 +2,7 @@ from streamlink.plugins.lnk import LNK
 from tests.plugins import PluginCanHandleUrl
 
 
-class TestPluginCanHandleUrlLRT(PluginCanHandleUrl):
+class TestPluginCanHandleUrlLNK(PluginCanHandleUrl):
     __plugin__ = LNK
 
     should_match = [

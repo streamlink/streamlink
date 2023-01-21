@@ -29,9 +29,9 @@ class TestPluginCanHandleUrlTVP(PluginCanHandleUrl):
         ),
 
         # tvp.info
-        ("https://tvp.info/", {}),
-        ("https://www.tvp.info/", {}),
-        ("https://www.tvp.info/65275202/13012023-0823", {}),
+        (("tvp_info", "https://tvp.info/"), {}),
+        (("tvp_info", "https://www.tvp.info/"), {}),
+        (("tvp_info", "https://www.tvp.info/65275202/13012023-0823"), {}),
     ]
 
     should_not_match = [

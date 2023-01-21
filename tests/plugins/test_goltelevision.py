@@ -2,7 +2,7 @@ from streamlink.plugins.goltelevision import GOLTelevision
 from tests.plugins import PluginCanHandleUrl
 
 
-class TestPluginCanHandleUrlEuronews(PluginCanHandleUrl):
+class TestPluginCanHandleUrlGOLTelevision(PluginCanHandleUrl):
     __plugin__ = GOLTelevision
 
     should_match = [
