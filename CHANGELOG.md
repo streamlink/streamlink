@@ -1,5 +1,25 @@
 # Changelog
 
+## streamlink 5.2.0 (2023-01-23)
+
+Release highlights:
+
+- Added: new stream read/output loop, to be able to detect player process termination while stream output is paused (ad filtering, etc.) ([#5024](https://github.com/streamlink/streamlink/pull/5024))
+- Added: support for named plugin matchers ([#5103](https://github.com/streamlink/streamlink/pull/5103), [#5107](https://github.com/streamlink/streamlink/pull/5107))
+- Added: Python warnings capturing to streamlink logger and added `StreamlinkWarning` ([#5072](https://github.com/streamlink/streamlink/pull/5072))
+- Changed: deprecation log messages to warnings, and added missing warnings for [previously deprecated things](https://streamlink.github.io/deprecations.html) ([#5072](https://github.com/streamlink/streamlink/pull/5072))
+- Deprecated: usage of `validate.text` in favor of `str` ([#5090](https://github.com/streamlink/streamlink/pull/5090))
+- Improved: `Streamlink` session option getters/setters ([#5076](https://github.com/streamlink/streamlink/pull/5076))
+- Fixed: incorrect inheritance of `NoPluginError` and removed unneeded `url` parameter from `NoStreamsError` ([#5088](https://github.com/streamlink/streamlink/pull/5088))
+- Fixed: error handling in Twitch access token acquirement ([#5011](https://github.com/streamlink/streamlink/pull/5011))
+- Fixed: dogan plugin ([#5053](https://github.com/streamlink/streamlink/pull/5053))
+- Fixed: ceskatelevize plugin, added sport/sportplus/decko ([#5063](https://github.com/streamlink/streamlink/pull/5063))
+- Added plugins: mixcloud ([#5096](https://github.com/streamlink/streamlink/pull/5096)), vkplay ([#5054](https://github.com/streamlink/streamlink/pull/5054))
+- Removed plugins: orf_tvthek ([#5104](https://github.com/streamlink/streamlink/pull/5104))
+
+[Full changelog](https://github.com/streamlink/streamlink/compare/5.1.2...5.2.0)
+
+
 ## streamlink 5.1.2 (2022-12-03)
 
 Patch release:
