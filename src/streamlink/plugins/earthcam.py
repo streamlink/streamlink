@@ -7,6 +7,7 @@ $notes Only works for the cams hosted on EarthCam
 
 import logging
 import re
+from urllib.parse import urlparse
 
 from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.api import validate
@@ -45,7 +46,7 @@ class EarthCam(Plugin):
         if not data:
             return
 
-        cam_name = parse_qsd(self.url).get("cam") or next(iter(data.keys()), None)
+        cam_name = parse_qsd(urlparse(self.url).query).get("cam") or next(iter(data.keys()), None)
         cam_data = data.get(cam_name)
         if not cam_data:
             return
