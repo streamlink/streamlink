@@ -147,6 +147,6 @@ jobs:
         run: ./script/github-release.py "${STREAMLINK_DIST_DIR}"/*.tar.gz{,.asc}
       - name: PyPI release
         env:
-          TWINE_USERNAME: "__token__"
-          TWINE_PASSWORD: ${{ secrets.TWINE_PASSWORD }}
+          PYPI_USER: streamlink
+          PYPI_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
         run: ./script/deploy-pypi.sh
