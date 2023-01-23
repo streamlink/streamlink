@@ -13,12 +13,15 @@ class TestBuffer:
 
     def test_write(self, buffer: Buffer):
         assert buffer.length == 0
+        assert not buffer.written_once
 
         buffer.write(b"1" * 8192)
         assert buffer.length == 8192
+        assert buffer.written_once
 
         buffer.write(b"2" * 4096)
         assert buffer.length == 8192 + 4096
+        assert buffer.written_once
 
     def test_read(self, buffer: Buffer):
         buffer.write(b"1" * 8192)
@@ -63,15 +66,19 @@ class TestBuffer:
 
     def test_close(self, buffer: Buffer):
         assert not buffer.closed
+        assert not buffer.written_once
 
         buffer.write(b"1" * 8192)
         assert buffer.length == 8192
+        assert buffer.written_once
 
         buffer.close()
         assert buffer.closed
+        assert buffer.written_once
 
         buffer.write(b"2" * 8192)
         assert buffer.length == 8192
+        assert buffer.written_once
 
         assert buffer.read() == b"1" * 8192
         assert buffer.length == 0
