@@ -1,5 +1,15 @@
 # Changelog
 
+## streamlink 5.2.1 (2023-01-23)
+
+No code changes.  
+Please see the changelog of the [`5.2.0`](https://streamlink.github.io/changelog.html#streamlink-5-2-0-2023-01-23) release.
+
+- Reverted: PyPI deploy script changes ([#5116](https://github.com/streamlink/streamlink/pull/5116))
+
+[Full changelog](https://github.com/streamlink/streamlink/compare/5.2.0...5.2.1)
+
+
 ## streamlink 5.2.0 (2023-01-23)
 
 Release highlights:
