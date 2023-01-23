@@ -19,11 +19,14 @@ else
         exit 1
     fi
 
-    if [[ -z "${TWINE_USERNAME}" ]] || [[ -z "${TWINE_PASSWORD}" ]]; then
-        echo >&2 "deploy: missing TWINE_USERNAME or TWINE_PASSWORD env var"
+    if [[ -z "${PYPI_USER}" ]] || [[ -z "${PYPI_PASSWORD}" ]]; then
+        echo >&2 "deploy: missing PYPI_USER or PYPI_PASSWORD env var"
         exit 1
     fi
 
     echo >&2 "deploy: Uploading files to PyPI (${version})"
-    twine upload "${dist_dir}"/streamlink-"${version}"{.tar.gz,-*.whl}{,.asc}
+    twine upload \
+        --username "${PYPI_USER}" \
+        --password "${PYPI_PASSWORD}" \
+        "${dist_dir}"/streamlink-"${version}"{.tar.gz,-*.whl}{,.asc}
 fi
