@@ -205,11 +205,23 @@ class HLSStreamWriter(SegmentedStreamWriter):
     def write(self, sequence: Sequence, result: Response, *data):
         if not self.should_filter_sequence(sequence):
             log.debug(f"Writing segment {sequence.num} to output")
+
+            written_once = self.reader.buffer.written_once
             try:
                 return self._write(sequence, result, *data)
             finally:
+                is_paused = self.reader.is_paused()
+
+                # Depending on the filtering implementation, the segment's discontinuity attribute can be missing.
+                # Also check if the output will be resumed after data has already been written to the buffer before.
+                if sequence.segment.discontinuity or is_paused and written_once:
+                    log.warning(
+                        "Encountered a stream discontinuity. "
+                        "This is unsupported and will result in incoherent output data."
+                    )
+
                 # unblock reader thread after writing data to the buffer
-                if self.reader.is_paused():
+                if is_paused:
                     log.info("Resuming stream output")
                     self.reader.resume()
 

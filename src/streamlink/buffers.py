@@ -27,6 +27,7 @@ class Buffer:
         self.current_chunk = None
         self.closed = False
         self.length = 0
+        self.written_once = False
 
     def _iterate_chunks(self, size):
         bytes_left = size
@@ -52,6 +53,7 @@ class Buffer:
             data = bytes(data)  # Copy so that original buffer may be reused
             self.chunks.append(data)
             self.length += len(data)
+            self.written_once = True
 
     def read(self, size=-1):
         if size < 0 or size > self.length:
