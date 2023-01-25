@@ -3,6 +3,7 @@ include CHANGELOG.md
 include README.md
 include LICENSE*
 include *requirements.txt
+include icon.svg
 
 recursive-include completions *
 recursive-include docs *
