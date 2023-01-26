@@ -112,6 +112,8 @@ performing these checks locally avoids unnecessary build failures.
     flake8
     # check code for typing errors
     mypy
+    # optionally check for typing errors if changes were made to the docs extensions
+    mypy docs
 
     # build the documentation
     make --directory=docs clean html

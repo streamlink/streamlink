@@ -68,6 +68,5 @@ files = [
   "src/streamlink/",
   "src/streamlink_cli/",
   "tests/",
-  "docs/",
   "setup.py",
 ]
