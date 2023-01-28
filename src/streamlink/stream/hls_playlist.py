@@ -2,7 +2,7 @@ import inspect
 import logging
 import math
 import re
-from binascii import unhexlify
+from binascii import Error as BinasciiError, unhexlify
 from datetime import datetime, timedelta
 from typing import Any, Callable, ClassVar, Dict, Iterator, List, Mapping, NamedTuple, Optional, Tuple, Type, Union
 from urllib.parse import urljoin, urlparse
@@ -200,18 +200,19 @@ class M3U8Parser:
             tag = name[10:].upper().replace("_", "-")
             tags[tag] = method
 
-    def create_stream_info(self, streaminf: Dict[str, Optional[str]], cls=None):
+    @classmethod
+    def create_stream_info(cls, streaminf: Dict[str, Optional[str]], streaminfoclass=None):
         program_id = streaminf.get("PROGRAM-ID")
 
         _bandwidth = streaminf.get("BANDWIDTH")
         bandwidth = 0 if not _bandwidth else round(int(_bandwidth), 1 - int(math.log10(int(_bandwidth))))
 
         _resolution = streaminf.get("RESOLUTION")
-        resolution = None if not _resolution else self.parse_resolution(_resolution)
+        resolution = None if not _resolution else cls.parse_resolution(_resolution)
 
         codecs = (streaminf.get("CODECS") or "").split(",")
 
-        if cls == IFrameStreamInfo:
+        if streaminfoclass is IFrameStreamInfo:
             return IFrameStreamInfo(
                 bandwidth=bandwidth,
                 program_id=program_id,
@@ -230,20 +231,22 @@ class M3U8Parser:
                 subtitles=streaminf.get("SUBTITLES"),
             )
 
-    def split_tag(self, line: str) -> Union[Tuple[str, str], Tuple[None, None]]:
-        match = self._tag_re.match(line)
+    @classmethod
+    def split_tag(cls, line: str) -> Union[Tuple[str, str], Tuple[None, None]]:
+        match = cls._tag_re.match(line)
 
         if match:
             return match.group("tag"), (match.group("value") or "").strip()
 
         return None, None
 
-    def parse_attributes(self, value: str) -> Dict[str, str]:
+    @classmethod
+    def parse_attributes(cls, value: str) -> Dict[str, str]:
         pos = 0
         length = len(value)
         res: Dict[str, str] = {}
         while pos < length:
-            match = self._attr_re.match(value, pos)
+            match = cls._attr_re.match(value, pos)
             if match is None:
                 log.warning("Discarded invalid attributes list")
                 res.clear()
@@ -257,8 +260,9 @@ class M3U8Parser:
     def parse_bool(value: str) -> bool:
         return value == "YES"
 
-    def parse_byterange(self, value: str) -> Optional[ByteRange]:
-        match = self._range_re.match(value)
+    @classmethod
+    def parse_byterange(cls, value: str) -> Optional[ByteRange]:
+        match = cls._range_re.match(value)
         if match is None:
             return None
 
@@ -268,8 +272,9 @@ class M3U8Parser:
             offset=int(offset) if offset is not None else None,
         )
 
-    def parse_extinf(self, value: str) -> ExtInf:
-        match = self._extinf_re.match(value)
+    @classmethod
+    def parse_extinf(cls, value: str) -> ExtInf:
+        match = cls._extinf_re.match(value)
         if match is None:
             return ExtInf(0, None)
 
@@ -280,28 +285,30 @@ class M3U8Parser:
 
     @staticmethod
     def parse_hex(value: Optional[str]) -> Optional[bytes]:
-        if value is None:
-            return value
+        if value and value[:2] in ("0x", "0X"):
+            try:
+                return unhexlify(f"{'0' * (len(value) % 2)}{value[2:]}")
+            except BinasciiError:
+                pass
 
-        value = value[2:]
-        if len(value) % 2:
-            value = f"0{value}"
-
-        return unhexlify(value)
+        log.warning("Discarded invalid hexadecimal-sequence attribute value")
+        return None
 
     @staticmethod
     def parse_iso8601(value: Optional[str]) -> Optional[datetime]:
         try:
             return None if value is None else parse_datetime(value)
         except (ISO8601Error, ValueError):
+            log.warning("Discarded invalid ISO8601 attribute value")
             return None
 
     @staticmethod
     def parse_timedelta(value: Optional[str]) -> Optional[timedelta]:
         return None if value is None else timedelta(seconds=float(value))
 
-    def parse_resolution(self, value: str) -> Resolution:
-        match = self._res_re.match(value)
+    @classmethod
+    def parse_resolution(cls, value: str) -> Resolution:
+        match = cls._res_re.match(value)
         if match is None:
             return Resolution(width=0, height=0)
 
