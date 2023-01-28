@@ -4,7 +4,6 @@ import math
 import re
 from binascii import unhexlify
 from datetime import datetime, timedelta
-from itertools import starmap
 from typing import Any, Callable, ClassVar, Dict, Iterator, List, Mapping, NamedTuple, Optional, Tuple, Type, Union
 from urllib.parse import urljoin, urlparse
 
@@ -159,7 +158,26 @@ class M3U8Parser:
     _TAGS: ClassVar[Mapping[str, Callable[["M3U8Parser", str], None]]]
 
     _extinf_re = re.compile(r"(?P<duration>\d+(\.\d+)?)(,(?P<title>.+))?")
-    _attr_re = re.compile(r"([A-Z\-]+)=(\d+\.\d+|0x[0-9A-z]+|\d+x\d+|\d+|\"(.+?)\"|[0-9A-z\-]+)")
+    _attr_re = re.compile(r"""
+        (?P<key>[A-Z\-]+)
+        =
+        (?P<value>
+            (?# decimal-integer)
+            \d+
+            (?# hexadecimal-sequence)
+            |0[xX][0-9A-Fa-f]+
+            (?# decimal-floating-point and signed-decimal-floating-point)
+            |-?\d+\.\d+
+            (?# quoted-string)
+            |\"(?P<quoted>[^\r\n\"]*)\"
+            (?# enumerated-string)
+            |[^\",\s]+
+            (?# decimal-resolution)
+            |\d+x\d+
+        )
+        (?# be more lenient and allow spaces around attributes)
+        \s*(?:,\s*|$)
+    """, re.VERBOSE)
     _range_re = re.compile(r"(?P<range>\d+)(?:@(?P<offset>\d+))?")
     _tag_re = re.compile(r"#(?P<tag>[\w-]+)(:(?P<value>.+))?")
     _res_re = re.compile(r"(\d+)x(\d+)")
@@ -220,12 +238,20 @@ class M3U8Parser:
 
         return None, None
 
-    @staticmethod
-    def map_attribute(key: str, value: str, quoted: str) -> Tuple[str, str]:
-        return key, quoted or value
-
     def parse_attributes(self, value: str) -> Dict[str, str]:
-        return dict(starmap(self.map_attribute, self._attr_re.findall(value)))
+        pos = 0
+        length = len(value)
+        res: Dict[str, str] = {}
+        while pos < length:
+            match = self._attr_re.match(value, pos)
+            if match is None:
+                log.warning("Discarded invalid attributes list")
+                res.clear()
+                break
+            pos = match.end()
+            res[match["key"]] = match["quoted"] if match["quoted"] is not None else match["value"]
+
+        return res
 
     @staticmethod
     def parse_bool(value: str) -> bool:
