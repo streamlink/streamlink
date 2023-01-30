@@ -273,10 +273,14 @@ def build_parser():
         metavar="LEVEL",
         choices=logger.levels,
         default="info",
-        help="""
+        help=f"""
         Set the log message threshold.
 
-        Valid levels are: `none`, `error`, `warning`, `info`, `debug`, `trace`, `all`
+        Valid levels are, in order of increasing verbosity:
+
+        {', '.join([f'`{level}`' for level in logger.levels])}
+
+        Default is "info".
         """
     )
     general.add_argument(
