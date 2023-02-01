@@ -22,26 +22,18 @@ from streamlink.utils.parse import parse_json
 log = logging.getLogger(__name__)
 
 
-@pluginmatcher(re.compile(r"""
-    https?://(?:\w+\.)?youtube\.com/
-    (?:
-        (?:
-            (?:
-                watch\?(?:.*&)*v=
-                |
-                (?P<embed>embed)/(?!live_stream)
-                |
-                v/
-            )(?P<video_id>[\w-]{11})
-        )
-        |
-        embed/live_stream\?channel=(?P<embed_live>[^/?&]+)
-        |
-        (?:c(?:hannel)?/|user/)?(?P<channel>[^/?]+)(?P<channel_live>/live)?/?$
-    )
-    |
-    https?://youtu\.be/(?P<video_id_short>[\w-]{11})
-""", re.VERBOSE))
+@pluginmatcher(name="default", pattern=re.compile(
+    r"https?://(?:\w+\.)?youtube\.com/(?:v/|live/|watch\?(?:.*&)?v=)(?P<video_id>[\w-]{11})",
+))
+@pluginmatcher(name="channel", pattern=re.compile(
+    r"https?://(?:\w+\.)?youtube\.com/(?:@|c(?:hannel)?/)?(?P<channel>[^/?]+)(?P<live>/live)?/?$",
+))
+@pluginmatcher(name="embed", pattern=re.compile(
+    r"https?://(?:\w+\.)?youtube\.com/embed/(?:live_stream\?channel=(?P<live>[^/?&]+)|(?P<video_id>[\w-]{11}))",
+))
+@pluginmatcher(name="shorthand", pattern=re.compile(
+    r"https?://youtu\.be/(?P<video_id>[\w-]{11})",
+))
 class YouTube(Plugin):
     _re_ytInitialData = re.compile(r"""var\s+ytInitialData\s*=\s*({.*?})\s*;\s*</script>""", re.DOTALL)
     _re_ytInitialPlayerResponse = re.compile(r"""var\s+ytInitialPlayerResponse\s*=\s*({.*?});\s*var\s+\w+\s*=""", re.DOTALL)
@@ -81,12 +73,12 @@ class YouTube(Plugin):
         # translate input URLs to be able to find embedded data and to avoid unnecessary HTTP redirects
         if parsed.netloc == "gaming.youtube.com":
             self.url = urlunparse(parsed._replace(scheme="https", netloc="www.youtube.com"))
-        elif self.match.group("video_id_short") is not None:
-            self.url = self._url_canonical.format(video_id=self.match.group("video_id_short"))
-        elif self.match.group("embed") is not None:
-            self.url = self._url_canonical.format(video_id=self.match.group("video_id"))
-        elif self.match.group("embed_live") is not None:
-            self.url = self._url_channelid_live.format(channel_id=self.match.group("embed_live"))
+        elif self.matches["shorthand"]:
+            self.url = self._url_canonical.format(video_id=self.match["video_id"])
+        elif self.matches["embed"] and self.match["video_id"]:
+            self.url = self._url_canonical.format(video_id=self.match["video_id"])
+        elif self.matches["embed"] and self.match["live"]:
+            self.url = self._url_channelid_live.format(channel_id=self.match["live"])
         elif parsed.scheme != "https":
             self.url = urlunparse(parsed._replace(scheme="https"))
 
@@ -132,7 +124,7 @@ class YouTube(Plugin):
         schema_canonical = validate.Schema(
             validate.parse_html(),
             validate.xml_xpath_string(".//link[@rel='canonical'][1]/@href"),
-            validate.transform(self.matcher.match),
+            validate.regex(self.matchers["default"].pattern),
             validate.get("video_id")
         )
         return schema_canonical.validate(data)
@@ -281,7 +273,11 @@ class YouTube(Plugin):
         return parse_json(match.group(1))
 
     def _get_data_from_api(self, res):
-        _i_video_id = self.match.group("video_id")
+        try:
+            _i_video_id = self.match["video_id"]
+        except IndexError:
+            _i_video_id = None
+
         if _i_video_id is None:
             try:
                 _i_video_id = self._schema_canonical(res.text)
@@ -343,7 +339,7 @@ class YouTube(Plugin):
     def _get_streams(self):
         res = self._get_res(self.url)
 
-        if self.match.group("channel") and not self.match.group("channel_live"):
+        if self.matches["channel"] and not self.match["live"]:
             initial = self._get_data_from_regex(res, self._re_ytInitialData, "initial data")
             video_id = self._data_video_id(initial)
             if video_id is None:

@@ -9,40 +9,54 @@ from tests.plugins import PluginCanHandleUrl
 class TestPluginCanHandleUrlYouTube(PluginCanHandleUrl):
     __plugin__ = YouTube
 
-    should_match = [
-        "https://www.youtube.com/CHANNELNAME",
-        "https://www.youtube.com/CHANNELNAME/",
-        "https://www.youtube.com/CHANNELNAME/live",
-        "https://www.youtube.com/CHANNELNAME/live/",
-        "https://www.youtube.com/c/CHANNELNAME",
-        "https://www.youtube.com/c/CHANNELNAME/",
-        "https://www.youtube.com/c/CHANNELNAME/live",
-        "https://www.youtube.com/c/CHANNELNAME/live/",
-        "https://www.youtube.com/user/CHANNELNAME",
-        "https://www.youtube.com/user/CHANNELNAME/",
-        "https://www.youtube.com/user/CHANNELNAME/live",
-        "https://www.youtube.com/user/CHANNELNAME/live/",
-        "https://www.youtube.com/channel/CHANNELID",
-        "https://www.youtube.com/channel/CHANNELID/",
-        "https://www.youtube.com/channel/CHANNELID/live",
-        "https://www.youtube.com/channel/CHANNELID/live/",
-        "https://www.youtube.com/embed/aqz-KE-bpKQ",
-        "https://www.youtube.com/embed/live_stream?channel=UCNye-wNBqNL5ZzHSJj3l8Bg",
-        "https://www.youtube.com/v/aqz-KE-bpKQ",
-        "https://www.youtube.com/watch?v=aqz-KE-bpKQ",
-        "https://www.youtube.com/watch?foo=bar&baz=qux&v=aqz-KE-bpKQ",
-        "https://youtu.be/0123456789A",
-    ]
-
     should_match_groups = [
-        ("https://www.youtube.com/v/aqz-KE-bpKQ", {
+        (("default", "https://www.youtube.com/v/aqz-KE-bpKQ"), {
             "video_id": "aqz-KE-bpKQ",
         }),
-        ("https://www.youtube.com/embed/aqz-KE-bpKQ", {
-            "embed": "embed",
+        (("default", "https://www.youtube.com/live/aqz-KE-bpKQ"), {
             "video_id": "aqz-KE-bpKQ",
         }),
-        ("https://www.youtube.com/watch?v=aqz-KE-bpKQ", {
+        (("default", "https://www.youtube.com/watch?foo=bar&baz=qux&v=aqz-KE-bpKQ&asdf=1234"), {
+            "video_id": "aqz-KE-bpKQ",
+        }),
+
+        (("channel", "https://www.youtube.com/CHANNELNAME"), {
+            "channel": "CHANNELNAME",
+        }),
+        (("channel", "https://www.youtube.com/CHANNELNAME/live"), {
+            "channel": "CHANNELNAME",
+            "live": "/live",
+        }),
+        (("channel", "https://www.youtube.com/@CHANNELNAME"), {
+            "channel": "CHANNELNAME",
+        }),
+        (("channel", "https://www.youtube.com/@CHANNELNAME/live"), {
+            "channel": "CHANNELNAME",
+            "live": "/live",
+        }),
+        (("channel", "https://www.youtube.com/c/CHANNELNAME"), {
+            "channel": "CHANNELNAME",
+        }),
+        (("channel", "https://www.youtube.com/c/CHANNELNAME/live"), {
+            "channel": "CHANNELNAME",
+            "live": "/live",
+        }),
+        (("channel", "https://www.youtube.com/channel/CHANNELID"), {
+            "channel": "CHANNELID",
+        }),
+        (("channel", "https://www.youtube.com/channel/CHANNELID/live"), {
+            "channel": "CHANNELID",
+            "live": "/live",
+        }),
+
+        (("embed", "https://www.youtube.com/embed/aqz-KE-bpKQ"), {
+            "video_id": "aqz-KE-bpKQ",
+        }),
+        (("embed", "https://www.youtube.com/embed/live_stream?channel=CHANNELNAME"), {
+            "live": "CHANNELNAME",
+        }),
+
+        (("shorthand", "https://youtu.be/aqz-KE-bpKQ"), {
             "video_id": "aqz-KE-bpKQ",
         }),
     ]
