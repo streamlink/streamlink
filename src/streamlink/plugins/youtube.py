@@ -227,22 +227,32 @@ class YouTube(Plugin):
     def _create_adaptive_streams(self, adaptive_formats):
         streams = {}
         adaptive_streams = {}
+        audio_streams = {}
         best_audio_itag = None
 
         # Extract audio streams from the adaptive format list
         for url, label, itag, mimeType in adaptive_formats:
             if url is None:
                 continue
+
             # extract any high quality streams only available in adaptive formats
             adaptive_streams[itag] = url
-            stream_type, stream_codecs = mimeType
+            stream_type, stream_codec = mimeType
+            stream_codec = re.sub(r"^(\w+).*$", r"\1", stream_codec)
 
-            if stream_type == "audio":
-                streams[f"audio_{stream_codecs}"] = HTTPStream(self.session, url)
+            if stream_type == "audio" and itag in self.adp_audio:
+                audio_bitrate = self.adp_audio[itag]
+                if stream_codec not in audio_streams or audio_bitrate > self.adp_audio[audio_streams[stream_codec]]:
+                    audio_streams[stream_codec] = itag
 
                 # find the best quality audio stream m4a, opus or vorbis
-                if best_audio_itag is None or self.adp_audio[itag] > self.adp_audio[best_audio_itag]:
+                if best_audio_itag is None or audio_bitrate > self.adp_audio[best_audio_itag]:
                     best_audio_itag = itag
+
+        streams.update({
+            f"audio_{stream_codec}": HTTPStream(self.session, adaptive_streams[itag])
+            for stream_codec, itag in audio_streams.items()
+        })
 
         if best_audio_itag and adaptive_streams and MuxedStream.is_usable(self.session):
             aurl = adaptive_streams[best_audio_itag]
@@ -254,7 +264,7 @@ class YouTube(Plugin):
                 streams[name] = MuxedStream(
                     self.session,
                     HTTPStream(self.session, vurl),
-                    HTTPStream(self.session, aurl)
+                    HTTPStream(self.session, aurl),
                 )
 
         return streams
