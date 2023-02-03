@@ -9,7 +9,7 @@ import logging
 import re
 from urllib.parse import parse_qsl, urlparse
 
-from streamlink.plugin import Plugin, pluginargument, pluginmatcher
+from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.api import validate
 from streamlink.stream.dash import DASHStream
 from streamlink.stream.ffmpegmux import MuxedStream
@@ -22,10 +22,6 @@ log = logging.getLogger(__name__)
 @pluginmatcher(re.compile(
     r"https?://(?:www\.)?svtplay\.se/(?P<live>kanaler/)?"
 ))
-@pluginargument(
-    "mux-subtitles",
-    is_global=True,
-)
 class SVTPlay(Plugin):
     _URL_API_VIDEO = "https://api.svt.se/videoplayer-api/video/{item}"
     _MAP_CHANNEL_NAMES = {
@@ -138,9 +134,8 @@ class SVTPlay(Plugin):
                 return HLSStream.parse_variant_playlist(self.session, videos[fmt], name_fmt="{pixels}_{bitrate}")
 
             if streamtype is DASHStream:
-                mux_subtitles = self.get_option("mux_subtitles")
                 subtitlestreams = {}
-                if mux_subtitles and "webvtt" in subtitles:
+                if self.session.get_option("mux-subtitles") and "webvtt" in subtitles:
                     subtitlestreams["webvtt"] = HTTPStream(self.session, subtitles["webvtt"])
 
                 dash_streams = DASHStream.parse_manifest(self.session, videos[fmt])

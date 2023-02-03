@@ -12,7 +12,7 @@ from io import BytesIO
 from typing import Iterator, Sequence, Tuple
 from urllib.parse import urlparse
 
-from streamlink.plugin import Plugin, PluginError, pluginargument, pluginmatcher
+from streamlink.plugin import Plugin, PluginError, pluginmatcher
 from streamlink.plugin.api import validate
 from streamlink.stream.ffmpegmux import MuxedStream
 from streamlink.stream.hls import HLSStream
@@ -129,10 +129,6 @@ class ZTNR:
 @pluginmatcher(re.compile(
     r"https?://(?:www\.)?rtve\.es/play/videos/.+"
 ))
-@pluginargument(
-    "mux-subtitles",
-    is_global=True,
-)
 class Rtve(Plugin):
     URL_M3U8 = "https://ztnr.rtve.es/ztnr/{id}.m3u8"
     URL_VIDEOS = "https://ztnr.rtve.es/ztnr/movil/thumbnail/rtveplayw/videos/{id}.png?q=v2"
@@ -178,7 +174,7 @@ class Rtve(Plugin):
 
         streams = HLSStream.parse_variant_playlist(self.session, url).items()
 
-        if self.options.get("mux-subtitles"):
+        if self.session.get_option("mux-subtitles"):
             subs = self.session.http.get(
                 self.URL_SUBTITLES.format(id=self.id),
                 schema=validate.Schema(

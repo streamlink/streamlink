@@ -138,9 +138,6 @@ class ArgparseDirective(Directive):
             for line in self.process_help(action.help).split("\n"):
                 yield line
             yield ""
-            if hasattr(action, "plugins") and len(action.plugins) > 0:
-                yield f"    **Supported plugins:** {', '.join(action.plugins)}"
-                yield ""
 
     def generate_parser_rst(self, parser, parent=None, depth=0):
         if depth >= len(self._headlines):

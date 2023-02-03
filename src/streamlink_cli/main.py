@@ -727,11 +727,6 @@ def setup_plugin_args(session: Streamlink, parser: ArgumentParser):
                         continue
                     defaults[pargdest] = action.default
 
-                    # add plugin to global argument
-                    plugins = getattr(action, "plugins", [])
-                    plugins.append(pname)
-                    setattr(action, "plugins", plugins)
-
         plugin.options = PluginOptions(defaults)
 
 
