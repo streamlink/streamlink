@@ -104,9 +104,6 @@ class PluginArguments(ast.NodeVisitor, IDatalistItem):
             ):
                 continue
 
-            if any(kw.value.value for kw in decorator.keywords if kw.arg == "is_global" and type(kw.value) is ast.Constant):
-                continue
-
             if any(
                 True
                 for kw in decorator.keywords

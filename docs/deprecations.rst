@@ -1,6 +1,17 @@
 Deprecations
 ============
 
+streamlink 5.3.0
+----------------
+
+Deprecation of global plugin arguments
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The ``is_global=True`` :py:class:`plugin argument <streamlink.options.Argument>` parameter has been deprecated.
+Instead of defining a global plugin argument to set a key-value pair on the plugin's options, use the respective option on
+the plugin's Streamlink session instance instead.
+
+
 streamlink 5.2.0
 ----------------
 

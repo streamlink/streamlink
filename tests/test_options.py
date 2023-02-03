@@ -4,6 +4,7 @@ from unittest.mock import Mock, patch
 
 import pytest
 
+from streamlink.exceptions import StreamlinkDeprecationWarning
 from streamlink.options import Argument, Arguments, Options
 from streamlink.plugin import Plugin, pluginargument
 from streamlink_cli.argparser import ArgumentParser
@@ -170,7 +171,7 @@ class TestArguments(unittest.TestCase):
 
 
 class TestSetupOptions:
-    def test_setup_plugin_args(self):
+    def test_setup_plugin_args(self, recwarn: pytest.WarningsRecorder):
         session = Mock()
         plugin = Mock()
         parser = ArgumentParser(add_help=False)
@@ -184,6 +185,10 @@ class TestSetupOptions:
             Argument("test2", default="default2"),
             Argument("test3")
         )
+
+        assert [(record.category, str(record.message)) for record in recwarn.list] == [
+            (StreamlinkDeprecationWarning, "Defining global plugin arguments is deprecated. Use the session options instead."),
+        ]
 
         setup_plugin_args(session, parser)
 
@@ -206,13 +211,17 @@ class TestSetupOptions:
         assert plugin.options.get("test2") == "default2"
         assert plugin.options.get("test3") is None
 
-    def test_setup_plugin_options(self):
+    def test_setup_plugin_options(self, recwarn: pytest.WarningsRecorder):
         @pluginargument("foo-foo", is_global=True)
         @pluginargument("bar-bar", default=456)
         @pluginargument("baz-baz", default=789, help=argparse.SUPPRESS)
         class FakePlugin(Plugin):
             def _get_streams(self):  # pragma: no cover
                 pass
+
+        assert [(record.category, str(record.message)) for record in recwarn.list] == [
+            (StreamlinkDeprecationWarning, "Defining global plugin arguments is deprecated. Use the session options instead."),
+        ]
 
         session = Mock()
         parser = ArgumentParser()

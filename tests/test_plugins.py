@@ -10,7 +10,6 @@ import streamlink.plugins
 import tests.plugins
 from streamlink.plugin.plugin import Matcher, Plugin
 from streamlink.utils.module import load_module
-from streamlink_cli.argparser import build_parser
 
 
 plugins_path = streamlink.plugins.__path__[0]
@@ -51,14 +50,6 @@ class TestPlugins:
     def plugin(self, request):
         return load_module(f"streamlink.plugins.{request.param}", plugins_path)
 
-    @pytest.fixture(scope="class")
-    def parser(self):
-        return build_parser()
-
-    @pytest.fixture(scope="class")
-    def global_arg_dests(self, parser):
-        return [action.dest for action in parser._actions]
-
     def test_exports_plugin(self, plugin):
         assert hasattr(plugin, "__plugin__"), "Plugin module exports __plugin__"
         assert issubclass(plugin.__plugin__, Plugin), "__plugin__ is an instance of the Plugin class"
@@ -92,9 +83,8 @@ class TestPlugins:
         assert not hasattr(pluginclass, "priority"), "Does not implement deprecated priority(url)"
         assert callable(pluginclass._get_streams), "Implements _get_streams()"
 
-    def test_has_valid_global_args(self, global_arg_dests, plugin):
-        assert all(parg.dest in global_arg_dests for parg in plugin.__plugin__.arguments or [] if parg.is_global), \
-            "All plugin arguments with is_global=True are valid global arguments"
+    def test_no_global_args(self, plugin):
+        assert not [parg for parg in plugin.__plugin__.arguments or [] if parg.is_global], "Doesn't define global arguments"
 
 
 class TestPluginTests:

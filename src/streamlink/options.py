@@ -1,4 +1,7 @@
+import warnings
 from typing import Any, Callable, ClassVar, Dict, Iterator, Mapping, Optional, Sequence, Union
+
+from streamlink.exceptions import StreamlinkDeprecationWarning
 
 
 class Options:
@@ -90,7 +93,7 @@ class Argument:
         :param sensitive: Whether the argument is sensitive (passwords, etc.) and should be masked
         :param argument_name: Custom CLI argument name without plugin name prefix
         :param dest: Custom plugin option name
-        :param is_global: Whether this plugin argument refers to a global CLI argument
+        :param is_global: Whether this plugin argument refers to a global CLI argument (deprecated)
         :param options: Arguments passed to :meth:`ArgumentParser.add_argument`, excluding ``requires`` and ``dest``
         """
 
@@ -105,6 +108,11 @@ class Argument:
         self.sensitive = sensitive
         self._default = options.get("default")
         self.is_global = is_global
+        if is_global:
+            warnings.warn(
+                "Defining global plugin arguments is deprecated. Use the session options instead.",
+                StreamlinkDeprecationWarning,
+            )
 
     @staticmethod
     def _normalize_name(name: str) -> str:
