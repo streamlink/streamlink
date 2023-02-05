@@ -13,7 +13,7 @@ Please see the [CLI documentation](https://streamlink.github.io/cli.html) for ho
 
 ## ❤️ Support
 
-If you think that Streamlink is useful and if you want to keep the project alive, then please consider supporting its maintainers by sending a small and optionally recurring tip via the [available options](https://streamlink.github.io/donate.html).  
+If you think that Streamlink is useful and if you want to keep the project alive, then please consider supporting its maintainers by sending a small and optionally recurring tip via the [available options](https://streamlink.github.io/latest/donate.html).  
 Your support is very much appreciated, thank you!
 {%- if contributors %}
 

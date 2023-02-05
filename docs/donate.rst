@@ -3,67 +3,95 @@ Donating
 
 Thank you for considering a donation to the Streamlink team!
 
-Streamlink is an organization composed of a geographically diverse group of
-individuals. Donations/tips can be sent in a variety of ways. If you would like
-to donate directly to a specific user, please review their details in the
-team section below.
+Streamlink is an organization composed of a geographically diverse group of individuals.
+Donations/tips can be sent in a variety of ways.
 
-If you would prefer to donate to the team as a whole, please use our
-`Open Collective <https://opencollective.com/streamlink>`_.
+If you want to show your support for the project and its team members by making an optionally recurring financial contribution,
+then please take a look at the most recent or past contributions to one of Streamlink's repositories, issue trackers and
+discussion forums on GitHub, and send your donations/tips directly to the people involved.
+The necessary informations can be found on the respective GitHub profile of each person.
 
-Note that donations are not tax deductible, as Streamlink does not operate as
-a charitable organization. Your donation to the team or a team member may be
-used in any way and does not come with expectations of work to be provided or
+Note that donations are not tax deductible, as Streamlink does not operate as a charitable organization.
+
+Your donation to any team member may be used in any way and does not come with expectations of work to be provided or
 as payment for future work.
 
-.. raw:: html
 
-   <a href="https://opencollective.com/streamlink" target="_blank" class="no-external-link-icon">
-     <img alt="Donate to our collective" src="https://opencollective.com/streamlink/donate/button@2x.png?color=white" width="300" height="50">
-   </a>
+Team members
+============
+
+.. rst-class:: team-members
 
 
-.. raw:: html
+- .. figure:: https://github.com/back-to.png?size=100
+     :alt: @back-to
+     :target: https://github.com/back-to
+     :width: 100
+     :height: 100
+     :align: center
 
-   <h1>Individual team member donations</h1>
+     @back-to
 
-Bastimeyer
-^^^^^^^^^^
 
-.. container:: clearfix
+- .. figure:: https://github.com/bastimeyer.png?size=100
+     :alt: @bastimeyer
+     :target: https://github.com/bastimeyer
+     :width: 100
+     :height: 100
+     :align: center
 
-   .. image:: https://github.com/bastimeyer.png?size=150
-      :class: github-avatar
+     @bastimeyer
 
-   .. container::
 
-      - `Github <https://github.com/bastimeyer>`__
-      - `Github Sponsors <https://github.com/sponsors/bastimeyer>`__
-      - `Paypal <https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=YUCGRLVALHS8C&item_name=Streamlink%20Twitch%20GUI>`__
-      - `Bitcoin <https://www.blockchain.com/btc/address/1EZg8eBz4RdPb8pEzYD9JEzr9Fyitzj8j8>`__ :code:`1EZg8eBz4RdPb8pEzYD9JEzr9Fyitzj8j8`
+- .. figure:: https://github.com/beardypig.png?size=100
+     :alt: @beardypig
+     :target: https://github.com/beardypig
+     :width: 100
+     :height: 100
+     :align: center
 
-Beardypig
-^^^^^^^^^
+     @beardypig
 
-.. container:: clearfix
 
-   .. image:: https://github.com/beardypig.png?size=150
-      :class: github-avatar
+- .. figure:: https://github.com/gravyboat.png?size=100
+     :alt: @gravyboat
+     :target: https://github.com/gravyboat
+     :width: 100
+     :height: 100
+     :align: center
 
-   .. container::
+     @gravyboat
 
-      - `Github <https://github.com/beardypig>`__
-      - `Bitcoin <https://www.blockchain.com/btc/address/1Ey3KZ9SwTj6QyASE6vgJVebUiJsW1HuRh>`__ :code:`1Ey3KZ9SwTj6QyASE6vgJVebUiJsW1HuRh`
 
-Gravyboat
-^^^^^^^^^
+- .. figure:: https://github.com/mkbloke.png?size=100
+     :alt: @mkbloke
+     :target: https://github.com/mkbloke
+     :width: 100
+     :height: 100
+     :align: center
 
-.. container:: clearfix
+     @mkbloke
 
-   .. image:: https://github.com/gravyboat.png?size=150
-      :class: github-avatar
 
-   .. container::
+Useful links
+============
 
-      - `Github <https://github.com/gravyboat>`__
-      - `Github Sponsors <https://github.com/sponsors/gravyboat>`__
+- Streamlink's GitHub releases with the changelog summary and commit history of each release:
+
+  https://github.com/streamlink/streamlink/releases
+
+- Streamlink's monthly repository activity:
+
+  https://github.com/streamlink/streamlink/pulse/monthly
+
+- All Streamlink repositories:
+
+  https://github.com/orgs/streamlink/repositories
+
+
+**Shutdown of Streamlink's Open Collective account**
+
+In 2017, Streamlink started using Open Collective as a platform in order to receive tips from financial contributors for
+supporting the team and for covering expenses. However, due to the composition of the team and the way work on this free
+open source software project is done by individual team members on a variable and voluntary basis, it was determined that
+the Open Collective account was not working as planned, and it was eventually shut down in 2023.
