@@ -288,14 +288,16 @@ table.table-custom-layout.table-custom-layout-dependencies tbody td {
   Content
 */
 
-.github-avatar {
-  float: left;
-  width: 150px;
-  height: 150px;
-  margin: 0 1rem 1rem 0;
-}
-.github-avatar + .container > ul > li {
+.team-members {
+  display: flex;
   list-style: none;
+  justify-content: space-between;
+}
+.team-members a:after {
+  display: none !important;
+}
+.team-members figcaption a.headerlink {
+  display: none;
 }
 
 section#plugins dl.field-list {
