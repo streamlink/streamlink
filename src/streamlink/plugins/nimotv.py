@@ -10,6 +10,7 @@ import re
 from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.api import useragents, validate
 from streamlink.stream.hls import HLSStream
+from streamlink.stream.http import HTTPStream
 
 log = logging.getLogger(__name__)
 
@@ -93,7 +94,8 @@ class NimoTV(Plugin):
             't': '100',
             'needwm': 1,
         }
-        url = f'{_domain}{_id}.m3u8'
+        url = f'{_domain}{_id}.flv'
+        url = url.replace('hls.nimo.tv', 'flv.nimo.tv')
         log.debug(f'URL={url}')
         for k, v in self.video_qualities.items():
             _params = params.copy()
@@ -105,7 +107,7 @@ class NimoTV(Plugin):
 
             log.trace(f'{v} params={_params!r}')
             # some qualities might not exist, but it will select a different lower quality
-            yield v, HLSStream(self.session, url, params=_params)
+            yield v, HTTPStream(self.session, url, params=_params)
 
         self.author = data['nickname']
         self.category = data['game']
