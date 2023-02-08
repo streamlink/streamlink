@@ -48,6 +48,13 @@ class TestPluginCanHandleUrlYouTube(PluginCanHandleUrl):
             "channel": "CHANNELID",
             "live": "/live",
         }),
+        (("channel", "https://www.youtube.com/user/CHANNELNAME"), {
+            "channel": "CHANNELNAME",
+        }),
+        (("channel", "https://www.youtube.com/user/CHANNELNAME/live"), {
+            "channel": "CHANNELNAME",
+            "live": "/live",
+        }),
 
         (("embed", "https://www.youtube.com/embed/aqz-KE-bpKQ"), {
             "video_id": "aqz-KE-bpKQ",
