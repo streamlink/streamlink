@@ -78,7 +78,6 @@ class NimoTV(Plugin):
             _tp = self._re_tp.search(mStreamPkg).group(1).decode('utf-8')
             _wsSecret = self._re_wsSecret.search(mStreamPkg).group(1).decode('utf-8')
             _wsTime = self._re_wsTime.search(mStreamPkg).group(1).decode('utf-8')
-            
         except AttributeError:
             log.error('invalid mStreamPkg')
             return
