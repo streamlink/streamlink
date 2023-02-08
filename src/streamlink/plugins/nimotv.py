@@ -9,7 +9,7 @@ import re
 
 from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.api import useragents, validate
-from streamlink.stream.hls import HLSStream
+from streamlink.stream.http import HTTPStream
 
 log = logging.getLogger(__name__)
 
@@ -32,6 +32,8 @@ class NimoTV(Plugin):
     _re_domain = re.compile(br'(https?:\/\/[A-Za-z]{2,3}.hls[A-Za-z\.\/]+)(?:V|&)')
     _re_id = re.compile(br'id=([^|\\]+)')
     _re_tp = re.compile(br'tp=(\d+)')
+    _re_wsSecret = re.compile(br'wsSecret=(\w+)')
+    _re_wsTime = re.compile(br'wsTime=(\w+)')
 
     def _get_streams(self):
         username = self.match.group('username')
@@ -74,6 +76,8 @@ class NimoTV(Plugin):
             _domain = self._re_domain.search(mStreamPkg).group(1).decode('utf-8')
             _id = self._re_id.search(mStreamPkg).group(1).decode('utf-8')
             _tp = self._re_tp.search(mStreamPkg).group(1).decode('utf-8')
+            _wsSecret = self._re_wsSecret.search(mStreamPkg).group(1).decode('utf-8')
+            _wsTime = self._re_wsTime.search(mStreamPkg).group(1).decode('utf-8')
         except AttributeError:
             log.error('invalid mStreamPkg')
             return
@@ -82,11 +86,14 @@ class NimoTV(Plugin):
             'appid': _appid,
             'id': _id,
             'tp': _tp,
+            'wsSecret': _wsSecret,
+            'wsTime': _wsTime,
             'u': '0',
             't': '100',
             'needwm': 1,
         }
-        url = f'{_domain}{_id}.m3u8'
+        url = f'{_domain}{_id}.flv'
+        url = url.replace('hls.nimo.tv', 'flv.nimo.tv')
         log.debug(f'URL={url}')
         for k, v in self.video_qualities.items():
             _params = params.copy()
@@ -98,7 +105,7 @@ class NimoTV(Plugin):
 
             log.trace(f'{v} params={_params!r}')
             # some qualities might not exist, but it will select a different lower quality
-            yield v, HLSStream(self.session, url, params=_params)
+            yield v, HTTPStream(self.session, url, params=_params)
 
         self.author = data['nickname']
         self.category = data['game']
