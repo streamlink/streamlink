@@ -9,7 +9,6 @@ import re
 
 from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.api import useragents, validate
-from streamlink.stream.hls import HLSStream
 from streamlink.stream.http import HTTPStream
 
 log = logging.getLogger(__name__)
