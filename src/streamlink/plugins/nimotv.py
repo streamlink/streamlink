@@ -32,6 +32,8 @@ class NimoTV(Plugin):
     _re_domain = re.compile(br'(https?:\/\/[A-Za-z]{2,3}.hls[A-Za-z\.\/]+)(?:V|&)')
     _re_id = re.compile(br'id=([^|\\]+)')
     _re_tp = re.compile(br'tp=(\d+)')
+    _re_wsSecret = re.compile(br'wsSecret=(\w+)')
+    _re_wsTime = re.compile(br'wsTime=(\w+)')
 
     def _get_streams(self):
         username = self.match.group('username')
@@ -74,6 +76,9 @@ class NimoTV(Plugin):
             _domain = self._re_domain.search(mStreamPkg).group(1).decode('utf-8')
             _id = self._re_id.search(mStreamPkg).group(1).decode('utf-8')
             _tp = self._re_tp.search(mStreamPkg).group(1).decode('utf-8')
+            _wsSecret = self._re_wsSecret.search(mStreamPkg).group(1).decode('utf-8')
+            _wsTime = self._re_wsTime.search(mStreamPkg).group(1).decode('utf-8')
+            
         except AttributeError:
             log.error('invalid mStreamPkg')
             return
@@ -82,6 +87,8 @@ class NimoTV(Plugin):
             'appid': _appid,
             'id': _id,
             'tp': _tp,
+            'wsSecret': _wsSecret,
+            'wsTime': _wsTime,
             'u': '0',
             't': '100',
             'needwm': 1,
