@@ -26,7 +26,7 @@ log = logging.getLogger(__name__)
     r"https?://(?:\w+\.)?youtube\.com/(?:v/|live/|watch\?(?:.*&)?v=)(?P<video_id>[\w-]{11})",
 ))
 @pluginmatcher(name="channel", pattern=re.compile(
-    r"https?://(?:\w+\.)?youtube\.com/(?:@|c(?:hannel)?/)?(?P<channel>[^/?]+)(?P<live>/live)?/?$",
+    r"https?://(?:\w+\.)?youtube\.com/(?:@|c(?:hannel)?/|user/)?(?P<channel>[^/?]+)(?P<live>/live)?/?$",
 ))
 @pluginmatcher(name="embed", pattern=re.compile(
     r"https?://(?:\w+\.)?youtube\.com/embed/(?:live_stream\?channel=(?P<live>[^/?&]+)|(?P<video_id>[\w-]{11}))",
