@@ -58,8 +58,10 @@ class BBCiPlayer(Plugin):
     state_re = re.compile(r"window.__IPLAYER_REDUX_STATE__\s*=\s*({.*?});</script>")
     account_locals_re = re.compile(r"window.bbcAccount.locals\s*=\s*({.*?});")
     hash = base64.b64decode(b"N2RmZjc2NzFkMGM2OTdmZWRiMWQ5MDVkOWExMjE3MTk5MzhiOTJiZg==")
-    api_url = "https://open.live.bbc.co.uk/mediaselector/6/select/version/2.0/mediaset/" \
-              "{platform}/vpid/{vpid}/format/json/atk/{vpid_hash}/asn/1/"
+    api_url = (
+        "https://open.live.bbc.co.uk/mediaselector/6/select/version/2.0/mediaset/"
+        + "{platform}/vpid/{vpid}/format/json/atk/{vpid_hash}/asn/1/"
+    )
     platforms = ("pc", "iptv-all")
     session_url = "https://session.bbc.com/session"
     auth_url = "https://account.bbc.com/signin"
@@ -184,11 +186,13 @@ class BBCiPlayer(Plugin):
         if not self.get_option("username"):
             log.error(
                 "BBC iPlayer requires an account you must login using "
-                "--bbciplayer-username and --bbciplayer-password")
+                + "--bbciplayer-username and --bbciplayer-password",
+            )
             return
         log.info(
             "A TV License is required to watch BBC iPlayer streams, see the BBC website for more "
-            "information: https://www.bbc.co.uk/iplayer/help/tvlicence")
+            + "information: https://www.bbc.co.uk/iplayer/help/tvlicence",
+        )
         if not self.login(self.url):
             log.error(
                 "Could not authenticate, check your username and password")

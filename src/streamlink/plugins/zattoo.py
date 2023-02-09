@@ -347,9 +347,7 @@ class Zattoo(Plugin):
                 self._authed = False
 
         if not self._authed and (not email and not password):
-            log.error(
-                "A login for Zattoo is required, use --zattoo-email EMAIL"
-                " --zattoo-password PASSWORD to set them")
+            log.error("A login for Zattoo is required, use --zattoo-email EMAIL --zattoo-password PASSWORD to set them")
             return
 
         if not self._authed:

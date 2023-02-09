@@ -51,9 +51,12 @@ class Streann(Plugin):
     base_url = "https://ott.streann.com"
     get_time_url = base_url + "/web/services/public/get-server-time"
     token_url = base_url + "/loadbalancer/services/web-players/{playerId}/token/{type}/{dataId}/{deviceId}"
-    stream_url = base_url + "/loadbalancer/services/web-players/{type}s-reseller-secure/{dataId}/{playerId}" \
-                            "/{token}/{resellerId}/playlist.m3u8?date={time}&device-type=web&device-name=web" \
-                            "&device-os=web&device-id={deviceId}"
+    stream_url = (
+        base_url
+        + "/loadbalancer/services/web-players/{type}s-reseller-secure/{dataId}/{playerId}"
+        + "/{token}/{resellerId}/playlist.m3u8?date={time}&device-type=web&device-name=web"
+        + "&device-os=web&device-id={deviceId}"
+    )
     passphrase_re = re.compile(r"""CryptoJS\.AES\.decrypt\(.*?,\s*(['"])(?P<passphrase>(?:(?!\1).)*)\1\s*?\);""")
 
     _device_id = None

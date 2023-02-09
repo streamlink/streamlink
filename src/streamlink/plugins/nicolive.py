@@ -186,8 +186,7 @@ class NicoLive(Plugin):
         if not wss_api_url:
             log.error(
                 "Failed to get wss_api_url. "
-                "Please check if the URL is correct, "
-                "and make sure your account has access to the video.",
+                + "Please check if the URL is correct, and make sure your account has access to the video.",
             )
             return
 

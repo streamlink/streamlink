@@ -704,26 +704,26 @@ class TestXmlElementSchema:
                 validate.xml_element(),
                 (
                     "<parent attrkey1=\"attrval1\" attrkey2=\"attrval2\">"
-                    "parenttext"
-                    "<childA a=\"1\">childAtext</childA>"
-                    "childAtail"
-                    "<childB b=\"2\">childBtext<childC/></childB>"
-                    "childBtail"
-                    "</parent>"
-                    "parenttail"
+                    + "parenttext"
+                    + "<childA a=\"1\">childAtext</childA>"
+                    + "childAtail"
+                    + "<childB b=\"2\">childBtext<childC/></childB>"
+                    + "childBtail"
+                    + "</parent>"
+                    + "parenttail"
                 ),
             ),
             (
                 validate.xml_element(tag=upper, attrib={upper: upper}, text=upper, tail=upper),
                 (
                     "<PARENT ATTRKEY1=\"ATTRVAL1\" ATTRKEY2=\"ATTRVAL2\">"
-                    "PARENTTEXT"
-                    "<childA a=\"1\">childAtext</childA>"
-                    "childAtail"
-                    "<childB b=\"2\">childBtext<childC/></childB>"
-                    "childBtail"
-                    "</PARENT>"
-                    "PARENTTAIL"
+                    + "PARENTTEXT"
+                    + "<childA a=\"1\">childAtext</childA>"
+                    + "childAtail"
+                    + "<childB b=\"2\">childBtext<childC/></childB>"
+                    + "childBtail"
+                    + "</PARENT>"
+                    + "PARENTTAIL"
                 ),
             ),
         ],

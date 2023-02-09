@@ -1,5 +1,6 @@
 import unittest
 from io import StringIO
+from textwrap import dedent
 from unittest.mock import Mock, patch
 
 from streamlink_cli.console import ConsoleOutput
@@ -39,14 +40,13 @@ class TestConsoleOutput(unittest.TestCase):
         test_obj1 = {"test": 1, "foo": "foo"}
         test_obj2 = Mock(__json__=Mock(return_value={"test": 2}))
         console.msg_json(test_obj1, test_obj2, ["qux"], foo="bar", baz="qux")
-        self.assertEqual(
-            '{\n'
-            '  "test": 2,\n'
-            '  "foo": "bar",\n'
-            '  "baz": "qux"\n'
-            '}\n',
-            output.getvalue(),
-        )
+        assert output.getvalue() == dedent("""
+            {
+              "test": 2,
+              "foo": "bar",
+              "baz": "qux"
+            }
+        """).lstrip()
         self.assertEqual([("test", 1), ("foo", "foo")], list(test_obj1.items()))
 
     def test_msg_json_merge_list(self):
@@ -55,17 +55,23 @@ class TestConsoleOutput(unittest.TestCase):
         test_list1 = ["foo", "bar"]
         test_list2 = Mock(__json__=Mock(return_value={"foo": "bar"}))
         console.msg_json(test_list1, ["baz"], test_list2, {"foo": "bar"}, foo="bar", baz="qux")
-        self.assertEqual(
-            '[\n'
-            '  "foo",\n'
-            '  "bar",\n'
-            '  "baz",\n'
-            '  {\n    "foo": "bar"\n  },\n'
-            '  {\n    "foo": "bar"\n  },\n'
-            '  {\n    "foo": "bar",\n    "baz": "qux"\n  }\n'
-            ']\n',
-            output.getvalue(),
-        )
+        assert output.getvalue() == dedent("""
+            [
+              "foo",
+              "bar",
+              "baz",
+              {
+                "foo": "bar"
+              },
+              {
+                "foo": "bar"
+              },
+              {
+                "foo": "bar",
+                "baz": "qux"
+              }
+            ]
+        """).lstrip()
         self.assertEqual(["foo", "bar"], test_list1)
 
     @patch("streamlink_cli.console.sys.exit")

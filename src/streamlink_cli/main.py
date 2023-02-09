@@ -108,11 +108,10 @@ def create_output(formatter: Formatter) -> Union[FileOutput, PlayerOutput]:
 
     elif not args.player:
         console.exit(
-            "The default player (VLC) does not seem to be "
-            "installed. You must specify the path to a player "
-            "executable with --player, a file path to save the "
-            "stream with --output, or pipe the stream to "
-            "another program with --stdout.",
+            "The default player (VLC) does not seem to be installed."
+            + " You must specify the path to a player executable with --player,"
+            + " a file path to save the stream with --output,"
+            + " or pipe the stream to another program with --stdout.",
         )
         return  # type: ignore
 
@@ -192,9 +191,10 @@ def output_stream_http(
 
     if not external:
         if not args.player:
-            console.exit("The default player (VLC) does not seem to be "
-                         "installed. You must specify the path to a player "
-                         "executable with --player.")
+            console.exit(
+                "The default player (VLC) does not seem to be installed."
+                + " You must specify the path to a player executable with --player.",
+            )
 
         server = create_http_server()
         player = output = PlayerOutput(
@@ -943,7 +943,7 @@ def main():
         usage = parser.format_usage()
         console.msg(
             f"{usage}\n"
-            f"Use -h/--help to see the available options or read the manual at https://streamlink.github.io",
+            + "Use -h/--help to see the available options or read the manual at https://streamlink.github.io",
         )
 
     sys.exit(error_code)

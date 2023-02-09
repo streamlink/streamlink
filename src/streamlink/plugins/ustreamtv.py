@@ -522,11 +522,12 @@ class UStreamTV(Plugin):
             password=self.get_option("password"),
         )
         log.debug(
-            f"Connecting to UStream API:"
-            f" media_id={media_id},"
-            f" application={application},"
-            f" referrer={self.url},"
-            f" cluster=live",
+            "Connecting to UStream API: " + ", ".join([
+                f"media_id={media_id}",
+                f"application={application}",
+                f"referrer={self.url}",
+                f"cluster={'live'}",
+            ]),
         )
         wsclient.start()
 

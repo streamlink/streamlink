@@ -82,9 +82,12 @@ select = [
   "COM",
   # flake8-comprehensions
   "C4",
+  # flake8-implicit-str-concat
+  "ISC",
 ]
 extend-ignore = [
   "C408",  # unnecessary-collection-call
+  "ISC003",  # explicit-string-concatenation
 ]
 extend-exclude = [
   "docs/conf.py",
@@ -108,6 +111,9 @@ ban-relative-imports = "all"
 
 [tool.ruff.flake8-quotes]
 avoid-escape = false
+
+[tool.ruff.flake8-implicit-str-concat]
+allow-multiline = false
 
 
 # https://mypy.readthedocs.io/en/stable/config_file.html
