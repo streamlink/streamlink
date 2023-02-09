@@ -89,10 +89,10 @@ class FileOutput(Output):
 class PlayerOutput(Output):
     PLAYER_TERMINATE_TIMEOUT = 10.0
 
-    _re_player_args_input = re.compile("|".join(map(
-        lambda const: re.escape(f"{{{const}}}"),
-        [PLAYER_ARGS_INPUT_DEFAULT, PLAYER_ARGS_INPUT_FALLBACK],
-    )))
+    _re_player_args_input = re.compile("|".join(
+        re.escape(f"{{{const}}}")
+        for const in [PLAYER_ARGS_INPUT_DEFAULT, PLAYER_ARGS_INPUT_FALLBACK]
+    ))
 
     def __init__(self, cmd, args="", filename=None, quiet=True, kill=True,
                  call=False, http=None, namedpipe=None, record=None, title=None):

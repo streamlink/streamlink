@@ -1,31 +1,15 @@
-import unittest
+import pytest
 
 from streamlink.utils.data import search_dict
 
 
-class TestUtilsData(unittest.TestCase):
-    def test_search_dict(self):
-        self.assertSequenceEqual(
-            list(search_dict(["one", "two"], "one")),
-            [],
-        )
-        self.assertSequenceEqual(
-            list(search_dict({"two": "test2"}, "one")),
-            [],
-        )
-        self.assertSequenceEqual(
-            list(search_dict({"one": "test1", "two": "test2"}, "one")),
-            ["test1"],
-        )
-        self.assertSequenceEqual(
-            list(search_dict({"one": {"inner": "test1"}, "two": "test2"}, "inner")),
-            ["test1"],
-        )
-        self.assertSequenceEqual(
-            list(search_dict({"one": [{"inner": "test1"}], "two": "test2"}, "inner")),
-            ["test1"],
-        )
-        self.assertSequenceEqual(
-            list(sorted(search_dict({"one": [{"inner": "test1"}], "two": {"inner": "test2"}}, "inner"))),
-            list(sorted(["test1", "test2"])),
-        )
+@pytest.mark.parametrize("args,expected", [
+    ((["one", "two"], "one"), []),
+    (({"two": "test2"}, "one"), []),
+    (({"one": "test1", "two": "test2"}, "one"), ["test1"]),
+    (({"one": {"inner": "test1"}, "two": "test2"}, "inner"), ["test1"]),
+    (({"one": [{"inner": "test1"}], "two": "test2"}, "inner"), ["test1"]),
+    (({"one": [{"inner": "test1"}], "two": {"inner": "test2"}}, "inner"), ["test1", "test2"]),
+])
+def test_search_dict(args, expected):
+    assert list(search_dict(*args)) == expected

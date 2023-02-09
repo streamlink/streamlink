@@ -80,6 +80,11 @@ select = [
   "Q",
   # flake8-commas
   "COM",
+  # flake8-comprehensions
+  "C4",
+]
+extend-ignore = [
+  "C408",  # unnecessary-collection-call
 ]
 extend-exclude = [
   "docs/conf.py",

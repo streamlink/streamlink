@@ -510,7 +510,7 @@ class MuxedHLSStream(MuxedStream):
             else:
                 tracks.append(audio)
         maps.extend(f"{i}:a" for i in range(1, len(tracks)))
-        substreams = map(lambda url: HLSStream(session, url, force_restart=force_restart, **args), tracks)
+        substreams = [HLSStream(session, url, force_restart=force_restart, **args) for url in tracks]
         ffmpeg_options = ffmpeg_options or {}
 
         super().__init__(session, *substreams, format="mpegts", maps=maps, **ffmpeg_options)

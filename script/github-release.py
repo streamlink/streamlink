@@ -344,7 +344,7 @@ class GitHubAPI:
                 authors[email].commits += 1
 
         # sort by commits in descending order and by login name in ascending order
-        return sorted(
+        return sorted(  # noqa: C414
             sorted(
                 authors.values(),
                 key=lambda author: author.name,
