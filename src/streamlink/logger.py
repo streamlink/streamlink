@@ -6,7 +6,8 @@ from logging import CRITICAL, DEBUG, ERROR, INFO, WARNING
 from pathlib import Path
 from sys import version_info
 from threading import Lock
-from typing import IO, Iterator, List, Optional, TYPE_CHECKING, Union
+from typing import IO, TYPE_CHECKING, Iterator, List, Optional, Union
+
 # noinspection PyProtectedMember
 from warnings import WarningMessage
 

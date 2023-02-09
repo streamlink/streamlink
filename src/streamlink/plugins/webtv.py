@@ -18,6 +18,7 @@ from streamlink.utils.crypto import unpad_pkcs5
 from streamlink.utils.parse import parse_json
 from streamlink.utils.url import update_scheme
 
+
 log = logging.getLogger(__name__)
 
 

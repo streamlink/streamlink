@@ -10,6 +10,7 @@ import re
 from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.stream.hls import HLSStream
 
+
 # URL to the RUV LIVE API
 RUV_LIVE_API = """http://www.ruv.is/sites/all/themes/at_ruv/scripts/\
 ruv-stream.php?channel={0}&format=json"""

@@ -6,6 +6,7 @@ from streamlink.plugin.plugin import LOW_PRIORITY, parse_params, stream_weight
 from streamlink.stream.dash import DASHStream
 from streamlink.utils.url import update_scheme
 
+
 log = logging.getLogger(__name__)
 
 

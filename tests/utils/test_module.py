@@ -4,6 +4,7 @@ import unittest
 
 from streamlink.utils.module import load_module
 
+
 # used in the import test to verify that this module was imported
 __test_marker__ = "test_marker"
 

@@ -25,6 +25,7 @@ from streamlink.plugin.api import useragents, validate
 from streamlink.stream.hls import HLSStream, HLSStreamReader, HLSStreamWriter
 from streamlink.utils.url import update_qsd
 
+
 log = logging.getLogger(__name__)
 
 

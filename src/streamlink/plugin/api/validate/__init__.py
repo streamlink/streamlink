@@ -1,45 +1,46 @@
 from typing import TYPE_CHECKING
 
 # noinspection PyPep8Naming,PyShadowingBuiltins
-from streamlink.plugin.api.validate._schemas import (  # noqa: I101, F401
-    SchemaContainer,
+from streamlink.plugin.api.validate._schemas import (
     AllSchema as all,
     AnySchema as any,
-    NoneOrAllSchema as none_or_all,
-    ListSchema as list,
-    RegexSchema as regex,
-    TransformSchema as transform,
-    OptionalSchema as optional,
-    GetItemSchema as get,
     AttrSchema as attr,
-    UnionSchema as union,
+    GetItemSchema as get,
+    ListSchema as list,
+    NoneOrAllSchema as none_or_all,
+    OptionalSchema as optional,
+    RegexSchema as regex,
+    SchemaContainer,
+    TransformSchema as transform,
     UnionGetSchema as union_get,
+    UnionSchema as union,
     XmlElementSchema as xml_element,
 )
-from streamlink.plugin.api.validate._validate import (  # noqa: F401
+from streamlink.plugin.api.validate._validate import (
     Schema,
     validate,
 )
+
 # noinspection PyShadowingBuiltins
-from streamlink.plugin.api.validate._validators import (  # noqa: I101, F401
-    validator_length as length,
-    validator_startswith as startswith,
-    validator_endswith as endswith,
+from streamlink.plugin.api.validate._validators import (
     validator_contains as contains,
-    validator_url as url,
+    validator_endswith as endswith,
+    validator_filter as filter,
     validator_getattr as getattr,
     validator_hasattr as hasattr,
-    validator_filter as filter,
+    validator_length as length,
     validator_map as map,
+    validator_parse_html as parse_html,
+    validator_parse_json as parse_json,
+    validator_parse_qsd as parse_qsd,
+    validator_parse_xml as parse_xml,
+    validator_startswith as startswith,
+    validator_url as url,
     validator_xml_find as xml_find,
     validator_xml_findall as xml_findall,
     validator_xml_findtext as xml_findtext,
     validator_xml_xpath as xml_xpath,
     validator_xml_xpath_string as xml_xpath_string,
-    validator_parse_json as parse_json,
-    validator_parse_html as parse_html,
-    validator_parse_xml as parse_xml,
-    validator_parse_qsd as parse_qsd,
 )
 
 
@@ -59,6 +60,7 @@ def _deprecations():
     def __getattr__(_attr: str):
         if _attr in deprecations:
             import warnings
+
             from streamlink.exceptions import StreamlinkDeprecationWarning
 
             val, msg = deprecations[_attr]

@@ -10,7 +10,7 @@ from dataclasses import dataclass
 from os import getenv
 from pathlib import Path
 from pprint import pformat
-from typing import Any, IO, Literal, NewType, Optional
+from typing import IO, Any, Literal, NewType, Optional
 
 # noinspection PyPackageRequirements
 import jinja2

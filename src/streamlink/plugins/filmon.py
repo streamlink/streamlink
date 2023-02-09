@@ -18,6 +18,7 @@ from streamlink.plugin.api.http_session import TLSSecLevel1Adapter
 from streamlink.stream.hls import HLSStream, HLSStreamReader, HLSStreamWorker
 from streamlink.stream.http import HTTPStream
 
+
 log = logging.getLogger(__name__)
 
 _StreamData = Tuple[str, str, int]

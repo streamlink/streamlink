@@ -1,4 +1,4 @@
-from importlib.machinery import FileFinder, SOURCE_SUFFIXES, SourceFileLoader
+from importlib.machinery import SOURCE_SUFFIXES, FileFinder, SourceFileLoader
 from importlib.util import module_from_spec
 
 

@@ -9,6 +9,7 @@ from typing import Any, Optional
 from streamlink.buffers import RingBuffer
 from streamlink.stream.stream import Stream, StreamIO
 
+
 log = logging.getLogger(__name__)
 
 

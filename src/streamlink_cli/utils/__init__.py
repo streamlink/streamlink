@@ -5,6 +5,7 @@ from streamlink_cli.utils.formatter import Formatter
 from streamlink_cli.utils.http_server import HTTPServer
 from streamlink_cli.utils.player import find_default_player
 
+
 __all__ = [
     "Formatter", "HTTPServer", "JSONEncoder",
     "datetime",

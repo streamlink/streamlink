@@ -10,6 +10,7 @@ from typing import Any, Dict, Optional, Union
 
 from streamlink.compat import is_win32
 
+
 if is_win32:
     xdg_cache = os.environ.get("APPDATA", os.path.expanduser("~"))
 else:

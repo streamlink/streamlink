@@ -11,6 +11,7 @@ from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.stream.hls import HLSStream
 from streamlink.utils.parse import parse_json
 
+
 log = logging.getLogger(__name__)
 
 HLS_URL_FORMAT = "https://hls.goodgame.ru/hls/{0}{1}.m3u8"

@@ -18,6 +18,7 @@ from streamlink.stream.dash import DASHStream
 from streamlink.stream.hls import HLSStream
 from streamlink.utils.parse import parse_json
 
+
 log = logging.getLogger(__name__)
 
 

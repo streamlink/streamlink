@@ -21,6 +21,7 @@ from streamlink.stream.hls import HLSStream
 from streamlink.utils.crypto import decrypt_openssl
 from streamlink.utils.parse import parse_qsd
 
+
 log = logging.getLogger(__name__)
 
 

@@ -1,5 +1,6 @@
 import re
 
+
 _hours_minutes_seconds_re = re.compile(r"""
     ^-?(?:(?P<hours>\d+):)?(?P<minutes>\d+):(?P<seconds>\d+)$
 """, re.VERBOSE)

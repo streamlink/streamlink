@@ -7,4 +7,5 @@
 from streamlink.exceptions import NoPluginError, NoStreamsError, PluginError
 from streamlink.plugin.plugin import Plugin
 
+
 __all__ = ['Plugin', 'PluginError', 'NoStreamsError', 'NoPluginError']

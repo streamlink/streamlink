@@ -14,6 +14,7 @@ from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.api import validate
 from streamlink.stream.http import HTTPStream
 
+
 log = logging.getLogger(__name__)
 
 

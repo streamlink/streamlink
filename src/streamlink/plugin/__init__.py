@@ -3,12 +3,13 @@ from streamlink.options import Argument as PluginArgument, Arguments as PluginAr
 from streamlink.plugin.plugin import (
     HIGH_PRIORITY,
     LOW_PRIORITY,
-    NORMAL_PRIORITY,
     NO_PRIORITY,
+    NORMAL_PRIORITY,
     Plugin,
     pluginargument,
     pluginmatcher,
 )
+
 
 __all__ = [
     "HIGH_PRIORITY", "NORMAL_PRIORITY", "LOW_PRIORITY", "NO_PRIORITY",

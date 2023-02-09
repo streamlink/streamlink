@@ -72,6 +72,10 @@ select = [
   "W",
   # pyflakes
   "F",
+  # isort
+  "I",
+  # flake8-tidy-imports
+  "TID",
 ]
 extend-exclude = [
   "docs/conf.py",
@@ -81,7 +85,17 @@ extend-exclude = [
 
 [tool.ruff.per-file-ignores]
 "__init__.py" = ["F401"]
+"src/streamlink/__init__.py" = ["I"]
+"src/streamlink/_version.py" = ["I"]
 "src/streamlink/plugin/api/useragents.py" = ["E501"]
+
+[tool.ruff.isort]
+known-first-party = ["streamlink", "streamlink_cli"]
+lines-after-imports = 2
+combine-as-imports = true
+
+[tool.ruff.flake8-tidy-imports]
+ban-relative-imports = "all"
 
 
 # https://mypy.readthedocs.io/en/stable/config_file.html

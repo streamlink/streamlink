@@ -9,6 +9,7 @@ import re
 from docutils import nodes
 from docutils.transforms import Transform
 
+
 GITHUB_ISSUE_URL = "https://github.com/{0}/issues/{1}"
 GITHUB_USER_URL = "https://github.com/{1}"
 

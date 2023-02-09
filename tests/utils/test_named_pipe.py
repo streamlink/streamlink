@@ -5,8 +5,9 @@ from unittest.mock import Mock, call, patch
 from streamlink.utils.named_pipe import NamedPipe, NamedPipeBase, NamedPipePosix, NamedPipeWindows
 from tests import posix_only, windows_only
 
+
 try:
-    from ctypes import windll, create_string_buffer, c_ulong, byref  # type: ignore[attr-defined]
+    from ctypes import byref, c_ulong, create_string_buffer, windll  # type: ignore[attr-defined]
 except ImportError:
     pass
 

@@ -12,6 +12,7 @@ from streamlink.plugin.api import validate
 from streamlink.stream.hls import HLSStream
 from streamlink.utils.url import update_qsd
 
+
 log = logging.getLogger(__name__)
 
 

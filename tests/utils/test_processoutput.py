@@ -8,6 +8,7 @@ import pytest_asyncio
 
 from streamlink.utils.processoutput import ProcessOutput
 
+
 try:
     from unittest.mock import AsyncMock, Mock, call, patch  # type: ignore
 except ImportError:

@@ -19,6 +19,7 @@ from streamlink.utils.parse import parse_json
 from streamlink.utils.times import hours_minutes_seconds
 from streamlink.utils.url import update_qsd
 
+
 log = logging.getLogger(__name__)
 
 

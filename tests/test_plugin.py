@@ -17,8 +17,9 @@ from streamlink.plugin import (
     pluginargument,
     pluginmatcher,
 )
+
 # noinspection PyProtectedMember
-from streamlink.plugin.plugin import Matcher, _COOKIE_KEYS
+from streamlink.plugin.plugin import _COOKIE_KEYS, Matcher
 from streamlink.session import Streamlink
 
 

@@ -5,7 +5,7 @@ import freezegun
 import pytest
 
 from streamlink import Streamlink
-from streamlink.plugins.filmon import FilmOnAPI, FilmOnHLS, Filmon
+from streamlink.plugins.filmon import Filmon, FilmOnAPI, FilmOnHLS
 from tests.plugins import PluginCanHandleUrl
 
 

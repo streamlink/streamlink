@@ -12,6 +12,7 @@ from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.api import validate
 from streamlink.stream.http import HTTPStream
 
+
 log = logging.getLogger(__name__)
 
 API_URL = "https://api.live.bilibili.com/room/v1/Room/playUrl"
