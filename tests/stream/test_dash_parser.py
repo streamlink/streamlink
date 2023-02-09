@@ -80,9 +80,9 @@ class TestMPDParser(unittest.TestCase):
             video_segments = list(map(attrgetter("url"), (itertools.islice(segments, 5))))
             # suggested delay is 11 seconds, each segment is 5 seconds long - so there should be 3
             self.assertSequenceEqual(video_segments,
-                                     ['http://test.se/tracks-v3/dvr-1526842800-698.g_m4v?t=3403000',
-                                      'http://test.se/tracks-v3/dvr-1526842800-699.g_m4v?t=3408000',
-                                      'http://test.se/tracks-v3/dvr-1526842800-700.g_m4v?t=3413000'])
+                                     ["http://test.se/tracks-v3/dvr-1526842800-698.g_m4v?t=3403000",
+                                      "http://test.se/tracks-v3/dvr-1526842800-699.g_m4v?t=3408000",
+                                      "http://test.se/tracks-v3/dvr-1526842800-700.g_m4v?t=3413000"])
 
     def test_segments_static_number(self):
         with xml("dash/test_2.mpd") as mpd_xml:
@@ -95,11 +95,11 @@ class TestMPDParser(unittest.TestCase):
             video_segments = list(map(attrgetter("url"), (itertools.islice(segments, 100000))))
             self.assertEqual(len(video_segments), 444)
             self.assertSequenceEqual(video_segments[:5],
-                                     ['http://test.se/video/250kbit/segment_1.m4s',
-                                      'http://test.se/video/250kbit/segment_2.m4s',
-                                      'http://test.se/video/250kbit/segment_3.m4s',
-                                      'http://test.se/video/250kbit/segment_4.m4s',
-                                      'http://test.se/video/250kbit/segment_5.m4s'])
+                                     ["http://test.se/video/250kbit/segment_1.m4s",
+                                      "http://test.se/video/250kbit/segment_2.m4s",
+                                      "http://test.se/video/250kbit/segment_3.m4s",
+                                      "http://test.se/video/250kbit/segment_4.m4s",
+                                      "http://test.se/video/250kbit/segment_5.m4s"])
 
     def test_segments_dynamic_time(self):
         with xml("dash/test_3.mpd") as mpd_xml:
@@ -112,7 +112,7 @@ class TestMPDParser(unittest.TestCase):
             video_segments = list(map(attrgetter("url"), (itertools.islice(segments, 3))))
             # default suggested delay is 3 seconds, each segment is 4 seconds long - so there should be 1 segment
             self.assertSequenceEqual(video_segments,
-                                     ['http://test.se/video-time=1525450872000-2800000-0.m4s?z32='])
+                                     ["http://test.se/video-time=1525450872000-2800000-0.m4s?z32="])
 
     def test_segments_dynamic_number(self):
         with freeze_time(FakeDatetime(2018, 5, 22, 13, 37, 0, tzinfo=utc)):
@@ -130,11 +130,11 @@ class TestMPDParser(unittest.TestCase):
                                            seg.available_at))
 
                 self.assertSequenceEqual(video_segments,
-                                         [('http://test.se/hd-5_000311235.mp4',
+                                         [("http://test.se/hd-5_000311235.mp4",
                                            datetime.datetime(2018, 5, 22, 13, 37, 0, tzinfo=utc)),
-                                          ('http://test.se/hd-5_000311236.mp4',
+                                          ("http://test.se/hd-5_000311236.mp4",
                                            datetime.datetime(2018, 5, 22, 13, 37, 5, tzinfo=utc)),
-                                          ('http://test.se/hd-5_000311237.mp4',
+                                          ("http://test.se/hd-5_000311237.mp4",
                                            datetime.datetime(2018, 5, 22, 13, 37, 10, tzinfo=utc))
                                           ])
 
@@ -148,9 +148,9 @@ class TestMPDParser(unittest.TestCase):
 
             video_segments = [x.url for x in itertools.islice(segments, 3)]
             self.assertSequenceEqual(video_segments,
-                                     ['http://test.se/dash/150633-video_eng=194000-0.dash',
-                                      'http://test.se/dash/150633-video_eng=194000-2000.dash',
-                                      'http://test.se/dash/150633-video_eng=194000-4000.dash',
+                                     ["http://test.se/dash/150633-video_eng=194000-0.dash",
+                                      "http://test.se/dash/150633-video_eng=194000-2000.dash",
+                                      "http://test.se/dash/150633-video_eng=194000-4000.dash",
                                       ])
 
     def test_segments_list(self):
@@ -163,9 +163,9 @@ class TestMPDParser(unittest.TestCase):
 
             video_segments = [x.url for x in itertools.islice(segments, 3)]
             self.assertSequenceEqual(video_segments,
-                                     ['http://test.se/chunk_ctvideo_ridp0va0br4332748_cn1_mpd.m4s',
-                                      'http://test.se/chunk_ctvideo_ridp0va0br4332748_cn2_mpd.m4s',
-                                      'http://test.se/chunk_ctvideo_ridp0va0br4332748_cn3_mpd.m4s',
+                                     ["http://test.se/chunk_ctvideo_ridp0va0br4332748_cn1_mpd.m4s",
+                                      "http://test.se/chunk_ctvideo_ridp0va0br4332748_cn2_mpd.m4s",
+                                      "http://test.se/chunk_ctvideo_ridp0va0br4332748_cn3_mpd.m4s",
                                       ])
 
     def test_segments_dynamic_timeline_continue(self):
@@ -179,11 +179,11 @@ class TestMPDParser(unittest.TestCase):
 
                 video_segments_p1 = [x.url for x in itertools.islice(segments_p1, 100)]
                 self.assertSequenceEqual(video_segments_p1,
-                                         ['http://test.se/video/1006000.mp4',
-                                          'http://test.se/video/1007000.mp4',
-                                          'http://test.se/video/1008000.mp4',
-                                          'http://test.se/video/1009000.mp4',
-                                          'http://test.se/video/1010000.mp4'])
+                                         ["http://test.se/video/1006000.mp4",
+                                          "http://test.se/video/1007000.mp4",
+                                          "http://test.se/video/1008000.mp4",
+                                          "http://test.se/video/1009000.mp4",
+                                          "http://test.se/video/1010000.mp4"])
 
                 # Continue in the next manifest
                 mpd_p2 = MPD(mpd_xml_p2,
@@ -194,11 +194,11 @@ class TestMPDParser(unittest.TestCase):
                 segments_p2 = mpd_p2.periods[0].adaptationSets[0].representations[0].segments(init=False)
                 video_segments_p2 = [x.url for x in itertools.islice(segments_p2, 100)]
                 self.assertSequenceEqual(video_segments_p2,
-                                         ['http://test.se/video/1011000.mp4',
-                                          'http://test.se/video/1012000.mp4',
-                                          'http://test.se/video/1013000.mp4',
-                                          'http://test.se/video/1014000.mp4',
-                                          'http://test.se/video/1015000.mp4'])
+                                         ["http://test.se/video/1011000.mp4",
+                                          "http://test.se/video/1012000.mp4",
+                                          "http://test.se/video/1013000.mp4",
+                                          "http://test.se/video/1014000.mp4",
+                                          "http://test.se/video/1015000.mp4"])
 
     def test_tsegment_t_is_none_1895(self):
         """
@@ -213,9 +213,9 @@ class TestMPDParser(unittest.TestCase):
 
             video_segments = [x.url for x in itertools.islice(segments, 3)]
             self.assertSequenceEqual(video_segments,
-                                     ['http://test.se/video-time=0-2799000-0.m4s?z32=CENSORED_SESSION',
-                                      'http://test.se/video-time=4000-2799000-0.m4s?z32=CENSORED_SESSION',
-                                      'http://test.se/video-time=8000-2799000-0.m4s?z32=CENSORED_SESSION',
+                                     ["http://test.se/video-time=0-2799000-0.m4s?z32=CENSORED_SESSION",
+                                      "http://test.se/video-time=4000-2799000-0.m4s?z32=CENSORED_SESSION",
+                                      "http://test.se/video-time=8000-2799000-0.m4s?z32=CENSORED_SESSION",
                                       ])
 
     def test_bitrate_rounded(self):

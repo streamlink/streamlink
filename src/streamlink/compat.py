@@ -13,7 +13,7 @@ try:
         return DEVNULL
 except ImportError:
     def devnull():
-        return open(os.path.devnull, 'w')
+        return open(os.path.devnull, "w")
 
 
 __all__ = [

@@ -383,7 +383,7 @@ class SegmentTemplate(MPDNode):
 
     def __init__(self, node, root=None, parent=None, *args, **kwargs):
         super().__init__(node, root, parent, *args, **kwargs)
-        self.defaultSegmentTemplate = self.walk_back_get_attr('segmentTemplate')
+        self.defaultSegmentTemplate = self.walk_back_get_attr("segmentTemplate")
 
         self.initialization = self.attr("initialization", parser=MPDParsers.segment_template)
         self.media = self.attr("media", parser=MPDParsers.segment_template)

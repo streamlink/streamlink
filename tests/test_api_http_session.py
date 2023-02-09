@@ -65,7 +65,7 @@ class TestPluginAPIHTTPSession(unittest.TestCase):
 
         # encode the json string with each encoding and assert that the correct one is detected
         for encoding in ["UTF-32BE", "UTF-32LE", "UTF-16BE", "UTF-16LE", "UTF-8"]:
-            with patch('requests.Response.content', new_callable=PropertyMock) as mock_content:
+            with patch("requests.Response.content", new_callable=PropertyMock) as mock_content:
                 mock_content.return_value = json_str.encode(encoding)
                 res = requests.Response()
 
@@ -74,7 +74,7 @@ class TestPluginAPIHTTPSession(unittest.TestCase):
     def test_json_encoding_override(self):
         json_text = "{\"test\": \"Α and Ω\"}".encode("cp949")
 
-        with patch('requests.Response.content', new_callable=PropertyMock) as mock_content:
+        with patch("requests.Response.content", new_callable=PropertyMock) as mock_content:
             mock_content.return_value = json_text
             res = requests.Response()
             res.encoding = "cp949"

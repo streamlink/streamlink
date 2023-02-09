@@ -19,7 +19,7 @@ log = logging.getLogger(__name__)
     r"https?://news\.now\.com/home/live"
 ))
 class NowNews(Plugin):
-    epg_re = re.compile(r'''epg.getEPG\("(\d+)"\);''')
+    epg_re = re.compile(r"""epg.getEPG\("(\d+)"\);""")
     api_url = "https://hkt-mobile-api.nowtv.now.com/09/1/getLiveURL"
     backup_332_api = "https://d7lz7jwg8uwgn.cloudfront.net/apps_resource/news/live.json"
     backup_332_stream = "https://d3i3yn6xwv1jpw.cloudfront.net/live/now332/playlist.m3u8"
@@ -40,7 +40,7 @@ class NowNews(Plugin):
                     return HLSStream.parse_variant_playlist(self.session, self.backup_332_stream)
 
             api_res = self.session.http.post(self.api_url,
-                                             headers={"Content-Type": 'application/json'},
+                                             headers={"Content-Type": "application/json"},
                                              data=json.dumps(dict(channelno=channel_id,
                                                                   mode="prod",
                                                                   audioCode="",

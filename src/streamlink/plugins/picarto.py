@@ -89,20 +89,20 @@ class Picarto(Plugin):
 
     def get_vod(self, vod_id):
         data = {
-            'query': (
-                'query ($videoId: ID!) {\n'
-                '  video(id: $videoId) {\n'
-                '    id\n'
-                '    title\n'
-                '    file_name\n'
-                '    video_recording_image_url\n'
-                '    channel {\n'
-                '      name\n'
-                '      }'
-                '  }\n'
-                '}\n'
+            "query": (
+                "query ($videoId: ID!) {\n"
+                "  video(id: $videoId) {\n"
+                "    id\n"
+                "    title\n"
+                "    file_name\n"
+                "    video_recording_image_url\n"
+                "    channel {\n"
+                "      name\n"
+                "      }"
+                "  }\n"
+                "}\n"
             ),
-            'variables': {'videoId': vod_id},
+            "variables": {"videoId": vod_id},
         }
         vod_data = self.session.http.post(self.API_URL_VOD, json=data, schema=validate.Schema(
             validate.parse_json(),
@@ -139,12 +139,12 @@ class Picarto(Plugin):
     def _get_streams(self):
         m = self.match.groupdict()
 
-        if m['po_vod_id'] or m['vod_id']:
-            log.debug('Type=VOD')
-            return self.get_vod(m['po_vod_id'] or m['vod_id'])
-        elif m['po_user'] or m['user']:
-            log.debug('Type=Live')
-            return self.get_live(m['po_user'] or m['user'])
+        if m["po_vod_id"] or m["vod_id"]:
+            log.debug("Type=VOD")
+            return self.get_vod(m["po_vod_id"] or m["vod_id"])
+        elif m["po_user"] or m["user"]:
+            log.debug("Type=Live")
+            return self.get_live(m["po_user"] or m["user"])
 
 
 __plugin__ = Picarto

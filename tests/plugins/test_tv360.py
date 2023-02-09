@@ -6,5 +6,5 @@ class TestPluginCanHandleUrlTV360(PluginCanHandleUrl):
     __plugin__ = TV360
 
     should_match = [
-        'http://tv360.com.tr/canli-yayin',
+        "http://tv360.com.tr/canli-yayin",
     ]

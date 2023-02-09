@@ -6,5 +6,5 @@ class TestPluginCanHandleUrlFoxTR(PluginCanHandleUrl):
     __plugin__ = FoxTR
 
     should_match = [
-        'http://www.fox.com.tr/canli-yayin',
+        "http://www.fox.com.tr/canli-yayin",
     ]

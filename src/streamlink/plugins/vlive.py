@@ -46,37 +46,37 @@ class Vlive(Plugin):
             ),
         ))
         if video_json is None:
-            log.error('Could not parse video page')
+            log.error("Could not parse video page")
             return
 
-        err = video_json.get('errorCode')
-        if err == 'common_700':
-            log.error('Available only to members of the channel')
+        err = video_json.get("errorCode")
+        if err == "common_700":
+            log.error("Available only to members of the channel")
             return
-        elif err == 'common_702':
-            log.error('Vlive+ VODs are not supported')
+        elif err == "common_702":
+            log.error("Vlive+ VODs are not supported")
             return
-        elif err == 'common_404':
-            log.error('Could not find video page')
+        elif err == "common_404":
+            log.error("Could not find video page")
             return
         elif err is not None:
-            log.error('Unknown error code: {0}'.format(err))
+            log.error("Unknown error code: {0}".format(err))
             return
 
-        if video_json['type'] == 'VOD':
-            log.error('VODs are not supported')
+        if video_json["type"] == "VOD":
+            log.error("VODs are not supported")
             return
 
         url_format, video_id = self.match.groups()
-        if url_format == 'post':
-            video_id = str(video_json['videoSeq'])
+        if url_format == "post":
+            video_id = str(video_json["videoSeq"])
 
-        video_status = video_json.get('status')
-        if video_status == 'ENDED':
-            log.error('Stream has ended')
+        video_status = video_json.get("status")
+        if video_status == "ENDED":
+            log.error("Stream has ended")
             return
-        elif video_status != 'ON_AIR':
-            log.error('Unknown video status: {0}'.format(video_status))
+        elif video_status != "ON_AIR":
+            log.error("Unknown video status: {0}".format(video_status))
             return
 
         stream_url = self.session.http.get(

@@ -91,7 +91,7 @@ def test_update_qsd():
     assert update_qsd("http://test.se?one=", keep_blank_values=False) == "http://test.se", "should strip blank params"
     assert update_qsd("http://test.se?one=&two=", {"one": None}, keep_blank_values=False) == "http://test.se?one=", \
         "should leave one"
-    assert update_qsd("http://test.se?&two=", {"one": ''}, keep_blank_values=False) == "http://test.se?one=", \
+    assert update_qsd("http://test.se?&two=", {"one": ""}, keep_blank_values=False) == "http://test.se?one=", \
         "should set one blank"
     assert update_qsd("http://test.se?one=", {"two": 2}) == "http://test.se?one=&two=2"
 

@@ -88,12 +88,12 @@ class ArgumentParser(argparse.ArgumentParser):
         # raise an exception if we weren't able to find a match
         if match is None:
             nargs_errors = {
-                None: argparse._('expected one argument'),
-                argparse.OPTIONAL: argparse._('expected at most one argument'),
-                argparse.ONE_OR_MORE: argparse._('expected at least one argument'),
+                None: argparse._("expected one argument"),
+                argparse.OPTIONAL: argparse._("expected at most one argument"),
+                argparse.ONE_OR_MORE: argparse._("expected at least one argument"),
             }
-            default = argparse.ngettext('expected %s argument',
-                                        'expected %s arguments',
+            default = argparse.ngettext("expected %s argument",
+                                        "expected %s arguments",
                                         action.nargs) % action.nargs
             msg = nargs_errors.get(action.nargs, default)
             raise argparse.ArgumentError(action, msg)

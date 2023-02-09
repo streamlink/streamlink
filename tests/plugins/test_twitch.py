@@ -47,8 +47,8 @@ class TestPluginCanHandleUrlTwitch(PluginCanHandleUrl):
     ]
 
     should_not_match = [
-        'https://www.twitch.tv',
-        'https://www.twitch.tv/',
+        "https://www.twitch.tv",
+        "https://www.twitch.tv/",
     ]
 
 

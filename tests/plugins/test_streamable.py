@@ -6,5 +6,5 @@ class TestPluginCanHandleUrlStreamable(PluginCanHandleUrl):
     __plugin__ = Streamable
 
     should_match = [
-        'https://streamable.com/example',
+        "https://streamable.com/example",
     ]

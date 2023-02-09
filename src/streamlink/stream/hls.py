@@ -408,7 +408,7 @@ class HLSStreamWorker(SegmentedStreamWorker):
         try:
             self.reload_playlist()
         except StreamError as err:
-            log.error(f'{err}')
+            log.error(f"{err}")
             self.reader.close()
             return
 

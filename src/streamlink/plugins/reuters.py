@@ -17,7 +17,7 @@ log = logging.getLogger(__name__)
 
 
 @pluginmatcher(re.compile(
-    r'https?://([\w-]+\.)*reuters\.(com|tv)'
+    r"https?://([\w-]+\.)*reuters\.(com|tv)"
 ))
 class Reuters(Plugin):
     def _get_data(self):

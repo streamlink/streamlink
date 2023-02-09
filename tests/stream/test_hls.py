@@ -577,7 +577,7 @@ class TestHlsPlaylistParseErrors(TestMixinStreamHLS, unittest.TestCase):
         self.assertEqual(mock_log.error.mock_calls, [call("Streams containing I-frames only are not playable")])
 
 
-@patch('streamlink.stream.hls.FFMPEGMuxer.is_usable', Mock(return_value=True))
+@patch("streamlink.stream.hls.FFMPEGMuxer.is_usable", Mock(return_value=True))
 class TestHlsExtAudio(unittest.TestCase):
     @property
     def playlist(self):
@@ -597,12 +597,12 @@ class TestHlsExtAudio(unittest.TestCase):
 
         with requests_mock.Mocker() as mock:
             mock.get(master_url, text=self.playlist)
-            master_stream = self.run_streamlink(master_url)['video']
+            master_stream = self.run_streamlink(master_url)["video"]
 
         with pytest.raises(AttributeError):
             master_stream.substreams
 
-        assert master_stream.url == 'http://mocked/path/playlist.m3u8'
+        assert master_stream.url == "http://mocked/path/playlist.m3u8"
 
     def test_hls_ext_audio_en(self):
         """
@@ -611,13 +611,13 @@ class TestHlsExtAudio(unittest.TestCase):
         """
 
         master_url = "http://mocked/path/master.m3u8"
-        expected = ['http://mocked/path/playlist.m3u8', 'http://mocked/path/en.m3u8']
+        expected = ["http://mocked/path/playlist.m3u8", "http://mocked/path/en.m3u8"]
 
         with requests_mock.Mocker() as mock:
             mock.get(master_url, text=self.playlist)
-            master_stream = self.run_streamlink(master_url, 'en')
+            master_stream = self.run_streamlink(master_url, "en")
 
-        substreams = master_stream['video'].substreams
+        substreams = master_stream["video"].substreams
         result = [x.url for x in substreams]
 
         # Check result
@@ -630,13 +630,13 @@ class TestHlsExtAudio(unittest.TestCase):
         """
 
         master_url = "http://mocked/path/master.m3u8"
-        expected = ['http://mocked/path/playlist.m3u8', 'http://mocked/path/es.m3u8']
+        expected = ["http://mocked/path/playlist.m3u8", "http://mocked/path/es.m3u8"]
 
         with requests_mock.Mocker() as mock:
             mock.get(master_url, text=self.playlist)
-            master_stream = self.run_streamlink(master_url, 'es')
+            master_stream = self.run_streamlink(master_url, "es")
 
-        substreams = master_stream['video'].substreams
+        substreams = master_stream["video"].substreams
 
         result = [x.url for x in substreams]
 
@@ -650,13 +650,13 @@ class TestHlsExtAudio(unittest.TestCase):
         """
 
         master_url = "http://mocked/path/master.m3u8"
-        expected = ['http://mocked/path/playlist.m3u8', 'http://mocked/path/en.m3u8', 'http://mocked/path/es.m3u8']
+        expected = ["http://mocked/path/playlist.m3u8", "http://mocked/path/en.m3u8", "http://mocked/path/es.m3u8"]
 
         with requests_mock.Mocker() as mock:
             mock.get(master_url, text=self.playlist)
-            master_stream = self.run_streamlink(master_url, 'en,es')
+            master_stream = self.run_streamlink(master_url, "en,es")
 
-        substreams = master_stream['video'].substreams
+        substreams = master_stream["video"].substreams
 
         result = [x.url for x in substreams]
 
@@ -665,13 +665,13 @@ class TestHlsExtAudio(unittest.TestCase):
 
     def test_hls_ext_audio_wildcard(self):
         master_url = "http://mocked/path/master.m3u8"
-        expected = ['http://mocked/path/playlist.m3u8', 'http://mocked/path/en.m3u8', 'http://mocked/path/es.m3u8']
+        expected = ["http://mocked/path/playlist.m3u8", "http://mocked/path/en.m3u8", "http://mocked/path/es.m3u8"]
 
         with requests_mock.Mocker() as mock:
             mock.get(master_url, text=self.playlist)
-            master_stream = self.run_streamlink(master_url, '*')
+            master_stream = self.run_streamlink(master_url, "*")
 
-        substreams = master_stream['video'].substreams
+        substreams = master_stream["video"].substreams
 
         result = [x.url for x in substreams]
 

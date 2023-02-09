@@ -11,11 +11,11 @@ class TestCommandLineWithTitlePOSIX(CommandLineTestCase):
 
     def test_open_player_with_default_title_vlc(self):
         self._test_args(["streamlink", "-p", "/usr/bin/vlc", "http://test.se", "test"],
-                        ["/usr/bin/vlc", "--input-title-format", 'http://test.se', "-"])
+                        ["/usr/bin/vlc", "--input-title-format", "http://test.se", "-"])
 
     def test_open_player_with_default_title_vlc_args(self):
         self._test_args(["streamlink", "-p", "\"/Applications/VLC/vlc\" --other-option", "http://test.se", "test"],
-                        ["/Applications/VLC/vlc", "--other-option", "--input-title-format", 'http://test.se', "-"])
+                        ["/Applications/VLC/vlc", "--other-option", "--input-title-format", "http://test.se", "-"])
 
     def test_open_player_with_title_mpv(self):
         self._test_args(["streamlink", "-p", "/usr/bin/mpv", "--title", "{title}", "http://test.se", "test"],

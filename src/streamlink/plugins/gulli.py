@@ -18,15 +18,15 @@ log = logging.getLogger(__name__)
 
 
 @pluginmatcher(re.compile(
-    r'https?://replay\.gulli\.fr/(?:Direct|.+/(?P<video_id>VOD\d+))'
+    r"https?://replay\.gulli\.fr/(?:Direct|.+/(?P<video_id>VOD\d+))"
 ))
 class Gulli(Plugin):
-    LIVE_PLAYER_URL = 'https://replay.gulli.fr/jwplayer/embedstreamtv'
-    VOD_PLAYER_URL = 'https://replay.gulli.fr/jwplayer/embed/{0}'
+    LIVE_PLAYER_URL = "https://replay.gulli.fr/jwplayer/embedstreamtv"
+    VOD_PLAYER_URL = "https://replay.gulli.fr/jwplayer/embed/{0}"
 
-    _playlist_re = re.compile(r'sources: (\[.+?\])', re.DOTALL)
-    _vod_video_index_re = re.compile(r'jwplayer\(idplayer\).playlistItem\((?P<video_index>[0-9]+)\)')
-    _mp4_bitrate_re = re.compile(r'.*_(?P<bitrate>[0-9]+)\.mp4')
+    _playlist_re = re.compile(r"sources: (\[.+?\])", re.DOTALL)
+    _vod_video_index_re = re.compile(r"jwplayer\(idplayer\).playlistItem\((?P<video_index>[0-9]+)\)")
+    _mp4_bitrate_re = re.compile(r".*_(?P<bitrate>[0-9]+)\.mp4")
 
     _video_schema = validate.Schema(
         validate.all(
@@ -35,14 +35,14 @@ class Gulli(Plugin):
             validate.parse_json(),
             [
                 validate.Schema({
-                    'file': validate.url()
+                    "file": validate.url()
                 })
             ]
         )
     )
 
     def _get_streams(self):
-        video_id = self.match.group('video_id')
+        video_id = self.match.group("video_id")
         if video_id is not None:
             # VOD
             live = False
@@ -60,29 +60,29 @@ class Gulli(Plugin):
             match = self._vod_video_index_re.search(res.text)
             if match is None:
                 return
-            index = int(match.group('video_index'))
+            index = int(match.group("video_index"))
 
         if not playlist:
             return
         videos = self._video_schema.validate(playlist[index])
 
         for video in videos:
-            video_url = video['file']
+            video_url = video["file"]
 
             # Ignore non-supported MSS streams
-            if 'isml/Manifest' in video_url:
+            if "isml/Manifest" in video_url:
                 continue
 
             try:
-                if '.m3u8' in video_url:
+                if ".m3u8" in video_url:
                     yield from HLSStream.parse_variant_playlist(self.session, video_url).items()
-                elif '.mp4' in video_url:
+                elif ".mp4" in video_url:
                     match = self._mp4_bitrate_re.match(video_url)
                     bitrate = "vod" if match is None else f"{match.group('bitrate')}k"
                     yield bitrate, HTTPStream(self.session, video_url)
             except OSError as err:
-                if '403 Client Error' in str(err):
-                    log.error('Failed to access stream, may be due to geo-restriction')
+                if "403 Client Error" in str(err):
+                    log.error("Failed to access stream, may be due to geo-restriction")
                 raise
 
 

@@ -170,12 +170,12 @@ class FFMPEGMuxer(StreamIO):
         copyts = session.options.get("ffmpeg-copyts") or options.pop("copyts", False)
         start_at_zero = session.options.get("ffmpeg-start-at-zero") or options.pop("start_at_zero", False)
 
-        self._cmd = [self.command(session), '-nostats', '-y']
+        self._cmd = [self.command(session), "-nostats", "-y"]
         for np in self.pipes:
             self._cmd.extend(["-i", str(np.path)])
 
-        self._cmd.extend(['-c:v', videocodec])
-        self._cmd.extend(['-c:a', audiocodec])
+        self._cmd.extend(["-c:v", videocodec])
+        self._cmd.extend(["-c:a", audiocodec])
 
         for m in maps:
             self._cmd.extend(["-map", str(m)])
@@ -190,8 +190,8 @@ class FFMPEGMuxer(StreamIO):
                 stream_id = ":{0}".format(stream) if stream else ""
                 self._cmd.extend(["-metadata{0}".format(stream_id), datum])
 
-        self._cmd.extend(['-f', ofmt, outpath])
-        log.debug("ffmpeg command: {0}".format(' '.join(self._cmd)))
+        self._cmd.extend(["-f", ofmt, outpath])
+        log.debug("ffmpeg command: {0}".format(" ".join(self._cmd)))
         self.close_errorlog = False
 
         if session.options.get("ffmpeg-verbose"):

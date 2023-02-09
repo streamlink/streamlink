@@ -6,10 +6,10 @@ class TestPluginCanHandleUrlOPENRECtv(PluginCanHandleUrl):
     __plugin__ = OPENRECtv
 
     should_match = [
-        'https://www.openrec.tv/live/DXRLAPSGTpx',
-        'https://www.openrec.tv/movie/JsDw3rAV2Rj',
+        "https://www.openrec.tv/live/DXRLAPSGTpx",
+        "https://www.openrec.tv/movie/JsDw3rAV2Rj",
     ]
 
     should_not_match = [
-        'https://www.openrec.tv/',
+        "https://www.openrec.tv/",
     ]

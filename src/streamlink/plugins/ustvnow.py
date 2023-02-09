@@ -56,26 +56,26 @@ class USTVNow(Plugin):
 
     @classmethod
     def encrypt_data(cls, data, key, iv):
-        rkey = "".join(reversed(key)).encode('utf8')
-        riv = "".join(reversed(iv)).encode('utf8')
+        rkey = "".join(reversed(key)).encode("utf8")
+        riv = "".join(reversed(iv)).encode("utf8")
 
         fkey = SHA256.new(rkey).hexdigest()[:32].encode("utf8")
 
         cipher = AES.new(fkey, AES.MODE_CBC, riv)
-        encrypted = cipher.encrypt(pad(data, 16, 'pkcs7'))
+        encrypted = cipher.encrypt(pad(data, 16, "pkcs7"))
         return base64.b64encode(encrypted)
 
     @classmethod
     def decrypt_data(cls, data, key, iv):
-        rkey = "".join(reversed(key)).encode('utf8')
-        riv = "".join(reversed(iv)).encode('utf8')
+        rkey = "".join(reversed(key)).encode("utf8")
+        riv = "".join(reversed(iv)).encode("utf8")
 
         fkey = SHA256.new(rkey).hexdigest()[:32].encode("utf8")
 
         cipher = AES.new(fkey, AES.MODE_CBC, riv)
         decrypted = cipher.decrypt(base64.b64decode(data))
         if decrypted:
-            return unpad(decrypted, 16, 'pkcs7')
+            return unpad(decrypted, 16, "pkcs7")
         else:
             return decrypted
 
@@ -117,11 +117,11 @@ class USTVNow(Plugin):
             })
 
             data = res.json()
-            if data['status']:
-                self._token = data['response']['sessionId']
+            if data["status"]:
+                self._token = data["response"]["sessionId"]
                 log.debug("New token: {}".format(self._token))
             else:
-                log.error("Token acquisition failed: {details} ({detail})".format(**data['error']))
+                log.error("Token acquisition failed: {details} ({detail})".format(**data["error"]))
                 raise PluginError("could not obtain token")
 
         return self._token
@@ -129,8 +129,8 @@ class USTVNow(Plugin):
     def api_request(self, path, data, metadata=None):
         key, iv = self._get_encryption_config(self._signin_url)
         post_data = {
-            "data": self.encrypt_data(json.dumps(data).encode('utf8'), key, iv).decode("utf8"),
-            "metadata": self.encrypt_data(json.dumps(metadata).encode('utf8'), key, iv).decode("utf8")
+            "data": self.encrypt_data(json.dumps(data).encode("utf8"), key, iv).decode("utf8"),
+            "metadata": self.encrypt_data(json.dumps(metadata).encode("utf8"), key, iv).decode("utf8")
         }
         headers = {"box-id": self.box_id,
                    "session-id": self.get_token(),
@@ -153,7 +153,7 @@ class USTVNow(Plugin):
             {"request": "signin"}
         )
 
-        return resp['data']['status']
+        return resp["data"]["status"]
 
     def _get_streams(self):
         """
@@ -162,13 +162,13 @@ class USTVNow(Plugin):
         if self.login(self.get_option("username"), self.get_option("password")):
             path = urlparse(self.url).path.strip("/")
             resp = self.api_request("send", {"path": path}, {"request": "page/stream"})
-            if resp['data']['status']:
-                for stream in resp['data']['response']['streams']:
-                    if stream['keys']['licenseKey']:
+            if resp["data"]["status"]:
+                for stream in resp["data"]["response"]["streams"]:
+                    if stream["keys"]["licenseKey"]:
                         log.warning("Stream possibly protected by DRM")
-                    yield from HLSStream.parse_variant_playlist(self.session, stream['url']).items()
+                    yield from HLSStream.parse_variant_playlist(self.session, stream["url"]).items()
             else:
-                log.error("Could not find any streams: {code}: {message}".format(**resp['data']['error']))
+                log.error("Could not find any streams: {code}: {message}".format(**resp["data"]["error"]))
         else:
             log.error("Failed to login, check username and password")
 

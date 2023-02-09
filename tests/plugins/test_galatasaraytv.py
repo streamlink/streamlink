@@ -6,8 +6,8 @@ class TestPluginCanHandleUrlGalatasarayTV(PluginCanHandleUrl):
     __plugin__ = GalatasarayTV
 
     should_match = [
-        'http://galatasaray.com/',
-        'https://galatasaray.com',
-        'https://galatasaray.com/',
-        'https://www.galatasaray.com/',
+        "http://galatasaray.com/",
+        "https://galatasaray.com",
+        "https://galatasaray.com/",
+        "https://www.galatasaray.com/",
     ]

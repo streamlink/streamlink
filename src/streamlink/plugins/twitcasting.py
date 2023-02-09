@@ -71,7 +71,7 @@ class TwitCasting(Plugin):
         else:
             mode = "base"  # Low quality
 
-        if (proto == '') or (host == '') or (not movie_id):
+        if (proto == "") or (host == "") or (not movie_id):
             raise PluginError(f"No stream available for user {self.channel}")
 
         real_stream_url = self._STREAM_REAL_URL.format(proto=proto, host=host, movie_id=movie_id, mode=mode)

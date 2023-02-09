@@ -76,6 +76,8 @@ select = [
   "I",
   # flake8-tidy-imports
   "TID",
+  # flake8-quotes
+  "Q",
 ]
 extend-exclude = [
   "docs/conf.py",
@@ -96,6 +98,9 @@ combine-as-imports = true
 
 [tool.ruff.flake8-tidy-imports]
 ban-relative-imports = "all"
+
+[tool.ruff.flake8-quotes]
+avoid-escape = false
 
 
 # https://mypy.readthedocs.io/en/stable/config_file.html

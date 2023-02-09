@@ -20,20 +20,20 @@ log = logging.getLogger(__name__)
     r"https?://(?:www\.)?dr\.dk/drtv(/kanal/[\w-]+)"
 ))
 class DRDK(Plugin):
-    live_api_url = 'https://www.dr-massive.com/api/page'
+    live_api_url = "https://www.dr-massive.com/api/page"
 
     _live_data_schema = validate.Schema(
-        {'item': {'customFields': {
-            validate.optional('hlsURL'): validate.url(),
-            validate.optional('hlsWithSubtitlesURL'): validate.url(),
+        {"item": {"customFields": {
+            validate.optional("hlsURL"): validate.url(),
+            validate.optional("hlsWithSubtitlesURL"): validate.url(),
         }}},
-        validate.get('item'),
-        validate.get('customFields'),
+        validate.get("item"),
+        validate.get("customFields"),
     )
 
     def _get_live(self, path):
         params = dict(
-            ff='idp',
+            ff="idp",
             path=path,
         )
         res = self.session.http.get(self.live_api_url, params=params)
@@ -41,9 +41,9 @@ class DRDK(Plugin):
 
         streams = {}
         for name, url in playlists.items():
-            name_prefix = ''
-            if name == 'hlsWithSubtitlesURL':
-                name_prefix = 'subtitled_'
+            name_prefix = ""
+            if name == "hlsWithSubtitlesURL":
+                name_prefix = "subtitled_"
 
             streams.update(HLSStream.parse_variant_playlist(
                 self.session,

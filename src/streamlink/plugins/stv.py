@@ -16,10 +16,10 @@ log = logging.getLogger(__name__)
 
 
 @pluginmatcher(re.compile(
-    r'https?://player\.stv\.tv/live'
+    r"https?://player\.stv\.tv/live"
 ))
 class STV(Plugin):
-    API_URL = 'https://player.api.stv.tv/v1/streams/stv/'
+    API_URL = "https://player.api.stv.tv/v1/streams/stv/"
 
     def get_title(self):
         if self.title is None:
@@ -30,18 +30,18 @@ class STV(Plugin):
         res = self.session.http.get(self.API_URL)
         data = self.session.http.json(res)
 
-        if data['success'] is False:
-            raise PluginError(data['reason']['message'])
+        if data["success"] is False:
+            raise PluginError(data["reason"]["message"])
 
         try:
-            self.title = data['results']['now']['title']
+            self.title = data["results"]["now"]["title"]
         except KeyError:
-            self.title = 'STV'
+            self.title = "STV"
 
         return data
 
     def _get_streams(self):
-        hls_url = self._get_api_results()['results']['streamUrl']
+        hls_url = self._get_api_results()["results"]["streamUrl"]
         return HLSStream.parse_variant_playlist(self.session, hls_url)
 
 

@@ -124,7 +124,7 @@ class Ceskatelevize(Plugin):
                             "quality": "web",
                         }],
                     },
-                    separators=(',', ':'),
+                    separators=(",", ":"),
                 ),
             },
             schema=validate.Schema(

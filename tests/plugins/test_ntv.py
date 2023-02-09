@@ -6,11 +6,11 @@ class TestPluginCanHandleUrlNTV(PluginCanHandleUrl):
     __plugin__ = NTV
 
     should_match = [
-        'https://www.ntv.ru/air/',
-        'http://www.ntv.ru/air/'
+        "https://www.ntv.ru/air/",
+        "http://www.ntv.ru/air/"
     ]
 
     should_not_match = [
-        'https://www.ntv.ru/',
-        'http://www.ntv.ru/'
+        "https://www.ntv.ru/",
+        "http://www.ntv.ru/"
     ]

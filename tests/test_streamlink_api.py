@@ -16,19 +16,19 @@ def get_session():
 
 
 class TestStreamlinkAPI(unittest.TestCase):
-    @patch('streamlink.api.Streamlink', side_effect=get_session)
+    @patch("streamlink.api.Streamlink", side_effect=get_session)
     def test_find_test_plugin(self, session):
         self.assertIn("hls", streams("test.se"))
 
-    @patch('streamlink.api.Streamlink', side_effect=get_session)
+    @patch("streamlink.api.Streamlink", side_effect=get_session)
     def test_no_streams_exception(self, session):
         self.assertEqual({}, streams("test.se/NoStreamsError"))
 
-    @patch('streamlink.api.Streamlink', side_effect=get_session)
+    @patch("streamlink.api.Streamlink", side_effect=get_session)
     def test_no_streams(self, session):
         self.assertEqual({}, streams("test.se/empty"))
 
-    @patch('streamlink.api.Streamlink', side_effect=get_session)
+    @patch("streamlink.api.Streamlink", side_effect=get_session)
     def test_stream_type_filter(self, session):
         stream_types = ["hls"]
         available_streams = streams("test.se", stream_types=stream_types)
@@ -36,7 +36,7 @@ class TestStreamlinkAPI(unittest.TestCase):
         self.assertNotIn("test", available_streams)
         self.assertNotIn("http", available_streams)
 
-    @patch('streamlink.api.Streamlink', side_effect=get_session)
+    @patch("streamlink.api.Streamlink", side_effect=get_session)
     def test_stream_type_wildcard(self, session):
         stream_types = ["hls", "*"]
         available_streams = streams("test.se", stream_types=stream_types)

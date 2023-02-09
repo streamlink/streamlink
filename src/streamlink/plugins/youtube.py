@@ -83,7 +83,7 @@ class YouTube(Plugin):
         elif parsed.scheme != "https":
             self.url = urlunparse(parsed._replace(scheme="https"))
 
-        self.session.http.headers.update({'User-Agent': useragents.CHROME})
+        self.session.http.headers.update({"User-Agent": useragents.CHROME})
 
     @classmethod
     def stream_weight(cls, stream):

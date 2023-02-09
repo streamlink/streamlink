@@ -6,5 +6,5 @@ class TestPluginCanHandleUrlWWENetwork(PluginCanHandleUrl):
     __plugin__ = WWENetwork
 
     should_match = [
-        'https://watch.wwe.com/in-ring/3622',
+        "https://watch.wwe.com/in-ring/3622",
     ]
