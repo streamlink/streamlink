@@ -401,10 +401,7 @@ class Crunchyroll(Plugin):
                 except CrunchyrollAPIError as err:
                     raise PluginError(f"Authentication error: {err.msg}")
             if not api.auth:
-                log.warning(
-                    "No authentication provided, you won't be able to access "
-                    "premium restricted content",
-                )
+                log.warning("No authentication provided, you won't be able to access premium restricted content")
 
         return api
 

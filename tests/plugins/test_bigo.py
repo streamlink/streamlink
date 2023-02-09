@@ -22,7 +22,7 @@ class TestPluginCanHandleUrlBigo(PluginCanHandleUrl):
         "http://www.bigoweb.co/show/00000000",
         "https://www.bigoweb.co/show/00000000",
         "http://bigoweb.co/show/00000000",
-        "https://bigoweb.co/show/00000000"
+        "https://bigoweb.co/show/00000000",
 
         # Wrong URL structure
         "https://www.bigo.tv/show/00000000",

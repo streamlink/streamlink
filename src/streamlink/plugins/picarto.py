@@ -6,6 +6,7 @@ $type live, vod
 
 import logging
 import re
+from textwrap import dedent
 from urllib.parse import urlparse
 
 from streamlink.plugin import Plugin, pluginmatcher
@@ -89,19 +90,19 @@ class Picarto(Plugin):
 
     def get_vod(self, vod_id):
         data = {
-            "query": (
-                "query ($videoId: ID!) {\n"
-                "  video(id: $videoId) {\n"
-                "    id\n"
-                "    title\n"
-                "    file_name\n"
-                "    video_recording_image_url\n"
-                "    channel {\n"
-                "      name\n"
-                "      }"
-                "  }\n"
-                "}\n"
-            ),
+            "query": dedent("""
+                query ($videoId: ID!) {
+                  video(id: $videoId) {
+                    id
+                    title
+                    file_name
+                    video_recording_image_url
+                    channel {
+                      name
+                    }
+                  }
+                }
+            """).lstrip(),
             "variables": {"videoId": vod_id},
         }
         vod_data = self.session.http.post(self.API_URL_VOD, json=data, schema=validate.Schema(

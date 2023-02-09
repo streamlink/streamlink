@@ -141,9 +141,11 @@ class AbemaTV(Plugin):
 
     _SLOTM3U8 = "https://vod-abematv.akamaized.net/slot/{0}/playlist.m3u8"
 
-    SECRETKEY = (b"v+Gjs=25Aw5erR!J8ZuvRrCx*rGswhB&qdHd_SYerEWdU&a?3DzN9B"
-                 b"Rbp5KwY4hEmcj5#fykMjJ=AuWz5GSMY-d@H7DMEh3M@9n2G552Us$$"
-                 b"k9cD=3TxwWe86!x#Zyhe")
+    SECRETKEY = (
+          b"v+Gjs=25Aw5erR!J8ZuvRrCx*rGswhB&qdHd_SYerEWdU&a?3DzN9B"
+        + b"Rbp5KwY4hEmcj5#fykMjJ=AuWz5GSMY-d@H7DMEh3M@9n2G552Us$$"
+        + b"k9cD=3TxwWe86!x#Zyhe"
+    )
 
     _USER_SCHEMA = validate.Schema({"profile": {"userId": str}, "token": str})
 

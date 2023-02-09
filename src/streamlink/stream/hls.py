@@ -218,8 +218,7 @@ class HLSStreamWriter(SegmentedStreamWriter):
                 # Also check if the output will be resumed after data has already been written to the buffer before.
                 if sequence.segment.discontinuity or is_paused and written_once:
                     log.warning(
-                        "Encountered a stream discontinuity. "
-                        "This is unsupported and will result in incoherent output data.",
+                        "Encountered a stream discontinuity. This is unsupported and will result in incoherent output data.",
                     )
 
                 # unblock reader thread after writing data to the buffer
@@ -422,12 +421,16 @@ class HLSStreamWorker(SegmentedStreamWorker):
             self.playlist_sequence = self.duration_to_sequence(self.duration_offset_start, self.playlist_sequences)
 
         if self.playlist_sequences:
-            log.debug(f"First Sequence: {self.playlist_sequences[0].num}; "
-                      f"Last Sequence: {self.playlist_sequences[-1].num}")
-            log.debug(f"Start offset: {self.duration_offset_start}; "
-                      f"Duration: {self.duration_limit}; "
-                      f"Start Sequence: {self.playlist_sequence}; "
-                      f"End Sequence: {self.playlist_end}")
+            log.debug("; ".join([
+                f"First Sequence: {self.playlist_sequences[0].num}",
+                f"Last Sequence: {self.playlist_sequences[-1].num}",
+            ]))
+            log.debug("; ".join([
+                f"Start offset: {self.duration_offset_start}",
+                f"Duration: {self.duration_limit}",
+                f"Start Sequence: {self.playlist_sequence}",
+                f"End Sequence: {self.playlist_end}",
+            ]))
 
         total_duration = 0
         while not self.closed:
