@@ -109,7 +109,7 @@ performing these checks locally avoids unnecessary build failures.
     python -m pytest -ra path/to/test-file.py::TestClassName::test_method_name ...
 
     # check code for linting errors
-    flake8
+    ruff .
     # check code for typing errors
     mypy
     # optionally check for typing errors if changes were made to the docs extensions
@@ -123,42 +123,46 @@ performing these checks locally avoids unnecessary build failures.
 Code style
 ----------
 
-Streamlink aims to use best practices, as detailed in `PEP 8`_ and implemented in tools such as `Black`_.
+Streamlink uses `Ruff`_ as primary code linting tool and the project aims to use best practices for achieving great
+code readability with minimal git diffs, as detailed in :pep:`8` and implemented in related linting tools, such as `Black`_.
 
 These are the best practices most likely to be relevant to plugin authors:
 
-1. `Imports`_ (linted by flake8).
+1. `Import order according to PEP8 <pep8-imports_>`_
 
-2. `Indentation`_ (linted by flake8; 4 spaces per indentation level).
+2. `Indentation of 4 spaces per level <pep8-indentation_>`_
 
-3. `Quotes`_ (double quotes ``"`` and ``"""``).
+3. `Double quotes for all string literals <black-quotes_>`_
 
-4.  Maximum line length (defined in the ``flake8`` section of `setup.cfg`_ via ``max-line-length``).
+4. `Line length of at most 128 characters <pyproject.toml_>`_
 
-5. `Horizontal vs vertical whitespace`_ (balance line length, readability and vertical whitespace).
+5. `Balanced line wrapping for readability <black-line-wrapping_>`_
 
-6. `Blank lines`_ (linted by flake8 for imports, class and method definitions).
+6. `Blank lines <pep8-blank-lines_>`_
 
-7. `Comments`_ (linted by flake8; use sparingly and where strictly useful).
+7. `Comments <pep8-comments_>`_
 
-8. `Line breaks & binary operators`_ (break before binary operators).
+8. `Line breaks and binary operators <pep8-binary-operators_>`_
 
-9. Don't use multiple parameters on the same line where line breaks are in use.
+9. New indented line for each bracket item (args, lists, etc.) in multi-line definitions, with trailing comma
 
    .. code-block:: python
 
       # incorrect:
       schema=validate.Schema(
           validate.parse_json(), [{
-              ...
-          }],
+              "foo": {"bar": validate.url(schema="https", path=validate.endswith(".m3u8"))}, "baz": str
+          }]
       )
 
       # correct:
       schema=validate.Schema(
           validate.parse_json(),
           [{
-              ...
+              "foo": {
+                  "bar": validate.url(schema="https", path=validate.endswith(".m3u8")),
+              },
+              "baz": str,
           }],
       )
 
@@ -166,16 +170,16 @@ It might be helpful to new plugin authors to pick a small and recently modified 
 template from which to work. If care is taken to preserve existing blank lines during modification, the main plugin
 structure should be compliant-ready for `linting <Validating changes_>`_.
 
-.. _PEP 8: https://peps.python.org/pep-0008/
+.. _Ruff: https://github.com/charliermarsh/ruff#readme
 .. _Black: https://black.readthedocs.io/en/stable/the_black_code_style/current_style.html
-.. _Imports: https://peps.python.org/pep-0008/#imports
-.. _Indentation: https://peps.python.org/pep-0008/#indentation
-.. _Quotes: https://black.readthedocs.io/en/stable/the_black_code_style/current_style.html#strings
-.. _setup.cfg: https://github.com/streamlink/streamlink/blob/master/setup.cfg
-.. _Horizontal vs vertical whitespace: https://black.readthedocs.io/en/stable/the_black_code_style/current_style.html#how-black-wraps-lines
-.. _Blank lines: https://peps.python.org/pep-0008/#blank-lines
-.. _Comments: https://peps.python.org/pep-0008/#comments
-.. _Line breaks & binary operators: https://peps.python.org/pep-0008/#should-a-line-break-before-or-after-a-binary-operator
+.. _pyproject.toml: https://github.com/streamlink/streamlink/blob/master/pyproject.toml
+.. _pep8-binary-operators: https://peps.python.org/pep-0008/#should-a-line-break-before-or-after-a-binary-operator
+.. _pep8-blank-lines: https://peps.python.org/pep-0008/#blank-lines
+.. _pep8-comments: https://peps.python.org/pep-0008/#comments
+.. _pep8-imports: https://peps.python.org/pep-0008/#imports
+.. _pep8-indentation: https://peps.python.org/pep-0008/#indentation
+.. _black-line-wrapping: https://black.readthedocs.io/en/stable/the_black_code_style/current_style.html#how-black-wraps-lines
+.. _black-quotes: https://black.readthedocs.io/en/stable/the_black_code_style/current_style.html#strings
 
 
 Plugins

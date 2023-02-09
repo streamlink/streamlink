@@ -57,6 +57,33 @@ exclude_lines = [
 ]
 
 
+# https://beta.ruff.rs/docs/configuration/
+[tool.ruff]
+src = ["src", "tests"]
+target-version = "py37"
+fix = false
+ignore-init-module-imports = true
+line-length = 128
+show-source = true
+format = "grouped"
+select = [
+  # pycodestyle
+  "E",
+  "W",
+  # pyflakes
+  "F",
+]
+extend-exclude = [
+  "docs/conf.py",
+  "src/streamlink/packages/",
+  "src/streamlink_cli/packages/",
+]
+
+[tool.ruff.per-file-ignores]
+"__init__.py" = ["F401"]
+"src/streamlink/plugin/api/useragents.py" = ["E501"]
+
+
 # https://mypy.readthedocs.io/en/stable/config_file.html
 [tool.mypy]
 python_version = 3.7
