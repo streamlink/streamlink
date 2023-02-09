@@ -6,11 +6,10 @@ coverage[toml]
 mock ; python_version<"3.8"
 requests-mock
 freezegun>=1.0.0
-flake8
-flake8-import-order
-flake8-pyi
 shtab
 versioningit >=2.0.0, <3
+
+ruff
 
 mypy
 lxml-stubs
