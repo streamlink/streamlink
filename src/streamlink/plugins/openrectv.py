@@ -124,7 +124,7 @@ class OPENRECtv(Plugin):
             return mdata["title"]
 
     def _get_streams(self):
-        self.video_id = self.url.rsplit('/', 1)[-1]
+        self.video_id = self.url.rsplit("/", 1)[-1]
         if self.get_option("email") and self.get_option("password"):
             self.login(self.get_option("email"), self.get_option("password"))
         mdata = self._get_movie_data()

@@ -6,6 +6,6 @@ class TestPluginCanHandleUrlSTV(PluginCanHandleUrl):
     __plugin__ = STV
 
     should_match = [
-        'https://player.stv.tv/live',
-        'http://player.stv.tv/live',
+        "https://player.stv.tv/live",
+        "http://player.stv.tv/live",
     ]

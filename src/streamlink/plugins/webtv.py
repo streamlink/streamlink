@@ -77,7 +77,7 @@ class WebTV(Plugin):
                             yield from variant.items()
                         else:
                             # and if that fails, try it as a plain HLS stream
-                            yield 'live', HLSStream(self.session, url, headers=headers)
+                            yield "live", HLSStream(self.session, url, headers=headers)
                     except OSError:
                         log.warning("Could not open the stream, perhaps the channel is offline")
 

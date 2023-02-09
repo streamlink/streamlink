@@ -22,7 +22,7 @@ QUALITIES = {
     "240p": "_240"
 }
 
-_apidata_re = re.compile(r'''(?P<quote>["']?)channel(?P=quote)\s*:\s*(?P<data>{.*?})\s*,''')
+_apidata_re = re.compile(r"""(?P<quote>["']?)channel(?P=quote)\s*:\s*(?P<data>{.*?})\s*,""")
 _ddos_re = re.compile(r'document.cookie="(__DDOS_[^;]+)')
 
 
@@ -54,12 +54,12 @@ class GoodGame(Plugin):
             return
 
         log.debug("Found channel info: id={id} channelkey={channelkey} pid={streamkey} online={status}".format(**channel_info))
-        if not channel_info['status']:
+        if not channel_info["status"]:
             log.debug("Channel appears to be offline")
 
         streams = {}
         for name, url_suffix in QUALITIES.items():
-            url = HLS_URL_FORMAT.format(channel_info['streamkey'], url_suffix)
+            url = HLS_URL_FORMAT.format(channel_info["streamkey"], url_suffix)
             if not self._check_stream(url):
                 continue
 

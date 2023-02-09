@@ -54,9 +54,9 @@ class BBCiPlayer(Plugin):
     bbc.co.uk/iplayer/episode/*
     """
     mediator_re = re.compile(
-        r'window\.__IPLAYER_REDUX_STATE__\s*=\s*({.*?});', re.DOTALL)
-    state_re = re.compile(r'window.__IPLAYER_REDUX_STATE__\s*=\s*({.*?});</script>')
-    account_locals_re = re.compile(r'window.bbcAccount.locals\s*=\s*({.*?});')
+        r"window\.__IPLAYER_REDUX_STATE__\s*=\s*({.*?});", re.DOTALL)
+    state_re = re.compile(r"window.__IPLAYER_REDUX_STATE__\s*=\s*({.*?});</script>")
+    account_locals_re = re.compile(r"window.bbcAccount.locals\s*=\s*({.*?});")
     hash = base64.b64decode(b"N2RmZjc2NzFkMGM2OTdmZWRiMWQ5MDVkOWExMjE3MTk5MzhiOTJiZg==")
     api_url = "https://open.live.bbc.co.uk/mediaselector/6/select/version/2.0/mediaset/" \
               "{platform}/vpid/{vpid}/format/json/atk/{vpid_hash}/asn/1/"
@@ -173,7 +173,7 @@ class BBCiPlayer(Plugin):
             data=dict(
                 jsEnabled=True,
                 username=self.get_option("username"),
-                password=self.get_option('password'),
+                password=self.get_option("password"),
                 attempts=0
             ),
             headers={"Referer": self.url})

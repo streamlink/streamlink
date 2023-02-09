@@ -54,7 +54,7 @@ class Streann(Plugin):
     stream_url = base_url + "/loadbalancer/services/web-players/{type}s-reseller-secure/{dataId}/{playerId}" \
                             "/{token}/{resellerId}/playlist.m3u8?date={time}&device-type=web&device-name=web" \
                             "&device-os=web&device-id={deviceId}"
-    passphrase_re = re.compile(r'''CryptoJS\.AES\.decrypt\(.*?,\s*(['"])(?P<passphrase>(?:(?!\1).)*)\1\s*?\);''')
+    passphrase_re = re.compile(r"""CryptoJS\.AES\.decrypt\(.*?,\s*(['"])(?P<passphrase>(?:(?!\1).)*)\1\s*?\);""")
 
     _device_id = None
     _domain = None

@@ -21,21 +21,21 @@ from streamlink.stream.http import HTTPStream
 log = logging.getLogger(__name__)
 
 
-@pluginmatcher(re.compile(r'''
+@pluginmatcher(re.compile(r"""
     https?://(?:www\.)?
     (?:
         rtbf\.be/auvio/.*\?l?id=(?P<video_id>\d+)#?
         |
         rtbfradioplayer\.be/radio/liveradio/.+
     )
-''', re.VERBOSE))
+""", re.VERBOSE))
 class RTBF(Plugin):
-    GEO_URL = 'https://www.rtbf.be/api/geoloc'
-    TOKEN_URL = 'https://token.rtbf.be/'
-    RADIO_STREAM_URL = 'http://www.rtbfradioplayer.be/radio/liveradio/rtbf/radios/{}/config.json'
+    GEO_URL = "https://www.rtbf.be/api/geoloc"
+    TOKEN_URL = "https://token.rtbf.be/"
+    RADIO_STREAM_URL = "http://www.rtbfradioplayer.be/radio/liveradio/rtbf/radios/{}/config.json"
 
     _stream_size_re = re.compile(
-        r'https?://.+-(?P<size>\d+p?)\..+?$'
+        r"https?://.+-(?P<size>\d+p?)\..+?$"
     )
 
     _video_player_re = re.compile(
@@ -51,8 +51,8 @@ class RTBF(Plugin):
 
     _geo_schema = validate.Schema(
         {
-            'country': str,
-            'zone': str,
+            "country": str,
+            "zone": str,
         }
     )
 
@@ -65,21 +65,21 @@ class RTBF(Plugin):
                 validate.transform(html_unescape),
                 validate.parse_json(),
                 {
-                    'geoLocRestriction': str,
-                    validate.optional('isLive'): bool,
-                    validate.optional('startDate'): str,
-                    validate.optional('endDate'): str,
-                    'sources': validate.any(
+                    "geoLocRestriction": str,
+                    validate.optional("isLive"): bool,
+                    validate.optional("startDate"): str,
+                    validate.optional("endDate"): str,
+                    "sources": validate.any(
                         [],
                         validate.Schema({
-                            str: validate.any(None, '', validate.url())
+                            str: validate.any(None, "", validate.url())
                         })
                     ),
-                    validate.optional('urlHls'): validate.any(None, '', validate.url()),
-                    validate.optional('urlDash'): validate.any(None, '', validate.url()),
-                    validate.optional('streamUrlHls'): validate.any(None, '', validate.url()),
-                    validate.optional('streamUrlDash'): validate.any(None, '', validate.url()),
-                    validate.optional('drm'): bool,
+                    validate.optional("urlHls"): validate.any(None, "", validate.url()),
+                    validate.optional("urlDash"): validate.any(None, "", validate.url()),
+                    validate.optional("streamUrlHls"): validate.any(None, "", validate.url()),
+                    validate.optional("streamUrlDash"): validate.any(None, "", validate.url()),
+                    validate.optional("drm"): bool,
                 }
             )
         )
@@ -87,32 +87,32 @@ class RTBF(Plugin):
 
     _radio_stream_schema = validate.Schema(
         {
-            'audioUrls': validate.all(
+            "audioUrls": validate.all(
                 [{
-                    'url': validate.url(),
-                    'mimeType': str,
+                    "url": validate.url(),
+                    "mimeType": str,
                 }]
             )
         }
     )
 
     def check_geolocation(self, geoloc_flag):
-        if geoloc_flag == 'open':
+        if geoloc_flag == "open":
             return True
 
         res = self.session.http.get(self.GEO_URL)
         data = self.session.http.json(res, schema=self._geo_schema)
-        return data['country'] == geoloc_flag or data['zone'] == geoloc_flag
+        return data["country"] == geoloc_flag or data["zone"] == geoloc_flag
 
     def tokenize_stream(self, url):
-        res = self.session.http.post(self.TOKEN_URL, data={'streams[url]': url})
+        res = self.session.http.post(self.TOKEN_URL, data={"streams[url]": url})
         data = self.session.http.json(res)
-        return data['streams']['url']
+        return data["streams"]["url"]
 
     @staticmethod
     def iso8601_to_epoch(date):
         # Convert an ISO 8601-formatted string date to datetime
-        return datetime.datetime.strptime(date[:-6], '%Y-%m-%dT%H:%M:%S') + \
+        return datetime.datetime.strptime(date[:-6], "%Y-%m-%dT%H:%M:%S") + \
             datetime.timedelta(hours=int(date[-6:-3]), minutes=int(date[-2:]))
 
     def _get_radio_streams(self):
@@ -120,79 +120,79 @@ class RTBF(Plugin):
         match = self._radio_id_re.search(res.text)
         if match is None:
             return
-        radio_id = match.group('radio_id')
+        radio_id = match.group("radio_id")
         res = self.session.http.get(self.RADIO_STREAM_URL.format(radio_id))
         streams = self.session.http.json(res, schema=self._radio_stream_schema)
 
-        for stream in streams['audioUrls']:
-            match = self._stream_size_re.match(stream['url'])
+        for stream in streams["audioUrls"]:
+            match = self._stream_size_re.match(stream["url"])
             if match is not None:
-                quality = '{}k'.format(match.group('size'))
+                quality = "{}k".format(match.group("size"))
             else:
-                quality = stream['mimetype']
-            yield quality, HTTPStream(self.session, stream['url'])
+                quality = stream["mimetype"]
+            yield quality, HTTPStream(self.session, stream["url"])
 
     def _get_video_streams(self):
         res = self.session.http.get(self.url)
         match = self._video_player_re.search(res.text)
         if match is None:
             return
-        player_url = match.group('player_url')
+        player_url = match.group("player_url")
         stream_data = self.session.http.get(player_url, schema=self._video_stream_schema)
         if stream_data is None:
             return
 
         # Check geolocation to prevent further errors when stream is parsed
-        if not self.check_geolocation(stream_data['geoLocRestriction']):
-            log.error('Stream is geo-restricted')
+        if not self.check_geolocation(stream_data["geoLocRestriction"]):
+            log.error("Stream is geo-restricted")
             return
 
         # Check whether streams are DRM-protected
-        if stream_data.get('drm', False):
-            log.error('Stream is DRM-protected')
+        if stream_data.get("drm", False):
+            log.error("Stream is DRM-protected")
             return
 
         now = datetime.datetime.now()
         try:
-            if isinstance(stream_data['sources'], dict):
+            if isinstance(stream_data["sources"], dict):
                 urls = []
-                for profile, url in stream_data['sources'].items():
+                for profile, url in stream_data["sources"].items():
                     if not url or url in urls:
                         continue
                     match = self._stream_size_re.match(url)
                     if match is not None:
-                        quality = match.group('size')
+                        quality = match.group("size")
                     else:
                         quality = profile
                     yield quality, HTTPStream(self.session, url)
                     urls.append(url)
 
-            hls_url = stream_data.get('urlHls') or stream_data.get('streamUrlHls')
+            hls_url = stream_data.get("urlHls") or stream_data.get("streamUrlHls")
             if hls_url:
-                if stream_data.get('isLive', False):
+                if stream_data.get("isLive", False):
                     # Live streams require a token
                     hls_url = self.tokenize_stream(hls_url)
                 yield from HLSStream.parse_variant_playlist(self.session, hls_url).items()
 
-            dash_url = stream_data.get('urlDash') or stream_data.get('streamUrlDash')
+            dash_url = stream_data.get("urlDash") or stream_data.get("streamUrlDash")
             if dash_url:
-                if stream_data.get('isLive', False):
+                if stream_data.get("isLive", False):
                     # Live streams require a token
                     dash_url = self.tokenize_stream(dash_url)
                 yield from DASHStream.parse_manifest(self.session, dash_url).items()
 
         except OSError as err:
-            if '403 Client Error' in str(err):
+            if "403 Client Error" in str(err):
                 # Check whether video is expired
-                if 'startDate' in stream_data:
-                    if now < self.iso8601_to_epoch(stream_data['startDate']):
-                        log.error('Stream is not yet available')
-                elif 'endDate' in stream_data:
-                    if now > self.iso8601_to_epoch(stream_data['endDate']):
-                        log.error('Stream has expired')
+                if "startDate" in stream_data:
+                    if now < self.iso8601_to_epoch(stream_data["startDate"]):
+                        log.error("Stream is not yet available")
+                elif "endDate" in stream_data:
+                    if now > self.iso8601_to_epoch(stream_data["endDate"]):
+                        log.error("Stream has expired")
 
     def _get_streams(self):
-        if self.match.group('video_id'):
+        if self.match.group("video_id"):
             return self._get_video_streams()
         return self._get_radio_streams()
 

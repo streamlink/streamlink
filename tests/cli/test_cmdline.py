@@ -70,13 +70,13 @@ class TestCommandLinePOSIX(CommandLineTestCase):
 
     def test_open_player_extra_args_in_player(self):
         self._test_args(["streamlink", "-p", "/usr/bin/player",
-                         "-a", '''--input-title-format "Poker \\"Stars\\"" {filename}''',
+                         "-a", """--input-title-format "Poker \\"Stars\\"" {filename}""",
                          "http://test.se", "test"],
                         ["/usr/bin/player", "--input-title-format", 'Poker "Stars"', "-"])
 
     def test_open_player_extra_args_in_player_pass_through(self):
         self._test_args(["streamlink", "--player-passthrough", "hls", "-p", "/usr/bin/player",
-                         "-a", '''--input-title-format "Poker \\"Stars\\"" {filename}''',
+                         "-a", """--input-title-format "Poker \\"Stars\\"" {filename}""",
                          "test.se", "hls"],
                         ["/usr/bin/player", "--input-title-format", 'Poker "Stars"', "http://test.se/playlist.m3u8"],
                         passthrough=True)
@@ -107,19 +107,19 @@ class TestCommandLineWindows(CommandLineTestCase):
         self._test_args(["streamlink", "-p",
                          '''c:\\Program Files\\Player\\player.exe --input-title-format "Poker \\"Stars\\""''',
                          "http://test.se", "test"],
-                        '''c:\\Program Files\\Player\\player.exe --input-title-format "Poker \\"Stars\\"" -''')
+                        """c:\\Program Files\\Player\\player.exe --input-title-format "Poker \\"Stars\\"" -""")
 
     def test_open_player_extra_args_in_player(self):
         self._test_args(["streamlink", "-p", "c:\\Program Files\\Player\\player.exe",
-                         "-a", '''--input-title-format "Poker \\"Stars\\"" {filename}''',
+                         "-a", """--input-title-format "Poker \\"Stars\\"" {filename}""",
                          "http://test.se", "test"],
-                        '''c:\\Program Files\\Player\\player.exe --input-title-format "Poker \\"Stars\\"" -''')
+                        """c:\\Program Files\\Player\\player.exe --input-title-format "Poker \\"Stars\\"" -""")
 
     def test_open_player_extra_args_in_player_pass_through(self):
         self._test_args(["streamlink", "--player-passthrough", "hls", "-p", "c:\\Program Files\\Player\\player.exe",
-                         "-a", '''--input-title-format "Poker \\"Stars\\"" {filename}''',
+                         "-a", """--input-title-format "Poker \\"Stars\\"" {filename}""",
                          "test.se", "hls"],
-                        '''c:\\Program Files\\Player\\player.exe'''
+                        """c:\\Program Files\\Player\\player.exe"""
                         + ''' --input-title-format "Poker \\"Stars\\"" \"http://test.se/playlist.m3u8\"''',
                         passthrough=True)
 

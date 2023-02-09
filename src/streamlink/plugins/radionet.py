@@ -48,22 +48,22 @@ class RadioNet(Plugin):
         if streams is None:
             return
 
-        if streams['type'] != 'STATION':
+        if streams["type"] != "STATION":
             return
 
         stream_urls = set()
-        for stream in streams['streams']:
-            log.trace('{0!r}'.format(stream))
-            url = stream['url']
+        for stream in streams["streams"]:
+            log.trace("{0!r}".format(stream))
+            url = stream["url"]
 
-            url_no_scheme = urlunparse(urlparse(url)._replace(scheme=''))
+            url_no_scheme = urlunparse(urlparse(url)._replace(scheme=""))
             if url_no_scheme in stream_urls:
                 continue
             stream_urls.add(url_no_scheme)
 
-            if stream['contentFormat'] in ('audio/mpeg', 'audio/aac'):
-                yield 'live', HTTPStream(self.session, url, allow_redirects=True)
-            elif stream['contentFormat'] == 'video/MP2T':
+            if stream["contentFormat"] in ("audio/mpeg", "audio/aac"):
+                yield "live", HTTPStream(self.session, url, allow_redirects=True)
+            elif stream["contentFormat"] == "video/MP2T":
                 streams = HLSStream.parse_variant_playlist(self.session, stream["url"])
                 if not streams:
                     yield stream["quality"], HLSStream(self.session, stream["url"])

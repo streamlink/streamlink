@@ -57,7 +57,7 @@ class ArgparseDirective(Directive):
 
         help = _inline_code_block_re.sub(
             lambda m: (
-                ":code:`{0}`".format(m.group(1).replace('\\', '\\\\'))
+                ":code:`{0}`".format(m.group(1).replace("\\", "\\\\"))
             ),
             help
         )

@@ -6,5 +6,5 @@ class TestPluginCanHandleUrlBilibili(PluginCanHandleUrl):
     __plugin__ = Bilibili
 
     should_match = [
-        'https://live.bilibili.com/123123123',
+        "https://live.bilibili.com/123123123",
     ]

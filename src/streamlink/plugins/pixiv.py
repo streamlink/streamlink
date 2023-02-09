@@ -90,8 +90,8 @@ class Pixiv(Plugin):
     def _login_using_session_id_and_device_token(self, session_id, device_token):
         self.session.http.get(self.login_url_get)
 
-        self.session.http.cookies.set('PHPSESSID', session_id, domain='.pixiv.net', path='/')
-        self.session.http.cookies.set('device_token', device_token, domain='.pixiv.net', path='/')
+        self.session.http.cookies.set("PHPSESSID", session_id, domain=".pixiv.net", path="/")
+        self.session.http.cookies.set("device_token", device_token, domain=".pixiv.net", path="/")
 
         self.save_cookies()
         log.info("Successfully set sessionId and deviceToken")

@@ -23,13 +23,13 @@ log = logging.getLogger(__name__)
     r"https?://(?:tv|radio)\.nrk\.no/(program|direkte|serie|podkast)(?:/.+)?/([^/]+)"
 ))
 class NRK(Plugin):
-    _psapi_url = 'https://psapi.nrk.no'
+    _psapi_url = "https://psapi.nrk.no"
     # Program type to manifest type mapping
     _program_type_map = {
-        'direkte': 'channel',
-        'serie': 'program',
-        'program': 'program',
-        'podkast': 'podcast',
+        "direkte": "channel",
+        "serie": "program",
+        "program": "program",
+        "podkast": "podcast",
     }
 
     _program_id_re = re.compile(r'<meta property="nrk:program-id" content="([^"]+)"')
@@ -80,18 +80,18 @@ class NRK(Plugin):
         # Extract media URL.
         res = self.session.http.get(manifest_url)
         manifest = self.session.http.json(res, schema=self._playable_schema)
-        if 'nonPlayable' in manifest:
+        if "nonPlayable" in manifest:
             reason = manifest["nonPlayable"]["reason"]
             log.error(f"Not playable ({reason})")
             return None
         self._set_metadata(manifest)
-        asset = manifest['playable']['assets'][0]
+        asset = manifest["playable"]["assets"][0]
 
         # Some streams such as podcasts are not HLS but plain files.
-        if asset['format'] == 'HLS':
-            return HLSStream.parse_variant_playlist(self.session, asset['url'])
+        if asset["format"] == "HLS":
+            return HLSStream.parse_variant_playlist(self.session, asset["url"])
         else:
-            return [("live", HTTPStream(self.session, asset['url']))]
+            return [("live", HTTPStream(self.session, asset["url"]))]
 
     def _set_metadata(self, manifest):
         luna = manifest.get("statistics").get("luna")

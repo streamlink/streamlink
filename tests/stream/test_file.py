@@ -12,7 +12,7 @@ class TestFileStream(unittest.TestCase):
     def test_open_file_path(self):
         m = mock_open()
         s = FileStream(self.session, path="/test/path")
-        with patch('streamlink.stream.file.open', m, create=True):
+        with patch("streamlink.stream.file.open", m, create=True):
             s.open()
             m.assert_called_with("/test/path")
 

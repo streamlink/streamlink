@@ -29,8 +29,8 @@ class GoogleDocs(Plugin):
         data = dict(parse_qsl(res.text))
 
         if data["status"] == "ok":
-            fmts = dict([s.split('/')[:2] for s in data["fmt_list"].split(",")])
-            streams = [s.split('|') for s in data["fmt_stream_map"].split(",")]
+            fmts = dict([s.split("/")[:2] for s in data["fmt_list"].split(",")])
+            streams = [s.split("|") for s in data["fmt_stream_map"].split(",")]
             for qcode, url in streams:
                 _, h = fmts[qcode].split("x")
                 yield "{0}p".format(h), HTTPStream(self.session, url)

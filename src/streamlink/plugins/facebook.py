@@ -24,13 +24,13 @@ log = logging.getLogger(__name__)
     /[^/]+/(?:posts|videos)/(?P<video_id>\d+)
 """, re.VERBOSE))
 class Facebook(Plugin):
-    _src_re = re.compile(r'''(sd|hd)_src["']?\s*:\s*(?P<quote>["'])(?P<url>.+?)(?P=quote)''')
-    _dash_manifest_re = re.compile(r'''dash_manifest["']?\s*:\s*["'](?P<manifest>.+?)["'],''')
-    _playlist_re = re.compile(r'''video:\[({url:".+?}\])''')
+    _src_re = re.compile(r"""(sd|hd)_src["']?\s*:\s*(?P<quote>["'])(?P<url>.+?)(?P=quote)""")
+    _dash_manifest_re = re.compile(r"""dash_manifest["']?\s*:\s*["'](?P<manifest>.+?)["'],""")
+    _playlist_re = re.compile(r"""video:\[({url:".+?}\])""")
     _plurl_re = re.compile(r'''url:"(.*?)"''')
-    _pc_re = re.compile(r'''pkg_cohort["']\s*:\s*["'](.+?)["']''')
-    _rev_re = re.compile(r'''client_revision["']\s*:\s*(\d+),''')
-    _dtsg_re = re.compile(r'''DTSGInitialData["'],\s*\[\],\s*{\s*["']token["']\s*:\s*["'](.+?)["']''')
+    _pc_re = re.compile(r"""pkg_cohort["']\s*:\s*["'](.+?)["']""")
+    _rev_re = re.compile(r"""client_revision["']\s*:\s*(\d+),""")
+    _dtsg_re = re.compile(r"""DTSGInitialData["'],\s*\[\],\s*{\s*["']token["']\s*:\s*["'](.+?)["']""")
     _DEFAULT_PC = "PHASED:DEFAULT"
     _DEFAULT_REV = 4681796
     _TAHOE_URL = "https://www.facebook.com/video/tahoe/async/{0}/?chain=true&isvideo=true&payloadtype=primary"

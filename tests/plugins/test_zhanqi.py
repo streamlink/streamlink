@@ -6,5 +6,5 @@ class TestPluginCanHandleUrlZhanqitv(PluginCanHandleUrl):
     __plugin__ = Zhanqitv
 
     should_match = [
-        'https://www.zhanqi.tv/lpl',
+        "https://www.zhanqi.tv/lpl",
     ]

@@ -22,7 +22,7 @@ class NHKWorld(Plugin):
         sdomain = self.match.group(1) or "www"
         res = self.session.http.get(API_URL.format(sdomain))
 
-        stream_url = self.session.http.json(res)['main']['wstrm']
+        stream_url = self.session.http.json(res)["main"]["wstrm"]
         return HLSStream.parse_variant_playlist(self.session, stream_url)
 
 

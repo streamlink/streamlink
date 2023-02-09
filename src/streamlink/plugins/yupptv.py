@@ -18,7 +18,7 @@ log = logging.getLogger(__name__)
 
 
 @pluginmatcher(re.compile(
-    r'https?://(?:www\.)?yupptv\.com'
+    r"https?://(?:www\.)?yupptv\.com"
 ))
 @pluginargument(
     "boxid",
@@ -39,7 +39,7 @@ log = logging.getLogger(__name__)
     help="Purge cached YuppTV credentials to initiate a new session and reauthenticate.",
 )
 class YuppTV(Plugin):
-    _m3u8_re = re.compile(r'''['"](http.+\.m3u8.*?)['"]''')
+    _m3u8_re = re.compile(r"""['"](http.+\.m3u8.*?)['"]""")
     _cookie_expiry = 3600 * 24 * 365
 
     def __init__(self, *args, **kwargs):
@@ -55,17 +55,17 @@ class YuppTV(Plugin):
         time_now = time.time()
 
         self.session.http.cookies.set(
-            'BoxId',
+            "BoxId",
             box_id,
-            domain='www.yupptv.com',
-            path='/',
+            domain="www.yupptv.com",
+            path="/",
             expires=time_now + self._cookie_expiry,
         )
         self.session.http.cookies.set(
-            'YuppflixToken',
+            "YuppflixToken",
             yuppflix_token,
-            domain='www.yupptv.com',
-            path='/',
+            domain="www.yupptv.com",
+            path="/",
             expires=time_now + self._cookie_expiry,
         )
 
