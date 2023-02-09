@@ -19,7 +19,7 @@ QUALITIES = {
     "1080p": "",
     "720p": "_720",
     "480p": "_480",
-    "240p": "_240"
+    "240p": "_240",
 }
 
 _apidata_re = re.compile(r"""(?P<quote>["']?)channel(?P=quote)\s*:\s*(?P<data>{.*?})\s*,""")
@@ -27,7 +27,7 @@ _ddos_re = re.compile(r'document.cookie="(__DDOS_[^;]+)')
 
 
 @pluginmatcher(re.compile(
-    r"https?://(?:www\.)?goodgame\.ru/channel/(?P<user>[^/]+)"
+    r"https?://(?:www\.)?goodgame\.ru/channel/(?P<user>[^/]+)",
 ))
 class GoodGame(Plugin):
     def _check_stream(self, url):
@@ -37,7 +37,7 @@ class GoodGame(Plugin):
 
     def _get_streams(self):
         headers = {
-            "Referer": self.url
+            "Referer": self.url,
         }
         res = self.session.http.get(self.url, headers=headers)
 

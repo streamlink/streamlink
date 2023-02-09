@@ -37,7 +37,7 @@ class Pluzz(Plugin):
 
     def _get_streams(self):
         self.session.http.headers.update({
-            "User-Agent": useragents.CHROME
+            "User-Agent": useragents.CHROME,
         })
         CHROME_VERSION = re.compile(r"Chrome/(\d+)").search(useragents.CHROME).group(1)
 
@@ -45,9 +45,9 @@ class Pluzz(Plugin):
         country_code = self.session.http.get(self.GEO_URL, schema=validate.Schema(
             validate.parse_json(),
             {"reponse": {"geo_info": {
-                "country_code": str
+                "country_code": str,
             }}},
-            validate.get(("reponse", "geo_info", "country_code"))
+            validate.get(("reponse", "geo_info", "country_code")),
         ))
         log.debug(f"Country: {country_code}")
 
@@ -73,7 +73,7 @@ class Pluzz(Plugin):
                         validate.xml_xpath_string(".//script[contains(text(),'new Magnetoscope')][1]/text()"),
                         str,
                         validate.regex(re.compile(
-                            r"""player\.load\s*\(\s*{\s*src\s*:\s*(?P<q>['"])(?P<video_id>.+?)(?P=q)\s*}\s*\)\s*;"""
+                            r"""player\.load\s*\(\s*{\s*src\s*:\s*(?P<q>['"])(?P<video_id>.+?)(?P=q)\s*}\s*\)\s*;""",
                         )),
                         validate.get("video_id"),
                     ),
@@ -103,7 +103,7 @@ class Pluzz(Plugin):
             "browser": "chrome",
             "browser_version": CHROME_VERSION,
             "os": "ios",
-            "gmt": datetime.now(tz=LOCALTIMEZONE).strftime("%z")
+            "gmt": datetime.now(tz=LOCALTIMEZONE).strftime("%z"),
         })
         video_format, token_url, url, self.title = self.session.http.get(api_url, schema=validate.Schema(
             validate.parse_json(),
@@ -112,27 +112,27 @@ class Pluzz(Plugin):
                     "workflow": validate.any("token-akamai", "dai"),
                     "format": validate.any("dash", "hls"),
                     "token": validate.url(),
-                    "url": validate.url()
+                    "url": validate.url(),
                 },
                 "meta": {
-                    "title": str
-                }
+                    "title": str,
+                },
             },
             validate.union_get(
                 ("video", "format"),
                 ("video", "token"),
                 ("video", "url"),
-                ("meta", "title")
-            )
+                ("meta", "title"),
+            ),
         ))
 
         data_url = update_qsd(token_url, {
-            "url": url
+            "url": url,
         })
         video_url = self.session.http.get(data_url, schema=validate.Schema(
             validate.parse_json(),
             {"url": validate.url()},
-            validate.get("url")
+            validate.get("url"),
         ))
 
         if video_format == "dash":

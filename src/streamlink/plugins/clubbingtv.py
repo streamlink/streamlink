@@ -16,7 +16,7 @@ log = logging.getLogger(__name__)
 
 
 @pluginmatcher(re.compile(
-    r"https?://(www\.)?clubbingtv\.com/"
+    r"https?://(www\.)?clubbingtv\.com/",
 ))
 @pluginargument(
     "username",
@@ -49,7 +49,7 @@ class ClubbingTV(Plugin):
 
         if "Invalid Email/User Name" in res.text:
             log.error(
-                "Failed to login to Clubbing TV, incorrect email/password combination"
+                "Failed to login to Clubbing TV, incorrect email/password combination",
             )
             return False
 
@@ -71,7 +71,7 @@ class ClubbingTV(Plugin):
 
         stream_url = match.group("stream_url")
         log.info(
-            "Fetching external stream from URL {0}".format(stream_url)
+            "Fetching external stream from URL {0}".format(stream_url),
         )
         return self.session.streams(stream_url)
 

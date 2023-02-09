@@ -12,7 +12,7 @@ class TestCommandLineWithPlayerFifoPosix(CommandLineTestCase):
             ["streamlink", "--player-fifo",
              "-p", "any-player",
              "http://test.se", "test"],
-            ["any-player", "/tmp/streamlinkpipe"]
+            ["any-player", "/tmp/streamlinkpipe"],
         )
 
 
@@ -24,7 +24,7 @@ class TestCommandLineWithPlayerFifoWindows(CommandLineTestCase):
             ["streamlink", "--player-fifo",
              "-p", "any-player.exe",
              "http://test.se", "test"],
-            "any-player.exe \\\\.\\pipe\\streamlinkpipe"
+            "any-player.exe \\\\.\\pipe\\streamlinkpipe",
         )
 
     def test_player_fifo_vlc(self):
@@ -32,7 +32,7 @@ class TestCommandLineWithPlayerFifoWindows(CommandLineTestCase):
             ["streamlink", "--player-fifo",
              "-p", "C:\\Program Files\\VideoLAN\\vlc.exe",
              "http://test.se", "test"],
-            "C:\\Program Files\\VideoLAN\\vlc.exe --input-title-format http://test.se stream://\\\\\\.\\pipe\\streamlinkpipe"
+            "C:\\Program Files\\VideoLAN\\vlc.exe --input-title-format http://test.se stream://\\\\\\.\\pipe\\streamlinkpipe",
         )
 
     def test_player_fifo_mpv(self):
@@ -40,5 +40,5 @@ class TestCommandLineWithPlayerFifoWindows(CommandLineTestCase):
             ["streamlink", "--player-fifo",
              "-p", "C:\\Program Files\\mpv\\mpv.exe",
              "http://test.se", "test"],
-            "C:\\Program Files\\mpv\\mpv.exe --force-media-title=http://test.se file://\\\\.\\pipe\\streamlinkpipe"
+            "C:\\Program Files\\mpv\\mpv.exe --force-media-title=http://test.se file://\\\\.\\pipe\\streamlinkpipe",
         )

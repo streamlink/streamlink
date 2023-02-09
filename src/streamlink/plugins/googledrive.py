@@ -17,7 +17,7 @@ log = logging.getLogger(__name__)
 
 
 @pluginmatcher(re.compile(
-    r"https?://(?:drive|docs)\.google\.com/file/d/([^/]+)/?"
+    r"https?://(?:drive|docs)\.google\.com/file/d/([^/]+)/?",
 ))
 class GoogleDocs(Plugin):
     api_url = "https://docs.google.com/get_video_info"

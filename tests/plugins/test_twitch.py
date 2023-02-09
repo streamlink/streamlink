@@ -62,7 +62,7 @@ class TagDateRangeAd(Tag):
             "ID": self.val_quoted_string(id),
             "CLASS": self.val_quoted_string(classname),
             "START-DATE": self.val_quoted_string(start.strftime(DATETIME_FORMAT)),
-            "DURATION": duration
+            "DURATION": duration,
         }
         if custom is not None:
             attrs.update(**{key: self.val_quoted_string(value) for (key, value) in custom.items()})
@@ -77,7 +77,7 @@ class Segment(_Segment):
     def build(self, namespace):
         return "#EXT-X-PROGRAM-DATE-TIME:{0}\n{1}".format(
             self.date.strftime(DATETIME_FORMAT),
-            super().build(namespace)
+            super().build(namespace),
         )
 
 
@@ -131,7 +131,7 @@ class TestTwitchHLSStream(TestMixinStreamHLS, unittest.TestCase):
     def test_hls_disable_ads_daterange_unknown(self):
         daterange = TagDateRangeAd(start=DATETIME_BASE, duration=1, id="foo", classname="bar", custom=None)
         thread, segments = self.subject([
-            Playlist(0, [daterange, Segment(0), Segment(1)], end=True)
+            Playlist(0, [daterange, Segment(0), Segment(1)], end=True),
         ], disable_ads=True, low_latency=False)
 
         self.await_write(2)
@@ -141,7 +141,7 @@ class TestTwitchHLSStream(TestMixinStreamHLS, unittest.TestCase):
     def test_hls_disable_ads_daterange_by_class(self):
         daterange = TagDateRangeAd(start=DATETIME_BASE, duration=1, id="foo", classname="twitch-stitched-ad", custom=None)
         thread, segments = self.subject([
-            Playlist(0, [daterange, Segment(0), Segment(1)], end=True)
+            Playlist(0, [daterange, Segment(0), Segment(1)], end=True),
         ], disable_ads=True, low_latency=False)
 
         self.await_write(2)
@@ -151,7 +151,7 @@ class TestTwitchHLSStream(TestMixinStreamHLS, unittest.TestCase):
     def test_hls_disable_ads_daterange_by_id(self):
         daterange = TagDateRangeAd(start=DATETIME_BASE, duration=1, id="stitched-ad-1234", classname="/", custom=None)
         thread, segments = self.subject([
-            Playlist(0, [daterange, Segment(0), Segment(1)], end=True)
+            Playlist(0, [daterange, Segment(0), Segment(1)], end=True),
         ], disable_ads=True, low_latency=False)
 
         self.await_write(2)
@@ -161,7 +161,7 @@ class TestTwitchHLSStream(TestMixinStreamHLS, unittest.TestCase):
     def test_hls_disable_ads_daterange_by_attr(self):
         daterange = TagDateRangeAd(start=DATETIME_BASE, duration=1, id="foo", classname="/", custom={"X-TV-TWITCH-AD-URL": "/"})
         thread, segments = self.subject([
-            Playlist(0, [daterange, Segment(0), Segment(1)], end=True)
+            Playlist(0, [daterange, Segment(0), Segment(1)], end=True),
         ], disable_ads=True, low_latency=False)
 
         self.await_write(2)
@@ -174,20 +174,20 @@ class TestTwitchHLSStream(TestMixinStreamHLS, unittest.TestCase):
         thread, segments = self.subject([
             Playlist(0, [daterange, Segment(0), Segment(1)]),
             Playlist(2, [daterange, Segment(2), Segment(3)]),
-            Playlist(4, [Segment(4), Segment(5)], end=True)
+            Playlist(4, [Segment(4), Segment(5)], end=True),
         ], disable_ads=True, low_latency=False)
 
         self.await_write(6)
         self.assertEqual(
             self.await_read(read_all=True),
             self.content(segments, cond=lambda s: s.num >= 4),
-            "Filters out preroll ad segments"
+            "Filters out preroll ad segments",
         )
         self.assertTrue(all(self.called(s) for s in segments.values()), "Downloads all segments")
 
         self.assertEqual(mock_log.info.mock_calls, [
             call("Will skip ad segments"),
-            call("Waiting for pre-roll ads to finish, be patient")
+            call("Waiting for pre-roll ads to finish, be patient"),
         ])
 
     @patch("streamlink.plugins.twitch.log")
@@ -196,19 +196,19 @@ class TestTwitchHLSStream(TestMixinStreamHLS, unittest.TestCase):
         thread, segments = self.subject([
             Playlist(0, [Segment(0), Segment(1)]),
             Playlist(2, [daterange, Segment(2), Segment(3)]),
-            Playlist(4, [Segment(4), Segment(5)], end=True)
+            Playlist(4, [Segment(4), Segment(5)], end=True),
         ], disable_ads=True, low_latency=False)
 
         self.await_write(6)
         self.assertEqual(
             self.await_read(read_all=True),
             self.content(segments, cond=lambda s: s.num != 2 and s.num != 3),
-            "Filters out mid-stream ad segments"
+            "Filters out mid-stream ad segments",
         )
         self.assertTrue(all(self.called(s) for s in segments.values()), "Downloads all segments")
 
         self.assertEqual(mock_log.info.mock_calls, [
-            call("Will skip ad segments")
+            call("Will skip ad segments"),
         ])
 
     @patch("streamlink.plugins.twitch.log")
@@ -216,14 +216,14 @@ class TestTwitchHLSStream(TestMixinStreamHLS, unittest.TestCase):
         daterange = TagDateRangeAd(duration=2)
         thread, segments = self.subject([
             Playlist(0, [daterange, Segment(0), Segment(1)]),
-            Playlist(2, [Segment(2), Segment(3)], end=True)
+            Playlist(2, [Segment(2), Segment(3)], end=True),
         ], disable_ads=False, low_latency=False)
 
         self.await_write(4)
         self.assertEqual(
             self.await_read(read_all=True),
             self.content(segments),
-            "Doesn't filter out segments"
+            "Doesn't filter out segments",
         )
         self.assertTrue(all(self.called(s) for s in segments.values()), "Downloads all segments")
 
@@ -233,7 +233,7 @@ class TestTwitchHLSStream(TestMixinStreamHLS, unittest.TestCase):
     def test_hls_low_latency_has_prefetch(self, mock_log):
         thread, segments = self.subject([
             Playlist(0, [Segment(0), Segment(1), Segment(2), Segment(3), SegmentPrefetch(4), SegmentPrefetch(5)]),
-            Playlist(4, [Segment(4), Segment(5), Segment(6), Segment(7), SegmentPrefetch(8), SegmentPrefetch(9)], end=True)
+            Playlist(4, [Segment(4), Segment(5), Segment(6), Segment(7), SegmentPrefetch(8), SegmentPrefetch(9)], end=True),
         ], disable_ads=False, low_latency=True)
 
         self.assertEqual(2, self.session.options.get("hls-live-edge"))
@@ -243,21 +243,21 @@ class TestTwitchHLSStream(TestMixinStreamHLS, unittest.TestCase):
         self.assertEqual(
             self.await_read(read_all=True),
             self.content(segments, cond=lambda s: s.num >= 4),
-            "Skips first four segments due to reduced live-edge"
+            "Skips first four segments due to reduced live-edge",
         )
         self.assertFalse(any(self.called(s) for s in segments.values() if s.num < 4), "Doesn't download old segments")
 
         self.assertTrue(all(self.called(s) for s in segments.values() if s.num >= 4), "Downloads all remaining segments")
 
         self.assertEqual(mock_log.info.mock_calls, [
-            call("Low latency streaming (HLS live edge: 2)")
+            call("Low latency streaming (HLS live edge: 2)"),
         ])
 
     @patch("streamlink.plugins.twitch.log")
     def test_hls_no_low_latency_has_prefetch(self, mock_log):
         thread, segments = self.subject([
             Playlist(0, [Segment(0), Segment(1), Segment(2), Segment(3), SegmentPrefetch(4), SegmentPrefetch(5)]),
-            Playlist(4, [Segment(4), Segment(5), Segment(6), Segment(7), SegmentPrefetch(8), SegmentPrefetch(9)], end=True)
+            Playlist(4, [Segment(4), Segment(5), Segment(6), Segment(7), SegmentPrefetch(8), SegmentPrefetch(9)], end=True),
         ], disable_ads=False, low_latency=False)
 
         self.assertEqual(4, self.session.options.get("hls-live-edge"))
@@ -267,7 +267,7 @@ class TestTwitchHLSStream(TestMixinStreamHLS, unittest.TestCase):
         self.assertEqual(
             self.await_read(read_all=True),
             self.content(segments, cond=lambda s: s.num < 8),
-            "Ignores prefetch segments"
+            "Ignores prefetch segments",
         )
         self.assertTrue(all(self.called(s) for s in segments.values() if s.num <= 7), "Ignores prefetch segments")
 
@@ -279,7 +279,7 @@ class TestTwitchHLSStream(TestMixinStreamHLS, unittest.TestCase):
     def test_hls_low_latency_no_prefetch(self, mock_log):
         self.subject([
             Playlist(0, [Segment(0), Segment(1), Segment(2), Segment(3)]),
-            Playlist(4, [Segment(4), Segment(5), Segment(6), Segment(7)], end=True)
+            Playlist(4, [Segment(4), Segment(5), Segment(6), Segment(7)], end=True),
         ], disable_ads=False, low_latency=True)
 
         self.assertTrue(self.session.get_plugin_option("twitch", "low-latency"))
@@ -289,7 +289,7 @@ class TestTwitchHLSStream(TestMixinStreamHLS, unittest.TestCase):
         self.await_read(read_all=True)
         self.assertEqual(mock_log.info.mock_calls, [
             call("Low latency streaming (HLS live edge: 2)"),
-            call("This is not a low latency stream")
+            call("This is not a low latency stream"),
         ])
 
     @patch("streamlink.plugins.twitch.log")
@@ -297,21 +297,21 @@ class TestTwitchHLSStream(TestMixinStreamHLS, unittest.TestCase):
         daterange = TagDateRangeAd(duration=4)
         thread, segments = self.subject([
             Playlist(0, [daterange, Segment(0), Segment(1), Segment(2), Segment(3)]),
-            Playlist(4, [Segment(4), Segment(5), Segment(6), Segment(7), SegmentPrefetch(8), SegmentPrefetch(9)], end=True)
+            Playlist(4, [Segment(4), Segment(5), Segment(6), Segment(7), SegmentPrefetch(8), SegmentPrefetch(9)], end=True),
         ], disable_ads=False, low_latency=True)
 
         self.await_write(8)
         self.assertEqual(
             self.await_read(read_all=True),
             self.content(segments, cond=lambda s: s.num > 1),
-            "Skips first two segments due to reduced live-edge"
+            "Skips first two segments due to reduced live-edge",
         )
         self.assertFalse(any(self.called(s) for s in segments.values() if s.num < 2), "Skips first two preroll segments")
 
         self.assertTrue(all(self.called(s) for s in segments.values() if s.num >= 2), "Downloads all remaining segments")
 
         self.assertEqual(mock_log.info.mock_calls, [
-            call("Low latency streaming (HLS live edge: 2)")
+            call("Low latency streaming (HLS live edge: 2)"),
         ])
 
     @patch("streamlink.plugins.twitch.log")
@@ -319,7 +319,7 @@ class TestTwitchHLSStream(TestMixinStreamHLS, unittest.TestCase):
         daterange = TagDateRangeAd(duration=4)
         self.subject([
             Playlist(0, [daterange, Segment(0), Segment(1), Segment(2), Segment(3)]),
-            Playlist(4, [Segment(4), Segment(5), Segment(6), Segment(7), SegmentPrefetch(8), SegmentPrefetch(9)], end=True)
+            Playlist(4, [Segment(4), Segment(5), Segment(6), Segment(7), SegmentPrefetch(8), SegmentPrefetch(9)], end=True),
         ], disable_ads=True, low_latency=True)
 
         self.await_write(8)
@@ -327,7 +327,7 @@ class TestTwitchHLSStream(TestMixinStreamHLS, unittest.TestCase):
         self.assertEqual(mock_log.info.mock_calls, [
             call("Will skip ad segments"),
             call("Low latency streaming (HLS live edge: 2)"),
-            call("Waiting for pre-roll ads to finish, be patient")
+            call("Waiting for pre-roll ads to finish, be patient"),
         ])
 
     @patch("streamlink.plugins.twitch.log")
@@ -369,7 +369,7 @@ class TestTwitchHLSStream(TestMixinStreamHLS, unittest.TestCase):
         daterange = TagDateRangeAd(duration=4)
         self.subject([
             Playlist(0, [daterange, Segment(0), Segment(1), Segment(2), Segment(3)]),
-            Playlist(4, [Segment(4), Segment(5), Segment(6), Segment(7)], end=True)
+            Playlist(4, [Segment(4), Segment(5), Segment(6), Segment(7)], end=True),
         ], disable_ads=True, low_latency=True)
 
         self.await_write(6)
@@ -378,12 +378,13 @@ class TestTwitchHLSStream(TestMixinStreamHLS, unittest.TestCase):
             call("Will skip ad segments"),
             call("Low latency streaming (HLS live edge: 2)"),
             call("Waiting for pre-roll ads to finish, be patient"),
-            call("This is not a low latency stream")
+            call("This is not a low latency stream"),
         ])
 
     def test_hls_low_latency_no_ads_reload_time(self):
+        Seg, SegPre = Segment, SegmentPrefetch
         self.subject([
-            Playlist(0, [Segment(0, duration=5), Segment(1, duration=7), Segment(2, duration=11), SegmentPrefetch(3)], end=True)
+            Playlist(0, [Seg(0, duration=5), Seg(1, duration=7), Seg(2, duration=11), SegPre(3)], end=True),
         ], low_latency=True)
 
         self.await_write(4)
@@ -558,20 +559,20 @@ class TestTwitchMetadata(unittest.TestCase):
             "https://gql.twitch.tv/gql",
             json=[
                 {"data": {"userOrError": {"userDoesNotExist": "error"} if not data else {
-                    "displayName": "channel name"
+                    "displayName": "channel name",
                 }}},
                 {"data": {"user": None if not data else {
                     "lastBroadcast": {
-                        "title": "channel status"
+                        "title": "channel status",
                     },
                     "stream": {
                         "id": "stream id",
                         "game": {
-                            "name": "channel game"
-                        }
-                    }
-                }}}
-            ]
+                            "name": "channel game",
+                        },
+                    },
+                }}},
+            ],
         )
 
     def mock_request_video(self, data=True):
@@ -581,12 +582,12 @@ class TestTwitchMetadata(unittest.TestCase):
                 "id": "video id",
                 "title": "video title",
                 "game": {
-                    "displayName": "video game"
+                    "displayName": "video game",
                 },
                 "owner": {
-                    "displayName": "channel name"
-                }
-            }}}
+                    "displayName": "channel name",
+                },
+            }}},
         )
 
     def mock_request_clip(self, data=True):
@@ -597,19 +598,19 @@ class TestTwitchMetadata(unittest.TestCase):
                     "clip": None if not data else {
                         "id": "clip id",
                         "broadcaster": {
-                            "displayName": "channel name"
+                            "displayName": "channel name",
                         },
                         "game": {
-                            "name": "game name"
-                        }
-                    }
+                            "name": "game name",
+                        },
+                    },
                 }},
                 {"data": {
                     "clip": None if not data else {
-                        "title": "clip title"
-                    }
-                }}
-            ]
+                        "title": "clip title",
+                    },
+                }},
+            ],
         )
 
     def test_metadata_channel(self):
@@ -626,26 +627,26 @@ class TestTwitchMetadata(unittest.TestCase):
                 "extensions": {
                     "persistedQuery": {
                         "version": 1,
-                        "sha256Hash": "c3ea5a669ec074a58df5c11ce3c27093fa38534c94286dc14b68a25d5adcbf55"
-                    }
+                        "sha256Hash": "c3ea5a669ec074a58df5c11ce3c27093fa38534c94286dc14b68a25d5adcbf55",
+                    },
                 },
                 "variables": {
                     "login": "foo",
-                    "lcpVideosEnabled": False
-                }
+                    "lcpVideosEnabled": False,
+                },
             },
             {
                 "operationName": "StreamMetadata",
                 "extensions": {
                     "persistedQuery": {
                         "version": 1,
-                        "sha256Hash": "059c4653b788f5bdb2f5a2d2a24b0ddc3831a15079001a3d927556a96fb0517f"
-                    }
+                        "sha256Hash": "059c4653b788f5bdb2f5a2d2a24b0ddc3831a15079001a3d927556a96fb0517f",
+                    },
                 },
                 "variables": {
-                    "channelLogin": "foo"
-                }
-            }
+                    "channelLogin": "foo",
+                },
+            },
         ])
 
     def test_metadata_channel_no_data(self):
@@ -671,14 +672,14 @@ class TestTwitchMetadata(unittest.TestCase):
                 "extensions": {
                     "persistedQuery": {
                         "version": 1,
-                        "sha256Hash": "cb3b1eb2f2d2b2f65b8389ba446ec521d76c3aa44f5424a1b1d235fe21eb4806"
-                    }
+                        "sha256Hash": "cb3b1eb2f2d2b2f65b8389ba446ec521d76c3aa44f5424a1b1d235fe21eb4806",
+                    },
                 },
                 "variables": {
                     "channelLogin": "",
-                    "videoID": "1337"
-                }
-            }
+                    "videoID": "1337",
+                },
+            },
         )
 
     def test_metadata_video_no_data(self):
@@ -703,25 +704,25 @@ class TestTwitchMetadata(unittest.TestCase):
                 "extensions": {
                     "persistedQuery": {
                         "version": 1,
-                        "sha256Hash": "4480c1dcc2494a17bb6ef64b94a5213a956afb8a45fe314c66b0d04079a93a8f"
-                    }
+                        "sha256Hash": "4480c1dcc2494a17bb6ef64b94a5213a956afb8a45fe314c66b0d04079a93a8f",
+                    },
                 },
                 "variables": {
-                    "slug": "foo"
-                }
+                    "slug": "foo",
+                },
             },
             {
                 "operationName": "ClipsTitle",
                 "extensions": {
                     "persistedQuery": {
                         "version": 1,
-                        "sha256Hash": "f6cca7f2fdfbfc2cecea0c88452500dae569191e58a265f97711f8f2a838f5b4"
-                    }
+                        "sha256Hash": "f6cca7f2fdfbfc2cecea0c88452500dae569191e58a265f97711f8f2a838f5b4",
+                    },
                 },
                 "variables": {
-                    "slug": "foo"
-                }
-            }
+                    "slug": "foo",
+                },
+            },
         ])
 
     def test_metadata_clip_no_data(self):

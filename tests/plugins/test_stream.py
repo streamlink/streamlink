@@ -88,15 +88,15 @@ class TestPluginStream(unittest.TestCase):
         self.assertEqual({}, parse_params())
         self.assertEqual(
             dict(verify=False, params=dict(key="a value")),
-            parse_params("""verify=False params={'key': 'a value'}""")
+            parse_params("""verify=False params={'key': 'a value'}"""),
         )
         self.assertEqual(
             dict(verify=False),
-            parse_params("""verify=False""")
+            parse_params("""verify=False"""),
         )
         self.assertEqual(
             dict(conn=["B:1", "S:authMe", "O:1", "NN:code:1.23", "NS:flag:ok", "O:0"]),
-            parse_params(""""conn=['B:1', 'S:authMe', 'O:1', 'NN:code:1.23', 'NS:flag:ok', 'O:0']""")
+            parse_params(""""conn=['B:1', 'S:authMe', 'O:1', 'NN:code:1.23', 'NS:flag:ok', 'O:0']"""),
         )
 
     def test_stream_weight_value(self):

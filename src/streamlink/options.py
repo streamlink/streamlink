@@ -83,7 +83,7 @@ class Argument:
         argument_name: Optional[str] = None,
         dest: Optional[str] = None,
         is_global: bool = False,
-        **options
+        **options,
     ):
         """
         :param name: Argument name, without leading ``--`` or plugin name prefixes, e.g. ``"username"``, ``"password"``, etc.

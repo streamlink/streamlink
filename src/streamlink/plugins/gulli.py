@@ -18,7 +18,7 @@ log = logging.getLogger(__name__)
 
 
 @pluginmatcher(re.compile(
-    r"https?://replay\.gulli\.fr/(?:Direct|.+/(?P<video_id>VOD\d+))"
+    r"https?://replay\.gulli\.fr/(?:Direct|.+/(?P<video_id>VOD\d+))",
 ))
 class Gulli(Plugin):
     LIVE_PLAYER_URL = "https://replay.gulli.fr/jwplayer/embedstreamtv"
@@ -35,10 +35,10 @@ class Gulli(Plugin):
             validate.parse_json(),
             [
                 validate.Schema({
-                    "file": validate.url()
-                })
-            ]
-        )
+                    "file": validate.url(),
+                }),
+            ],
+        ),
     )
 
     def _get_streams(self):

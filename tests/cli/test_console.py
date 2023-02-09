@@ -45,7 +45,7 @@ class TestConsoleOutput(unittest.TestCase):
             '  "foo": "bar",\n'
             '  "baz": "qux"\n'
             '}\n',
-            output.getvalue()
+            output.getvalue(),
         )
         self.assertEqual([("test", 1), ("foo", "foo")], list(test_obj1.items()))
 
@@ -64,7 +64,7 @@ class TestConsoleOutput(unittest.TestCase):
             '  {\n    "foo": "bar"\n  },\n'
             '  {\n    "foo": "bar",\n    "baz": "qux"\n  }\n'
             ']\n',
-            output.getvalue()
+            output.getvalue(),
         )
         self.assertEqual(["foo", "bar"], test_list1)
 

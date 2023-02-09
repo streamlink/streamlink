@@ -17,7 +17,7 @@ class TestPluginCanHandleUrlRuv(PluginCanHandleUrl):
         "http://ruv.is/ras2",
         "http://ruv.is/rondo",
         "http://www.ruv.is/spila/ruv/ol-2018-ishokki-karla/20180217",
-        "http://www.ruv.is/spila/ruv/frettir/20180217"
+        "http://www.ruv.is/spila/ruv/frettir/20180217",
     ]
 
     should_not_match = [

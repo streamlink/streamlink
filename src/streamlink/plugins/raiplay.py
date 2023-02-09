@@ -19,7 +19,7 @@ log = logging.getLogger(__name__)
 
 
 @pluginmatcher(re.compile(
-    r"https?://(?:www\.)?raiplay\.it/dirette/(\w+)/?"
+    r"https?://(?:www\.)?raiplay\.it/dirette/(\w+)/?",
 ))
 class RaiPlay(Plugin):
     _DEFAULT_MEDIAPOLIS_OUTPUT = "64"

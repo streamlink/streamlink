@@ -15,7 +15,7 @@ log = logging.getLogger(__name__)
 
 
 @pluginmatcher(re.compile(
-    r"https?://zeenews\.india\.com/live-tv"
+    r"https?://zeenews\.india\.com/live-tv",
 ))
 class ZeeNews(Plugin):
     HLS_URL = "https://z5ams.akamaized.net/zeenews/index.m3u8{0}"

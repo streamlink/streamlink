@@ -78,6 +78,8 @@ select = [
   "TID",
   # flake8-quotes
   "Q",
+  # flake8-commas
+  "COM",
 ]
 extend-exclude = [
   "docs/conf.py",

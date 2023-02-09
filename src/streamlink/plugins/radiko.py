@@ -19,7 +19,7 @@ from streamlink.stream.hls import HLSStream
 
 
 @pluginmatcher(re.compile(
-    r"https?://radiko\.jp/(#!/)?(?P<state>live|ts)/(?P<station_id>[a-zA-Z0-9-]+)/?(?P<start_at>\d+)?"
+    r"https?://radiko\.jp/(#!/)?(?P<state>live|ts)/(?P<station_id>[a-zA-Z0-9-]+)/?(?P<start_at>\d+)?",
 ))
 class Radiko(Plugin):
     _api_auth_1 = "https://radiko.jp/v2/api/auth1"
@@ -35,7 +35,7 @@ class Radiko(Plugin):
             start_at = self.match.group("start_at")
             url, token = self._timefree(station_id, start_at)
         headers = {
-            "X-Radiko-AuthToken": token
+            "X-Radiko-AuthToken": token,
         }
         self.session.http.headers = headers
         yield from HLSStream.parse_variant_playlist(self.session, url).items()
@@ -48,7 +48,7 @@ class Radiko(Plugin):
             "station_id": station_id,
             "l": 15,
             "lsid": lsid,
-            "type": "b"
+            "type": "b",
         }
         url = f"{live_url}?{urlencode(live_params)}"
         return url, token
@@ -66,7 +66,7 @@ class Radiko(Plugin):
             "to": end_at,
             "l": 15,
             "lsid": lsid,
-            "type": "b"
+            "type": "b",
         }
         url = f"{m3u8_url}?{urlencode(m3u8_params)}"
         return url, token
@@ -76,7 +76,7 @@ class Radiko(Plugin):
             "x-radiko-app": "pc_html5",
             "x-radiko-app-version": "0.0.1",
             "x-radiko-device": "pc",
-            "x-radiko-user": "dummy_user"
+            "x-radiko-user": "dummy_user",
         }
         self.session.http.headers.update(headers)
         r = self.session.http.get(self._api_auth_1)
@@ -88,7 +88,7 @@ class Radiko(Plugin):
             "x-radiko-authtoken": token,
             "x-radiko-device": "pc",
             "x-radiko-partialkey": partial_key,
-            "x-radiko-user": "dummy_user"
+            "x-radiko-user": "dummy_user",
         }
         self.session.http.headers.update(headers)
         r = self.session.http.get(self._api_auth_2)

@@ -17,7 +17,7 @@ log = logging.getLogger(__name__)
 
 
 @pluginmatcher(re.compile(
-    r"https?://(?:www\.)?ccma\.cat/tv3/directe/(?P<ident>.+?)/"
+    r"https?://(?:www\.)?ccma\.cat/tv3/directe/(?P<ident>.+?)/",
 ))
 class TV3Cat(Plugin):
     _URL_STREAM_INFO = "https://dinamics.ccma.cat/pvideo/media.jsp"

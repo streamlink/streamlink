@@ -22,7 +22,7 @@ log = logging.getLogger(__name__)
 
 
 @pluginmatcher(re.compile(
-    r"https?://(?:[\w-]+\.)?delfi\.(?P<tld>lt|lv|ee)"
+    r"https?://(?:[\w-]+\.)?delfi\.(?P<tld>lt|lv|ee)",
 ))
 class Delfi(Plugin):
     _api = {
@@ -50,13 +50,13 @@ class Delfi(Plugin):
                                         "type": str,
                                         "src": str,
                                     }],
-                                    validate.filter(lambda item: item["type"] == "application/x-mpegurl")
-                                )
-                            }
-                        }
+                                    validate.filter(lambda item: item["type"] == "application/x-mpegurl"),
+                                ),
+                            },
+                        },
                     },
-                    validate.get(("data", "versions"))
-                )
+                    validate.get(("data", "versions")),
+                ),
             )
         except PluginError:
             log.error("Failed to get streams from API")
@@ -80,9 +80,9 @@ class Delfi(Plugin):
                         validate.get("stream"),
                         validate.parse_json(),
                         {"versions": [{
-                            "hls": str
+                            "hls": str,
                         }]},
-                        validate.get("versions")
+                        validate.get("versions"),
                     ),
                 ),
             ))
@@ -96,7 +96,7 @@ class Delfi(Plugin):
 
     def _get_streams(self):
         root = self.session.http.get(self.url, schema=validate.Schema(
-            validate.parse_html()
+            validate.parse_html(),
         ))
 
         video_id = root.xpath("string(.//div[@data-provider='dvideo'][@data-id][1]/@data-id)")

@@ -21,7 +21,7 @@ log = logging.getLogger(__name__)
 
 
 @pluginmatcher(re.compile(
-    r"https?://watch\.wwe\.com/(channel)?"
+    r"https?://watch\.wwe\.com/(channel)?",
 ))
 @pluginargument(
     "email",
@@ -74,7 +74,7 @@ class WWENetwork(Plugin):
             log.debug("API request failed: {0}:{1} ({2})".format(
                 data["status"],
                 data.get("code"),
-                "; ".join(data.get("messages", []))
+                "; ".join(data.get("messages", [])),
             ))
         return data
 
@@ -155,7 +155,7 @@ class WWENetwork(Plugin):
                 yield from HLSStream.parse_variant_playlist(
                     self.session,
                     info["hlsUrl"],
-                    start_offset=start_point
+                    start_offset=start_point,
                 ).items()
             else:
                 log.error("Could not find the HLS URL")

@@ -11,7 +11,7 @@ from streamlink.plugin.api import validate
 
 
 @pluginmatcher(re.compile(
-    r"https?://(?:www\.)?atptour\.com/(?:en|es)/atp-challenger-tour/challenger-tv"
+    r"https?://(?:www\.)?atptour\.com/(?:en|es)/atp-challenger-tour/challenger-tv",
 ))
 class AtpChallengerTour(Plugin):
     def _get_streams(self):

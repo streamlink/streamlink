@@ -16,7 +16,7 @@ log = logging.getLogger(__name__)
 
 
 @pluginmatcher(re.compile(
-    r"https?://www\.idf1\.fr/(videos/[^/]+/[^/]+\.html|live\b)"
+    r"https?://www\.idf1\.fr/(videos/[^/]+/[^/]+\.html|live\b)",
 ))
 class IDF1(Plugin):
     def _get_streams(self):
@@ -27,8 +27,8 @@ class IDF1(Plugin):
                 validate.union((
                     validate.xml_xpath_string(".//script[@class='dacast-video'][@id]/@id"),
                     validate.xml_xpath_string(".//head/title[1]/text()"),
-                ))
-            )
+                )),
+            ),
         )
 
         if not self.id:
@@ -47,8 +47,8 @@ class IDF1(Plugin):
                 validate.any(
                     {"error": str},
                     {"hls": validate.url()},
-                )
-            )
+                ),
+            ),
         )
 
         if data.get("error"):

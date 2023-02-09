@@ -20,7 +20,7 @@ log = logging.getLogger(__name__)
 
 
 @pluginmatcher(re.compile(
-    r"https?://(?:www\.)?atresplayer\.com/"
+    r"https?://(?:www\.)?atresplayer\.com/",
 ))
 class AtresPlayer(Plugin):
     def __init__(self, *args, **kwargs):

@@ -528,7 +528,7 @@ class Plugin:
             id=self.get_id(),
             author=self.get_author(),
             category=self.get_category(),
-            title=self.get_title()
+            title=self.get_title(),
         )
 
     def get_id(self) -> Optional[str]:

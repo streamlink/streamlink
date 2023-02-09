@@ -35,25 +35,25 @@ class RTBF(Plugin):
     RADIO_STREAM_URL = "http://www.rtbfradioplayer.be/radio/liveradio/rtbf/radios/{}/config.json"
 
     _stream_size_re = re.compile(
-        r"https?://.+-(?P<size>\d+p?)\..+?$"
+        r"https?://.+-(?P<size>\d+p?)\..+?$",
     )
 
     _video_player_re = re.compile(
         r'<iframe\s+class="embed-responsive-item\s+js-embed-iframe".*src="(?P<player_url>.+?)".*?</iframe>',
-        re.DOTALL
+        re.DOTALL,
     )
     _video_stream_data_re = re.compile(
-        r'<div\s+id="js-embed-player"\s+class="js-embed-player\s+embed-player"\s+data-media="(.+?)"'
+        r'<div\s+id="js-embed-player"\s+class="js-embed-player\s+embed-player"\s+data-media="(.+?)"',
     )
     _radio_id_re = re.compile(
-        r'var currentStationKey = "(?P<radio_id>.+?)"'
+        r'var currentStationKey = "(?P<radio_id>.+?)"',
     )
 
     _geo_schema = validate.Schema(
         {
             "country": str,
             "zone": str,
-        }
+        },
     )
 
     _video_stream_schema = validate.Schema(
@@ -72,17 +72,17 @@ class RTBF(Plugin):
                     "sources": validate.any(
                         [],
                         validate.Schema({
-                            str: validate.any(None, "", validate.url())
-                        })
+                            str: validate.any(None, "", validate.url()),
+                        }),
                     ),
                     validate.optional("urlHls"): validate.any(None, "", validate.url()),
                     validate.optional("urlDash"): validate.any(None, "", validate.url()),
                     validate.optional("streamUrlHls"): validate.any(None, "", validate.url()),
                     validate.optional("streamUrlDash"): validate.any(None, "", validate.url()),
                     validate.optional("drm"): bool,
-                }
-            )
-        )
+                },
+            ),
+        ),
     )
 
     _radio_stream_schema = validate.Schema(
@@ -91,9 +91,9 @@ class RTBF(Plugin):
                 [{
                     "url": validate.url(),
                     "mimeType": str,
-                }]
-            )
-        }
+                }],
+            ),
+        },
     )
 
     def check_geolocation(self, geoloc_flag):

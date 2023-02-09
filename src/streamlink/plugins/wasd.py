@@ -16,7 +16,7 @@ log = logging.getLogger(__name__)
 
 
 @pluginmatcher(re.compile(
-    r"https?://(?:www\.)?wasd\.tv/(?P<nickname>[^/]+)/?$"
+    r"https?://(?:www\.)?wasd\.tv/(?P<nickname>[^/]+)/?$",
 ))
 class WASD(Plugin):
     _media_schema = validate.Schema({
@@ -32,7 +32,7 @@ class WASD(Plugin):
                 },
                 "media_status": validate.any("STOPPED", "RUNNING"),
                 "media_type": "HLS",
-            }]
+            }],
         }],
     })
     _api_schema = validate.Schema({
@@ -64,7 +64,7 @@ class WASD(Plugin):
                 "offset": "0",
                 "channel_id": channel_id,
                 "media_container_type": "SINGLE,COOP",
-            }
+            },
         )
 
         json_res = self.session.http.json(res, schema=self._api_schema)

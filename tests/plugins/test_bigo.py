@@ -12,7 +12,7 @@ class TestPluginCanHandleUrlBigo(PluginCanHandleUrl):
         "http://www.bigo.tv/00000000",
         "http://www.bigo.tv/fancy1234",
         "http://www.bigo.tv/abc.123",
-        "http://www.bigo.tv/000000.00"
+        "http://www.bigo.tv/000000.00",
     ]
 
     should_not_match = [
@@ -28,5 +28,5 @@ class TestPluginCanHandleUrlBigo(PluginCanHandleUrl):
         "https://www.bigo.tv/show/00000000",
         "http://www.bigo.tv/show/00000000",
         "http://bigo.tv/show/00000000",
-        "https://bigo.tv/show/00000000"
+        "https://bigo.tv/show/00000000",
     ]

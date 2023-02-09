@@ -27,7 +27,7 @@ log = logging.getLogger(__name__)
 
 
 @pluginmatcher(re.compile(
-    r"https?://(\w+)\.radio\.(net|at|de|dk|es|fr|it|pl|pt|se)"
+    r"https?://(\w+)\.radio\.(net|at|de|dk|es|fr|it|pl|pt|se)",
 ))
 class RadioNet(Plugin):
     def _get_streams(self):

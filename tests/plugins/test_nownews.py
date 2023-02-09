@@ -9,7 +9,7 @@ class TestPluginCanHandleUrlNowNews(PluginCanHandleUrl):
         "https://news.now.com/home/live",
         "http://news.now.com/home/live",
         "https://news.now.com/home/live331a",
-        "http://news.now.com/home/live331a"
+        "http://news.now.com/home/live331a",
     ]
 
     should_not_match = [

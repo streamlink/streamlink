@@ -57,7 +57,7 @@ class TestPluginAPIHTTPSession(unittest.TestCase):
         self.assertEqual(mock_sleep.mock_calls, [
             call(2),
             call(4),
-            call(5)
+            call(5),
         ])
 
     def test_json_encoding(self):

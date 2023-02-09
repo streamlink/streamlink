@@ -15,5 +15,5 @@ class TestPluginCanHandleUrlVimeo(PluginCanHandleUrl):
     ]
 
     should_not_match = [
-        "https://www.vimeo.com/"
+        "https://www.vimeo.com/",
     ]

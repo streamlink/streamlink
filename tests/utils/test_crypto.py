@@ -16,5 +16,5 @@ class TestUtil(unittest.TestCase):
         data = base64.b64decode("U2FsdGVkX18nVyJ6Y+ksOASMSHKuRoQ9b4DKHuPbyQc=")
         self.assertEqual(
             b"this is a test\n",
-            decrypt_openssl(data, b"streamlink")
+            decrypt_openssl(data, b"streamlink"),
         )

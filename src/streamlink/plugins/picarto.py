@@ -54,11 +54,11 @@ class Picarto(Plugin):
                         }],
                     }),
                     "getLoadBalancerUrl": validate.any(None, {
-                        "url": validate.any(None, validate.transform(lambda url: urlparse(url).netloc))
-                    })
+                        "url": validate.any(None, validate.transform(lambda url: urlparse(url).netloc)),
+                    }),
                 },
                 validate.union_get("channel", "getMultiStreams", "getLoadBalancerUrl"),
-            )
+            ),
         )
         if not channel or not multistreams or not loadbalancer:
             log.debug("Missing channel or streaming data")
@@ -82,7 +82,7 @@ class Picarto(Plugin):
 
         hls_url = self.HLS_URL.format(
             netloc=loadbalancer["url"],
-            file_name=channel["stream_name"]
+            file_name=channel["stream_name"],
         )
 
         return HLSStream.parse_variant_playlist(self.session, hls_url)
@@ -115,7 +115,7 @@ class Picarto(Plugin):
                     "channel": {"name": str},
                 }),
             }},
-            validate.get(("data", "video"))
+            validate.get(("data", "video")),
         ))
 
         if not vod_data:
@@ -131,7 +131,7 @@ class Picarto(Plugin):
         netloc = urlparse(vod_data["video_recording_image_url"]).netloc
         hls_url = self.HLS_URL.format(
             netloc=netloc,
-            file_name=vod_data["file_name"]
+            file_name=vod_data["file_name"],
         )
 
         return HLSStream.parse_variant_playlist(self.session, hls_url)

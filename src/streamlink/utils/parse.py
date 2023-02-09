@@ -28,7 +28,7 @@ def parse_json(
     name="JSON",
     exception=PluginError,
     schema=None,
-    *args, **kwargs
+    *args, **kwargs,
 ):
     """Wrapper around json.loads.
 
@@ -43,7 +43,7 @@ def parse_html(
     name="HTML",
     exception=PluginError,
     schema=None,
-    *args, **kwargs
+    *args, **kwargs,
 ):
     """Wrapper around lxml.etree.HTML with some extras.
 
@@ -64,7 +64,7 @@ def parse_xml(
     name="XML",
     exception=PluginError,
     schema=None,
-    *args, **kwargs
+    *args, **kwargs,
 ):
     """Wrapper around lxml.etree.XML with some extras.
 
@@ -88,7 +88,7 @@ def parse_qsd(
     name="query string",
     exception=PluginError,
     schema=None,
-    *args, **kwargs
+    *args, **kwargs,
 ):
     """Parses a query string into a dict.
 

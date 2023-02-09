@@ -34,7 +34,7 @@ class Mixcloud(Plugin):
                         }
                     }
                 """,
-                "variables": {"user": {"username": self.match.group("user")}}
+                "variables": {"user": {"username": self.match.group("user")}},
             },
             schema=validate.Schema(
                 validate.parse_json(),

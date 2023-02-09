@@ -14,7 +14,7 @@ from streamlink.stream.hls import HLSStream
 
 
 @pluginmatcher(re.compile(
-    r"https?://(\w+\.)?welt\.de/?"
+    r"https?://(\w+\.)?welt\.de/?",
 ))
 class Welt(Plugin):
     _url_vod = "https://www.welt.de/onward/video/play/{0}"
@@ -24,7 +24,7 @@ class Welt(Plugin):
         validate.parse_json(),
         validate.get("sources"),
         validate.filter(lambda obj: obj["extension"] == "m3u8"),
-        validate.get((0, "src"))
+        validate.get((0, "src")),
     )
 
     def _get_streams(self):

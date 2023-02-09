@@ -16,5 +16,5 @@ class TestUtilsModule(unittest.TestCase):
     def test_load_module(self):
         self.assertEqual(
             sys.modules[__name__].__test_marker__,
-            load_module(__name__.split(".")[-1], os.path.dirname(__file__)).__test_marker__
+            load_module(__name__.split(".")[-1], os.path.dirname(__file__)).__test_marker__,
         )

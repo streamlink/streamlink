@@ -18,7 +18,7 @@ log = logging.getLogger(__name__)
 
 
 @pluginmatcher(re.compile(
-    r"https?://(?:www\.)?dw\.com/"
+    r"https?://(?:www\.)?dw\.com/",
 ))
 class DeutscheWelle(Plugin):
     DEFAULT_CHANNEL = "1"
@@ -36,7 +36,7 @@ class DeutscheWelle(Plugin):
         channel = int(
             dict(parse_qsl(str(urlparse(self.url).query))).get("channel")
             or channel
-            or self.DEFAULT_CHANNEL
+            or self.DEFAULT_CHANNEL,
         )
         log.debug(f"Using channel ID: {channel}")
 

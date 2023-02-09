@@ -17,7 +17,7 @@ log = logging.getLogger(__name__)
 
 
 @pluginmatcher(re.compile(
-    r"https?://(?:(?P<subdomain>\w+)\.)?euronews\.com/(?P<live>live$)?"
+    r"https?://(?:(?P<subdomain>\w+)\.)?euronews\.com/(?P<live>live$)?",
 ))
 class Euronews(Plugin):
     API_URL = "https://{subdomain}.euronews.com/api/live/data"

@@ -189,7 +189,7 @@ class DASHStream(Stream):
         video_representation: Optional[Representation] = None,
         audio_representation: Optional[Representation] = None,
         period: float = 0,
-        **args
+        **args,
     ):
         """
         :param streamlink.Streamlink session: Streamlink session instance
@@ -234,7 +234,7 @@ class DASHStream(Stream):
         cls,
         session,
         url_or_manifest: str,
-        **args
+        **args,
     ) -> Dict[str, "DASHStream"]:
         """
         Parse a DASH manifest file and return its streams.
@@ -294,7 +294,7 @@ class DASHStream(Stream):
 
         log.debug("Available languages for DASH audio streams: {0} (using: {1})".format(
             ", ".join(available_languages) or "NONE",
-            lang or "n/a"
+            lang or "n/a",
         ))
 
         # if the language is given by the stream, filter out other languages that do not match

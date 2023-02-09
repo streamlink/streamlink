@@ -19,7 +19,7 @@ log = logging.getLogger(__name__)
 
 
 @pluginmatcher(re.compile(
-    r"https?://(?:www\.)?booyah\.live/(?:(?P<type>channels|clips|vods)/)?(?P<id>[^?]+)"
+    r"https?://(?:www\.)?booyah\.live/(?:(?P<type>channels|clips|vods)/)?(?P<id>[^?]+)",
 ))
 class Booyah(Plugin):
     auth_api_url = "https://booyah.live/api/v3/auths/sessions"

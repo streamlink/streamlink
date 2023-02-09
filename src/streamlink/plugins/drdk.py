@@ -17,7 +17,7 @@ log = logging.getLogger(__name__)
 
 
 @pluginmatcher(re.compile(
-    r"https?://(?:www\.)?dr\.dk/drtv(/kanal/[\w-]+)"
+    r"https?://(?:www\.)?dr\.dk/drtv(/kanal/[\w-]+)",
 ))
 class DRDK(Plugin):
     live_api_url = "https://www.dr-massive.com/api/page"

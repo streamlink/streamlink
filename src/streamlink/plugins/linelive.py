@@ -12,7 +12,7 @@ from streamlink.stream.hls import HLSStream
 
 
 @pluginmatcher(re.compile(
-    r"https?://live\.line\.me/channels/(?P<channel>\d+)/broadcast/(?P<broadcast>\d+)"
+    r"https?://live\.line\.me/channels/(?P<channel>\d+)/broadcast/(?P<broadcast>\d+)",
 ))
 class LineLive(Plugin):
     _URL_API = "https://live-api.line-apps.com/web/v4.0/channel/{channel}/broadcast/{broadcast}/player_status"

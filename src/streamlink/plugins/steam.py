@@ -28,10 +28,10 @@ class SteamLoginFailed(Exception):
 
 
 @pluginmatcher(re.compile(
-    r"https?://steamcommunity\.com/broadcast/watch/(\d+)"
+    r"https?://steamcommunity\.com/broadcast/watch/(\d+)",
 ))
 @pluginmatcher(re.compile(
-    r"https?://steam\.tv/(\w+)"
+    r"https?://steam\.tv/(\w+)",
 ))
 @pluginargument(
     "email",
@@ -76,9 +76,9 @@ class SteamBroadcastPlugin(Plugin):
                     "publickey_mod": validate.all(str, validate.transform(lambda x: int(x, 16))),
                     "success": True,
                     "timestamp": str,
-                    "token_gid": str
-                }
-            )
+                    "token_gid": str,
+                },
+            ),
         )
 
         rsa = RSA.construct((rsadata["publickey_mod"], rsadata["publickey_exp"]))
@@ -116,9 +116,9 @@ class SteamBroadcastPlugin(Plugin):
                     validate.optional("emailsteamid"): str,
                     validate.optional("login_complete"): bool,
                     validate.optional("captcha_needed"): bool,
-                    validate.optional("captcha_gid"): validate.any(str, int)
-                }
-            )
+                    validate.optional("captcha_gid"): validate.any(str, int),
+                },
+            ),
         )
 
         if resp.get("login_complete"):
@@ -167,7 +167,7 @@ class SteamBroadcastPlugin(Plugin):
                 emailsteamid=resp.get("emailsteamid", ""),
                 captcha_text=captcha_text,
                 captchagid=captchagid,
-                twofactorcode=twofactorcode
+                twofactorcode=twofactorcode,
             )
 
         log.error("Something went wrong while logging in to Steam")
@@ -181,7 +181,7 @@ class SteamBroadcastPlugin(Plugin):
                 broadcastid=0,
                 steamid=steamid,
                 viewertoken=viewertoken,
-                sessionid=sessionid
+                sessionid=sessionid,
             ),
             schema=validate.Schema(
                 validate.parse_json(),
@@ -190,9 +190,9 @@ class SteamBroadcastPlugin(Plugin):
                     "retry": int,
                     "broadcastid": validate.any(str, int),
                     validate.optional("url"): validate.url(),
-                    validate.optional("viewertoken"): str
-                }
-            )
+                    validate.optional("viewertoken"): str,
+                },
+            ),
         )
 
     def _find_steamid(self, url):

@@ -12,7 +12,7 @@ from streamlink.stream.hls import HLSStream
 
 
 @pluginmatcher(re.compile(
-    r"https?://(?:www\.)?cbsnews\.com/(?:\w+/)?live/?"
+    r"https?://(?:www\.)?cbsnews\.com/(?:\w+/)?live/?",
 ))
 class CBSNews(Plugin):
     def _get_streams(self):

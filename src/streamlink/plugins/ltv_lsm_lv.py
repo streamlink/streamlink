@@ -31,8 +31,8 @@ class LTVHLSStreamWorker(HLSStreamWorker):
         self.playlist_sequences = [
             sequence._replace(
                 segment=sequence.segment._replace(
-                    uri=copy_query_url(sequence.segment.uri, self.stream.url)
-                )
+                    uri=copy_query_url(sequence.segment.uri, self.stream.url),
+                ),
             )
             for sequence in self.playlist_sequences
         ]
@@ -56,7 +56,7 @@ class LTVHLSStream(HLSStream):
 
 
 @pluginmatcher(re.compile(
-    r"https://ltv\.lsm\.lv/lv/tiesraide"
+    r"https://ltv\.lsm\.lv/lv/tiesraide",
 ))
 class LtvLsmLv(Plugin):
     URL_IFRAME = "https://ltv.lsm.lv/embed/live?c={embed_id}"

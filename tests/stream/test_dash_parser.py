@@ -135,7 +135,7 @@ class TestMPDParser(unittest.TestCase):
                                           ("http://test.se/hd-5_000311236.mp4",
                                            datetime.datetime(2018, 5, 22, 13, 37, 5, tzinfo=utc)),
                                           ("http://test.se/hd-5_000311237.mp4",
-                                           datetime.datetime(2018, 5, 22, 13, 37, 10, tzinfo=utc))
+                                           datetime.datetime(2018, 5, 22, 13, 37, 10, tzinfo=utc)),
                                           ])
 
     def test_segments_static_no_publish_time(self):
@@ -225,8 +225,8 @@ class TestMPDParser(unittest.TestCase):
                 attrib={
                     "id": "test",
                     "bandwidth": bandwidth,
-                    "mimeType": "video/mp4"
-                }
+                    "mimeType": "video/mp4",
+                },
             )
             node.findall.return_value = []
             return Representation(node)

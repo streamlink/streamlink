@@ -11,5 +11,5 @@ class TestPluginCanHandleUrlAdultSwim(PluginCanHandleUrl):
         "https://www.adultswim.com/streams/infomercials",
         "https://www.adultswim.com/streams/last-stream-on-the-left-channel/",
         "https://www.adultswim.com/videos/as-seen-on-adult-swim/wednesday-march-18th-2020",
-        "https://www.adultswim.com/videos/fishcenter-live/wednesday-april-29th-2020/"
+        "https://www.adultswim.com/videos/fishcenter-live/wednesday-april-29th-2020/",
     ]

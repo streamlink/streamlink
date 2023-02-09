@@ -12,13 +12,13 @@ from streamlink.stream.hls import HLSStream
 
 
 @pluginmatcher(re.compile(
-    r"https?://(?:www\.)?fox(?:play)?\.com\.tr/"
+    r"https?://(?:www\.)?fox(?:play)?\.com\.tr/",
 ))
 class FoxTR(Plugin):
     def _get_streams(self):
         re_streams = re.compile(r"""(['"])(?P<url>https://\S+/foxtv\.m3u8\S+)\1""")
         res = self.session.http.get(self.url, schema=validate.Schema(
-            validate.transform(re_streams.findall)
+            validate.transform(re_streams.findall),
         ))
         for _, stream_url in res:
             return HLSStream.parse_variant_playlist(self.session, stream_url)

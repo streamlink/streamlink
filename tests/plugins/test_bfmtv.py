@@ -19,5 +19,5 @@ class TestPluginCanHandleUrlBFMTV(PluginCanHandleUrl):
         "https://www.01net.com/mediaplayer/replay/jtech/",
         "https://www.bfmtv.com/politique/macron-et-le-pen-talonnes-par-fillon-et-melenchon-a-l-approche"
         + "-du-premier-tour-1142070.html",
-        "https://rmcdecouverte.bfmtv.com/mediaplayer-replay/?id=6714&title=TOP%20GEAR%20:PASSION%20VINTAGE"
+        "https://rmcdecouverte.bfmtv.com/mediaplayer-replay/?id=6714&title=TOP%20GEAR%20:PASSION%20VINTAGE",
     ]

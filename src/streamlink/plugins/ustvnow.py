@@ -24,7 +24,7 @@ log = logging.getLogger(__name__)
 
 
 @pluginmatcher(re.compile(
-    r"https?://(?:www\.)?ustvnow\.com/live/(?P<scode>\w+)/-(?P<id>\d+)"
+    r"https?://(?:www\.)?ustvnow\.com/live/(?P<scode>\w+)/-(?P<id>\d+)",
 ))
 @pluginargument(
     "username",
@@ -113,7 +113,7 @@ class USTVNow(Plugin):
                 "device_id": 5,
                 "display_lang_code": "ENG",
                 "device_sub_type": "",
-                "timezone": "UTC"
+                "timezone": "UTC",
             })
 
             data = res.json()
@@ -130,7 +130,7 @@ class USTVNow(Plugin):
         key, iv = self._get_encryption_config(self._signin_url)
         post_data = {
             "data": self.encrypt_data(json.dumps(data).encode("utf8"), key, iv).decode("utf8"),
-            "metadata": self.encrypt_data(json.dumps(metadata).encode("utf8"), key, iv).decode("utf8")
+            "metadata": self.encrypt_data(json.dumps(metadata).encode("utf8"), key, iv).decode("utf8"),
         }
         headers = {"box-id": self.box_id,
                    "session-id": self.get_token(),
@@ -148,9 +148,9 @@ class USTVNow(Plugin):
                 "login_id": username,
                 "login_key": password,
                 "login_mode": "1",
-                "manufacturer": "123"
+                "manufacturer": "123",
             },
-            {"request": "signin"}
+            {"request": "signin"},
         )
 
         return resp["data"]["status"]

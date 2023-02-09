@@ -16,7 +16,7 @@ log = logging.getLogger(__name__)
 
 
 @pluginmatcher(re.compile(
-    r"https?://(?:\w+\.)?showroom-live\.com/"
+    r"https?://(?:\w+\.)?showroom-live\.com/",
 ))
 class Showroom(Plugin):
     LIVE_STATUS = 2

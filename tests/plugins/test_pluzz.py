@@ -15,5 +15,5 @@ class TestPluginCanHandleUrlPluzz(PluginCanHandleUrl):
         "https://france3-regions.francetvinfo.fr/bourgogne-franche-comte/tv/direct/franche-comte",
         "https://www.francetvinfo.fr/en-direct/tv.html",
         "https://www.francetvinfo.fr/meteo/orages/inondations-dans-le-gard-plus-de-deux-mois-de-pluie-en-quelques-heures-des"
-        + "-degats-mais-pas-de-victime_4771265.html"
+        + "-degats-mais-pas-de-victime_4771265.html",
     ]

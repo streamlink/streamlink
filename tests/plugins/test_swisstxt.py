@@ -8,7 +8,7 @@ class TestPluginCanHandleUrlSwisstxt(PluginCanHandleUrl):
     should_match = [
         "http://www.srf.ch/sport/resultcenter/tennis?eventId=338052",
         "http://live.rsi.ch/tennis.html?eventId=338052",
-        "http://live.rsi.ch/sport.html?eventId=12345"
+        "http://live.rsi.ch/sport.html?eventId=12345",
     ]
 
     should_not_match = [

@@ -27,13 +27,13 @@ class TV5Monde(Plugin):
             validate.parse_json(),
             validate.any(
                 validate.all({"files": list}, validate.get("files")),
-                list
+                list,
             ),
             [{
-                "url": validate.url(path=validate.endswith(".m3u8"))
+                "url": validate.url(path=validate.endswith(".m3u8")),
             }],
             validate.get((0, "url")),
-            validate.transform(lambda content_url: update_scheme("https://", content_url))
+            validate.transform(lambda content_url: update_scheme("https://", content_url)),
         )
         try:
             live = schema_live.validate(root)
@@ -53,13 +53,13 @@ class TV5Monde(Plugin):
                     {"@graph": [dict]},
                     validate.get("@graph"),
                     validate.filter(lambda obj: obj["@type"] == "VideoObject"),
-                    validate.get(0)
+                    validate.get(0),
                 ),
-                dict
+                dict,
             ),
             {"contentUrl": validate.url()},
             validate.get("contentUrl"),
-            validate.transform(lambda content_url: update_scheme("https://", content_url))
+            validate.transform(lambda content_url: update_scheme("https://", content_url)),
         )
         try:
             vod = schema_vod.validate(root)
@@ -73,7 +73,7 @@ class TV5Monde(Plugin):
 
     def _get_streams(self):
         root = self.session.http.get(self.url, schema=validate.Schema(
-            validate.parse_html()
+            validate.parse_html(),
         ))
 
         return self._get_hls(root) or self._get_vod(root)

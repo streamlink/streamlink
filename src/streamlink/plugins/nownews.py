@@ -16,7 +16,7 @@ log = logging.getLogger(__name__)
 
 
 @pluginmatcher(re.compile(
-    r"https?://news\.now\.com/home/live"
+    r"https?://news\.now\.com/home/live",
 ))
 class NowNews(Plugin):
     epg_re = re.compile(r"""epg.getEPG\("(\d+)"\);""")

@@ -116,7 +116,7 @@ class HLSStreamWriter(SegmentedStreamWriter):
                 key_uri,
                 exception=StreamError,
                 retries=self.retries,
-                **self.reader.request_params
+                **self.reader.request_params,
             )
             res.encoding = "binary/octet-stream"
             self.key_data = res.content
@@ -219,7 +219,7 @@ class HLSStreamWriter(SegmentedStreamWriter):
                 if sequence.segment.discontinuity or is_paused and written_once:
                     log.warning(
                         "Encountered a stream discontinuity. "
-                        "This is unsupported and will result in incoherent output data."
+                        "This is unsupported and will result in incoherent output data.",
                     )
 
                 # unblock reader thread after writing data to the buffer
@@ -489,7 +489,7 @@ class MuxedHLSStream(MuxedStream):
         multivariant: Optional[M3U8] = None,
         force_restart: bool = False,
         ffmpeg_options: Optional[Dict[str, Any]] = None,
-        **args
+        **args,
     ):
         """
         :param streamlink.Streamlink session: Streamlink session instance
@@ -548,7 +548,7 @@ class HLSStream(HTTPStream):
         force_restart: bool = False,
         start_offset: float = 0,
         duration: Optional[float] = None,
-        **args
+        **args,
     ):
         """
         :param streamlink.Streamlink session_: Streamlink session instance
@@ -627,7 +627,7 @@ class HLSStream(HTTPStream):
         name_fmt: Optional[str] = None,
         start_offset: float = 0,
         duration: Optional[float] = None,
-        **request_params
+        **request_params,
     ) -> Dict[str, Union["HLSStream", "MuxedHLSStream"]]:
         """
         Parse a variant playlist and return its streams.
@@ -766,7 +766,7 @@ class HLSStream(HTTPStream):
                     force_restart=force_restart,
                     start_offset=start_offset,
                     duration=duration,
-                    **request_params
+                    **request_params,
                 )
             else:
                 stream = cls(
@@ -776,7 +776,7 @@ class HLSStream(HTTPStream):
                     force_restart=force_restart,
                     start_offset=start_offset,
                     duration=duration,
-                    **request_params
+                    **request_params,
                 )
 
             streams[stream_name] = stream

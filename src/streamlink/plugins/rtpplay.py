@@ -15,7 +15,7 @@ from streamlink.stream.hls import HLSStream
 
 
 @pluginmatcher(re.compile(
-    r"https?://www\.rtp\.pt/play/"
+    r"https?://www\.rtp\.pt/play/",
 ))
 class RTPPlay(Plugin):
     def _get_streams(self):

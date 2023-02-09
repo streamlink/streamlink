@@ -25,7 +25,7 @@ STREAM_WEIGHTS = {
 STREAM_NAMES = {
     "120k": "low",
     "328k": "mid",
-    "864k": "high"
+    "864k": "high",
 }
 
 
@@ -57,31 +57,31 @@ _media_schema = validate.Schema(
                         "quality": validate.any(str, None),
                         "url": validate.url(
                             scheme="http",
-                            path=validate.endswith(".m3u8")
+                            path=validate.endswith(".m3u8"),
                         ),
-                        validate.optional("video_encode_id"): str
-                    }]
-                )
-            }
-        )
-    }
+                        validate.optional("video_encode_id"): str,
+                    }],
+                ),
+            },
+        ),
+    },
 )
 _login_schema = validate.Schema({
     "auth": validate.any(str, None),
     "expires": validate.all(
         str,
-        validate.transform(parse_timestamp)
+        validate.transform(parse_timestamp),
     ),
     "user": {
         "username": validate.any(str, None),
         "email": str,
-    }
+    },
 })
 _session_schema = validate.Schema(
     {
         "session_id": str,
     },
-    validate.get("session_id")
+    validate.get("session_id"),
 )
 
 
@@ -129,7 +129,7 @@ class CrunchyrollAPI:
         params = params or {}
         if self.session_id:
             params.update({
-                "session_id": self.session_id
+                "session_id": self.session_id,
             })
         else:
             params.update({
@@ -187,7 +187,7 @@ class CrunchyrollAPI:
         """
         params = {
             "account": username,
-            "password": password
+            "password": password,
         }
 
         login = self._api_call("login", params, schema=_login_schema)
@@ -403,7 +403,7 @@ class Crunchyroll(Plugin):
             if not api.auth:
                 log.warning(
                     "No authentication provided, you won't be able to access "
-                    "premium restricted content"
+                    "premium restricted content",
                 )
 
         return api

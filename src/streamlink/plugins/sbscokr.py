@@ -18,7 +18,7 @@ log = logging.getLogger(__name__)
 
 
 @pluginmatcher(re.compile(
-    r"https?://www\.sbs\.co\.kr/live/(?P<channel>[^/?]+)"
+    r"https?://www\.sbs\.co\.kr/live/(?P<channel>[^/?]+)",
 ))
 @pluginargument(
     "id",

@@ -19,7 +19,7 @@ class RTPA(Plugin):
             validate.union((
                 validate.xml_xpath_string(".//video/source[@src][@type='application/x-mpegURL'][1]/@src"),
                 validate.xml_xpath_string(".//head/title[1]/text()"),
-            ))
+            )),
         ))
         if not hls_url:
             return

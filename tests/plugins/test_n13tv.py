@@ -17,5 +17,5 @@ class TestPluginCanHandleUrlN13TV(PluginCanHandleUrl):
         "http://13tv.co.il/item/entertainment/tzhok-mehamatzav/season-01/episodes/vkdoc-2023442/",
         "https://13tv.co.il/item/entertainment/tzhok-mehamatzav/season-01/episodes/vkdoc-2023442/",
         "http://www.13tv.co.il/item/entertainment/tzhok-mehamatzav/season-01/episodes/vkdoc-2023442/"
-        "https://www.13tv.co.il/item/entertainment/tzhok-mehamatzav/season-01/episodes/vkdoc-2023442/"
+        "https://www.13tv.co.il/item/entertainment/tzhok-mehamatzav/season-01/episodes/vkdoc-2023442/",
     ]

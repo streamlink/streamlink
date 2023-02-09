@@ -239,7 +239,7 @@ class UsherService:
                     "hide_ads": bool,
                     "server_ads": bool,
                     "show_ads": bool,
-                }
+                },
             ).validate(extra_params)
             log.debug(f"{extra_params_debug!r}")
         except PluginError:
@@ -279,10 +279,10 @@ class TwitchAPI:
             "extensions": {
                 "persistedQuery": {
                     "version": 1,
-                    "sha256Hash": sha256hash
-                }
+                    "sha256Hash": sha256hash,
+                },
             },
-            "variables": dict(**variables)
+            "variables": dict(**variables),
         }
 
     @staticmethod
@@ -290,9 +290,9 @@ class TwitchAPI:
         return parse_json(tokenstr, schema=validate.Schema(
             {"chansub": {"restricted_bitrates": validate.all(
                 [str],
-                validate.filter(lambda n: not re.match(r"(.+_)?archives|live|chunked", n))
+                validate.filter(lambda n: not re.match(r"(.+_)?archives|live|chunked", n)),
             )}},
-            validate.get(("chansub", "restricted_bitrates"))
+            validate.get(("chansub", "restricted_bitrates")),
         ))
 
     # GraphQL API calls
@@ -302,27 +302,27 @@ class TwitchAPI:
             "VideoMetadata",
             "cb3b1eb2f2d2b2f65b8389ba446ec521d76c3aa44f5424a1b1d235fe21eb4806",
             channelLogin="",  # parameter can be empty
-            videoID=video_id
+            videoID=video_id,
         )
 
         return self.call(query, schema=validate.Schema(
             {"data": {"video": {
                 "id": str,
                 "owner": {
-                    "displayName": str
+                    "displayName": str,
                 },
                 "title": str,
                 "game": {
-                    "displayName": str
-                }
+                    "displayName": str,
+                },
             }}},
             validate.get(("data", "video")),
             validate.union_get(
                 "id",
                 ("owner", "displayName"),
                 ("game", "displayName"),
-                "title"
-            )
+                "title",
+            ),
         ))
 
     def metadata_channel(self, channel):
@@ -331,42 +331,42 @@ class TwitchAPI:
                 "ChannelShell",
                 "c3ea5a669ec074a58df5c11ce3c27093fa38534c94286dc14b68a25d5adcbf55",
                 login=channel,
-                lcpVideosEnabled=False
+                lcpVideosEnabled=False,
             ),
             self._gql_persisted_query(
                 "StreamMetadata",
                 "059c4653b788f5bdb2f5a2d2a24b0ddc3831a15079001a3d927556a96fb0517f",
-                channelLogin=channel
-            )
+                channelLogin=channel,
+            ),
         ]
 
         return self.call(queries, schema=validate.Schema(
             [
                 validate.all(
                     {"data": {"userOrError": {
-                        "displayName": str
-                    }}}
+                        "displayName": str,
+                    }}},
                 ),
                 validate.all(
                     {"data": {"user": {
                         "lastBroadcast": {
-                            "title": str
+                            "title": str,
                         },
                         "stream": {
                             "id": str,
                             "game": {
-                                "name": str
-                            }
-                        }
-                    }}}
-                )
+                                "name": str,
+                            },
+                        },
+                    }}},
+                ),
             ],
             validate.union_get(
                 (1, "data", "user", "stream", "id"),
                 (0, "data", "userOrError", "displayName"),
                 (1, "data", "user", "stream", "game", "name"),
-                (1, "data", "user", "lastBroadcast", "title")
-            )
+                (1, "data", "user", "lastBroadcast", "title"),
+            ),
         ))
 
     def metadata_clips(self, clipname):
@@ -374,13 +374,13 @@ class TwitchAPI:
             self._gql_persisted_query(
                 "ClipsView",
                 "4480c1dcc2494a17bb6ef64b94a5213a956afb8a45fe314c66b0d04079a93a8f",
-                slug=clipname
+                slug=clipname,
             ),
             self._gql_persisted_query(
                 "ClipsTitle",
                 "f6cca7f2fdfbfc2cecea0c88452500dae569191e58a265f97711f8f2a838f5b4",
-                slug=clipname
-            )
+                slug=clipname,
+            ),
         ]
 
         return self.call(queries, schema=validate.Schema(
@@ -389,21 +389,21 @@ class TwitchAPI:
                     {"data": {"clip": {
                         "id": str,
                         "broadcaster": {"displayName": str},
-                        "game": {"name": str}
+                        "game": {"name": str},
                     }}},
-                    validate.get(("data", "clip"))
+                    validate.get(("data", "clip")),
                 ),
                 validate.all(
                     {"data": {"clip": {"title": str}}},
-                    validate.get(("data", "clip"))
-                )
+                    validate.get(("data", "clip")),
+                ),
             ],
             validate.union_get(
                 (0, "id"),
                 (0, "broadcaster", "displayName"),
                 (0, "game", "name"),
-                (1, "title")
-            )
+                (1, "title"),
+            ),
         ))
 
     def access_token(self, is_live, channel_or_vod):
@@ -454,45 +454,45 @@ class TwitchAPI:
         query = self._gql_persisted_query(
             "VideoAccessToken_Clip",
             "36b89d2507fce29e5ca551df756d27c1cfe079e2609642b4390aa4c35796eb11",
-            slug=clipname
+            slug=clipname,
         )
 
         return self.call(query, schema=validate.Schema(
             {"data": {"clip": {
                 "playbackAccessToken": {
                     "signature": str,
-                    "value": str
+                    "value": str,
                 },
                 "videoQualities": [validate.all(
                     {
                         "frameRate": validate.transform(int),
                         "quality": str,
-                        "sourceURL": validate.url()
+                        "sourceURL": validate.url(),
                     },
                     validate.transform(lambda q: (
                         f"{q['quality']}p{q['frameRate']}",
-                        q["sourceURL"]
-                    ))
-                )]
+                        q["sourceURL"],
+                    )),
+                )],
             }}},
             validate.get(("data", "clip")),
             validate.union_get(
                 ("playbackAccessToken", "signature"),
                 ("playbackAccessToken", "value"),
-                "videoQualities"
-            )
+                "videoQualities",
+            ),
         ))
 
     def stream_metadata(self, channel):
         query = self._gql_persisted_query(
             "StreamMetadata",
             "1c719a40e481453e5c48d9bb585d971b8b372f8ebb105b17076722264dfa5b3e",
-            channelLogin=channel
+            channelLogin=channel,
         )
 
         return self.call(query, schema=validate.Schema(
             {"data": {"user": {"stream": {"type": str}}}},
-            validate.get(("data", "user", "stream"))
+            validate.get(("data", "user", "stream")),
         ))
 
 

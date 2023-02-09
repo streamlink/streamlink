@@ -35,7 +35,7 @@ class ArteTV(Plugin):
 
         json_url = self.API_URL.format(language, video_id or "LIVE")
         headers = {
-            "Authorization": f"Bearer {self.API_TOKEN}"
+            "Authorization": f"Bearer {self.API_TOKEN}",
         }
         streams, metadata = self.session.http.get(json_url, headers=headers, schema=validate.Schema(
             validate.parse_json(),
@@ -49,17 +49,17 @@ class ArteTV(Plugin):
                                 "slot": int,
                                 "protocol": validate.any("HLS", "HLS_NG"),
                             },
-                            validate.union_get("slot", "protocol", "url")
-                        )
-                    ]
+                            validate.union_get("slot", "protocol", "url"),
+                        ),
+                    ],
                 ),
                 "metadata": {
                     "title": str,
-                    "subtitle": validate.any(None, str)
-                }
+                    "subtitle": validate.any(None, str),
+                },
             }}},
             validate.get(("data", "attributes")),
-            validate.union_get("streams", "metadata")
+            validate.union_get("streams", "metadata"),
         ))
 
         if not streams:

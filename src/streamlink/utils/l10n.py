@@ -29,7 +29,7 @@ class Country:
                 c.alpha_3,
                 c.numeric,
                 c.name,
-                getattr(c, "official_name", c.name)
+                getattr(c, "official_name", c.name),
             )
         except (LookupError, KeyError):
             raise LookupError(f"Invalid country code: {country}")
@@ -47,7 +47,7 @@ class Country:
             self.alpha3,
             self.numeric,
             self.name,
-            self.official_name
+            self.official_name,
         )
 
 
@@ -74,7 +74,7 @@ class Language:
                 getattr(lang, "alpha_2", ""),
                 lang.alpha_3,
                 lang.name,
-                getattr(lang, "bibliographic", "")
+                getattr(lang, "bibliographic", ""),
             )
         except (LookupError, KeyError):
             raise LookupError(f"Invalid language code: {language}")
@@ -91,7 +91,7 @@ class Language:
             self.alpha2,
             self.alpha3,
             self.name,
-            self.bibliographic
+            self.bibliographic,
         )
 
 

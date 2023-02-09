@@ -106,7 +106,7 @@ class StreamlinkOptions(Options):
 
     def _set_http_attr_key_equals_value(self, key, value):
         getattr(self.session.http, self._OPTIONS_HTTP_ATTRS[key]).update(
-            value if isinstance(value, dict) else dict(self._parse_key_equals_value_string(value))
+            value if isinstance(value, dict) else dict(self._parse_key_equals_value_string(value)),
         )
 
     def _set_http_attr(self, key, value):
@@ -190,7 +190,7 @@ class Streamlink:
 
     def __init__(
         self,
-        options: Optional[Dict[str, Any]] = None
+        options: Optional[Dict[str, Any]] = None,
     ):
         """
         :param options: Custom options

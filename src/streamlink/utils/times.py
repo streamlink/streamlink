@@ -55,11 +55,11 @@ def seconds_to_hhmmss(seconds):
     return "{0:02d}:{1:02d}:{2}".format(
         int(hours),
         int(minutes),
-        "{0:02.1f}".format(seconds) if seconds % 1 else "{0:02d}".format(int(seconds))
+        "{0:02.1f}".format(seconds) if seconds % 1 else "{0:02d}".format(int(seconds)),
     )
 
 
 __all__ = [
     "hours_minutes_seconds",
-    "seconds_to_hhmmss"
+    "seconds_to_hhmmss",
 ]

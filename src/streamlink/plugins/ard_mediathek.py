@@ -80,7 +80,7 @@ class ARDMediathek(Plugin):
                         },
                         "show": validate.any(None, validate.all(
                             {"title": str},
-                            validate.get("title")
+                            validate.get("title"),
                         )),
                         "title": str,
                         "mediaCollection": {
@@ -92,13 +92,13 @@ class ARDMediathek(Plugin):
                                                 "_quality": validate.any(str, int),
                                                 "_stream": validate.url(),
                                             },
-                                            validate.union_get("_quality", "_stream")
-                                        )]
+                                            validate.union_get("_quality", "_stream"),
+                                        )],
                                     },
                                     validate.get("_mediaStreamArray"),
-                                    validate.transform(dict)
-                                )]
-                            }
+                                    validate.transform(dict),
+                                )],
+                            },
                         },
                     },
                     validate.union_get(
@@ -107,9 +107,9 @@ class ARDMediathek(Plugin):
                         ("publicationService", "name"),
                         "title",
                         "show",
-                    )
-                ))
-            )
+                    ),
+                )),
+            ),
         })
         data = schema_data.validate(data_json)
 

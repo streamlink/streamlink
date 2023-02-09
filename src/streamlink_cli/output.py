@@ -56,7 +56,7 @@ class FileOutput(Output):
         self,
         filename: Optional[Path] = None,
         fd: Optional[BinaryIO] = None,
-        record: Optional["FileOutput"] = None
+        record: Optional["FileOutput"] = None,
     ):
         super().__init__()
         self.filename = filename
@@ -91,7 +91,7 @@ class PlayerOutput(Output):
 
     _re_player_args_input = re.compile("|".join(map(
         lambda const: re.escape(f"{{{const}}}"),
-        [PLAYER_ARGS_INPUT_DEFAULT, PLAYER_ARGS_INPUT_FALLBACK]
+        [PLAYER_ARGS_INPUT_DEFAULT, PLAYER_ARGS_INPUT_FALLBACK],
     )))
 
     def __init__(self, cmd, args="", filename=None, quiet=True, kill=True,
@@ -190,7 +190,7 @@ class PlayerOutput(Output):
         # format args via the formatter, so that invalid/unknown variables don't raise a KeyError
         argsformatter = Formatter({
             PLAYER_ARGS_INPUT_DEFAULT: lambda: filename,
-            PLAYER_ARGS_INPUT_FALLBACK: lambda: filename
+            PLAYER_ARGS_INPUT_FALLBACK: lambda: filename,
         })
         args = argsformatter.title(self.args)
         cmd = self.cmd

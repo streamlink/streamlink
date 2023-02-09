@@ -65,15 +65,15 @@ def num(type, min=None, max=None):
         if min is not None and not (value > min):
             raise argparse.ArgumentTypeError(
                 "{0} value must be more than {1} but is {2}".format(
-                    type.__name__, min, value
-                )
+                    type.__name__, min, value,
+                ),
             )
 
         if max is not None and not (value <= max):
             raise argparse.ArgumentTypeError(
                 "{0} value must be at most {1} but is {2}".format(
-                    type.__name__, max, value
-                )
+                    type.__name__, max, value,
+                ),
             )
 
         return value
@@ -85,5 +85,5 @@ def num(type, min=None, max=None):
 
 __all__ = [
     "boolean", "comma_list", "comma_list_filter", "filesize", "keyvalue",
-    "num"
+    "num",
 ]

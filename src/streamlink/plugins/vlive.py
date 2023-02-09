@@ -17,7 +17,7 @@ log = logging.getLogger(__name__)
 
 
 @pluginmatcher(re.compile(
-    r"https?://www\.vlive\.tv/(?P<format>video|post)/(?P<id>[\d-]+)"
+    r"https?://www\.vlive\.tv/(?P<format>video|post)/(?P<id>[\d-]+)",
 ))
 class Vlive(Plugin):
     _playinfo_url = "https://www.vlive.tv/globalv-web/vam-web/old/v3/live/{0}/playInfo"
