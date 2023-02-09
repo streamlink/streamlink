@@ -85,7 +85,7 @@ def test_update_qsd():
     assert update_qsd("http://test.se?one=1&two=3", {"two": 2}) == "http://test.se?one=1&two=2"
     assert update_qsd("http://test.se?one=1&two=3", remove=["two"]) == "http://test.se?one=1"
     assert update_qsd("http://test.se?one=1&two=3", {"one": None}, remove="*") == "http://test.se?one=1"
-    assert update_qsd("http://test.se", dict([("one", ""), ("two", "")])) == "http://test.se?one=&two=", \
+    assert update_qsd("http://test.se", {"one": "", "two": ""}) == "http://test.se?one=&two=", \
         "should add empty params"
     assert update_qsd("http://test.se?one=", {"one": None}) == "http://test.se?one=", "should leave empty params unchanged"
     assert update_qsd("http://test.se?one=", keep_blank_values=False) == "http://test.se", "should strip blank params"

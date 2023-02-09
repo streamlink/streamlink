@@ -32,7 +32,7 @@ class TestDASHStream(unittest.TestCase):
         mpdClass.assert_called_with(ANY, base_url="http://test.bar", url="http://test.bar/foo.mpd")
 
         self.assertSequenceEqual(
-            sorted(list(streams.keys())),
+            sorted(streams.keys()),
             sorted(["720p", "1080p"]),
         )
 
@@ -52,7 +52,7 @@ class TestDASHStream(unittest.TestCase):
         mpdClass.assert_called_with(ANY, base_url="http://test.bar", url="http://test.bar/foo.mpd")
 
         self.assertSequenceEqual(
-            sorted(list(streams.keys())),
+            sorted(streams.keys()),
             sorted(["a128k", "a256k"]),
         )
 
@@ -73,7 +73,7 @@ class TestDASHStream(unittest.TestCase):
         mpdClass.assert_called_with(ANY, base_url="http://test.bar", url="http://test.bar/foo.mpd")
 
         self.assertSequenceEqual(
-            sorted(list(streams.keys())),
+            sorted(streams.keys()),
             sorted(["720p", "1080p"]),
         )
 
@@ -95,7 +95,7 @@ class TestDASHStream(unittest.TestCase):
         mpdClass.assert_called_with(ANY, base_url="http://test.bar", url="http://test.bar/foo.mpd")
 
         self.assertSequenceEqual(
-            sorted(list(streams.keys())),
+            sorted(streams.keys()),
             sorted(["720p+a128k", "1080p+a128k", "720p+a256k", "1080p+a256k"]),
         )
 
@@ -117,7 +117,7 @@ class TestDASHStream(unittest.TestCase):
         mpdClass.assert_called_with(ANY, base_url="http://test.bar", url="http://test.bar/foo.mpd")
 
         self.assertSequenceEqual(
-            sorted(list(streams.keys())),
+            sorted(streams.keys()),
             sorted(["720p", "1080p"]),
         )
 
@@ -142,7 +142,7 @@ class TestDASHStream(unittest.TestCase):
         mpdClass.assert_called_with(ANY, base_url="http://test.bar", url="http://test.bar/foo.mpd")
 
         self.assertSequenceEqual(
-            sorted(list(streams.keys())),
+            sorted(streams.keys()),
             sorted(["720p", "1080p"]),
         )
 
@@ -166,7 +166,7 @@ class TestDASHStream(unittest.TestCase):
         mpdClass.assert_called_with(ANY, base_url="http://test.bar", url="http://test.bar/foo.mpd")
 
         self.assertSequenceEqual(
-            sorted(list(streams.keys())),
+            sorted(streams.keys()),
             sorted(["720p", "1080p"]),
         )
 
@@ -194,7 +194,7 @@ class TestDASHStream(unittest.TestCase):
         mpdClass.assert_called_with(ANY, base_url="http://test.bar", url="http://test.bar/foo.mpd")
 
         self.assertSequenceEqual(
-            sorted(list(streams.keys())),
+            sorted(streams.keys()),
             sorted(["720p", "1080p"]),
         )
 
@@ -275,7 +275,7 @@ class TestDASHStream(unittest.TestCase):
         mpdClass.assert_called_with(ANY, base_url="http://test.bar", url="http://test.bar/foo.mpd")
 
         self.assertSequenceEqual(
-            sorted(list(streams.keys())),
+            sorted(streams.keys()),
             sorted(["720p", "1080p", "1080p_alt", "1080p_alt2"]),
         )
 

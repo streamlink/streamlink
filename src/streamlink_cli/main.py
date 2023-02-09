@@ -650,7 +650,7 @@ def setup_config_args(parser, ignore_unknown=False):
         # We want the config specified last to get the highest priority
         config_files.extend(
             config_file
-            for config_file in map(lambda path: Path(path).expanduser(), reversed(args.config))
+            for config_file in [Path(path).expanduser() for path in reversed(args.config)]
             if config_file.is_file()
         )
 

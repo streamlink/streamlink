@@ -146,14 +146,15 @@ class MPDNode:
             return default
 
     def children(self, cls, minimum=0, maximum=None):
-
         children = self.node.findall(cls.__tag__)
         if len(children) < minimum or (maximum and len(children) > maximum):
             raise MPDParsingError("expected to find {}/{} required [{}..{})".format(
                 self.__tag__, cls.__tag__, minimum, maximum or "unbound"))
 
-        return list(map(lambda x: cls(x[1], root=self.root, parent=self, i=x[0], base_url=self.base_url),
-                        enumerate(children)))
+        return [
+            cls(child, root=self.root, parent=self, i=i, base_url=self.base_url)
+            for i, child in enumerate(children)
+        ]
 
     def only_child(self, cls, minimum=0):
         children = self.children(cls, minimum=minimum, maximum=1)
