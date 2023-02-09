@@ -17,6 +17,7 @@ from streamlink.stream.ffmpegmux import MuxedStream
 from streamlink.stream.hls import HLSStream
 from streamlink.stream.http import HTTPStream
 
+
 log = logging.getLogger(__name__)
 
 

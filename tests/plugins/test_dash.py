@@ -3,7 +3,7 @@ from unittest.mock import Mock, patch
 
 import pytest
 
-from streamlink.plugin.plugin import BIT_RATE_WEIGHT_RATIO, LOW_PRIORITY, NORMAL_PRIORITY, NO_PRIORITY
+from streamlink.plugin.plugin import BIT_RATE_WEIGHT_RATIO, LOW_PRIORITY, NO_PRIORITY, NORMAL_PRIORITY
 from streamlink.plugins.dash import MPEGDASH
 from tests.plugins import PluginCanHandleUrl
 

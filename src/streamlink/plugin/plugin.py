@@ -8,6 +8,7 @@ import warnings
 from functools import partial
 from http.cookiejar import Cookie
 from typing import (
+    TYPE_CHECKING,
     Any,
     Callable,
     ClassVar,
@@ -18,7 +19,6 @@ from typing import (
     Optional,
     Pattern,
     Sequence,
-    TYPE_CHECKING,
     Tuple,
     Type,
     TypeVar,
@@ -31,6 +31,7 @@ from streamlink.cache import Cache
 from streamlink.exceptions import FatalPluginError, NoStreamsError, PluginError
 from streamlink.options import Argument, Arguments, Options
 from streamlink.user_input import UserInputRequester
+
 
 if TYPE_CHECKING:  # pragma: no cover
     from streamlink.session import Streamlink

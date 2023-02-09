@@ -14,6 +14,7 @@ from streamlink.stream.hls import HLSStream
 from streamlink.stream.http import HTTPStream
 from streamlink.utils.parse import parse_qsd
 
+
 log = logging.getLogger(__name__)
 
 

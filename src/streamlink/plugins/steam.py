@@ -19,6 +19,7 @@ from streamlink.plugin import Plugin, pluginargument, pluginmatcher
 from streamlink.plugin.api import validate
 from streamlink.stream.dash import DASHStream
 
+
 log = logging.getLogger(__name__)
 
 

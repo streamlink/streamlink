@@ -14,6 +14,7 @@ from streamlink.plugin.api import validate
 from streamlink.plugins.brightcove import BrightcovePlayer
 from streamlink.stream.http import HTTPStream
 
+
 log = logging.getLogger(__name__)
 
 

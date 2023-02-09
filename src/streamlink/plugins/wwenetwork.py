@@ -16,6 +16,7 @@ from streamlink.plugin.api import useragents
 from streamlink.stream.hls import HLSStream
 from streamlink.utils.times import seconds_to_hhmmss
 
+
 log = logging.getLogger(__name__)
 
 

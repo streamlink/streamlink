@@ -13,6 +13,7 @@ from streamlink.plugin import Plugin, pluginargument, pluginmatcher
 from streamlink.plugin.api import useragents
 from streamlink.stream.hls import HLSStream
 
+
 log = logging.getLogger(__name__)
 
 

@@ -1,6 +1,7 @@
 import argparse
 import re
 
+
 _filesize_re = re.compile(r'''
     (?P<size>\d+(\.\d+)?)
     (?P<modifier>[Kk]|[Mm])?

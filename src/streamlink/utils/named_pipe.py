@@ -8,8 +8,9 @@ from pathlib import Path
 
 from streamlink.compat import is_win32
 
+
 try:
-    from ctypes import windll, cast, c_ulong, c_void_p, byref  # type: ignore[attr-defined]
+    from ctypes import byref, c_ulong, c_void_p, cast, windll  # type: ignore[attr-defined]
 except ImportError:
     pass
 

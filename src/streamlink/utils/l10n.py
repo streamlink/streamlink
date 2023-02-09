@@ -4,6 +4,7 @@ from typing import Optional
 
 from pycountry import countries, languages  # type: ignore[import]
 
+
 DEFAULT_LANGUAGE = "en"
 DEFAULT_COUNTRY = "US"
 DEFAULT_LANGUAGE_CODE = f"{DEFAULT_LANGUAGE}_{DEFAULT_COUNTRY}"

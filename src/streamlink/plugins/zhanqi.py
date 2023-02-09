@@ -12,6 +12,7 @@ from streamlink.plugin.api import validate
 from streamlink.stream.hls import HLSStream
 from streamlink.stream.http import HTTPStream
 
+
 log = logging.getLogger(__name__)
 
 API_URL = "https://www.zhanqi.tv/api/static/v2.1/room/domain/{0}.json"

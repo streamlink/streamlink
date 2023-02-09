@@ -6,6 +6,7 @@ from streamlink.plugin.plugin import parse_params
 from streamlink.stream.http import HTTPStream
 from streamlink.utils.url import update_scheme
 
+
 log = logging.getLogger(__name__)
 
 

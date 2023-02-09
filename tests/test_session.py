@@ -12,7 +12,7 @@ import urllib3
 import tests.plugin
 from streamlink import NoPluginError, Streamlink
 from streamlink.exceptions import StreamlinkDeprecationWarning
-from streamlink.plugin import HIGH_PRIORITY, LOW_PRIORITY, NORMAL_PRIORITY, NO_PRIORITY, Plugin, pluginmatcher
+from streamlink.plugin import HIGH_PRIORITY, LOW_PRIORITY, NO_PRIORITY, NORMAL_PRIORITY, Plugin, pluginmatcher
 from streamlink.stream.hls import HLSStream
 from streamlink.stream.http import HTTPStream
 

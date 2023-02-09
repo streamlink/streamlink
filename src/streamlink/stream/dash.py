@@ -17,6 +17,7 @@ from streamlink.stream.stream import Stream
 from streamlink.utils.l10n import Language
 from streamlink.utils.parse import parse_xml
 
+
 log = logging.getLogger(__name__)
 
 

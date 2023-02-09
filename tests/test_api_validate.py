@@ -6,6 +6,7 @@ from lxml.etree import Element, tostring as etree_tostring
 
 from streamlink.exceptions import PluginError, StreamlinkDeprecationWarning
 from streamlink.plugin.api import validate
+
 # noinspection PyProtectedMember
 from streamlink.plugin.api.validate._exception import ValidationError
 

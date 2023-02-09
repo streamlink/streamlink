@@ -1,9 +1,7 @@
 import unittest
 from argparse import ArgumentTypeError
 
-from streamlink.utils.args import (
-    boolean, comma_list, comma_list_filter, filesize, keyvalue, num
-)
+from streamlink.utils.args import boolean, comma_list, comma_list_filter, filesize, keyvalue, num
 
 
 class TestUtilsArgs(unittest.TestCase):

@@ -14,6 +14,7 @@ from streamlink_cli.compat import stdout
 from streamlink_cli.constants import PLAYER_ARGS_INPUT_DEFAULT, PLAYER_ARGS_INPUT_FALLBACK, SUPPORTED_PLAYERS
 from streamlink_cli.utils import Formatter
 
+
 if is_win32:
     import msvcrt
 

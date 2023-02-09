@@ -7,6 +7,7 @@ from urllib.parse import urlparse
 
 # noinspection PyPackageRequirements
 from Crypto.Cipher import AES
+
 # noinspection PyPackageRequirements
 from Crypto.Util.Padding import unpad
 from requests import Response
@@ -16,11 +17,12 @@ from streamlink.buffers import RingBuffer
 from streamlink.exceptions import StreamError
 from streamlink.stream.ffmpegmux import FFMPEGMuxer, MuxedStream
 from streamlink.stream.filtered import FilteredStream
-from streamlink.stream.hls_playlist import ByteRange, Key, M3U8, Map, Media, Segment, load as load_hls_playlist
+from streamlink.stream.hls_playlist import M3U8, ByteRange, Key, Map, Media, Segment, load as load_hls_playlist
 from streamlink.stream.http import HTTPStream
 from streamlink.stream.segmented import SegmentedStreamReader, SegmentedStreamWorker, SegmentedStreamWriter
 from streamlink.utils.cache import LRUCache
 from streamlink.utils.formatter import Formatter
+
 
 log = logging.getLogger(__name__)
 

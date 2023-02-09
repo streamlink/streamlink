@@ -1,4 +1,4 @@
-from streamlink.plugins.rtve import Rtve, ZTNR
+from streamlink.plugins.rtve import ZTNR, Rtve
 from tests.plugins import PluginCanHandleUrl
 
 

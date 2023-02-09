@@ -17,6 +17,7 @@ from streamlink.stream.hls import HLSStream
 from streamlink.utils.parse import parse_qsd
 from streamlink.utils.url import update_scheme
 
+
 log = logging.getLogger(__name__)
 
 

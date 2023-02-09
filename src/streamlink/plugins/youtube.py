@@ -19,6 +19,7 @@ from streamlink.stream.http import HTTPStream
 from streamlink.utils.data import search_dict
 from streamlink.utils.parse import parse_json
 
+
 log = logging.getLogger(__name__)
 
 
