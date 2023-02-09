@@ -47,7 +47,7 @@ def is_wheel_for_windows():
 
 
 entry_points = {
-    "console_scripts": ["streamlink=streamlink_cli.main:main"]
+    "console_scripts": ["streamlink=streamlink_cli.main:main"],
 }
 
 if is_wheel_for_windows():
@@ -64,7 +64,7 @@ data_files = [
     # man page
     #  requires pre-built man page file via sphinx (docs-requirements.txt)
     #  `make --directory=docs clean man`
-    ("share/man/man1", ["docs/_build/man/streamlink.1"])
+    ("share/man/man1", ["docs/_build/man/streamlink.1"]),
 ]
 data_files = [
     (destdir, [file for file in srcfiles if path.exists(file)])

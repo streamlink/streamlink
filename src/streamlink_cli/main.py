@@ -51,11 +51,11 @@ def get_formatter(plugin: Plugin):
             "category": lambda: plugin.get_category(),
             "game": lambda: plugin.get_category(),
             "title": lambda: plugin.get_title(),
-            "time": lambda: datetime.now()
+            "time": lambda: datetime.now(),
         },
         {
-            "time": lambda dt, fmt: dt.strftime(fmt)
-        }
+            "time": lambda dt, fmt: dt.strftime(fmt),
+        },
     )
 
 
@@ -112,7 +112,7 @@ def create_output(formatter: Formatter) -> Union[FileOutput, PlayerOutput]:
             "installed. You must specify the path to a player "
             "executable with --player, a file path to save the "
             "stream with --output, or pipe the stream to "
-            "another program with --stdout."
+            "another program with --stdout.",
         )
         return  # type: ignore
 
@@ -144,7 +144,7 @@ def create_output(formatter: Formatter) -> Union[FileOutput, PlayerOutput]:
             namedpipe=namedpipe,
             http=http,
             record=record,
-            title=formatter.title(args.title, defaults=DEFAULT_STREAM_METADATA) if args.title else args.url
+            title=formatter.title(args.title, defaults=DEFAULT_STREAM_METADATA) if args.title else args.url,
         )
 
 
@@ -202,7 +202,7 @@ def output_stream_http(
             args=args.player_args,
             filename=server.url,
             quiet=not args.verbose_player,
-            title=formatter.title(args.title, defaults=DEFAULT_STREAM_METADATA) if args.title else args.url
+            title=formatter.title(args.title, defaults=DEFAULT_STREAM_METADATA) if args.title else args.url,
         )
 
         try:
@@ -286,7 +286,7 @@ def output_stream_passthrough(stream, formatter: Formatter):
         filename=f'"{url}"',
         call=True,
         quiet=not args.verbose_player,
-        title=formatter.title(args.title, defaults=DEFAULT_STREAM_METADATA) if args.title else args.url
+        title=formatter.title(args.title, defaults=DEFAULT_STREAM_METADATA) if args.title else args.url,
     )
 
     try:
@@ -393,7 +393,7 @@ def handle_stream(plugin: Plugin, streams: Dict[str, Stream], stream_name: str) 
     if args.json:
         console.msg_json(
             stream,
-            metadata=plugin.get_metadata()
+            metadata=plugin.get_metadata(),
         )
 
     elif args.stream_url:
@@ -572,7 +572,7 @@ def handle_url():
                 plugin=plugin.module,
                 metadata=plugin.get_metadata(),
                 streams=streams,
-                error=errmsg
+                error=errmsg,
             )
         else:
             console.exit(f"{errmsg}.\n       Available streams: {validstreams}")
@@ -580,7 +580,7 @@ def handle_url():
         console.msg_json(
             plugin=plugin.module,
             metadata=plugin.get_metadata(),
-            streams=streams
+            streams=streams,
         )
     elif args.stream_url:
         try:
@@ -763,7 +763,7 @@ def setup_plugin_options(session: Streamlink, pluginname: str, pluginclass: Type
                 session.set_plugin_option(
                     pluginname,
                     req.dest,
-                    console.askpass(prompt) if req.sensitive else console.ask(prompt)
+                    console.askpass(prompt) if req.sensitive else console.ask(prompt),
                 )
 
 
@@ -826,7 +826,7 @@ def log_current_arguments(session: Streamlink, parser: argparse.ArgumentParser):
         if action.default != value:
             name = next(  # pragma: no branch
                 (option for option in action.option_strings if option.startswith("--")),
-                action.option_strings[0]
+                action.option_strings[0],
             ) if action.option_strings else action.dest
             log.debug(f" {name}={value if name not in sensitive else '*' * 8}")
 
@@ -943,7 +943,7 @@ def main():
         usage = parser.format_usage()
         console.msg(
             f"{usage}\n"
-            f"Use -h/--help to see the available options or read the manual at https://streamlink.github.io"
+            f"Use -h/--help to see the available options or read the manual at https://streamlink.github.io",
         )
 
     sys.exit(error_code)

@@ -66,10 +66,10 @@ class BBCiPlayer(Plugin):
 
     mediator_schema = validate.Schema(
         {
-            "versions": [{"id": str}]
+            "versions": [{"id": str}],
         },
         validate.get("versions"), validate.get(0),
-        validate.get("id")
+        validate.get("id"),
     )
     mediaselector_schema = validate.Schema(
         validate.parse_json(),
@@ -77,12 +77,12 @@ class BBCiPlayer(Plugin):
             {"connection":
                 validate.all([{
                     validate.optional("href"): validate.url(),
-                    validate.optional("transferFormat"): str
+                    validate.optional("transferFormat"): str,
                 }], validate.filter(lambda c: c.get("href"))),
-                "kind": str}
+                "kind": str},
         ]},
         validate.get("media"),
-        validate.filter(lambda x: x["kind"] == "video")
+        validate.filter(lambda x: x["kind"] == "video"),
     )
 
     def __init__(self, *args, **kwargs):
@@ -160,7 +160,7 @@ class BBCiPlayer(Plugin):
         # make the session request to get the correct cookies
         session_res = self.session.http.get(
             self.session_url,
-            params=dict(ptrt=ptrt_url)
+            params=dict(ptrt=ptrt_url),
         )
 
         if auth_check(session_res):
@@ -174,7 +174,7 @@ class BBCiPlayer(Plugin):
                 jsEnabled=True,
                 username=self.get_option("username"),
                 password=self.get_option("password"),
-                attempts=0
+                attempts=0,
             ),
             headers={"Referer": self.url})
 

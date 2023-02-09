@@ -62,7 +62,7 @@ class TestPluginUStreamTV(unittest.TestCase):
         group = parser.add_argument_group("UStreamTV", parent=plugins)
 
         session.plugins = {
-            "ustreamtv": UStreamTV
+            "ustreamtv": UStreamTV,
         }
 
         setup_plugin_args(session, parser)

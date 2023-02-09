@@ -46,7 +46,7 @@ class GithubReferences(Transform):
                 link = nodes.reference(
                     match.group(0),
                     match.group(0),
-                    refuri=ref
+                    refuri=ref,
                 )
                 new_nodes.append(link)
 

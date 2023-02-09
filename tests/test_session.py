@@ -173,25 +173,25 @@ class TestSession(unittest.TestCase):
 
     def test_resolve_url_priority(self):
         @pluginmatcher(priority=HIGH_PRIORITY, pattern=re.compile(
-            "https://(high|normal|low|no)$"
+            "https://(high|normal|low|no)$",
         ))
         class HighPriority(EmptyPlugin):
             pass
 
         @pluginmatcher(priority=NORMAL_PRIORITY, pattern=re.compile(
-            "https://(normal|low|no)$"
+            "https://(normal|low|no)$",
         ))
         class NormalPriority(EmptyPlugin):
             pass
 
         @pluginmatcher(priority=LOW_PRIORITY, pattern=re.compile(
-            "https://(low|no)$"
+            "https://(low|no)$",
         ))
         class LowPriority(EmptyPlugin):
             pass
 
         @pluginmatcher(priority=NO_PRIORITY, pattern=re.compile(
-            "https://(no)$"
+            "https://(no)$",
         ))
         class NoPriority(EmptyPlugin):
             pass
@@ -222,7 +222,7 @@ class TestSession(unittest.TestCase):
 
     def test_resolve_deprecated(self):
         @pluginmatcher(priority=LOW_PRIORITY, pattern=re.compile(
-            "https://low"
+            "https://low",
         ))
         class LowPriority(EmptyPlugin):
             pass
@@ -348,7 +348,7 @@ class TestSession(unittest.TestCase):
         mock_httpsession.return_value = Mock(adapters={
             "http://": adapter_http,
             "https://": adapter_https,
-            "foo://": adapter_foo
+            "foo://": adapter_foo,
         })
         session = self.subject(load_plugins=False)
         self.assertEqual(session.get_option("interface"), None)

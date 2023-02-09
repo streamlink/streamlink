@@ -21,7 +21,7 @@ log = logging.getLogger(__name__)
 
 
 @pluginmatcher(re.compile(
-    r"https?://(?:www\.)?svtplay\.se/(?P<live>kanaler/)?"
+    r"https?://(?:www\.)?svtplay\.se/(?P<live>kanaler/)?",
 ))
 class SVTPlay(Plugin):
     _URL_API_VIDEO = "https://api.svt.se/videoplayer-api/video/{item}"

@@ -11,7 +11,7 @@ from streamlink.plugin.api import validate
 
 
 @pluginmatcher(re.compile(
-    r"https?://(?:www\.)?cnews\.fr"
+    r"https?://(?:www\.)?cnews\.fr",
 ))
 class CNEWS(Plugin):
     _dailymotion_url = "https://www.dailymotion.com/embed/video/{}"
@@ -30,7 +30,7 @@ class CNEWS(Plugin):
                         validate.optional("video_id"): str,
                     },
                 },
-                validate.union_get("dm_player_live_dailymotion", "dm_player_node_dailymotion")
+                validate.union_get("dm_player_live_dailymotion", "dm_player_node_dailymotion"),
             ),
         ))
         if not data:

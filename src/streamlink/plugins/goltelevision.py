@@ -13,7 +13,7 @@ from streamlink.stream.hls import HLSStream
 
 
 @pluginmatcher(re.compile(
-    r"https?://(?:www\.)?goltelevision\.com/en-directo"
+    r"https?://(?:www\.)?goltelevision\.com/en-directo",
 ))
 class GOLTelevision(Plugin):
     def _get_streams(self):
@@ -27,7 +27,7 @@ class GOLTelevision(Plugin):
                 validate.parse_json(),
                 {"manifest": validate.url()},
                 validate.get("manifest"),
-            )
+            ),
         )
         return HLSStream.parse_variant_playlist(self.session, url)
 

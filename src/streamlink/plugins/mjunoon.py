@@ -23,7 +23,7 @@ log = logging.getLogger(__name__)
 
 
 @pluginmatcher(re.compile(
-    r"https?://(?:www\.)?mjunoon\.tv/(?:watch/)?([\w-]+)"
+    r"https?://(?:www\.)?mjunoon\.tv/(?:watch/)?([\w-]+)",
 ))
 class Mjunoon(Plugin):
     login_url = "https://cdn2.mjunoon.tv:9191/v2/auth/login"
@@ -32,15 +32,15 @@ class Mjunoon(Plugin):
     is_live_channel_re = re.compile(r'"isLiveBroadcast":\s*"(true|undefined)"')
 
     main_chunk_js_url_re = re.compile(
-        r'<script src="(/static/js/main\.\w+\.chunk\.js)"></script>'
+        r'<script src="(/static/js/main\.\w+\.chunk\.js)"></script>',
     )
 
     js_credentials_re = re.compile(
-        r'data:{email:"(?P<email>.*?)",password:"(?P<password>.*?)"}'
+        r'data:{email:"(?P<email>.*?)",password:"(?P<password>.*?)"}',
     )
 
     js_cipher_data_re = re.compile(
-        r'createDecipheriv\("(?P<algorithm>.*?)","(?P<key>.*?)","(?P<iv>.*?)"\)'
+        r'createDecipheriv\("(?P<algorithm>.*?)","(?P<key>.*?)","(?P<iv>.*?)"\)',
     )
 
     token_schema = validate.Schema({
@@ -147,7 +147,7 @@ class Mjunoon(Plugin):
         )
         encrypted_data = self.session.http.json(
             res,
-            schema=self.encrypted_data_schema
+            schema=self.encrypted_data_schema,
         )
 
         stream_data = parse_json(

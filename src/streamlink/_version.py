@@ -6,7 +6,7 @@ def _get_version() -> str:
     import streamlink
 
     return get_version(
-        project_dir=Path(streamlink.__file__).parents[2]
+        project_dir=Path(streamlink.__file__).parents[2],
     )
 
 

@@ -42,7 +42,7 @@ class ArgumentParser(argparse.ArgumentParser):
         self,
         *args,
         parent: Optional[argparse._ArgumentGroup] = None,
-        **kwargs
+        **kwargs,
     ) -> argparse._ArgumentGroup:
         group = super().add_argument_group(*args, **kwargs)
         if parent not in self.NESTED_ARGUMENT_GROUPS:
@@ -168,7 +168,7 @@ def build_parser():
 
         Please report broken plugins or bugs to the issue tracker on Github:
           https://github.com/streamlink/streamlink/issues
-        """)
+        """),
     )
 
     positional = parser.add_argument_group("Positional arguments")
@@ -183,7 +183,7 @@ def build_parser():
         depending on the implementation of the plugin being used.
 
         Alternatively, the URL can also be specified by using the --url option.
-        """
+        """,
     )
     positional.add_argument(
         "stream",
@@ -202,7 +202,7 @@ def build_parser():
 
         If no stream is specified and --default-stream is not used, then a list
         of available streams will be printed.
-        """
+        """,
     )
 
     general = parser.add_argument_group("General options")
@@ -211,7 +211,7 @@ def build_parser():
         action="store_true",
         help="""
         Show this help message and exit.
-        """
+        """,
     )
     general.add_argument(
         "-V", "--version",
@@ -219,14 +219,14 @@ def build_parser():
         version=f"%(prog)s {streamlink_version}",
         help="""
         Show version number and exit.
-        """
+        """,
     )
     general.add_argument(
         "--plugins",
         action="store_true",
         help="""
         Print a list of all currently installed plugins.
-        """
+        """,
     )
     general.add_argument(
         "--plugin-dirs",
@@ -236,7 +236,7 @@ def build_parser():
         Attempts to load plugins from these directories.
 
         Multiple directories can be used by separating them with a comma.
-        """
+        """,
     )
     general.add_argument(
         "--can-handle-url",
@@ -247,7 +247,7 @@ def build_parser():
         Returns status code `1` for false and `0` for true.
 
         Useful for external scripting.
-        """
+        """,
     )
     general.add_argument(
         "--can-handle-url-no-redirect",
@@ -255,7 +255,7 @@ def build_parser():
         help="""
         Same as --can-handle-url but without following redirects when looking up
         the URL.
-        """
+        """,
     )
     general.add_argument(
         "--config",
@@ -266,7 +266,7 @@ def build_parser():
 
         Can be repeated to load multiple files, in which case the options are
         merged on top of each other where the last config has highest priority.
-        """
+        """,
     )
     general.add_argument(
         "-l", "--loglevel",
@@ -281,7 +281,7 @@ def build_parser():
         {', '.join([f'`{level}`' for level in logger.levels])}
 
         Default is "info".
-        """
+        """,
     )
     general.add_argument(
         "--logfile",
@@ -305,7 +305,7 @@ def build_parser():
         Linux/BSD:
 
           ${XDG_STATE_HOME:-${HOME}/.local/state}/streamlink/logs
-        """
+        """,
     )
     general.add_argument(
         "-Q", "--quiet",
@@ -314,7 +314,7 @@ def build_parser():
         Hide all log output.
 
         Alias for `--loglevel none`.
-        """
+        """,
     )
     general.add_argument(
         "-j", "--json",
@@ -323,7 +323,7 @@ def build_parser():
         Output JSON representations instead of the normal text output.
 
         Useful for external scripting.
-        """
+        """,
     )
     general.add_argument(
         "--auto-version-check",
@@ -334,14 +334,14 @@ def build_parser():
         Enable or disable the automatic check for a new version of Streamlink.
 
         Default is "no".
-        """
+        """,
     )
     general.add_argument(
         "--version-check",
         action="store_true",
         help="""
         Runs a version check and exits.
-        """
+        """,
     )
     general.add_argument(
         "--locale",
@@ -355,7 +355,7 @@ def build_parser():
         `es_ES`.
 
         Default is system locale.
-        """
+        """,
     )
     general.add_argument(
         "--interface",
@@ -363,21 +363,21 @@ def build_parser():
         metavar="INTERFACE",
         help="""
         Set the network interface.
-        """
+        """,
     )
     general.add_argument(
         "-4", "--ipv4",
         action="store_true",
         help="""
         Resolve address names to IPv4 only. This option overrides --ipv6.
-        """
+        """,
     )
     general.add_argument(
         "-6", "--ipv6",
         action="store_true",
         help="""
         Resolve address names to IPv6 only. This option overrides --ipv4.
-        """
+        """,
     )
 
     player = parser.add_argument_group("Player options")
@@ -411,7 +411,7 @@ def build_parser():
 
         As an alternative to this, see the --player-args parameter, which does
         not log any custom player arguments.
-        """
+        """,
     )
     player.add_argument(
         "-a", "--player-args",
@@ -445,14 +445,14 @@ def build_parser():
         Note: When neither of the variables are found, `{{{PLAYER_ARGS_INPUT_DEFAULT}}}`
         will be appended to the whole parameter value, to ensure that the player
         always receives an input argument.
-        """
+        """,
     )
     player.add_argument(
         "-v", "--verbose-player",
         action="store_true",
         help="""
         Allow the player to display its console output.
-        """
+        """,
     )
     player.add_argument(
         "-n", "--player-fifo", "--fifo",
@@ -460,14 +460,14 @@ def build_parser():
         help="""
         Make the player read the stream through a named pipe instead of the
         stdin pipe.
-        """
+        """,
     )
     player.add_argument(
         "--player-http",
         action="store_true",
         help="""
         Make the player read the stream through HTTP instead of the stdin pipe.
-        """
+        """,
     )
     player.add_argument(
         "--player-continuous-http",
@@ -479,7 +479,7 @@ def build_parser():
         This makes it possible to handle stream disconnects if your player is
         capable of reconnecting to a HTTP stream. This is usually done by
         setting your player to a "repeat mode".
-        """
+        """,
     )
     player.add_argument(
         "--player-external-http",
@@ -498,7 +498,7 @@ def build_parser():
 
         The URLs that can be used to access the stream will be printed to the
         console, and the server can be interrupted using CTRL-C.
-        """
+        """,
     )
     player.add_argument(
         "--player-external-http-continuous",
@@ -514,7 +514,7 @@ def build_parser():
         If set to non-continuous, Streamlink will stop once the stream has ended.
 
         Default is true.
-        """
+        """,
     )
     player.add_argument(
         "--player-external-http-port",
@@ -524,7 +524,7 @@ def build_parser():
         help="""
         A fixed port to use for the external HTTP server if that mode is
         enabled. Omit or set to `0` to use a random high ( >1024) port.
-        """
+        """,
     )
     player.add_argument(
         "--player-passthrough",
@@ -540,7 +540,7 @@ def build_parser():
         - {0}
 
         Make sure your player can handle the stream type when using this.
-        """.format("\n        - ".join(STREAM_PASSTHROUGH))
+        """.format("\n        - ".join(STREAM_PASSTHROUGH)),
     )
     player.add_argument(
         "--player-no-close",
@@ -554,7 +554,7 @@ def build_parser():
         player before it has played back all of its cached data.
 
         This option will instead let the player decide when to exit.
-        """
+        """,
     )
     player.add_argument(
         "-t", "--title",
@@ -579,7 +579,7 @@ def build_parser():
         Example:
 
             %(prog)s -p mpv --title "{{author}} - {{category}} - {{title}}" <URL> [STREAM]
-        """
+        """,
     )
 
     output = parser.add_argument_group("File output options")
@@ -601,14 +601,14 @@ def build_parser():
         Example:
 
             %(prog)s --output "~/recordings/{author}/{category}/{id}-{time:%%Y%%m%%d%%H%%M%%S}.ts" <URL> [STREAM]
-        """
+        """,
     )
     output.add_argument(
         "-f", "--force",
         action="store_true",
         help="""
         When using --output or --record, always write to file even if it already exists (overwrite).
-        """
+        """,
     )
     output.add_argument(
         "--force-progress",
@@ -616,14 +616,14 @@ def build_parser():
         help="""
         When using --output or --record,
         show the download progress bar even if there is no terminal.
-        """
+        """,
     )
     output.add_argument(
         "-O", "--stdout",
         action="store_true",
         help="""
         Write stream data to stdout instead of playing it.
-        """
+        """,
     )
     output.add_argument(
         "-r", "--record",
@@ -643,7 +643,7 @@ def build_parser():
         Example:
 
             %(prog)s --record "~/recordings/{author}/{category}/{id}-{time:%%Y%%m%%d%%H%%M%%S}.ts" <URL> [STREAM]
-        """
+        """,
     )
     output.add_argument(
         "-R", "--record-and-pipe",
@@ -662,7 +662,7 @@ def build_parser():
         Example:
 
             %(prog)s --record-and-pipe "~/recordings/{author}/{category}/{id}-{time:%%Y%%m%%d%%H%%M%%S}.ts" <URL> [STREAM]
-        """
+        """,
     )
     output.add_argument(
         "--fs-safe-rules",
@@ -681,7 +681,7 @@ def build_parser():
 
         - POSIX: `\\x00-\\x1F /`
         - Windows: `\\x00-\\x1F \\x7F " * / : < > ? \\ |`
-        """
+        """,
     )
 
     stream = parser.add_argument_group("Stream options")
@@ -697,7 +697,7 @@ def build_parser():
 
         This is an alternative to setting the URL using a positional argument
         and can be useful if set in a config file.
-        """
+        """,
     )
     stream.add_argument(
         "--default-stream",
@@ -715,14 +715,14 @@ def build_parser():
 
         This is an alternative to setting the stream using a positional argument
         and can be useful if set in a config file.
-        """
+        """,
     )
     stream.add_argument(
         "--stream-url",
         action="store_true",
         help="""
         If possible, translate the resolved stream to a URL and print it.
-        """
+        """,
     )
     stream.add_argument(
         "--retry-streams",
@@ -734,7 +734,7 @@ def build_parser():
         attempt will be made to fetch the list of streams available.
 
         The number of fetch retry attempts can be capped with --retry-max.
-        """
+        """,
     )
     stream.add_argument(
         "--retry-max",
@@ -746,7 +746,7 @@ def build_parser():
 
         If --retry-max is set without setting --retry-streams, the delay between
         retries will default to 1 second.
-        """
+        """,
     )
     stream.add_argument(
         "--retry-open",
@@ -758,7 +758,7 @@ def build_parser():
         giving up.
 
         Default is 1.
-        """
+        """,
     )
     stream.add_argument(
         "--stream-types", "--stream-priority",
@@ -773,7 +773,7 @@ def build_parser():
         be used as a wildcard to match any other type of stream, eg. muxed-stream.
 
         Default is "hls,http,*".
-        """
+        """,
     )
     stream.add_argument(
         "--stream-sorting-excludes",
@@ -803,7 +803,7 @@ def build_parser():
 
           --stream-sorting-excludes ">480p,>medium"
 
-        """
+        """,
     )
 
     transport = parser.add_argument_group("Stream transport options")
@@ -831,7 +831,7 @@ def build_parser():
 
         Note: A smaller size is recommended on lower end systems (such as Raspberry Pi) when playing stream types that require
         some extra processing to avoid unnecessary background processing.
-        """
+        """,
     )
     transport.add_argument(
         "--stream-segment-attempts",
@@ -843,7 +843,7 @@ def build_parser():
         This applies to all different kinds of segmented stream types, such as DASH, HLS, etc.
 
         Default is 3.
-        """
+        """,
     )
     transport.add_argument(
         "--stream-segment-threads",
@@ -855,7 +855,7 @@ def build_parser():
         This applies to all different kinds of segmented stream types, such as DASH, HLS, etc.
 
         Default is 1.
-        """
+        """,
     )
     transport.add_argument(
         "--stream-segment-timeout",
@@ -867,7 +867,7 @@ def build_parser():
         This applies to all different kinds of segmented stream types, such as DASH, HLS, etc.
 
         Default is 10.0.
-        """
+        """,
     )
     transport.add_argument(
         "--stream-timeout",
@@ -879,7 +879,7 @@ def build_parser():
         This applies to all different kinds of stream types, such as DASH, HLS, HTTP, etc.
 
         Default is 60.0.
-        """
+        """,
     )
     transport.add_argument(
         "--mux-subtitles",
@@ -888,7 +888,7 @@ def build_parser():
         Automatically mux available subtitles into the output stream.
 
         Needs to be supported by the used plugin.
-        """
+        """,
     )
 
     transport_hls.add_argument(
@@ -909,14 +909,14 @@ def build_parser():
         Note: During live playback, the caching/buffering settings of the used player will add additional latency. To adjust
         this, please refer to the player's own documentation for the required configuration. Player parameters can be set via
         --player-args.
-        """
+        """,
     )
     transport_hls.add_argument(
         "--hls-segment-stream-data",
         action="store_true",
         help="""
         Immediately write segment data into output buffer while downloading.
-        """
+        """,
     )
     transport_hls.add_argument(
         "--hls-playlist-reload-attempts",
@@ -926,7 +926,7 @@ def build_parser():
         How many attempts should be done to reload the HLS playlist before giving up.
 
         Default is 3.
-        """
+        """,
     )
     transport_hls.add_argument(
         "--hls-playlist-reload-time",
@@ -940,7 +940,7 @@ def build_parser():
         - default: The playlist's target duration metadata
 
         Default is default.
-        """
+        """,
     )
     transport_hls.add_argument(
         "--hls-segment-ignore-names",
@@ -954,7 +954,7 @@ def build_parser():
         This will ignore every segment that ends with 000.ts, 001.ts and 002.ts
 
         Default is None.
-        """
+        """,
     )
     transport_hls.add_argument(
         "--hls-segment-key-uri",
@@ -975,7 +975,7 @@ def build_parser():
           --hls-segment-key-uri "{scheme}://{netloc}/custom/path/to/key"
 
         Default is None.
-        """
+        """,
     )
     transport_hls.add_argument(
         "--hls-audio-select",
@@ -995,7 +995,7 @@ def build_parser():
         Note: This is only useful in special circumstances where the regular
         locale option fails, such as when multiple sources of the same language
         exists.
-        """
+        """,
     )
     transport_hls.add_argument(
         "--hls-start-offset",
@@ -1007,7 +1007,7 @@ def build_parser():
         streams, this is a negative offset from the end of the stream (rewind).
 
         Default is 00:00:00.
-        """
+        """,
     )
     transport_hls.add_argument(
         "--hls-duration",
@@ -1020,14 +1020,14 @@ def build_parser():
         nearest HLS segment.
 
         Default is unlimited.
-        """
+        """,
     )
     transport_hls.add_argument(
         "--hls-live-restart",
         action="store_true",
         help="""
         Skip to the beginning of a live stream, or as far back as possible.
-        """
+        """,
     )
     transport_hls.add_argument("--hls-segment-attempts", help=argparse.SUPPRESS)
     transport_hls.add_argument("--hls-segment-threads", help=argparse.SUPPRESS)
@@ -1045,21 +1045,21 @@ def build_parser():
         `PATH`.
 
         Example: --ffmpeg-ffmpeg "/usr/local/bin/ffmpeg"
-        """
+        """,
     )
     transport_ffmpeg.add_argument(
         "--ffmpeg-no-validation",
         action="store_true",
         help="""
         Disable FFmpeg validation and version logging.
-        """
+        """,
     )
     transport_ffmpeg.add_argument(
         "--ffmpeg-verbose",
         action="store_true",
         help="""
         Write the console output from ffmpeg to the console.
-        """
+        """,
     )
     transport_ffmpeg.add_argument(
         "--ffmpeg-verbose-path",
@@ -1067,7 +1067,7 @@ def build_parser():
         metavar="PATH",
         help="""
         Path to write the output from the ffmpeg console.
-        """
+        """,
     )
     transport_ffmpeg.add_argument(
         "--ffmpeg-fout",
@@ -1079,7 +1079,7 @@ def build_parser():
         Default is "matroska".
 
         Example: --ffmpeg-fout "mpegts"
-        """
+        """,
     )
     transport_ffmpeg.add_argument(
         "--ffmpeg-video-transcode",
@@ -1090,7 +1090,7 @@ def build_parser():
         Default is "copy".
 
         Example: --ffmpeg-video-transcode "h264"
-        """
+        """,
     )
     transport_ffmpeg.add_argument(
         "--ffmpeg-audio-transcode",
@@ -1101,7 +1101,7 @@ def build_parser():
         Default is "copy".
 
         Example: --ffmpeg-audio-transcode "aac"
-        """
+        """,
     )
     transport_ffmpeg.add_argument(
         "--ffmpeg-copyts",
@@ -1109,14 +1109,14 @@ def build_parser():
         help="""
         Forces the `-copyts` ffmpeg option and does not remove
         the initial start time offset value.
-        """
+        """,
     )
     transport_ffmpeg.add_argument(
         "--ffmpeg-start-at-zero",
         action="store_true",
         help="""
         Enable the `-start_at_zero` ffmpeg option when using --ffmpeg-copyts.
-        """
+        """,
     )
 
     http = parser.add_argument_group("HTTP options")
@@ -1127,7 +1127,7 @@ def build_parser():
         A HTTP proxy to use for all HTTP and HTTPS requests, including WebSocket connections.
 
         Example: --http-proxy "http://hostname:port/"
-        """
+        """,
     )
     http.add_argument("--https-proxy", help=argparse.SUPPRESS)
     http.add_argument(
@@ -1139,7 +1139,7 @@ def build_parser():
         A cookie to add to each HTTP request.
 
         Can be repeated to add multiple cookies.
-        """
+        """,
     )
     http.add_argument(
         "--http-header",
@@ -1150,7 +1150,7 @@ def build_parser():
         A header to add to each HTTP request.
 
         Can be repeated to add multiple headers.
-        """
+        """,
     )
     http.add_argument(
         "--http-query-param",
@@ -1161,7 +1161,7 @@ def build_parser():
         A query parameter to add to each HTTP request.
 
         Can be repeated to add multiple query parameters.
-        """
+        """,
     )
     http.add_argument(
         "--http-ignore-env",
@@ -1169,7 +1169,7 @@ def build_parser():
         help="""
         Ignore HTTP settings set in the environment such as environment
         variables (`HTTP_PROXY`, etc) or `~/.netrc` authentication.
-        """
+        """,
     )
     http.add_argument(
         "--http-no-ssl-verify",
@@ -1178,7 +1178,7 @@ def build_parser():
         Don't attempt to verify SSL certificates.
 
         Usually a bad idea, only use this if you know what you're doing.
-        """
+        """,
     )
     http.add_argument(
         "--http-disable-dh",
@@ -1187,7 +1187,7 @@ def build_parser():
         Disable Diffie Hellman key exchange
 
         Usually a bad idea, only use this if you know what you're doing.
-        """
+        """,
     )
     http.add_argument(
         "--http-ssl-cert",
@@ -1196,7 +1196,7 @@ def build_parser():
         SSL certificate to use.
 
         Expects a .pem file.
-        """
+        """,
     )
     http.add_argument(
         "--http-ssl-cert-crt-key",
@@ -1206,7 +1206,7 @@ def build_parser():
         SSL certificate to use.
 
         Expects a .crt and a .key file.
-        """
+        """,
     )
     http.add_argument(
         "--http-timeout",
@@ -1217,7 +1217,7 @@ def build_parser():
         other options.
 
         Default is 20.0.
-        """
+        """,
     )
 
     return parser

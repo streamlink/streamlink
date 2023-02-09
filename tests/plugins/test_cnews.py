@@ -9,5 +9,5 @@ class TestPluginCanHandleUrlCNEWS(PluginCanHandleUrl):
         "http://www.cnews.fr/le-direct",
         "http://www.cnews.fr/direct",
         "http://www.cnews.fr/emission/2018-06-12/meteo-du-12062018-784730",
-        "http://www.cnews.fr/emission/2018-06-12/le-journal-des-faits-divers-du-12062018-784704"
+        "http://www.cnews.fr/emission/2018-06-12/le-journal-des-faits-divers-du-12062018-784704",
     ]

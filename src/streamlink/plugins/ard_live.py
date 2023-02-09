@@ -19,7 +19,7 @@ log = logging.getLogger(__name__)
 
 
 @pluginmatcher(re.compile(
-    r"https?://((www|live)\.)?daserste\.de/"
+    r"https?://((www|live)\.)?daserste\.de/",
 ))
 class ARDLive(Plugin):
     _URL_DATA_BASE = "https://www.daserste.de/"
@@ -28,7 +28,7 @@ class ARDLive(Plugin):
         3: "720p",
         2: "540p",
         1: "270p",
-        0: "180p"
+        0: "180p",
     }
 
     def _get_streams(self):
@@ -40,7 +40,7 @@ class ARDLive(Plugin):
                 validate.transform(lambda s: s.replace("'", "\"")),
                 validate.parse_json(),
                 {"url": str},
-                validate.get("url")
+                validate.get("url"),
             ))
         except PluginError:
             return
@@ -59,15 +59,15 @@ class ARDLive(Plugin):
                                 "_quality": validate.any(str, int),
                                 "_stream": [validate.url()],
                             },
-                            validate.union_get("_quality", ("_stream", 0))
-                        )]
+                            validate.union_get("_quality", ("_stream", 0)),
+                        )],
                     },
                     validate.get("_mediaStreamArray"),
-                    validate.transform(dict)
-                )]
+                    validate.transform(dict),
+                )],
             }},
             validate.get("mc"),
-            validate.union_get("_title", ("_mediaArray", 0))
+            validate.union_get("_title", ("_mediaArray", 0)),
         ))
 
         if media.get("auto"):

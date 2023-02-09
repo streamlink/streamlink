@@ -32,7 +32,7 @@ class MuxedStream(Stream):
         self,
         session,
         *substreams: Stream,
-        **options
+        **options,
     ):
         """
         :param streamlink.Streamlink session: Streamlink session instance

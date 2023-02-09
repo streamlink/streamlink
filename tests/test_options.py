@@ -15,7 +15,7 @@ class TestOptions(unittest.TestCase):
     def setUp(self):
         self.options = Options({
             "a_default": "default",
-            "another-default": "default2"
+            "another-default": "default2",
         })
 
     def test_options(self):
@@ -183,7 +183,7 @@ class TestSetupOptions:
             Argument("global-arg1", is_global=True),
             Argument("test1", default="default1"),
             Argument("test2", default="default2"),
-            Argument("test3")
+            Argument("test3"),
         )
 
         assert [(record.category, str(record.message)) for record in recwarn.list] == [

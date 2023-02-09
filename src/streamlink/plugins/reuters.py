@@ -17,19 +17,19 @@ log = logging.getLogger(__name__)
 
 
 @pluginmatcher(re.compile(
-    r"https?://([\w-]+\.)*reuters\.(com|tv)"
+    r"https?://([\w-]+\.)*reuters\.(com|tv)",
 ))
 class Reuters(Plugin):
     def _get_data(self):
         root = self.session.http.get(self.url, schema=validate.Schema(
-            validate.parse_html()
+            validate.parse_html(),
         ))
 
         try:
             log.debug("Trying to find source via meta tag")
             schema = validate.Schema(
                 validate.xml_xpath_string(".//meta[@property='og:video'][1]/@content"),
-                validate.url()
+                validate.url(),
             )
             return schema.validate(root)
         except PluginError:
@@ -41,7 +41,7 @@ class Reuters(Plugin):
                 validate.xml_findtext(".//script[@type='application/ld+json'][@class='next-head']"),
                 validate.parse_json(),
                 {"contentUrl": validate.url()},
-                validate.get("contentUrl")
+                validate.get("contentUrl"),
             )
             return schema.validate(root)
         except PluginError:
@@ -50,7 +50,7 @@ class Reuters(Plugin):
         schema_fusion = validate.xml_findtext(".//script[@type='application/javascript'][@id='fusion-metadata']")
         schema_video = validate.all(
             {"source": {"hls": validate.url()}},
-            validate.get(("source", "hls"))
+            validate.get(("source", "hls")),
         )
         try:
             log.debug("Trying to find source via fusion-metadata globalContent")
@@ -61,7 +61,7 @@ class Reuters(Plugin):
                 validate.parse_json(),
                 {"result": {"related_content": {"videos": list}}},
                 validate.get(("result", "related_content", "videos", 0)),
-                schema_video
+                schema_video,
             )
             return schema.validate(root)
         except PluginError:
@@ -78,7 +78,7 @@ class Reuters(Plugin):
                 validate.get("videohub-by-guid-v1"),
                 validate.transform(lambda obj: obj[list(obj.keys())[0]]),
                 validate.get(("data", "result", "videos", 0)),
-                schema_video
+                schema_video,
             )
             return schema.validate(root)
         except PluginError:

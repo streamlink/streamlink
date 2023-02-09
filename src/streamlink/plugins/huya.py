@@ -19,7 +19,7 @@ log = logging.getLogger(__name__)
 
 
 @pluginmatcher(re.compile(
-    r"https?://(?:www\.)?huya\.com/(?P<channel>[^/]+)"
+    r"https?://(?:www\.)?huya\.com/(?P<channel>[^/]+)",
 ))
 class Huya(Plugin):
     QUALITY_WEIGHTS: Dict[str, int] = {}

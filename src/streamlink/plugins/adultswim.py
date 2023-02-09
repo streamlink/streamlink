@@ -30,15 +30,15 @@ class AdultSwim(Plugin):
     video_data_url = "https://www.adultswim.com/api/shows/v1/media/{0}/desktop"
 
     app_id_js_url_re = re.compile(
-        r"""<script src="([^"]*asvp\..*?\.bundle\.js)">"""
+        r"""<script src="([^"]*asvp\..*?\.bundle\.js)">""",
     )
 
     app_id_re = re.compile(
-        r'''CDN_TOKEN_APP_ID="(.*?)"'''
+        r'''CDN_TOKEN_APP_ID="(.*?)"''',
     )
 
     json_data_re = re.compile(
-        r"""<script id="__NEXT_DATA__" type="application/json">({.*})</script>"""
+        r"""<script id="__NEXT_DATA__" type="application/json">({.*})</script>""",
     )
 
     truncate_url_re = re.compile(r"""(.*)/\w+/?""")
@@ -47,13 +47,13 @@ class AdultSwim(Plugin):
         "media": {
             "desktop": {
                 str: {
-                    "url": validate.url()
-                }
-            }
+                    "url": validate.url(),
+                },
+            },
         }},
         validate.get("media"),
         validate.get("desktop"),
-        validate.filter(lambda k, v: k in ["unprotected", "bulkaes"])
+        validate.filter(lambda k, v: k in ["unprotected", "bulkaes"]),
     )
 
     _stream_data_schema = validate.Schema({
@@ -79,7 +79,7 @@ class AdultSwim(Plugin):
             str: {
                 validate.optional("id"): str,
                 validate.optional("slug"): str,
-            }
+            },
         }}}},
         validate.get("props"),
         validate.get("pageProps"),
@@ -167,7 +167,7 @@ class AdultSwim(Plugin):
                 raise PluginError(
                     "Missing show_name or episode_name for url_type: {0}".format(
                         url_type,
-                    )
+                    ),
                 )
             video_id = self._get_video_data(episode_name)
         else:

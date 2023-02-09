@@ -13,7 +13,7 @@ from streamlink.stream.hls import HLSStream
 
 
 @pluginmatcher(re.compile(
-    r"https?://(?:www\.)?bigo\.tv/([^/]+)$"
+    r"https?://(?:www\.)?bigo\.tv/([^/]+)$",
 ))
 class Bigo(Plugin):
     _api_url = "https://www.bigo.tv/OInterface/getVideoParam?bigoId={0}"
@@ -22,15 +22,15 @@ class Bigo(Plugin):
         "code": 0,
         "msg": "success",
         "data": {
-            "videoSrc": validate.any(None, "", validate.url())
-        }
+            "videoSrc": validate.any(None, "", validate.url()),
+        },
     })
 
     def _get_streams(self):
         res = self.session.http.get(
             self._api_url.format(self.match.group(1)),
             allow_redirects=True,
-            headers={"User-Agent": useragents.IPHONE_6}
+            headers={"User-Agent": useragents.IPHONE_6},
         )
         data = self.session.http.json(res, schema=self._video_info_schema)
         videourl = data["data"]["videoSrc"]

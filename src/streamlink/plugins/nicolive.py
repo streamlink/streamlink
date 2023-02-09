@@ -71,22 +71,22 @@ class NicoLiveWsClient(WebsocketClient):
                     "quality": "abr",
                     "protocol": "hls",
                     "latency": "high",
-                    "chasePlay": False
+                    "chasePlay": False,
                 },
                 "room": {
                     "protocol": "webSocket",
-                    "commentable": True
+                    "commentable": True,
                 },
-                "reconnect": False
-            }
+                "reconnect": False,
+            },
         })
 
     def send_getpermit(self):
         self.send_json({
             "type": "getAkashic",
             "data": {
-                "chasePlay": False
-            }
+                "chasePlay": False,
+            },
         })
 
     def send_pong(self):
@@ -115,7 +115,7 @@ class NicoLiveHLSStream(HLSStream):
 
 
 @pluginmatcher(re.compile(
-    r"https?://(?P<domain>live\d*\.nicovideo\.jp)/watch/(lv|co)\d+"
+    r"https?://(?P<domain>live\d*\.nicovideo\.jp)/watch/(lv|co)\d+",
 ))
 @pluginargument(
     "email",
@@ -187,7 +187,7 @@ class NicoLive(Plugin):
             log.error(
                 "Failed to get wss_api_url. "
                 "Please check if the URL is correct, "
-                "and make sure your account has access to the video."
+                "and make sure your account has access to the video.",
             )
             return
 
@@ -224,12 +224,12 @@ class NicoLive(Plugin):
                 validate.parse_json(),
                 {"site": {
                     "relive": {
-                        "webSocketUrl": validate.url(scheme="wss")
+                        "webSocketUrl": validate.url(scheme="wss"),
                     },
-                    validate.optional("frontendId"): int
+                    validate.optional("frontendId"): int,
                 }},
                 validate.get("site"),
-                validate.union_get(("relive", "webSocketUrl"), "frontendId")
+                validate.union_get(("relive", "webSocketUrl"), "frontendId"),
             ))
         except PluginError:
             return
@@ -251,7 +251,7 @@ class NicoLive(Plugin):
                 "user_session",
                 user_session,
                 path="/",
-                domain="nicovideo.jp"
+                domain="nicovideo.jp",
             )
             self.save_cookies()
 

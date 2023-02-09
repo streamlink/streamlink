@@ -157,7 +157,7 @@ class HTTPSession(Session):
                     timeout=timeout,
                     proxies=proxies,
                     *args,
-                    **kwargs
+                    **kwargs,
                 )
                 if raise_for_status and res.status_code not in acceptable_status:
                     res.raise_for_status()

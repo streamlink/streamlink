@@ -35,7 +35,7 @@ class TagMap(Tag):
         self.content = f"[map{num}]".encode("ascii")
         super().__init__("EXT-X-MAP", {
             "URI": self.val_quoted_string(self.url(namespace)),
-            **(attrs or {})
+            **(attrs or {}),
         })
 
 
@@ -135,7 +135,7 @@ class TestHLSStream(TestMixinStreamHLS, unittest.TestCase):
 
     def test_offset_and_duration(self):
         thread, segments = self.subject([
-            Playlist(1234, [Segment(0), Segment(1, duration=0.5), Segment(2, duration=0.5), Segment(3)], end=True)
+            Playlist(1234, [Segment(0), Segment(1, duration=0.5), Segment(2, duration=0.5), Segment(3)], end=True),
         ], streamoptions={"start_offset": 1, "duration": 1})
 
         data = self.await_read(read_all=True)
@@ -152,13 +152,13 @@ class TestHLSStream(TestMixinStreamHLS, unittest.TestCase):
 
         thread, segments = self.subject([
             Playlist(0, [map1, Segment(0), Segment(1), Segment(2), Segment(3)]),
-            Playlist(4, [map1, Segment(4), map2, Segment(5), Segment(6), discontinuity, Segment(7)], end=True)
+            Playlist(4, [map1, Segment(4), map2, Segment(5), Segment(6), discontinuity, Segment(7)], end=True),
         ])
 
         data = self.await_read(read_all=True, timeout=None)
         self.assertEqual(data, self.content([
             map1, segments[1], map1, segments[2], map1, segments[3],
-            map1, segments[4], map2, segments[5], map2, segments[6], segments[7]
+            map1, segments[4], map2, segments[5], map2, segments[6], segments[7],
         ]))
         self.assertTrue(self.called(map1, once=True), "Downloads first map only once")
         self.assertTrue(self.called(map2, once=True), "Downloads second map only once")
@@ -179,15 +179,15 @@ class TestHLSStreamByterange(TestMixinStreamHLS, unittest.TestCase):
         thread, _ = self.subject([
             Playlist(0, [
                 Tag("EXT-X-BYTERANGE", "3"), Segment(0),
-                Segment(1)
-            ], end=True)
+                Segment(1),
+            ], end=True),
         ])
 
         self.await_write(2 - 1)
         self.thread.close()
 
         self.assertEqual(mock_log.error.call_args_list, [
-            call("Failed to fetch segment 0: Missing BYTERANGE offset")
+            call("Failed to fetch segment 0: Missing BYTERANGE offset"),
         ])
         self.assertFalse(self.called(Segment(0)))
 
@@ -199,15 +199,15 @@ class TestHLSStreamByterange(TestMixinStreamHLS, unittest.TestCase):
             Playlist(0, [
                 Segment(0),
                 map1,
-                Segment(1)
-            ], end=True)
+                Segment(1),
+            ], end=True),
         ])
 
         self.await_write(3 - 1)
         self.thread.close()
 
         self.assertEqual(mock_log.error.call_args_list, [
-            call("Failed to fetch map for segment 1: Missing BYTERANGE offset")
+            call("Failed to fetch map for segment 1: Missing BYTERANGE offset"),
         ])
         self.assertFalse(self.called(map1))
 
@@ -218,15 +218,15 @@ class TestHLSStreamByterange(TestMixinStreamHLS, unittest.TestCase):
                 Tag("EXT-X-BYTERANGE", "3@0"), Segment(0),
                 Segment(1),
                 Tag("EXT-X-BYTERANGE", "5"), Segment(2),
-                Segment(3)
-            ], end=True)
+                Segment(3),
+            ], end=True),
         ])
 
         self.await_write(4 - 1)
         self.thread.close()
 
         self.assertEqual(mock_log.error.call_args_list, [
-            call("Failed to fetch segment 2: Missing BYTERANGE offset")
+            call("Failed to fetch segment 2: Missing BYTERANGE offset"),
         ])
         self.assertEqual(self.mocks[self.url(Segment(0))].last_request._request.headers["Range"], "bytes=0-2")
         self.assertFalse(self.called(Segment(2)))
@@ -247,7 +247,7 @@ class TestHLSStreamByterange(TestMixinStreamHLS, unittest.TestCase):
                 Tag("EXT-X-BYTERANGE", "11"), s3,
                 Tag("EXT-X-BYTERANGE", "17@13"), s4,
                 Tag("EXT-X-BYTERANGE", "19"), s5,
-            ], end=True)
+            ], end=True),
         ])
 
         self.await_write(5 * 2)
@@ -286,14 +286,14 @@ class TestHLSStreamEncrypted(TestMixinStreamHLS, unittest.TestCase):
         aesKey, aesIv, key = self.gen_key(method="INVALID")
 
         self.subject([
-            Playlist(0, [key, SegmentEnc(1, aesKey, aesIv)], end=True)
+            Playlist(0, [key, SegmentEnc(1, aesKey, aesIv)], end=True),
         ])
         self.await_write()
 
         assert self.thread.reader.writer.closed
         assert b"".join(self.thread.data) == b""
         assert mock_log.error.mock_calls == [
-            call("Failed to create decryptor: Unable to decrypt cipher INVALID")
+            call("Failed to create decryptor: Unable to decrypt cipher INVALID"),
         ]
 
     @patch("streamlink.stream.hls.log")
@@ -301,14 +301,14 @@ class TestHLSStreamEncrypted(TestMixinStreamHLS, unittest.TestCase):
         aesKey, aesIv, key = self.gen_key(uri=False)
 
         self.subject([
-            Playlist(0, [key, SegmentEnc(1, aesKey, aesIv)], end=True)
+            Playlist(0, [key, SegmentEnc(1, aesKey, aesIv)], end=True),
         ])
         self.await_write()
 
         assert self.thread.reader.writer.closed
         assert b"".join(self.thread.data) == b""
         assert mock_log.error.mock_calls == [
-            call("Failed to create decryptor: Missing URI for decryption key")
+            call("Failed to create decryptor: Missing URI for decryption key"),
         ]
 
     def test_hls_encrypted_aes128(self):
@@ -318,7 +318,7 @@ class TestHLSStreamEncrypted(TestMixinStreamHLS, unittest.TestCase):
         # noinspection PyTypeChecker
         thread, segments = self.subject([
             Playlist(0, [key] + [SegmentEnc(num, aesKey, aesIv) for num in range(0, 4)]),
-            Playlist(4, [key] + [SegmentEnc(num, aesKey, aesIv, content=long) for num in range(4, 8)], end=True)
+            Playlist(4, [key] + [SegmentEnc(num, aesKey, aesIv, content=long) for num in range(4, 8)], end=True),
         ])
 
         self.await_write(3 + 4)
@@ -341,13 +341,13 @@ class TestHLSStreamEncrypted(TestMixinStreamHLS, unittest.TestCase):
         # noinspection PyTypeChecker
         thread, segments = self.subject([
             Playlist(0, [key, map1] + [SegmentEnc(num, aesKey, aesIv) for num in range(0, 2)]),
-            Playlist(2, [key, map2] + [SegmentEnc(num, aesKey, aesIv) for num in range(2, 4)], end=True)
+            Playlist(2, [key, map2] + [SegmentEnc(num, aesKey, aesIv) for num in range(2, 4)], end=True),
         ])
 
         self.await_write(2 * 2 + 2 * 2)
         data = self.await_read(read_all=True)
         self.assertEqual(data, self.content([
-            map1, segments[0], map1, segments[1], map2, segments[2], map2, segments[3]
+            map1, segments[0], map1, segments[1], map2, segments[2], map2, segments[3],
         ], prop="content_plain"))
 
     def test_hls_encrypted_aes128_key_uri_override(self):
@@ -358,7 +358,7 @@ class TestHLSStreamEncrypted(TestMixinStreamHLS, unittest.TestCase):
         # noinspection PyTypeChecker
         thread, segments = self.subject([
             Playlist(0, [key_invalid] + [SegmentEnc(num, aesKey, aesIv) for num in range(0, 4)]),
-            Playlist(4, [key_invalid] + [SegmentEnc(num, aesKey, aesIv) for num in range(4, 8)], end=True)
+            Playlist(4, [key_invalid] + [SegmentEnc(num, aesKey, aesIv) for num in range(4, 8)], end=True),
         ], options={"hls-segment-key-uri": "{scheme}://real-{netloc}{path}?{query}"})
 
         self.await_write(3 + 4)
@@ -378,7 +378,7 @@ class TestHLSStreamEncrypted(TestMixinStreamHLS, unittest.TestCase):
                 key,
                 SegmentEnc(0, aesKey, aesIv, append=b"?"),
                 SegmentEnc(1, aesKey, aesIv),
-            ], end=True)
+            ], end=True),
         ])
         self.await_write()
         assert self.thread.reader.writer.closed is not True
@@ -387,7 +387,7 @@ class TestHLSStreamEncrypted(TestMixinStreamHLS, unittest.TestCase):
         data = self.await_read(read_all=True)
         assert data == self.content([segments[1]], prop="content_plain")
         assert mock_log.error.mock_calls == [
-            call("Error while decrypting segment 0: Data must be padded to 16 byte boundary in CBC mode")
+            call("Error while decrypting segment 0: Data must be padded to 16 byte boundary in CBC mode"),
         ]
 
     @patch("streamlink.stream.hls.log")
@@ -400,7 +400,7 @@ class TestHLSStreamEncrypted(TestMixinStreamHLS, unittest.TestCase):
                 key,
                 SegmentEnc(0, aesKey, aesIv, padding=padding),
                 SegmentEnc(1, aesKey, aesIv),
-            ], end=True)
+            ], end=True),
         ])
         self.await_write()
         assert self.thread.reader.writer.closed is not True
@@ -420,7 +420,7 @@ class TestHLSStreamEncrypted(TestMixinStreamHLS, unittest.TestCase):
                 key,
                 SegmentEnc(0, aesKey, aesIv, padding=padding),
                 SegmentEnc(1, aesKey, aesIv),
-            ], end=True)
+            ], end=True),
         ])
         self.await_write()
         assert self.thread.reader.writer.closed is not True
@@ -437,13 +437,13 @@ class TestHlsPlaylistReloadTime(TestMixinStreamHLS, unittest.TestCase):
         Segment(0, duration=11),
         Segment(1, duration=7),
         Segment(2, duration=5),
-        Segment(3, duration=3)
+        Segment(3, duration=3),
     ]
 
     def get_session(self, options=None, reload_time=None, *args, **kwargs):
         return super().get_session(dict(options or {}, **{
             "hls-live-edge": 3,
-            "hls-playlist-reload-time": reload_time
+            "hls-playlist-reload-time": reload_time,
         }))
 
     def subject(self, *args, **kwargs):
@@ -544,7 +544,7 @@ class TestHlsPlaylistParseErrors(TestMixinStreamHLS, unittest.TestCase):
             Playlist(1, [Segment(0)]),
             self.InvalidPlaylist(),
             self.InvalidPlaylist(),
-            Playlist(2, [Segment(2)], end=True)
+            Playlist(2, [Segment(2)], end=True),
         ])
         self.await_write(2)
         data = self.await_read(read_all=True)
@@ -553,7 +553,7 @@ class TestHlsPlaylistParseErrors(TestMixinStreamHLS, unittest.TestCase):
         self.await_close()
         self.assertEqual(mock_log.warning.mock_calls, [
             call("Failed to reload playlist: Missing #EXTM3U header"),
-            call("Failed to reload playlist: Missing #EXTM3U header")
+            call("Failed to reload playlist: Missing #EXTM3U header"),
         ])
 
     @patch("streamlink.stream.hls.HLSStreamWorker._reload_playlist", Mock(return_value=FakePlaylist(is_master=True)))
@@ -564,7 +564,7 @@ class TestHlsPlaylistParseErrors(TestMixinStreamHLS, unittest.TestCase):
         self.assertTrue(self.thread.reader.buffer.closed, "Closes the stream on initial playlist parsing error")
         self.assertEqual(mock_log.debug.mock_calls, [call("Reloading playlist")])
         self.assertEqual(mock_log.error.mock_calls, [
-            call(f"Attempted to play a variant playlist, use 'hls://{self.stream.url}' instead")
+            call(f"Attempted to play a variant playlist, use 'hls://{self.stream.url}' instead"),
         ])
 
     @patch("streamlink.stream.hls.HLSStreamWorker._reload_playlist", Mock(return_value=FakePlaylist(iframes_only=True)))

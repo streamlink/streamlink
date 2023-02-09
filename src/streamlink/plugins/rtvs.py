@@ -14,7 +14,7 @@ from streamlink.utils.parse import parse_json
 
 
 @pluginmatcher(re.compile(
-    r"https?://www\.rtvs\.sk/televizia/live-[\w-]+"
+    r"https?://www\.rtvs\.sk/televizia/live-[\w-]+",
 ))
 class Rtvs(Plugin):
     _re_channel_id = re.compile(r"'stream':\s*'live-(\d+)'")
@@ -33,7 +33,7 @@ class Rtvs(Plugin):
                 "p": "win",
                 "f": "0",
                 "d": "1",
-            }
+            },
         )
         videos = parse_json(res.text, schema=validate.Schema({
             "clip": {

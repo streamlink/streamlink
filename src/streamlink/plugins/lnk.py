@@ -17,7 +17,7 @@ log = logging.getLogger(__name__)
 
 
 @pluginmatcher(re.compile(
-    r"https?://(?:www\.)?lnk\.lt/tiesiogiai(?:#(?P<channel>[a-z0-9]+))?"
+    r"https?://(?:www\.)?lnk\.lt/tiesiogiai(?:#(?P<channel>[a-z0-9]+))?",
 ))
 class LNK(Plugin):
     API_URL = "https://lnk.lt/api/video/video-config/{0}"
@@ -47,12 +47,12 @@ class LNK(Plugin):
                     "title": validate.any(None, str),
                     "videoUrl": validate.any(
                         "",
-                        validate.url(path=validate.endswith(".m3u8"))
-                    )
+                        validate.url(path=validate.endswith(".m3u8")),
+                    ),
                 }},
                 validate.get("videoInfo"),
-                validate.union_get("channel", "genre", "title", "videoUrl")
-            )
+                validate.union_get("channel", "genre", "title", "videoUrl"),
+            ),
         )
         if not hls_url:
             log.error("The stream is not available in your region")

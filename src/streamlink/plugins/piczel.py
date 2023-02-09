@@ -12,7 +12,7 @@ from streamlink.stream.hls import HLSStream
 
 
 @pluginmatcher(re.compile(
-    r"https?://piczel\.tv/watch/(?P<channel>\w+)"
+    r"https?://piczel\.tv/watch/(?P<channel>\w+)",
 ))
 class Piczel(Plugin):
     _URL_STREAMS = "https://piczel.tv/api/streams"

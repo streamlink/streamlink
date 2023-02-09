@@ -26,7 +26,7 @@ log = logging.getLogger(__name__)
 
 
 @pluginmatcher(re.compile(
-    r"https?://ott\.streann\.com/s(?:treaming|-secure)/player\.html"
+    r"https?://ott\.streann\.com/s(?:treaming|-secure)/player\.html",
 ))
 @pluginmatcher(re.compile(r"""
     https?://(?:www\.)?(?:
@@ -90,13 +90,13 @@ class Streann(Plugin):
         headers = {
             "Referer": self.url,
             "X-Requested-With": "XMLHttpRequest",
-            "Content-Type": "application/x-www-form-urlencoded"
+            "Content-Type": "application/x-www-form-urlencoded",
         }
 
         res = self.session.http.post(
             self.token_url.format(deviceId=self.device_id, **config),
             data=pdata,
-            headers=headers
+            headers=headers,
         )
 
         if res.status_code == 204:
@@ -123,7 +123,7 @@ class Streann(Plugin):
             iframes = self.session.http.get(self.url, schema=validate.Schema(
                 validate.parse_html(),
                 validate.xml_findall(".//iframe[@src]"),
-                validate.filter(lambda elem: urlparse(elem.attrib.get("src")).netloc == "ott.streann.com")
+                validate.filter(lambda elem: urlparse(elem.attrib.get("src")).netloc == "ott.streann.com"),
             ))
             if not iframes:
                 log.error("Could not find 'ott.streann.com' iframe")

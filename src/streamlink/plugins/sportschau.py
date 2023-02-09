@@ -18,7 +18,7 @@ log = logging.getLogger(__name__)
 
 
 @pluginmatcher(re.compile(
-    r"https?://(?:\w+\.)*sportschau\.de/"
+    r"https?://(?:\w+\.)*sportschau\.de/",
 ))
 class Sportschau(Plugin):
     def _get_streams(self):

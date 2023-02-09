@@ -33,8 +33,8 @@ class Bloomberg(Plugin):
             {"live": {"channels": {"byChannelId": {
                 channel: validate.all(
                     {"liveId": str},
-                    validate.get("liveId")
-                )
+                    validate.get("liveId"),
+                ),
             }}}},
             validate.get(("live", "channels", "byChannelId", channel)),
         )
@@ -51,13 +51,13 @@ class Bloomberg(Plugin):
                 live_id: {
                     validate.optional("cdns"): validate.all(
                         [{"streams": [{
-                            "url": validate.url()
+                            "url": validate.url(),
                         }]}],
-                        validate.transform(lambda x: [urls["url"] for y in x for urls in y["streams"]])
-                    )
-                }
+                        validate.transform(lambda x: [urls["url"] for y in x for urls in y["streams"]]),
+                    ),
+                },
             }},
-            validate.get(("livestreams", live_id, "cdns"))
+            validate.get(("livestreams", live_id, "cdns")),
         ))
 
     def _get_vod_streams(self, data):
@@ -65,21 +65,21 @@ class Bloomberg(Plugin):
             validate.any(
                 validate.all(
                     {"video": {"videoStory": dict}},
-                    validate.get(("video", "videoStory"))
+                    validate.get(("video", "videoStory")),
                 ),
                 validate.all(
                     {"quicktakeVideo": {"videoStory": dict}},
-                    validate.get(("quicktakeVideo", "videoStory"))
-                )
+                    validate.get(("quicktakeVideo", "videoStory")),
+                ),
             ),
             {"video": {
-                "bmmrId": str
+                "bmmrId": str,
             }},
-            validate.get(("video", "bmmrId"))
+            validate.get(("video", "bmmrId")),
         )
         schema_url = validate.all(
             {"url": validate.url()},
-            validate.get("url")
+            validate.get("url"),
         )
 
         try:
@@ -95,9 +95,9 @@ class Bloomberg(Plugin):
             {
                 validate.optional("secureStreams"): [schema_url],
                 validate.optional("streams"): [schema_url],
-                "title": str
+                "title": str,
             },
-            validate.union_get("secureStreams", "streams", "title")
+            validate.union_get("secureStreams", "streams", "title"),
         ))
 
         return secureStreams or streams

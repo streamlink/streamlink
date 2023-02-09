@@ -125,7 +125,7 @@ class MPDNode:
     def __str__(self):
         return "<{tag} {attrs}>".format(
             tag=self.__tag__,
-            attrs=" ".join("@{}={}".format(attr, getattr(self, attr)) for attr in self.attributes)
+            attrs=" ".join("@{}={}".format(attr, getattr(self, attr)) for attr in self.attributes),
         )
 
     def attr(self, key, default=None, parser=None, required=False, inherited=False):
@@ -465,8 +465,8 @@ class SegmentTemplate(MPDNode):
                 self.startNumber
                 + int(
                     (since_start - suggested_delay - self.root.minBufferTime).total_seconds()
-                    / self.duration_seconds
-                )
+                    / self.duration_seconds,
+                ),
             )
 
             # the time the segment number is available at NOW

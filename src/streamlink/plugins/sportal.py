@@ -15,7 +15,7 @@ log = logging.getLogger(__name__)
 
 
 @pluginmatcher(re.compile(
-    r"https?://(?:www\.)?sportal\.bg/sportal_live_tv\.php"
+    r"https?://(?:www\.)?sportal\.bg/sportal_live_tv\.php",
 ))
 class Sportal(Plugin):
     _hls_re = re.compile(r"""["'](?P<url>[^"']+\.m3u8[^"']*?)["']""")

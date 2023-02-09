@@ -21,7 +21,7 @@ log = logging.getLogger(__name__)
 
 
 @pluginmatcher(re.compile(
-    r"https?://(?:www\.)?thvli\.vn/live/(?P<channel>[^/]+)"
+    r"https?://(?:www\.)?thvli\.vn/live/(?P<channel>[^/]+)",
 ))
 class VinhLongTV(Plugin):
     _API_URL = "https://api.thvli.vn/backend/cm/get_detail/{channel}/"

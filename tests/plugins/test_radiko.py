@@ -11,5 +11,5 @@ class TestPluginCanHandleUrlRadiko(PluginCanHandleUrl):
         "http://radiko.jp/#!/live/QRR",
         "http://radiko.jp/live/QRR",
         "http://radiko.jp/#!/ts/QRR/20200308180000",
-        "http://radiko.jp/ts/QRR/20200308180000"
+        "http://radiko.jp/ts/QRR/20200308180000",
     ]

@@ -18,7 +18,7 @@ log = logging.getLogger(__name__)
 
 
 @pluginmatcher(re.compile(
-    r"https?://(?:www\.)?13tv\.co\.il/(live|.*?/)"
+    r"https?://(?:www\.)?13tv\.co\.il/(live|.*?/)",
 ))
 class N13TV(Plugin):
     api_url = "https://13tv-api.oplayer.io/api/getlink/"
@@ -31,14 +31,14 @@ class N13TV(Plugin):
     live_schema = validate.Schema(validate.all(
         [{"Link": validate.url()}],
         validate.get(0),
-        validate.get("Link")
+        validate.get("Link"),
     ))
 
     vod_schema = validate.Schema(validate.all([{
         "ShowTitle": str,
         "ProtocolType": validate.all(
             str,
-            validate.transform(lambda x: x.replace("://", ""))
+            validate.transform(lambda x: x.replace("://", "")),
         ),
         "ServerAddress": str,
         "MediaRoot": str,
@@ -47,8 +47,8 @@ class N13TV(Plugin):
         "StreamingType": str,
         "Token": validate.all(
             str,
-            validate.transform(lambda x: x.lstrip("?"))
-        )
+            validate.transform(lambda x: x.lstrip("?")),
+        ),
     }], validate.get(0)))
 
     def _get_live(self, user_id):
@@ -58,8 +58,8 @@ class N13TV(Plugin):
                 userId=user_id,
                 serverType="web",
                 ch=1,
-                cdnName="casttime"
-            )
+                cdnName="casttime",
+            ),
         )
 
         url = self.session.http.json(res, schema=self.live_schema)
@@ -74,21 +74,21 @@ class N13TV(Plugin):
                 userId=user_id,
                 videoName=video_name,
                 serverType="web",
-                callback="x"
-            )
+                callback="x",
+            ),
         )
 
         vod_data = self.session.http.json(res, schema=self.vod_schema)
 
         if video_name == vod_data["ShowTitle"]:
             host, base_path = self.server_addr_re.search(
-                vod_data["ServerAddress"]
+                vod_data["ServerAddress"],
             ).groups()
             if not host or not base_path:
                 raise PluginError("Could not split 'ServerAddress' components")
 
             base_file, file_ext = self.media_file_re.search(
-                vod_data["MediaFile"]
+                vod_data["MediaFile"],
             ).groups()
             if not base_file or not file_ext:
                 raise PluginError("Could not split 'MediaFile' components")
@@ -99,7 +99,7 @@ class N13TV(Plugin):
                 base_file,
                 vod_data["Bitrates"],
                 file_ext,
-                vod_data["StreamingType"]
+                vod_data["StreamingType"],
             )
             log.debug("Media path={0}".format(media_path))
 
@@ -109,7 +109,7 @@ class N13TV(Plugin):
                 media_path,
                 "",
                 vod_data["Token"],
-                ""
+                "",
             ))
             log.debug("URL={0}".format(vod_url))
 

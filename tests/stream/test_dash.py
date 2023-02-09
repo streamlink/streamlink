@@ -23,9 +23,9 @@ class TestDASHStream(unittest.TestCase):
                 Mock(contentProtection=None,
                      representations=[
                          Mock(id=1, mimeType="video/mp4", height=720),
-                         Mock(id=2, mimeType="video/mp4", height=1080)
-                     ])
-            ])
+                         Mock(id=2, mimeType="video/mp4", height=1080),
+                     ]),
+            ]),
         ])
 
         streams = DASHStream.parse_manifest(self.session, self.test_url)
@@ -33,7 +33,7 @@ class TestDASHStream(unittest.TestCase):
 
         self.assertSequenceEqual(
             sorted(list(streams.keys())),
-            sorted(["720p", "1080p"])
+            sorted(["720p", "1080p"]),
         )
 
     @patch("streamlink.stream.dash.MPD")
@@ -43,9 +43,9 @@ class TestDASHStream(unittest.TestCase):
                 Mock(contentProtection=None,
                      representations=[
                          Mock(id=1, mimeType="audio/mp4", bandwidth=128.0, lang="en"),
-                         Mock(id=2, mimeType="audio/mp4", bandwidth=256.0, lang="en")
-                     ])
-            ])
+                         Mock(id=2, mimeType="audio/mp4", bandwidth=256.0, lang="en"),
+                     ]),
+            ]),
         ])
 
         streams = DASHStream.parse_manifest(self.session, self.test_url)
@@ -53,7 +53,7 @@ class TestDASHStream(unittest.TestCase):
 
         self.assertSequenceEqual(
             sorted(list(streams.keys())),
-            sorted(["a128k", "a256k"])
+            sorted(["a128k", "a256k"]),
         )
 
     @patch("streamlink.stream.dash.MPD")
@@ -64,9 +64,9 @@ class TestDASHStream(unittest.TestCase):
                      representations=[
                          Mock(id=1, mimeType="video/mp4", height=720),
                          Mock(id=2, mimeType="video/mp4", height=1080),
-                         Mock(id=3, mimeType="audio/aac", bandwidth=128.0, lang="en")
-                     ])
-            ])
+                         Mock(id=3, mimeType="audio/aac", bandwidth=128.0, lang="en"),
+                     ]),
+            ]),
         ])
 
         streams = DASHStream.parse_manifest(self.session, self.test_url)
@@ -74,7 +74,7 @@ class TestDASHStream(unittest.TestCase):
 
         self.assertSequenceEqual(
             sorted(list(streams.keys())),
-            sorted(["720p", "1080p"])
+            sorted(["720p", "1080p"]),
         )
 
     @patch("streamlink.stream.dash.MPD")
@@ -86,9 +86,9 @@ class TestDASHStream(unittest.TestCase):
                          Mock(id=1, mimeType="video/mp4", height=720),
                          Mock(id=2, mimeType="video/mp4", height=1080),
                          Mock(id=3, mimeType="audio/aac", bandwidth=128.0, lang="en"),
-                         Mock(id=4, mimeType="audio/aac", bandwidth=256.0, lang="en")
-                     ])
-            ])
+                         Mock(id=4, mimeType="audio/aac", bandwidth=256.0, lang="en"),
+                     ]),
+            ]),
         ])
 
         streams = DASHStream.parse_manifest(self.session, self.test_url)
@@ -96,7 +96,7 @@ class TestDASHStream(unittest.TestCase):
 
         self.assertSequenceEqual(
             sorted(list(streams.keys())),
-            sorted(["720p+a128k", "1080p+a128k", "720p+a256k", "1080p+a256k"])
+            sorted(["720p+a128k", "1080p+a128k", "720p+a256k", "1080p+a256k"]),
         )
 
     @patch("streamlink.stream.dash.MPD")
@@ -108,9 +108,9 @@ class TestDASHStream(unittest.TestCase):
                          Mock(id=1, mimeType="video/mp4", height=720),
                          Mock(id=2, mimeType="video/mp4", height=1080),
                          Mock(id=3, mimeType="audio/aac", bandwidth=128.0, lang="en"),
-                         Mock(id=4, mimeType="audio/aac", bandwidth=128.0, lang="es")
-                     ])
-            ])
+                         Mock(id=4, mimeType="audio/aac", bandwidth=128.0, lang="es"),
+                     ]),
+            ]),
         ])
 
         streams = DASHStream.parse_manifest(self.session, self.test_url)
@@ -118,7 +118,7 @@ class TestDASHStream(unittest.TestCase):
 
         self.assertSequenceEqual(
             sorted(list(streams.keys())),
-            sorted(["720p", "1080p"])
+            sorted(["720p", "1080p"]),
         )
 
         self.assertEqual(streams["720p"].audio_representation.lang, "en")
@@ -133,9 +133,9 @@ class TestDASHStream(unittest.TestCase):
                          Mock(id=1, mimeType="video/mp4", height=720),
                          Mock(id=2, mimeType="video/mp4", height=1080),
                          Mock(id=3, mimeType="audio/aac", bandwidth=128.0, lang="eng"),
-                         Mock(id=4, mimeType="audio/aac", bandwidth=128.0, lang="spa")
-                     ])
-            ])
+                         Mock(id=4, mimeType="audio/aac", bandwidth=128.0, lang="spa"),
+                     ]),
+            ]),
         ])
 
         streams = DASHStream.parse_manifest(self.session, self.test_url)
@@ -143,7 +143,7 @@ class TestDASHStream(unittest.TestCase):
 
         self.assertSequenceEqual(
             sorted(list(streams.keys())),
-            sorted(["720p", "1080p"])
+            sorted(["720p", "1080p"]),
         )
 
         self.assertEqual(streams["720p"].audio_representation.lang, "eng")
@@ -158,8 +158,8 @@ class TestDASHStream(unittest.TestCase):
                          Mock(id=1, mimeType="video/mp4", height=720),
                          Mock(id=2, mimeType="video/mp4", height=1080),
                          Mock(id=3, mimeType="audio/aac", bandwidth=128.0, lang="en_no_voice"),
-                     ])
-            ])
+                     ]),
+            ]),
         ])
 
         streams = DASHStream.parse_manifest(self.session, self.test_url)
@@ -167,7 +167,7 @@ class TestDASHStream(unittest.TestCase):
 
         self.assertSequenceEqual(
             sorted(list(streams.keys())),
-            sorted(["720p", "1080p"])
+            sorted(["720p", "1080p"]),
         )
 
         self.assertEqual(streams["720p"].audio_representation.lang, "en_no_voice")
@@ -185,9 +185,9 @@ class TestDASHStream(unittest.TestCase):
                          Mock(id=1, mimeType="video/mp4", height=720),
                          Mock(id=2, mimeType="video/mp4", height=1080),
                          Mock(id=3, mimeType="audio/aac", bandwidth=128.0, lang="en"),
-                         Mock(id=4, mimeType="audio/aac", bandwidth=128.0, lang="es")
-                     ])
-            ])
+                         Mock(id=4, mimeType="audio/aac", bandwidth=128.0, lang="es"),
+                     ]),
+            ]),
         ])
 
         streams = DASHStream.parse_manifest(self.session, self.test_url)
@@ -195,7 +195,7 @@ class TestDASHStream(unittest.TestCase):
 
         self.assertSequenceEqual(
             sorted(list(streams.keys())),
-            sorted(["720p", "1080p"])
+            sorted(["720p", "1080p"]),
         )
 
         self.assertEqual(streams["720p"].audio_representation.lang, "es")
@@ -267,8 +267,8 @@ class TestDASHStream(unittest.TestCase):
                          Mock(id=2, mimeType="video/mp4", height=1080, bandwidth=64.0),
                          Mock(id=3, mimeType="video/mp4", height=1080, bandwidth=32.0),
                          Mock(id=4, mimeType="video/mp4", height=720),
-                     ])
-            ])
+                     ]),
+            ]),
         ])
 
         streams = DASHStream.parse_manifest(self.session, self.test_url)
@@ -276,7 +276,7 @@ class TestDASHStream(unittest.TestCase):
 
         self.assertSequenceEqual(
             sorted(list(streams.keys())),
-            sorted(["720p", "1080p", "1080p_alt", "1080p_alt2"])
+            sorted(["720p", "1080p", "1080p_alt", "1080p_alt2"]),
         )
 
     @patch("streamlink.stream.dash.MPD")
@@ -291,8 +291,8 @@ class TestDASHStream(unittest.TestCase):
                          Mock(id=1, mimeType="video/mp4", height=1080, bandwidth=64.0),
                          Mock(id=2, mimeType="video/mp4", height=1080, bandwidth=128.0),
                          Mock(id=3, mimeType="video/mp4", height=1080, bandwidth=32.0),
-                     ])
-            ])
+                     ]),
+            ]),
         ])
 
         streams = DASHStream.parse_manifest(self.session, self.test_url)

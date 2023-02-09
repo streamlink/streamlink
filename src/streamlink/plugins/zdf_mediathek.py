@@ -19,7 +19,7 @@ log = logging.getLogger(__name__)
 
 
 @pluginmatcher(re.compile(
-    r"https?://(\w+\.)?(zdf\.de|3sat\.de)/"
+    r"https?://(\w+\.)?(zdf\.de|3sat\.de)/",
 ))
 class ZDFMediathek(Plugin):
     PLAYER_ID = "ngplayer_2_4"
@@ -45,7 +45,7 @@ class ZDFMediathek(Plugin):
         headers = {
             "Accept": "application/vnd.de.zdf.v1.0+json;charset=UTF-8",
             "Api-Auth": f"Bearer {apiToken}",
-            "Referer": self.url
+            "Referer": self.url,
         }
 
         pApiUrl = urlparse(apiUrl)
@@ -54,11 +54,11 @@ class ZDFMediathek(Plugin):
             validate.parse_json(),
             {"mainVideoContent": {
                 "http://zdf.de/rels/target": {
-                    "http://zdf.de/rels/streams/ptmd-template": str
-                }
+                    "http://zdf.de/rels/streams/ptmd-template": str,
+                },
             }},
             validate.get(("mainVideoContent", "http://zdf.de/rels/target", "http://zdf.de/rels/streams/ptmd-template")),
-            validate.transform(lambda template: template.format(playerId=self.PLAYER_ID).replace(" ", ""))
+            validate.transform(lambda template: template.format(playerId=self.PLAYER_ID).replace(" ", "")),
         ))
 
         stream_request_url = url_concat(apiUrlBase, apiUrlPath)
@@ -73,17 +73,17 @@ class ZDFMediathek(Plugin):
                                 "quality": str,
                                 "audio": {
                                     "tracks": [{
-                                        "uri": validate.url()
-                                    }]
-                                }
+                                        "uri": validate.url(),
+                                    }],
+                                },
                             }],
-                            validate.filter(lambda obj: obj["quality"] == "auto")
-                        )
+                            validate.filter(lambda obj: obj["quality"] == "auto"),
+                        ),
                     }],
-                    validate.filter(lambda obj: obj["type"] == "h264_aac_ts_http_m3u8_http")
-                )
+                    validate.filter(lambda obj: obj["type"] == "h264_aac_ts_http_m3u8_http"),
+                ),
             }]},
-            validate.get("priorityList")
+            validate.get("priorityList"),
         ))
 
         for priority in data:

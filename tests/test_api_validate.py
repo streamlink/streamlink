@@ -169,7 +169,7 @@ class TestDict:
         ids=[
             "existing",
             "missing",
-        ]
+        ],
     )
     def test_optional(self, value, expected):
         assert validate.validate({validate.optional("foo"): "foo"}, value) == expected
@@ -339,28 +339,28 @@ class TestAllSchema:
                 """
                     ValidationError(type):
                       Type of 123 should be str, but is int
-                """
+                """,
             ),
             (
                 "bar",
                 """
                     ValidationError(Callable):
                       <lambda>('bar') is not true
-                """
+                """,
             ),
             (
                 "failure",
                 """
                     ValidationError(equality):
                       'failure' does not equal 'foo'
-                """
+                """,
             ),
         ],
         ids=[
             "first",
             "second",
             "third",
-        ]
+        ],
     )
     def test_failure(self, schema, value, error):
         with pytest.raises(ValidationError) as cm:
@@ -388,7 +388,7 @@ class TestAnySchema:
             "first",
             "second",
             "third",
-        ]
+        ],
     )
     def test_success(self, schema, value):
         assert validate.validate(schema, value) is value
@@ -627,7 +627,7 @@ class TestGetItemSchema:
     def test_strict(self):
         dictionary = {
             ("foo", "bar", "baz"): "foo-bar-baz",
-            "foo": {"bar": {"baz": "qux"}}
+            "foo": {"bar": {"baz": "qux"}},
         }
         assert validate.validate(validate.get(("foo", "bar", "baz"), strict=True), dictionary) == "foo-bar-baz"
 
@@ -785,7 +785,7 @@ class TestXmlElementSchema:
             "attrib",
             "text",
             "tail",
-        ]
+        ],
     )
     def test_failure(self, element, schema, error):
         with pytest.raises(ValidationError) as cm:
@@ -880,14 +880,14 @@ class TestUnionSchema:
 class TestLengthValidator:
     @pytest.mark.parametrize(
         "minlength, value",
-        [(3, "foo"), (3, [1, 2, 3])]
+        [(3, "foo"), (3, [1, 2, 3])],
     )
     def test_success(self, minlength, value):
         assert validate.validate(validate.length(minlength), value)
 
     @pytest.mark.parametrize(
         "minlength, value",
-        [(3, "foo"), (3, [1, 2, 3])]
+        [(3, "foo"), (3, [1, 2, 3])],
     )
     def test_failure(self, minlength, value):
         with pytest.raises(ValidationError) as cm:
@@ -1043,7 +1043,7 @@ class TestHasAttrValidator:
         def __repr__(self):
             return self.__class__.__name__
 
-    def test_success(self,):
+    def test_success(self):
         assert validate.validate(validate.hasattr("foo"), self.Subject())
 
     def test_failure(self):
@@ -1425,13 +1425,13 @@ class TestValidationError:
         err = ValidationError(
             ValidationError(
                 "foo",
-                schema=dict
+                schema=dict,
             ),
             ValidationError(
                 "bar",
-                schema="something"
+                schema="something",
             ),
-            schema=validate.any
+            schema=validate.any,
         )
         assert_validationerror(err, """
             ValidationError(AnySchema):

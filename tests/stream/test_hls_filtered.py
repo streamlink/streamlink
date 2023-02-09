@@ -47,7 +47,7 @@ class TestFilteredHLSStream(TestMixinStreamHLS, unittest.TestCase):
     # don't patch should_filter_sequence here (it always returns False)
     def test_not_filtered(self):
         thread, reader, writer, segments = self.subject([
-            Playlist(0, [SegmentFiltered(0), SegmentFiltered(1)], end=True)
+            Playlist(0, [SegmentFiltered(0), SegmentFiltered(1)], end=True),
         ])
 
         self.await_write(2)
@@ -114,7 +114,7 @@ class TestFilteredHLSStream(TestMixinStreamHLS, unittest.TestCase):
     @patch("streamlink.stream.hls.HLSStreamWriter.should_filter_sequence", new=filter_sequence)
     def test_filtered_timeout(self):
         thread, reader, writer, segments = self.subject([
-            Playlist(0, [Segment(0), Segment(1)], end=True)
+            Playlist(0, [Segment(0), Segment(1)], end=True),
         ])
 
         self.await_write()
@@ -131,7 +131,7 @@ class TestFilteredHLSStream(TestMixinStreamHLS, unittest.TestCase):
     def test_filtered_no_timeout(self):
         thread, reader, writer, segments = self.subject([
             Playlist(0, [SegmentFiltered(0), SegmentFiltered(1)]),
-            Playlist(2, [Segment(2), Segment(3)], end=True)
+            Playlist(2, [Segment(2), Segment(3)], end=True),
         ])
 
         self.assertFalse(reader.is_paused(), "Doesn't let the reader wait if not filtering")
@@ -158,7 +158,7 @@ class TestFilteredHLSStream(TestMixinStreamHLS, unittest.TestCase):
     @patch("streamlink.stream.hls.HLSStreamWriter.should_filter_sequence", new=filter_sequence)
     def test_filtered_closed(self):
         thread, reader, writer, segments = self.subject(start=False, playlists=[
-            Playlist(0, [SegmentFiltered(0), SegmentFiltered(1)], end=True)
+            Playlist(0, [SegmentFiltered(0), SegmentFiltered(1)], end=True),
         ])
 
         # mock the reader thread's _event_filter.wait method, so that the main thread can wait on its call
@@ -189,7 +189,7 @@ class TestFilteredHLSStream(TestMixinStreamHLS, unittest.TestCase):
 
     def test_hls_segment_ignore_names(self):
         thread, reader, writer, segments = self.subject([
-            Playlist(0, [Segment(0), Segment(1), Segment(2), Segment(3)], end=True)
+            Playlist(0, [Segment(0), Segment(1), Segment(2), Segment(3)], end=True),
         ], {"hls-segment-ignore-names": [
             ".*",
             "segment0",

@@ -35,7 +35,7 @@ class BrightcovePlayer:
         player_url = self.URL_PLAYER.format(
             account_id=self.account_id,
             player_id=self.player_id,
-            video_id=video_id
+            video_id=video_id,
         )
 
         policy_key = self.session.http.get(
@@ -43,8 +43,8 @@ class BrightcovePlayer:
             params={"videoId": video_id},
             schema=validate.Schema(
                 re.compile(r"""policyKey\s*:\s*(?P<q>['"])(?P<key>[\w-]+)(?P=q)"""),
-                validate.any(None, validate.get("key"))
-            )
+                validate.any(None, validate.get("key")),
+            ),
         )
         if not policy_key:
             raise PluginError("Could not find Brightcove policy key")
@@ -66,8 +66,8 @@ class BrightcovePlayer:
                     }],
                     validate.optional("name"): str,
                 },
-                validate.union_get("sources", "name")
-            )
+                validate.union_get("sources", "name"),
+            ),
         )
 
         for source in sources:
@@ -87,7 +87,7 @@ class BrightcovePlayer:
 
 
 @pluginmatcher(re.compile(
-    r"https?://players\.brightcove\.net/(?P<account_id>[^/]+)/(?P<player_id>[^/]+)/index\.html"
+    r"https?://players\.brightcove\.net/(?P<account_id>[^/]+)/(?P<player_id>[^/]+)/index\.html",
 ))
 class Brightcove(Plugin):
     def _get_streams(self):

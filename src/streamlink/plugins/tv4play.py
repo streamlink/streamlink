@@ -40,7 +40,7 @@ class TV4Play(Plugin):
                 "title": str,
             },
             "mediaUri": str,
-        }
+        },
     )
 
     @property
@@ -59,7 +59,7 @@ class TV4Play(Plugin):
         try:
             res = self.session.http.get(
                 self.api_assets.format(self.get_video_id),
-                params=params
+                params=params,
             )
         except Exception as e:
             if "404 Client Error" in str(e):

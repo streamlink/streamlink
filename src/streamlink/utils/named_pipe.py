@@ -98,7 +98,7 @@ class NamedPipeWindows(NamedPipeBase):
             self.bufsize,
             self.bufsize,
             0,
-            None
+            None,
         )
         if self.pipe == self.INVALID_HANDLE_VALUE:
             self._get_last_error()
@@ -113,7 +113,7 @@ class NamedPipeWindows(NamedPipeBase):
             cast(data, c_void_p),
             len(data),
             byref(written),
-            None
+            None,
         )
         return written.value
 

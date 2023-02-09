@@ -21,10 +21,10 @@ log = logging.getLogger(__name__)
 
 
 @pluginmatcher(re.compile(
-    r"https?://(?:\w+\.)?vk\.com/videos?(?:\?z=video)?(?P<video_id>-?\d+_\d+)"
+    r"https?://(?:\w+\.)?vk\.com/videos?(?:\?z=video)?(?P<video_id>-?\d+_\d+)",
 ))
 @pluginmatcher(re.compile(
-    r"https?://(\w+\.)?vk\.com/.+"
+    r"https?://(\w+\.)?vk\.com/.+",
 ))
 class VK(Plugin):
     API_URL = "https://vk.com/al_video.php"
@@ -65,7 +65,7 @@ class VK(Plugin):
             self.url = self.session.http.get(self.url, schema=validate.Schema(
                 validate.parse_html(),
                 validate.xml_xpath_string(".//head/meta[@property='og:url'][@content]/@content"),
-                str
+                str,
             ))
         except PluginError:
             pass
@@ -103,8 +103,8 @@ class VK(Plugin):
                         validate.optional("manifest"): validate.startswith("<?xml"),
                         validate.optional("md_author"): validate.any(str, None),
                         validate.optional("md_title"): validate.any(str, None),
-                    }
-                )
+                    },
+                ),
             )
         except PluginError:
             log.error("Could not parse API response")

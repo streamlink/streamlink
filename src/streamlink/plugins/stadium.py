@@ -17,7 +17,7 @@ log = logging.getLogger(__name__)
 
 
 @pluginmatcher(re.compile(
-    r"https?://(?:www\.)?watchstadium\.com/"
+    r"https?://(?:www\.)?watchstadium\.com/",
 ))
 class Stadium(Plugin):
     _API_URL = "https://edge.api.brightcove.com/playback/v1/accounts/{data_account}/videos/{data_video_id}"
@@ -28,7 +28,7 @@ class Stadium(Plugin):
             data = self.session.http.get(self.url, schema=validate.Schema(
                 validate.parse_html(),
                 validate.xml_find(".//video[@id='brightcove_video_player']"),
-                validate.union_get("data-video-id", "data-account", "data-ad-config-id", "data-player")
+                validate.union_get("data-video-id", "data-account", "data-ad-config-id", "data-player"),
             ))
         except PluginError:
             return
@@ -37,7 +37,7 @@ class Stadium(Plugin):
         url = self._PLAYER_URL.format(data_account=data_account, data_player=data_player)
         policy_key = self.session.http.get(url, schema=validate.Schema(
             re.compile(r"""options:\s*{.+policyKey:\s*"([^"]+)""", re.DOTALL),
-            validate.any(None, validate.get(1))
+            validate.any(None, validate.get(1)),
         ))
         if not policy_key:
             return
@@ -58,8 +58,8 @@ class Stadium(Plugin):
                     }],
                 },
                 validate.get("sources"),
-                validate.filter(lambda source: source.get("type") == "application/x-mpegURL")
-            )
+                validate.filter(lambda source: source.get("type") == "application/x-mpegURL"),
+            ),
         )
 
         for stream in streams:

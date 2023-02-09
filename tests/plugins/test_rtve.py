@@ -63,6 +63,6 @@ def test_translate_has_streams():
         (
             "HD_READY",
             "https://rtvehlsvodlote7modo2.rtve.es/mediavodv2/resources/TE_NGVA/mp4/5/3/1656573649835.mp4/video.m3u8"
-            + "?hls_no_audio_only=true&idasset=6638770"
+            + "?hls_no_audio_only=true&idasset=6638770",
         ),
     ]

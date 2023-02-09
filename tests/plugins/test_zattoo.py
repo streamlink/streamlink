@@ -39,11 +39,11 @@ class TestPluginCanHandleUrlZattoo(PluginCanHandleUrl):
         + "/1455137700000/6900000",
         "https://zattoo.com/watch/tve/130920738-viaje-al-centro-de-la-tele/96847859/1508777100000/1508779800000/0",
         "https://zattoo.com/recording/193074536",
-        "https://zattoo.com/recordings?recording=186466965"
+        "https://zattoo.com/recordings?recording=186466965",
     ]
 
     should_not_match = [
         "https://ewe.de",
         "https://netcologne.de",
-        "https://zattoo.com"
+        "https://zattoo.com",
     ]

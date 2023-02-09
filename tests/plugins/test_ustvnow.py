@@ -8,7 +8,7 @@ class TestPluginCanHandleUrlUSTVNow(PluginCanHandleUrl):
     __plugin__ = USTVNow
 
     should_match = [
-        "http://www.ustvnow.com/live/foo/-65"
+        "http://www.ustvnow.com/live/foo/-65",
     ]
 
 
@@ -23,8 +23,8 @@ class TestPluginUSTVNow(unittest.TestCase):
             USTVNow.encrypt_data(
                 b'{"login_id":"test@test.com","login_key":"testtest1234","login_mode":"1","manufacturer":"123"}',
                 key,
-                iv
-            )
+                iv,
+            ),
         )
 
     def test_decrypt_data(self):
@@ -37,6 +37,6 @@ class TestPluginUSTVNow(unittest.TestCase):
                 b"KcRLETVAmHlosM0OyUd5hdTQ6WhBRTe/YRAHiLJWrzf94OLkSueXTtQ9QZ1fjOLCbpX2qteEPUWVnzvvSgVDkQmRUttN"
                 + b"/royoxW2aL0gYQSoH1NWoDV8sIgvS5vDiQ85",
                 key,
-                iv
-            )
+                iv,
+            ),
         )

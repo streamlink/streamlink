@@ -16,7 +16,7 @@ log = logging.getLogger(__name__)
 
 
 @pluginmatcher(re.compile(
-    r"https?://(?:www\.)?openrec\.tv/(?:live|movie)/(?P<id>[^/]+)"
+    r"https?://(?:www\.)?openrec\.tv/(?:live|movie)/(?P<id>[^/]+)",
 ))
 @pluginargument(
     "email",
@@ -52,7 +52,7 @@ class OPENRECtv(Plugin):
         validate.optional("subs_trial_media"): {
             "url": validate.any(None, validate.url()),
             "url_ull": validate.any(None, validate.url()),
-        }
+        },
     })
 
     _subscription_schema = validate.Schema({
@@ -60,16 +60,16 @@ class OPENRECtv(Plugin):
         validate.optional("data"): {
             "items": [{
                 "media": {
-                    "url": validate.any(None, validate.url())
-                }
-            }]
-        }
+                    "url": validate.any(None, validate.url()),
+                },
+            }],
+        },
     })
 
     _login_schema = validate.Schema({
         validate.optional("error_message"): str,
         "status": int,
-        validate.optional("data"): object
+        validate.optional("data"): object,
     })
 
     def __init__(self, *args, **kwargs):
@@ -89,7 +89,7 @@ class OPENRECtv(Plugin):
         url = self.movie_info_url.format(id=self.video_id)
         res = self.session.http.get(url, headers={
             "access-token": self.session.http.cookies.get("access_token"),
-            "uuid": self.session.http.cookies.get("uuid")
+            "uuid": self.session.http.cookies.get("uuid"),
         })
         data = self.session.http.json(res, schema=self._info_schema)
 
@@ -103,7 +103,7 @@ class OPENRECtv(Plugin):
         url = self.subscription_info_url.format(id=self.video_id)
         res = self.session.http.get(url, headers={
             "access-token": self.session.http.cookies.get("access_token"),
-            "uuid": self.session.http.cookies.get("uuid")
+            "uuid": self.session.http.cookies.get("uuid"),
         })
         data = self.session.http.json(res, schema=self._subscription_schema)
 
@@ -151,7 +151,7 @@ class OPENRECtv(Plugin):
             if m3u8_file is not None:
                 yield from HLSStream.parse_variant_playlist(
                     self.session,
-                    m3u8_file
+                    m3u8_file,
                 ).items()
 
         else:

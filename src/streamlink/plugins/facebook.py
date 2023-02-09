@@ -38,7 +38,7 @@ class Facebook(Plugin):
     def _parse_streams(self, res):
         stream_url = validate.Schema(
             validate.parse_html(),
-            validate.xml_xpath_string(".//head/meta[@property='og:video:url'][@content][1]/@content")
+            validate.xml_xpath_string(".//head/meta[@property='og:video:url'][@content][1]/@content"),
         ).validate(res.text)
         if not stream_url:
             log.debug("No meta og:video:url")
@@ -86,7 +86,7 @@ class Facebook(Plugin):
                 validate.xml_xpath_string(".//head/title[1]/text()"),
                 validate.xml_xpath_string(".//head/meta[@res='canonical'][@href][1]/@href"),
                 validate.xml_xpath_string(".//head/meta[@property='og:title'][@content][1]/@content"),
-            ))
+            )),
         ).validate(res.text)
         if canonical == "https://www.facebook.com/login/" or "log in" in title.lower():
             log.error("This URL requires a login or may be accessible from a different IP address.")
@@ -131,7 +131,7 @@ class Facebook(Plugin):
         res = self.session.http.post(
             url,
             headers={"Content-Type": "application/x-www-form-urlencoded"},
-            data=urlencode(data).encode("ascii")
+            data=urlencode(data).encode("ascii"),
         )
 
         yield from self._parse_streams(res)

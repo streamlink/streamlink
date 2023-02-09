@@ -62,7 +62,7 @@ class TestCLIMain(unittest.TestCase):
             "worst": b,
             "best": d,
             "worst-unfiltered": a,
-            "best-unfiltered": e
+            "best-unfiltered": e,
         }
 
         self.assertEqual(resolve_stream_name(streams, "unknown"), "unknown")
@@ -86,15 +86,15 @@ class TestCLIMain(unittest.TestCase):
             "720p": b,
             "1080p": c,
             "worst": b,
-            "best": c
+            "best": c,
         }
         self.assertEqual(
             format_valid_streams(_TestPlugin, streams),
             ", ".join([
                 "audio",
                 "720p (worst)",
-                "1080p (best)"
-            ])
+                "1080p (best)",
+            ]),
         )
 
         streams = {
@@ -102,15 +102,15 @@ class TestCLIMain(unittest.TestCase):
             "720p": b,
             "1080p": c,
             "worst-unfiltered": b,
-            "best-unfiltered": c
+            "best-unfiltered": c,
         }
         self.assertEqual(
             format_valid_streams(_TestPlugin, streams),
             ", ".join([
                 "audio",
                 "720p (worst-unfiltered)",
-                "1080p (best-unfiltered)"
-            ])
+                "1080p (best-unfiltered)",
+            ]),
         )
 
 
@@ -146,8 +146,8 @@ class TestCLIMainJsonAndStreamUrl(unittest.TestCase):
                 id="test-id-1234-5678",
                 author="Tѥst Āuƭhǿr",
                 category=None,
-                title="Test Title"
-            )
+                title="Test Title",
+            ),
         )])
         self.assertEqual(console.error.mock_calls, [])
         console.msg_json.mock_calls.clear()
@@ -184,9 +184,9 @@ class TestCLIMainJsonAndStreamUrl(unittest.TestCase):
                     id="test-id-1234-5678",
                     author="Tѥst Āuƭhǿr",
                     category=None,
-                    title="Test Title"
+                    title="Test Title",
                 ),
-                streams=streams
+                streams=streams,
             )])
             self.assertEqual(console.error.mock_calls, [])
             console.msg_json.mock_calls.clear()
@@ -213,7 +213,7 @@ class TestCLIMainCheckFileOutput(unittest.TestCase):
             spec=Path(path),
             is_file=Mock(return_value=is_file),
             resolve=Mock(return_value=resolve),
-            __str__=Mock(return_value=path)
+            __str__=Mock(return_value=path),
         )
 
     @patch("streamlink_cli.main.log")
@@ -282,7 +282,7 @@ class TestCLIMainCreateOutput(unittest.TestCase):
     @patch("streamlink_cli.main.DEFAULT_STREAM_METADATA", {"title": "bar"})
     def test_create_output_no_file_output_options(self, args: Mock):
         formatter = Formatter({
-            "author": lambda: "foo"
+            "author": lambda: "foo",
         })
         args.output = None
         args.stdout = None
@@ -371,7 +371,7 @@ class TestCLIMainCreateOutput(unittest.TestCase):
     @patch("streamlink_cli.main.DEFAULT_STREAM_METADATA", {"title": "bar"})
     def test_create_output_record(self, mock_check_file_output: Mock, args: Mock):
         formatter = Formatter({
-            "author": lambda: "foo"
+            "author": lambda: "foo",
         })
         mock_check_file_output.side_effect = lambda path, force: FileOutput(path)
         args.output = None
@@ -408,7 +408,7 @@ class TestCLIMainCreateOutput(unittest.TestCase):
     @patch("streamlink_cli.main.DEFAULT_STREAM_METADATA", {"title": "bar"})
     def test_create_output_record_stdout(self, args: Mock):
         formatter = Formatter({
-            "author": lambda: "foo"
+            "author": lambda: "foo",
         })
         args.output = None
         args.stdout = None
@@ -454,7 +454,7 @@ class TestCLIMainCreateOutput(unittest.TestCase):
             create_output(formatter)
         self.assertRegex(
             console.exit.call_args_list[0][0][0],
-            r"^The default player \(\w+\) does not seem to be installed\."
+            r"^The default player \(\w+\) does not seem to be installed\.",
         )
 
 
@@ -492,7 +492,7 @@ class TestCLIMainOutputStream(unittest.TestCase):
         output = Mock()
         stream = Mock(
             __str__=lambda _: "fake-stream",
-            open=Mock(side_effect=StreamError("failure"))
+            open=Mock(side_effect=StreamError("failure")),
         )
         formatter = Formatter({})
 
@@ -505,7 +505,7 @@ class TestCLIMainOutputStream(unittest.TestCase):
             call("Try 2/2: Could not open stream fake-stream (Could not open stream: failure)"),
         ])
         self.assertEqual(mock_console.exit.call_args_list, [
-            call("Could not open stream fake-stream, tried 2 times, exiting")
+            call("Could not open stream fake-stream, tried 2 times, exiting"),
         ])
         self.assertFalse(output.open.called, "Does not open the output on stream error")
 
@@ -719,7 +719,7 @@ class TestCLIMainLoggingInfos(_TestCLIMainLogging):
     def test_log_current_arguments(self, mock_log):
         self.subject([
             "streamlink",
-            "--loglevel", "info"
+            "--loglevel", "info",
         ])
         self.assertEqual(mock_log.debug.mock_calls, [], "Doesn't log anything if not debug logging")
 
@@ -730,7 +730,7 @@ class TestCLIMainLoggingInfos(_TestCLIMainLogging):
             "--testplugin-bool",
             "--testplugin-password=secret",
             "test.se/channel",
-            "best,worst"
+            "best,worst",
         ])
         self.assertEqual(
             mock_log.debug.mock_calls[-7:],
@@ -741,8 +741,8 @@ class TestCLIMainLoggingInfos(_TestCLIMainLogging):
                 call(" --loglevel=debug"),
                 call(" --player=custom"),
                 call(" --testplugin-bool=True"),
-                call(" --testplugin-password=********")
-            ]
+                call(" --testplugin-password=********"),
+            ],
         )
 
 
@@ -776,7 +776,7 @@ class TestCLIMainLoggingLogfile(_TestCLIMainLogging):
         self.write_file_and_assert(
             mock_mkdir=path.mkdir,
             mock_write=mock_open(str(path), "a").write,
-            mock_stdout=mock_stdout
+            mock_stdout=mock_stdout,
         )
 
 
@@ -790,7 +790,7 @@ class TestCLIMainLoggingLogfilePosix(_TestCLIMainLogging):
         self.write_file_and_assert(
             mock_mkdir=PosixPath("/foo").mkdir,
             mock_write=mock_open("/foo/bar", "a").write,
-            mock_stdout=mock_stdout
+            mock_stdout=mock_stdout,
         )
 
     @patch("sys.stdout")
@@ -802,7 +802,7 @@ class TestCLIMainLoggingLogfilePosix(_TestCLIMainLogging):
         self.write_file_and_assert(
             mock_mkdir=PosixPath("/foo").mkdir,
             mock_write=mock_open("/foo/bar", "a").write,
-            mock_stdout=mock_stdout
+            mock_stdout=mock_stdout,
         )
 
     @patch("sys.stdout")
@@ -815,7 +815,7 @@ class TestCLIMainLoggingLogfilePosix(_TestCLIMainLogging):
         self.write_file_and_assert(
             mock_mkdir=PosixPath("/foo").mkdir,
             mock_write=mock_open("/foo/2000-01-02_03-04-05.log", "a").write,
-            mock_stdout=mock_stdout
+            mock_stdout=mock_stdout,
         )
 
 
@@ -829,7 +829,7 @@ class TestCLIMainLoggingLogfileWindows(_TestCLIMainLogging):
         self.write_file_and_assert(
             mock_mkdir=WindowsPath("C:\\foo").mkdir,
             mock_write=mock_open("C:\\foo\\bar", "a").write,
-            mock_stdout=mock_stdout
+            mock_stdout=mock_stdout,
         )
 
     @patch("sys.stdout")
@@ -841,7 +841,7 @@ class TestCLIMainLoggingLogfileWindows(_TestCLIMainLogging):
         self.write_file_and_assert(
             mock_mkdir=WindowsPath("C:\\foo").mkdir,
             mock_write=mock_open("C:\\foo\\bar", "a").write,
-            mock_stdout=mock_stdout
+            mock_stdout=mock_stdout,
         )
 
     @patch("sys.stdout")
@@ -854,7 +854,7 @@ class TestCLIMainLoggingLogfileWindows(_TestCLIMainLogging):
         self.write_file_and_assert(
             mock_mkdir=WindowsPath("C:\\foo").mkdir,
             mock_write=mock_open("C:\\foo\\2000-01-02_03-04-05.log", "a").write,
-            mock_stdout=mock_stdout
+            mock_stdout=mock_stdout,
         )
 
 
@@ -888,7 +888,7 @@ class TestCLIMainPrint(unittest.TestCase):
         self.assertEqual(
             self.get_stdout(mock_stdout),
             "usage: streamlink [OPTIONS] <URL> [STREAM]\n\n"
-            + "Use -h/--help to see the available options or read the manual at https://streamlink.github.io\n"
+            + "Use -h/--help to see the available options or read the manual at https://streamlink.github.io\n",
         )
 
     @patch("sys.stdout")
@@ -898,14 +898,14 @@ class TestCLIMainPrint(unittest.TestCase):
         output = self.get_stdout(mock_stdout)
         self.assertIn(
             "usage: streamlink [OPTIONS] <URL> [STREAM]",
-            output
+            output,
         )
         self.assertIn(
             dedent("""
                 Streamlink is a command-line utility that extracts streams from various
                 services and pipes them into a video player of choice.
             """),
-            output
+            output,
         )
         self.assertIn(
             dedent("""
@@ -915,7 +915,7 @@ class TestCLIMainPrint(unittest.TestCase):
                 Please report broken plugins or bugs to the issue tracker on Github:
                   https://github.com/streamlink/streamlink/issues
             """),
-            output
+            output,
         )
 
     @patch("sys.stdout")

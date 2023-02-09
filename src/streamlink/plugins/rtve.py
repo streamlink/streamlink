@@ -128,7 +128,7 @@ class ZTNR:
 
 
 @pluginmatcher(re.compile(
-    r"https?://(?:www\.)?rtve\.es/play/videos/.+"
+    r"https?://(?:www\.)?rtve\.es/play/videos/.+",
 ))
 class Rtve(Plugin):
     URL_M3U8 = "https://ztnr.rtve.es/ztnr/{id}.m3u8"

@@ -11,7 +11,7 @@ from streamlink.stream.hls import HLSStream
 
 
 @pluginmatcher(re.compile(
-    r"https?://www\.ntv\.ru/air/"
+    r"https?://www\.ntv\.ru/air/",
 ))
 class NTV(Plugin):
     def _get_streams(self):

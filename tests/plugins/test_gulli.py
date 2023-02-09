@@ -9,7 +9,7 @@ class TestPluginCanHandleUrlGulli(PluginCanHandleUrl):
         "http://replay.gulli.fr/Direct",
         "http://replay.gulli.fr/dessins-animes/My-Little-Pony-les-amies-c-est-magique/VOD68328764799000",
         "https://replay.gulli.fr/emissions/In-Ze-Boite2/VOD68639028668000",
-        "https://replay.gulli.fr/series/Power-Rangers-Dino-Super-Charge/VOD68612908435000"
+        "https://replay.gulli.fr/series/Power-Rangers-Dino-Super-Charge/VOD68612908435000",
     ]
 
     should_not_match = [

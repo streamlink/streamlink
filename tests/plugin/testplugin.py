@@ -18,7 +18,7 @@ class TestStream(Stream):
 
 
 @pluginmatcher(re.compile(
-    r"https?://test\.se"
+    r"https?://test\.se",
 ))
 @pluginargument(
     "bool",
@@ -31,7 +31,7 @@ class TestStream(Stream):
 )
 class TestPlugin(Plugin):
     options = Options({
-        "a_option": "default"
+        "a_option": "default",
     })
 
     id = "test-id-1234-5678"
@@ -69,7 +69,7 @@ class TestPlugin(Plugin):
 
         streams["480p"] = [
             HTTPStream(self.session, "http://test.se/stream"),
-            HLSStream(self.session, "http://test.se/playlist.m3u8")
+            HLSStream(self.session, "http://test.se/playlist.m3u8"),
         ]
 
         return streams

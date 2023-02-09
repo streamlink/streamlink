@@ -65,13 +65,13 @@ class CDNBG(Plugin):
             iframe_url = self.session.http.get(self.url, schema=validate.Schema(
                 validate.any(
                     self._find_url(
-                        re.compile(r"'src',\s*'(?P<url>https?://i\.cdn\.bg/live/\w+)'\);")
+                        re.compile(r"'src',\s*'(?P<url>https?://i\.cdn\.bg/live/\w+)'\);"),
                     ),
                     validate.all(
                         validate.parse_html(),
-                        validate.xml_xpath_string(".//iframe[contains(@src,'cdn.bg')][1]/@src")
-                    )
-                )
+                        validate.xml_xpath_string(".//iframe[contains(@src,'cdn.bg')][1]/@src"),
+                    ),
+                ),
             ))
 
         if not iframe_url:
@@ -86,23 +86,23 @@ class CDNBG(Plugin):
             schema=validate.Schema(
                 validate.any(
                     self._find_url(
-                        re.compile(r"sdata\.src.*?=.*?(?P<q>[\"'])(?P<url>.*?)(?P=q)")
+                        re.compile(r"sdata\.src.*?=.*?(?P<q>[\"'])(?P<url>.*?)(?P=q)"),
                     ),
                     self._find_url(
-                        re.compile(r"(src|file): (?P<q>[\"'])(?P<url>(https?:)?//.+?m3u8.*?)(?P=q)")
+                        re.compile(r"(src|file): (?P<q>[\"'])(?P<url>(https?:)?//.+?m3u8.*?)(?P=q)"),
                     ),
                     self._find_url(
-                        re.compile(r"video src=(?P<url>http[^ ]+m3u8[^ ]*)")
+                        re.compile(r"video src=(?P<url>http[^ ]+m3u8[^ ]*)"),
                     ),
                     self._find_url(
-                        re.compile(r"source src=\"(?P<url>[^\"]+m3u8[^\"]*)\"")
+                        re.compile(r"source src=\"(?P<url>[^\"]+m3u8[^\"]*)\""),
                     ),
                     # GEOBLOCKED
                     self._find_url(
-                        re.compile(r"(?P<url>[^\"]+geoblock[^\"]+)")
+                        re.compile(r"(?P<url>[^\"]+geoblock[^\"]+)"),
                     ),
-                )
-            )
+                ),
+            ),
         )
         if "geoblock" in stream_url:
             log.error("Geo-restricted content")

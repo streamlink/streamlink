@@ -12,7 +12,7 @@ from streamlink.stream.hls import HLSStream
 
 
 @pluginmatcher(re.compile(
-    r"https?://(?:www\.)?tv360\.com\.tr/canli-yayin"
+    r"https?://(?:www\.)?tv360\.com\.tr/canli-yayin",
 ))
 class TV360(Plugin):
     def _get_streams(self):

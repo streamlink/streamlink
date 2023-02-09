@@ -17,7 +17,7 @@ log = logging.getLogger(__name__)
 
 
 @pluginmatcher(re.compile(
-    r"https?://sketch\.pixiv\.net/@?(?P<user>[^/]+)"
+    r"https?://sketch\.pixiv\.net/@?(?P<user>[^/]+)",
 ))
 @pluginargument(
     "sessionid",
@@ -54,27 +54,27 @@ class Pixiv(Plugin):
             },
             validate.optional("hls_movie"): {
                 "url": str,
-            }
-        }
+            },
+        },
     )
 
     _user_schema = validate.Schema(
         {
             "owner": _user_dict_schema,
             "performers": [
-                validate.any(_user_dict_schema, None)
-            ]
-        }
+                validate.any(_user_dict_schema, None),
+            ],
+        },
     )
 
     _data_lives_schema = validate.Schema(
         {
             "data": {
-                "lives": [_user_schema]
-            }
+                "lives": [_user_schema],
+            },
         },
         validate.get("data"),
-        validate.get("lives")
+        validate.get("lives"),
     )
 
     api_lives = "https://sketch.pixiv.net/api/lives.json"

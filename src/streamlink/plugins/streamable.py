@@ -13,7 +13,7 @@ from streamlink.utils.url import update_scheme
 
 
 @pluginmatcher(re.compile(
-    r"https?://(?:www\.)?streamable\.com/(.+)"
+    r"https?://(?:www\.)?streamable\.com/(.+)",
 ))
 class Streamable(Plugin):
     def _get_streams(self):

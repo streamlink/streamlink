@@ -13,7 +13,7 @@ from streamlink.stream.hls import HLSStream
 
 
 @pluginmatcher(re.compile(
-    r"https?://(?:www\.)?tvrplus\.ro(?:/live/.+|/?$)"
+    r"https?://(?:www\.)?tvrplus\.ro(?:/live/.+|/?$)",
 ))
 class TVRPlus(Plugin):
     def _get_streams(self):

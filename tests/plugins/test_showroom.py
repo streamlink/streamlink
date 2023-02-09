@@ -11,5 +11,5 @@ class TestPluginCanHandleUrlShowroom(PluginCanHandleUrl):
         "http://showroom-live.com/48_YAMAGUCHI_MAHO",
         "https://www.showroom-live.com/4b9581094890",
         "https://www.showroom-live.com/157941217780",
-        "https://www.showroom-live.com/madokacom"
+        "https://www.showroom-live.com/madokacom",
     ]

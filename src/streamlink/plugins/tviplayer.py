@@ -41,7 +41,7 @@ class TVIPlayer(Plugin):
                         },
                     ),
                 ),
-            )
+            ),
         )
         if not data:
             return

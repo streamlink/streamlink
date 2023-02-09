@@ -59,7 +59,7 @@ class ArgparseDirective(Directive):
             lambda m: (
                 ":code:`{0}`".format(m.group(1).replace("\\", "\\\\"))
             ),
-            help
+            help,
         )
 
         help = _example_inline_code_block_re.sub(r":code:`\1`", help)
@@ -74,10 +74,10 @@ class ArgparseDirective(Directive):
                         if m2.group(1) in self._available_options
                         else m2.group(0)
                     ),
-                    m.group(1)
+                    m.group(1),
                 )
             ),
-            help
+            help,
         )
 
         # Create simple blocks.
@@ -89,7 +89,7 @@ class ArgparseDirective(Directive):
         # Create note directives from "Note: " paragraphs.
         help = _note_re.sub(
             lambda m: ".. note::\n\n" + indent(m.group(1)) + "\n\n",
-            help
+            help,
         )
 
         # workaround to replace %(prog)s with streamlink
@@ -101,7 +101,7 @@ class ArgparseDirective(Directive):
         # create cross-link for the "Metadata variables" section
         help = _cli_metadata_variables_section_cross_link_re.sub(
             "the \":ref:`Metadata variables <cli/metadata:Variables>`\" section",
-            help
+            help,
         )
 
         return indent(help)

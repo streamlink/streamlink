@@ -11,7 +11,7 @@ class ValidationError(ValueError):
         self,
         *errors,
         schema: Optional[Union[str, object]] = None,
-        **errkeywords
+        **errkeywords,
     ):
         self.schema = schema
         if len(errors) == 1 and type(errors[0]) is str:

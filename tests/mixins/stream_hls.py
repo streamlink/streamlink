@@ -31,7 +31,7 @@ class Playlist(HLSItemBase):
         self.items = [
             Tag("EXTM3U"),
             Tag("EXT-X-VERSION", int(version)),
-            Tag("EXT-X-TARGETDURATION", int(targetduration))
+            Tag("EXT-X-TARGETDURATION", int(targetduration)),
         ]
         if mediasequence is not None:  # pragma: no branch
             self.items.append(Tag("EXT-X-MEDIA-SEQUENCE", int(mediasequence)))
@@ -85,7 +85,7 @@ class Segment(HLSItemBase):
         return "#EXTINF:{duration:.3f},{title}\n{path}".format(
             duration=self.duration,
             title=self.title,
-            path=self.path if self.path_relative else self.url(namespace)
+            path=self.path if self.path_relative else self.url(namespace),
         )
 
 

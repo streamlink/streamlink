@@ -12,7 +12,7 @@ from streamlink.stream.hls import HLSStream
 
 
 @pluginmatcher(re.compile(
-    r"https?://(?:www\.)?tvtoya\.pl/player/live"
+    r"https?://(?:www\.)?tvtoya\.pl/player/live",
 ))
 class TVToya(Plugin):
     def _get_streams(self):
@@ -30,9 +30,9 @@ class TVToya(Plugin):
                                 str,
                                 validate.transform(lambda url: url.replace("https:////", "https://")),
                                 validate.url(path=validate.endswith(".m3u8")),
-                            )
-                        }
-                    }
+                            ),
+                        },
+                    },
                 },
                 validate.get(("props", "pageProps", "url")),
             ))

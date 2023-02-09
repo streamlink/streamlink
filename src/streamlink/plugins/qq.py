@@ -17,7 +17,7 @@ log = logging.getLogger(__name__)
 
 
 @pluginmatcher(re.compile(
-    r"https?://(m\.)?live\.qq\.com/(?P<room_id>\d+)?"
+    r"https?://(m\.)?live\.qq\.com/(?P<room_id>\d+)?",
 ))
 class QQ(Plugin):
     _URL_API = "https://live.qq.com/api/h5/room"
@@ -47,7 +47,7 @@ class QQ(Plugin):
                                 "game_name": str,
                                 "room_name": str,
                                 "hls_url": validate.url(path=validate.endswith(".m3u8")),
-                            }
+                            },
                         },
                     ),
                     validate.all(

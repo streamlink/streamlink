@@ -112,7 +112,7 @@ class YouTube(Plugin):
                     validate.xml_xpath(".//form[@action='https://consent.youtube.com/save']"),
                     validate.filter(lambda elem: elem.xpath(".//input[@type='hidden'][@name='set_ytc'][@value='true']")),
                     validate.get(0),
-                )
+                ),
             ),
             validate.union((
                 validate.get("action"),
@@ -126,7 +126,7 @@ class YouTube(Plugin):
             validate.parse_html(),
             validate.xml_xpath_string(".//link[@rel='canonical'][1]/@href"),
             validate.regex(self.matchers["default"].pattern),
-            validate.get("video_id")
+            validate.get("video_id"),
         )
         return schema_canonical.validate(data)
 
@@ -135,10 +135,10 @@ class YouTube(Plugin):
         schema = validate.Schema(
             {"playabilityStatus": {
                 "status": str,
-                validate.optional("reason"): str
+                validate.optional("reason"): str,
             }},
             validate.get("playabilityStatus"),
-            validate.union_get("status", "reason")
+            validate.union_get("status", "reason"),
         )
         return schema.validate(data)
 
@@ -160,25 +160,25 @@ class YouTube(Plugin):
                     validate.any(
                         validate.all(
                             {"playerMicroformatRenderer": dict},
-                            validate.get("playerMicroformatRenderer")
+                            validate.get("playerMicroformatRenderer"),
                         ),
                         validate.all(
                             {"microformatDataRenderer": dict},
-                            validate.get("microformatDataRenderer")
-                        )
+                            validate.get("microformatDataRenderer"),
+                        ),
                     ),
                     {
-                        "category": str
-                    }
-                )
+                        "category": str,
+                    },
+                ),
             },
             validate.union_get(
                 ("videoDetails", "videoId"),
                 ("videoDetails", "author"),
                 ("microformat", "category"),
                 ("videoDetails", "title"),
-                ("videoDetails", "isLive")
-            )
+                ("videoDetails", "isLive"),
+            ),
         )
         videoDetails = schema.validate(data)
         log.trace(f"videoDetails = {videoDetails!r}")
@@ -193,9 +193,9 @@ class YouTube(Plugin):
                     {
                         "itag": int,
                         "qualityLabel": str,
-                        validate.optional("url"): validate.url(scheme="http")
+                        validate.optional("url"): validate.url(scheme="http"),
                     },
-                    validate.union_get("url", "qualityLabel")
+                    validate.union_get("url", "qualityLabel"),
                 )],
                 validate.optional("adaptiveFormats"): [validate.all(
                     {
@@ -206,13 +206,13 @@ class YouTube(Plugin):
                             validate.union_get("type", "codecs"),
                         ),
                         validate.optional("url"): validate.url(scheme="http"),
-                        validate.optional("qualityLabel"): str
+                        validate.optional("qualityLabel"): str,
                     },
-                    validate.union_get("url", "qualityLabel", "itag", "mimeType")
-                )]
+                    validate.union_get("url", "qualityLabel", "itag", "mimeType"),
+                )],
             }},
             validate.get("streamingData"),
-            validate.union_get("hlsManifestUrl", "formats", "adaptiveFormats")
+            validate.union_get("hlsManifestUrl", "formats", "adaptiveFormats"),
         )
         hls_manifest, formats, adaptive_formats = schema.validate(data)
         return hls_manifest, formats or [], adaptive_formats or []
@@ -324,7 +324,7 @@ class YouTube(Plugin):
                     },
                     "user": {"lockedSafetyMode": "false"},
                     "request": {"useSsl": "true"},
-                }
+                },
             }),
         )
         return parse_json(res.text)

@@ -49,7 +49,7 @@ class UseeTV(Plugin):
                     validate.xml_xpath_string(".//video[@id='video-player']/source/@src"),
                     validate.any(None, validate.url()),
                 ),
-            )
+            ),
         ).validate(root)
 
         if url and ".m3u8" in url:

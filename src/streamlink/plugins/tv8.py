@@ -31,7 +31,7 @@ class TV8HLSStream(HLSStream):
 
 
 @pluginmatcher(re.compile(
-    r"https?://www\.tv8\.com\.tr/canli-yayin"
+    r"https?://www\.tv8\.com\.tr/canli-yayin",
 ))
 class TV8(Plugin):
     def _get_streams(self):

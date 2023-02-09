@@ -104,7 +104,7 @@ class FilmOnAPI:
             "url": validate.url(),
             "watch-timeout": int,
         },
-        validate.union_get("quality", "url", "watch-timeout")
+        validate.union_get("quality", "url", "watch-timeout"),
     )
 
     def __init__(self, session):
@@ -168,7 +168,7 @@ class FilmOnAPI:
 class Filmon(Plugin):
     quality_weights = {
         "high": 720,
-        "low": 480
+        "low": 480,
     }
 
     TIME_CHANNEL = 60 * 60 * 24 * 365

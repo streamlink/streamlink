@@ -20,7 +20,7 @@ log = logging.getLogger(__name__)
 
 
 @pluginmatcher(re.compile(
-    r"https?://(?:www\.)?(?:mediaklikk|m4sport|hirado|petofilive)\.hu/"
+    r"https?://(?:www\.)?(?:mediaklikk|m4sport|hirado|petofilive)\.hu/",
 ))
 class Mediaklikk(Plugin):
     PLAYER_URL = "https://player.mediaklikk.hu/playernew/player.php"

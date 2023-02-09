@@ -51,7 +51,7 @@ class TestUtilsParse(unittest.TestCase):
         expected = Element("test", {"foo": "bar"})
         actual = parse_xml(
             """<test foo="bar"/>""",
-            schema=validate.Schema(xml_element(tag="test", attrib={"foo": str}))
+            schema=validate.Schema(xml_element(tag="test", attrib={"foo": str})),
         )
         self.assertEqual(expected.tag, actual.tag)
         self.assertEqual(expected.attrib, actual.attrib)
@@ -64,7 +64,7 @@ class TestUtilsParse(unittest.TestCase):
         actual = parse_xml(
             """<test foo="bar &"/>""",
             schema=validate.Schema(xml_element(tag="test", attrib={"foo": str})),
-            invalid_char_entities=True
+            invalid_char_entities=True,
         )
         self.assertEqual(expected.tag, actual.tag)
         self.assertEqual(expected.attrib, actual.attrib)
@@ -98,5 +98,5 @@ class TestUtilsParse(unittest.TestCase):
     def test_parse_qsd(self):
         self.assertEqual(
             {"test": "1", "foo": "bar"},
-            parse_qsd("test=1&foo=bar", schema=validate.Schema({"test": str, "foo": "bar"}))
+            parse_qsd("test=1&foo=bar", schema=validate.Schema({"test": str, "foo": "bar"})),
         )

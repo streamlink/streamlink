@@ -118,7 +118,7 @@ class Zattoo(Plugin):
         self.headers = {
             "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
             "X-Requested-With": "XMLHttpRequest",
-            "Referer": self.base_url
+            "Referer": self.base_url,
         }
 
     def _hello(self):
@@ -128,7 +128,7 @@ class Zattoo(Plugin):
             schema=validate.Schema(validate.parse_json(), {
                 "success": bool,
                 "session_token": str,
-            }, validate.get("session_token"))
+            }, validate.get("session_token")),
         )
         if self._uuid:
             __uuid = self._uuid
@@ -150,8 +150,8 @@ class Zattoo(Plugin):
             data=params,
             schema=validate.Schema(
                 validate.parse_json(),
-                validate.any({"active": bool}, {"success": bool})
-            )
+                validate.any({"active": bool}, {"success": bool}),
+            ),
         )
         if res.get("active") or res.get("success"):
             log.debug("Hello was successful.")
@@ -268,7 +268,7 @@ class Zattoo(Plugin):
             res = self.session.http.get(
                 f'{self.base_url}/zapi/v2/cached/channels/{self._session_attributes.get("power_guide_hash")}',
                 headers=self.headers,
-                params={"details": "False"}
+                params={"details": "False"},
             )
         except Exception:
             log.debug("Force session reset for _get_params_cid")
@@ -287,7 +287,7 @@ class Zattoo(Plugin):
                                 "title": str,
                                 "stream_types": validate.all(
                                     [str],
-                                    validate.filter(lambda n: not re.match(r"(.+_(?:fairplay|playready|widevine))", n))
+                                    validate.filter(lambda n: not re.match(r"(.+_(?:fairplay|playready|widevine))", n)),
                                 ),
                                 "level": str,
                                 "availability": str,
@@ -296,7 +296,7 @@ class Zattoo(Plugin):
                     ],
                 }]},
                 validate.get("channel_groups"),
-            )
+            ),
         )
 
         c_list = [channel for channel_group in data for channel in channel_group["channels"]]
@@ -336,7 +336,7 @@ class Zattoo(Plugin):
             active = self.session.http.get(
                 f"{self.base_url}/zapi/v3/session",
                 schema=validate.Schema(validate.parse_json(),
-                                       {"active": bool}, validate.get("active"))
+                                       {"active": bool}, validate.get("active")),
             )
             if active:
                 self._session_attributes.set(

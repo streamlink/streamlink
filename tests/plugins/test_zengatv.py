@@ -14,5 +14,5 @@ class TestPluginCanHandleUrlZengaTV(PluginCanHandleUrl):
 
     should_not_match = [
         "http://www.zengatv.com",
-        "http://www.zengatv.com/"
+        "http://www.zengatv.com/",
     ]

@@ -14,7 +14,7 @@ API_URL = "http://{}.nhk.or.jp/nhkworld/app/tv/hlslive_web.json"
 
 
 @pluginmatcher(re.compile(
-    r"https?://(?:(\w+)\.)?nhk\.or\.jp/nhkworld"
+    r"https?://(?:(\w+)\.)?nhk\.or\.jp/nhkworld",
 ))
 class NHKWorld(Plugin):
     def _get_streams(self):

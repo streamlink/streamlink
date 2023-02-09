@@ -21,31 +21,31 @@ SHOW_STATUS_OFFLINE = 0
 SHOW_STATUS_ONLINE = 1
 SHOW_STATUS_ROUND = 2
 STREAM_WEIGHTS = {
-    "source": 1080
+    "source": 1080,
 }
 
 _room_id_schema = validate.Schema(
     {
         "data": validate.any(None, {
             "room_id": int,
-            "live_status": int
-        })
+            "live_status": int,
+        }),
     },
-    validate.get("data")
+    validate.get("data"),
 )
 
 _room_stream_list_schema = validate.Schema(
     {
         "data": validate.any(None, {
-            "durl": [{"url": validate.url()}]
-        })
+            "durl": [{"url": validate.url()}],
+        }),
     },
-    validate.get("data")
+    validate.get("data"),
 )
 
 
 @pluginmatcher(re.compile(
-    r"https?://live\.bilibili\.com/(?P<channel>[^/]+)"
+    r"https?://live\.bilibili\.com/(?P<channel>[^/]+)",
 ))
 class Bilibili(Plugin):
     @classmethod

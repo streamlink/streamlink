@@ -17,7 +17,7 @@ log = logging.getLogger(__name__)
 
 
 @pluginmatcher(re.compile(
-    r"https?://(?:www\.)?tvr\.by/televidenie/belarus"
+    r"https?://(?:www\.)?tvr\.by/televidenie/belarus",
 ))
 class TVRBy(Plugin):
     file_re = re.compile(r"""(?P<url>https://stream\.hoster\.by[^"',]+\.m3u8[^"',]*)""")

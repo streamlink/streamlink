@@ -20,10 +20,10 @@ log = logging.getLogger(__name__)
 
 
 @pluginmatcher(re.compile(
-    r"https?://(?:www\.)?1tv\.ru/live"
+    r"https?://(?:www\.)?1tv\.ru/live",
 ))
 @pluginmatcher(re.compile(
-    r"https?://static\.1tv\.ru/eump/(?:embeds|pages)/1tv_live(?:_orbit-plus-4)?\.html"
+    r"https?://static\.1tv\.ru/eump/(?:embeds|pages)/1tv_live(?:_orbit-plus-4)?\.html",
 ))
 class OneTV(Plugin):
     def _get_streams(self):

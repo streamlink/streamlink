@@ -25,17 +25,17 @@ _room_schema = validate.Schema(
         "data": validate.any(None, {
             "status": validate.all(
                 str,
-                validate.transform(int)
+                validate.transform(int),
             ),
             "videoId": str,
-        })
+        }),
     },
-    validate.get("data")
+    validate.get("data"),
 )
 
 
 @pluginmatcher(re.compile(
-    r"https?://(www\.)?zhanqi\.tv/(?P<channel>[^/]+)"
+    r"https?://(www\.)?zhanqi\.tv/(?P<channel>[^/]+)",
 ))
 class Zhanqitv(Plugin):
     def _get_streams(self):

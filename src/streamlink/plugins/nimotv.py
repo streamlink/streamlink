@@ -16,7 +16,7 @@ log = logging.getLogger(__name__)
 
 
 @pluginmatcher(re.compile(
-    r"https?://(?:www\.|m\.)?nimo\.tv/(?P<username>.*)"
+    r"https?://(?:www\.|m\.)?nimo\.tv/(?P<username>.*)",
 ))
 class NimoTV(Plugin):
     data_url = "https://m.nimo.tv/{0}"

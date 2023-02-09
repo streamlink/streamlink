@@ -23,7 +23,7 @@ log = logging.getLogger(__name__)
 
 
 @pluginmatcher(re.compile(
-    r"https?://(\w+)\.web\.tv/?"
+    r"https?://(\w+)\.web\.tv/?",
 ))
 class WebTV(Plugin):
     _sources_re = re.compile(r'"sources": (\[.*?\]),', re.DOTALL)
@@ -34,12 +34,12 @@ class WebTV(Plugin):
                 validate.all(
                     str,
                     validate.transform(lambda x: WebTV.decrypt_stream_url(x)),
-                    validate.contains("m3u8")
-                )
+                    validate.contains("m3u8"),
+                ),
             ),
             "type": str,
             "label": str,
-        }
+        },
     ])
 
     @staticmethod

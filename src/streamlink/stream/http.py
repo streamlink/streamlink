@@ -20,7 +20,7 @@ class HTTPStream(Stream):
         session_,
         url: str,
         buffered: bool = True,
-        **args
+        **args,
     ):
         """
         :param streamlink.Streamlink session_: Streamlink session instance

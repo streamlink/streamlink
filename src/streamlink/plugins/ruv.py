@@ -103,7 +103,7 @@ class Ruv(Plugin):
 
                 yield key, HLSStream(
                     self.session,
-                    base_url + token
+                    base_url + token,
                 )
 
         else:
