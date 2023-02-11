@@ -21,6 +21,10 @@ with suppress(AttributeError):
     ACCEPTABLE_ERRNO += (errno.WSAECONNABORTED,)  # type: ignore[assignment,attr-defined]
 
 
+def _noop(_):
+    return None
+
+
 class _ReadError(BaseException):
     pass
 
@@ -105,7 +109,7 @@ class StreamRunner:
     ) -> None:
         read = self.stream.read
         write = self.output.write
-        progress = self.progress.write if self.progress else lambda _: None
+        progress = self.progress.write if self.progress else _noop
 
         if self.playerpoller:
             self.playerpoller.start()
