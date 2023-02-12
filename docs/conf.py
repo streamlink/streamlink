@@ -26,6 +26,7 @@ extensions = [
     'ext_plugins',
     'ext_releaseref',
     'myst_parser',
+    'sphinx_design',
 ]
 
 autosectionlabel_prefix_document = True
