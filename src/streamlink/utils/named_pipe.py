@@ -4,6 +4,7 @@ import os
 import random
 import tempfile
 import threading
+from contextlib import suppress
 from pathlib import Path
 
 from streamlink.compat import is_win32
@@ -65,11 +66,15 @@ class NamedPipePosix(NamedPipeBase):
         return self.fifo.write(data)
 
     def close(self):
-        if self.fifo:
-            self.fifo.close()
+        try:
+            if self.fifo is not None:
+                self.fifo.close()
+        except OSError:
+            raise
+        finally:
+            with suppress(OSError):
+                self.path.unlink()
             self.fifo = None
-        if self.path.is_fifo():
-            os.unlink(self.path)
 
 
 class NamedPipeWindows(NamedPipeBase):
@@ -118,9 +123,13 @@ class NamedPipeWindows(NamedPipeBase):
         return written.value
 
     def close(self):
-        if self.pipe is not None:
-            windll.kernel32.DisconnectNamedPipe(self.pipe)
-            windll.kernel32.CloseHandle(self.pipe)
+        try:
+            if self.pipe is not None:
+                windll.kernel32.DisconnectNamedPipe(self.pipe)
+                windll.kernel32.CloseHandle(self.pipe)
+        except OSError:
+            raise
+        finally:
             self.pipe = None
 
 
