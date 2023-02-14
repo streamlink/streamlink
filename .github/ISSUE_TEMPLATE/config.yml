@@ -9,9 +9,6 @@ contact_links:
   - name: "📖 Documentation"
     about: "Please refer to Streamlink's documentation first before opening new issues or asking questions."
     url: https://streamlink.github.io/
-  - name: "💬 Gitter channel"
-    about: "Get in touch with other Streamlink users."
-    url: https://gitter.im/streamlink/streamlink
-  - name: "💬 Matrix channel (Gitter bridge)"
+  - name: "💬 Gitter Matrix channel"
     about: "Get in touch with other Streamlink users."
     url: https://matrix.to/#/#streamlink_streamlink:gitter.im
