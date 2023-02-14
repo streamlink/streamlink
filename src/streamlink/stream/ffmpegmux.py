@@ -4,6 +4,7 @@ import re
 import subprocess
 import sys
 import threading
+from contextlib import suppress
 from functools import lru_cache
 from pathlib import Path
 from shutil import which
@@ -131,22 +132,28 @@ class FFMPEGMuxer(StreamIO):
     @staticmethod
     def copy_to_pipe(stream: StreamIO, pipe: NamedPipeBase):
         log.debug(f"Starting copy to pipe: {pipe.path}")
+        # TODO: catch OSError when creating/opening pipe fails and close entire output stream
         pipe.open()
-        while not stream.closed:
+
+        while True:
             try:
                 data = stream.read(8192)
-                if len(data):
-                    pipe.write(data)
-                else:
-                    break
-            except (OSError, ValueError):
-                log.error(f"Pipe copy aborted: {pipe.path}")
+            except (OSError, ValueError) as err:
+                log.error(f"Error while reading from substream: {err}")
                 break
-        try:
+
+            if data == b"":
+                log.debug(f"Pipe copy complete: {pipe.path}")
+                break
+
+            try:
+                pipe.write(data)
+            except OSError as err:
+                log.error(f"Error while writing to pipe {pipe.path}: {err}")
+                break
+
+        with suppress(OSError):
             pipe.close()
-        except OSError:  # might fail closing, but that should be ok for the pipe
-            pass
-        log.debug(f"Pipe copy complete: {pipe.path}")
 
     def __init__(self, session, *streams, **options):
         if not self.is_usable(session):
@@ -223,16 +230,24 @@ class FFMPEGMuxer(StreamIO):
             self.process.kill()
             self.process.stdout.close()
 
-            # close the streams
             executor = concurrent.futures.ThreadPoolExecutor()
+
+            # close the substreams
             futures = [
                 executor.submit(stream.close)
                 for stream in self.streams
                 if hasattr(stream, "close") and callable(stream.close)
             ]
-
             concurrent.futures.wait(futures, return_when=concurrent.futures.ALL_COMPLETED)
             log.debug("Closed all the substreams")
+
+            # wait for substream copy-to-pipe threads to terminate and clean up the opened pipes
+            timeout = self.session.options.get("stream-timeout")
+            futures = [
+                executor.submit(thread.join, timeout=timeout)
+                for thread in self.pipe_threads
+            ]
+            concurrent.futures.wait(futures, return_when=concurrent.futures.ALL_COMPLETED)
 
         if self.close_errorlog:
             self.errorlog.close()
