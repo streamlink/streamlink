@@ -113,9 +113,9 @@ def test_split_tag(string: str, expected: Union[Tuple[str, str], Tuple[None, Non
 ])
 def test_parse_attributes(caplog: pytest.LogCaptureFixture, attributes: str, log: bool, expected: dict):
     assert M3U8Parser.parse_attributes(attributes) == expected
-    assert not log or [(r.module, r.levelname, r.message) for r in caplog.records] == [
+    assert [(r.module, r.levelname, r.message) for r in caplog.records] == ([
         ("hls_playlist", "warning", "Discarded invalid attributes list"),
-    ]
+    ] if log else [])
 
 
 @pytest.mark.parametrize("string,expected", [
@@ -159,9 +159,9 @@ def test_parse_extinf(string: str, expected: ExtInf):
 ])
 def test_parse_hex(caplog: pytest.LogCaptureFixture, string: Optional[str], log: bool, expected: Optional[bytes]):
     assert M3U8Parser.parse_hex(string) == expected
-    assert not log or [(r.module, r.levelname, r.message) for r in caplog.records] == [
+    assert [(r.module, r.levelname, r.message) for r in caplog.records] == ([
         ("hls_playlist", "warning", "Discarded invalid hexadecimal-sequence attribute value"),
-    ]
+    ] if log else [])
 
 
 @pytest.mark.parametrize("string,log,expected", [
@@ -173,9 +173,9 @@ def test_parse_hex(caplog: pytest.LogCaptureFixture, string: Optional[str], log:
 ])
 def test_parse_iso8601(caplog: pytest.LogCaptureFixture, string: Optional[str], log: bool, expected: Optional[datetime]):
     assert M3U8Parser.parse_iso8601(string) == expected
-    assert not log or [(r.module, r.levelname, r.message) for r in caplog.records] == [
+    assert [(r.module, r.levelname, r.message) for r in caplog.records] == ([
         ("hls_playlist", "warning", "Discarded invalid ISO8601 attribute value"),
-    ]
+    ] if log else [])
 
 
 @pytest.mark.parametrize("string,expected", [

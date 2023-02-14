@@ -285,7 +285,10 @@ class M3U8Parser:
 
     @staticmethod
     def parse_hex(value: Optional[str]) -> Optional[bytes]:
-        if value and value[:2] in ("0x", "0X"):
+        if value is None:
+            return None
+
+        if value[:2] in ("0x", "0X"):
             try:
                 return unhexlify(f"{'0' * (len(value) % 2)}{value[2:]}")
             except BinasciiError:
