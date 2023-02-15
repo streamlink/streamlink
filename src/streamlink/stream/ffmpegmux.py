@@ -8,10 +8,9 @@ from contextlib import suppress
 from functools import lru_cache
 from pathlib import Path
 from shutil import which
-from typing import List, Optional
+from typing import List, Optional, TextIO, Union
 
 from streamlink import StreamError
-from streamlink.compat import devnull
 from streamlink.stream.stream import Stream, StreamIO
 from streamlink.utils.named_pipe import NamedPipe, NamedPipeBase
 from streamlink.utils.processoutput import ProcessOutput
@@ -86,6 +85,8 @@ class FFMPEGMuxer(StreamIO):
 
     FFMPEG_VERSION: Optional[str] = None
     FFMPEG_VERSION_TIMEOUT = 4.0
+
+    errorlog: Union[int, TextIO]
 
     @classmethod
     def is_usable(cls, session):
@@ -199,15 +200,13 @@ class FFMPEGMuxer(StreamIO):
 
         self._cmd.extend(["-f", ofmt, outpath])
         log.debug("ffmpeg command: {0}".format(" ".join(self._cmd)))
-        self.close_errorlog = False
 
-        if session.options.get("ffmpeg-verbose"):
-            self.errorlog = sys.stderr
-        elif session.options.get("ffmpeg-verbose-path"):
+        if session.options.get("ffmpeg-verbose-path"):
             self.errorlog = Path(session.options.get("ffmpeg-verbose-path")).expanduser().open("w")
-            self.close_errorlog = True
+        elif session.options.get("ffmpeg-verbose"):
+            self.errorlog = sys.stderr
         else:
-            self.errorlog = devnull()
+            self.errorlog = subprocess.DEVNULL
 
     def open(self):
         for t in self.pipe_threads:
@@ -249,9 +248,9 @@ class FFMPEGMuxer(StreamIO):
             ]
             concurrent.futures.wait(futures, return_when=concurrent.futures.ALL_COMPLETED)
 
-        if self.close_errorlog:
-            self.errorlog.close()
-            self.errorlog = None
+        if self.errorlog is not sys.stderr and self.errorlog is not subprocess.DEVNULL:
+            with suppress(OSError):
+                self.errorlog.close()
 
         super().close()
 
