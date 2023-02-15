@@ -115,7 +115,7 @@ class TestCLIMain(unittest.TestCase):
 
 
 class TestCLIMainHandleUrl:
-    @pytest.mark.parametrize("side_effect,expected", [
+    @pytest.mark.parametrize(("side_effect", "expected"), [
         (NoPluginError("foo"), "No plugin can handle URL: fakeurl"),
         (PluginError("bar"), "bar"),
     ])

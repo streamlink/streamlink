@@ -7,7 +7,7 @@ from tests.testutils.handshake import Handshake
 
 
 class TestBuffer:
-    @pytest.fixture
+    @pytest.fixture()
     def buffer(self):
         return Buffer()
 
@@ -100,7 +100,7 @@ class TestBuffer:
 class TestRingBuffer:
     BUFFER_SIZE = 8192 * 4
 
-    @pytest.fixture
+    @pytest.fixture()
     def buffer(self):
         return RingBuffer(size=self.BUFFER_SIZE)
 
@@ -167,13 +167,13 @@ class TestRingBuffer:
 class TestThreadedRingBuffer:
     TIMEOUT = 1
 
-    @pytest.fixture
+    @pytest.fixture()
     def handshake(self):
         handshake = Handshake()
         yield handshake
         assert not handshake._context.error
 
-    @pytest.fixture
+    @pytest.fixture()
     def buffer(self):
         buffer = RingBuffer(size=4)
         assert not buffer.wait_used(0), "Buffer is not filled initially"

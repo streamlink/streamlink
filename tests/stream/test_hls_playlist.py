@@ -40,7 +40,7 @@ def test_parse_tag_callback_cache():
     assert childA._TAGS is childB._TAGS
 
 
-@pytest.mark.parametrize("string,expected", [
+@pytest.mark.parametrize(("string", "expected"), [
     ("", (None, None)),
     ("invalid", (None, None)),
     ("#TAG", ("TAG", "")),
@@ -51,7 +51,7 @@ def test_split_tag(string: str, expected: Union[Tuple[str, str], Tuple[None, Non
     assert M3U8Parser.split_tag(string) == expected
 
 
-@pytest.mark.parametrize("attributes,log,expected", [
+@pytest.mark.parametrize(("attributes", "log", "expected"), [
     pytest.param("", False, {}, id="empty attribute list"),
     pytest.param("invalid", True, {}, id="invalid attribute list"),
     pytest.param("key=VALUE", True, {}, id="lowercase attribute name"),
@@ -118,7 +118,7 @@ def test_parse_attributes(caplog: pytest.LogCaptureFixture, attributes: str, log
     ] if log else [])
 
 
-@pytest.mark.parametrize("string,expected", [
+@pytest.mark.parametrize(("string", "expected"), [
     ("", False),
     ("NO", False),
     ("YES", True),
@@ -127,7 +127,7 @@ def test_parse_bool(string: str, expected: bool):
     assert M3U8Parser.parse_bool(string) is expected
 
 
-@pytest.mark.parametrize("string,expected", [
+@pytest.mark.parametrize(("string", "expected"), [
     ("", None),
     ("invalid", None),
     ("1234", ByteRange(1234, None)),
@@ -137,7 +137,7 @@ def test_parse_byterange(string: str, expected: Optional[ByteRange]):
     assert M3U8Parser.parse_byterange(string) == expected
 
 
-@pytest.mark.parametrize("string,expected", [
+@pytest.mark.parametrize(("string", "expected"), [
     ("", ExtInf(0, None)),
     ("invalid", ExtInf(0, None)),
     ("123", ExtInf(123.0, None)),
@@ -148,7 +148,7 @@ def test_parse_extinf(string: str, expected: ExtInf):
     assert M3U8Parser.parse_extinf(string) == expected
 
 
-@pytest.mark.parametrize("string,log,expected", [
+@pytest.mark.parametrize(("string", "log", "expected"), [
     (None, False, None),
     ("", True, None),
     ("deadbeef", True, None),
@@ -164,7 +164,7 @@ def test_parse_hex(caplog: pytest.LogCaptureFixture, string: Optional[str], log:
     ] if log else [])
 
 
-@pytest.mark.parametrize("string,log,expected", [
+@pytest.mark.parametrize(("string", "log", "expected"), [
     (None, False, None),
     ("not an ISO8601 string", True, None),
     ("2000-01-01", True, None),
@@ -178,7 +178,7 @@ def test_parse_iso8601(caplog: pytest.LogCaptureFixture, string: Optional[str], 
     ] if log else [])
 
 
-@pytest.mark.parametrize("string,expected", [
+@pytest.mark.parametrize(("string", "expected"), [
     (None, None),
     ("123", timedelta(seconds=123.0)),
     ("123.456", timedelta(seconds=123.456)),
@@ -188,7 +188,7 @@ def test_parse_timedelta(string: Optional[str], expected: Optional[timedelta]):
     assert M3U8Parser.parse_timedelta(string) == expected
 
 
-@pytest.mark.parametrize("string,expected", [
+@pytest.mark.parametrize(("string", "expected"), [
     ("", Resolution(0, 0)),
     ("invalid", Resolution(0, 0)),
     ("1920x1080", Resolution(1920, 1080)),

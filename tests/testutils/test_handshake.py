@@ -28,7 +28,7 @@ class Producer(Thread):
         self.value += 1
 
 
-@pytest.fixture
+@pytest.fixture()
 def producer(request):
     thread = Producer(**getattr(request, "param", {}))
     yield thread
@@ -61,7 +61,7 @@ class TestSynchronization:
         assert not producer.handshake.wait_done(0), "Producer is not in done-state anymore"
         assert not producer.handshake.wait_ready(0), "Producer's loop ended, not waiting in ready-state again"
 
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio()
     async def test_async(self, producer: Producer):
         assert not await producer.handshake.is_ready(0), "Producer is not yet ready"
         assert not await producer.handshake.is_done(0), "Producer is not done"
@@ -99,7 +99,7 @@ class TestNoCaptureExceptions:
         assert not producer.is_alive(), "Producer thread has raised exception and has terminated"
         assert isinstance(producer.error, Exception)
 
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio()
     async def test_async(self, producer: Producer):
         producer.start()
 
@@ -130,7 +130,7 @@ class TestCaptureExceptions:
         assert not producer.is_alive(), "Producer thread has raised exception and has terminated"
         assert isinstance(producer.error, ValueError)
 
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio()
     @pytest.mark.parametrize("producer", [{"exception": TypeError}], indirect=True)
     async def test_async(self, producer: Producer):
         producer.start()

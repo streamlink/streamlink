@@ -23,7 +23,7 @@ PATH_TESTPLUGINS_OVERRIDE = PATH_TESTPLUGINS / "override"
 _original_allowed_gai_family = urllib3.util.connection.allowed_gai_family  # type: ignore[attr-defined]
 
 
-@pytest.fixture
+@pytest.fixture()
 def session():
     with patch("streamlink.session.Streamlink.load_builtin_plugins"):
         yield Streamlink()
@@ -416,12 +416,12 @@ class TestSession(unittest.TestCase):
 
 
 class TestSessionOptionHttpProxy:
-    @pytest.fixture
+    @pytest.fixture()
     def no_deprecation(self, recwarn: pytest.WarningsRecorder):
         yield
         assert recwarn.list == []
 
-    @pytest.fixture
+    @pytest.fixture()
     def logs_deprecation(self, recwarn: pytest.WarningsRecorder):
         yield
         assert [(record.category, str(record.message)) for record in recwarn.list] == [
@@ -486,7 +486,7 @@ class TestSessionOptionHttpProxy:
     pytest.param(("http-query-params", "params"), id="http-query-params"),
 ], indirect=True)
 class TestOptionsKeyEqualsValue:
-    @pytest.fixture
+    @pytest.fixture()
     def option(self, request, session: Streamlink):
         option, attr = request.param
         httpsessionattr = getattr(session.http, attr)

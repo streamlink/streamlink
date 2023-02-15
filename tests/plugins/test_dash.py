@@ -21,7 +21,7 @@ class TestPluginCanHandleUrlMPEGDASH(PluginCanHandleUrl):
     ]
 
 
-@pytest.mark.parametrize("url,priority", [
+@pytest.mark.parametrize(("url", "priority"), [
     ("http://example.com/foo.mpd", LOW_PRIORITY),
     ("dash://http://example.com/foo.mpd", NORMAL_PRIORITY),
     ("dash://http://example.com/bar", NORMAL_PRIORITY),
@@ -31,7 +31,7 @@ def test_priority(url, priority):
     assert next((matcher.priority for matcher in MPEGDASH.matchers if matcher.pattern.match(url)), NO_PRIORITY) == priority
 
 
-@pytest.mark.parametrize("url,expected", [
+@pytest.mark.parametrize(("url", "expected"), [
     ("example.com/foo.mpd", "https://example.com/foo.mpd"),
     ("http://example.com/foo.mpd", "http://example.com/foo.mpd"),
     ("https://example.com/foo.mpd", "https://example.com/foo.mpd"),

@@ -14,20 +14,20 @@ class TestCLIFormatter:
         def __str__(self):
             return "obj"
 
-    @pytest.fixture
+    @pytest.fixture()
     def mock_replace_chars(self):
         with patch("streamlink_cli.utils.formatter.replace_chars") as mock_replace_chars:
             yield mock_replace_chars
 
-    @pytest.fixture
+    @pytest.fixture()
     def prop(self):
         return Mock(return_value="prop")
 
-    @pytest.fixture
+    @pytest.fixture()
     def obj(self):
         return self.Obj()
 
-    @pytest.fixture
+    @pytest.fixture()
     def formatter(self, prop: Mock, obj: Obj):
         with freeze_time("2000-01-02T03:04:05.000006Z"):
             yield Formatter(

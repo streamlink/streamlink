@@ -14,7 +14,7 @@ class TestUrllib3Overrides:
     def httpsession(self) -> HTTPSession:
         return HTTPSession()
 
-    @pytest.mark.parametrize("url,expected,assertion", [
+    @pytest.mark.parametrize(("url", "expected", "assertion"), [
         ("https://foo/bar%3F?baz%21", "https://foo/bar%3F?baz%21", "Keeps encoded reserved characters"),
         ("https://foo/%62%61%72?%62%61%7A", "https://foo/bar?baz", "Decodes encoded unreserved characters"),
         ("https://foo/bär?bäz", "https://foo/b%C3%A4r?b%C3%A4z", "Encodes other characters"),

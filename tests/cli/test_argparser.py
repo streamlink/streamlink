@@ -14,14 +14,14 @@ def parser():
     return build_parser()
 
 
-@pytest.fixture
+@pytest.fixture()
 def session(monkeypatch: pytest.MonkeyPatch):
     monkeypatch.setattr("streamlink.session.Streamlink.load_builtin_plugins", lambda _: None)
-    yield Streamlink()
+    return Streamlink()
 
 
 @pytest.mark.filterwarnings("ignore")
-@pytest.mark.parametrize("argv,option,expected", [
+@pytest.mark.parametrize(("argv", "option", "expected"), [
     pytest.param(
         ["--locale", "xx_XX"],
         "locale",

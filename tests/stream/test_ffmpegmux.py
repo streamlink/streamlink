@@ -21,7 +21,7 @@ def _logger(caplog: pytest.LogCaptureFixture):
     caplog.set_level(1, "streamlink")
 
 
-@pytest.fixture
+@pytest.fixture()
 def session():
     with patch("streamlink.session.Streamlink.load_builtin_plugins"):
         yield Streamlink({"ffmpeg-no-validation": True})
@@ -37,7 +37,7 @@ class TestCommand:
             assert FFMPEGMuxer.command(session) == "some_value"
             assert len(mock.call_args_list) == 0
 
-    @pytest.mark.parametrize("command,which,expected", [
+    @pytest.mark.parametrize(("command", "which", "expected"), [
         pytest.param(None, {"ffmpeg": None}, None, id="resolver-negative"),
         pytest.param(None, {"ffmpeg": "ffmpeg"}, "ffmpeg", id="resolver-posix"),
         pytest.param(None, {"ffmpeg": "ffmpeg.exe"}, "ffmpeg.exe", id="resolver-windows"),
@@ -49,7 +49,7 @@ class TestCommand:
         with patch("streamlink.stream.ffmpegmux.which", side_effect=lambda value: which.get(value)):
             assert FFMPEGMuxer.command(session) == expected
 
-    @pytest.mark.parametrize("resolved,expected", [
+    @pytest.mark.parametrize(("resolved", "expected"), [
         pytest.param(None, False, id="negative"),
         pytest.param("ffmpeg", True, id="positive"),
     ])
@@ -130,7 +130,7 @@ class TestCommand:
 
 
 class TestFFmpegVersionOutput:
-    @pytest.fixture
+    @pytest.fixture()
     def output(self):
         output = FFmpegVersionOutput(["/usr/bin/ffmpeg", "-version"], timeout=1.0)
         assert output.command == ["/usr/bin/ffmpeg", "-version"]
@@ -176,12 +176,12 @@ class TestOpen:
         with patch("streamlink.stream.ffmpegmux.which", return_value="ffmpeg") as mock:
             yield mock
 
-    @pytest.fixture
+    @pytest.fixture()
     def popen(self):
         with patch("subprocess.Popen") as mock:
             yield mock
 
-    @pytest.mark.parametrize("options,muxer_args,expected", [
+    @pytest.mark.parametrize(("options", "muxer_args", "expected"), [
         pytest.param(
             {},
             {},
@@ -426,7 +426,7 @@ class TestOpen:
             streamio.close()
             assert not mock_stderr.close.called
 
-    @pytest.mark.parametrize("options,side_effect", [
+    @pytest.mark.parametrize(("options", "side_effect"), [
         pytest.param({"ffmpeg-verbose-path": "foo"}, None, id="verbose-path"),
         pytest.param({"ffmpeg-verbose-path": "foo", "ffmpeg-verbose": True}, None, id="verbose-path priority"),
         pytest.param({"ffmpeg-verbose-path": "foo"}, OSError, id="OSError on close"),

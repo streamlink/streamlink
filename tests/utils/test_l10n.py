@@ -6,7 +6,7 @@ import streamlink.utils.l10n as l10n
 
 
 class TestLocalization:
-    @pytest.mark.parametrize("locale,expected", [
+    @pytest.mark.parametrize(("locale", "expected"), [
         ("en_US", "en_US"),
         ("ko_KR", "ko_KR"),
     ])
@@ -46,7 +46,7 @@ class TestLocalization:
 
 
 class TestLocalizationEquality:
-    @pytest.mark.parametrize("language,country", [
+    @pytest.mark.parametrize(("language", "country"), [
         (None, None),
         ("eng", None),
         ("en", None),
@@ -66,7 +66,7 @@ class TestLocalizationEquality:
         locale = l10n.Localization("fr_FR")
         assert locale.equivalent(language)
 
-    @pytest.mark.parametrize("language,country", [
+    @pytest.mark.parametrize(("language", "country"), [
         ("eng", None),
         ("en", None),
         ("en", "US"),
@@ -82,7 +82,7 @@ class TestLocalizationEquality:
 
 
 class TestCountry:
-    @pytest.mark.parametrize("country,attr,expected", [
+    @pytest.mark.parametrize(("country", "attr", "expected"), [
         ("USA", "alpha2", "US"),
         ("GB", "alpha2", "GB"),
         ("Canada", "name", "Canada"),
@@ -108,7 +108,7 @@ class TestCountry:
 
 
 class TestLanguage:
-    @pytest.mark.parametrize("language,attr,expected", [
+    @pytest.mark.parametrize(("language", "attr", "expected"), [
         ("en", "alpha3", "eng"),
         ("fra", "bibliographic", "fre"),
         ("fre", "alpha3", "fra"),

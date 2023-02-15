@@ -40,7 +40,7 @@ class TestPluginCanHandleUrlFilmon(PluginCanHandleUrl):
     ]
 
 
-@pytest.fixture(scope="function")
+@pytest.fixture()
 def filmonhls():
     with freezegun.freeze_time(datetime.datetime(2000, 1, 1, 0, 0, 0, 0)), \
          patch("streamlink.plugins.filmon.FilmOnHLS._get_stream_data", return_value=[]):

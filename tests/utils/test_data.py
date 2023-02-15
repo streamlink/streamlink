@@ -3,7 +3,7 @@ import pytest
 from streamlink.utils.data import search_dict
 
 
-@pytest.mark.parametrize("args,expected", [
+@pytest.mark.parametrize(("args", "expected"), [
     ((["one", "two"], "one"), []),
     (({"two": "test2"}, "one"), []),
     (({"one": "test1", "two": "test2"}, "one"), ["test1"]),

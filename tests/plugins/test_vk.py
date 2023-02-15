@@ -29,7 +29,7 @@ class TestPluginCanHandleUrlVK(PluginCanHandleUrl):
     ]
 
 
-@pytest.mark.parametrize("url,newurl", [
+@pytest.mark.parametrize(("url", "newurl"), [
     # canonical video URL
     pytest.param(
         "https://vk.com/video-24136539_456241176",

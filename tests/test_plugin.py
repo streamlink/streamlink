@@ -49,7 +49,7 @@ class DeprecatedPlugin(FakePlugin):
 
 
 class TestPlugin:
-    @pytest.mark.parametrize("pluginclass,module,logger", [
+    @pytest.mark.parametrize(("pluginclass", "module", "logger"), [
         (Plugin, "plugin", "streamlink.plugin.plugin"),
         (FakePlugin, "test_plugin", "tests.test_plugin"),
         (RenamedPlugin, "baz", "foo.bar.baz"),
@@ -289,35 +289,35 @@ def _create_cookie_dict(name, value, expires=None):
 
 
 class TestCookies:
-    @pytest.fixture
+    @pytest.fixture()
     def session(self):
         return Streamlink()
 
-    @pytest.fixture
+    @pytest.fixture()
     def pluginclass(self):
         class MyPlugin(FakePlugin):
             __module__ = "myplugin"
 
         return MyPlugin
 
-    @pytest.fixture
+    @pytest.fixture()
     def plugincache(self, request):
         with patch("streamlink.plugin.plugin.Cache") as mock_cache:
             cache = mock_cache("plugin-cache.json", "myplugin")
             cache.get_all.return_value = request.param
             yield cache
 
-    @pytest.fixture
+    @pytest.fixture()
     def logger(self, pluginclass: Type[Plugin]):
         with patch("streamlink.plugin.plugin.logging") as mock_logging:
             yield mock_logging.getLogger(pluginclass.__module__)
 
-    @pytest.fixture
+    @pytest.fixture()
     def plugin(self, pluginclass: Type[Plugin], session: Streamlink, plugincache: Mock, logger: Mock):
         plugin = pluginclass(session, "http://test.se")
         assert plugin.cache is plugincache
         assert plugin.logger is logger
-        yield plugin
+        return plugin
 
     @staticmethod
     def _cookie_to_dict(cookie):

@@ -10,7 +10,7 @@ from streamlink.session import Streamlink
 from tests.testutils.handshake import Handshake
 
 
-@pytest.mark.parametrize("name,value", [
+@pytest.mark.parametrize(("name", "value"), [
     ("OPCODE_CONT", ABNF.OPCODE_CONT),
     ("OPCODE_TEXT", ABNF.OPCODE_TEXT),
     ("OPCODE_BINARY", ABNF.OPCODE_BINARY),
@@ -23,7 +23,7 @@ def test_opcode_export(name, value):
 
 
 class TestWebsocketClient:
-    @pytest.fixture
+    @pytest.fixture()
     def session(self, request: pytest.FixtureRequest):
         with patch("streamlink.session.Streamlink.load_builtin_plugins"):
             session = Streamlink()
@@ -31,17 +31,17 @@ class TestWebsocketClient:
                 session.set_option(key, value)
             yield session
 
-    @pytest.fixture
+    @pytest.fixture()
     def websocketapp(self):
         with patch("streamlink.plugin.api.websocket.WebSocketApp") as mock_websocketapp:
             yield mock_websocketapp
 
-    @pytest.fixture
+    @pytest.fixture()
     def client(self, request: pytest.FixtureRequest, session: Streamlink, websocketapp: Mock):
         with patch("streamlink.plugin.api.websocket.certify_where", side_effect=Mock(return_value="/path/to/cacert.pem")):
             yield WebsocketClient(session, "wss://localhost:0", **getattr(request, "param", {}))
 
-    @pytest.mark.parametrize("level,expected", [
+    @pytest.mark.parametrize(("level", "expected"), [
         pytest.param(DEBUG, False, id="debug"),
         pytest.param(TRACE, True, id="trace"),
     ])
@@ -51,7 +51,7 @@ class TestWebsocketClient:
             WebsocketClient(session, "wss://localhost:0")
         assert mock_enable_trace.called is expected
 
-    @pytest.mark.parametrize("client,expected", [
+    @pytest.mark.parametrize(("client", "expected"), [
         pytest.param({}, FIREFOX, id="default"),
         pytest.param({"header": ["User-Agent: foo"]}, "foo", id="header list"),
         pytest.param({"header": {"User-Agent": "bar"}}, "bar", id="header dict"),
@@ -59,7 +59,7 @@ class TestWebsocketClient:
     def test_user_agent(self, client: WebsocketClient, websocketapp: Mock, expected: str):
         assert [arg[1].get("header", []) for arg in websocketapp.call_args_list] == [[f"User-Agent: {expected}"]]
 
-    @pytest.mark.parametrize("session,client", [
+    @pytest.mark.parametrize(("session", "client"), [
         (
             {
                 "http-proxy": "https://username:password@hostname:1234",

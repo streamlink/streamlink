@@ -304,7 +304,7 @@ class TestDASHStream(unittest.TestCase):
 
 
 class TestDASHStreamWorker:
-    @pytest.fixture
+    @pytest.fixture()
     def mock_time(self, monkeypatch: pytest.MonkeyPatch) -> Mock:
         mock = Mock(return_value=1)
         monkeypatch.setattr("streamlink.stream.dash.time", mock)
@@ -316,11 +316,11 @@ class TestDASHStreamWorker:
         monkeypatch.setattr("streamlink.stream.dash.DASHStreamWorker.wait", mock)
         return mock
 
-    @pytest.fixture
+    @pytest.fixture()
     def representation(self) -> Mock:
         return Mock(id=1, mimeType="video/mp4", height=720)
 
-    @pytest.fixture
+    @pytest.fixture()
     def segments(self) -> List[Mock]:
         return [
             Mock(url="init_segment"),
@@ -328,7 +328,7 @@ class TestDASHStreamWorker:
             Mock(url="second_segment"),
         ]
 
-    @pytest.fixture
+    @pytest.fixture()
     def mpd(self, representation) -> Mock:
         return Mock(
             publishTime=1,
@@ -346,7 +346,7 @@ class TestDASHStreamWorker:
             ],
         )
 
-    @pytest.fixture
+    @pytest.fixture()
     def worker(self, mpd):
         reader = MagicMock(representation_id=1, mime_type="video/mp4")
         worker = DASHStreamWorker(reader)

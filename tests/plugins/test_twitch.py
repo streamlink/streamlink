@@ -393,7 +393,7 @@ class TestTwitchHLSStream(TestMixinStreamHLS, unittest.TestCase):
 
 
 class TestTwitchAPIAccessToken:
-    @pytest.fixture
+    @pytest.fixture()
     def plugin(self, request):
         session = Streamlink()
         for param in getattr(request, "param", {}):
@@ -401,14 +401,14 @@ class TestTwitchAPIAccessToken:
         yield Twitch(session, "https://twitch.tv/channelname")
         Twitch.options.clear()
 
-    @pytest.fixture
+    @pytest.fixture()
     def mocker(self):
         # The built-in requests_mock fixture is bad when trying to reference the following constants or classes
         with requests_mock.Mocker() as mocker:
             mocker.register_uri(requests_mock.ANY, requests_mock.ANY, exc=requests_mock.exceptions.InvalidRequest)
             yield mocker
 
-    @pytest.fixture
+    @pytest.fixture()
     def mock(self, request, mocker: requests_mock.Mocker):
         mock = mocker.post("https://gql.twitch.tv/gql", **getattr(request, "param", {"json": {}}))
         yield mock
@@ -423,7 +423,7 @@ class TestTwitchAPIAccessToken:
             },
         }
 
-    @pytest.fixture
+    @pytest.fixture()
     def assert_live(self, mock):
         yield
         assert mock.last_request.json().get("variables") == {  # type: ignore[union-attr]
@@ -434,7 +434,7 @@ class TestTwitchAPIAccessToken:
             "playerType": "embed",
         }
 
-    @pytest.fixture
+    @pytest.fixture()
     def assert_vod(self, mock):
         yield
         assert mock.last_request.json().get("variables") == {  # type: ignore[union-attr]
@@ -445,7 +445,7 @@ class TestTwitchAPIAccessToken:
             "playerType": "embed",
         }
 
-    @pytest.mark.parametrize("plugin,exp_headers,exp_variables", [
+    @pytest.mark.parametrize(("plugin", "exp_headers", "exp_variables"), [
         (
             [],
             {"Client-ID": TwitchAPI.CLIENT_ID},
@@ -521,7 +521,7 @@ class TestTwitchAPIAccessToken:
         with pytest.raises(NoStreamsError):
             plugin._access_token(False, "vodid")
 
-    @pytest.mark.parametrize("plugin,mock", [
+    @pytest.mark.parametrize(("plugin", "mock"), [
         (
             [("api-header", [("Authorization", "OAuth invalid-token")])],
             {
