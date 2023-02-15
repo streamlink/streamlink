@@ -2,6 +2,8 @@ import unittest
 from threading import Event
 from unittest.mock import MagicMock, call, patch
 
+import pytest
+
 from streamlink.stream.hls import HLSStream, HLSStreamReader
 from tests.mixins.stream_hls import EventedHLSStreamWriter, Playlist, Segment, TestMixinStreamHLS
 
@@ -52,8 +54,8 @@ class TestFilteredHLSStream(TestMixinStreamHLS, unittest.TestCase):
 
         self.await_write(2)
         data = self.await_read()
-        self.assertEqual(data, self.content(segments), "Does not filter by default")
-        self.assertTrue(reader.filter_wait(timeout=0))
+        assert data == self.content(segments), "Does not filter by default"
+        assert reader.filter_wait(timeout=0)
 
     @patch("streamlink.stream.hls.HLSStreamWriter.should_filter_sequence", new=filter_sequence)
     @patch("streamlink.stream.hls.log")
@@ -119,13 +121,12 @@ class TestFilteredHLSStream(TestMixinStreamHLS, unittest.TestCase):
 
         self.await_write()
         data = self.await_read()
-        self.assertEqual(data, segments[0].content, "Has read the first segment")
+        assert data == segments[0].content, "Has read the first segment"
 
         # simulate a timeout by having an empty buffer
         # timeout value is set to 0
-        with self.assertRaises(OSError) as cm:
+        with pytest.raises(OSError, match=r"^Read timeout$"):
             self.await_read()
-        self.assertEqual(str(cm.exception), "Read timeout", "Raises a timeout error when no data is available to read")
 
     @patch("streamlink.stream.hls.HLSStreamWriter.should_filter_sequence", new=filter_sequence)
     def test_filtered_no_timeout(self):
@@ -134,26 +135,26 @@ class TestFilteredHLSStream(TestMixinStreamHLS, unittest.TestCase):
             Playlist(2, [Segment(2), Segment(3)], end=True),
         ])
 
-        self.assertFalse(reader.is_paused(), "Doesn't let the reader wait if not filtering")
+        assert not reader.is_paused(), "Doesn't let the reader wait if not filtering"
 
         self.await_write(2)
-        self.assertTrue(reader.is_paused(), "Lets the reader wait if filtering")
+        assert reader.is_paused(), "Lets the reader wait if filtering"
 
         # test the reader's filter_wait() method
-        self.assertFalse(reader.filter_wait(timeout=0), "Is filtering")
+        assert not reader.filter_wait(timeout=0), "Is filtering"
 
         # make reader read (no data available yet)
         thread.handshake.go()
         # once data becomes available, the reader continues reading
         self.await_write()
-        self.assertFalse(reader.is_paused(), "Reader is not waiting anymore")
+        assert not reader.is_paused(), "Reader is not waiting anymore"
 
         assert thread.handshake.wait_done(TIMEOUT_HANDSHAKE), "Doesn't time out when filtering"
         assert b"".join(thread.data) == segments[2].content, "Reads next available buffer data"
 
         self.await_write()
         data = self.await_read()
-        self.assertEqual(data, self.content(segments, cond=lambda s: s.num >= 2))
+        assert data == self.content(segments, cond=lambda s: s.num >= 2)
 
     @patch("streamlink.stream.hls.HLSStreamWriter.should_filter_sequence", new=filter_sequence)
     def test_filtered_closed(self):
@@ -173,9 +174,9 @@ class TestFilteredHLSStream(TestMixinStreamHLS, unittest.TestCase):
             self.start()
 
             # write first filtered segment and trigger the event_filter's lock
-            self.assertFalse(reader.is_paused(), "Doesn't let the reader wait if not filtering")
+            assert not reader.is_paused(), "Doesn't let the reader wait if not filtering"
             self.await_write()
-            self.assertTrue(reader.is_paused(), "Lets the reader wait if filtering")
+            assert reader.is_paused(), "Lets the reader wait if filtering"
 
             # make reader read (no data available yet)
             thread.handshake.go()
@@ -197,4 +198,5 @@ class TestFilteredHLSStream(TestMixinStreamHLS, unittest.TestCase):
         ]})
 
         self.await_write(4)
-        self.assertEqual(self.await_read(), self.content(segments, cond=lambda s: s.num % 2 > 0))
+        data = self.await_read()
+        assert data == self.content(segments, cond=lambda s: s.num % 2 > 0)

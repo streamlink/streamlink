@@ -19,24 +19,24 @@ class TestOptions(unittest.TestCase):
         })
 
     def test_options(self):
-        self.assertEqual(self.options.get("a_default"), "default")
-        self.assertEqual(self.options.get("non_existing"), None)
+        assert self.options.get("a_default") == "default"
+        assert self.options.get("non_existing") is None
 
         self.options.set("a_option", "option")
-        self.assertEqual(self.options.get("a_option"), "option")
+        assert self.options.get("a_option") == "option"
 
     def test_options_update(self):
-        self.assertEqual(self.options.get("a_default"), "default")
-        self.assertEqual(self.options.get("non_existing"), None)
+        assert self.options.get("a_default") == "default"
+        assert self.options.get("non_existing") is None
 
         self.options.update({"a_option": "option"})
-        self.assertEqual(self.options.get("a_option"), "option")
+        assert self.options.get("a_option") == "option"
 
     def test_options_name_normalised(self):
-        self.assertEqual(self.options.get("a_default"), "default")
-        self.assertEqual(self.options.get("a-default"), "default")
-        self.assertEqual(self.options.get("another-default"), "default2")
-        self.assertEqual(self.options.get("another_default"), "default2")
+        assert self.options.get("a_default") == "default"
+        assert self.options.get("a-default") == "default"
+        assert self.options.get("another-default") == "default2"
+        assert self.options.get("another_default") == "default2"
 
 
 class TestMappedOptions:
@@ -94,19 +94,19 @@ class TestMappedOptions:
 
 class TestArgument(unittest.TestCase):
     def test_name(self):
-        self.assertEqual(Argument("test-arg").argument_name("plugin"), "--plugin-test-arg")
-        self.assertEqual(Argument("test-arg").namespace_dest("plugin"), "plugin_test_arg")
-        self.assertEqual(Argument("test-arg").dest, "test_arg")
+        assert Argument("test-arg").argument_name("plugin") == "--plugin-test-arg"
+        assert Argument("test-arg").namespace_dest("plugin") == "plugin_test_arg"
+        assert Argument("test-arg").dest == "test_arg"
 
     def test_name_plugin(self):
-        self.assertEqual(Argument("test-arg").argument_name("test_plugin"), "--test-plugin-test-arg")
-        self.assertEqual(Argument("test-arg").namespace_dest("test_plugin"), "test_plugin_test_arg")
-        self.assertEqual(Argument("test-arg").dest, "test_arg")
+        assert Argument("test-arg").argument_name("test_plugin") == "--test-plugin-test-arg"
+        assert Argument("test-arg").namespace_dest("test_plugin") == "test_plugin_test_arg"
+        assert Argument("test-arg").dest == "test_arg"
 
     def test_name_override(self):
-        self.assertEqual(Argument("test", argument_name="override-name").argument_name("plugin"), "--override-name")
-        self.assertEqual(Argument("test", argument_name="override-name").namespace_dest("plugin"), "override_name")
-        self.assertEqual(Argument("test", argument_name="override-name").dest, "test")
+        assert Argument("test", argument_name="override-name").argument_name("plugin") == "--override-name"
+        assert Argument("test", argument_name="override-name").namespace_dest("plugin") == "override_name"
+        assert Argument("test", argument_name="override-name").dest == "test"
 
 
 class TestArguments(unittest.TestCase):
@@ -115,9 +115,9 @@ class TestArguments(unittest.TestCase):
         test2 = Argument("test2")
         args = Arguments(test1, test2)
 
-        self.assertEqual(args.get("test1"), test1)
-        self.assertEqual(args.get("test2"), test2)
-        self.assertEqual(args.get("test3"), None)
+        assert args.get("test1") == test1
+        assert args.get("test2") == test2
+        assert args.get("test3") is None
 
     def test_iter(self):
         test1 = Argument("test1")
@@ -126,8 +126,8 @@ class TestArguments(unittest.TestCase):
 
         i_args = iter(args)
 
-        self.assertEqual(next(i_args), test1)
-        self.assertEqual(next(i_args), test2)
+        assert next(i_args) == test1
+        assert next(i_args) == test2
 
     def test_requires(self):
         test1 = Argument("test1", requires="test2")
@@ -136,14 +136,15 @@ class TestArguments(unittest.TestCase):
 
         args = Arguments(test1, test2, test3)
 
-        self.assertEqual(list(args.requires("test1")), [test2, test3])
+        assert list(args.requires("test1")) == [test2, test3]
 
     def test_requires_invalid(self):
         test1 = Argument("test1", requires="test2")
 
         args = Arguments(test1)
 
-        self.assertRaises(KeyError, lambda: list(args.requires("test1")))
+        with pytest.raises(KeyError):
+            list(args.requires("test1"))
 
     def test_requires_cycle(self):
         test1 = Argument("test1", requires="test2")
@@ -151,7 +152,8 @@ class TestArguments(unittest.TestCase):
 
         args = Arguments(test1, test2)
 
-        self.assertRaises(RuntimeError, lambda: list(args.requires("test1")))
+        with pytest.raises(RuntimeError):
+            list(args.requires("test1"))
 
     def test_requires_cycle_deep(self):
         test1 = Argument("test1", requires="test-2")
@@ -160,14 +162,16 @@ class TestArguments(unittest.TestCase):
 
         args = Arguments(test1, test2, test3)
 
-        self.assertRaises(RuntimeError, lambda: list(args.requires("test1")))
+        with pytest.raises(RuntimeError):
+            list(args.requires("test1"))
 
     def test_requires_cycle_self(self):
         test1 = Argument("test1", requires="test1")
 
         args = Arguments(test1)
 
-        self.assertRaises(RuntimeError, lambda: list(args.requires("test1")))
+        with pytest.raises(RuntimeError):
+            list(args.requires("test1"))
 
 
 class TestSetupOptions:

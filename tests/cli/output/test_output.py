@@ -5,6 +5,8 @@ import unittest
 from pathlib import Path
 from unittest.mock import Mock, call, patch
 
+import pytest
+
 from streamlink_cli.output import FileOutput, PlayerOutput
 from tests import posix_only, windows_only
 
@@ -22,15 +24,15 @@ class TestFileOutput(unittest.TestCase):
         mock_path = Mock(spec=Path("foo", "bar"))
         fo_main, fo_record = self.subject(mock_path, mock_stdout)
 
-        self.assertEqual(fo_main.opened, False)
-        self.assertIs(fo_main.filename, mock_path)
-        self.assertIs(fo_main.fd, None)
-        self.assertIs(fo_main.record, fo_record)
+        assert not fo_main.opened
+        assert fo_main.filename is mock_path
+        assert fo_main.fd is None
+        assert fo_main.record is fo_record
 
-        self.assertEqual(fo_main.record.opened, False)
-        self.assertIs(fo_main.record.filename, None)
-        self.assertIs(fo_main.record.fd, mock_stdout)
-        self.assertIs(fo_main.record.record, None)
+        assert not fo_main.record.opened
+        assert fo_main.record.filename is None
+        assert fo_main.record.fd is mock_stdout
+        assert fo_main.record.record is None
 
     def test_early_close(self, mock_stdout: Mock):
         mock_path = Mock(spec=Path("foo", "bar"))
@@ -42,9 +44,8 @@ class TestFileOutput(unittest.TestCase):
         mock_path = Mock(spec=Path("foo", "bar"))
         fo_main, fo_record = self.subject(mock_path, mock_stdout)
 
-        with self.assertRaises(OSError) as cm:
+        with pytest.raises(OSError, match=r"^Output is not opened$"):
             fo_main.write(b"foo")
-        self.assertEqual(str(cm.exception), "Output is not opened")
 
     def _test_open(self, mock_open: Mock, mock_stdout: Mock):
         mock_path = Mock(spec=Path("foo", "bar"))
@@ -52,20 +53,20 @@ class TestFileOutput(unittest.TestCase):
         fo_main, fo_record = self.subject(mock_path, mock_stdout)
 
         fo_main.open()
-        self.assertEqual(fo_main.opened, True)
-        self.assertEqual(fo_main.record.opened, True)
-        self.assertEqual(mock_path.parent.mkdir.call_args_list, [call(parents=True, exist_ok=True)])
-        self.assertIs(fo_main.fd, mock_fd)
+        assert fo_main.opened
+        assert fo_main.record.opened
+        assert mock_path.parent.mkdir.call_args_list == [call(parents=True, exist_ok=True)]
+        assert fo_main.fd is mock_fd
 
         fo_main.write(b"foo")
-        self.assertEqual(mock_fd.write.call_args_list, [call(b"foo")])
-        self.assertEqual(mock_stdout.write.call_args_list, [call(b"foo")])
+        assert mock_fd.write.call_args_list == [call(b"foo")]
+        assert mock_stdout.write.call_args_list == [call(b"foo")]
 
         fo_main.close()
-        self.assertEqual(mock_fd.close.call_args_list, [call()])
-        self.assertEqual(mock_stdout.close.call_args_list, [])
-        self.assertEqual(fo_main.opened, False)
-        self.assertEqual(fo_main.record.opened, False)
+        assert mock_fd.close.call_args_list == [call()]
+        assert mock_stdout.close.call_args_list == []
+        assert not fo_main.opened
+        assert not fo_main.record.opened
 
         return mock_path
 
@@ -79,67 +80,47 @@ class TestFileOutput(unittest.TestCase):
     @patch("builtins.open")
     def test_open_windows(self, mock_open: Mock, mock_msvcrt: Mock, mock_stdout: Mock):
         mock_path = self._test_open(mock_open, mock_stdout)
-        self.assertEqual(mock_msvcrt.setmode.call_args_list, [
+        assert mock_msvcrt.setmode.call_args_list == [
             call(mock_stdout.fileno(), os.O_BINARY),
             call(mock_open(mock_path, "wb").fileno(), os.O_BINARY),
-        ])
+        ]
 
 
 class TestPlayerOutput(unittest.TestCase):
     def test_supported_player_generic(self):
-        self.assertEqual("vlc",
-                         PlayerOutput.supported_player("vlc"))
-
-        self.assertEqual("mpv",
-                         PlayerOutput.supported_player("mpv"))
-
-        self.assertEqual("potplayer",
-                         PlayerOutput.supported_player("potplayermini.exe"))
+        assert PlayerOutput.supported_player("vlc") == "vlc"
+        assert PlayerOutput.supported_player("mpv") == "mpv"
+        assert PlayerOutput.supported_player("potplayermini.exe") == "potplayer"
 
     @patch("streamlink_cli.output.os.path.basename", new=ntpath.basename)
     def test_supported_player_win32(self):
-        self.assertEqual("mpv",
-                         PlayerOutput.supported_player("C:\\MPV\\mpv.exe"))
-        self.assertEqual("vlc",
-                         PlayerOutput.supported_player("C:\\VLC\\vlc.exe"))
-        self.assertEqual("potplayer",
-                         PlayerOutput.supported_player("C:\\PotPlayer\\PotPlayerMini64.exe"))
+        assert PlayerOutput.supported_player("C:\\MPV\\mpv.exe") == "mpv"
+        assert PlayerOutput.supported_player("C:\\VLC\\vlc.exe") == "vlc"
+        assert PlayerOutput.supported_player("C:\\PotPlayer\\PotPlayerMini64.exe") == "potplayer"
 
     @patch("streamlink_cli.output.os.path.basename", new=posixpath.basename)
     def test_supported_player_posix(self):
-        self.assertEqual("mpv",
-                         PlayerOutput.supported_player("/usr/bin/mpv"))
-        self.assertEqual("vlc",
-                         PlayerOutput.supported_player("/usr/bin/vlc"))
+        assert PlayerOutput.supported_player("/usr/bin/mpv") == "mpv"
+        assert PlayerOutput.supported_player("/usr/bin/vlc") == "vlc"
 
     @patch("streamlink_cli.output.os.path.basename", new=ntpath.basename)
     def test_supported_player_args_win32(self):
-        self.assertEqual("mpv",
-                         PlayerOutput.supported_player("C:\\MPV\\mpv.exe --argh"))
-        self.assertEqual("vlc",
-                         PlayerOutput.supported_player("C:\\VLC\\vlc.exe --argh"))
-        self.assertEqual("potplayer",
-                         PlayerOutput.supported_player("C:\\PotPlayer\\PotPlayerMini64.exe --argh"))
+        assert PlayerOutput.supported_player("C:\\MPV\\mpv.exe --argh") == "mpv"
+        assert PlayerOutput.supported_player("C:\\VLC\\vlc.exe --argh") == "vlc"
+        assert PlayerOutput.supported_player("C:\\PotPlayer\\PotPlayerMini64.exe --argh") == "potplayer"
 
     @patch("streamlink_cli.output.os.path.basename", new=posixpath.basename)
     def test_supported_player_args_posix(self):
-        self.assertEqual("mpv",
-                         PlayerOutput.supported_player("/usr/bin/mpv --argh"))
-        self.assertEqual("vlc",
-                         PlayerOutput.supported_player("/usr/bin/vlc --argh"))
+        assert PlayerOutput.supported_player("/usr/bin/mpv --argh") == "mpv"
+        assert PlayerOutput.supported_player("/usr/bin/vlc --argh") == "vlc"
 
     @patch("streamlink_cli.output.os.path.basename", new=posixpath.basename)
     def test_supported_player_negative_posix(self):
-        self.assertEqual(None,
-                         PlayerOutput.supported_player("/usr/bin/xmpvideo"))
-        self.assertEqual(None,
-                         PlayerOutput.supported_player("/usr/bin/echo"))
+        assert PlayerOutput.supported_player("/usr/bin/xmpvideo") is None
+        assert PlayerOutput.supported_player("/usr/bin/echo") is None
 
     @patch("streamlink_cli.output.os.path.basename", new=ntpath.basename)
     def test_supported_player_negative_win32(self):
-        self.assertEqual(None,
-                         PlayerOutput.supported_player("C:\\mpc\\mpc-hd.exe"))
-        self.assertEqual(None,
-                         PlayerOutput.supported_player("C:\\mplayer\\not-vlc.exe"))
-        self.assertEqual(None,
-                         PlayerOutput.supported_player("C:\\NotPlayer\\NotPlayerMini64.exe"))
+        assert PlayerOutput.supported_player("C:\\mpc\\mpc-hd.exe") is None
+        assert PlayerOutput.supported_player("C:\\mplayer\\not-vlc.exe") is None
+        assert PlayerOutput.supported_player("C:\\NotPlayer\\NotPlayerMini64.exe") is None

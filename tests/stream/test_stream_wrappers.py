@@ -11,10 +11,10 @@ class TestPluginStream(unittest.TestCase):
             yield b"3" * 2048
 
         fd = StreamIOIterWrapper(generator())
-        self.assertEqual(fd.read(4096), b"1" * 4096)
-        self.assertEqual(fd.read(2048), b"1" * 2048)
-        self.assertEqual(fd.read(2048), b"1" * 2048)
-        self.assertEqual(fd.read(1), b"2")
-        self.assertEqual(fd.read(4095), b"2" * 4095)
-        self.assertEqual(fd.read(1536), b"3" * 1536)
-        self.assertEqual(fd.read(), b"3" * 512)
+        assert fd.read(4096) == b"1" * 4096
+        assert fd.read(2048) == b"1" * 2048
+        assert fd.read(2048) == b"1" * 2048
+        assert fd.read(1) == b"2"
+        assert fd.read(4095) == b"2" * 4095
+        assert fd.read(1536) == b"3" * 1536
+        assert fd.read() == b"3" * 512

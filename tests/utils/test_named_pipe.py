@@ -2,6 +2,8 @@ import threading
 import unittest
 from unittest.mock import Mock, call, patch
 
+import pytest
+
 from streamlink.utils.named_pipe import NamedPipe, NamedPipeBase, NamedPipePosix, NamedPipeWindows
 from tests import posix_only, windows_only
 
@@ -70,68 +72,67 @@ class TestNamedPipe(unittest.TestCase):
     def test_name(self, mock_log):
         NamedPipe()
         NamedPipe()
-        self.assertEqual(mock_log.info.mock_calls, [
+        assert mock_log.info.mock_calls == [
             call("Creating pipe streamlinkpipe-12345-1-67890"),
             call("Creating pipe streamlinkpipe-12345-2-67890"),
-        ])
+        ]
 
 
 @posix_only
 class TestNamedPipePosix(unittest.TestCase):
     def test_export(self):
-        self.assertEqual(NamedPipe, NamedPipePosix)
+        assert NamedPipe is NamedPipePosix
 
     @patch("streamlink.utils.named_pipe.os.mkfifo")
     def test_create(self, mock_mkfifo):
-        mock_mkfifo.side_effect = OSError()
-        with self.assertRaises(OSError):
+        mock_mkfifo.side_effect = OSError
+        with pytest.raises(OSError):  # noqa: PT011
             NamedPipePosix()
-        self.assertEqual(mock_mkfifo.call_args[0][1:], (0o660,))
+        assert mock_mkfifo.call_args[0][1:] == (0o660,)
 
     def test_close_before_open(self):
         pipe = NamedPipePosix()
-        self.assertTrue(pipe.path.is_fifo())
+        assert pipe.path.is_fifo()
         pipe.close()
-        self.assertFalse(pipe.path.is_fifo())
+        assert not pipe.path.is_fifo()
         # closing twice doesn't raise
         pipe.close()
 
     def test_write_before_open(self):
         pipe = NamedPipePosix()
-        self.assertTrue(pipe.path.is_fifo())
-        with self.assertRaises(Exception):
+        assert pipe.path.is_fifo()
+        with pytest.raises(AttributeError):
             pipe.write(b"foo")
         pipe.close()
 
     def test_named_pipe(self):
         pipe = NamedPipePosix()
-        self.assertTrue(pipe.path.is_fifo())
+        assert pipe.path.is_fifo()
         reader = ReadNamedPipeThreadPosix(pipe)
         reader.start()
         pipe.open()
-        self.assertEqual(pipe.write(b"foo"), 3)
-        self.assertEqual(pipe.write(b"bar"), 3)
+        assert pipe.write(b"foo") == 3
+        assert pipe.write(b"bar") == 3
         pipe.close()
-        self.assertFalse(pipe.path.is_fifo())
+        assert not pipe.path.is_fifo()
         reader.done.wait(4000)
-        self.assertEqual(reader.error, None)
-        self.assertEqual(reader.data, b"foobar")
-        self.assertFalse(reader.is_alive())
+        assert reader.error is None
+        assert reader.data == b"foobar"
+        assert not reader.is_alive()
 
 
 @windows_only
 class TestNamedPipeWindows(unittest.TestCase):
     def test_export(self):
-        self.assertEqual(NamedPipe, NamedPipeWindows)
+        assert NamedPipe is NamedPipeWindows
 
     @patch("streamlink.utils.named_pipe.windll.kernel32")
     def test_create(self, mock_kernel32):
         mock_kernel32.CreateNamedPipeW.return_value = NamedPipeWindows.INVALID_HANDLE_VALUE
         mock_kernel32.GetLastError.return_value = 12345
-        with self.assertRaises(OSError) as cm:
+        with pytest.raises(OSError, match=r"^Named pipe error code 0x00003039$"):
             NamedPipeWindows()
-        self.assertEqual(str(cm.exception), "Named pipe error code 0x00003039")
-        self.assertEqual(mock_kernel32.CreateNamedPipeW.call_args[0][1:], (
+        assert mock_kernel32.CreateNamedPipeW.call_args[0][1:] == (
             0x00000002,
             0x00000000,
             255,
@@ -139,16 +140,16 @@ class TestNamedPipeWindows(unittest.TestCase):
             8192,
             0,
             None,
-        ))
+        )
 
     def test_close_before_open(self):
         pipe = NamedPipeWindows()
         handle = windll.kernel32.CreateFileW(str(pipe.path), GENERIC_READ, 0, None, OPEN_EXISTING, 0, None)
-        self.assertNotEqual(handle, NamedPipeWindows.INVALID_HANDLE_VALUE)
+        assert handle != NamedPipeWindows.INVALID_HANDLE_VALUE
         windll.kernel32.CloseHandle(handle)
         pipe.close()
         handle = windll.kernel32.CreateFileW(str(pipe.path), GENERIC_READ, 0, None, OPEN_EXISTING, 0, None)
-        self.assertEqual(handle, NamedPipeWindows.INVALID_HANDLE_VALUE)
+        assert handle == NamedPipeWindows.INVALID_HANDLE_VALUE
         # closing twice doesn't raise
         pipe.close()
 
@@ -157,11 +158,11 @@ class TestNamedPipeWindows(unittest.TestCase):
         reader = ReadNamedPipeThreadWindows(pipe)
         reader.start()
         pipe.open()
-        self.assertEqual(pipe.write(b"foo"), 3)
-        self.assertEqual(pipe.write(b"bar"), 3)
-        self.assertEqual(pipe.write(b"\0"), 1)
+        assert pipe.write(b"foo") == 3
+        assert pipe.write(b"bar") == 3
+        assert pipe.write(b"\x00") == 1
         reader.done.wait(4000)
-        self.assertEqual(reader.error, None)
-        self.assertEqual(reader.data, b"foobar")
-        self.assertFalse(reader.is_alive())
+        assert reader.error is None
+        assert reader.data == b"foobar"
+        assert not reader.is_alive()
         pipe.close()

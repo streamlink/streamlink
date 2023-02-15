@@ -36,29 +36,28 @@ class TestUrllib3Overrides:
 class TestPluginAPIHTTPSession(unittest.TestCase):
     def test_session_init(self):
         session = HTTPSession()
-        self.assertEqual(session.headers.get("User-Agent"), FIREFOX)
-        self.assertEqual(session.timeout, 20.0)
-        self.assertIn("file://", session.adapters.keys())
+        assert session.headers.get("User-Agent") == FIREFOX
+        assert session.timeout == 20.0
+        assert "file://" in session.adapters.keys()
 
     @patch("streamlink.plugin.api.http_session.time.sleep")
     @patch("streamlink.plugin.api.http_session.Session.request", side_effect=requests.Timeout)
     def test_read_timeout(self, mock_request, mock_sleep):
         session = HTTPSession()
 
-        with self.assertRaises(PluginError) as cm:
+        with pytest.raises(PluginError, match=r"^Unable to open URL: http://localhost/"):
             session.get("http://localhost/", timeout=123, retries=3, retry_backoff=2, retry_max_backoff=5)
-        self.assertTrue(str(cm.exception).startswith("Unable to open URL: http://localhost/"))
-        self.assertEqual(mock_request.mock_calls, [
+        assert mock_request.mock_calls == [
             call("GET", "http://localhost/", headers={}, params={}, timeout=123, proxies={}, allow_redirects=True),
             call("GET", "http://localhost/", headers={}, params={}, timeout=123, proxies={}, allow_redirects=True),
             call("GET", "http://localhost/", headers={}, params={}, timeout=123, proxies={}, allow_redirects=True),
             call("GET", "http://localhost/", headers={}, params={}, timeout=123, proxies={}, allow_redirects=True),
-        ])
-        self.assertEqual(mock_sleep.mock_calls, [
+        ]
+        assert mock_sleep.mock_calls == [
             call(2),
             call(4),
             call(5),
-        ])
+        ]
 
     def test_json_encoding(self):
         json_str = "{\"test\": \"Α and Ω\"}"
@@ -69,7 +68,7 @@ class TestPluginAPIHTTPSession(unittest.TestCase):
                 mock_content.return_value = json_str.encode(encoding)
                 res = requests.Response()
 
-                self.assertEqual(HTTPSession.json(res), {"test": "\u0391 and \u03a9"})
+                assert HTTPSession.json(res) == {"test": "Α and Ω"}
 
     def test_json_encoding_override(self):
         json_text = "{\"test\": \"Α and Ω\"}".encode("cp949")
@@ -79,4 +78,4 @@ class TestPluginAPIHTTPSession(unittest.TestCase):
             res = requests.Response()
             res.encoding = "cp949"
 
-            self.assertEqual(HTTPSession.json(res), {"test": "\u0391 and \u03a9"})
+            assert HTTPSession.json(res) == {"test": "Α and Ω"}

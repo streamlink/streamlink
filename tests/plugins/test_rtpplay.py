@@ -62,16 +62,16 @@ class TestRTPPlay(unittest.TestCase):
 
     def test_empty(self):
         streams = self.subject("https://www.rtp.pt/play/id/title", "")
-        self.assertEqual(streams, None)
+        assert streams is None
 
     def test_invalid(self):
         streams = self.subject("https://www.rtp.pt/play/id/title", self._content_pre + self._content_invalid)
-        self.assertEqual(streams, None)
+        assert streams is None
 
     def test_valid(self):
         streams = self.subject("https://www.rtp.pt/play/id/title", self._content_pre + self._content_valid)
-        self.assertIsInstance(next(iter(streams.values())), HLSStream)
+        assert isinstance(next(iter(streams.values())), HLSStream)
 
     def test_valid_b64(self):
         streams = self.subject("https://www.rtp.pt/play/id/title", self._content_pre + self._content_valid_b64)
-        self.assertIsInstance(next(iter(streams.values())), HLSStream)
+        assert isinstance(next(iter(streams.values())), HLSStream)

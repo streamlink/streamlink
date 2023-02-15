@@ -21,7 +21,7 @@ class TestPluginStream(unittest.TestCase):
 
     def assertDictHas(self, a, b):
         for key, value in a.items():
-            self.assertEqual(b[key], value)
+            assert b[key] == value
 
     @patch("streamlink.stream.HLSStream.parse_variant_playlist")
     def _test_hls(self, surl, url, mock_parse):
@@ -29,12 +29,12 @@ class TestPluginStream(unittest.TestCase):
 
         streams = self.session.streams(surl)
 
-        self.assertIn("live", streams)
+        assert "live" in streams
         mock_parse.assert_called_with(self.session, url)
 
         stream = streams["live"]
-        self.assertIsInstance(stream, HLSStream)
-        self.assertEqual(stream.url, url)
+        assert isinstance(stream, HLSStream)
+        assert stream.url == url
 
     @patch("streamlink.stream.HLSStream.parse_variant_playlist")
     def _test_hlsvariant(self, surl, url, mock_parse):
@@ -44,21 +44,21 @@ class TestPluginStream(unittest.TestCase):
 
         mock_parse.assert_called_with(self.session, url)
 
-        self.assertNotIn("live", streams)
-        self.assertIn("best", streams)
+        assert "live" not in streams
+        assert "best" in streams
 
         stream = streams["best"]
-        self.assertIsInstance(stream, HLSStream)
-        self.assertEqual(stream.url, url)
+        assert isinstance(stream, HLSStream)
+        assert stream.url == url
 
     def _test_http(self, surl, url, params):
         streams = self.session.streams(surl)
 
-        self.assertIn("live", streams)
+        assert "live" in streams
 
         stream = streams["live"]
-        self.assertIsInstance(stream, HTTPStream)
-        self.assertEqual(stream.url, url)
+        assert isinstance(stream, HTTPStream)
+        assert stream.url == url
         self.assertDictHas(params, stream.args)
 
     def test_plugin_hls(self):
@@ -85,55 +85,29 @@ class TestPluginStream(unittest.TestCase):
                         "https://hostname.se/auth.php?key=a+value", dict(verify=False, params=dict(key="a value")))
 
     def test_parse_params(self):
-        self.assertEqual({}, parse_params())
-        self.assertEqual(
-            dict(verify=False, params=dict(key="a value")),
-            parse_params("""verify=False params={'key': 'a value'}"""),
-        )
-        self.assertEqual(
-            dict(verify=False),
-            parse_params("""verify=False"""),
-        )
-        self.assertEqual(
-            dict(conn=["B:1", "S:authMe", "O:1", "NN:code:1.23", "NS:flag:ok", "O:0"]),
-            parse_params(""""conn=['B:1', 'S:authMe', 'O:1', 'NN:code:1.23', 'NS:flag:ok', 'O:0']"""),
-        )
+        assert parse_params() \
+               == {}
+        assert parse_params("verify=False params={'key': 'a value'}") \
+               == dict(verify=False, params=dict(key="a value"))
+        assert parse_params("verify=False") \
+               == dict(verify=False)
+        assert parse_params("\"conn=['B:1', 'S:authMe', 'O:1', 'NN:code:1.23', 'NS:flag:ok', 'O:0']") \
+               == dict(conn=["B:1", "S:authMe", "O:1", "NN:code:1.23", "NS:flag:ok", "O:0"])
 
     def test_stream_weight_value(self):
-        self.assertEqual((720, "pixels"),
-                         stream_weight("720p"))
-
-        self.assertEqual((721, "pixels"),
-                         stream_weight("720p+"))
-
-        self.assertEqual((780, "pixels"),
-                         stream_weight("720p60"))
+        assert stream_weight("720p") == (720, "pixels")
+        assert stream_weight("720p+") == (721, "pixels")
+        assert stream_weight("720p60") == (780, "pixels")
 
     def test_stream_weight(self):
-        self.assertGreater(stream_weight("720p+"),
-                           stream_weight("720p"))
-
-        self.assertGreater(stream_weight("720p_3000k"),
-                           stream_weight("720p_2500k"))
-
-        self.assertGreater(stream_weight("720p60_3000k"),
-                           stream_weight("720p_3000k"))
-
-        self.assertGreater(stream_weight("3000k"),
-                           stream_weight("2500k"))
-
-        self.assertEqual(stream_weight("720p"),
-                         stream_weight("720p"))
-
-        self.assertLess(stream_weight("720p_3000k"),
-                        stream_weight("720p+_3000k"))
+        assert stream_weight("720p+") > stream_weight("720p")
+        assert stream_weight("720p_3000k") > stream_weight("720p_2500k")
+        assert stream_weight("720p60_3000k") > stream_weight("720p_3000k")
+        assert stream_weight("3000k") > stream_weight("2500k")
+        assert stream_weight("720p") == stream_weight("720p")
+        assert stream_weight("720p_3000k") < stream_weight("720p+_3000k")
 
     def test_stream_weight_and_audio(self):
-        self.assertGreater(stream_weight("720p+a256k"),
-                           stream_weight("720p+a128k"))
-
-        self.assertGreater(stream_weight("720p+a256k"),
-                           stream_weight("720p+a128k"))
-
-        self.assertGreater(stream_weight("720p+a128k"),
-                           stream_weight("360p+a256k"))
+        assert stream_weight("720p+a256k") > stream_weight("720p+a128k")
+        assert stream_weight("720p+a256k") > stream_weight("720p+a128k")
+        assert stream_weight("720p+a128k") > stream_weight("360p+a256k")
