@@ -10,7 +10,7 @@ from streamlink.stream.ffmpegmux import FFMPEGMuxer, FFmpegVersionOutput
 
 # noinspection PyProtectedMember
 @pytest.fixture(autouse=True)
-def resolve_command_cache_clear():
+def _resolve_command_cache_clear():
     FFMPEGMuxer._resolve_command.cache_clear()
     yield
     FFMPEGMuxer._resolve_command.cache_clear()

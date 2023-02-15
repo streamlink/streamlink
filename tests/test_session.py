@@ -417,12 +417,12 @@ class TestSession(unittest.TestCase):
 
 class TestSessionOptionHttpProxy:
     @pytest.fixture()
-    def no_deprecation(self, recwarn: pytest.WarningsRecorder):
+    def _no_deprecation(self, recwarn: pytest.WarningsRecorder):
         yield
         assert recwarn.list == []
 
     @pytest.fixture()
-    def logs_deprecation(self, recwarn: pytest.WarningsRecorder):
+    def _logs_deprecation(self, recwarn: pytest.WarningsRecorder):
         yield
         assert [(record.category, str(record.message)) for record in recwarn.list] == [
             (
@@ -431,50 +431,58 @@ class TestSessionOptionHttpProxy:
             ),
         ]
 
-    def test_https_proxy_default(self, session: Streamlink, no_deprecation):
+    @pytest.mark.usefixtures("_no_deprecation")
+    def test_https_proxy_default(self, session: Streamlink):
         session.set_option("http-proxy", "http://testproxy.com")
 
         assert session.http.proxies["http"] == "http://testproxy.com"
         assert session.http.proxies["https"] == "http://testproxy.com"
 
-    def test_https_proxy_set_first(self, session: Streamlink, logs_deprecation):
+    @pytest.mark.usefixtures("_logs_deprecation")
+    def test_https_proxy_set_first(self, session: Streamlink):
         session.set_option("https-proxy", "https://testhttpsproxy.com")
         session.set_option("http-proxy", "http://testproxy.com")
 
         assert session.http.proxies["http"] == "http://testproxy.com"
         assert session.http.proxies["https"] == "http://testproxy.com"
 
-    def test_https_proxy_default_override(self, session: Streamlink, logs_deprecation):
+    @pytest.mark.usefixtures("_logs_deprecation")
+    def test_https_proxy_default_override(self, session: Streamlink):
         session.set_option("http-proxy", "http://testproxy.com")
         session.set_option("https-proxy", "https://testhttpsproxy.com")
 
         assert session.http.proxies["http"] == "https://testhttpsproxy.com"
         assert session.http.proxies["https"] == "https://testhttpsproxy.com"
 
-    def test_https_proxy_set_only(self, session: Streamlink, logs_deprecation):
+    @pytest.mark.usefixtures("_logs_deprecation")
+    def test_https_proxy_set_only(self, session: Streamlink):
         session.set_option("https-proxy", "https://testhttpsproxy.com")
 
         assert session.http.proxies["http"] == "https://testhttpsproxy.com"
         assert session.http.proxies["https"] == "https://testhttpsproxy.com"
 
-    def test_http_proxy_socks(self, session: Streamlink, no_deprecation):
+    @pytest.mark.usefixtures("_no_deprecation")
+    def test_http_proxy_socks(self, session: Streamlink):
         session.set_option("http-proxy", "socks5://localhost:1234")
 
         assert session.http.proxies["http"] == "socks5://localhost:1234"
         assert session.http.proxies["https"] == "socks5://localhost:1234"
 
-    def test_https_proxy_socks(self, session: Streamlink, logs_deprecation):
+    @pytest.mark.usefixtures("_logs_deprecation")
+    def test_https_proxy_socks(self, session: Streamlink):
         session.set_option("https-proxy", "socks5://localhost:1234")
 
         assert session.http.proxies["http"] == "socks5://localhost:1234"
         assert session.http.proxies["https"] == "socks5://localhost:1234"
 
-    def test_get_http_proxy(self, session: Streamlink, no_deprecation):
+    @pytest.mark.usefixtures("_no_deprecation")
+    def test_get_http_proxy(self, session: Streamlink):
         session.http.proxies["http"] = "http://testproxy1.com"
         session.http.proxies["https"] = "http://testproxy2.com"
         assert session.get_option("http-proxy") == "http://testproxy1.com"
 
-    def test_get_https_proxy(self, session: Streamlink, logs_deprecation):
+    @pytest.mark.usefixtures("_logs_deprecation")
+    def test_get_https_proxy(self, session: Streamlink):
         session.http.proxies["http"] = "http://testproxy1.com"
         session.http.proxies["https"] = "http://testproxy2.com"
         assert session.get_option("https-proxy") == "http://testproxy2.com"
