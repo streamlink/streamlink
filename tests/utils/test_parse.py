@@ -1,5 +1,6 @@
 import unittest
 
+import pytest
 from lxml.etree import Element
 
 from streamlink.exceptions import PluginError
@@ -10,42 +11,47 @@ from streamlink.utils.parse import parse_html, parse_json, parse_qsd, parse_xml
 
 class TestUtilsParse(unittest.TestCase):
     def test_parse_json(self):
-        self.assertEqual({}, parse_json("{}"))
-        self.assertEqual({"test": 1}, parse_json("""{"test": 1}"""))
-        self.assertEqual({"test": 1}, parse_json("""{"test": 1}""", schema=validate.Schema({"test": 1})))
-        self.assertRaises(PluginError, parse_json, """{"test: 1}""")
-        self.assertRaises(IOError, parse_json, """{"test: 1}""", exception=IOError)
-        self.assertRaises(PluginError, parse_json, """{"test: 1}""" * 10)
+        assert parse_json("{}") == {}
+        assert parse_json('{"test": 1}') == {"test": 1}
+        assert parse_json('{"test": 1}', schema=validate.Schema({"test": 1})) == {"test": 1}
+        with pytest.raises(PluginError):
+            parse_json("""{"test: 1}""")
+        with pytest.raises(SyntaxError):
+            parse_json("""{"test: 1}""", exception=SyntaxError)
+        with pytest.raises(PluginError):
+            parse_json("""{"test: 1}""" * 10)
 
     def test_parse_xml(self):
         expected = Element("test", {"foo": "bar"})
         actual = parse_xml("""<test foo="bar"/>""", ignore_ns=True)
-        self.assertEqual(expected.tag, actual.tag)
-        self.assertEqual(expected.attrib, actual.attrib)
+        assert actual.tag == expected.tag
+        assert actual.attrib == expected.attrib
 
     def test_parse_xml_ns_ignore(self):
         expected = Element("test", {"foo": "bar"})
         actual = parse_xml("""<test foo="bar" xmlns="foo:bar"/>""", ignore_ns=True)
-        self.assertEqual(expected.tag, actual.tag)
-        self.assertEqual(expected.attrib, actual.attrib)
+        assert actual.tag == expected.tag
+        assert actual.attrib == expected.attrib
 
         actual = parse_xml("""<test	foo="bar"	xmlns="foo:bar"/>""", ignore_ns=True)
-        self.assertEqual(expected.tag, actual.tag)
-        self.assertEqual(expected.attrib, actual.attrib)
+        assert actual.tag == expected.tag
+        assert actual.attrib == expected.attrib
 
         actual = parse_xml("""<test\nfoo="bar"\nxmlns="foo:bar"/>""", ignore_ns=True)
-        self.assertEqual(expected.tag, actual.tag)
-        self.assertEqual(expected.attrib, actual.attrib)
+        assert actual.tag == expected.tag
+        assert actual.attrib == expected.attrib
 
     def test_parse_xml_ns(self):
         expected = Element("{foo:bar}test", {"foo": "bar"})
         actual = parse_xml("""<h:test foo="bar" xmlns:h="foo:bar"/>""")
-        self.assertEqual(expected.tag, actual.tag)
-        self.assertEqual(expected.attrib, actual.attrib)
+        assert actual.tag == expected.tag
+        assert actual.attrib == expected.attrib
 
     def test_parse_xml_fail(self):
-        self.assertRaises(PluginError, parse_xml, "1" * 1000)
-        self.assertRaises(IOError, parse_xml, "1" * 1000, exception=IOError)
+        with pytest.raises(PluginError):
+            parse_xml("1" * 1000)
+        with pytest.raises(SyntaxError):
+            parse_xml("1" * 1000, exception=SyntaxError)
 
     def test_parse_xml_validate(self):
         expected = Element("test", {"foo": "bar"})
@@ -53,11 +59,12 @@ class TestUtilsParse(unittest.TestCase):
             """<test foo="bar"/>""",
             schema=validate.Schema(xml_element(tag="test", attrib={"foo": str})),
         )
-        self.assertEqual(expected.tag, actual.tag)
-        self.assertEqual(expected.attrib, actual.attrib)
+        assert actual.tag == expected.tag
+        assert actual.attrib == expected.attrib
 
     def test_parse_xml_entities_fail(self):
-        self.assertRaises(PluginError, parse_xml, """<test foo="bar &"/>""")
+        with pytest.raises(PluginError):
+            parse_xml("""<test foo="bar &"/>""")
 
     def test_parse_xml_entities(self):
         expected = Element("test", {"foo": "bar &"})
@@ -66,37 +73,34 @@ class TestUtilsParse(unittest.TestCase):
             schema=validate.Schema(xml_element(tag="test", attrib={"foo": str})),
             invalid_char_entities=True,
         )
-        self.assertEqual(expected.tag, actual.tag)
-        self.assertEqual(expected.attrib, actual.attrib)
+        assert actual.tag == expected.tag
+        assert actual.attrib == expected.attrib
 
     def test_parse_xml_encoding(self):
         tree = parse_xml("""<?xml version="1.0" encoding="UTF-8"?><test>ä</test>""")
-        self.assertEqual(tree.xpath(".//text()"), ["ä"])
+        assert tree.xpath(".//text()") == ["ä"]
         tree = parse_xml("""<test>ä</test>""")
-        self.assertEqual(tree.xpath(".//text()"), ["ä"])
+        assert tree.xpath(".//text()") == ["ä"]
         tree = parse_xml(b"""<?xml version="1.0" encoding="UTF-8"?><test>\xC3\xA4</test>""")
-        self.assertEqual(tree.xpath(".//text()"), ["ä"])
+        assert tree.xpath(".//text()") == ["ä"]
         tree = parse_xml(b"""<test>\xC3\xA4</test>""")
-        self.assertEqual(tree.xpath(".//text()"), ["ä"])
+        assert tree.xpath(".//text()") == ["ä"]
 
     def test_parse_html_encoding(self):
         tree = parse_html("""<!DOCTYPE html><html><head><meta charset="utf-8"/></head><body>ä</body></html>""")
-        self.assertEqual(tree.xpath(".//body/text()"), ["ä"])
+        assert tree.xpath(".//body/text()") == ["ä"]
         tree = parse_html("""<!DOCTYPE html><html><body>ä</body></html>""")
-        self.assertEqual(tree.xpath(".//body/text()"), ["ä"])
+        assert tree.xpath(".//body/text()") == ["ä"]
         tree = parse_html(b"""<!DOCTYPE html><html><meta charset="utf-8"/><body>\xC3\xA4</body></html>""")
-        self.assertEqual(tree.xpath(".//body/text()"), ["ä"])
+        assert tree.xpath(".//body/text()") == ["ä"]
         tree = parse_html(b"""<!DOCTYPE html><html><body>\xC3\xA4</body></html>""")
-        self.assertEqual(tree.xpath(".//body/text()"), ["Ã¤"])
+        assert tree.xpath(".//body/text()") == ["Ã¤"]
 
     def test_parse_html_xhtml5(self):
         tree = parse_html("""<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html><html><body>ä?></body></html>""")
-        self.assertEqual(tree.xpath(".//body/text()"), ["ä?>"])
+        assert tree.xpath(".//body/text()") == ["ä?>"]
         tree = parse_html(b"""<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html><html><body>\xC3\xA4?></body></html>""")
-        self.assertEqual(tree.xpath(".//body/text()"), ["ä?>"])
+        assert tree.xpath(".//body/text()") == ["ä?>"]
 
     def test_parse_qsd(self):
-        self.assertEqual(
-            {"test": "1", "foo": "bar"},
-            parse_qsd("test=1&foo=bar", schema=validate.Schema({"test": str, "foo": "bar"})),
-        )
+        assert parse_qsd("test=1&foo=bar", schema=validate.Schema({"test": str, "foo": "bar"})) == {"test": "1", "foo": "bar"}

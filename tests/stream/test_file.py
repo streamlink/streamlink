@@ -19,4 +19,4 @@ class TestFileStream(unittest.TestCase):
     def test_open_fileobj(self):
         fileobj = Mock()
         s = FileStream(self.session, fileobj=fileobj)
-        self.assertEqual(fileobj, s.open())
+        assert s.open() is fileobj

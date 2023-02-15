@@ -220,7 +220,7 @@ class TestMixinStreamHLS(unittest.TestCase):
         thread.reader.writer.join(timeout)
         thread.reader.worker.join(timeout)
         thread.join(timeout)
-        self.assertTrue(self.thread.reader.closed, "Stream reader is closed")
+        assert self.thread.reader.closed, "Stream reader is closed"
 
     # make write calls on the write-thread and wait until it has finished
     def await_write(self, write_calls=1, timeout=TIMEOUT_AWAIT_WRITE) -> None:

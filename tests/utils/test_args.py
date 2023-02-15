@@ -1,32 +1,32 @@
 import unittest
 from argparse import ArgumentTypeError
 
+import pytest
+
 from streamlink.utils.args import boolean, comma_list, comma_list_filter, filesize, keyvalue, num
 
 
 class TestUtilsArgs(unittest.TestCase):
     def test_boolean_true(self):
-        self.assertEqual(boolean("1"), True)
-        self.assertEqual(boolean("on"), True)
-        self.assertEqual(boolean("true"), True)
-        self.assertEqual(boolean("yes"), True)
-        self.assertEqual(boolean("Yes"), True)
+        assert boolean("1") is True
+        assert boolean("on") is True
+        assert boolean("true") is True
+        assert boolean("yes") is True
+        assert boolean("Yes") is True
 
     def test_boolean_false(self):
-        self.assertEqual(boolean("0"), False)
-        self.assertEqual(boolean("false"), False)
-        self.assertEqual(boolean("no"), False)
-        self.assertEqual(boolean("No"), False)
-        self.assertEqual(boolean("off"), False)
+        assert boolean("0") is False
+        assert boolean("false") is False
+        assert boolean("no") is False
+        assert boolean("No") is False
+        assert boolean("off") is False
 
     def test_boolean_error(self):
-        with self.assertRaises(ArgumentTypeError):
+        with pytest.raises(ArgumentTypeError):
             boolean("yesno")
-
-        with self.assertRaises(ArgumentTypeError):
+        with pytest.raises(ArgumentTypeError):
             boolean("FOO")
-
-        with self.assertRaises(ArgumentTypeError):
+        with pytest.raises(ArgumentTypeError):
             boolean("2")
 
     def test_comma_list(self):
@@ -39,7 +39,7 @@ class TestUtilsArgs(unittest.TestCase):
         ]
 
         for _v, _r in test_data:
-            self.assertEqual(comma_list(_v), _r)
+            assert comma_list(_v) == _r
 
     def test_comma_list_filter(self):
         # (acceptable, values, result)
@@ -53,21 +53,20 @@ class TestUtilsArgs(unittest.TestCase):
 
         for _a, _v, _r in test_data:
             func = comma_list_filter(_a)
-            self.assertEqual(func(_v), _r)
+            assert func(_v) == _r
 
     def test_filesize(self):
-        self.assertEqual(filesize("2000"), 2000)
-        self.assertEqual(filesize("11KB"), 1024 * 11)
-        self.assertEqual(filesize("12MB"), 1024 * 1024 * 12)
-        self.assertEqual(filesize("1KB"), 1024)
-        self.assertEqual(filesize("1MB"), 1024 * 1024)
-        self.assertEqual(filesize("2KB"), 1024 * 2)
+        assert filesize("2000") == 2000
+        assert filesize("11KB") == 1024 * 11
+        assert filesize("12MB") == 1024 * 1024 * 12
+        assert filesize("1KB") == 1024
+        assert filesize("1MB") == 1024 * 1024
+        assert filesize("2KB") == 1024 * 2
 
     def test_filesize_error(self):
-        with self.assertRaises(ValueError):
+        with pytest.raises(ValueError):  # noqa: PT011
             filesize("FOO")
-
-        with self.assertRaises(ValueError):
+        with pytest.raises(ValueError):  # noqa: PT011
             filesize("0.00000")
 
     def test_keyvalue(self):
@@ -83,10 +82,10 @@ class TestUtilsArgs(unittest.TestCase):
         ]
 
         for _v, _r in test_data:
-            self.assertEqual(keyvalue(_v), _r)
+            assert keyvalue(_v) == _r
 
     def test_keyvalue_error(self):
-        with self.assertRaises(ValueError):
+        with pytest.raises(ValueError):  # noqa: PT011
             keyvalue("127.0.0.1")
 
     def test_num(self):
@@ -98,21 +97,21 @@ class TestUtilsArgs(unittest.TestCase):
         ]
 
         for _v, _f, _r in test_data:
-            self.assertEqual(_f(_v), _r)
+            assert _f(_v) == _r
 
     def test_num_error(self):
-        with self.assertRaises(ArgumentTypeError):
-            func = num(int, 5, 10)
+        func = num(int, 5, 10)
+        with pytest.raises(ArgumentTypeError):
             func("3")
 
-        with self.assertRaises(ArgumentTypeError):
-            func = num(int, max=11)
+        func = num(int, max=11)
+        with pytest.raises(ArgumentTypeError):
             func("12")
 
-        with self.assertRaises(ArgumentTypeError):
-            func = num(int, min=15)
+        func = num(int, min=15)
+        with pytest.raises(ArgumentTypeError):
             func("8")
 
-        with self.assertRaises(ArgumentTypeError):
-            func = num(float, 10, 20)
+        func = num(float, 10, 20)
+        with pytest.raises(ArgumentTypeError):
             func("40.222")

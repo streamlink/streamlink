@@ -44,4 +44,4 @@ class TestPluginWelt(unittest.TestCase):
             </script>
             </body></html>
         """)
-        self.assertEqual(hls_url, "https://foo.bar/baz.m3u8?qux", "Finds the correct HLS live URL")
+        assert hls_url == "https://foo.bar/baz.m3u8?qux"

@@ -260,14 +260,14 @@ class TestSession(unittest.TestCase):
     def test_options(self):
         session = self.subject()
         session.set_option("test_option", "option")
-        self.assertEqual(session.get_option("test_option"), "option")
-        self.assertEqual(session.get_option("non_existing"), None)
+        assert session.get_option("test_option") == "option"
+        assert session.get_option("non_existing") is None
 
-        self.assertEqual(session.get_plugin_option("testplugin", "a_option"), "default")
+        assert session.get_plugin_option("testplugin", "a_option") == "default"
         session.set_plugin_option("testplugin", "another_option", "test")
-        self.assertEqual(session.get_plugin_option("testplugin", "another_option"), "test")
-        self.assertEqual(session.get_plugin_option("non_existing", "non_existing"), None)
-        self.assertEqual(session.get_plugin_option("testplugin", "non_existing"), None)
+        assert session.get_plugin_option("testplugin", "another_option") == "test"
+        assert session.get_plugin_option("non_existing", "non_existing") is None
+        assert session.get_plugin_option("testplugin", "non_existing") is None
 
     def test_streams(self):
         session = self.subject()
@@ -336,9 +336,9 @@ class TestSession(unittest.TestCase):
     def test_set_and_get_locale(self):
         session = Streamlink()
         session.set_option("locale", "en_US")
-        self.assertEqual(session.localization.country.alpha2, "US")
-        self.assertEqual(session.localization.language.alpha2, "en")
-        self.assertEqual(session.localization.language_code, "en_US")
+        assert session.localization.country.alpha2 == "US"
+        assert session.localization.language.alpha2 == "en"
+        assert session.localization.language_code == "en_US"
 
     @patch("streamlink.session.HTTPSession")
     def test_interface(self, mock_httpsession):
@@ -351,19 +351,19 @@ class TestSession(unittest.TestCase):
             "foo://": adapter_foo,
         })
         session = self.subject(load_plugins=False)
-        self.assertEqual(session.get_option("interface"), None)
+        assert session.get_option("interface") is None
 
         session.set_option("interface", "my-interface")
-        self.assertEqual(adapter_http.poolmanager.connection_pool_kw, {"source_address": ("my-interface", 0)})
-        self.assertEqual(adapter_https.poolmanager.connection_pool_kw, {"source_address": ("my-interface", 0)})
-        self.assertEqual(adapter_foo.poolmanager.connection_pool_kw, {})
-        self.assertEqual(session.get_option("interface"), "my-interface")
+        assert adapter_http.poolmanager.connection_pool_kw == {"source_address": ("my-interface", 0)}
+        assert adapter_https.poolmanager.connection_pool_kw == {"source_address": ("my-interface", 0)}
+        assert adapter_foo.poolmanager.connection_pool_kw == {}
+        assert session.get_option("interface") == "my-interface"
 
         session.set_option("interface", None)
-        self.assertEqual(adapter_http.poolmanager.connection_pool_kw, {})
-        self.assertEqual(adapter_https.poolmanager.connection_pool_kw, {})
-        self.assertEqual(adapter_foo.poolmanager.connection_pool_kw, {})
-        self.assertEqual(session.get_option("interface"), None)
+        assert adapter_http.poolmanager.connection_pool_kw == {}
+        assert adapter_https.poolmanager.connection_pool_kw == {}
+        assert adapter_foo.poolmanager.connection_pool_kw == {}
+        assert session.get_option("interface") is None
 
     @patch("streamlink.session.urllib3_util_connection", allowed_gai_family=_original_allowed_gai_family)
     def test_ipv4_ipv6(self, mock_urllib3_util_connection):

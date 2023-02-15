@@ -31,10 +31,7 @@ class TestDASHStream(unittest.TestCase):
         streams = DASHStream.parse_manifest(self.session, self.test_url)
         mpdClass.assert_called_with(ANY, base_url="http://test.bar", url="http://test.bar/foo.mpd")
 
-        self.assertSequenceEqual(
-            sorted(streams.keys()),
-            sorted(["720p", "1080p"]),
-        )
+        assert sorted(streams.keys()) == sorted(["720p", "1080p"])
 
     @patch("streamlink.stream.dash.MPD")
     def test_parse_manifest_audio_only(self, mpdClass):
@@ -51,10 +48,7 @@ class TestDASHStream(unittest.TestCase):
         streams = DASHStream.parse_manifest(self.session, self.test_url)
         mpdClass.assert_called_with(ANY, base_url="http://test.bar", url="http://test.bar/foo.mpd")
 
-        self.assertSequenceEqual(
-            sorted(streams.keys()),
-            sorted(["a128k", "a256k"]),
-        )
+        assert sorted(streams.keys()) == sorted(["a128k", "a256k"])
 
     @patch("streamlink.stream.dash.MPD")
     def test_parse_manifest_audio_single(self, mpdClass):
@@ -72,10 +66,7 @@ class TestDASHStream(unittest.TestCase):
         streams = DASHStream.parse_manifest(self.session, self.test_url)
         mpdClass.assert_called_with(ANY, base_url="http://test.bar", url="http://test.bar/foo.mpd")
 
-        self.assertSequenceEqual(
-            sorted(streams.keys()),
-            sorted(["720p", "1080p"]),
-        )
+        assert sorted(streams.keys()) == sorted(["720p", "1080p"])
 
     @patch("streamlink.stream.dash.MPD")
     def test_parse_manifest_audio_multi(self, mpdClass):
@@ -94,10 +85,7 @@ class TestDASHStream(unittest.TestCase):
         streams = DASHStream.parse_manifest(self.session, self.test_url)
         mpdClass.assert_called_with(ANY, base_url="http://test.bar", url="http://test.bar/foo.mpd")
 
-        self.assertSequenceEqual(
-            sorted(streams.keys()),
-            sorted(["720p+a128k", "1080p+a128k", "720p+a256k", "1080p+a256k"]),
-        )
+        assert sorted(streams.keys()) == sorted(["720p+a128k", "1080p+a128k", "720p+a256k", "1080p+a256k"])
 
     @patch("streamlink.stream.dash.MPD")
     def test_parse_manifest_audio_multi_lang(self, mpdClass):
@@ -116,13 +104,10 @@ class TestDASHStream(unittest.TestCase):
         streams = DASHStream.parse_manifest(self.session, self.test_url)
         mpdClass.assert_called_with(ANY, base_url="http://test.bar", url="http://test.bar/foo.mpd")
 
-        self.assertSequenceEqual(
-            sorted(streams.keys()),
-            sorted(["720p", "1080p"]),
-        )
+        assert sorted(streams.keys()) == sorted(["720p", "1080p"])
 
-        self.assertEqual(streams["720p"].audio_representation.lang, "en")
-        self.assertEqual(streams["1080p"].audio_representation.lang, "en")
+        assert streams["720p"].audio_representation.lang == "en"
+        assert streams["1080p"].audio_representation.lang == "en"
 
     @patch("streamlink.stream.dash.MPD")
     def test_parse_manifest_audio_multi_lang_alpha3(self, mpdClass):
@@ -141,13 +126,10 @@ class TestDASHStream(unittest.TestCase):
         streams = DASHStream.parse_manifest(self.session, self.test_url)
         mpdClass.assert_called_with(ANY, base_url="http://test.bar", url="http://test.bar/foo.mpd")
 
-        self.assertSequenceEqual(
-            sorted(streams.keys()),
-            sorted(["720p", "1080p"]),
-        )
+        assert sorted(streams.keys()) == sorted(["720p", "1080p"])
 
-        self.assertEqual(streams["720p"].audio_representation.lang, "eng")
-        self.assertEqual(streams["1080p"].audio_representation.lang, "eng")
+        assert streams["720p"].audio_representation.lang == "eng"
+        assert streams["1080p"].audio_representation.lang == "eng"
 
     @patch("streamlink.stream.dash.MPD")
     def test_parse_manifest_audio_invalid_lang(self, mpdClass):
@@ -165,13 +147,10 @@ class TestDASHStream(unittest.TestCase):
         streams = DASHStream.parse_manifest(self.session, self.test_url)
         mpdClass.assert_called_with(ANY, base_url="http://test.bar", url="http://test.bar/foo.mpd")
 
-        self.assertSequenceEqual(
-            sorted(streams.keys()),
-            sorted(["720p", "1080p"]),
-        )
+        assert sorted(streams.keys()) == sorted(["720p", "1080p"])
 
-        self.assertEqual(streams["720p"].audio_representation.lang, "en_no_voice")
-        self.assertEqual(streams["1080p"].audio_representation.lang, "en_no_voice")
+        assert streams["720p"].audio_representation.lang == "en_no_voice"
+        assert streams["1080p"].audio_representation.lang == "en_no_voice"
 
     @patch("streamlink.stream.dash.MPD")
     def test_parse_manifest_audio_multi_lang_locale(self, mpdClass):
@@ -193,21 +172,17 @@ class TestDASHStream(unittest.TestCase):
         streams = DASHStream.parse_manifest(self.session, self.test_url)
         mpdClass.assert_called_with(ANY, base_url="http://test.bar", url="http://test.bar/foo.mpd")
 
-        self.assertSequenceEqual(
-            sorted(streams.keys()),
-            sorted(["720p", "1080p"]),
-        )
+        assert sorted(streams.keys()) == sorted(["720p", "1080p"])
 
-        self.assertEqual(streams["720p"].audio_representation.lang, "es")
-        self.assertEqual(streams["1080p"].audio_representation.lang, "es")
+        assert streams["720p"].audio_representation.lang == "es"
+        assert streams["1080p"].audio_representation.lang == "es"
 
     @patch("streamlink.stream.dash.MPD")
     def test_parse_manifest_drm(self, mpdClass):
         mpdClass.return_value = Mock(periods=[Mock(adaptationSets=[Mock(contentProtection="DRM")])])
 
-        self.assertRaises(PluginError,
-                          DASHStream.parse_manifest,
-                          self.session, self.test_url)
+        with pytest.raises(PluginError):
+            DASHStream.parse_manifest(self.session, self.test_url)
         mpdClass.assert_called_with(ANY, base_url="http://test.bar", url="http://test.bar/foo.mpd")
 
     def test_parse_manifest_string(self):
@@ -215,7 +190,7 @@ class TestDASHStream(unittest.TestCase):
             test_manifest = mpd_txt.read()
 
         streams = DASHStream.parse_manifest(self.session, test_manifest)
-        self.assertSequenceEqual(list(streams.keys()), ["2500k"])
+        assert list(streams.keys()) == ["2500k"]
 
     @patch("streamlink.stream.dash.DASHStreamReader")
     @patch("streamlink.stream.dash.FFMPEGMuxer")
@@ -237,12 +212,16 @@ class TestDASHStream(unittest.TestCase):
 
         stream.open()
 
-        self.assertSequenceEqual(reader.mock_calls, [call(stream, 1, "video/mp4"),
-                                                     call().open(),
-                                                     call(stream, 2, "audio/mp3"),
-                                                     call().open()])
-        self.assertSequenceEqual(muxer.mock_calls, [call(self.session, open_reader, open_reader, copyts=True),
-                                                    call().open()])
+        assert reader.mock_calls == [
+            call(stream, 1, "video/mp4"),
+            call().open(),
+            call(stream, 2, "audio/mp3"),
+            call().open(),
+        ]
+        assert muxer.mock_calls == [
+            call(self.session, open_reader, open_reader, copyts=True),
+            call().open(),
+        ]
 
     @patch("streamlink.stream.dash.MPD")
     def test_segments_number_time(self, mpdClass):
@@ -252,7 +231,7 @@ class TestDASHStream(unittest.TestCase):
             streams = DASHStream.parse_manifest(self.session, self.test_url)
             mpdClass.assert_called_with(ANY, base_url="http://test.bar", url="http://test.bar/foo.mpd")
 
-            self.assertSequenceEqual(list(streams.keys()), ["2500k"])
+            assert list(streams.keys()) == ["2500k"]
 
     @patch("streamlink.stream.dash.MPD")
     def test_parse_manifest_with_duplicated_resolutions(self, mpdClass):
@@ -274,10 +253,7 @@ class TestDASHStream(unittest.TestCase):
         streams = DASHStream.parse_manifest(self.session, self.test_url)
         mpdClass.assert_called_with(ANY, base_url="http://test.bar", url="http://test.bar/foo.mpd")
 
-        self.assertSequenceEqual(
-            sorted(streams.keys()),
-            sorted(["720p", "1080p", "1080p_alt", "1080p_alt2"]),
-        )
+        assert sorted(streams.keys()) == sorted(["720p", "1080p", "1080p_alt", "1080p_alt2"])
 
     @patch("streamlink.stream.dash.MPD")
     def test_parse_manifest_with_duplicated_resolutions_sorted_bandwidth(self, mpdClass):
@@ -298,9 +274,9 @@ class TestDASHStream(unittest.TestCase):
         streams = DASHStream.parse_manifest(self.session, self.test_url)
         mpdClass.assert_called_with(ANY, base_url="http://test.bar", url="http://test.bar/foo.mpd")
 
-        self.assertEqual(streams["1080p"].video_representation.bandwidth, 128.0)
-        self.assertEqual(streams["1080p_alt"].video_representation.bandwidth, 64.0)
-        self.assertEqual(streams["1080p_alt2"].video_representation.bandwidth, 32.0)
+        assert streams["1080p"].video_representation.bandwidth == pytest.approx(128.0)
+        assert streams["1080p_alt"].video_representation.bandwidth == pytest.approx(64.0)
+        assert streams["1080p_alt2"].video_representation.bandwidth == pytest.approx(32.0)
 
 
 class TestDASHStreamWorker:
