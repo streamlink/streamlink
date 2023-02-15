@@ -1,5 +1,5 @@
 import subprocess
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Type
 from unittest.mock import Mock, call, patch
 
 import pytest
@@ -175,11 +175,6 @@ class TestOpen:
     def which(self):
         with patch("streamlink.stream.ffmpegmux.which", return_value="ffmpeg") as mock:
             yield mock
-
-    @pytest.fixture(scope="class")
-    def devnull(self):
-        with patch("streamlink.stream.ffmpegmux.devnull") as mock_devnull:
-            yield mock_devnull()
 
     @pytest.fixture
     def popen(self):
@@ -403,7 +398,6 @@ class TestOpen:
         self,
         session: Streamlink,
         popen: Mock,
-        devnull: Mock,
         options: Dict,
         muxer_args: Dict,
         expected: List,
@@ -416,11 +410,10 @@ class TestOpen:
             ["ffmpeg"] + expected,
             stdin=subprocess.PIPE,
             stdout=subprocess.PIPE,
-            stderr=devnull,
+            stderr=subprocess.DEVNULL,
         )]
 
         streamio.close()
-        assert not devnull.close.called
 
     def test_stderr(self, session: Streamlink, popen: Mock):
         session.options.update({"ffmpeg-verbose": True})
@@ -433,14 +426,21 @@ class TestOpen:
             streamio.close()
             assert not mock_stderr.close.called
 
-    def test_stderr_path(self, session: Streamlink, popen: Mock):
-        session.options.update({"ffmpeg-verbose-path": "foo"})
+    @pytest.mark.parametrize("options,side_effect", [
+        pytest.param({"ffmpeg-verbose-path": "foo"}, None, id="verbose-path"),
+        pytest.param({"ffmpeg-verbose-path": "foo", "ffmpeg-verbose": True}, None, id="verbose-path priority"),
+        pytest.param({"ffmpeg-verbose-path": "foo"}, OSError, id="OSError on close"),
+    ])
+    def test_stderr_path(self, session: Streamlink, popen: Mock, options: dict, side_effect: Optional[Type[Exception]]):
+        session.options.update(options)
         with patch("streamlink.stream.ffmpegmux.Path") as mock_path:
             file: Mock = mock_path("foo").expanduser().open("w")
+            file.close.side_effect = side_effect
             streamio = FFMPEGMuxer(session)
 
             streamio.open()
             assert popen.call_args_list[0][1]["stderr"] is file
+            assert not file.close.called
 
             streamio.close()
-            assert file.close.called
+            assert file.close.called_once
