@@ -85,6 +85,8 @@ select = [
   "C4",
   # flake8-implicit-str-concat
   "ISC",
+  # flake8-pytest-style
+  "PT",
 ]
 extend-ignore = [
   "C408",  # unnecessary-collection-call
