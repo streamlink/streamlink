@@ -51,7 +51,7 @@ class TestGetLatest:
 
 class TestVersionCheck:
     @pytest.fixture(autouse=True)
-    def current(self, monkeypatch: pytest.MonkeyPatch):
+    def _current(self, monkeypatch: pytest.MonkeyPatch):
         monkeypatch.setattr("streamlink_cli.utils.versioncheck.streamlink_version", "1.0.0")
 
     @pytest.fixture()

@@ -14,13 +14,13 @@ configdir = Path(tests.resources.__path__[0], "cli", "config")
 
 
 @pytest.fixture()
-def args(request: pytest.FixtureRequest):
+def _args(request: pytest.FixtureRequest):
     with patch("streamlink_cli.main.args", Namespace(**getattr(request, "param", {}))):
         yield
 
 
 @pytest.fixture()
-def config_files(request: pytest.FixtureRequest):
+def _config_files(request: pytest.FixtureRequest):
     with patch("streamlink_cli.main.CONFIG_FILES", getattr(request, "param", [])):
         yield
 
@@ -32,7 +32,7 @@ def setup_args():
 
 
 @pytest.fixture(autouse=True)
-def session():
+def _session():
     def resolve_url(name):
         if name == "noplugin":
             raise NoPluginError()
@@ -43,7 +43,9 @@ def session():
         yield
 
 
-@pytest.mark.parametrize(("args", "config_files", "expected", "deprecations"), [
+# noinspection PyTestParametrized
+@pytest.mark.usefixtures("_args", "_config_files")
+@pytest.mark.parametrize(("_args", "_config_files", "expected", "deprecations"), [
     pytest.param(
         {
             "config": None,
@@ -210,11 +212,9 @@ def session():
         [],
         id="Multiple custom configs",
     ),
-], indirect=["args", "config_files"])
+], indirect=["_args", "_config_files"])
 def test_setup_config_args(
     recwarn: pytest.WarningsRecorder,
-    args: Namespace,
-    config_files: list,
     setup_args: Mock,
     expected: list,
     deprecations: list,

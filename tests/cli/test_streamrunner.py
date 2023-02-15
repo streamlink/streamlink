@@ -103,7 +103,7 @@ def _logging(caplog: pytest.LogCaptureFixture):
 
 
 @pytest.fixture(autouse=True)
-def isatty(request: pytest.FixtureRequest):
+def _isatty(request: pytest.FixtureRequest):
     with patch("sys.stdout.isatty", return_value=getattr(request, "param", False)):
         yield
 
@@ -563,12 +563,12 @@ class TestHTTPServer:
 
 
 @pytest.mark.parametrize(
-    ("isatty", "force_progress"),
+    ("_isatty", "force_progress"),
     [
         pytest.param(False, True, id="No TTY, force"),
         pytest.param(True, False, id="TTY, no force"),
     ],
-    indirect=["isatty"],
+    indirect=["_isatty"],
 )
 class TestHasProgress:
     @pytest.mark.parametrize(
@@ -591,7 +591,6 @@ class TestHasProgress:
     def test_no_progress(
         self,
         output: Union[FakePlayerOutput, FakeFileOutput, FakeHTTPServer],
-        isatty: bool,
         force_progress: bool,
     ):
         stream_runner = FakeStreamRunner(StreamIO(), output, force_progress)
@@ -625,7 +624,6 @@ class TestHasProgress:
     def test_has_progress(
         self,
         output: Union[FakePlayerOutput, FakeFileOutput],
-        isatty: bool,
         force_progress: bool,
         expected: Path,
     ):
