@@ -16,7 +16,7 @@ def cache_dir(tmp_path: Path):
         yield tmp_path
 
 
-@pytest.fixture
+@pytest.fixture()
 def cache(request: pytest.FixtureRequest, cache_dir: Path):
     param = getattr(request, "param", {})
     filename = param.get("filename", "cache.json")
@@ -80,7 +80,7 @@ class TestPrefix:
 
 
 class TestExpiration:
-    @pytest.mark.parametrize("expires,expected", [
+    @pytest.mark.parametrize(("expires", "expected"), [
         pytest.param(-20, None, id="past"),
         pytest.param(20, "value", id="future"),
     ])
@@ -89,7 +89,7 @@ class TestExpiration:
             cache.set("key", "value", expires=expires)
             assert cache.get("key") == expected
 
-    @pytest.mark.parametrize("delta,expected", [
+    @pytest.mark.parametrize(("delta", "expected"), [
         pytest.param(timedelta(seconds=-20), None, id="past"),
         pytest.param(timedelta(seconds=20), "value", id="future"),
     ])
@@ -112,7 +112,7 @@ class TestExpiration:
 
 
 class TestIO:
-    @pytest.mark.parametrize("mockpath,side_effect", [
+    @pytest.mark.parametrize(("mockpath", "side_effect"), [
         ("pathlib.Path.open", OSError),
         ("json.load", JSONDecodeError),
     ])

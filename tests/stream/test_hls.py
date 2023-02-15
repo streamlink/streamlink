@@ -680,7 +680,7 @@ class TestHlsExtAudio(unittest.TestCase):
 
 
 class TestM3U8ParserLogging:
-    @pytest.mark.parametrize("loglevel,has_logs", [("trace", False), ("all", True)])
+    @pytest.mark.parametrize(("loglevel", "has_logs"), [("trace", False), ("all", True)])
     def test_log(self, caplog: pytest.LogCaptureFixture, loglevel: str, has_logs: bool):
         caplog.set_level(loglevel, "streamlink")
 

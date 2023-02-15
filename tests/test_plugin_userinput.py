@@ -15,15 +15,15 @@ def test_session():
 
 
 class TestPluginUserInput:
-    @pytest.fixture
+    @pytest.fixture()
     def session(self):
         return Streamlink()
 
-    @pytest.fixture
+    @pytest.fixture()
     def testplugin(self, session: Streamlink):
         return _TestPlugin(session, "http://example.com/stream")
 
-    @pytest.fixture
+    @pytest.fixture()
     def console_input(self, request, session: Streamlink):
         isatty: bool = request.param
         with patch("streamlink_cli.console.sys.stdin.isatty", return_value=isatty):

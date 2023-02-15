@@ -7,7 +7,7 @@ from streamlink_cli.output import PlayerOutput
 from tests import posix_only, windows_only
 
 
-@pytest.fixture
+@pytest.fixture()
 def playeroutput(request: pytest.FixtureRequest):
     playeroutput = PlayerOutput(**getattr(request, "param", {}))
     yield playeroutput
@@ -16,7 +16,7 @@ def playeroutput(request: pytest.FixtureRequest):
             stream.close()
 
 
-@pytest.fixture
+@pytest.fixture()
 def mock_popen(playeroutput: PlayerOutput):
     mock_popen = Mock(return_value=Mock(poll=Mock(side_effect=Mock(return_value=None))))
     with patch("streamlink_cli.output.sleep"), \
@@ -24,7 +24,7 @@ def mock_popen(playeroutput: PlayerOutput):
         yield mock_popen
 
 
-@pytest.mark.parametrize("playeroutput,expected", [
+@pytest.mark.parametrize(("playeroutput", "expected"), [
     pytest.param(
         dict(cmd="mpv", title="foo bar"),
         ["mpv", "--force-media-title=foo bar", "-"],
@@ -57,7 +57,7 @@ def test_playeroutput(mock_popen: Mock, playeroutput: PlayerOutput, expected):
     ]
 
 
-@pytest.mark.parametrize("playeroutput,expected", [
+@pytest.mark.parametrize(("playeroutput", "expected"), [
     pytest.param(
         dict(cmd="foo"),
         ["foo", "-"],

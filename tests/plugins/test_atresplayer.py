@@ -18,7 +18,7 @@ class TestPluginCanHandleUrlAtresPlayer(PluginCanHandleUrl):
 
 
 class TestAtresPlayer:
-    @pytest.mark.parametrize("url,expected", [
+    @pytest.mark.parametrize(("url", "expected"), [
         ("http://www.atresplayer.com/directos/antena3", "https://www.atresplayer.com/directos/antena3/"),
         ("http://www.atresplayer.com/directos/antena3/", "https://www.atresplayer.com/directos/antena3/"),
         ("https://www.atresplayer.com/directos/antena3", "https://www.atresplayer.com/directos/antena3/"),

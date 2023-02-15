@@ -81,7 +81,7 @@ class TestPluginCanHandleUrlYouTube(PluginCanHandleUrl):
     ]
 
 
-@pytest.mark.parametrize("url,expected", [
+@pytest.mark.parametrize(("url", "expected"), [
     ("http://gaming.youtube.com/watch?v=0123456789A", "https://www.youtube.com/watch?v=0123456789A"),
     ("http://youtu.be/0123456789A", "https://www.youtube.com/watch?v=0123456789A"),
     ("http://youtube.com/embed/0123456789A", "https://www.youtube.com/watch?v=0123456789A"),

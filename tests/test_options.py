@@ -63,7 +63,7 @@ class TestMappedOptions:
             "baz": _set_add,
         }
 
-    @pytest.fixture
+    @pytest.fixture()
     def options(self):
         return self.MappedOptions({"foo-bar": 123, "baz": 100})
 

@@ -5,7 +5,7 @@ import pytest
 from streamlink.utils.url import absolute_url, prepend_www, update_qsd, update_scheme, url_concat, url_equal
 
 
-@pytest.mark.parametrize("baseurl,url,expected", [
+@pytest.mark.parametrize(("baseurl", "url", "expected"), [
     ("http://test.se", "/test", "http://test.se/test"),
     ("http://test.se", "http/test.se/test", "http://test.se/http/test.se/test"),
     ("http://test.se", "http://test2.se/test", "http://test2.se/test"),
@@ -14,7 +14,7 @@ def test_absolute_url(baseurl, url, expected):
     assert expected == absolute_url(baseurl, url)
 
 
-@pytest.mark.parametrize("url,expected", [
+@pytest.mark.parametrize(("url", "expected"), [
     ("http://test.se/test", "http://www.test.se/test"),
     ("http://www.test.se", "http://www.test.se"),
 ])
@@ -22,7 +22,7 @@ def test_prepend_www(url, expected):
     assert expected == prepend_www(url)
 
 
-@pytest.mark.parametrize("assertion,args,expected", [
+@pytest.mark.parametrize(("assertion", "args", "expected"), [
     ("current scheme overrides target scheme (https)",
      ("https://other.com/bar", "http://example.com/foo"),
      "https://example.com/foo"),

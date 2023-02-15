@@ -13,12 +13,12 @@ from streamlink import logger
 from streamlink.exceptions import StreamlinkDeprecationWarning, StreamlinkWarning
 
 
-@pytest.fixture
+@pytest.fixture()
 def output():
     return StringIO()
 
 
-@pytest.fixture
+@pytest.fixture()
 def log(request, output: StringIO):
     params = getattr(request, "param", {})
     params.setdefault("format", "[{name}][{levelname}] {message}")
@@ -31,7 +31,7 @@ def log(request, output: StringIO):
 
 
 class TestLogging:
-    @pytest.fixture
+    @pytest.fixture()
     def log_failure(self, request, log: logging.Logger, output: StringIO):
         params = getattr(request, "param", {})
         root = logging.getLogger("streamlink")
@@ -40,7 +40,7 @@ class TestLogging:
                 logger.basicConfig(stream=output, **params)
         return cm.value
 
-    @pytest.mark.parametrize("name,level", [
+    @pytest.mark.parametrize(("name", "level"), [
         ("none", logger.NONE),
         ("critical", logger.CRITICAL),
         ("error", logger.ERROR),
@@ -87,7 +87,7 @@ class TestLogging:
         log.debug("test")
         assert output.getvalue() == "[test][debug] test\n"
 
-    @pytest.mark.parametrize("loglevel,calllevel,expected", [
+    @pytest.mark.parametrize(("loglevel", "calllevel", "expected"), [
         (logger.DEBUG, logger.TRACE, ""),
         (logger.TRACE, logger.TRACE, "[test][trace] test\n"),
         (logger.TRACE, logger.DEBUG, "[test][debug] test\n"),
@@ -101,7 +101,7 @@ class TestLogging:
         assert output.getvalue() == expected
 
     # https://github.com/streamlink/streamlink/issues/4862
-    @pytest.mark.parametrize("level,levelname", [
+    @pytest.mark.parametrize(("level", "levelname"), [
         (logger.TRACE, "trace"),
         (logger.ALL, "all"),
     ])
@@ -115,7 +115,7 @@ class TestLogging:
             ("test_logger", levelname, "bar"),
         ]
 
-    @pytest.mark.parametrize("level,expected", [
+    @pytest.mark.parametrize(("level", "expected"), [
         (logger.DEBUG, ""),
         (logger.INFO, "[test][info] foo\n[test][info] bar\n"),
     ])
@@ -181,7 +181,7 @@ class TestCaptureWarnings:
         assert output.getvalue() == ""
 
     @pytest.mark.parametrize("log", [{"capture_warnings": True}], indirect=["log"])
-    @pytest.mark.parametrize("warning,expected,origin", [
+    @pytest.mark.parametrize(("warning", "expected", "origin"), [
         (("Test warning", UserWarning), "[warnings][userwarning] Test warning\n", True),
         (("Test warning", DeprecationWarning), "[warnings][deprecationwarning] Test warning\n", True),
         (("Test warning", FutureWarning), "[warnings][futurewarning] Test warning\n", True),

@@ -20,7 +20,7 @@ class TestProgressFormatter:
             path=lambda *_: "PATH",
         )
 
-    @pytest.mark.parametrize("term_width,expected", [
+    @pytest.mark.parametrize(("term_width", "expected"), [
         (99, "[download] Written WRITTEN to PATH (ELAPSED @ SPEED)"),
         (63, "[download] Written WRITTEN to PATH (ELAPSED @ SPEED)"),
         (62, "[download] Written WRITTEN (ELAPSED @ SPEED)"),
@@ -36,7 +36,7 @@ class TestProgressFormatter:
         with patch("streamlink_cli.utils.progress.ProgressFormatter.term_width", lambda: term_width):
             assert ProgressFormatter.format(ProgressFormatter.FORMATS, params) == expected
 
-    @pytest.mark.parametrize("term_width,expected", [
+    @pytest.mark.parametrize(("term_width", "expected"), [
         (99, "[download] Written WRITTEN to PATH (ELAPSED)"),
         (55, "[download] Written WRITTEN to PATH (ELAPSED)"),
         (54, "[download] Written WRITTEN (ELAPSED)"),
@@ -60,7 +60,7 @@ class TestProgressFormatter:
             params["path"] = Mock(side_effect=ValueError("fail"))
             assert ProgressFormatter.format(ProgressFormatter.FORMATS, params) == "[download] Written WRITTEN (ELAPSED @ SPEED)"
 
-    @pytest.mark.parametrize("size,expected", [
+    @pytest.mark.parametrize(("size", "expected"), [
         (0, "0 bytes"),
         (2**10 - 1, "1023 bytes"),
         (2**10, "1.00 KiB"),
@@ -78,7 +78,7 @@ class TestProgressFormatter:
         assert ProgressFormatter.format_filesize(float(size)) == expected
         assert ProgressFormatter.format_filesize(size, "/s") == f"{expected}/s"
 
-    @pytest.mark.parametrize("elapsed,expected", [
+    @pytest.mark.parametrize(("elapsed", "expected"), [
         (-1, "0s"),
         (0, "0s"),
         (9, "9s"),
@@ -106,7 +106,7 @@ class TestProgressFormatter:
     _path_windows_rel = PureWindowsPath("foobar\\baz\\some file name")
     _path_windows_unc = PureWindowsPath("\\\\?\\foobar\\baz\\some file name")
 
-    @pytest.mark.parametrize("path,max_width,expected", [
+    @pytest.mark.parametrize(("path", "max_width", "expected"), [
         pytest.param(_path_posix, 26, "/foobar/baz/some file name", id="posix - full path"),
         pytest.param(_path_posix, 25, "…oobar/baz/some file name", id="posix - truncated by 1"),
         pytest.param(_path_posix, 24, "…obar/baz/some file name", id="posix - truncated by 2"),
@@ -151,7 +151,7 @@ class TestProgressFormatter:
 
 
 class TestWidth:
-    @pytest.mark.parametrize("chars,expected", [
+    @pytest.mark.parametrize(("chars", "expected"), [
         ("ABCDEFGHIJ", 10),
         ("A你好世界こんにちは안녕하세요B", 30),
         ("·「」『』【】-=！@#￥%……&×（）", 30),
@@ -159,7 +159,7 @@ class TestWidth:
     def test_width(self, chars, expected):
         assert ProgressFormatter.width(chars) == expected
 
-    @pytest.mark.parametrize("prefix,max_len,expected", [
+    @pytest.mark.parametrize(("prefix", "max_len", "expected"), [
         ("你好世界こんにちは안녕하세요CD", 10, "녕하세요CD"),
         ("你好世界こんにちは안녕하세요CD", 9, "하세요CD"),
         ("你好世界こんにちは안녕하세요CD", 23, "こんにちは안녕하세요CD"),
@@ -175,13 +175,13 @@ class TestPrint:
             mock_get_terminal_size.return_value = Mock(columns=10)
             yield
 
-    @pytest.fixture
+    @pytest.fixture()
     def stream(self):
         return StringIO()
 
-    @pytest.fixture
+    @pytest.fixture()
     def progress(self, stream: StringIO):
-        yield Progress(stream, Mock())
+        return Progress(stream, Mock())
 
     @posix_only
     def test_print_posix(self, progress: Progress, stream: StringIO):

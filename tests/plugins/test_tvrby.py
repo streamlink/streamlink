@@ -18,7 +18,7 @@ class TestPluginCanHandleUrlTVRBy(PluginCanHandleUrl):
 
 
 class TestPluginTVRBy:
-    @pytest.mark.parametrize("url,expected", [
+    @pytest.mark.parametrize(("url", "expected"), [
         (
             "http://www.tvr.by/televidenie/belarus-1/",
             "http://www.tvr.by/televidenie/belarus-1/",

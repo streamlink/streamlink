@@ -108,7 +108,7 @@ def isatty(request: pytest.FixtureRequest):
         yield
 
 
-@pytest.fixture
+@pytest.fixture()
 def stream():
     stream = FakeStream()
     yield stream
@@ -116,7 +116,7 @@ def stream():
 
 
 # "stream_runner" fixture dependency declared in downstream scopes
-@pytest.fixture
+@pytest.fixture()
 def runnerthread(request: pytest.FixtureRequest, stream_runner: StreamRunner):
     class RunnerThread(Thread):
         exception = None
@@ -160,14 +160,14 @@ def assert_thread_termination(thread: Thread, assertion: str):
 
 
 class TestPlayerOutput:
-    @pytest.fixture
+    @pytest.fixture()
     def player_process(self):
         player_process = Mock()
         player_process.poll = Mock(return_value=None)
 
         return player_process
 
-    @pytest.fixture
+    @pytest.fixture()
     def output(self, player_process: Mock):
         with patch("subprocess.Popen") as mock_popen, \
              patch("streamlink_cli.output.sleep"):
@@ -176,7 +176,7 @@ class TestPlayerOutput:
             output.open()
             yield output
 
-    @pytest.fixture
+    @pytest.fixture()
     def stream_runner(self, stream: FakeStream, output: FakePlayerOutput):
         with patch("streamlink_cli.streamrunner.PlayerPollThread", EventedPlayerPollThread):
             stream_runner = StreamRunner(stream, output)
@@ -187,7 +187,7 @@ class TestPlayerOutput:
             yield stream_runner
             assert not stream_runner.playerpoller.is_alive()
 
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio()
     async def test_read_write(
         self,
         caplog: pytest.LogCaptureFixture,
@@ -229,7 +229,7 @@ class TestPlayerOutput:
             ("streamrunner", "info", "Stream ended"),
         ]
 
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio()
     async def test_paused(
         self,
         caplog: pytest.LogCaptureFixture,
@@ -283,9 +283,9 @@ class TestPlayerOutput:
             ("streamrunner", "info", "Stream ended"),
         ]
 
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio()
     @pytest.mark.parametrize(
-        "writeerror,runnerthread",
+        ("writeerror", "runnerthread"),
         [
             pytest.param(
                 OSError(errno.EPIPE, "Broken pipe"),
@@ -359,7 +359,7 @@ class TestPlayerOutput:
             ("streamrunner", "info", "Stream ended"),
         ]
 
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio()
     async def test_player_close_paused(
         self,
         caplog: pytest.LogCaptureFixture,
@@ -414,7 +414,7 @@ class TestPlayerOutput:
             ("streamrunner", "info", "Stream ended"),
         ]
 
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio()
     @pytest.mark.parametrize(
         "runnerthread",
         [{"exception": OSError("Error when reading from stream: Read timeout, exiting")}],
@@ -457,19 +457,19 @@ class TestPlayerOutput:
 
 
 class TestHTTPServer:
-    @pytest.fixture
+    @pytest.fixture()
     def output(self):
         return FakeHTTPServer()
 
-    @pytest.fixture
+    @pytest.fixture()
     def stream_runner(self, stream: FakeStream, output: FakeHTTPServer):
         stream_runner = StreamRunner(stream, output)
         assert not stream_runner.playerpoller
         assert not stream_runner.progress
         assert stream_runner.is_http
-        yield stream_runner
+        return stream_runner
 
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio()
     async def test_read_write(
         self,
         caplog: pytest.LogCaptureFixture,
@@ -508,7 +508,7 @@ class TestHTTPServer:
         ]
 
     @pytest.mark.parametrize(
-        "writeerror,logs,runnerthread",
+        ("writeerror", "logs", "runnerthread"),
         [
             pytest.param(
                 OSError(errno.EPIPE, "Broken pipe"),
@@ -563,7 +563,7 @@ class TestHTTPServer:
 
 
 @pytest.mark.parametrize(
-    "isatty,force_progress",
+    ("isatty", "force_progress"),
     [
         pytest.param(False, True, id="No TTY, force"),
         pytest.param(True, False, id="TTY, no force"),
@@ -598,7 +598,7 @@ class TestHasProgress:
         assert not stream_runner.progress
 
     @pytest.mark.parametrize(
-        "output,expected",
+        ("output", "expected"),
         [
             pytest.param(
                 FakePlayerOutput("mocked", record=FakeFileOutput(Path("record"))),
@@ -637,11 +637,11 @@ class TestHasProgress:
 
 
 class TestProgress:
-    @pytest.fixture
+    @pytest.fixture()
     def output(self):
-        yield FakeFileOutput(Path("filename"))
+        return FakeFileOutput(Path("filename"))
 
-    @pytest.fixture
+    @pytest.fixture()
     def stream_runner(self, stream: FakeStream, output: FakeFileOutput):
         with patch("streamlink_cli.streamrunner.Progress", FakeProgress):
             stream_runner = FakeStreamRunner(stream, output, True)
@@ -653,7 +653,7 @@ class TestProgress:
             yield stream_runner
             assert not stream_runner.progress.is_alive()
 
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio()
     async def test_read_write(
         self,
         caplog: pytest.LogCaptureFixture,

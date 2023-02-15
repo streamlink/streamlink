@@ -109,7 +109,7 @@ class PluginCanHandleUrl:
 
     # ---- misc fixtures
 
-    @pytest.fixture
+    @pytest.fixture()
     def classnames(self):
         yield _plugin_can_handle_url_classnames
         _plugin_can_handle_url_classnames.add(self.__class__.__name__)

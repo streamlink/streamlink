@@ -13,19 +13,19 @@ from streamlink_cli.main import setup_config_args
 configdir = Path(tests.resources.__path__[0], "cli", "config")
 
 
-@pytest.fixture
+@pytest.fixture()
 def args(request: pytest.FixtureRequest):
     with patch("streamlink_cli.main.args", Namespace(**getattr(request, "param", {}))):
         yield
 
 
-@pytest.fixture
+@pytest.fixture()
 def config_files(request: pytest.FixtureRequest):
     with patch("streamlink_cli.main.CONFIG_FILES", getattr(request, "param", [])):
         yield
 
 
-@pytest.fixture
+@pytest.fixture()
 def setup_args():
     with patch("streamlink_cli.main.setup_args") as mock_setup_args:
         yield mock_setup_args
@@ -43,7 +43,7 @@ def session():
         yield
 
 
-@pytest.mark.parametrize("args,config_files,expected,deprecations", [
+@pytest.mark.parametrize(("args", "config_files", "expected", "deprecations"), [
     pytest.param(
         {
             "config": None,
