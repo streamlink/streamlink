@@ -32,6 +32,7 @@ build-file = "streamlink/_version.py"
 [tool.pytest.ini_options]
 filterwarnings = [
   "always",
+  "ignore:.*pkg_resources\\.declare_namespace.*:DeprecationWarning",
 ]
 
 
