@@ -132,7 +132,7 @@ class TestRingBuffer:
         assert buffer.length == 0
 
     def test_read_timeout(self, buffer: RingBuffer):
-        with pytest.raises(IOError):
+        with pytest.raises(OSError, match=r"^Read timeout$"):
             buffer.read(timeout=0)
 
     def test_read_after_close(self, buffer: RingBuffer):

@@ -35,8 +35,8 @@ class TestLogging:
     def log_failure(self, request, log: logging.Logger, output: StringIO):
         params = getattr(request, "param", {})
         root = logging.getLogger("streamlink")
-        with pytest.raises(Exception) as cm:
-            with patch("streamlink.logger.root", root):
+        with patch("streamlink.logger.root", root):
+            with pytest.raises(Exception) as cm:  # noqa: PT011
                 logger.basicConfig(stream=output, **params)
         return cm.value
 

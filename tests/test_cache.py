@@ -128,8 +128,8 @@ class TestIO:
         ValueError,
     ])
     def test_save_fail_jsondump(self, cache: Cache, side_effect: Type[Exception]):
-        with pytest.raises(side_effect):
-            with patch("json.dump", side_effect=side_effect):
+        with patch("json.dump", side_effect=side_effect):
+            with pytest.raises(side_effect):
                 cache.set("key", "value")
         assert not cache.filename.exists()
 
