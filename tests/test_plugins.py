@@ -74,7 +74,8 @@ class TestPlugins:
 
     def test_matchers(self, plugin):
         pluginclass = plugin.__plugin__
-        assert isinstance(pluginclass.matchers, list) and len(pluginclass.matchers) > 0, "Has at least one matcher"
+        assert isinstance(pluginclass.matchers, list), "Has at a matchers list"
+        assert len(pluginclass.matchers) > 0, "Has at least one matcher"
         assert all(isinstance(matcher, Matcher) for matcher in pluginclass.matchers), "Only has valid matchers"
 
     def test_plugin_api(self, plugin):

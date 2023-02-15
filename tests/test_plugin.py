@@ -114,12 +114,11 @@ class TestPluginMatcher:
 
     # noinspection PyUnusedLocal
     def test_named_duplicate(self):
-        with pytest.raises(ValueError) as cm:
+        with pytest.raises(ValueError, match=r"^A matcher named 'foo' has already been registered$"):
             @pluginmatcher(re.compile("http://foo"), name="foo")
             @pluginmatcher(re.compile("http://foo"), name="foo")
             class MyPlugin(FakePlugin):
                 pass
-        assert str(cm.value) == "A matcher named 'foo' has already been registered"
 
     def test_no_matchers(self):
         class MyPlugin(FakePlugin):
@@ -238,8 +237,9 @@ class TestPluginArguments:
         assert tuple(arg.name for arg in MixedPlugin.arguments) == ("qux", "foo", "bar", "baz")
 
     def test_decorator_typerror(self):
-        with pytest.raises(TypeError) as cm:
-            with patch("builtins.repr", Mock(side_effect=lambda obj: obj.__name__)):
+        with patch("builtins.repr", Mock(side_effect=lambda obj: obj.__name__)):
+            with pytest.raises(TypeError) as cm:
+                # noinspection PyUnusedLocal
                 @pluginargument("foo")
                 class Foo:
                     pass

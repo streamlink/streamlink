@@ -215,7 +215,7 @@ async def test_onoutput_exception(event_loop: asyncio.BaseEventLoop, processoutp
     error = ValueError("error")
     processoutput.onstdout = Mock(side_effect=error)
 
-    with pytest.raises(ValueError) as cm:
+    with pytest.raises(ValueError) as cm:  # noqa: PT011
         await processoutput._run()
 
     assert cm.value is error
