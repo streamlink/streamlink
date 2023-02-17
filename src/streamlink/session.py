@@ -301,7 +301,7 @@ class Streamlink:
               - ``dict[str, str] | str``
               - ``{}``
               - A ``dict`` or an ampersand ``&`` delimited ``str`` of query string parameters to add to each HTTP/HTTPS request,
-                e.g. ``foo=bar;baz=qux``
+                e.g. ``foo=bar&baz=qux``
             * - http-trust-env
               - ``bool``
               - ``True``
@@ -354,12 +354,12 @@ class Streamlink:
             * - hls-live-restart
               - ``bool``
               - ``False``
-              - Skip to the beginning of an HLS live stream, or as far back as possible
+              - Skip to the beginning of a live HLS stream, or as far back as possible
             * - hls-start-offset
               - ``float``
               - ``0.0``
               - Number of seconds to skip from the beginning of the HLS stream,
-                interpreted as a negative offset for live streams
+                interpreted as a negative offset for livestreams
             * - hls-duration
               - ``float | None``
               - ``None``
@@ -374,7 +374,7 @@ class Streamlink:
               - Override the HLS playlist reload time, either in seconds (``float``) or as a ``str`` keyword:
 
                 - ``segment``: duration of the last segment
-                - ``live-edge``: sum of segment durations of the live edge value minus one
+                - ``live-edge``: sum of segment durations of the ``hls-live-edge`` value minus one
                 - ``default``: the playlist's target duration
             * - hls-segment-stream-data
               - ``bool``
@@ -445,11 +445,11 @@ class Streamlink:
               - ``False``
               - Append FFmpeg's stderr stream to the Python's stderr stream
             * - ffmpeg-verbose-path
-              - ``str``
+              - ``str | None``
               - ``None``
               - Write FFmpeg's stderr stream to the filesystem at the specified path
             * - ffmpeg-fout
-              - ``str``
+              - ``str | None``
               - ``None``
               - Set the output format of muxed streams, e.g. ``"matroska"``
             * - ffmpeg-video-transcode
