@@ -2,12 +2,53 @@
 
   <br />
 
-.. |icon-download| raw:: html
-
-  <i class="fa fa-download"></i>
-
 Installation
 ============
+
+.. sphinx-design currently doesn't support autosectionlabel, so set labels for the following sections explicitly
+
+.. grid:: 4
+    :padding: 0
+    :class-container: installation-grid
+
+    .. grid-item-card::
+        :link: windows
+        :link-type: ref
+        :link-alt: Windows
+        :padding: 3
+        :text-align: center
+
+        :fab:`windows`
+
+    .. grid-item-card::
+        :link: macos
+        :link-type: ref
+        :link-alt: macOS
+        :padding: 3
+        :text-align: center
+
+        :fab:`apple`
+
+    .. grid-item-card::
+        :link: linux-and-bsd
+        :link-type: ref
+        :link-alt: Linux and BSD
+        :padding: 3
+        :text-align: center
+
+        :fab:`linux`
+
+    .. grid-item-card::
+        :link: pypi-package-and-source-code
+        :link-type: ref
+        :link-alt: PyPI package and source code
+        :padding: 3
+        :text-align: center
+
+        :fab:`python`
+
+
+.. _windows:
 
 Windows
 -------
@@ -21,7 +62,7 @@ Installers                           See the `Windows binaries`_ section below
 
 Portable                             See the `Windows binaries`_ section below
 
-Nightly builds                       See the `Windows nightly builds`_ section below
+Nightly builds                       See the `Windows binaries`_ section below
 
 Python pip                           See the `PyPI package and source code`_ section below
 
@@ -52,6 +93,9 @@ Python pip                           See the `PyPI package and source code`_ sec
 .. _Installing Scoop packages: https://scoop.sh
 .. _Installing Winget packages: https://docs.microsoft.com/en-us/windows/package-manager/
 
+
+.. _macos:
+
 macOS
 -----
 
@@ -73,6 +117,8 @@ Python pip                           See the `PyPI package and source code`_ sec
 .. _Installing Homebrew packages: https://brew.sh
 
 
+.. _linux-and-bsd:
+
 Linux and BSD
 -------------
 
@@ -81,9 +127,9 @@ Linux and BSD
 ==================================== ===========================================
 Distribution                         Installing
 ==================================== ===========================================
-AppImage                             See the `AppImages`_ section below
+AppImage                             See the `Linux AppImages`_ section below
 
-AppImage nightly builds              See the `AppImage nightly builds`_ section below
+AppImage nightly builds              See the `Linux AppImages`_ section below
 
 Python pip                           See the `PyPI package and source code`_ section below
 
@@ -193,23 +239,25 @@ Package availability
 Packaging is not done by the Streamlink maintainers themselves except for
 the `PyPI package <PyPI package and source code_>`_,
 the `Windows installers + portable builds <Windows binaries_>`_,
-and the `Linux AppImages <AppImages_>`_.
+and the `Linux AppImages <Linux AppImages_>`_.
 
 If a packaged release of Streamlink is not available for your operating system / distro or your system's architecture,
 or if it's out of date or broken, then please contact the respective package maintainers or package-repository maintainers
 of your operating system / distro, as it's up to them to add, update, or fix those packages.
 
-Users of glibc-based Linux distros can find up-to-date Streamlink releases via the available `AppImages`_.
+Users of glibc-based Linux distros can find up-to-date Streamlink releases via the available `AppImages <Linux AppImages>`_.
 
 Please open an issue or pull request on GitHub if an **available**, **maintained** and **up-to-date** package is missing
 from the install docs.
 
 
+.. _pypi-package-and-source-code:
+
 PyPI package and source code
 ----------------------------
 
 If a package is not available on your platform, or if it's out of date,
-Streamlink can be installed via `pip`_, the Python package manager.
+then Streamlink can be installed via `pip`_, the Python package manager.
 
 Before running :command:`pip`, make sure that it's the Python 3 version of `pip`_ (to check, run :command:`pip --version`).
 On some systems, this isn't the case by default and an alternative, like :command:`pip3` for example, needs to be run instead.
@@ -220,8 +268,8 @@ On some systems, this isn't the case by default and an alternative, like :comman
     only for the current user** (see the ``--user`` parameter below), since system-wide packages can cause conflicts with
     the system's regular package manager.
 
-    Those user-packages will be installed into ``~/.local`` instead of ``/usr`` and entry-scripts for
-    running the programs can be found in ``~/.local/bin``, eg. ``~/.local/bin/streamlink``.
+    Those user-packages will be installed into ``~/.local`` instead of ``/usr``, and entry-scripts for
+    running the programs can be found in ``~/.local/bin``, e.g. ``~/.local/bin/streamlink``.
 
     In order for the command line shell to be able to find these executables, the user's ``PATH`` environment variable
     needs to be extended. This can be done by adding ``export PATH="${HOME}/.local/bin:${PATH}"``
@@ -234,21 +282,21 @@ Version                              Installing
 ==================================== ===========================================
 `Latest release`_                    .. code-block:: bash
 
-                                        pip install --user --upgrade streamlink
+                                         pip install --user -U streamlink
 
 `Master branch`_                     .. code-block:: bash
 
-                                        pip install --user --upgrade git+https://github.com/streamlink/streamlink.git
+                                         pip install --user -U git+https://github.com/streamlink/streamlink.git
 
-`Specific tag/branch or commit`_     .. code-block:: bash
+`Specific tag/branch/commit`_        .. code-block:: bash
 
-                                        pip install --user --upgrade git+https://github.com/USERNAME/streamlink.git@BRANCH-OR-COMMIT
+                                         pip install --user -U git+https://github.com/USERNAME/streamlink.git@REVISION
 ==================================== ===========================================
 
 .. _pip: https://pip.pypa.io/en/stable/
 .. _Latest release: https://pypi.python.org/pypi/streamlink
 .. _Master branch: https://github.com/streamlink/streamlink/commits/master
-.. _Specific tag/branch or commit: https://pip.pypa.io/en/stable/reference/pip_install/#git
+.. _Specific tag/branch/commit: https://pip.pypa.io/en/stable/reference/pip_install/#git
 
 Virtual environment
 -------------------
@@ -303,7 +351,7 @@ install it first, either with a system package manager, or using ``pip``, as det
 .. _pipx: https://pypa.github.io/pipx/
 
 Dependencies
-^^^^^^^^^^^^
+------------
 
 To install Streamlink from source you will need these dependencies.
 
@@ -364,103 +412,211 @@ optional  `FFmpeg`_                 Required for `muxing`_ multiple video/audio/
 Windows binaries
 ----------------
 
-Windows installers and portable archives for Streamlink are built at `streamlink/windows-builds`_,
-with support for different architectures and different Python versions.
+.. grid:: 2
+    :padding: 0
+    :class-container: grid-with-icons
 
-These installers and portable archives contain:
+    .. grid-item-card::
+        :padding: 3
+        :link: https://github.com/streamlink/windows-builds/releases
+        :link-alt: Windows stable releases
+        :text-align: center
 
-- an embedded Python version, built at `streamlink/python-windows-embed`_
-- Streamlink and its dependencies
-- FFmpeg, required for muxing streams, built at `streamlink/FFmpeg-Builds`_
+        **Windows stable releases**
+        ^^^
+        :fas:`download` GitHub releases page
 
-and they are available in the following flavors:
+        The most recent Streamlink release
 
-- Latest Python - x86_64 (64 bit) - recommended
-- Latest Python - x86 (32 bit)
-- Python 3.8 - x86_64 (64 bit) - for Windows 7
-- Python 3.8 - x86 (32 bit) - for Windows 7
+    .. grid-item-card::
+        :padding: 3
+        :link: https://github.com/streamlink/windows-builds/actions?query=event%3Aschedule+is%3Asuccess+branch%3Amaster
+        :link-alt: Windows nightly builds
+        :text-align: center
+
+        **Windows nightly builds**
+        ^^^
+        :fas:`download` GitHub actions build artifacts
+
+        Built once each day at midnight UTC |br| :sub:`GitHub account required`
+
+**Flavors**
+
+.. list-table::
+    :header-rows: 2
+    :stub-columns: 1
+    :width: 100%
+
+    * -
+      - Installer
+      -
+      - Portable
+      -
+    * -
+      - 64 bit
+      - 32 bit
+      - 64 bit
+      - 32 bit
+    * - Latest Python
+      - :bdg-link-success-line:`Windows 10+ <https://github.com/streamlink/windows-builds/releases>`
+      - :bdg-link-primary-line:`Windows 10+ <https://github.com/streamlink/windows-builds/releases>`
+      - :bdg-link-success-line:`Windows 10+ <https://github.com/streamlink/windows-builds/releases>`
+      - :bdg-link-primary-line:`Windows 10+ <https://github.com/streamlink/windows-builds/releases>`
+    * - Python 3.8
+      - :bdg-link-secondary-line:`Windows 7 <https://github.com/streamlink/windows-builds/releases>`
+      - :bdg-link-secondary-line:`Windows 7 <https://github.com/streamlink/windows-builds/releases>`
+      - :bdg-link-secondary-line:`Windows 7 <https://github.com/streamlink/windows-builds/releases>`
+      - :bdg-link-secondary-line:`Windows 7 <https://github.com/streamlink/windows-builds/releases>`
+
+**Contents**
+
+.. grid:: 3
+    :padding: 0
+    :class-container: grid-with-images
+
+    .. grid-item-card::
+        :padding: 3
+        :link: https://github.com/streamlink/python-windows-embed
+        :link-alt: Embedded Python build
+        :text-align: center
+
+        .. image:: _static/icon-python.svg
+            :alt: Python
+
+        Python |br| :sub:`embedded build`
+
+    .. grid-item-card::
+        :padding: 3
+        :link: https://github.com/streamlink/streamlink
+        :link-alt: Streamlink and its runtime dependencies
+        :text-align: center
+
+        .. image:: _static/icon.svg
+            :alt: Streamlink
+
+        Streamlink |br| :sub:`and dependencies`
+
+    .. grid-item-card::
+        :padding: 3
+        :link: https://github.com/streamlink/FFmpeg-Builds
+        :link-alt: FFmpeg, required for muxing streams
+        :text-align: center
+
+        .. image:: _static/icon-ffmpeg.svg
+            :alt: FFmpeg
+
+        FFmpeg |br| :sub:`for muxing streams`
 
 .. note::
 
    The installers automatically create a :ref:`config file <cli/config:Configuration file>` if it doesn't exist yet and set the
    value of the :option:`--ffmpeg-ffmpeg` CLI parameter to the path of the included FFmpeg binary. The portable archives
-   can't do that, and users need to do that themselves.
+   can't do that, and users need to create or update the config file themselves.
 
-   Please see the README of the `streamlink/windows-builds`_ repository for further information.
-
-Windows stable builds
-^^^^^^^^^^^^^^^^^^^^^
-
-|icon-download| `streamlink/windows-builds releases page <windows-stable_>`_
-
-Windows nightly builds
-^^^^^^^^^^^^^^^^^^^^^^
-
-|icon-download| `streamlink/windows-builds nightly builds artifacts <windows-nightly_>`_
-
-Built once each day at midnight UTC from Streamlink's `master branch <streamlink-master_>`_. |br|
-This includes the most recent changes, but is not considered "stable". |br|
-A GitHub account is required in order to access build artifacts.
+   :fas:`triangle-exclamation` Please see the README of the `streamlink/windows-builds`_ repository for more information
+   about the differences between the installers and portable archives.
 
 .. _streamlink/windows-builds: https://github.com/streamlink/windows-builds
-.. _streamlink/python-windows-embed: https://github.com/streamlink/python-windows-embed
-.. _streamlink/FFmpeg-Builds: https://github.com/streamlink/FFmpeg-Builds
-.. _windows-stable: https://github.com/streamlink/windows-builds/releases
-.. _windows-nightly: https://github.com/streamlink/windows-builds/actions?query=event%3Aschedule+is%3Asuccess+branch%3Amaster
 
 
-AppImages
----------
+Linux AppImages
+---------------
 
-Linux AppImages for Streamlink are built at `streamlink/streamlink-appimage`_.
+.. grid:: 2
+    :padding: 0
+    :class-container: grid-with-icons
 
-These AppImages contain:
+    .. grid-item-card::
+        :padding: 3
+        :link: https://github.com/streamlink/streamlink-appimage/releases
+        :link-alt: AppImage stable releases
+        :text-align: center
 
-- a Python environment
-- Streamlink and its dependencies
+        **AppImage stable releases**
+        ^^^
+        :fas:`download` GitHub releases page
 
-and they are available for the following CPU architectures:
+        The most recent Streamlink release
 
-- x86_64
-- i686
-- aarch64
+    .. grid-item-card::
+        :padding: 3
+        :link: https://github.com/streamlink/streamlink-appimage/actions?query=event%3Aschedule+is%3Asuccess+branch%3Amaster
+        :link-alt: AppImage nightly builds
+        :text-align: center
 
-1. **Download the latest Streamlink AppImage matching your CPU architecture**
+        **AppImage nightly builds**
+        ^^^
+        :fas:`download` GitHub actions build artifacts
 
-   If unsure, run :command:`uname -m` to check the CPU's architecture.
+        Built once each day at midnight UTC |br| :sub:`GitHub account required`
 
-2. **Set the executable flag**
+**Architectures**
 
-   This can either be done in a regular file browser, or a command line shell via :command:`chmod +x filename`.
+.. grid:: 3
+    :padding: 0
+
+    .. grid-item-card::
+        :padding: 3
+        :text-align: center
+
+        :bdg-link-success-line:`x86_64 <https://github.com/streamlink/streamlink-appimage/releases>`
+
+    .. grid-item-card::
+        :padding: 3
+        :text-align: center
+
+        :bdg-link-success-line:`aarch64 <https://github.com/streamlink/streamlink-appimage/releases>`
+
+    .. grid-item-card::
+        :padding: 3
+        :text-align: center
+
+        :bdg-link-primary-line:`i686 <https://github.com/streamlink/streamlink-appimage/releases>`
+
+**Contents**
+
+.. grid:: 2
+    :padding: 0
+    :class-container: grid-with-images
+
+    .. grid-item-card::
+        :padding: 3
+        :link: https://github.com/streamlink/appimage-buildenv
+        :link-alt: Python from the pypa/manulinux docker images
+        :text-align: center
+
+        .. image:: _static/icon-python.svg
+            :alt: Python
+
+        Python |br| :sub:`from the pypa/manylinux docker images`
+
+    .. grid-item-card::
+        :padding: 3
+        :link: https://github.com/streamlink/streamlink
+        :link-alt: Streamlink and its runtime dependencies
+        :text-align: center
+
+        .. image:: _static/icon.svg
+            :alt: Streamlink
+
+        Streamlink |br| :sub:`and dependencies`
+
+**How-To**
+
+1. Download the AppImage file matching your CPU architecture (run :command:`uname -m` to check)
+
+2. Set the executable flag via a file browser or :command:`chmod +x filename` from a command-line shell
 
    .. code-block:: bash
 
       # AppImage file names include the release version, Python version, platform name and CPU architecture
-      chmod +x streamlink-2.0.0-1-cp39-cp39-manylinux2014_x86_64.AppImage
+      chmod +x streamlink-5.3.0-1-cp311-cp311-manylinux2014_x86_64.AppImage
 
-3. **Run the AppImage**
-
-   Set any command-line parameters supported by Streamlink, e.g. :option:`--version`:
+3. Run the AppImage with any command-line parameters supported by Streamlink
 
    .. code-block:: bash
 
-      # Run the Streamlink AppImage with any parameter supported by Streamlink
-      ./streamlink-2.0.0-1-cp39-cp39-manylinux2014_x86_64.AppImage --version
-
-
-AppImage stable builds
-^^^^^^^^^^^^^^^^^^^^^^
-
-|icon-download| `streamlink/streamlink-appimage releases page <appimage-stable_>`_
-
-AppImage nightly builds
-^^^^^^^^^^^^^^^^^^^^^^^
-
-|icon-download| `streamlink/streamlink-appimage nightly builds artifacts <appimage-nightly_>`_
-
-Built once each day at midnight UTC from Streamlink's `master branch <streamlink-master_>`_. |br|
-This includes the most recent changes, but is not considered "stable". |br|
-A GitHub account is required in order to access build artifacts.
+      ./streamlink-5.3.0-1-cp311-cp311-manylinux2014_x86_64.AppImage --loglevel=debug
 
 
 What are AppImages?
@@ -480,9 +636,6 @@ Additional information, like for example how to inspect the AppImage contents or
 how to extract the contents if `FUSE`_ is not available on your system, can be
 found in the `AppImage documentation`_.
 
-.. _streamlink/streamlink-appimage: https://github.com/streamlink/streamlink-appimage
-.. _appimage-stable: https://github.com/streamlink/streamlink-appimage/releases
-.. _appimage-nightly: https://github.com/streamlink/streamlink-appimage/actions?query=event%3Aschedule+is%3Asuccess+branch%3Amaster
 .. _AppImageLauncher: https://github.com/TheAssassin/AppImageLauncher
 .. _FUSE: https://docs.appimage.org/user-guide/troubleshooting/fuse.html
 .. _AppImage documentation: https://docs.appimage.org/user-guide/run-appimages.html
