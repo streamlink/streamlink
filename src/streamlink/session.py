@@ -198,31 +198,36 @@ class Streamlink:
 
         self.http = HTTPSession()
         self.options = StreamlinkOptions(self, {
+            "user-input-requester": None,
+            "locale": None,
             "interface": None,
             "ipv4": False,
             "ipv6": False,
-            "hls-live-edge": 3,
-            "hls-segment-ignore-names": [],
-            "hls-segment-stream-data": False,
-            "hls-playlist-reload-attempts": 3,
-            "hls-playlist-reload-time": "default",
-            "hls-start-offset": 0,
-            "hls-duration": None,
             "ringbuffer-size": 1024 * 1024 * 16,  # 16 MB
+            "mux-subtitles": False,
             "stream-segment-attempts": 3,
             "stream-segment-threads": 1,
             "stream-segment-timeout": 10.0,
             "stream-timeout": 60.0,
+            "hls-live-edge": 3,
+            "hls-live-restart": False,
+            "hls-start-offset": 0.0,
+            "hls-duration": None,
+            "hls-playlist-reload-attempts": 3,
+            "hls-playlist-reload-time": "default",
+            "hls-segment-stream-data": False,
+            "hls-segment-ignore-names": [],
+            "hls-segment-key-uri": None,
+            "hls-audio-select": [],
             "ffmpeg-ffmpeg": None,
             "ffmpeg-no-validation": False,
+            "ffmpeg-verbose": False,
+            "ffmpeg-verbose-path": None,
             "ffmpeg-fout": None,
             "ffmpeg-video-transcode": None,
             "ffmpeg-audio-transcode": None,
             "ffmpeg-copyts": False,
             "ffmpeg-start-at-zero": False,
-            "mux-subtitles": False,
-            "locale": None,
-            "user-input-requester": None,
         })
         if options:
             self.options.update(options)
@@ -239,119 +244,225 @@ class Streamlink:
 
         **Available options**:
 
-        ======================== =========================================
-        interface                (str) Set the network interface,
-                                 default: ``None``
-        ipv4                     (bool) Resolve address names to IPv4 only.
-                                 This option overrides ipv6, default: ``False``
-        ipv6                     (bool) Resolve address names to IPv6 only.
-                                 This option overrides ipv4, default: ``False``
+        .. list-table::
+            :header-rows: 1
+            :width: 100%
 
-        hls-live-edge            (int) How many segments from the end
-                                 to start live streams on, default: ``3``
 
-        hls-segment-ignore-names (str[]) List of segment names without
-                                 file endings which should get filtered out,
-                                 default: ``[]``
+            * - key
+              - type
+              - default
+              - description
+            * - user-input-requester
+              - ``UserInputRequester | None``
+              - ``None``
+              - Instance of ``UserInputRequester`` to collect input from the user at runtime
+            * - locale
+              - ``str``
+              - *system locale*
+              - Locale setting, in the RFC 1766 format,
+                e.g. ``en_US`` or ``es_ES``
+            * - interface
+              - ``str | None``
+              - ``None``
+              - Network interface address
+            * - ipv4
+              - ``bool``
+              - ``False``
+              - Resolve address names to IPv4 only, overrides ``ipv6``
+            * - ipv6
+              - ``bool``
+              - ``False``
+              - Resolve address names to IPv6 only, overrides ``ipv4``
+            * - http-proxy
+              - ``str | None``
+              - ``None``
+              - Proxy address for all HTTP/HTTPS requests
+            * - https-proxy *(deprecated)*
+              - ``str | None``
+              - ``None``
+              - Proxy address for all HTTP/HTTPS requests
+            * - http-cookies
+              - ``dict[str, str] | str``
+              - ``{}``
+              - A ``dict`` or a semicolon ``;`` delimited ``str`` of cookies to add to each HTTP/HTTPS request,
+                e.g. ``foo=bar;baz=qux``
+            * - http-headers
+              - ``dict[str, str] | str``
+              - ``{}``
+              - A ``dict`` or a semicolon ``;`` delimited ``str`` of headers to add to each HTTP/HTTPS request,
+                e.g. ``foo=bar;baz=qux``
+            * - http-query-params
+              - ``dict[str, str] | str``
+              - ``{}``
+              - A ``dict`` or a semicolon ``;`` delimited ``str`` of query string parameters to add to each HTTP/HTTPS request,
+                e.g. ``foo=bar;baz=qux``
+            * - http-trust-env
+              - ``bool``
+              - ``True``
+              - Trust HTTP settings set in the environment,
+                such as environment variables (``HTTP_PROXY``, etc.) and ``~/.netrc`` authentication
+            * - http-ssl-verify
+              - ``bool``
+              - ``True``
+              - Verify TLS/SSL certificates
+            * - http-disable-dh
+              - ``bool``
+              - ``False``
+              - Disable TLS/SSL Diffie-Hellman key exchange
+            * - http-ssl-cert
+              - ``str | tuple | None``
+              - ``None``
+              - TLS/SSL certificate to use, can be either a .pem file (``str``) or a .crt/.key pair (``tuple``)
+            * - http-timeout
+              - ``float``
+              - ``20.0``
+              - General timeout used by all HTTP/HTTPS requests, except the ones covered by other options
+            * - ringbuffer-size
+              - ``int``
+              - ``16777216`` (16 MiB)
+              - The size of the internal ring buffer used by most stream types
+            * - mux-subtitles
+              - ``bool``
+              - ``False``
+              - Make supported plugins mux available subtitles into the output stream
+            * - stream-segment-attempts
+              - ``int``
+              - ``3``
+              - Number of segment download attempts in segmented streams
+            * - stream-segment-threads
+              - ``int``
+              - ``1``
+              - The size of the thread pool used to download segments in parallel
+            * - stream-segment-timeout
+              - ``float``
+              - ``10.0``
+              - Segment connect and read timeout
+            * - stream-timeout
+              - ``float``
+              - ``60.0``
+              - Timeout for reading data from stream
+            * - hls-live-edge
+              - ``int``
+              - ``3``
+              - Number of segments from the live position of the HLS stream to start reading
+            * - hls-live-restart
+              - ``bool``
+              - ``False``
+              - Skip to the beginning of an HLS live stream, or as far back as possible
+            * - hls-start-offset
+              - ``float``
+              - ``0.0``
+              - Number of seconds to skip from the beginning of the HLS stream,
+                interpreted as a negative offset for live streams
+            * - hls-duration
+              - ``float | None``
+              - ``None``
+              - Limit the HLS stream playback duration, rounded to the nearest HLS segment
+            * - hls-playlist-reload-attempts
+              - ``int``
+              - ``3``
+              - Number of HLS playlist reload attempts before giving up
+            * - hls-playlist-reload-time
+              - ``str | float``
+              - ``"default"``
+              - Override the HLS playlist reload time, either in seconds (``float``) or as a ``str`` keyword:
 
-        hls-segment-stream-data  (bool) Stream HLS segment downloads,
-                                 default: ``False``
-
-        http-proxy               (str) Specify an HTTP proxy to use for
-                                 all HTTP requests
-
-        https-proxy              (str) Specify an HTTPS proxy to use for
-                                 all HTTPS requests
-
-        http-cookies             (dict or str) A dict or a semicolon ``;``
-                                 delimited str of cookies to add to each
-                                 HTTP request, e.g. ``foo=bar;baz=qux``
-
-        http-headers             (dict or str) A dict or semicolon ``;``
-                                 delimited str of headers to add to each
-                                 HTTP request, e.g. ``foo=bar;baz=qux``
-
-        http-query-params        (dict or str) A dict or an ampersand ``&``
-                                 delimited string of query parameters to
-                                 add to each HTTP request,
-                                 e.g. ``foo=bar&baz=qux``
-
-        http-trust-env           (bool) Trust HTTP settings set in the
-                                 environment, such as environment
-                                 variables (HTTP_PROXY, etc.) and
-                                 ~/.netrc authentication
-
-        http-ssl-verify          (bool) Verify SSL certificates,
-                                 default: ``True``
-
-        http-disable-dh          (bool) Disable SSL Diffie-Hellman key exchange
-
-        http-ssl-cert            (str or tuple) SSL certificate to use,
-                                 can be either a .pem file (str) or a
-                                 .crt/.key pair (tuple)
-
-        http-timeout             (float) General timeout used by all HTTP
-                                 requests except the ones covered by
-                                 other options, default: ``20.0``
-
-        ringbuffer-size          (int) The size of the internal ring
-                                 buffer used by most stream types,
-                                 default: ``16777216`` (16MB)
-
-        ffmpeg-ffmpeg            (str) Specify the location of the
-                                 ffmpeg executable use by Muxing streams
-                                 e.g. ``/usr/local/bin/ffmpeg``
-
-        ffmpeg-no-validation     (bool) Disable FFmpeg validation and version logging.
-                                 default: ``False``
-
-        ffmpeg-verbose           (bool) Log stderr from ffmpeg to the
-                                 console
-
-        ffmpeg-verbose-path      (str) Specify the location of the
-                                 ffmpeg stderr log file
-
-        ffmpeg-fout              (str) The output file format
-                                 when muxing with ffmpeg
-                                 e.g. ``matroska``
-
-        ffmpeg-video-transcode   (str) The codec to use if transcoding
-                                 video when muxing with ffmpeg
-                                 e.g. ``h264``
-
-        ffmpeg-audio-transcode   (str) The codec to use if transcoding
-                                 audio when muxing with ffmpeg
-                                 e.g. ``aac``
-
-        ffmpeg-copyts            (bool) When used with ffmpeg, do not shift input timestamps.
-
-        ffmpeg-start-at-zero     (bool) When used with ffmpeg and copyts,
-                                 shift input timestamps, so they start at zero
-                                 default: ``False``
-
-        mux-subtitles            (bool) Mux available subtitles into the
-                                 output stream.
-
-        stream-segment-attempts  (int) How many attempts should be done
-                                 to download each segment, default: ``3``.
-
-        stream-segment-threads   (int) The size of the thread pool used
-                                 to download segments, default: ``1``.
-
-        stream-segment-timeout   (float) Segment connect and read
-                                 timeout, default: ``10.0``.
-
-        stream-timeout           (float) Timeout for reading data from
-                                 stream, default: ``60.0``.
-
-        locale                   (str) Locale setting, in the RFC 1766 format
-                                 e.g. en_US or es_ES
-                                 default: ``system locale``.
-
-        user-input-requester     (UserInputRequester) instance of UserInputRequester
-                                 to collect input from the user at runtime.
-                                 default: ``None``.
-        ======================== =========================================
+                - ``segment``: duration of the last segment
+                - ``live-edge``: sum of segment durations of the live edge value minus one
+                - ``default``: the playlist's target duration
+            * - hls-segment-stream-data
+              - ``bool``
+              - ``False``
+              - Stream data of HLS segment downloads to the output instead of waiting for the full response
+            * - hls-segment-ignore-names
+              - ``List[str]``
+              - ``[]``
+              - List of HLS segment names without file endings which should get filtered out
+            * - hls-segment-key-uri
+              - ``str | None``
+              - ``None``
+              - Override the address of the encrypted HLS stream's key,
+                with support for the following string template variables:
+                ``{url}``, ``{scheme}``, ``{netloc}``, ``{path}``, ``{query}``
+            * - hls-audio-select
+              - ``List[str]``
+              - ``[]``
+              - Select a specific audio source or sources when multiple audio sources are available,
+                by language code or name, or ``"*"`` (asterisk)
+            * - hls-segment-attempts *(deprecated)*
+              - ``int``
+              - ``3``
+              - See ``stream-segment-attempts``
+            * - hls-segment-threads *(deprecated)*
+              - ``int``
+              - ``3``
+              - See ``stream-segment-threads``
+            * - hls-segment-timeout *(deprecated)*
+              - ``float``
+              - ``10.00``
+              - See ``stream-segment-timeout``
+            * - hls-timeout *(deprecated)*
+              - ``float``
+              - ``60.00``
+              - See ``stream-timeout``
+            * - dash-segment-attempts *(deprecated)*
+              - ``int``
+              - ``3``
+              - See ``stream-segment-attempts``
+            * - dash-segment-threads *(deprecated)*
+              - ``int``
+              - ``3``
+              - See ``stream-segment-threads``
+            * - dash-segment-timeout *(deprecated)*
+              - ``float``
+              - ``10.00``
+              - See ``stream-segment-timeout``
+            * - dash-timeout *(deprecated)*
+              - ``float``
+              - ``60.00``
+              - See ``stream-timeout``
+            * - http-stream-timeout *(deprecated)*
+              - ``float``
+              - ``60.00``
+              - See ``stream-timeout``
+            * - ffmpeg-ffmpeg
+              - ``str | None``
+              - ``None``
+              - Override for the ``ffmpeg``/``ffmpeg.exe`` binary path,
+                which by default gets looked up via the ``PATH`` env var
+            * - ffmpeg-no-validation
+              - ``bool``
+              - ``False``
+              - Disable FFmpeg validation and version logging
+            * - ffmpeg-verbose
+              - ``bool``
+              - ``False``
+              - Append FFmpeg's stderr stream to the Python's stderr stream
+            * - ffmpeg-verbose-path
+              - ``str``
+              - ``None``
+              - Write FFmpeg's stderr stream to the filesystem at the specified path
+            * - ffmpeg-fout
+              - ``str``
+              - ``None``
+              - Set the output format of muxed streams, e.g. ``"matroska"``
+            * - ffmpeg-video-transcode
+              - ``str | None``
+              - ``None``
+              - The codec to use if transcoding video when muxing streams, e.g. ``"h264"``
+            * - ffmpeg-audio-transcode
+              - ``str | None``
+              - ``None``
+              - The codec to use if transcoding video when muxing streams, e.g. ``"aac"``
+            * - ffmpeg-copyts
+              - ``bool``
+              - ``False``
+              - Don't shift input stream timestamps when muxing streams
+            * - ffmpeg-start-at-zero
+              - ``bool``
+              - ``False``
+              - When ``ffmpeg-copyts`` is ``True``, shift timestamps to zero
         """
 
         self.options.set(key, value)

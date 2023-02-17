@@ -649,7 +649,7 @@ class HLSStream(HTTPStream):
         """
 
         locale = session_.localization
-        audio_select = session_.options.get("hls-audio-select") or []
+        audio_select = session_.options.get("hls-audio-select")
 
         res = cls._fetch_variant_playlist(session_, url, **request_params)
 
