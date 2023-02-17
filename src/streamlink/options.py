@@ -63,6 +63,30 @@ class Options:
         for key, value in options.items():
             self.set(key, value)
 
+    def keys(self):
+        return self.options.keys()
+
+    def values(self):
+        return self.options.values()
+
+    def items(self):
+        return self.options.items()
+
+    def __getitem__(self, item):
+        return self.get(item)
+
+    def __setitem__(self, item, value):
+        return self.set(item, value)
+
+    def __contains__(self, item):
+        return self.options.__contains__(item)
+
+    def __len__(self):
+        return self.options.__len__()
+
+    def __iter__(self):
+        return self.options.__iter__()
+
 
 class Argument:
     """
