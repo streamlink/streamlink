@@ -488,11 +488,6 @@ class TestSessionOptionHttpProxy:
         assert session.get_option("https-proxy") == "http://testproxy2.com"
 
 
-@pytest.mark.parametrize("option", [
-    pytest.param(("http-cookies", "cookies"), id="http-cookies"),
-    pytest.param(("http-headers", "headers"), id="http-headers"),
-    pytest.param(("http-query-params", "params"), id="http-query-params"),
-], indirect=True)
 class TestOptionsKeyEqualsValue:
     @pytest.fixture()
     def option(self, request, session: Streamlink):
@@ -505,11 +500,29 @@ class TestOptionsKeyEqualsValue:
         assert httpsessionattr.get("foo") == "foo=bar"
         assert httpsessionattr.get("bar") == "123"
 
+    @pytest.mark.parametrize(
+        "option",
+        [
+            pytest.param(("http-cookies", "cookies"), id="http-cookies"),
+            pytest.param(("http-headers", "headers"), id="http-headers"),
+            pytest.param(("http-query-params", "params"), id="http-query-params"),
+        ],
+        indirect=["option"],
+    )
     def test_dict(self, session: Streamlink, option: str):
         session.set_option(option, {"foo": "foo=bar", "bar": "123"})
 
-    def test_string(self, session: Streamlink, option: str):
-        session.set_option(option, "foo=foo=bar;bar=123;baz")
+    @pytest.mark.parametrize(
+        ("option", "value"),
+        [
+            pytest.param(("http-cookies", "cookies"), "foo=foo=bar;bar=123;baz", id="http-cookies"),
+            pytest.param(("http-headers", "headers"), "foo=foo=bar;bar=123;baz", id="http-headers"),
+            pytest.param(("http-query-params", "params"), "foo=foo=bar&bar=123&baz", id="http-query-params"),
+        ],
+        indirect=["option"],
+    )
+    def test_string(self, session: Streamlink, option: str, value: str):
+        session.set_option(option, value)
 
 
 class TestOptionsDocumentation:

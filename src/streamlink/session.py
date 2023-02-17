@@ -49,8 +49,8 @@ class StreamlinkOptions(Options):
     # ---- utils
 
     @staticmethod
-    def _parse_key_equals_value_string(value: str) -> Iterator[Tuple[str, str]]:
-        for keyval in value.split(";"):
+    def _parse_key_equals_value_string(delimiter: str, value: str) -> Iterator[Tuple[str, str]]:
+        for keyval in value.split(delimiter):
             try:
                 key, val = keyval.split("=", 1)
                 yield key.strip(), val.strip()
@@ -104,11 +104,6 @@ class StreamlinkOptions(Options):
                 StreamlinkDeprecationWarning,
             )
 
-    def _set_http_attr_key_equals_value(self, key, value):
-        getattr(self.session.http, self._OPTIONS_HTTP_ATTRS[key]).update(
-            value if isinstance(value, dict) else dict(self._parse_key_equals_value_string(value)),
-        )
-
     def _set_http_attr(self, key, value):
         setattr(self.session.http, self._OPTIONS_HTTP_ATTRS[key], value)
 
@@ -124,6 +119,15 @@ class StreamlinkOptions(Options):
         urllib3_util_ssl.DEFAULT_CIPHERS = ":".join(default_ciphers)  # type: ignore[attr-defined]
 
     @staticmethod
+    def _factory_set_http_attr_key_equals_value(delimiter: str) -> Callable[["StreamlinkOptions", str, Any], None]:
+        def inner(self: "StreamlinkOptions", key: str, value: Any) -> None:
+            getattr(self.session.http, self._OPTIONS_HTTP_ATTRS[key]).update(
+                value if isinstance(value, dict) else dict(self._parse_key_equals_value_string(delimiter, value)),
+            )
+
+        return inner
+
+    @staticmethod
     def _factory_set_deprecated(name: str, mapper: Callable[[Any], Any]) -> Callable[["StreamlinkOptions", str, Any], None]:
         def inner(self: "StreamlinkOptions", key: str, value: Any) -> None:
             self.set_explicit(name, mapper(value))
@@ -135,6 +139,7 @@ class StreamlinkOptions(Options):
         return inner
 
     # bind explicitly with dummy context, to prevent `TypeError: 'staticmethod' object is not callable` on py<310
+    _factory_set_http_attr_key_equals_value = _factory_set_http_attr_key_equals_value.__get__(object)
     _factory_set_deprecated = _factory_set_deprecated.__get__(object)
 
     # ----
@@ -157,9 +162,9 @@ class StreamlinkOptions(Options):
         "ipv6": _set_ipv4_ipv6,
         "http-proxy": _set_http_proxy,
         "https-proxy": _set_http_proxy,
-        "http-cookies": _set_http_attr_key_equals_value,
-        "http-headers": _set_http_attr_key_equals_value,
-        "http-query-params": _set_http_attr_key_equals_value,
+        "http-cookies": _factory_set_http_attr_key_equals_value(";"),
+        "http-headers": _factory_set_http_attr_key_equals_value(";"),
+        "http-query-params": _factory_set_http_attr_key_equals_value("&"),
         "http-disable-dh": _set_http_disable_dh,
         "http-ssl-cert": _set_http_attr,
         "http-ssl-verify": _set_http_attr,
@@ -295,7 +300,7 @@ class Streamlink:
             * - http-query-params
               - ``dict[str, str] | str``
               - ``{}``
-              - A ``dict`` or a semicolon ``;`` delimited ``str`` of query string parameters to add to each HTTP/HTTPS request,
+              - A ``dict`` or an ampersand ``&`` delimited ``str`` of query string parameters to add to each HTTP/HTTPS request,
                 e.g. ``foo=bar;baz=qux``
             * - http-trust-env
               - ``bool``
