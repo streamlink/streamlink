@@ -91,6 +91,25 @@ class TestMappedOptions:
         assert options.get("baz") == 2
         assert options.get_explicit("baz") == 1
 
+    def test_mutablemapping_methods(self, options: MappedOptions):
+        options["key"] = "value"
+        assert options["key"] == "value"
+
+        assert options["foo-bar"] is None
+
+        options["baz"] = 0
+        assert options["baz"] == 2
+
+        assert "foo-bar" in options
+        assert "qux" not in options
+
+        assert len(options) == 3
+
+        assert list(iter(options)) == ["foo-bar", "baz", "key"]
+        assert list(options.keys()) == ["foo-bar", "baz", "key"]
+        assert list(options.values()) == [123, 1, "value"]
+        assert list(options.items()) == [("foo-bar", 123), ("baz", 1), ("key", "value")]
+
 
 class TestArgument(unittest.TestCase):
     def test_name(self):
