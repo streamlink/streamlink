@@ -1,5 +1,27 @@
 # Changelog
 
+## streamlink 5.3.0 (2023-02-18)
+
+Release highlights:
+
+- Project meta: dropped Open Collective sponsoring platform and updated the project's README, as well as the docs' donation/support page ([#5143](https://github.com/streamlink/streamlink/pull/5143))
+- Deprecated: global plugin arguments ([#5140](https://github.com/streamlink/streamlink/pull/5140))
+- Fixed: muxed streams sometimes missing data at the end ([#5162](https://github.com/streamlink/streamlink/pull/5162))
+- Fixed: named pipes sometimes not being cleaned up properly ([#5162](https://github.com/streamlink/streamlink/pull/5162))
+- Fixed: new YouTube channel URLs not being matched ([#5137](https://github.com/streamlink/streamlink/pull/5137))
+- Fixed: KeyError when accessing certain YouTube URLs ([#5139](https://github.com/streamlink/streamlink/pull/5139))
+- Fixed: M3U8 attribute parsing ([#5125](https://github.com/streamlink/streamlink/pull/5125))
+- Fixed: NimoTV streams stopping after a few seconds ([#5147](https://github.com/streamlink/streamlink/pull/5147))
+- Fixed: delimiter of `http-query-params` session option string setter ([#5176](https://github.com/streamlink/streamlink/pull/5176))
+- Fixed: sdist/bdist missing some files ([#5119](https://github.com/streamlink/streamlink/pull/5119), [#5141](https://github.com/streamlink/streamlink/pull/5141))
+- Docs: fixed `Streamlink.set_option()` docstring ([#5176](https://github.com/streamlink/streamlink/pull/5176))
+- Docs: improved CLI tutorial ([#5157](https://github.com/streamlink/streamlink/pull/5157))
+- Docs: improved install page ([#5178](https://github.com/streamlink/streamlink/pull/5178))
+- Removed plugins: funimationnow ([#5128](https://github.com/streamlink/streamlink/pull/5128)), schoolism ([#5127](https://github.com/streamlink/streamlink/pull/5127))
+
+[Full changelog](https://github.com/streamlink/streamlink/compare/5.2.1...5.3.0)
+
+
 ## streamlink 5.2.1 (2023-01-23)
 
 No code changes.  
