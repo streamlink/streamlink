@@ -304,16 +304,13 @@ table.table-custom-layout.table-custom-layout-dependencies tbody td {
   filter: grayscale(1);
 }
 
-.team-members {
-  display: flex;
-  list-style: none;
-  justify-content: space-between;
+.team-members img {
+  width: 100px;
+  height: 100px;
+  margin: 0 auto;
 }
-.team-members a:after {
+.team-members a:not(.sd-hide-link-text)::after {
   display: none !important;
-}
-.team-members figcaption a.headerlink {
-  display: none;
 }
 
 section#plugins dl.field-list {

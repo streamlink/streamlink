@@ -20,57 +20,44 @@ as payment for future work.
 Team members
 ============
 
-.. rst-class:: team-members
+.. grid:: 2 3 5 5
+    :padding: 0
+    :class-container: team-members
 
+    .. grid-item-card::
+        :padding: 3
+        :img-top: https://github.com/back-to.png?size=100
+        :link: https://github.com/back-to
+        :link-alt: @back-to
+        :text-align: center
 
-- .. figure:: https://github.com/back-to.png?size=100
-     :alt: @back-to
-     :target: https://github.com/back-to
-     :width: 100
-     :height: 100
-     :align: center
+    .. grid-item-card::
+        :padding: 3
+        :img-top: https://github.com/bastimeyer.png?size=100
+        :link: https://github.com/bastimeyer
+        :link-alt: @bastimeyer
+        :text-align: center
 
-     @back-to
+    .. grid-item-card::
+        :padding: 3
+        :img-top: https://github.com/beardypig.png?size=100
+        :link: https://github.com/beardypig
+        :link-alt: @beardypig
+        :text-align: center
 
+    .. grid-item-card::
+        :padding: 3
+        :img-top: https://github.com/gravyboat.png?size=100
+        :link: https://github.com/gravyboat
+        :link-alt: @gravyboat
+        :text-align: center
 
-- .. figure:: https://github.com/bastimeyer.png?size=100
-     :alt: @bastimeyer
-     :target: https://github.com/bastimeyer
-     :width: 100
-     :height: 100
-     :align: center
-
-     @bastimeyer
-
-
-- .. figure:: https://github.com/beardypig.png?size=100
-     :alt: @beardypig
-     :target: https://github.com/beardypig
-     :width: 100
-     :height: 100
-     :align: center
-
-     @beardypig
-
-
-- .. figure:: https://github.com/gravyboat.png?size=100
-     :alt: @gravyboat
-     :target: https://github.com/gravyboat
-     :width: 100
-     :height: 100
-     :align: center
-
-     @gravyboat
-
-
-- .. figure:: https://github.com/mkbloke.png?size=100
-     :alt: @mkbloke
-     :target: https://github.com/mkbloke
-     :width: 100
-     :height: 100
-     :align: center
-
-     @mkbloke
+    .. grid-item-card::
+        :padding: 3
+        :img-top: https://github.com/mkbloke.png?size=100
+        :link: https://github.com/mkbloke
+        :link-alt: @mkbloke
+        :text-align: center
 
 
 Useful links
