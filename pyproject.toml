@@ -73,6 +73,10 @@ select = [
   "W",
   # pyflakes
   "F",
+  # pylint
+  "PLC",
+  "PLE",
+  "PLW",
   # isort
   "I",
   # flake8-tidy-imports

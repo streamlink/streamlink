@@ -808,7 +808,6 @@ def log_current_versions():
 
 
 def log_current_arguments(session: Streamlink, parser: argparse.ArgumentParser):
-    global args
     if not logger.root.isEnabledFor(logging.DEBUG):
         return
 
