@@ -521,14 +521,12 @@ class M3U8Parser:
         EXT-X-SESSION-DATA
         https://datatracker.ietf.org/doc/html/rfc8216#section-4.3.4.4
         """
-        pass
 
     def parse_tag_ext_x_session_key(self, value: str) -> None:
         """
         EXT-X-SESSION-KEY
         https://datatracker.ietf.org/doc/html/rfc8216#section-4.3.4.5
         """
-        pass
 
     # 4.3.5: Media or Master Playlist Tags
 
@@ -537,7 +535,6 @@ class M3U8Parser:
         EXT-X-INDEPENDENT-SEGMENTS
         https://datatracker.ietf.org/doc/html/rfc8216#section-4.3.5.1
         """
-        pass
 
     def parse_tag_ext_x_start(self, value: str) -> None:
         """

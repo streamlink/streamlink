@@ -178,14 +178,12 @@ class SegmentedStreamWriter(AwaitableMixin, Thread):
 
         Should be overridden by the inheriting class.
         """
-        pass
 
     def write(self, segment, result, *data):
         """Writes a segment to the buffer.
 
         Should be overridden by the inheriting class.
         """
-        pass
 
     def run(self):
         while not self.closed:

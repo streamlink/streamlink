@@ -89,6 +89,8 @@ select = [
   "C4",
   # flake8-implicit-str-concat
   "ISC",
+  # flake8-pie
+  "PIE",
   # flake8-pytest-style
   "PT",
 ]
