@@ -70,7 +70,7 @@ class TestCLIFormatter:
         ]
 
     def test_path_substitute(self, formatter: Formatter):
-        formatter.mapping.update(**{
+        formatter.mapping.update({
             "current": lambda: ".",
             "parent": lambda: "..",
             "dots": lambda: "...",
