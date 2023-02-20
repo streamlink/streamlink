@@ -50,23 +50,23 @@ class ArgparseDirective(Directive):
 
     _headlines = ["^", "~"]
 
-    def process_help(self, help):
+    def process_help(self, helptext):
         # Dedent the help to make sure we are always dealing with
         # non-indented text.
-        help = dedent(help)
+        helptext = dedent(helptext)
 
-        help = _inline_code_block_re.sub(
+        helptext = _inline_code_block_re.sub(
             lambda m: (
                 ":code:`{0}`".format(m.group(1).replace("\\", "\\\\"))
             ),
-            help,
+            helptext,
         )
 
-        help = _example_inline_code_block_re.sub(r":code:`\1`", help)
+        helptext = _example_inline_code_block_re.sub(r":code:`\1`", helptext)
 
         # Replace option references with links.
         # Do this before indenting blocks and notes.
-        help = _option_line_re.sub(
+        helptext = _option_line_re.sub(
             lambda m: (
                 _option_re.sub(
                     lambda m2: (
@@ -77,34 +77,34 @@ class ArgparseDirective(Directive):
                     m.group(1),
                 )
             ),
-            help,
+            helptext,
         )
 
         # Create simple blocks.
-        help = _block_re.sub("::\n\n  ", help)
+        helptext = _block_re.sub("::\n\n  ", helptext)
 
         # Boldify the default value.
-        help = _default_re.sub(r"Default is: **\1**.\n", help)
+        helptext = _default_re.sub(r"Default is: **\1**.\n", helptext)
 
         # Create note directives from "Note: " paragraphs.
-        help = _note_re.sub(
+        helptext = _note_re.sub(
             lambda m: ".. note::\n\n" + indent(m.group(1)) + "\n\n",
-            help,
+            helptext,
         )
 
         # workaround to replace %(prog)s with streamlink
-        help = _prog_re.sub("streamlink", help)
+        helptext = _prog_re.sub("streamlink", helptext)
 
         # fix escaped chars for percent-formatted argparse help strings
-        help = _percent_re.sub("%", help)
+        helptext = _percent_re.sub("%", helptext)
 
         # create cross-link for the "Metadata variables" section
-        help = _cli_metadata_variables_section_cross_link_re.sub(
+        helptext = _cli_metadata_variables_section_cross_link_re.sub(
             "the \":ref:`Metadata variables <cli/metadata:Variables>`\" section",
-            help,
+            helptext,
         )
 
-        return indent(help)
+        return indent(helptext)
 
     def generate_group_rst(self, group):
         for action in group._group_actions:

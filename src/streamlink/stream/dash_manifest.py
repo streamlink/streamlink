@@ -16,8 +16,10 @@ log = logging.getLogger(__name__)
 epoch_start = datetime.datetime(1970, 1, 1, tzinfo=utc)
 
 
+# TODO: use NamedTuple or dataclass
 class Segment:
-    def __init__(self, url, duration, init=False, content=True, available_at=epoch_start, range=None):
+    # noinspection PyShadowingBuiltins
+    def __init__(self, url, duration, init=False, content=True, available_at=epoch_start, range=None):  # noqa: A002
         self.url = url
         self.duration = duration
         self.init = init

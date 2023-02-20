@@ -87,7 +87,7 @@ class AdultSwim(Plugin):
         validate.filter(lambda k, v: k.startswith("Video:")),
     )
 
-    def _get_stream_data(self, id):
+    def _get_stream_data(self, streamid):
         res = self.session.http.get(self.url)
         m = self.json_data_re.search(res.text)
         if m and m.group(1):
@@ -96,9 +96,8 @@ class AdultSwim(Plugin):
             raise PluginError("Failed to get json_data")
 
         for stream in streams:
-            if "id" in stream:
-                if id == stream["id"] and "stream" in stream:
-                    return stream["stream"]
+            if "id" in stream and streamid == stream["id"] and "stream" in stream:
+                return stream["stream"]
 
     def _get_video_data(self, slug):
         m = self.truncate_url_re.search(self.url)

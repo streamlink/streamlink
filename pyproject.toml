@@ -79,10 +79,8 @@ select = [
   "PLW",
   # isort
   "I",
-  # flake8-tidy-imports
-  "TID",
-  # flake8-quotes
-  "Q",
+  # flake8-builtins
+  "A",
   # flake8-commas
   "COM",
   # flake8-comprehensions
@@ -93,8 +91,13 @@ select = [
   "PIE",
   # flake8-pytest-style
   "PT",
+  # flake8-quotes
+  "Q",
+  # flake8-tidy-imports
+  "TID",
 ]
 extend-ignore = [
+  "A003",  # builtin-attribute-shadowing
   "C408",  # unnecessary-collection-call
   "ISC003",  # explicit-string-concatenation
 ]
