@@ -58,7 +58,8 @@ def keyvalue(value):
     return match.group("key", "value")
 
 
-def num(type, min=None, max=None):
+# noinspection PyShadowingBuiltins
+def num(type, min=None, max=None):  # noqa: A002
     def func(value):
         value = type(value)
 

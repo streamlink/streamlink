@@ -73,8 +73,8 @@ class Booyah(Plugin):
         res = self.session.http.post(self.auth_api_url)
         self.session.http.json(res, self.auth_schema)
 
-    def get_vod(self, id):
-        res = self.session.http.get(self.vod_api_url.format(id))
+    def get_vod(self, vodid):
+        res = self.session.http.get(self.vod_api_url.format(vodid))
         user_data = self.session.http.json(res, schema=self.vod_schema)
 
         self.author = user_data["user"]["nickname"]
@@ -93,8 +93,8 @@ class Booyah(Plugin):
                     stream["stream_url"],
                 )
 
-    def get_live(self, id):
-        res = self.session.http.get(self.live_api_url.format(id))
+    def get_live(self, liveid):
+        res = self.session.http.get(self.live_api_url.format(liveid))
         user_data = self.session.http.json(res, schema=self.live_schema)
 
         if user_data["channel"]["is_streaming"]:

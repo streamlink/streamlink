@@ -57,9 +57,9 @@ DATETIME_FORMAT = "%Y-%m-%dT%H:%M:%S.%fZ"
 
 
 class TagDateRangeAd(Tag):
-    def __init__(self, start=DATETIME_BASE, duration=1, id="stitched-ad-1234", classname="twitch-stitched-ad", custom=None):
+    def __init__(self, start=DATETIME_BASE, duration=1, attrid="stitched-ad-1234", classname="twitch-stitched-ad", custom=None):
         attrs = {
-            "ID": self.val_quoted_string(id),
+            "ID": self.val_quoted_string(attrid),
             "CLASS": self.val_quoted_string(classname),
             "START-DATE": self.val_quoted_string(start.strftime(DATETIME_FORMAT)),
             "DURATION": duration,
@@ -129,7 +129,14 @@ class TestTwitchHLSStream(TestMixinStreamHLS, unittest.TestCase):
         return session
 
     def test_hls_disable_ads_daterange_unknown(self):
-        daterange = TagDateRangeAd(start=DATETIME_BASE, duration=1, id="foo", classname="bar", custom=None)
+        daterange = TagDateRangeAd(
+            start=DATETIME_BASE,
+            duration=1,
+            attrid="foo",
+            classname="bar",
+            custom=None,
+        )
+
         thread, segments = self.subject([
             Playlist(0, [daterange, Segment(0), Segment(1)], end=True),
         ], disable_ads=True, low_latency=False)
@@ -140,7 +147,14 @@ class TestTwitchHLSStream(TestMixinStreamHLS, unittest.TestCase):
         assert all(self.called(s) for s in segments.values()), "Downloads all segments"
 
     def test_hls_disable_ads_daterange_by_class(self):
-        daterange = TagDateRangeAd(start=DATETIME_BASE, duration=1, id="foo", classname="twitch-stitched-ad", custom=None)
+        daterange = TagDateRangeAd(
+            start=DATETIME_BASE,
+            duration=1,
+            attrid="foo",
+            classname="twitch-stitched-ad",
+            custom=None,
+        )
+
         thread, segments = self.subject([
             Playlist(0, [daterange, Segment(0), Segment(1)], end=True),
         ], disable_ads=True, low_latency=False)
@@ -151,7 +165,14 @@ class TestTwitchHLSStream(TestMixinStreamHLS, unittest.TestCase):
         assert all(self.called(s) for s in segments.values()), "Downloads all segments"
 
     def test_hls_disable_ads_daterange_by_id(self):
-        daterange = TagDateRangeAd(start=DATETIME_BASE, duration=1, id="stitched-ad-1234", classname="/", custom=None)
+        daterange = TagDateRangeAd(
+            start=DATETIME_BASE,
+            duration=1,
+            attrid="stitched-ad-1234",
+            classname="/",
+            custom=None,
+        )
+
         thread, segments = self.subject([
             Playlist(0, [daterange, Segment(0), Segment(1)], end=True),
         ], disable_ads=True, low_latency=False)
@@ -162,7 +183,14 @@ class TestTwitchHLSStream(TestMixinStreamHLS, unittest.TestCase):
         assert all(self.called(s) for s in segments.values()), "Downloads all segments"
 
     def test_hls_disable_ads_daterange_by_attr(self):
-        daterange = TagDateRangeAd(start=DATETIME_BASE, duration=1, id="foo", classname="/", custom={"X-TV-TWITCH-AD-URL": "/"})
+        daterange = TagDateRangeAd(
+            start=DATETIME_BASE,
+            duration=1,
+            attrid="foo",
+            classname="/",
+            custom={"X-TV-TWITCH-AD-URL": "/"},
+        )
+
         thread, segments = self.subject([
             Playlist(0, [daterange, Segment(0), Segment(1)], end=True),
         ], disable_ads=True, low_latency=False)

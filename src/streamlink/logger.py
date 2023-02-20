@@ -184,7 +184,7 @@ def basicConfig(
     filemode: str = "a",
     stream: Optional[IO] = None,
     level: Optional[str] = None,
-    format: str = FORMAT_BASE,
+    format: str = FORMAT_BASE,  # noqa: A002  # TODO: rename to "fmt" (breaking)
     style: str = FORMAT_STYLE,  # TODO: py38: Literal["%", "{", "$"]
     datefmt: str = FORMAT_DATE,
     remove_base: Optional[List[str]] = None,

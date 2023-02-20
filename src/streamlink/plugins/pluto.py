@@ -44,7 +44,7 @@ class PlutoHLSStream(HLSStream):
     )/?$
 """, re.VERBOSE))
 class Pluto(Plugin):
-    def _get_api_data(self, type, slug, filter=None):
+    def _get_api_data(self, kind, slug, slugfilter=None):
         log.debug(f"slug={slug}")
         app_version = self.session.http.get(self.url, schema=validate.Schema(
             validate.parse_html(),
@@ -67,7 +67,7 @@ class Pluto(Plugin):
                 "deviceType": "web",
                 "clientID": str(uuid4()),
                 "clientModelNumber": "1.0",
-                type: slug,
+                kind: slug,
             },
             schema=validate.Schema(
                 validate.parse_json(), {
@@ -91,14 +91,17 @@ class Pluto(Plugin):
                             "path": str,
                         },
                         validate.optional("seasons"): [{
-                            "episodes": validate.all([{
-                                "name": str,
-                                "_id": str,
-                                "slug": str,
-                                "stitched": {
-                                    "path": str,
-                                },
-                            }], validate.filter(lambda k: filter and k["slug"] == filter)),
+                            "episodes": validate.all(
+                                [{
+                                    "name": str,
+                                    "_id": str,
+                                    "slug": str,
+                                    "stitched": {
+                                        "path": str,
+                                    },
+                                }],
+                                validate.filter(lambda k: slugfilter and k["slug"] == slugfilter),
+                            ),
                         }],
                     }],
                     "sessionToken": str,
@@ -131,7 +134,7 @@ class Pluto(Plugin):
             path = media["stitched"]["path"]
 
         elif m["slug_series"] and m["slug_episode"]:
-            data = self._get_api_data("episodeSlugs", m["slug_series"], filter=m["slug_episode"])
+            data = self._get_api_data("episodeSlugs", m["slug_series"], slugfilter=m["slug_episode"])
             media = self._get_media_data(data, "VOD", m["slug_series"])
             if not media or "seasons" not in media:
                 return

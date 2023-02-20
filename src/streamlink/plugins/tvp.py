@@ -216,9 +216,9 @@ class TVP(Plugin):
             log.error("The content is not available in your region")
             return
 
-        for format in data.get("formats"):
-            if format.get("mimeType") == "application/x-mpegurl":
-                return HLSStream.parse_variant_playlist(self.session, format.get("url"))
+        for formatitem in data.get("formats"):
+            if formatitem.get("mimeType") == "application/x-mpegurl":
+                return HLSStream.parse_variant_playlist(self.session, formatitem.get("url"))
 
     def _get_streams(self):
         if self.matches["tvp_info"]:
