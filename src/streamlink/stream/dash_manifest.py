@@ -15,14 +15,14 @@ from isodate import Duration, parse_datetime, parse_duration  # type: ignore[imp
 log = logging.getLogger(__name__)
 
 UTC = datetime.timezone.utc
-epoch_start = datetime.datetime(1970, 1, 1, tzinfo=UTC)
+EPOCH_START = datetime.datetime(1970, 1, 1, tzinfo=UTC)
 ONE_SECOND = datetime.timedelta(seconds=1)
 
 
 # TODO: use NamedTuple or dataclass
 class Segment:
     # noinspection PyShadowingBuiltins
-    def __init__(self, url, duration, init=False, content=True, available_at=epoch_start, range=None):  # noqa: A002
+    def __init__(self, url, duration, init=False, content=True, available_at=EPOCH_START, range=None):  # noqa: A002
         self.url = url
         self.duration = duration
         self.init = init
@@ -32,7 +32,7 @@ class Segment:
 
 
 def datetime_to_seconds(dt):
-    return (dt - epoch_start).total_seconds()
+    return (dt - EPOCH_START).total_seconds()
 
 
 def count_dt(firstval: Optional[datetime.datetime] = None, step: datetime.timedelta = ONE_SECOND):
@@ -445,7 +445,7 @@ class SegmentTemplate(MPDNode):
         """
         log.debug("Generating segment numbers for {0} playlist (id={1})".format(self.root.type, self.parent.id))
         if self.root.type == "static":
-            available_iter = repeat(epoch_start)
+            available_iter = repeat(EPOCH_START)
             duration = self.period.duration.seconds or self.root.mediaPresentationDuration.seconds
             if duration:
                 number_iter = range(self.startNumber, int(duration / self.duration_seconds) + 1)
@@ -493,7 +493,7 @@ class SegmentTemplate(MPDNode):
                 suggested_delay = datetime.timedelta(seconds=(self.root.suggestedPresentationDelay.total_seconds()
                                                               if self.root.suggestedPresentationDelay
                                                               else 3))
-                publish_time = self.root.publishTime or epoch_start
+                publish_time = self.root.publishTime or EPOCH_START
 
                 # transform the time line in to a segment list
                 timeline = []
