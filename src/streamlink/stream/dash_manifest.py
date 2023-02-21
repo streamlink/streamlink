@@ -16,6 +16,7 @@ log = logging.getLogger(__name__)
 
 UTC = datetime.timezone.utc
 epoch_start = datetime.datetime(1970, 1, 1, tzinfo=UTC)
+ONE_SECOND = datetime.timedelta(seconds=1)
 
 
 # TODO: use NamedTuple or dataclass
@@ -34,11 +35,11 @@ def datetime_to_seconds(dt):
     return (dt - epoch_start).total_seconds()
 
 
-def count_dt(firstval=datetime.datetime.now(tz=UTC), step=datetime.timedelta(seconds=1)):
-    x = firstval
+def count_dt(firstval: Optional[datetime.datetime] = None, step: datetime.timedelta = ONE_SECOND):
+    current = datetime.datetime.now(tz=UTC) if firstval is None else firstval
     while True:
-        yield x
-        x += step
+        yield current
+        current += step
 
 
 @contextmanager
