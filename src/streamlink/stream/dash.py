@@ -31,7 +31,7 @@ class DASHStreamWriter(SegmentedStreamWriter):
     def _get_segment_name(segment: Segment) -> str:
         return Path(urlparse(segment.url).path).resolve().name
 
-    def fetch(self, segment, retries=None):
+    def fetch(self, segment: Segment, retries: Optional[int] = None):
         if self.closed or not retries:
             return
 
@@ -47,19 +47,18 @@ class DASHStreamWriter(SegmentedStreamWriter):
                     log.debug(f"Waiting for segment: {fname} aborted")
                     return
 
-            if segment.range:
-                start, length = segment.range
-                if length:
-                    end = start + length - 1
-                else:
-                    end = ""
+            if segment.byterange:
+                start, length = segment.byterange
+                end = str(start + length - 1) if length else ""
                 headers["Range"] = f"bytes={start}-{end}"
 
-            return self.session.http.get(segment.url,
-                                         timeout=self.timeout,
-                                         exception=StreamError,
-                                         headers=headers,
-                                         **request_args)
+            return self.session.http.get(
+                segment.url,
+                timeout=self.timeout,
+                exception=StreamError,
+                headers=headers,
+                **request_args,
+            )
         except StreamError as err:
             log.error(f"Failed to open segment {segment.url}: {err}")
             return self.fetch(segment, retries - 1)

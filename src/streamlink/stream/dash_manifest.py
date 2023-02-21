@@ -1,4 +1,5 @@
 import copy
+import dataclasses
 import datetime
 import logging
 import math
@@ -6,7 +7,7 @@ import re
 from collections import defaultdict, namedtuple
 from contextlib import contextmanager
 from itertools import count, repeat
-from typing import Optional
+from typing import Optional, Tuple
 from urllib.parse import urljoin, urlparse, urlsplit, urlunparse, urlunsplit
 
 from isodate import Duration, parse_datetime, parse_duration  # type: ignore[import]
@@ -19,16 +20,14 @@ EPOCH_START = datetime.datetime(1970, 1, 1, tzinfo=UTC)
 ONE_SECOND = datetime.timedelta(seconds=1)
 
 
-# TODO: use NamedTuple or dataclass
+@dataclasses.dataclass
 class Segment:
-    # noinspection PyShadowingBuiltins
-    def __init__(self, url, duration, init=False, content=True, available_at=EPOCH_START, range=None):  # noqa: A002
-        self.url = url
-        self.duration = duration
-        self.init = init
-        self.content = content
-        self.available_at = available_at
-        self.range = range
+    url: str
+    duration: float
+    init: bool = False
+    content: bool = True
+    available_at: datetime.datetime = EPOCH_START
+    byterange: Optional[Tuple[int, Optional[int]]] = None
 
 
 def datetime_to_seconds(dt):
@@ -347,7 +346,7 @@ class SegmentList(MPDNode):
         if self.initialization:
             yield Segment(self.make_url(self.initialization.source_url), 0, init=True, content=False)
         for n, segment_url in enumerate(self.segment_urls, self.start_number):
-            yield Segment(self.make_url(segment_url.media), self.duration_seconds, range=segment_url.media_range)
+            yield Segment(self.make_url(segment_url.media), self.duration_seconds, byterange=segment_url.media_range)
 
     def make_url(self, url):
         return BaseURL.join(self.base_url, url)
