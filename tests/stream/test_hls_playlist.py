@@ -1,9 +1,8 @@
 import unittest
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Optional, Tuple, Union
 
 import pytest
-from isodate import tzinfo  # type: ignore[import]
 
 from streamlink.stream.hls_playlist import (
     ByteRange,
@@ -17,6 +16,9 @@ from streamlink.stream.hls_playlist import (
     load,
 )
 from tests.resources import text
+
+
+UTC = timezone.utc
 
 
 def test_parse_tag_callback_cache():
@@ -169,7 +171,7 @@ def test_parse_hex(caplog: pytest.LogCaptureFixture, string: Optional[str], log:
     ("not an ISO8601 string", True, None),
     ("2000-01-01", True, None),
     ("2000-99-99T99:99:99.999Z", True, None),
-    ("2000-01-01T00:00:00.000Z", False, datetime(2000, 1, 1, 0, 0, 0, 0, tzinfo.UTC)),
+    ("2000-01-01T00:00:00.000Z", False, datetime(2000, 1, 1, 0, 0, 0, 0, tzinfo=UTC)),
 ])
 def test_parse_iso8601(caplog: pytest.LogCaptureFixture, string: Optional[str], log: bool, expected: Optional[datetime]):
     assert M3U8Parser.parse_iso8601(string) == expected
@@ -372,8 +374,8 @@ class TestHLSPlaylist(unittest.TestCase):
         with text("hls/test_date.m3u8") as m3u8_fh:
             playlist = load(m3u8_fh.read(), "http://test.se/")
 
-        start_date = datetime(year=2000, month=1, day=1, hour=0, minute=0, second=0, microsecond=0, tzinfo=tzinfo.UTC)
-        end_date = datetime(year=2000, month=1, day=1, hour=0, minute=1, second=0, microsecond=0, tzinfo=tzinfo.UTC)
+        start_date = datetime(year=2000, month=1, day=1, hour=0, minute=0, second=0, microsecond=0, tzinfo=UTC)
+        end_date = datetime(year=2000, month=1, day=1, hour=0, minute=1, second=0, microsecond=0, tzinfo=UTC)
         delta_15 = timedelta(seconds=15)
         delta_30 = timedelta(seconds=30, milliseconds=500)
         delta_60 = timedelta(seconds=60)

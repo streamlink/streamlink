@@ -7,10 +7,8 @@ $region Vietnam
 
 import logging
 import re
-from datetime import datetime
+from datetime import datetime, timezone
 from hashlib import md5
-
-from isodate import UTC  # type: ignore[import]
 
 from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.api import validate
@@ -30,7 +28,7 @@ class VinhLongTV(Plugin):
     _API_KEY_SECRET = "Kh0aAnT0an"
 
     def _get_headers(self):
-        now = datetime.now(tz=UTC)
+        now = datetime.now(tz=timezone.utc)
         date = now.strftime("%Y%m%d")
         time = now.strftime("%H%M%S")
         dtstr = f"{date}{time}"
