@@ -8,16 +8,14 @@ import pytest
 from freezegun import freeze_time
 from freezegun.api import FakeDatetime  # type: ignore[attr-defined]
 
-from streamlink.stream.dash_manifest import MPD, MPDParsers, MPDParsingError, Representation, utc
+from streamlink.stream.dash_manifest import MPD, MPDParsers, MPDParsingError, Representation
 from tests.resources import xml
 
 
-class TestMPDParsers(unittest.TestCase):
-    def test_utc(self):
-        assert utc.tzname(None) == "UTC"
-        assert utc.dst(None) == datetime.timedelta(0)
-        assert utc.utcoffset(None) == datetime.timedelta(0)
+UTC = datetime.timezone.utc
 
+
+class TestMPDParsers(unittest.TestCase):
     def test_bool_str(self):
         assert MPDParsers.bool_str("true")
         assert MPDParsers.bool_str("TRUE")
@@ -38,7 +36,7 @@ class TestMPDParsers(unittest.TestCase):
         assert MPDParsers.duration("PT1S") == datetime.timedelta(0, 1)
 
     def test_datetime(self):
-        assert MPDParsers.datetime("2018-01-01T00:00:00Z") == datetime.datetime(2018, 1, 1, 0, 0, 0, tzinfo=utc)
+        assert MPDParsers.datetime("2018-01-01T00:00:00Z") == datetime.datetime(2018, 1, 1, 0, 0, 0, tzinfo=UTC)
 
     def test_segment_template(self):
         assert MPDParsers.segment_template("$Time$-$Number$-$Other$")(Time=1, Number=2, Other=3) == "1-2-3"
@@ -112,7 +110,7 @@ class TestMPDParser(unittest.TestCase):
             ]
 
     def test_segments_dynamic_number(self):
-        with freeze_time(FakeDatetime(2018, 5, 22, 13, 37, 0, tzinfo=utc)):
+        with freeze_time(FakeDatetime(2018, 5, 22, 13, 37, 0, tzinfo=UTC)):
             with xml("dash/test_4.mpd") as mpd_xml:
                 mpd = MPD(mpd_xml, base_url="http://test.se/", url="http://test.se/manifest.mpd")
 
@@ -129,15 +127,15 @@ class TestMPDParser(unittest.TestCase):
                 assert video_segments == [
                     (
                         "http://test.se/hd-5_000311235.mp4",
-                        datetime.datetime(2018, 5, 22, 13, 37, 0, tzinfo=utc),
+                        datetime.datetime(2018, 5, 22, 13, 37, 0, tzinfo=UTC),
                     ),
                     (
                         "http://test.se/hd-5_000311236.mp4",
-                        datetime.datetime(2018, 5, 22, 13, 37, 5, tzinfo=utc),
+                        datetime.datetime(2018, 5, 22, 13, 37, 5, tzinfo=UTC),
                     ),
                     (
                         "http://test.se/hd-5_000311237.mp4",
-                        datetime.datetime(2018, 5, 22, 13, 37, 10, tzinfo=utc),
+                        datetime.datetime(2018, 5, 22, 13, 37, 10, tzinfo=UTC),
                     ),
                 ]
 

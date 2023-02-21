@@ -9,11 +9,13 @@ from itertools import count, repeat
 from typing import Optional
 from urllib.parse import urljoin, urlparse, urlsplit, urlunparse, urlunsplit
 
-from isodate import UTC as utc, Duration, parse_datetime, parse_duration  # type: ignore[import]
+from isodate import Duration, parse_datetime, parse_duration  # type: ignore[import]
 
 
 log = logging.getLogger(__name__)
-epoch_start = datetime.datetime(1970, 1, 1, tzinfo=utc)
+
+UTC = datetime.timezone.utc
+epoch_start = datetime.datetime(1970, 1, 1, tzinfo=UTC)
 
 
 # TODO: use NamedTuple or dataclass
@@ -32,7 +34,7 @@ def datetime_to_seconds(dt):
     return (dt - epoch_start).total_seconds()
 
 
-def count_dt(firstval=datetime.datetime.now(tz=utc), step=datetime.timedelta(seconds=1)):
+def count_dt(firstval=datetime.datetime.now(tz=UTC), step=datetime.timedelta(seconds=1)):
     x = firstval
     while True:
         yield x
@@ -63,7 +65,7 @@ class MPDParsers:
 
     @staticmethod
     def datetime(dt):
-        return parse_datetime(dt).replace(tzinfo=utc)
+        return parse_datetime(dt).replace(tzinfo=UTC)
 
     @staticmethod
     def segment_template(url_template):
@@ -205,7 +207,7 @@ class MPD(MPDNode):
         self.minBufferTime = self.attr("minBufferTime", parser=MPDParsers.duration, required=True)
         self.timeShiftBufferDepth = self.attr("timeShiftBufferDepth", parser=MPDParsers.duration)
         self.availabilityStartTime = self.attr("availabilityStartTime", parser=MPDParsers.datetime,
-                                               default=datetime.datetime.fromtimestamp(0, utc),  # earliest date
+                                               default=datetime.datetime.fromtimestamp(0, UTC),  # earliest date
                                                required=self.type == "dynamic")
         self.publishTime = self.attr("publishTime", parser=MPDParsers.datetime, required=self.type == "dynamic")
         self.availabilityEndTime = self.attr("availabilityEndTime", parser=MPDParsers.datetime)
@@ -449,7 +451,7 @@ class SegmentTemplate(MPDNode):
             else:
                 number_iter = count(self.startNumber)
         else:
-            now = datetime.datetime.now(utc)
+            now = datetime.datetime.now(UTC)
             if self.presentationTimeOffset:
                 since_start = (now - self.presentationTimeOffset) - self.root.availabilityStartTime
                 available_start_date = self.root.availabilityStartTime + self.presentationTimeOffset + since_start
@@ -519,7 +521,7 @@ class SegmentTemplate(MPDNode):
             else:
                 for segment, n in zip(self.segmentTimeline.segments, count(self.startNumber)):
                     yield (self.make_url(self.media(Time=segment.t, Number=n, **kwargs)),
-                           datetime.datetime.now(tz=utc))
+                           datetime.datetime.now(tz=UTC))
 
         else:
             for number, available_at in self.segment_numbers():
