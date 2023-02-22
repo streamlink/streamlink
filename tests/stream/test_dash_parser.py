@@ -261,3 +261,29 @@ class TestMPDParser(unittest.TestCase):
             mpd = MPD(mpd_xml, base_url="http://test.se/", url="http://test.se/manifest.mpd")
             duration = mpd.periods[0].duration.total_seconds()
             assert duration == pytest.approx(204.32)
+
+    def test_segments_byterange(self):
+        with xml("dash/test_segments_byterange.mpd") as mpd_xml:
+            mpd = MPD(mpd_xml, base_url="http://test/", url="http://test/manifest.mpd")
+        assert [
+            [
+                (seg.url, seg.init, seg.byterange)
+                for seg in adaptationset.representations[0].segments()
+            ]
+            for adaptationset in mpd.periods[0].adaptationSets
+        ] == [
+            [
+                ("http://test/video-frag.mp4", True, (36, 711)),
+                ("http://test/video-frag.mp4", False, (747, 875371)),
+                ("http://test/video-frag.mp4", False, (876118, 590796)),
+                ("http://test/video-frag.mp4", False, (1466914, 487041)),
+                ("http://test/video-frag.mp4", False, (1953955, 40698)),
+            ],
+            [
+                ("http://test/audio-frag.mp4", True, (32, 592)),
+                ("http://test/audio-frag.mp4", False, (624, 123576)),
+                ("http://test/audio-frag.mp4", False, (124200, 126104)),
+                ("http://test/audio-frag.mp4", False, (250304, 124062)),
+                ("http://test/audio-frag.mp4", False, (374366, 471)),
+            ],
+        ]
