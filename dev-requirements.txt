@@ -9,7 +9,7 @@ freezegun>=1.0.0
 shtab
 versioningit >=2.0.0, <3
 
-ruff
+ruff >=0.0.252
 
 mypy
 lxml-stubs
