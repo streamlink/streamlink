@@ -4,13 +4,34 @@ import datetime
 import logging
 import math
 import re
-from collections import defaultdict, namedtuple
+from collections import defaultdict
 from contextlib import contextmanager
 from itertools import count, repeat
-from typing import ClassVar, Optional, Tuple
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Callable,
+    ClassVar,
+    Iterator,
+    List,
+    Optional,
+    Sequence,
+    Set,
+    Tuple,
+    Type,
+    TypeVar,
+    Union,
+)
 from urllib.parse import urljoin, urlparse, urlsplit, urlunparse, urlunsplit
 
 from isodate import Duration, parse_datetime, parse_duration  # type: ignore[import]
+
+# noinspection PyProtectedMember
+from lxml.etree import _Attrib, _Element
+
+
+if TYPE_CHECKING:  # pragma: no cover
+    from typing_extensions import Literal
 
 
 log = logging.getLogger(__name__)
@@ -30,11 +51,24 @@ class Segment:
     byterange: Optional[Tuple[int, Optional[int]]] = None
 
 
+@dataclasses.dataclass
+class TimelineSegment:
+    t: int
+    d: int
+
+
+def _identity(x):
+    return x
+
+
 def datetime_to_seconds(dt):
     return (dt - EPOCH_START).total_seconds()
 
 
-def count_dt(firstval: Optional[datetime.datetime] = None, step: datetime.timedelta = ONE_SECOND):
+def count_dt(
+    firstval: Optional[datetime.datetime] = None,
+    step: datetime.timedelta = ONE_SECOND,
+) -> Iterator[datetime.datetime]:
     current = datetime.datetime.now(tz=UTC) if firstval is None else firstval
     while True:
         yield current
@@ -53,25 +87,25 @@ _re_segment_template = re.compile(r"(.*?)\$(\w+)(?:%([\w.]+))?\$")
 
 class MPDParsers:
     @staticmethod
-    def bool_str(v):
+    def bool_str(v: str) -> bool:
         return v.lower() == "true"
 
     @staticmethod
-    def type(type_):
-        if type_ not in ("static", "dynamic"):
+    def type(mpdtype: "Literal['static', 'dynamic']") -> "Literal['static', 'dynamic']":
+        if mpdtype not in ("static", "dynamic"):
             raise MPDParsingError("@type must be static or dynamic")
-        return type_
+        return mpdtype
 
     @staticmethod
-    def duration(duration):
+    def duration(duration: str) -> Union[datetime.timedelta, Duration]:
         return parse_duration(duration)
 
     @staticmethod
-    def datetime(dt):
+    def datetime(dt: str) -> datetime.datetime:
         return parse_datetime(dt).replace(tzinfo=UTC)
 
     @staticmethod
-    def segment_template(url_template):
+    def segment_template(url_template: str) -> Callable[..., str]:
         end = 0
         res = ""
         for m in _re_segment_template.finditer(url_template):
@@ -81,7 +115,7 @@ class MPDParsers:
         return f"{res}{url_template[end:]}".format
 
     @staticmethod
-    def frame_rate(frame_rate):
+    def frame_rate(frame_rate: str) -> float:
         if "/" not in frame_rate:
             return float(frame_rate)
 
@@ -89,14 +123,14 @@ class MPDParsers:
         return float(a) / float(b)
 
     @staticmethod
-    def timedelta(timescale=1):
+    def timedelta(timescale: float = 1):
         def _timedelta(seconds):
             return datetime.timedelta(seconds=int(float(seconds) / float(timescale)))
 
         return _timedelta
 
     @staticmethod
-    def range(range_spec):
+    def range(range_spec: str) -> Tuple[int, Optional[int]]:
         r = range_spec.split("-")
         if len(r) != 2:
             raise MPDParsingError("Invalid byte-range-spec")
@@ -109,33 +143,54 @@ class MPDParsingError(Exception):
     pass
 
 
+TMPDNode = TypeVar("TMPDNode", bound="MPDNode", covariant=True)
+TAttrDefault = TypeVar("TAttrDefault", Any, None)
+TAttrParseResult = TypeVar("TAttrParseResult")
+
+
 class MPDNode:
     __tag__: ClassVar[str]
 
-    def __init__(self, node, root=None, parent=None, *args, **kwargs):
+    parent: "MPDNode"
+
+    def __init__(
+        self,
+        node: _Element,
+        root: "MPD",
+        parent: "MPDNode",
+        *args,
+        **kwargs,
+    ):
         self.node = node
         self.root = root
         self.parent = parent
         self._base_url = kwargs.get("base_url")
-        self.attributes = set()
+        self.attributes: Set[str] = set()
         if self.__tag__ and self.node.tag.lower() != self.__tag__.lower():
             raise MPDParsingError(f"Root tag did not match the expected tag: {self.__tag__}")
 
     @property
-    def attrib(self):
+    def attrib(self) -> _Attrib:
         return self.node.attrib
 
     @property
-    def text(self):
+    def text(self) -> Optional[str]:
         return self.node.text
 
     def __str__(self):
         return f"<{self.__tag__} {' '.join(f'@{attr}={getattr(self, attr)}' for attr in self.attributes)}>"
 
-    def attr(self, key, default=None, parser=None, required=False, inherited=False):
+    def attr(
+        self,
+        key: str,
+        default: TAttrDefault = None,
+        parser: Optional[Callable[[Any], TAttrParseResult]] = None,
+        required: bool = False,
+        inherited: bool = False,
+    ) -> Union[TAttrParseResult, TAttrDefault, Any]:
         self.attributes.add(key)
         if key in self.attrib:
-            value = self.attrib.get(key)
+            value: Any = self.attrib.get(key)
             if parser and callable(parser):
                 return parser(value)
             else:
@@ -149,7 +204,12 @@ class MPDNode:
 
         return default
 
-    def children(self, cls, minimum=0, maximum=None):
+    def children(
+        self,
+        cls: Type[TMPDNode],
+        minimum: int = 0,
+        maximum: Optional[int] = None,
+    ) -> List[TMPDNode]:
         children = self.node.findall(cls.__tag__)
         if len(children) < minimum or (maximum and len(children) > maximum):
             raise MPDParsingError(f"Expected to find {self.__tag__}/{cls.__tag__} required [{minimum}..{maximum or 'unbound'})")
@@ -159,18 +219,26 @@ class MPDNode:
             for i, child in enumerate(children)
         ]
 
-    def only_child(self, cls, minimum=0):
+    def only_child(
+        self,
+        cls: Type[TMPDNode],
+        minimum: int = 0,
+    ) -> Optional[TMPDNode]:
         children = self.children(cls, minimum=minimum, maximum=1)
         return children[0] if len(children) else None
 
-    def walk_back(self, cls=None, f=lambda x: x):
+    def walk_back(
+        self,
+        cls: Optional[Type[TMPDNode]] = None,
+        f: Callable[["MPDNode"], "MPDNode"] = _identity,
+    ) -> Iterator[Union[TMPDNode, "MPDNode"]]:
         node = self.parent
         while node:
             if cls is None or cls.__tag__ == node.__tag__:
                 yield f(node)
             node = node.parent
 
-    def walk_back_get_attr(self, attr):
+    def walk_back_get_attr(self, attr: str) -> Optional[Any]:
         parent_attrs = [getattr(n, attr) for n in self.walk_back() if hasattr(n, attr)]
         return parent_attrs[0] if len(parent_attrs) else None
 
@@ -191,9 +259,14 @@ class MPD(MPDNode):
 
     __tag__ = "MPD"
 
-    def __init__(self, node, root=None, parent=None, url=None, *args, **kwargs):
+    parent: None  # type: ignore[assignment]
+
+    def __init__(self, node, url=None, *args, **kwargs):
         # top level has no parent
-        super().__init__(node, root=self, *args, **kwargs)
+        kwargs.pop("root", None)
+        kwargs.pop("parent", None)
+        # noinspection PyTypeChecker
+        super().__init__(node, root=self, parent=None, *args, **kwargs)
 
         # parser attributes
         self.url = url
@@ -272,14 +345,15 @@ class BaseURL(MPDNode):
 
     def __init__(self, node, root=None, parent=None, *args, **kwargs):
         super().__init__(node, root, parent, *args, **kwargs)
-        self.url = self.node.text.strip()
+
+        self.url = self.text.strip()
 
     @property
-    def is_absolute(self):
-        return urlparse(self.url).scheme
+    def is_absolute(self) -> bool:
+        return bool(urlparse(self.url).scheme)
 
     @staticmethod
-    def join(url, other):
+    def join(url: str, other: str) -> str:
         # if the other URL is an absolute url, then return that
         if urlparse(other).scheme:
             return other
@@ -302,6 +376,7 @@ class Period(MPDNode):
 
     def __init__(self, node, root=None, parent=None, *args, **kwargs):
         super().__init__(node, root, parent, *args, **kwargs)
+
         self.i = kwargs.get("i", 0)
         self.id = self.attr("id")
         self.bitstreamSwitching = self.attr(
@@ -355,6 +430,7 @@ class Initialization(MPDNode):
 
     def __init__(self, node, root=None, parent=None, *args, **kwargs):
         super().__init__(node, root, parent, *args, **kwargs)
+
         self.source_url = self.attr("sourceURL")
         self.range = self.attr(
             "range",
@@ -367,6 +443,7 @@ class SegmentURL(MPDNode):
 
     def __init__(self, node, root=None, parent=None, *args, **kwargs):
         super().__init__(node, root, parent, *args, **kwargs)
+
         self.media = self.attr("media")
         self.media_range = self.attr(
             "mediaRange",
@@ -404,7 +481,7 @@ class SegmentList(MPDNode):
         self.segment_urls = self.children(SegmentURL, minimum=1)
 
     @property
-    def segments(self):
+    def segments(self) -> Iterator[Segment]:
         if self.initialization:
             yield Segment(
                 url=self.make_url(self.initialization.source_url),
@@ -420,7 +497,7 @@ class SegmentList(MPDNode):
                 byterange=segment_url.media_range,
             )
 
-    def make_url(self, url):
+    def make_url(self, url: str) -> str:
         return BaseURL.join(self.base_url, url)
 
 
@@ -491,8 +568,11 @@ class AdaptationSet(MPDNode):
 class SegmentTemplate(MPDNode):
     __tag__ = "SegmentTemplate"
 
+    parent: Union["AdaptationSet", "Representation"]
+
     def __init__(self, node, root=None, parent=None, *args, **kwargs):
         super().__init__(node, root, parent, *args, **kwargs)
+
         self.defaultSegmentTemplate = self.walk_back_get_attr("segmentTemplate")
 
         self.initialization = self.attr(
@@ -533,7 +613,7 @@ class SegmentTemplate(MPDNode):
         # children
         self.segmentTimeline = self.only_child(SegmentTimeline)
 
-    def segments(self, **kwargs):
+    def segments(self, **kwargs) -> Iterator[Segment]:
         if kwargs.pop("init", True):
             init_url = self.format_initialization(**kwargs)
             if init_url:
@@ -552,7 +632,7 @@ class SegmentTemplate(MPDNode):
                 available_at=available_at,
             )
 
-    def make_url(self, url):
+    def make_url(self, url: str) -> str:
         """
         Join the URL with the base URL, unless it's an absolute URL
         :param url: maybe relative URL
@@ -561,11 +641,11 @@ class SegmentTemplate(MPDNode):
 
         return BaseURL.join(self.base_url, url)
 
-    def format_initialization(self, **kwargs):
+    def format_initialization(self, **kwargs) -> Optional[str]:
         if self.initialization:
             return self.make_url(self.initialization(**kwargs))
 
-    def segment_numbers(self):
+    def segment_numbers(self) -> Iterator[Tuple[int, datetime.datetime]]:
         """
         yield the segment number and when it will be available.
 
@@ -579,6 +659,8 @@ class SegmentTemplate(MPDNode):
         """
 
         log.debug(f"Generating segment numbers for {self.root.type} playlist (id={self.parent.id})")
+        number_iter: Union[Iterator[int], Sequence[int]]
+        available_iter: Iterator[datetime.datetime]
 
         if self.root.type == "static":
             available_iter = repeat(EPOCH_START)
@@ -616,7 +698,7 @@ class SegmentTemplate(MPDNode):
 
         yield from zip(number_iter, available_iter)
 
-    def format_media(self, **kwargs):
+    def format_media(self, **kwargs) -> Iterator[Tuple[str, datetime.datetime]]:
         if not self.segmentTimeline:
             for number, available_at in self.segment_numbers():
                 url = self.make_url(self.media(Number=number, **kwargs))
@@ -672,6 +754,7 @@ class Representation(MPDNode):
 
     def __init__(self, node, root=None, parent=None, *args, **kwargs):
         super().__init__(node, root, parent, *args, **kwargs)
+
         self.id = self.attr(
             "id",
             required=True,
@@ -727,10 +810,10 @@ class Representation(MPDNode):
         self.segmentTemplate = self.only_child(SegmentTemplate)
 
     @property
-    def bandwidth_rounded(self):
+    def bandwidth_rounded(self) -> float:
         return round(self.bandwidth, 1 - int(math.log10(self.bandwidth)))
 
-    def segments(self, **kwargs):
+    def segments(self, **kwargs) -> Iterator[Segment]:
         """
         Segments are yielded when they are available
 
@@ -769,32 +852,31 @@ class SubRepresentation(MPDNode):
 
 class SegmentTimeline(MPDNode):
     __tag__ = "SegmentTimeline"
-    TimelineSegment = namedtuple("TimelineSegment", "t d")
 
-    def __init__(self, node, *args, **kwargs):
-        super().__init__(node, *args, **kwargs)
+    def __init__(self, node, root=None, parent=None, *args, **kwargs):
+        super().__init__(node, root, parent, *args, **kwargs)
 
         self.timescale = self.walk_back_get_attr("timescale")
 
         self.timeline_segments = self.children(_TimelineSegment)
 
     @property
-    def segments(self):
+    def segments(self) -> Iterator[TimelineSegment]:
         t = 0
         for tsegment in self.timeline_segments:
             if t == 0 and tsegment.t is not None:
                 t = tsegment.t
             # check the start time from MPD
             for repeated_i in range(tsegment.r + 1):
-                yield self.TimelineSegment(t, tsegment.d)
+                yield TimelineSegment(t, tsegment.d)
                 t += tsegment.d
 
 
 class _TimelineSegment(MPDNode):
     __tag__ = "S"
 
-    def __init__(self, node, *args, **kwargs):
-        super().__init__(node, *args, **kwargs)
+    def __init__(self, node, root=None, parent=None, *args, **kwargs):
+        super().__init__(node, root, parent, *args, **kwargs)
 
         self.t = self.attr("t", parser=int)
         self.d = self.attr("d", parser=int)
