@@ -32,16 +32,6 @@ class PythonDeprecatedWarning(UserWarning):
 
 
 class StreamlinkOptions(Options):
-    _OPTIONS_HTTP_ATTRS = {
-        "http-cookies": "cookies",
-        "http-headers": "headers",
-        "http-query-params": "params",
-        "http-ssl-cert": "cert",
-        "http-ssl-trust-env": "trust_env",
-        "http-ssl-verify": "verify",
-        "http-timeout": "timeout",
-    }
-
     def __init__(self, session: "Streamlink", *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.session = session
@@ -143,6 +133,16 @@ class StreamlinkOptions(Options):
     _factory_set_deprecated = _factory_set_deprecated.__get__(object)
 
     # ----
+
+    _OPTIONS_HTTP_ATTRS = {
+        "http-cookies": "cookies",
+        "http-headers": "headers",
+        "http-query-params": "params",
+        "http-ssl-cert": "cert",
+        "http-ssl-verify": "verify",
+        "http-trust-env": "trust_env",
+        "http-timeout": "timeout",
+    }
 
     _MAP_GETTERS: ClassVar[Mapping[str, Callable[["StreamlinkOptions", str], Any]]] = {
         "http-proxy": _get_http_proxy,
