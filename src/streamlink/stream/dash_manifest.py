@@ -613,9 +613,9 @@ class SegmentTemplate(MPDNode):
         # children
         self.segmentTimeline = self.only_child(SegmentTimeline)
 
-    def segments(self, **kwargs) -> Iterator[Segment]:
+    def segments(self, base_url: str, **kwargs) -> Iterator[Segment]:
         if kwargs.pop("init", True):
-            init_url = self.format_initialization(**kwargs)
+            init_url = self.format_initialization(base_url, **kwargs)
             if init_url:
                 yield Segment(
                     url=init_url,
@@ -623,7 +623,7 @@ class SegmentTemplate(MPDNode):
                     init=True,
                     content=False,
                 )
-        for media_url, available_at in self.format_media(**kwargs):
+        for media_url, available_at in self.format_media(base_url, **kwargs):
             yield Segment(
                 url=media_url,
                 duration=self.duration_seconds,
@@ -632,18 +632,13 @@ class SegmentTemplate(MPDNode):
                 available_at=available_at,
             )
 
-    def make_url(self, url: str) -> str:
-        """
-        Join the URL with the base URL, unless it's an absolute URL
-        :param url: maybe relative URL
-        :return: joined URL
-        """
+    @staticmethod
+    def make_url(base_url: str, url: str) -> str:
+        return BaseURL.join(base_url, url)
 
-        return BaseURL.join(self.base_url, url)
-
-    def format_initialization(self, **kwargs) -> Optional[str]:
+    def format_initialization(self, base_url: str, **kwargs) -> Optional[str]:
         if self.initialization:
-            return self.make_url(self.initialization(**kwargs))
+            return self.make_url(base_url, self.initialization(**kwargs))
 
     def segment_numbers(self) -> Iterator[Tuple[int, datetime.datetime]]:
         """
@@ -698,10 +693,10 @@ class SegmentTemplate(MPDNode):
 
         yield from zip(number_iter, available_iter)
 
-    def format_media(self, **kwargs) -> Iterator[Tuple[str, datetime.datetime]]:
+    def format_media(self, base_url: str, **kwargs) -> Iterator[Tuple[str, datetime.datetime]]:
         if not self.segmentTimeline:
             for number, available_at in self.segment_numbers():
-                url = self.make_url(self.media(Number=number, **kwargs))
+                url = self.make_url(base_url, self.media(Number=number, **kwargs))
                 yield url, available_at
             return
 
@@ -714,7 +709,7 @@ class SegmentTemplate(MPDNode):
 
         if self.root.type == "static":
             for segment, n in zip(self.segmentTimeline.segments, count(self.startNumber)):
-                url = self.make_url(self.media(Time=segment.t, Number=n, **kwargs))
+                url = self.make_url(base_url, self.media(Time=segment.t, Number=n, **kwargs))
                 available_at = datetime.datetime.now(tz=UTC)  # TODO: replace with EPOCH_START ?!
                 yield url, available_at
             return
@@ -731,7 +726,7 @@ class SegmentTemplate(MPDNode):
             # the last segment in the timeline is the most recent one
             # so, work backwards and calculate when each of the segments was
             # available, based on the durations relative to the publish-time
-            url = self.make_url(self.media(Time=segment.t, Number=n, **kwargs))
+            url = self.make_url(base_url, self.media(Time=segment.t, Number=n, **kwargs))
             duration = datetime.timedelta(seconds=segment.d / self.timescale)
 
             # once the suggested_delay is reach stop
@@ -830,6 +825,7 @@ class Representation(MPDNode):
 
         if segmentTemplate:
             yield from segmentTemplate.segments(
+                self.base_url,
                 RepresentationID=self.id,
                 Bandwidth=int(self.bandwidth * 1000),
                 **kwargs,

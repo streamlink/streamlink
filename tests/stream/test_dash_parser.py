@@ -287,3 +287,33 @@ class TestMPDParser(unittest.TestCase):
                 ("http://test/audio-frag.mp4", False, (374366, 471)),
             ],
         ]
+
+    def test_nested_baseurls(self):
+        with xml("dash/test_nested_baseurls.mpd") as mpd_xml:
+            mpd = MPD(mpd_xml, base_url="https://foo/", url="https://test/manifest.mpd")
+        segment_urls = [
+            [seg.url for seg in itertools.islice(representation.segments(), 2)]
+            for adaptationset in mpd.periods[0].adaptationSets for representation in adaptationset.representations
+        ]
+        assert segment_urls == [
+            [
+                "https://hostname/period/init_video_5000kbps.m4s",
+                "https://hostname/period/media_video_5000kbps-1.m4s",
+            ],
+            [
+                "https://hostname/period/representation/init_video_9000kbps.m4s",
+                "https://hostname/period/representation/media_video_9000kbps-1.m4s",
+            ],
+            [
+                "https://hostname/period/adaptationset/init_audio_128kbps.m4s",
+                "https://hostname/period/adaptationset/media_audio_128kbps-1.m4s",
+            ],
+            [
+                "https://hostname/period/adaptationset/representation/init_audio_256kbps.m4s",
+                "https://hostname/period/adaptationset/representation/media_audio_256kbps-1.m4s",
+            ],
+            [
+                "https://other/init_audio_320kbps.m4s",
+                "https://other/media_audio_320kbps-1.m4s",
+            ],
+        ]
