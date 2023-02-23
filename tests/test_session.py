@@ -525,6 +525,24 @@ class TestOptionsKeyEqualsValue:
         session.set_option(option, value)
 
 
+@pytest.mark.parametrize(
+    ("option", "attr", "default", "value"),
+    [
+        ("http-ssl-cert", "cert", None, "foo"),
+        ("http-ssl-verify", "verify", True, False),
+        ("http-trust-env", "trust_env", True, False),
+        ("http-timeout", "timeout", 20.0, 30.0),
+    ],
+)
+def test_options_http_other(session: Streamlink, option: str, attr: str, default, value):
+    httpsessionattr = getattr(session.http, attr)
+    assert httpsessionattr == default
+    assert session.get_option(option) == httpsessionattr
+
+    session.set_option(option, value)
+    assert session.get_option(option) == value
+
+
 class TestOptionsDocumentation:
     @pytest.fixture()
     def docstring(self, session: Streamlink):
