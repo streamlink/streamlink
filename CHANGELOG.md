@@ -1,5 +1,17 @@
 # Changelog
 
+## streamlink 5.3.1 (2023-02-25)
+
+Patch release:
+
+- Fixed: `http-trust-env` session option name (`--http-ignore-env` CLI parameter) ([#5193](https://github.com/streamlink/streamlink/pull/5193))
+- Fixed: missing byterange attribute of initialization segments in DASH streams ([#5189](https://github.com/streamlink/streamlink/pull/5189))
+- Fixed: broken BaseURL context in DASH streams ([#5194](https://github.com/streamlink/streamlink/pull/5194))
+- Fixed: detection of certain encrypted DASH streams ([#5196](https://github.com/streamlink/streamlink/pull/5196))
+
+[Full changelog](https://github.com/streamlink/streamlink/compare/5.3.0...5.3.1)
+
+
 ## streamlink 5.3.0 (2023-02-18)
 
 Release highlights:
