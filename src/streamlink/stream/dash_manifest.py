@@ -803,6 +803,7 @@ class Representation(MPDNode):
         self.segmentBase = self.only_child(SegmentBase)
         self.segmentList = self.children(SegmentList)
         self.segmentTemplate = self.only_child(SegmentTemplate)
+        self.contentProtection = self.children(ContentProtection)
 
     @property
     def bandwidth_rounded(self) -> float:
