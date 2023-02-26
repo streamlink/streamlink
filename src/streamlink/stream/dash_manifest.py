@@ -12,6 +12,7 @@ from typing import (
     Any,
     Callable,
     ClassVar,
+    Dict,
     Iterator,
     List,
     Optional,
@@ -147,6 +148,8 @@ TMPDNode = TypeVar("TMPDNode", bound="MPDNode", covariant=True)
 TAttrDefault = TypeVar("TAttrDefault", Any, None)
 TAttrParseResult = TypeVar("TAttrParseResult")
 
+TTimelineIdent = Tuple[Optional[str], Optional[str], str]
+
 
 class MPDNode:
     __tag__: ClassVar[str]
@@ -260,6 +263,7 @@ class MPD(MPDNode):
     __tag__ = "MPD"
 
     parent: None  # type: ignore[assignment]
+    timelines: Dict[TTimelineIdent, int]
 
     def __init__(self, node, url=None, *args, **kwargs):
         # top level has no parent
@@ -504,6 +508,8 @@ class SegmentList(MPDNode):
 class AdaptationSet(MPDNode):
     __tag__ = "AdaptationSet"
 
+    parent: "Period"
+
     def __init__(self, node, root=None, parent=None, *args, **kwargs):
         super().__init__(node, root, parent, *args, **kwargs)
 
@@ -568,7 +574,7 @@ class AdaptationSet(MPDNode):
 class SegmentTemplate(MPDNode):
     __tag__ = "SegmentTemplate"
 
-    parent: Union["AdaptationSet", "Representation"]
+    parent: Union["Period", "AdaptationSet", "Representation"]
 
     def __init__(self, node, root=None, parent=None, *args, **kwargs):
         super().__init__(node, root, parent, *args, **kwargs)
@@ -613,7 +619,7 @@ class SegmentTemplate(MPDNode):
         # children
         self.segmentTimeline = self.only_child(SegmentTimeline)
 
-    def segments(self, base_url: str, **kwargs) -> Iterator[Segment]:
+    def segments(self, ident: TTimelineIdent, base_url: str, **kwargs) -> Iterator[Segment]:
         if kwargs.pop("init", True):
             init_url = self.format_initialization(base_url, **kwargs)
             if init_url:
@@ -623,7 +629,7 @@ class SegmentTemplate(MPDNode):
                     init=True,
                     content=False,
                 )
-        for media_url, available_at in self.format_media(base_url, **kwargs):
+        for media_url, available_at in self.format_media(ident, base_url, **kwargs):
             yield Segment(
                 url=media_url,
                 duration=self.duration_seconds,
@@ -653,7 +659,6 @@ class SegmentTemplate(MPDNode):
         In the simplest case, the segment number is based on the time since the availabilityStartTime.
         """
 
-        log.debug(f"Generating segment numbers for {self.root.type} playlist (id={self.parent.id})")
         number_iter: Union[Iterator[int], Sequence[int]]
         available_iter: Iterator[datetime.datetime]
 
@@ -693,19 +698,15 @@ class SegmentTemplate(MPDNode):
 
         yield from zip(number_iter, available_iter)
 
-    def format_media(self, base_url: str, **kwargs) -> Iterator[Tuple[str, datetime.datetime]]:
+    def format_media(self, ident: TTimelineIdent, base_url: str, **kwargs) -> Iterator[Tuple[str, datetime.datetime]]:
         if not self.segmentTimeline:
+            log.debug(f"Generating segment numbers for {self.root.type} playlist: {ident!r}")
             for number, available_at in self.segment_numbers():
                 url = self.make_url(base_url, self.media(Number=number, **kwargs))
                 yield url, available_at
             return
 
-        if self.parent.id is None:
-            # workaround for invalid `self.root.timelines[self.parent.id]`
-            # creates a timeline for every mimeType instead of one for both
-            self.parent.id = self.parent.mimeType
-
-        log.debug(f"Generating segment timeline for {self.root.type} playlist (id={self.parent.id}))")
+        log.debug(f"Generating segment timeline for {self.root.type} playlist: {ident!r}")
 
         if self.root.type == "static":
             for segment, n in zip(self.segmentTimeline.segments, count(self.startNumber)):
@@ -730,7 +731,7 @@ class SegmentTemplate(MPDNode):
             duration = datetime.timedelta(seconds=segment.d / self.timescale)
 
             # once the suggested_delay is reach stop
-            if self.root.timelines[self.parent.id] == -1 and publish_time - available_at >= suggested_delay:
+            if self.root.timelines[ident] == -1 and publish_time - available_at >= suggested_delay:
                 break
 
             timeline.append((url, available_at, segment.t))
@@ -739,13 +740,15 @@ class SegmentTemplate(MPDNode):
 
         # return the segments in chronological order
         for url, available_at, t in reversed(timeline):
-            if t > self.root.timelines[self.parent.id]:
-                self.root.timelines[self.parent.id] = t
+            if t > self.root.timelines[ident]:
+                self.root.timelines[ident] = t
                 yield url, available_at
 
 
 class Representation(MPDNode):
     __tag__ = "Representation"
+
+    parent: "AdaptationSet"
 
     def __init__(self, node, root=None, parent=None, *args, **kwargs):
         super().__init__(node, root, parent, *args, **kwargs)
@@ -798,6 +801,8 @@ class Representation(MPDNode):
             inherited=True,
         )
 
+        self.ident = self.parent.parent.id, self.parent.id, self.id
+
         self.baseURLs = self.children(BaseURL)
         self.subRepresentation = self.children(SubRepresentation)
         self.segmentBase = self.only_child(SegmentBase)
@@ -826,6 +831,7 @@ class Representation(MPDNode):
 
         if segmentTemplate:
             yield from segmentTemplate.segments(
+                self.ident,
                 self.base_url,
                 RepresentationID=self.id,
                 Bandwidth=int(self.bandwidth * 1000),

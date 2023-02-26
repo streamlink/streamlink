@@ -232,7 +232,7 @@ class TestMPDParser(unittest.TestCase):
                 },
             )
             node.findall.return_value = []
-            return Representation(node)
+            return Representation(node, parent=Mock())
 
         assert mock_rep(1.2 * 1000.0).bandwidth_rounded == pytest.approx(1.2)
         assert mock_rep(45.6 * 1000.0).bandwidth_rounded == pytest.approx(46.0)
@@ -316,4 +316,44 @@ class TestMPDParser(unittest.TestCase):
                 "https://other/init_audio_320kbps.m4s",
                 "https://other/media_audio_320kbps-1.m4s",
             ],
+        ]
+
+    def test_timeline_ids(self):
+        with xml("dash/test_timeline_ids.mpd") as mpd_xml, \
+             freeze_time("2000-01-01T00:00:00Z"):
+            mpd = MPD(mpd_xml, base_url="http://test/", url="http://test/manifest.mpd")
+            segment_urls = [
+                [
+                    segment.url
+                    for segment in itertools.islice(representation.segments(), 3)
+                ]
+                for adaptationset in mpd.periods[0].adaptationSets for representation in adaptationset.representations
+            ]
+        assert segment_urls == [
+            [
+                "http://test/audio1/init.mp4",
+                "http://test/audio1/t0.m4s",
+                "http://test/audio1/t1.m4s",
+            ],
+            [
+                "http://test/audio2/init.mp4",
+                "http://test/audio2/t0.m4s",
+                "http://test/audio2/t1.m4s",
+            ],
+            [
+                "http://test/video1/init.mp4",
+                "http://test/video1/t0.m4s",
+                "http://test/video1/t1.m4s",
+            ],
+            [
+                "http://test/video2/init.mp4",
+                "http://test/video2/t0.m4s",
+                "http://test/video2/t1.m4s",
+            ],
+        ]
+        assert list(mpd.timelines.keys()) == [
+            ("period-0", "0", "audio1"),
+            ("period-0", "0", "audio2"),
+            ("period-0", None, "video1"),
+            ("period-0", None, "video2"),
         ]
