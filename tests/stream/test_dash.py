@@ -204,34 +204,30 @@ class TestDASHStream(unittest.TestCase):
 
     @patch("streamlink.stream.dash.DASHStreamReader")
     @patch("streamlink.stream.dash.FFMPEGMuxer")
-    def test_stream_open_video_only(self, muxer, reader):
-        stream = DASHStream(self.session, Mock(), Mock(id=1, mimeType="video/mp4"))
-        open_reader = reader.return_value = Mock()
-
+    def test_stream_open_video_only(self, muxer: Mock, reader: Mock):
+        rep_video = Mock(ident=(None, None, "1"), mimeType="video/mp4")
+        stream = DASHStream(self.session, Mock(), rep_video)
         stream.open()
 
-        reader.assert_called_with(stream, 1, "video/mp4")
-        open_reader.open.assert_called_with()
-        muxer.assert_not_called()
+        assert reader.call_args_list == [call(stream, rep_video)]
+        reader_video = reader(stream, rep_video)
+        assert reader_video.open.called_once
+        assert muxer.call_args_list == []
 
     @patch("streamlink.stream.dash.DASHStreamReader")
     @patch("streamlink.stream.dash.FFMPEGMuxer")
-    def test_stream_open_video_audio(self, muxer, reader):
-        stream = DASHStream(self.session, Mock(), Mock(id=1, mimeType="video/mp4"), Mock(id=2, mimeType="audio/mp3", lang="en"))
-        open_reader = reader.return_value = Mock()
-
+    def test_stream_open_video_audio(self, muxer: Mock, reader: Mock):
+        rep_video = Mock(ident=(None, None, "1"), mimeType="video/mp4")
+        rep_audio = Mock(ident=(None, None, "2"), mimeType="audio/mp3", lang="en")
+        stream = DASHStream(self.session, Mock(), rep_video, rep_audio)
         stream.open()
 
-        assert reader.mock_calls == [
-            call(stream, 1, "video/mp4"),
-            call().open(),
-            call(stream, 2, "audio/mp3"),
-            call().open(),
-        ]
-        assert muxer.mock_calls == [
-            call(self.session, open_reader, open_reader, copyts=True),
-            call().open(),
-        ]
+        assert reader.call_args_list == [call(stream, rep_video), call(stream, rep_audio)]
+        reader_video = reader(stream, rep_video)
+        reader_audio = reader(stream, rep_audio)
+        assert reader_video.open.called_once
+        assert reader_audio.open.called_once
+        assert muxer.call_args_list == [call(self.session, reader_video, reader_audio, copyts=True)]
 
     @patch("streamlink.stream.dash.MPD")
     def test_segments_number_time(self, mpdClass):
@@ -302,7 +298,7 @@ class TestDASHStreamWorker:
 
     @pytest.fixture()
     def representation(self) -> Mock:
-        return Mock(id=1, mimeType="video/mp4", height=720)
+        return Mock(ident=(None, None, "1"), mimeType="video/mp4", height=720)
 
     @pytest.fixture()
     def segments(self) -> List[Mock]:
@@ -332,9 +328,9 @@ class TestDASHStreamWorker:
 
     @pytest.fixture()
     def worker(self, mpd):
-        reader = MagicMock(representation_id=1, mime_type="video/mp4")
+        stream = Mock(mpd=mpd, period=0, args={})
+        reader = Mock(stream=stream, ident=(None, None, "1"))
         worker = DASHStreamWorker(reader)
-        worker.mpd = mpd
         return worker
 
     def test_dynamic_reload(
@@ -405,9 +401,10 @@ class TestDASHStreamWorker:
         assert worker._wait.is_set()
 
     def test_duplicate_rep_id(self):
-        representation_vid = Mock(id=1, mimeType="video/mp4", height=720)
-        representation_aud = Mock(id=1, mimeType="audio/aac", lang="en")
+        representation_vid = Mock(ident=(None, None, "1"), mimeType="video/mp4", height=720)
+        representation_aud = Mock(ident=(None, None, "2"), mimeType="audio/aac", lang="en")
 
+        worker = DASHStreamWorker(Mock(stream=Mock(period=0)))
         mpd = Mock(
             dynamic=False,
             publishTime=1,
@@ -426,6 +423,5 @@ class TestDASHStreamWorker:
                 ),
             ],
         )
-
-        assert DASHStreamWorker.get_representation(mpd, 1, "video/mp4") is representation_vid
-        assert DASHStreamWorker.get_representation(mpd, 1, "audio/aac") is representation_aud
+        assert worker.get_representation(mpd, (None, None, "1")) is representation_vid
+        assert worker.get_representation(mpd, (None, None, "2")) is representation_aud
