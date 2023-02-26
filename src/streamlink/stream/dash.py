@@ -95,11 +95,10 @@ class DASHStreamWorker(SegmentedStreamWorker):
         if time_to_sleep > 0:
             self.wait(time_to_sleep)
 
-    @staticmethod
-    def get_representation(mpd, representation_id, mime_type):
-        for aset in mpd.periods[0].adaptationSets:
+    def get_representation(self, mpd, ident):
+        for aset in mpd.periods[self.period].adaptationSets:
             for rep in aset.representations:
-                if rep.id == representation_id and rep.mimeType == mime_type:
+                if rep.ident == ident:
                     return rep
 
     def iter_segments(self):
@@ -107,14 +106,14 @@ class DASHStreamWorker(SegmentedStreamWorker):
         back_off_factor = 1
         while not self.closed:
             # find the representation by ID
-            representation = self.get_representation(self.mpd, self.reader.representation_id, self.reader.mime_type)
+            representation = self.get_representation(self.mpd, self.reader.ident)
 
             if self.mpd.type == "static":
                 refresh_wait = 5
             else:
                 refresh_wait = max(
                     self.mpd.minimumUpdatePeriod.total_seconds(),
-                    self.mpd.periods[0].duration.total_seconds(),
+                    self.mpd.periods[self.period].duration.total_seconds(),
                 ) or 5
 
             with self.sleeper(refresh_wait * back_off_factor):
@@ -143,7 +142,7 @@ class DASHStreamWorker(SegmentedStreamWorker):
             return
 
         self.reader.buffer.wait_free()
-        log.debug("Reloading manifest ({0}:{1})".format(self.reader.representation_id, self.reader.mime_type))
+        log.debug(f"Reloading manifest {self.reader.ident!r}")
         res = self.session.http.get(self.mpd.url, exception=StreamError, **self.stream.args)
 
         new_mpd = MPD(self.session.http.xml(res, ignore_ns=True),
@@ -151,7 +150,7 @@ class DASHStreamWorker(SegmentedStreamWorker):
                       url=self.mpd.url,
                       timelines=self.mpd.timelines)
 
-        new_rep = self.get_representation(new_mpd, self.reader.representation_id, self.reader.mime_type)
+        new_rep = self.get_representation(new_mpd, self.reader.ident)
         with freeze_timeline(new_mpd):
             changed = len(list(itertools.islice(new_rep.segments(), 1))) > 0
 
@@ -169,11 +168,9 @@ class DASHStreamReader(SegmentedStreamReader):
     writer: "DASHStreamWriter"
     stream: "DASHStream"
 
-    def __init__(self, stream: "DASHStream", representation_id, mime_type, *args, **kwargs):
+    def __init__(self, stream: "DASHStream", representation: Representation, *args, **kwargs):
         super().__init__(stream, *args, **kwargs)
-        self.mime_type = mime_type
-        self.representation_id = representation_id
-        log.debug("Opening DASH reader for: {0} ({1})".format(self.representation_id, self.mime_type))
+        self.ident = representation.ident
 
 
 class DASHStream(Stream):
@@ -346,17 +343,22 @@ class DASHStream(Stream):
         return ret_new
 
     def open(self):
-        if self.video_representation:
-            video = DASHStreamReader(self, self.video_representation.id, self.video_representation.mimeType)
+        video, audio = None, None
+        rep_video, rep_audio = self.video_representation, self.audio_representation
+
+        if rep_video:
+            video = DASHStreamReader(self, rep_video)
+            log.debug(f"Opening DASH reader for: {rep_video.ident!r} - {rep_video.mimeType}")
             video.open()
 
-        if self.audio_representation:
-            audio = DASHStreamReader(self, self.audio_representation.id, self.audio_representation.mimeType)
+        if rep_audio:
+            audio = DASHStreamReader(self, rep_audio)
+            log.debug(f"Opening DASH reader for: {rep_audio.ident!r} - {rep_audio.mimeType}")
             audio.open()
 
-        if self.video_representation and self.audio_representation:
+        if video and audio:
             return FFMPEGMuxer(self.session, video, audio, copyts=True).open()
-        elif self.video_representation:
+        elif video:
             return video
-        elif self.audio_representation:
+        elif audio:
             return audio
