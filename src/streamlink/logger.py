@@ -166,11 +166,11 @@ def _showwarning(message, category, filename, lineno, file=None, line=None):
 
 
 def capturewarnings(capture=False):
-    global _showwarning_default
+    global _showwarning_default  # noqa: PLW0603
 
     if capture:
         if _showwarning_default is None:
-            _showwarning_default = warnings.showwarning
+            _showwarning_default = warnings.showwarning  # noqa: PLW0603
             warnings.showwarning = _showwarning
     else:
         if _showwarning_default is not None:
