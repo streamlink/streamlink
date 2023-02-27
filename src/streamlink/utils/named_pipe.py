@@ -26,7 +26,7 @@ class NamedPipeBase(abc.ABC):
     path: Path
 
     def __init__(self):
-        global _id
+        global _id  # noqa: PLW0603
         with _lock:
             _id += 1
             self.name = f"streamlinkpipe-{os.getpid()}-{_id}-{random.randint(0, 9999)}"
