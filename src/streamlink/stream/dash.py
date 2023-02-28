@@ -84,6 +84,8 @@ class DASHStreamWorker(SegmentedStreamWorker):
         self.mpd = self.stream.mpd
         self.period = self.stream.period
 
+        self.manifest_reload_retries = self.session.options.get("dash-manifest-reload-attempts")
+
     @contextmanager
     def sleeper(self, duration):
         """
@@ -143,12 +145,19 @@ class DASHStreamWorker(SegmentedStreamWorker):
 
         self.reader.buffer.wait_free()
         log.debug(f"Reloading manifest {self.reader.ident!r}")
-        res = self.session.http.get(self.mpd.url, exception=StreamError, **self.stream.args)
+        res = self.session.http.get(
+            self.mpd.url,
+            exception=StreamError,
+            retries=self.manifest_reload_retries,
+            **self.stream.args,
+        )
 
-        new_mpd = MPD(self.session.http.xml(res, ignore_ns=True),
-                      base_url=self.mpd.base_url,
-                      url=self.mpd.url,
-                      timelines=self.mpd.timelines)
+        new_mpd = MPD(
+            self.session.http.xml(res, ignore_ns=True),
+            base_url=self.mpd.base_url,
+            url=self.mpd.url,
+            timelines=self.mpd.timelines,
+        )
 
         new_rep = self.get_representation(new_mpd, self.reader.ident)
         with freeze_timeline(new_mpd):
@@ -245,7 +254,12 @@ class DASHStream(Stream):
         if url_or_manifest.startswith("<?xml"):
             mpd = MPD(parse_xml(url_or_manifest, ignore_ns=True))
         else:
-            res = session.http.get(url_or_manifest, **session.http.valid_request_args(**args))
+            retries = session.options.get("dash-manifest-reload-attempts")
+            res = session.http.get(
+                url_or_manifest,
+                retries=retries,
+                **session.http.valid_request_args(**args),
+            )
             url = res.url
 
             urlp = list(urlparse(url))
