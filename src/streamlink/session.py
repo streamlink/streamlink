@@ -224,6 +224,7 @@ class Streamlink:
             "hls-segment-ignore-names": [],
             "hls-segment-key-uri": None,
             "hls-audio-select": [],
+            "dash-manifest-reload-attempts": 3,
             "ffmpeg-ffmpeg": None,
             "ffmpeg-no-validation": False,
             "ffmpeg-verbose": False,
@@ -367,7 +368,7 @@ class Streamlink:
             * - hls-playlist-reload-attempts
               - ``int``
               - ``3``
-              - Number of HLS playlist reload attempts before giving up
+              - Max number of HLS playlist reload attempts before giving up
             * - hls-playlist-reload-time
               - ``str | float``
               - ``"default"``
@@ -395,6 +396,10 @@ class Streamlink:
               - ``[]``
               - Select a specific audio source or sources when multiple audio sources are available,
                 by language code or name, or ``"*"`` (asterisk)
+            * - dash-manifest-reload-attempts
+              - ``int``
+              - ``3``
+              - Max number of DASH manifest reload attempts before giving up
             * - hls-segment-attempts *(deprecated)*
               - ``int``
               - ``3``

@@ -808,6 +808,7 @@ def build_parser():
 
     transport = parser.add_argument_group("Stream transport options")
     transport_hls = parser.add_argument_group("HLS options", parent=transport)
+    transport_dash = parser.add_argument_group("DASH options", parent=transport)
     transport_ffmpeg = parser.add_argument_group("FFmpeg options", parent=transport)
 
     transport.add_argument(
@@ -923,7 +924,7 @@ def build_parser():
         type=num(int, min=0),
         metavar="ATTEMPTS",
         help="""
-        How many attempts should be done to reload the HLS playlist before giving up.
+        Max number of attempts when reloading the HLS playlist before giving up.
 
         Default is 3.
         """,
@@ -1029,11 +1030,22 @@ def build_parser():
         Skip to the beginning of a live stream, or as far back as possible.
         """,
     )
+
+    transport_dash.add_argument(
+        "--dash-manifest-reload-attempts",
+        type=num(int, min=0),
+        metavar="ATTEMPTS",
+        help="""
+        Max number of attempts when reloading the DASH manifest before giving up.
+
+        Default is 3.
+        """,
+    )
+
     transport_hls.add_argument("--hls-segment-attempts", help=argparse.SUPPRESS)
     transport_hls.add_argument("--hls-segment-threads", help=argparse.SUPPRESS)
     transport_hls.add_argument("--hls-segment-timeout", help=argparse.SUPPRESS)
     transport_hls.add_argument("--hls-timeout", help=argparse.SUPPRESS)
-
     transport.add_argument("--http-stream-timeout", help=argparse.SUPPRESS)
 
     transport_ffmpeg.add_argument(
@@ -1273,6 +1285,7 @@ _ARGUMENT_TO_SESSIONOPTION: List[Tuple[str, str, Optional[Callable[[Any], Any]]]
     ("hls_segment_ignore_names", "hls-segment-ignore-names", None),
     ("hls_segment_key_uri", "hls-segment-key-uri", None),
     ("hls_audio_select", "hls-audio-select", None),
+    ("dash_manifest_reload_attempts", "dash-manifest-reload-attempts", None),
     ("ffmpeg_ffmpeg", "ffmpeg-ffmpeg", None),
     ("ffmpeg_no_validation", "ffmpeg-no-validation", None),
     ("ffmpeg_verbose", "ffmpeg-verbose", None),
