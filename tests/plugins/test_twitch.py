@@ -1,5 +1,5 @@
 import unittest
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from unittest.mock import MagicMock, call, patch
 
 import pytest
@@ -52,7 +52,7 @@ class TestPluginCanHandleUrlTwitch(PluginCanHandleUrl):
     ]
 
 
-DATETIME_BASE = datetime(2000, 1, 1, 0, 0, 0, 0)
+DATETIME_BASE = datetime(2000, 1, 1, 0, 0, 0, 0, timezone.utc)
 DATETIME_FORMAT = "%Y-%m-%dT%H:%M:%S.%fZ"
 
 

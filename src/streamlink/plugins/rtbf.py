@@ -16,6 +16,7 @@ from streamlink.plugin.api import validate
 from streamlink.stream.dash import DASHStream
 from streamlink.stream.hls import HLSStream
 from streamlink.stream.http import HTTPStream
+from streamlink.utils.times import parse_datetime
 
 
 log = logging.getLogger(__name__)
@@ -109,12 +110,6 @@ class RTBF(Plugin):
         data = self.session.http.json(res)
         return data["streams"]["url"]
 
-    @staticmethod
-    def iso8601_to_epoch(date):
-        # Convert an ISO 8601-formatted string date to datetime
-        return datetime.datetime.strptime(date[:-6], "%Y-%m-%dT%H:%M:%S") + \
-            datetime.timedelta(hours=int(date[-6:-3]), minutes=int(date[-2:]))
-
     def _get_radio_streams(self):
         res = self.session.http.get(self.url)
         match = self._radio_id_re.search(res.text)
@@ -152,7 +147,7 @@ class RTBF(Plugin):
             log.error("Stream is DRM-protected")
             return
 
-        now = datetime.datetime.now()
+        now = datetime.datetime.now(datetime.timezone.utc)
         try:
             if isinstance(stream_data["sources"], dict):
                 urls = []
@@ -185,10 +180,10 @@ class RTBF(Plugin):
             if "403 Client Error" in str(err):
                 # Check whether video is expired
                 if "startDate" in stream_data:
-                    if now < self.iso8601_to_epoch(stream_data["startDate"]):
+                    if now < parse_datetime(stream_data["startDate"]):
                         log.error("Stream is not yet available")
                 elif "endDate" in stream_data:
-                    if now > self.iso8601_to_epoch(stream_data["endDate"]):
+                    if now > parse_datetime(stream_data["endDate"]):
                         log.error("Stream has expired")
 
     def _get_streams(self):

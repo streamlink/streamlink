@@ -8,15 +8,13 @@ $region France, Andorra, Monaco
 
 import logging
 import re
-from datetime import datetime
 from urllib.parse import urlparse
-
-from isodate import LOCAL as LOCALTIMEZONE  # type: ignore[import]
 
 from streamlink.plugin import Plugin, PluginError, pluginmatcher
 from streamlink.plugin.api import useragents, validate
 from streamlink.stream.dash import DASHStream
 from streamlink.stream.hls import HLSStream
+from streamlink.utils.times import localnow
 from streamlink.utils.url import update_qsd
 
 
@@ -103,7 +101,7 @@ class Pluzz(Plugin):
             "browser": "chrome",
             "browser_version": CHROME_VERSION,
             "os": "ios",
-            "gmt": datetime.now(tz=LOCALTIMEZONE).strftime("%z"),
+            "gmt": localnow().strftime("%z"),
         })
         video_format, token_url, url, self.title = self.session.http.get(api_url, schema=validate.Schema(
             validate.parse_json(),

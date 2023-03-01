@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from unittest.mock import Mock, patch
 
 import pytest
@@ -27,7 +27,7 @@ class TestFormatter:
                 {
                     "prop": prop,
                     "obj": lambda: obj,
-                    "time": datetime.now,
+                    "time": lambda: datetime.now(timezone.utc),
                     "empty": lambda: "",
                     "none": lambda: None,
                 },
@@ -57,14 +57,15 @@ class TestFormatter:
         assert prop.call_count == 1
 
     def test_format_spec(self, formatter: Formatter):
-        assert formatter.format("{time}") == "2000-01-02 03:04:05.000006"
-        assert formatter.cache == dict(time=datetime(2000, 1, 2, 3, 4, 5, 6, None))
+        assert formatter.format("{time}") == "2000-01-02 03:04:05.000006+00:00"
+        assert formatter.cache == dict(time=datetime(2000, 1, 2, 3, 4, 5, 6, timezone.utc))
         assert formatter.format("{time:%Y}") == "2000"
         assert formatter.format("{time:%Y-%m-%d}") == "2000-01-02"
         assert formatter.format("{time:%H:%M:%S}") == "03:04:05"
+        assert formatter.format("{time:%Z}") == "UTC"
         with patch("datetime.datetime.strftime", side_effect=ValueError):
             assert formatter.format("{time:foo:bar}") == "{time:foo:bar}"
-        assert formatter.cache == dict(time=datetime(2000, 1, 2, 3, 4, 5, 6, None))
+        assert formatter.cache == dict(time=datetime(2000, 1, 2, 3, 4, 5, 6, timezone.utc))
 
         assert formatter.format("{prop:foo}") == "prop"
         assert formatter.format("{none:foo}") == ""

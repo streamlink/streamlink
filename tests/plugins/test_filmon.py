@@ -1,4 +1,4 @@
-import datetime
+from datetime import datetime, timezone
 from unittest.mock import patch
 
 import freezegun
@@ -42,7 +42,7 @@ class TestPluginCanHandleUrlFilmon(PluginCanHandleUrl):
 
 @pytest.fixture()
 def filmonhls():
-    with freezegun.freeze_time(datetime.datetime(2000, 1, 1, 0, 0, 0, 0)), \
+    with freezegun.freeze_time("2000-01-01T00:00:00Z"), \
          patch("streamlink.plugins.filmon.FilmOnHLS._get_stream_data", return_value=[]):
         session = Streamlink()
         api = FilmOnAPI(session)
@@ -50,30 +50,30 @@ def filmonhls():
 
 
 def test_filmonhls_to_url(filmonhls):
-    filmonhls.watch_timeout = datetime.datetime(2000, 1, 1, 0, 0, 0, 0).timestamp()
+    filmonhls.watch_timeout = datetime(2000, 1, 1, 0, 0, 0, 0, timezone.utc).timestamp()
     assert filmonhls.to_url() == "http://fake/one.m3u8"
 
 
 def test_filmonhls_to_url_updated(filmonhls):
-    filmonhls.watch_timeout = datetime.datetime(1999, 12, 31, 23, 59, 59, 9999).timestamp()
+    filmonhls.watch_timeout = datetime(1999, 12, 31, 23, 59, 59, 9999, timezone.utc).timestamp()
 
     filmonhls._get_stream_data.return_value = [
-        ("high", "http://fake/two.m3u8", datetime.datetime(2000, 1, 1, 0, 0, 0, 0).timestamp()),
+        ("high", "http://fake/two.m3u8", datetime(2000, 1, 1, 0, 0, 0, 0, timezone.utc).timestamp()),
     ]
     assert filmonhls.to_url() == "http://fake/two.m3u8"
 
-    filmonhls.watch_timeout = datetime.datetime(1999, 12, 31, 23, 59, 59, 9999).timestamp()
+    filmonhls.watch_timeout = datetime(1999, 12, 31, 23, 59, 59, 9999, timezone.utc).timestamp()
     filmonhls._get_stream_data.return_value = [
-        ("high", "http://another-fake/three.m3u8", datetime.datetime(2000, 1, 1, 0, 0, 0, 0).timestamp()),
+        ("high", "http://another-fake/three.m3u8", datetime(2000, 1, 1, 0, 0, 0, 0, timezone.utc).timestamp()),
     ]
     assert filmonhls.to_url() == "http://fake/three.m3u8"
 
 
 def test_filmonhls_to_url_missing_quality(filmonhls):
-    filmonhls.watch_timeout = datetime.datetime(1999, 12, 31, 23, 59, 59, 9999).timestamp()
+    filmonhls.watch_timeout = datetime(1999, 12, 31, 23, 59, 59, 9999, timezone.utc).timestamp()
 
     filmonhls._get_stream_data.return_value = [
-        ("low", "http://fake/two.m3u8", datetime.datetime(2000, 1, 1, 0, 0, 0, 0).timestamp()),
+        ("low", "http://fake/two.m3u8", datetime(2000, 1, 1, 0, 0, 0, 0, timezone.utc).timestamp()),
     ]
     with pytest.raises(TypeError) as cm:
         filmonhls.to_url()
