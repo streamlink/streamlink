@@ -1,11 +1,59 @@
-import unittest
+from datetime import datetime, timedelta, timezone
 
+import freezegun
+import isodate  # type: ignore[import]
 import pytest
 
-from streamlink.utils.times import hours_minutes_seconds, seconds_to_hhmmss
+from streamlink.utils.times import (
+    LOCAL,
+    UTC,
+    fromlocaltimestamp,
+    fromtimestamp,
+    hours_minutes_seconds,
+    localnow,
+    now,
+    parse_datetime,
+    seconds_to_hhmmss,
+)
 
 
-class TestUtilsTimes(unittest.TestCase):
+class TestDatetime:
+    TS_Y2K = 946684800
+
+    @pytest.fixture()
+    def chatham_islands(self, monkeypatch: pytest.MonkeyPatch):
+        chatham_islands = timezone(timedelta(hours=12, minutes=45))
+        monkeypatch.setattr("streamlink.utils.times.LOCAL", chatham_islands)
+        return chatham_islands
+
+    def test_constants(self):
+        assert UTC is timezone.utc
+        assert LOCAL is isodate.LOCAL
+
+    def test_now(self):
+        with freezegun.freeze_time("2000-01-01T00:00:00Z"):
+            assert now() == datetime(2000, 1, 1, 0, 0, 0, 0, timezone.utc)
+
+    def test_localnow(self, chatham_islands: timezone):
+        with freezegun.freeze_time("2000-01-01T00:00:00+1245"):
+            assert localnow() == datetime(2000, 1, 1, 0, 0, 0, 0, chatham_islands)
+
+    def test_fromtimestamp(self):
+        assert fromtimestamp(self.TS_Y2K) == datetime(2000, 1, 1, 0, 0, 0, 0, timezone.utc)
+
+    def test_fromlocaltimestamp(self, chatham_islands: timezone):
+        assert fromlocaltimestamp(self.TS_Y2K) == datetime(2000, 1, 1, 12, 45, 0, 0, chatham_islands)
+        assert fromlocaltimestamp(self.TS_Y2K) == datetime(2000, 1, 1, 0, 0, 0, 0, timezone.utc)
+
+    def test_parse_datetime(self, chatham_islands: timezone):
+        assert parse_datetime("2000-01-01T00:00:00") == datetime(2000, 1, 1, 0, 0, 0, 0)  # noqa: DTZ001
+        assert parse_datetime("2000-01-01T00:00:00Z") == datetime(2000, 1, 1, 0, 0, 0, 0, timezone.utc)
+        assert parse_datetime("2000-01-01T00:00:00+1245") == datetime(2000, 1, 1, 0, 0, 0, 0, chatham_islands)
+        with pytest.raises(isodate.ISO8601Error):
+            parse_datetime("2000-01-01")
+
+
+class TestHoursMinutesSeconds:
     def test_hours_minutes_seconds(self):
         assert hours_minutes_seconds("00:01:30") == 90
         assert hours_minutes_seconds("01:20:15") == 4815

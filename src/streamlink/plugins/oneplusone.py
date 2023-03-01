@@ -7,7 +7,6 @@ $type live
 import logging
 import re
 from base64 import b64decode
-from datetime import datetime
 from time import time
 from urllib.parse import urljoin, urlparse
 
@@ -15,6 +14,7 @@ from streamlink.exceptions import NoStreamsError, PluginError
 from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.api import validate
 from streamlink.stream.hls import HLSStream
+from streamlink.utils.times import fromlocaltimestamp
 
 
 log = logging.getLogger(__name__)
@@ -34,7 +34,7 @@ class OnePlusOneHLS(HLSStream):
         self.api = OnePlusOneAPI(session_, self_url)
 
     def _next_watch_timeout(self):
-        _next = datetime.fromtimestamp(self.watch_timeout).isoformat(" ")
+        _next = fromlocaltimestamp(self.watch_timeout).isoformat(" ")
         log.debug(f"next watch_timeout at {_next}")
 
     def open(self):

@@ -85,6 +85,8 @@ select = [
   "COM",
   # flake8-comprehensions
   "C4",
+  # flake8-datetimez
+  "DTZ",
   # flake8-implicit-str-concat
   "ISC",
   # flake8-pie

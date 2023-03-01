@@ -1,5 +1,6 @@
 import logging
 import warnings
+from datetime import timezone
 from inspect import currentframe, getframeinfo
 from io import StringIO
 from pathlib import Path
@@ -24,7 +25,8 @@ def log(request, output: StringIO):
     params.setdefault("format", "[{name}][{levelname}] {message}")
     params.setdefault("style", "{")
     fakeroot = logging.getLogger("streamlink.test")
-    with patch("streamlink.logger.root", fakeroot):
+    with patch("streamlink.logger.root", fakeroot), \
+         patch("streamlink.utils.times.LOCAL", timezone.utc):
         logger.basicConfig(stream=output, **params)
         yield fakeroot
         logger.capturewarnings(False)
@@ -152,12 +154,12 @@ class TestLogging:
 
     @freezegun.freeze_time("2000-01-02T03:04:05.123456Z")
     @pytest.mark.parametrize("log", [
-        {"format": "[{asctime}][{name}][{levelname}] {message}", "datefmt": "%H:%M:%S.%f"},
+        {"format": "[{asctime}][{name}][{levelname}] {message}", "datefmt": "%H:%M:%S.%f%z"},
     ], indirect=True)
     def test_datefmt_custom(self, log: logging.Logger, output: StringIO):
         log.setLevel("info")
         log.info("test")
-        assert output.getvalue() == "[03:04:05.123456][test][info] test\n"
+        assert output.getvalue() == "[03:04:05.123456+0000][test][info] test\n"
 
 
 class TestCaptureWarnings:

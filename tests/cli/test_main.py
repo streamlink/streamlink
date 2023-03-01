@@ -1,4 +1,3 @@
-import datetime
 import logging
 import os
 import re
@@ -803,7 +802,7 @@ class TestCLIMainLoggingLogfilePosix(_TestCLIMainLogging):
     @patch("sys.stdout")
     @patch("builtins.open")
     @patch("pathlib.Path.mkdir", Mock())
-    @freezegun.freeze_time(datetime.datetime(2000, 1, 2, 3, 4, 5))
+    @freezegun.freeze_time("2000-01-02T03:04:05Z")
     def test_logfile_path_auto(self, mock_open, mock_stdout):
         with patch("streamlink_cli.constants.LOG_DIR", PosixPath("/foo")):
             self.subject(["streamlink", "--logfile", "-"])
@@ -842,7 +841,7 @@ class TestCLIMainLoggingLogfileWindows(_TestCLIMainLogging):
     @patch("sys.stdout")
     @patch("builtins.open")
     @patch("pathlib.Path.mkdir", Mock())
-    @freezegun.freeze_time(datetime.datetime(2000, 1, 2, 3, 4, 5))
+    @freezegun.freeze_time("2000-01-02T03:04:05Z")
     def test_logfile_path_auto(self, mock_open, mock_stdout):
         with patch("streamlink_cli.constants.LOG_DIR", WindowsPath("C:\\foo")):
             self.subject(["streamlink", "--logfile", "-"])

@@ -8,7 +8,7 @@ $type live, vod
 import logging
 import re
 from collections import deque
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from random import randint
 from threading import Event, RLock
 from typing import Any, Callable, Deque, Dict, List, NamedTuple, Optional, Union
@@ -295,7 +295,7 @@ class UStreamTVWsClient(WebsocketClient):
         if self.stream_initial_id is None:
             self.stream_initial_id = current_id
 
-        current_time = datetime.now()
+        current_time = datetime.now(timezone.utc)
 
         # lock the stream segments deques for the worker threads
         with self.stream_segments_lock:
@@ -362,7 +362,7 @@ class UStreamTVStreamWriter(SegmentedStreamWriter):
         if self.closed:  # pragma: no cover
             return
 
-        now = datetime.now()
+        now = datetime.now(timezone.utc)
         if segment.available_at > now:
             time_to_wait = (segment.available_at - now).total_seconds()
             log.debug(f"Waiting for {self.stream.kind} segment: {segment.num} ({time_to_wait:.01f}s)")

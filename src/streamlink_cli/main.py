@@ -18,6 +18,7 @@ from streamlink.exceptions import FatalPluginError, StreamlinkDeprecationWarning
 from streamlink.plugin import Plugin, PluginOptions
 from streamlink.stream.stream import Stream, StreamIO
 from streamlink.utils.named_pipe import NamedPipe
+from streamlink.utils.times import LOCAL as LOCALTIMEZONE
 from streamlink_cli.argparser import ArgumentParser, build_parser, setup_session_options
 from streamlink_cli.compat import DeprecatedPath, importlib_metadata, stdout
 from streamlink_cli.console import ConsoleOutput, ConsoleUserInputRequester
@@ -51,7 +52,7 @@ def get_formatter(plugin: Plugin):
             "category": lambda: plugin.get_category(),
             "game": lambda: plugin.get_category(),
             "title": lambda: plugin.get_title(),
-            "time": lambda: datetime.now(),
+            "time": lambda: datetime.now(tz=LOCALTIMEZONE),
         },
         {
             "time": lambda dt, fmt: dt.strftime(fmt),
@@ -834,7 +835,7 @@ def setup_logger_and_console(stream=sys.stdout, filename=None, level="info", jso
     global console
 
     if filename == "-":
-        filename = LOG_DIR / f"{datetime.now()}.log"
+        filename = LOG_DIR / f"{datetime.now(tz=LOCALTIMEZONE)}.log"
     elif filename:
         filename = Path(filename).expanduser().resolve()
 
