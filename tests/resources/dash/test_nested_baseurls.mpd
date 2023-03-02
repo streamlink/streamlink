@@ -6,11 +6,12 @@
   xsi:schemaLocation="urn:mpeg:DASH:schema:MPD:2011 http://standards.iso.org/ittf/PubliclyAvailableStandards/MPEG-DASH_schema_files/DASH-MPD.xsd"
   profiles="urn:mpeg:dash:profile:isoff-live:2011"
   type="static"
+  availabilityStartTime="2020-01-01T00:00:00Z"
   mediaPresentationDuration="PT0H0M6.00S"
   minBufferTime="PT6.0S"
 >
   <BaseURL>https://hostname/</BaseURL>
-  <Period id="0" start="PT0.0S">
+  <Period id="0" start="PT12M34S">
     <BaseURL>period/</BaseURL>
     <AdaptationSet
       id="0"
