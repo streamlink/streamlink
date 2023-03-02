@@ -7,7 +7,7 @@ $region Spain
 
 import re
 
-from streamlink.plugin import Plugin, PluginError, pluginmatcher
+from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.api import validate
 from streamlink.plugins.brightcove import BrightcovePlayer
 
@@ -18,17 +18,14 @@ from streamlink.plugins.brightcove import BrightcovePlayer
 class Telemadrid(Plugin):
 
     def _get_streams(self):
-        try:
-            data = self.session.http.get(self.url, schema=validate.Schema(
-                validate.parse_html(),
-                validate.xml_find(".//video[@class='video-js'][@data-video-id][@data-account][@data-player][1]"),
-                validate.union_get("data-video-id", "data-account", "data-player"),
-            ))
-        except PluginError:
-            return
+        data = self.session.http.get(self.url, schema=validate.Schema(
+            validate.parse_html(),
+            validate.xml_find(".//video[@class='video-js'][@data-video-id][@data-account][@data-player][1]"),
+            validate.union_get("data-video-id", "data-account", "data-player"),
+        ))
         data_video_id, data_account, data_player = data
         player = BrightcovePlayer(self.session, data_account, f"{data_player}_default")
-        return dict(player.get_streams(data_video_id))
+        return player.get_streams(data_video_id)
 
 
 __plugin__ = Telemadrid
