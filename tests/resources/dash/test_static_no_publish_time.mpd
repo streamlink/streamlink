@@ -5,11 +5,13 @@
   xmlns="urn:mpeg:dash:schema:mpd:2011"
   xsi:schemaLocation="urn:mpeg:dash:schema:mpd:2011 http://standards.iso.org/ittf/PubliclyAvailableStandards/MPEG-DASH_schema_files/DASH-MPD.xsd"
   type="static"
+  availabilityStartTime="2020-01-01T00:00:00Z"
   mediaPresentationDuration="PT1M23.847347S"
   maxSegmentDuration="PT3S"
   minBufferTime="PT10S"
-  profiles="urn:mpeg:dash:profile:isoff-live:2011">
-  <Period>
+  profiles="urn:mpeg:dash:profile:isoff-live:2011"
+>
+  <Period start="PT12M34S">
     <BaseURL>dash/</BaseURL>
     <AdaptationSet
       group="1"

@@ -6,7 +6,6 @@ from unittest.mock import Mock
 
 import pytest
 from freezegun import freeze_time
-from freezegun.api import FakeDatetime  # type: ignore[attr-defined]
 
 from streamlink.stream.dash_manifest import MPD, MPDParsers, MPDParsingError, Representation
 from tests.resources import xml
@@ -110,64 +109,68 @@ class TestMPDParser(unittest.TestCase):
             ]
 
     def test_segments_dynamic_number(self):
-        with freeze_time(FakeDatetime(2018, 5, 22, 13, 37, 0, tzinfo=UTC)):
-            with xml("dash/test_4.mpd") as mpd_xml:
-                mpd = MPD(mpd_xml, base_url="http://test.se/", url="http://test.se/manifest.mpd")
-
-                segments = mpd.periods[0].adaptationSets[0].representations[0].segments()
-                init_segment = next(segments)
-                assert init_segment.url == "http://test.se/hd-5-init.mp4"
-
-                video_segments = []
-                for _ in range(3):
-                    seg = next(segments)
-                    video_segments.append((seg.url,
-                                           seg.available_at))
-
-                assert video_segments == [
-                    (
-                        "http://test.se/hd-5_000311235.mp4",
-                        datetime.datetime(2018, 5, 22, 13, 37, 0, tzinfo=UTC),
-                    ),
-                    (
-                        "http://test.se/hd-5_000311236.mp4",
-                        datetime.datetime(2018, 5, 22, 13, 37, 5, tzinfo=UTC),
-                    ),
-                    (
-                        "http://test.se/hd-5_000311237.mp4",
-                        datetime.datetime(2018, 5, 22, 13, 37, 10, tzinfo=UTC),
-                    ),
-                ]
-
-    def test_segments_static_no_publish_time(self):
-        with xml("dash/test_5.mpd") as mpd_xml:
-            mpd = MPD(mpd_xml, base_url="http://test.se/", url="http://test.se/manifest.mpd")
-
-            segments = mpd.periods[0].adaptationSets[1].representations[0].segments()
-            init_segment = next(segments)
-            assert init_segment.url == "http://test.se/dash/150633-video_eng=194000.dash"
-
-            video_segments = [x.url for x in itertools.islice(segments, 3)]
-            assert video_segments == [
-                "http://test.se/dash/150633-video_eng=194000-0.dash",
-                "http://test.se/dash/150633-video_eng=194000-2000.dash",
-                "http://test.se/dash/150633-video_eng=194000-4000.dash",
+        with xml("dash/test_segments_dynamic_number.mpd") as mpd_xml, \
+             freeze_time("2018-05-22T13:37:00Z"):
+            mpd = MPD(mpd_xml, base_url="http://test/", url="http://test/manifest.mpd")
+            stream_urls = [
+                (segment.url, segment.available_at)
+                for segment in itertools.islice(mpd.periods[0].adaptationSets[0].representations[0].segments(), 4)
             ]
 
-    def test_segments_list(self):
-        with xml("dash/test_7.mpd") as mpd_xml:
-            mpd = MPD(mpd_xml, base_url="http://test.se/", url="http://test.se/manifest.mpd")
+        assert stream_urls == [
+            # The initialization segment gets its availability time from
+            # the sum of the manifest's availabilityStartTime value and the period's start value, similar to static manifests
+            (
+                "http://test/hd-5-init.mp4",
+                datetime.datetime(2018, 5, 4, 13, 32, 41, tzinfo=UTC),
+            ),
+            # The segment number also takes the availabilityStartTime and period start sum into consideration,
+            # but the availability time depends on the current time and the segment durations
+            (
+                "http://test/hd-5_000311084.mp4",
+                datetime.datetime(2018, 5, 22, 13, 37, 0, tzinfo=UTC),
+            ),
+            (
+                "http://test/hd-5_000311085.mp4",
+                datetime.datetime(2018, 5, 22, 13, 37, 5, tzinfo=UTC),
+            ),
+            (
+                "http://test/hd-5_000311086.mp4",
+                datetime.datetime(2018, 5, 22, 13, 37, 10, tzinfo=UTC),
+            ),
+        ]
 
-            segments = mpd.periods[0].adaptationSets[0].representations[0].segments()
-            init_segment = next(segments)
-            assert init_segment.url == "http://test.se/chunk_ctvideo_ridp0va0br4332748_cinit_mpd.m4s"
+    def test_static_no_publish_time(self):
+        with xml("dash/test_static_no_publish_time.mpd") as mpd_xml:
+            mpd = MPD(mpd_xml, base_url="http://test/", url="http://test/manifest.mpd")
 
-            video_segments = [x.url for x in itertools.islice(segments, 3)]
-            assert video_segments == [
-                "http://test.se/chunk_ctvideo_ridp0va0br4332748_cn1_mpd.m4s",
-                "http://test.se/chunk_ctvideo_ridp0va0br4332748_cn2_mpd.m4s",
-                "http://test.se/chunk_ctvideo_ridp0va0br4332748_cn3_mpd.m4s",
-            ]
+        segments = mpd.periods[0].adaptationSets[1].representations[0].segments()
+        segment_urls = [(segment.url, segment.available_at) for segment in itertools.islice(segments, 4)]
+        # ignores period start time in static manifests
+        expected_availability = datetime.datetime(2020, 1, 1, 0, 0, 0, tzinfo=UTC)
+
+        assert segment_urls == [
+            ("http://test/dash/150633-video_eng=194000.dash", expected_availability),
+            ("http://test/dash/150633-video_eng=194000-0.dash", expected_availability),
+            ("http://test/dash/150633-video_eng=194000-2000.dash", expected_availability),
+            ("http://test/dash/150633-video_eng=194000-4000.dash", expected_availability),
+        ]
+
+    def test_segment_list(self):
+        with xml("dash/test_segment_list.mpd") as mpd_xml:
+            mpd = MPD(mpd_xml, base_url="http://test/", url="http://test/manifest.mpd")
+
+        segments = mpd.periods[0].adaptationSets[0].representations[0].segments()
+        segment_urls = [(segment.url, segment.available_at) for segment in itertools.islice(segments, 4)]
+        # ignores period start time in static manifests
+        expected_availability = datetime.datetime(2020, 1, 1, 0, 0, 0, tzinfo=UTC)
+
+        assert segment_urls == [
+            ("http://test/chunk_ctvideo_ridp0va0br4332748_cinit_mpd.m4s", expected_availability),
+            ("http://test/chunk_ctvideo_ridp0va0br4332748_cn1_mpd.m4s", expected_availability),
+            ("http://test/chunk_ctvideo_ridp0va0br4332748_cn2_mpd.m4s", expected_availability),
+            ("http://test/chunk_ctvideo_ridp0va0br4332748_cn3_mpd.m4s", expected_availability),
+        ]
 
     def test_segments_dynamic_timeline_continue(self):
         with xml("dash/test_6_p1.mpd") as mpd_xml_p1:
@@ -265,13 +268,16 @@ class TestMPDParser(unittest.TestCase):
     def test_segments_byterange(self):
         with xml("dash/test_segments_byterange.mpd") as mpd_xml:
             mpd = MPD(mpd_xml, base_url="http://test/", url="http://test/manifest.mpd")
-        assert [
+
+        segment_urls = [
             [
                 (seg.url, seg.init, seg.byterange)
                 for seg in adaptationset.representations[0].segments()
             ]
             for adaptationset in mpd.periods[0].adaptationSets
-        ] == [
+        ]
+
+        assert segment_urls == [
             [
                 ("http://test/video-frag.mp4", True, (36, 711)),
                 ("http://test/video-frag.mp4", False, (747, 875371)),
@@ -291,30 +297,34 @@ class TestMPDParser(unittest.TestCase):
     def test_nested_baseurls(self):
         with xml("dash/test_nested_baseurls.mpd") as mpd_xml:
             mpd = MPD(mpd_xml, base_url="https://foo/", url="https://test/manifest.mpd")
+
         segment_urls = [
-            [seg.url for seg in itertools.islice(representation.segments(), 2)]
+            [(segment.url, segment.available_at) for segment in itertools.islice(representation.segments(), 2)]
             for adaptationset in mpd.periods[0].adaptationSets for representation in adaptationset.representations
         ]
+        # ignores period start time in static manifests
+        expected_availability = datetime.datetime(2020, 1, 1, 0, 0, 0, tzinfo=UTC)
+
         assert segment_urls == [
             [
-                "https://hostname/period/init_video_5000kbps.m4s",
-                "https://hostname/period/media_video_5000kbps-1.m4s",
+                ("https://hostname/period/init_video_5000kbps.m4s", expected_availability),
+                ("https://hostname/period/media_video_5000kbps-1.m4s", expected_availability),
             ],
             [
-                "https://hostname/period/representation/init_video_9000kbps.m4s",
-                "https://hostname/period/representation/media_video_9000kbps-1.m4s",
+                ("https://hostname/period/representation/init_video_9000kbps.m4s", expected_availability),
+                ("https://hostname/period/representation/media_video_9000kbps-1.m4s", expected_availability),
             ],
             [
-                "https://hostname/period/adaptationset/init_audio_128kbps.m4s",
-                "https://hostname/period/adaptationset/media_audio_128kbps-1.m4s",
+                ("https://hostname/period/adaptationset/init_audio_128kbps.m4s", expected_availability),
+                ("https://hostname/period/adaptationset/media_audio_128kbps-1.m4s", expected_availability),
             ],
             [
-                "https://hostname/period/adaptationset/representation/init_audio_256kbps.m4s",
-                "https://hostname/period/adaptationset/representation/media_audio_256kbps-1.m4s",
+                ("https://hostname/period/adaptationset/representation/init_audio_256kbps.m4s", expected_availability),
+                ("https://hostname/period/adaptationset/representation/media_audio_256kbps-1.m4s", expected_availability),
             ],
             [
-                "https://other/init_audio_320kbps.m4s",
-                "https://other/media_audio_320kbps-1.m4s",
+                ("https://other/init_audio_320kbps.m4s", expected_availability),
+                ("https://other/media_audio_320kbps-1.m4s", expected_availability),
             ],
         ]
 

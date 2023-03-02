@@ -5,13 +5,15 @@
      xsi:schemaLocation="urn:mpeg:DASH:schema:MPD:2011 http://standards.iso.org/ittf/PubliclyAvailableStandards/MPEG-DASH_schema_files/DASH-MPD.xsd"
      profiles="urn:mpeg:dash:profile:isoff-main:2011"
      type="static"
+     availabilityStartTime="2020-01-01T00:00:00Z"
      publishTime="2018-06-25T18:01:58Z"
      mediaPresentationDuration="PT53M18.059S"
-     minBufferTime="PT1.5S">
+     minBufferTime="PT1.5S"
+>
 <ProgramInformation>
     <Title>test/dash.smil</Title>
 </ProgramInformation>
-<Period id="0" start="PT0.0S">
+<Period id="0" start="PT12M34S">
     <AdaptationSet id="0" group="1" mimeType="video/mp4" maxWidth="1920" maxHeight="1080" par="16:9" frameRate="25" segmentAlignment="true" startWithSAP="1" subsegmentAlignment="true" subsegmentStartsWithSAP="1">
         <Representation id="p0va0br4332748" codecs="avc1.640028" width="1920" height="1080" sar="1:1" bandwidth="4332748">
             <SegmentList presentationTimeOffset="0" timescale="90000" duration="900000" startNumber="1">

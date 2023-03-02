@@ -1,7 +1,28 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<MPD xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="urn:mpeg:dash:schema:mpd:2011" xmlns:cenc="urn:mpeg:cenc:2013" xsi:schemaLocation="urn:mpeg:dash:schema:mpd:2011 http://standards.iso.org/ittf/PubliclyAvailableStandards/MPEG-DASH_schema_files/DASH-MPD.xsd" type="dynamic" publishTime="2018-05-10T09:27:09" minimumUpdatePeriod="PT10S" availabilityStartTime="2018-05-04T13:20:07Z" minBufferTime="PT2S" suggestedPresentationDelay="PT40S" timeShiftBufferDepth="PT24H0M0S" profiles="urn:mpeg:dash:profile:isoff-live:2011">
-  <Period start="PT0S" id="1">
-    <AdaptationSet mimeType="video/mp4" frameRate="25/1" segmentAlignment="true" subsegmentAlignment="true" startWithSAP="1" subsegmentStartsWithSAP="1" bitstreamSwitching="false">
+<MPD
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xmlns:cenc="urn:mpeg:cenc:2013"
+  xmlns="urn:mpeg:dash:schema:mpd:2011"
+  xsi:schemaLocation="urn:mpeg:dash:schema:mpd:2011 http://standards.iso.org/ittf/PubliclyAvailableStandards/MPEG-DASH_schema_files/DASH-MPD.xsd"
+  type="dynamic"
+  availabilityStartTime="2018-05-04T13:20:07Z"
+  publishTime="2018-05-10T09:27:09"
+  minimumUpdatePeriod="PT10S"
+  minBufferTime="PT2S"
+  suggestedPresentationDelay="PT40S"
+  timeShiftBufferDepth="PT24H0M0S"
+  profiles="urn:mpeg:dash:profile:isoff-live:2011"
+>
+  <Period id="1" start="PT12M34S">
+    <AdaptationSet
+      mimeType="video/mp4"
+      frameRate="25/1"
+      segmentAlignment="true"
+      subsegmentAlignment="true"
+      startWithSAP="1"
+      subsegmentStartsWithSAP="1"
+      bitstreamSwitching="false"
+    >
       <SegmentTemplate timescale="90000" duration="450000" startNumber="1"/>
       <Representation id="1" width="1280" height="720" bandwidth="2400000" codecs="avc1.64001f">
         <SegmentTemplate duration="450000" startNumber="1" media="hd-5_$Number%09d$.mp4" initialization="hd-5-init.mp4"/>
@@ -22,13 +43,32 @@
         <SegmentTemplate duration="450000" startNumber="1" media="hd-0_$Number%09d$.mp4" initialization="hd-0-init.mp4"/>
       </Representation>
     </AdaptationSet>
-    <AdaptationSet mimeType="audio/mp4" lang="rus" segmentAlignment="0">
-      <SegmentTemplate timescale="48000" media="hd-audio_$Number%09d$.mp4" initialization="hd-audio-init.mp4" duration="240000" startNumber="1"/>
+    <AdaptationSet
+      mimeType="audio/mp4"
+      lang="rus"
+      segmentAlignment="0"
+    >
+      <SegmentTemplate
+        timescale="48000"
+        media="hd-audio_$Number%09d$.mp4"
+        initialization="hd-audio-init.mp4"
+        duration="240000"
+        startNumber="1"
+      />
       <Representation id="7" bandwidth="96000" audioSamplingRate="48000" codecs="mp4a.40.2"/>
     </AdaptationSet>
-    <AdaptationSet mimeType="application/mp4" lang="rus">
+    <AdaptationSet
+      mimeType="application/mp4"
+      lang="rus"
+    >
       <Role schemeIdUri="urn:mpeg:dash:role" value="subtitle"/>
-      <SegmentTemplate timescale="90000" media="hd-caption_$Number%09d$.mp4" initialization="hd-caption-init.mp4" duration="450000" startNumber="1"/>
+      <SegmentTemplate
+        timescale="90000"
+        media="hd-caption_$Number%09d$.mp4"
+        initialization="hd-caption-init.mp4"
+        duration="450000"
+        startNumber="1"
+      />
       <Representation id="8" bandwidth="256" codecs="stpp"/>
     </AdaptationSet>
   </Period>
