@@ -11,6 +11,7 @@ from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.api import validate
 from streamlink.stream.hls import HLSStream
 
+
 log = logging.getLogger(__name__)
 
 
@@ -18,7 +19,6 @@ log = logging.getLogger(__name__)
     r"https?://(?:www\.)?kanal7\.com/canli-izle",
 ))
 class Kanal7(Plugin):
-
     def _get_streams(self):
         hls_url = self.session.http.get(self.url, schema=validate.Schema(
             re.compile(r"""hls\s*:\s*(?P<q>["'])(?P<hls_url>https?://.*?\.m3u8.*?)(?P=q)"""),
