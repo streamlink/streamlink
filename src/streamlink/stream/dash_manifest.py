@@ -292,7 +292,7 @@ class MPD(MPDNode):
         self.minimumUpdatePeriod = self.attr(
             "minimumUpdatePeriod",
             parser=MPDParsers.duration,
-            default=Duration(),
+            default=datetime.timedelta(),
         )
         self.minBufferTime = self.attr(
             "minBufferTime",
@@ -325,6 +325,9 @@ class MPD(MPDNode):
         self.suggestedPresentationDelay = self.attr(
             "suggestedPresentationDelay",
             parser=MPDParsers.duration,
+            # if there is no delay, use a delay of 3 seconds
+            # TODO: add a customizable parameter for this
+            default=datetime.timedelta(seconds=3),
         )
 
         # parse children
@@ -392,16 +395,16 @@ class Period(MPDNode):
         self.duration = self.attr(
             "duration",
             parser=MPDParsers.duration,
-            default=Duration(),
+            default=datetime.timedelta(),
         )
         self.start = self.attr(
             "start",
             parser=MPDParsers.duration,
-            default=Duration(),
+            default=datetime.timedelta(),
         )
 
         # anchor time for segment availability
-        offset = self.start if self.root.type == "dynamic" else Duration()
+        offset = self.start if self.root.type == "dynamic" else datetime.timedelta()
         self.availabilityStartTime = self.root.availabilityStartTime + offset
 
         # TODO: Early Access Periods
@@ -689,13 +692,12 @@ class SegmentTemplate(MPDNode):
                 since_start = now - self.period.availabilityStartTime
                 available_start = now
 
-            # if there is no delay, use a delay of 3 seconds
-            seconds = self.root.suggestedPresentationDelay.total_seconds() if self.root.suggestedPresentationDelay else 3
-            suggested_delay = datetime.timedelta(seconds=seconds)
+            suggested_delay = self.root.suggestedPresentationDelay
+            buffer_time = self.root.minBufferTime
 
             # the number of the segment that is available at NOW - SUGGESTED_DELAY - BUFFER_TIME
             number_offset = int(
-                (since_start - suggested_delay - self.root.minBufferTime).total_seconds()
+                (since_start - suggested_delay - buffer_time).total_seconds()
                 / self.duration_seconds,
             )
             number_iter = count(self.startNumber + number_offset)
@@ -725,9 +727,10 @@ class SegmentTemplate(MPDNode):
                 yield url, available_at
             return
 
-        # if there is no delay, use a delay of 3 seconds
-        seconds = self.root.suggestedPresentationDelay.total_seconds() if self.root.suggestedPresentationDelay else 3
-        suggested_delay = datetime.timedelta(seconds=seconds)
+        # Convert potential `isodate.Duration` instance to `datetime.timedelta` (relative to now)
+        now = datetime.datetime.now(UTC)
+        suggested_delay: datetime.timedelta = now + self.root.suggestedPresentationDelay - now
+
         publish_time = self.root.publishTime or EPOCH_START
 
         # transform the timeline into a segment list
@@ -740,7 +743,7 @@ class SegmentTemplate(MPDNode):
             url = self.make_url(base_url, self.media(Time=segment.t, Number=n, **kwargs))
             duration = datetime.timedelta(seconds=segment.d / self.timescale)
 
-            # once the suggested_delay is reach stop
+            # once the suggested_delay is reached, stop
             if self.root.timelines[ident] == -1 and publish_time - available_at >= suggested_delay:
                 break
 
