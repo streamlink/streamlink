@@ -1,9 +1,9 @@
-from streamlink.plugins.kanal7 import KANAL7
+from streamlink.plugins.kanal7 import Kanal7
 from tests.plugins import PluginCanHandleUrl
 
 
-class TestPluginCanHandleUrlKANAL7(PluginCanHandleUrl):
-    __plugin__ = KANAL7
+class TestPluginCanHandleUrlKanal7(PluginCanHandleUrl):
+    __plugin__ = Kanal7
 
     should_match = [
         "https://www.kanal7.com/canli-izle",
