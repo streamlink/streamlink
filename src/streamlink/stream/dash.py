@@ -42,9 +42,9 @@ class DASHStreamWriter(SegmentedStreamWriter):
             if segment.available_at > now:
                 time_to_wait = (segment.available_at - now).total_seconds()
                 fname = self._get_segment_name(segment)
-                log.debug(f"Waiting for segment: {fname} ({time_to_wait:.01f}s)")
+                log.debug(f"Waiting for {self.reader.mime_type} segment: {fname} ({time_to_wait:.01f}s)")
                 if not self.wait(time_to_wait):
-                    log.debug(f"Waiting for segment: {fname} aborted")
+                    log.debug(f"Waiting for {self.reader.mime_type} segment: {fname} aborted")
                     return
 
             if segment.byterange:
@@ -60,18 +60,18 @@ class DASHStreamWriter(SegmentedStreamWriter):
                 **request_args,
             )
         except StreamError as err:
-            log.error(f"Failed to open segment {segment.url}: {err}")
+            log.error(f"Failed to open {self.reader.mime_type} segment {segment.url}: {err}")
             return self.fetch(segment, retries - 1)
 
     def write(self, segment, res, chunk_size=8192):
         name = self._get_segment_name(segment)
         for chunk in res.iter_content(chunk_size):
             if self.closed:
-                log.warning(f"Download of segment: {name} aborted")
+                log.warning(f"Download of {self.reader.mime_type} segment: {name} aborted")
                 return
             self.reader.buffer.write(chunk)
 
-        log.debug(f"Download of segment: {name} complete")
+        log.debug(f"Download of {self.reader.mime_type} segment: {name} complete")
 
 
 class DASHStreamWorker(SegmentedStreamWorker):
@@ -180,6 +180,7 @@ class DASHStreamReader(SegmentedStreamReader):
     def __init__(self, stream: "DASHStream", representation: Representation, *args, **kwargs):
         super().__init__(stream, *args, **kwargs)
         self.ident = representation.ident
+        self.mime_type = representation.mimeType
 
 
 class DASHStream(Stream):
