@@ -622,12 +622,10 @@ class SegmentTemplate(MPDNode):
         self.presentationTimeOffset = self.attr(
             "presentationTimeOffset",
             parser=MPDParsers.timedelta(self.timescale),
+            default=datetime.timedelta(),
         )
 
-        if self.duration:
-            self.duration_seconds = self.duration / float(self.timescale)
-        else:
-            self.duration_seconds = None
+        self.duration_seconds = self.duration / self.timescale if self.duration and self.timescale else None
 
         # children
         self.segmentTimeline = self.only_child(SegmentTimeline)
@@ -673,6 +671,9 @@ class SegmentTemplate(MPDNode):
         In the simplest case, the segment number is based on the time since the availabilityStartTime.
         """
 
+        if not self.duration_seconds:  # pragma: no cover
+            raise MPDParsingError("Unknown segment durations: missing duration/timescale attributes on SegmentTemplate")
+
         number_iter: Union[Iterator[int], Sequence[int]]
         available_iter: Iterator[datetime.datetime]
 
@@ -685,28 +686,39 @@ class SegmentTemplate(MPDNode):
                 number_iter = count(self.startNumber)
         else:
             now = datetime.datetime.now(UTC)
-            if self.presentationTimeOffset:
-                since_start = (now - self.presentationTimeOffset) - self.period.availabilityStartTime
-                available_start = self.period.availabilityStartTime + self.presentationTimeOffset + since_start
-            else:
-                since_start = now - self.period.availabilityStartTime
-                available_start = now
+            since_start = now - self.period.availabilityStartTime - self.presentationTimeOffset
 
             suggested_delay = self.root.suggestedPresentationDelay
             buffer_time = self.root.minBufferTime
 
-            # the number of the segment that is available at NOW - SUGGESTED_DELAY - BUFFER_TIME
-            number_offset = int(
-                (since_start - suggested_delay - buffer_time).total_seconds()
-                / self.duration_seconds,
-            )
+            # Segment number
+            # To reduce unnecessary delay, start with the next/upcoming segment: +1
+            seconds_offset = (since_start - suggested_delay - buffer_time).total_seconds()
+            number_offset = max(0, int(seconds_offset / self.duration_seconds) + 1)
             number_iter = count(self.startNumber + number_offset)
 
-            # the time the segment number is available at NOW
+            # Segment availability time
+            # The availability time marks the segment's beginning: -1
+            available_offset = datetime.timedelta(seconds=max(0, number_offset - 1) * self.duration_seconds)
+            available_start = self.period.availabilityStartTime + available_offset
             available_iter = count_dt(
                 available_start,
                 datetime.timedelta(seconds=self.duration_seconds),
             )
+
+            log.debug(f"Stream start: {self.period.availabilityStartTime}")
+            log.debug(f"Current time: {now}")
+            log.debug(f"Availability: {available_start}")
+            log.debug("; ".join([
+                f"presentationTimeOffset: {self.presentationTimeOffset}",
+                f"suggestedPresentationDelay: {self.root.suggestedPresentationDelay}",
+                f"minBufferTime: {self.root.minBufferTime}",
+            ]))
+            log.debug("; ".join([
+                f"segmentDuration: {self.duration_seconds}",
+                f"segmentStart: {self.startNumber}",
+                f"segmentOffset: {number_offset} ({seconds_offset}s)",
+            ]))
 
         yield from zip(number_iter, available_iter)
 

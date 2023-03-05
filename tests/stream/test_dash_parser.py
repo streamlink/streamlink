@@ -109,8 +109,9 @@ class TestMPDParser(unittest.TestCase):
             ]
 
     def test_segments_dynamic_number(self):
+        # access manifest one hour after its availabilityStartTime
         with xml("dash/test_segments_dynamic_number.mpd") as mpd_xml, \
-             freeze_time("2018-05-22T13:37:00Z"):
+             freeze_time("2000-01-01T01:00:00Z"):
             mpd = MPD(mpd_xml, base_url="http://test/", url="http://test/manifest.mpd")
             stream_urls = [
                 (segment.url, segment.available_at)
@@ -118,25 +119,21 @@ class TestMPDParser(unittest.TestCase):
             ]
 
         assert stream_urls == [
-            # The initialization segment gets its availability time from
-            # the sum of the manifest's availabilityStartTime value and the period's start value, similar to static manifests
             (
                 "http://test/hd-5-init.mp4",
-                datetime.datetime(2018, 5, 4, 13, 32, 41, tzinfo=UTC),
-            ),
-            # The segment number also takes the availabilityStartTime and period start sum into consideration,
-            # but the availability time depends on the current time and the segment durations
-            (
-                "http://test/hd-5_000311084.mp4",
-                datetime.datetime(2018, 5, 22, 13, 37, 0, tzinfo=UTC),
+                datetime.datetime(2000, 1, 1, 0, 1, 30, tzinfo=UTC),
             ),
             (
-                "http://test/hd-5_000311085.mp4",
-                datetime.datetime(2018, 5, 22, 13, 37, 5, tzinfo=UTC),
+                "http://test/hd-5_000000794.mp4",
+                datetime.datetime(2000, 1, 1, 0, 59, 15, tzinfo=UTC),
             ),
             (
-                "http://test/hd-5_000311086.mp4",
-                datetime.datetime(2018, 5, 22, 13, 37, 10, tzinfo=UTC),
+                "http://test/hd-5_000000795.mp4",
+                datetime.datetime(2000, 1, 1, 0, 59, 20, tzinfo=UTC),
+            ),
+            (
+                "http://test/hd-5_000000796.mp4",
+                datetime.datetime(2000, 1, 1, 0, 59, 25, tzinfo=UTC),
             ),
         ]
 
