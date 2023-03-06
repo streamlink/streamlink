@@ -4,7 +4,6 @@ import itertools
 import logging
 from collections import defaultdict
 from contextlib import contextmanager
-from pathlib import Path
 from time import time
 from typing import Dict, Optional
 from urllib.parse import urlparse, urlunparse
@@ -27,10 +26,6 @@ class DASHStreamWriter(SegmentedStreamWriter):
     reader: "DASHStreamReader"
     stream: "DASHStream"
 
-    @staticmethod
-    def _get_segment_name(segment: Segment) -> str:
-        return Path(urlparse(segment.url).path).resolve().name
-
     def fetch(self, segment: Segment, retries: Optional[int] = None):
         if self.closed or not retries:
             return
@@ -40,10 +35,10 @@ class DASHStreamWriter(SegmentedStreamWriter):
         now = datetime.datetime.now(tz=UTC)
         if segment.available_at > now:
             time_to_wait = (segment.available_at - now).total_seconds()
-            fname = self._get_segment_name(segment)
-            log.debug(f"Waiting for {self.reader.mime_type} segment: {fname} ({time_to_wait:.01f}s)")
+            segment_name = segment.name
+            log.debug(f"Waiting for {self.reader.mime_type} segment: {segment_name} ({time_to_wait:.01f}s)")
             if not self.wait(time_to_wait):
-                log.debug(f"Waiting for {self.reader.mime_type} segment: {fname} aborted")
+                log.debug(f"Waiting for {self.reader.mime_type} segment: {segment_name} aborted")
                 return
 
         if segment.byterange:
@@ -61,17 +56,16 @@ class DASHStreamWriter(SegmentedStreamWriter):
                 **request_args,
             )
         except StreamError as err:
-            log.error(f"Failed to open {self.reader.mime_type} segment {segment.url}: {err}")
+            log.error(f"Download of {self.reader.mime_type} segment: {segment.name} failed ({err})")
 
     def write(self, segment, res, chunk_size=8192):
-        name = self._get_segment_name(segment)
         for chunk in res.iter_content(chunk_size):
             if self.closed:
-                log.warning(f"Download of {self.reader.mime_type} segment: {name} aborted")
+                log.warning(f"Download of {self.reader.mime_type} segment: {segment.name} aborted")
                 return
             self.reader.buffer.write(chunk)
 
-        log.debug(f"Download of {self.reader.mime_type} segment: {name} complete")
+        log.debug(f"Download of {self.reader.mime_type} segment: {segment.name} complete")
 
 
 class DASHStreamWorker(SegmentedStreamWorker):
