@@ -46,7 +46,7 @@ ONE_SECOND = datetime.timedelta(seconds=1)
 @dataclasses.dataclass
 class Segment:
     url: str
-    duration: float
+    duration: Optional[float] = None
     init: bool = False
     content: bool = True
     available_at: datetime.datetime = EPOCH_START
@@ -491,10 +491,7 @@ class SegmentList(MPDNode):
             default=1,
         )
 
-        if self.duration:
-            self.duration_seconds = self.duration / float(self.timescale)
-        else:
-            self.duration_seconds = None
+        self.duration_seconds = self.duration / self.timescale if self.duration and self.timescale else None
 
         self.initialization = self.only_child(Initialization)
         self.segment_urls = self.children(SegmentURL, minimum=1)
@@ -504,7 +501,7 @@ class SegmentList(MPDNode):
         if self.initialization:  # pragma: no branch
             yield Segment(
                 url=self.make_url(self.initialization.source_url),
-                duration=0,
+                duration=None,
                 init=True,
                 content=False,
                 available_at=self.period.availabilityStartTime,
@@ -641,7 +638,7 @@ class SegmentTemplate(MPDNode):
             if init_url:  # pragma: no branch
                 yield Segment(
                     url=init_url,
-                    duration=0,
+                    duration=None,
                     init=True,
                     content=False,
                     available_at=self.period.availabilityStartTime,
@@ -876,7 +873,7 @@ class Representation(MPDNode):
         else:
             yield Segment(
                 url=self.base_url,
-                duration=0,
+                duration=None,
                 init=True,
                 content=True,
                 available_at=self.period.availabilityStartTime,
