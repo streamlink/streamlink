@@ -7,6 +7,7 @@ import re
 from collections import defaultdict
 from contextlib import contextmanager
 from itertools import count, repeat
+from pathlib import Path
 from typing import (
     TYPE_CHECKING,
     Any,
@@ -50,6 +51,10 @@ class Segment:
     content: bool = True
     available_at: datetime.datetime = EPOCH_START
     byterange: Optional[Tuple[int, Optional[int]]] = None
+
+    @property
+    def name(self) -> str:
+        return Path(urlparse(self.url).path).resolve().name
 
 
 @dataclasses.dataclass
