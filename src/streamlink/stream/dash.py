@@ -35,33 +35,33 @@ class DASHStreamWriter(SegmentedStreamWriter):
         if self.closed or not retries:
             return
 
+        request_args = copy.deepcopy(self.reader.stream.args)
+        headers = request_args.pop("headers", {})
+        now = datetime.datetime.now(tz=UTC)
+        if segment.available_at > now:
+            time_to_wait = (segment.available_at - now).total_seconds()
+            fname = self._get_segment_name(segment)
+            log.debug(f"Waiting for {self.reader.mime_type} segment: {fname} ({time_to_wait:.01f}s)")
+            if not self.wait(time_to_wait):
+                log.debug(f"Waiting for {self.reader.mime_type} segment: {fname} aborted")
+                return
+
+        if segment.byterange:
+            start, length = segment.byterange
+            end = str(start + length - 1) if length else ""
+            headers["Range"] = f"bytes={start}-{end}"
+
         try:
-            request_args = copy.deepcopy(self.reader.stream.args)
-            headers = request_args.pop("headers", {})
-            now = datetime.datetime.now(tz=UTC)
-            if segment.available_at > now:
-                time_to_wait = (segment.available_at - now).total_seconds()
-                fname = self._get_segment_name(segment)
-                log.debug(f"Waiting for {self.reader.mime_type} segment: {fname} ({time_to_wait:.01f}s)")
-                if not self.wait(time_to_wait):
-                    log.debug(f"Waiting for {self.reader.mime_type} segment: {fname} aborted")
-                    return
-
-            if segment.byterange:
-                start, length = segment.byterange
-                end = str(start + length - 1) if length else ""
-                headers["Range"] = f"bytes={start}-{end}"
-
             return self.session.http.get(
                 segment.url,
                 timeout=self.timeout,
                 exception=StreamError,
                 headers=headers,
+                retries=retries,
                 **request_args,
             )
         except StreamError as err:
             log.error(f"Failed to open {self.reader.mime_type} segment {segment.url}: {err}")
-            return self.fetch(segment, retries - 1)
 
     def write(self, segment, res, chunk_size=8192):
         name = self._get_segment_name(segment)
