@@ -162,14 +162,7 @@ class MPDNode:
 
     parent: "MPDNode"
 
-    def __init__(
-        self,
-        node: _Element,
-        root: "MPD",
-        parent: "MPDNode",
-        *args,
-        **kwargs,
-    ):
+    def __init__(self, node: _Element, root: "MPD", parent: "MPDNode", **kwargs):
         self.node = node
         self.root = root
         self.parent = parent
@@ -310,12 +303,11 @@ class MPD(MPDNode):
     parent: None  # type: ignore[assignment]
     timelines: Dict[TTimelineIdent, int]
 
-    def __init__(self, node, url=None, *args, **kwargs):
+    def __init__(self, *args, url=None, **kwargs):
         # top level has no parent
-        kwargs.pop("root", None)
-        kwargs.pop("parent", None)
-        # noinspection PyTypeChecker
-        super().__init__(node, root=self, parent=None, *args, **kwargs)
+        kwargs["root"] = self
+        kwargs["parent"] = None
+        super().__init__(*args, **kwargs)
 
         # parser attributes
         self.url = url
@@ -395,8 +387,8 @@ class ProgramInformation(MPDNode):
 class BaseURL(MPDNode):
     __tag__ = "BaseURL"
 
-    def __init__(self, node, root=None, parent=None, *args, **kwargs):
-        super().__init__(node, root, parent, *args, **kwargs)
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
 
         self.url = self.text.strip()
 
@@ -426,8 +418,8 @@ class Location(MPDNode):
 class Period(MPDNode):
     __tag__ = "Period"
 
-    def __init__(self, node, root=None, parent=None, *args, **kwargs):
-        super().__init__(node, root, parent, *args, **kwargs)
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
 
         self.i = kwargs.get("i", 0)
         self.id = self.attr("id")
@@ -481,8 +473,8 @@ class EventStream(MPDNode):
 class Initialization(MPDNode):
     __tag__ = "Initialization"
 
-    def __init__(self, node, root=None, parent=None, *args, **kwargs):
-        super().__init__(node, root, parent, *args, **kwargs)
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
 
         self.source_url = self.attr("sourceURL")
         self.range = self.attr(
@@ -494,8 +486,8 @@ class Initialization(MPDNode):
 class SegmentURL(MPDNode):
     __tag__ = "SegmentURL"
 
-    def __init__(self, node, root=None, parent=None, *args, **kwargs):
-        super().__init__(node, root, parent, *args, **kwargs)
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
 
         self.media = self.attr("media")
         self.media_range = self.attr(
@@ -509,8 +501,8 @@ class SegmentList(MPDNode):
 
     period: "Period"
 
-    def __init__(self, node, root=None, parent=None, period=None, *args, **kwargs):
-        super().__init__(node, root, parent, *args, **kwargs)
+    def __init__(self, *args, period, **kwargs):
+        super().__init__(*args, **kwargs)
 
         self.period = period
 
@@ -562,8 +554,8 @@ class AdaptationSet(MPDNode):
 
     parent: "Period"
 
-    def __init__(self, node, root=None, parent=None, *args, **kwargs):
-        super().__init__(node, root, parent, *args, **kwargs)
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
 
         self.id = self.attr("id")
         self.group = self.attr("group")
@@ -629,8 +621,8 @@ class SegmentTemplate(MPDNode):
     parent: Union["Period", "AdaptationSet", "Representation"]
     period: "Period"
 
-    def __init__(self, node, root=None, parent=None, period=None, *args, **kwargs):
-        super().__init__(node, root, parent, *args, **kwargs)
+    def __init__(self, *args, period, **kwargs):
+        super().__init__(*args, **kwargs)
 
         self.period = period
 
@@ -816,8 +808,8 @@ class Representation(MPDNode):
     parent: "AdaptationSet"
     period: "Period"
 
-    def __init__(self, node, root=None, parent=None, period=None, *args, **kwargs):
-        super().__init__(node, root, parent, *args, **kwargs)
+    def __init__(self, *args, period, **kwargs):
+        super().__init__(*args, **kwargs)
 
         self.period = period
 
@@ -925,8 +917,8 @@ class SubRepresentation(MPDNode):
 class SegmentTimeline(MPDNode):
     __tag__ = "SegmentTimeline"
 
-    def __init__(self, node, root=None, parent=None, *args, **kwargs):
-        super().__init__(node, root, parent, *args, **kwargs)
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
 
         self.timescale = self.walk_back_get_attr("timescale")
 
@@ -947,8 +939,8 @@ class SegmentTimeline(MPDNode):
 class _TimelineSegment(MPDNode):
     __tag__ = "S"
 
-    def __init__(self, node, root=None, parent=None, *args, **kwargs):
-        super().__init__(node, root, parent, *args, **kwargs)
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
 
         self.t = self.attr("t", parser=int)
         self.d = self.attr("d", parser=int)
@@ -958,8 +950,8 @@ class _TimelineSegment(MPDNode):
 class ContentProtection(MPDNode):
     __tag__ = "ContentProtection"
 
-    def __init__(self, node, root=None, parent=None, *args, **kwargs):
-        super().__init__(node, root, parent, *args, **kwargs)
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
 
         self.schemeIdUri = self.attr("schemeIdUri")
         self.value = self.attr("value")
