@@ -23,6 +23,7 @@ from typing import (
     Type,
     TypeVar,
     Union,
+    overload,
 )
 from urllib.parse import urljoin, urlparse, urlsplit, urlunparse, urlunsplit
 
@@ -188,17 +189,54 @@ class MPDNode:
     def __str__(self):
         return f"<{self.__tag__} {' '.join(f'@{attr}={getattr(self, attr)}' for attr in self.attributes)}>"
 
+    @overload
+    def attr(  # type: ignore[misc]  # "Overloaded function signatures 1 and 2 overlap with incompatible return types"
+        self,
+        key: str,
+        parser: None = None,
+        default: None = None,
+        required: bool = False,
+        inherited: bool = False,
+    ) -> Optional[str]:
+        pass
+
+    @overload
     def attr(
         self,
         key: str,
-        default: TAttrDefault = None,
-        parser: Optional[Callable[[Any], TAttrParseResult]] = None,
+        parser: None,
+        default: TAttrDefault,
         required: bool = False,
         inherited: bool = False,
-    ) -> Union[TAttrParseResult, TAttrDefault, Any]:
+    ) -> TAttrDefault:
+        pass
+
+    @overload
+    def attr(
+        self,
+        key: str,
+        parser: Callable[[Any], TAttrParseResult],
+        default: None = None,
+        required: bool = False,
+        inherited: bool = False,
+    ) -> Optional[TAttrParseResult]:
+        pass
+
+    @overload
+    def attr(
+        self,
+        key: str,
+        parser: Callable[[Any], TAttrParseResult],
+        default: TAttrDefault,
+        required: bool = False,
+        inherited: bool = False,
+    ) -> Union[TAttrParseResult, TAttrDefault]:
+        pass
+
+    def attr(self, key, parser=None, default=None, required=False, inherited=False):
         self.attributes.add(key)
         if key in self.attrib:
-            value: Any = self.attrib.get(key)
+            value = self.attrib.get(key)
             if parser and callable(parser):
                 return parser(value)
             else:
