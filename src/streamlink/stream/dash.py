@@ -5,7 +5,7 @@ import logging
 from collections import defaultdict
 from contextlib import contextmanager
 from time import time
-from typing import Dict, Optional
+from typing import Dict, List, Optional
 from urllib.parse import urlparse, urlunparse
 
 from streamlink import PluginError, StreamError
@@ -262,7 +262,8 @@ class DASHStream(Stream):
 
             mpd = MPD(session.http.xml(res, ignore_ns=True), base_url=urlunparse(urlp), url=url)
 
-        video, audio = [], []
+        video: List[Optional[Representation]] = []
+        audio: List[Optional[Representation]] = []
 
         # Search for suitable video and audio representations
         for aset in mpd.periods[0].adaptationSets:
@@ -299,7 +300,7 @@ class DASHStream(Stream):
 
         if not lang:
             # filter by the first language that appears
-            lang = audio[0] and audio[0].lang
+            lang = audio[0].lang if audio[0] else None
 
         log.debug("Available languages for DASH audio streams: {0} (using: {1})".format(
             ", ".join(available_languages) or "NONE",
@@ -308,7 +309,7 @@ class DASHStream(Stream):
 
         # if the language is given by the stream, filter out other languages that do not match
         if len(available_languages) > 1:
-            audio = list(filter(lambda a: a.lang is None or a.lang == lang, audio))
+            audio = [a for a in audio if a and (a.lang is None or a.lang == lang)]
 
         ret = []
         for vid, aud in itertools.product(video, audio):
@@ -317,7 +318,7 @@ class DASHStream(Stream):
 
             if vid:
                 stream_name.append("{:0.0f}{}".format(vid.height or vid.bandwidth_rounded, "p" if vid.height else "k"))
-            if audio and len(audio) > 1:
+            if aud and len(audio) > 1:
                 stream_name.append("a{:0.0f}k".format(aud.bandwidth))
             ret.append(("+".join(stream_name), stream))
 
@@ -326,7 +327,7 @@ class DASHStream(Stream):
         for k, v in ret:
             dict_value_list[k].append(v)
 
-        def sortby_bandwidth(dash_stream: DASHStream) -> int:
+        def sortby_bandwidth(dash_stream: DASHStream) -> float:
             if dash_stream.video_representation:
                 return dash_stream.video_representation.bandwidth
             if dash_stream.audio_representation:
