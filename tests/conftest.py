@@ -29,3 +29,7 @@ def pytest_collection_modifyitems(items: List[pytest.Item]):  # pragma: no cover
         for item in items
     }
     items.sort(key=lambda item: priorities.get(item, default))
+
+
+def pytest_configure(config: pytest.Config):
+    config.addinivalue_line("markers", "nomockedhttprequest: tests where no mocked HTTP request will be made")
