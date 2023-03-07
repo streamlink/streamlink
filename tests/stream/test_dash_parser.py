@@ -364,3 +364,17 @@ class TestMPDParser(unittest.TestCase):
             ("period-0", None, "video1"),
             ("period-0", None, "video2"),
         ]
+
+    def test_get_representation(self):
+        with xml("dash/test_timeline_ids.mpd") as mpd_xml:
+            mpd = MPD(mpd_xml, base_url="http://test/", url="http://test/manifest.mpd")
+
+        assert mpd.get_representation((None, None, "unknown")) is None
+        assert mpd.get_representation((None, None, "audio1")) is None
+        assert mpd.get_representation((None, "0", "audio1")) is None
+        assert mpd.get_representation(("period-0", None, "audio1")) is None
+
+        assert getattr(mpd.get_representation(("period-0", "0", "audio1")), "mimeType") == "audio/mp4"
+        assert getattr(mpd.get_representation(("period-0", "0", "audio2")), "mimeType") == "audio/mp4"
+        assert getattr(mpd.get_representation(("period-0", None, "video1")), "mimeType") == "video/mp4"
+        assert getattr(mpd.get_representation(("period-0", None, "video2")), "mimeType") == "video/mp4"

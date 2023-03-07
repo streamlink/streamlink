@@ -77,7 +77,6 @@ class DASHStreamWorker(SegmentedStreamWorker):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.mpd = self.stream.mpd
-        self.period = self.stream.period
 
         self.manifest_reload_retries = self.session.options.get("dash-manifest-reload-attempts")
 
@@ -92,25 +91,19 @@ class DASHStreamWorker(SegmentedStreamWorker):
         if time_to_sleep > 0:
             self.wait(time_to_sleep)
 
-    def get_representation(self, mpd, ident):
-        for aset in mpd.periods[self.period].adaptationSets:
-            for rep in aset.representations:
-                if rep.ident == ident:
-                    return rep
-
     def iter_segments(self):
         init = True
         back_off_factor = 1
         while not self.closed:
             # find the representation by ID
-            representation = self.get_representation(self.mpd, self.reader.ident)
+            representation = self.mpd.get_representation(self.reader.ident)
 
             if self.mpd.type == "static":
                 refresh_wait = 5
             else:
                 refresh_wait = max(
                     self.mpd.minimumUpdatePeriod.total_seconds(),
-                    self.mpd.periods[self.period].duration.total_seconds(),
+                    representation.period.duration.total_seconds() if representation else 0,
                 ) or 5
 
             with self.sleeper(refresh_wait * back_off_factor):
@@ -154,7 +147,7 @@ class DASHStreamWorker(SegmentedStreamWorker):
             timelines=self.mpd.timelines,
         )
 
-        new_rep = self.get_representation(new_mpd, self.reader.ident)
+        new_rep = new_mpd.get_representation(self.reader.ident)
         with freeze_timeline(new_mpd):
             changed = len(list(itertools.islice(new_rep.segments(), 1))) > 0
 
@@ -191,7 +184,6 @@ class DASHStream(Stream):
         mpd: MPD,
         video_representation: Optional[Representation] = None,
         audio_representation: Optional[Representation] = None,
-        period: int = 0,
         **args,
     ):
         """
@@ -199,7 +191,6 @@ class DASHStream(Stream):
         :param mpd: Parsed MPD manifest
         :param video_representation: Video representation
         :param audio_representation: Audio representation
-        :param period: Update period
         :param args: Additional keyword arguments passed to :meth:`requests.Session.request`
         """
 
@@ -207,7 +198,6 @@ class DASHStream(Stream):
         self.mpd = mpd
         self.video_representation = video_representation
         self.audio_representation = audio_representation
-        self.period = period
         self.args = args
 
     def __json__(self):
@@ -260,6 +250,7 @@ class DASHStream(Stream):
         cls,
         session: Streamlink,
         url_or_manifest: str,
+        period: int = 0,
         **args,
     ) -> Dict[str, "DASHStream"]:
         """
@@ -267,6 +258,7 @@ class DASHStream(Stream):
 
         :param session: Streamlink session instance
         :param url_or_manifest: URL of the manifest file or an XML manifest string
+        :param period: Which MPD period to use (index number) for finding representations
         :param args: Additional keyword arguments passed to :meth:`requests.Session.request`
         """
 
@@ -282,7 +274,7 @@ class DASHStream(Stream):
         audio: List[Optional[Representation]] = []
 
         # Search for suitable video and audio representations
-        for aset in mpd.periods[0].adaptationSets:
+        for aset in mpd.periods[period].adaptationSets:
             if aset.contentProtection:
                 raise PluginError(f"{source} is protected by DRM")
             for rep in aset.representations:
