@@ -309,10 +309,6 @@ class TestDASHStreamWorker:
         return mock
 
     @pytest.fixture()
-    def representation(self) -> Mock:
-        return Mock(ident=(None, None, "1"), mimeType="video/mp4", height=720)
-
-    @pytest.fixture()
     def segments(self) -> List[Mock]:
         return [
             Mock(url="init_segment"),
@@ -321,22 +317,32 @@ class TestDASHStreamWorker:
         ]
 
     @pytest.fixture()
-    def mpd(self, representation) -> Mock:
+    def mpd(self) -> Mock:
+        representation = Mock(
+            ident=(None, None, "1"),
+            mimeType="video/mp4",
+            height=720,
+        )
+        adaptationset = Mock(
+            contentProtection=None,
+            representations=[representation],
+        )
+        period = Mock(
+            duration=Mock(total_seconds=Mock(return_value=0)),
+            adaptationSets=[adaptationset],
+        )
+        representation.period = period
+
         return Mock(
             publishTime=1,
             minimumUpdatePeriod=Mock(total_seconds=Mock(return_value=0)),
-            periods=[
-                Mock(
-                    duration=Mock(total_seconds=Mock(return_value=0)),
-                    adaptationSets=[
-                        Mock(
-                            contentProtection=None,
-                            representations=[representation],
-                        ),
-                    ],
-                ),
-            ],
+            periods=[period],
+            get_representation=Mock(return_value=representation),
         )
+
+    @pytest.fixture()
+    def representation(self, mpd) -> Mock:
+        return mpd.periods[0].adaptationSets[0].representations[0]
 
     @pytest.fixture()
     def worker(self, mpd):
@@ -409,29 +415,3 @@ class TestDASHStreamWorker:
         assert representation.segments.call_args_list == [call(init=True)]
         assert mock_wait.call_args_list == [call(5)]
         assert worker._wait.is_set()
-
-    def test_duplicate_rep_id(self):
-        representation_vid = Mock(ident=(None, None, "1"), mimeType="video/mp4", height=720)
-        representation_aud = Mock(ident=(None, None, "2"), mimeType="audio/aac", lang="en")
-
-        worker = DASHStreamWorker(Mock(stream=Mock(period=0)))
-        mpd = Mock(
-            dynamic=False,
-            publishTime=1,
-            periods=[
-                Mock(
-                    adaptationSets=[
-                        Mock(
-                            contentProtection=None,
-                            representations=[representation_vid],
-                        ),
-                        Mock(
-                            contentProtection=None,
-                            representations=[representation_aud],
-                        ),
-                    ],
-                ),
-            ],
-        )
-        assert worker.get_representation(mpd, (None, None, "1")) is representation_vid
-        assert worker.get_representation(mpd, (None, None, "2")) is representation_aud

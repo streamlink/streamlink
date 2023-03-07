@@ -380,6 +380,16 @@ class MPD(MPDNode):
         self.periods = self.children(Period, minimum=1)
         self.programInformation = self.children(ProgramInformation)
 
+    def get_representation(self, ident: TTimelineIdent) -> Optional["Representation"]:
+        """
+        Find the first Representation instance with a matching ident
+        """
+        for period in self.periods:
+            for adaptationset in period.adaptationSets:
+                for representation in adaptationset.representations:
+                    if representation.ident == ident:
+                        return representation
+
 
 class ProgramInformation(MPDNode):
     __tag__ = "ProgramInformation"
