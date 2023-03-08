@@ -723,7 +723,7 @@ class SegmentTemplate(MPDNode):
 
         if self.root.type == "static":
             available_iter = repeat(self.period.availabilityStartTime)
-            duration = self.period.duration.seconds or self.root.mediaPresentationDuration.seconds
+            duration = self.period.duration.total_seconds() or self.root.mediaPresentationDuration.total_seconds()
             if duration:
                 number_iter = range(self.startNumber, int(duration / self.duration_seconds) + 1)
             else:
