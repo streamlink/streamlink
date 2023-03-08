@@ -57,6 +57,10 @@ class Segment:
     def name(self) -> str:
         return Path(urlparse(self.url).path).resolve().name
 
+    @property
+    def available_in(self) -> float:
+        return max(0.0, (self.available_at - datetime.datetime.now(tz=UTC)).total_seconds())
+
 
 @dataclasses.dataclass
 class TimelineSegment:
