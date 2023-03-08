@@ -7,11 +7,34 @@ from unittest.mock import Mock
 import pytest
 from freezegun import freeze_time
 
-from streamlink.stream.dash_manifest import MPD, MPDParsers, MPDParsingError, Representation
+from streamlink.stream.dash_manifest import MPD, MPDParsers, MPDParsingError, Representation, Segment
 from tests.resources import xml
 
 
 UTC = datetime.timezone.utc
+
+
+class TestSegment:
+    @pytest.mark.parametrize(("url", "expected"), [
+        ("https://foo/bar", "bar"),
+        ("https://foo/bar/", "bar"),
+        ("https://foo/bar/baz.qux", "baz.qux"),
+        ("https://foo/bar/baz.qux", "baz.qux"),
+        ("https://foo/bar/baz.qux?asdf", "baz.qux"),
+    ])
+    def test_name(self, url: str, expected: str):
+        segment = Segment(url=url)
+        assert segment.name == expected
+
+    @pytest.mark.parametrize(("available_at", "expected"), [
+        (datetime.datetime(2000, 1, 2, 3, 4, 5, 123456, tzinfo=UTC), 1 * 86400 + 3 * 3600 + 4 * 60 + 5 + 0.123456),
+        (datetime.datetime(2000, 1, 1, 0, 0, 0, 0, tzinfo=UTC), 0.0),
+        (datetime.datetime(1999, 12, 31, 23, 59, 59, 999999, tzinfo=UTC), 0.0),
+    ])
+    def test_available_in(self, available_at: datetime.datetime, expected: float):
+        segment = Segment(url="foo", available_at=available_at)
+        with freeze_time("2000-01-01T00:00:00Z"):
+            assert segment.available_in == pytest.approx(expected)
 
 
 class TestMPDParsers(unittest.TestCase):

@@ -1,5 +1,4 @@
 import copy
-import datetime
 import itertools
 import logging
 from collections import defaultdict
@@ -20,8 +19,6 @@ from streamlink.utils.parse import parse_xml
 
 log = logging.getLogger(__name__)
 
-UTC = datetime.timezone.utc
-
 
 class DASHStreamWriter(SegmentedStreamWriter):
     reader: "DASHStreamReader"
@@ -33,12 +30,11 @@ class DASHStreamWriter(SegmentedStreamWriter):
 
         request_args = copy.deepcopy(self.reader.stream.args)
         headers = request_args.pop("headers", {})
-        now = datetime.datetime.now(tz=UTC)
-        if segment.available_at > now:
-            time_to_wait = (segment.available_at - now).total_seconds()
+        available_in = segment.available_in
+        if available_in > 0:
             segment_name = segment.name
-            log.debug(f"Waiting for {self.reader.mime_type} segment: {segment_name} ({time_to_wait:.01f}s)")
-            if not self.wait(time_to_wait):
+            log.debug(f"Waiting for {self.reader.mime_type} segment: {segment_name} ({available_in:.01f}s)")
+            if not self.wait(available_in):
                 log.debug(f"Waiting for {self.reader.mime_type} segment: {segment_name} aborted")
                 return
 
