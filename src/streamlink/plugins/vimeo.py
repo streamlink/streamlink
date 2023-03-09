@@ -26,7 +26,7 @@ log = logging.getLogger(__name__)
 ))
 class Vimeo(Plugin):
     _config_url_re = re.compile(r'(?:"config_url"|\bdata-config-url)\s*[:=]\s*(".+?")')
-    _config_re = re.compile(r"var\s+config\s*=\s*({.+?})\s*;")
+    _config_re = re.compile(r"playerConfig\s*=\s*({.+?})\s*var")
     _config_url_schema = validate.Schema(
         validate.transform(_config_url_re.search),
         validate.any(
