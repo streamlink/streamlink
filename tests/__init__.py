@@ -1,4 +1,3 @@
-import os
 import signal
 
 import freezegun.config
@@ -23,10 +22,3 @@ freezegun.config.configure(extend_ignore_list=["_pytest.runner", "_pytest.termin
 # make pytest rewrite assertions in dynamically parametrized plugin tests
 # https://docs.pytest.org/en/stable/how-to/writing_plugins.html#assertion-rewriting
 pytest.register_assert_rewrite("tests.plugins")
-
-
-windows_only = pytest.mark.skipif(os.name != "nt", reason="test only applicable on Windows")
-posix_only = pytest.mark.skipif(os.name != "posix", reason="test only applicable on a POSIX OS")
-
-
-__all__ = ["windows_only", "posix_only"]

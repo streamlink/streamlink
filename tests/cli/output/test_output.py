@@ -8,7 +8,6 @@ from unittest.mock import Mock, call, patch
 import pytest
 
 from streamlink_cli.output import FileOutput, PlayerOutput
-from tests import posix_only, windows_only
 
 
 @patch("streamlink_cli.output.stdout")
@@ -70,12 +69,12 @@ class TestFileOutput(unittest.TestCase):
 
         return mock_path
 
-    @posix_only
+    @pytest.mark.posix_only()
     @patch("builtins.open")
     def test_open_posix(self, mock_open: Mock, mock_stdout: Mock):
         self._test_open(mock_open, mock_stdout)
 
-    @windows_only
+    @pytest.mark.windows_only()
     @patch("streamlink_cli.output.msvcrt")
     @patch("builtins.open")
     def test_open_windows(self, mock_open: Mock, mock_msvcrt: Mock, mock_stdout: Mock):

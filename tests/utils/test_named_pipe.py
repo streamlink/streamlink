@@ -5,7 +5,6 @@ from unittest.mock import Mock, call, patch
 import pytest
 
 from streamlink.utils.named_pipe import NamedPipe, NamedPipeBase, NamedPipePosix, NamedPipeWindows
-from tests import posix_only, windows_only
 
 
 try:
@@ -78,7 +77,7 @@ class TestNamedPipe(unittest.TestCase):
         ]
 
 
-@posix_only
+@pytest.mark.posix_only()
 class TestNamedPipePosix(unittest.TestCase):
     def test_export(self):
         assert NamedPipe is NamedPipePosix
@@ -121,7 +120,7 @@ class TestNamedPipePosix(unittest.TestCase):
         assert not reader.is_alive()
 
 
-@windows_only
+@pytest.mark.windows_only()
 class TestNamedPipeWindows(unittest.TestCase):
     def test_export(self):
         assert NamedPipe is NamedPipeWindows
