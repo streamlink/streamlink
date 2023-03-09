@@ -16,8 +16,7 @@
   # - CHANGELOG.md (symlinked from docs/changelog.md)
   # - docs/
   # - docs-requirements.txt
-  # - src/streamlink/plugins/
-  # - src/streamlink_cli/argparser.py
+  # - src/ (docstrings of documented APIs, plugin metadata, CLI arguments, etc.)
   # https://docs.netlify.com/configure-builds/file-based-configuration/#ignore-builds
   ignore = """\
     [ $(git rev-parse --abbrev-ref HEAD) = master ] \
@@ -25,8 +24,7 @@
         CHANGELOG.md \
         docs/ \
         docs-requirements.txt \
-        src/streamlink/plugins/ \
-        src/streamlink_cli/argparser.py
+        src/
   """
 
 [build.environment]
