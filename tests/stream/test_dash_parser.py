@@ -147,15 +147,15 @@ class TestMPDParser(unittest.TestCase):
                 datetime.datetime(2000, 1, 1, 0, 1, 30, tzinfo=UTC),
             ),
             (
-                "http://test/hd-5_000000794.mp4",
+                "http://test/hd-5_000000793.mp4",
                 datetime.datetime(2000, 1, 1, 0, 59, 15, tzinfo=UTC),
             ),
             (
-                "http://test/hd-5_000000795.mp4",
+                "http://test/hd-5_000000794.mp4",
                 datetime.datetime(2000, 1, 1, 0, 59, 20, tzinfo=UTC),
             ),
             (
-                "http://test/hd-5_000000796.mp4",
+                "http://test/hd-5_000000795.mp4",
                 datetime.datetime(2000, 1, 1, 0, 59, 25, tzinfo=UTC),
             ),
         ]

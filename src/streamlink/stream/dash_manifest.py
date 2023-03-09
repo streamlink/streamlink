@@ -736,14 +736,12 @@ class SegmentTemplate(MPDNode):
             buffer_time = self.root.minBufferTime
 
             # Segment number
-            # To reduce unnecessary delay, start with the next/upcoming segment: +1
             seconds_offset = (since_start - suggested_delay - buffer_time).total_seconds()
-            number_offset = max(0, int(seconds_offset / self.duration_seconds) + 1)
+            number_offset = max(0, int(seconds_offset / self.duration_seconds))
             number_iter = count(self.startNumber + number_offset)
 
             # Segment availability time
-            # The availability time marks the segment's beginning: -1
-            available_offset = datetime.timedelta(seconds=max(0, number_offset - 1) * self.duration_seconds)
+            available_offset = datetime.timedelta(seconds=number_offset * self.duration_seconds)
             available_start = self.period.availabilityStartTime + available_offset
             available_iter = count_dt(
                 available_start,
