@@ -1,10 +1,11 @@
 from unittest.mock import Mock, patch
 
-from tests import posix_only, windows_only
+import pytest
+
 from tests.cli.test_cmdline import CommandLineTestCase
 
 
-@posix_only
+@pytest.mark.posix_only()
 @patch("streamlink_cli.main.NamedPipe", Mock(return_value=Mock(path="/tmp/streamlinkpipe")))
 class TestCommandLineWithPlayerFifoPosix(CommandLineTestCase):
     def test_player_fifo_default(self):
@@ -16,7 +17,7 @@ class TestCommandLineWithPlayerFifoPosix(CommandLineTestCase):
         )
 
 
-@windows_only
+@pytest.mark.windows_only()
 @patch("streamlink_cli.main.NamedPipe", Mock(return_value=Mock(path="\\\\.\\pipe\\streamlinkpipe")))
 class TestCommandLineWithPlayerFifoWindows(CommandLineTestCase):
     def test_player_fifo_default(self):

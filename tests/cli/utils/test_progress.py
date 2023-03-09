@@ -7,7 +7,6 @@ import freezegun
 import pytest
 
 from streamlink_cli.utils.progress import Progress, ProgressFormatter
-from tests import posix_only, windows_only
 
 
 class TestProgressFormatter:
@@ -183,7 +182,7 @@ class TestPrint:
     def progress(self, stream: StringIO):
         return Progress(stream, Mock())
 
-    @posix_only
+    @pytest.mark.posix_only()
     def test_print_posix(self, progress: Progress, stream: StringIO):
         progress.print_inplace("foo")
         progress.print_inplace("barbaz")
@@ -192,7 +191,7 @@ class TestPrint:
         progress.print_end()
         assert stream.getvalue() == "\rfoo       \rbarbaz    \r0123456789\rabcdefghijk\n"
 
-    @windows_only
+    @pytest.mark.windows_only()
     def test_print_windows(self, progress: Progress, stream: StringIO):
         progress.print_inplace("foo")
         progress.print_inplace("barbaz")

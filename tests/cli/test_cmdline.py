@@ -2,10 +2,11 @@ import unittest
 from pathlib import Path
 from unittest.mock import ANY, Mock, call, patch
 
+import pytest
+
 import streamlink_cli.main
 import tests
 from streamlink import Streamlink
-from tests import posix_only, windows_only
 
 
 class CommandLineTestCase(unittest.TestCase):
@@ -51,7 +52,7 @@ class CommandLineTestCase(unittest.TestCase):
             assert mock_call.call_args_list == [call(commandline, stderr=ANY, stdout=ANY)]
 
 
-@posix_only
+@pytest.mark.posix_only()
 class TestCommandLinePOSIX(CommandLineTestCase):
     """
     Commandline tests under POSIX-like operating systems
@@ -89,7 +90,7 @@ class TestCommandLinePOSIX(CommandLineTestCase):
                         ["/usr/bin/player", "-v", "-"])
 
 
-@windows_only
+@pytest.mark.windows_only()
 class TestCommandLineWindows(CommandLineTestCase):
     """
     Commandline tests for Windows

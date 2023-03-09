@@ -28,7 +28,6 @@ from streamlink_cli.main import (
     resolve_stream_name,
 )
 from streamlink_cli.output import FileOutput, PlayerOutput
-from tests import posix_only, windows_only
 from tests.plugin.testplugin import TestPlugin as _TestPlugin
 
 
@@ -637,7 +636,7 @@ class TestCLIMainLoggingStreams(_TestCLIMainLogging):
 
 
 class TestCLIMainLoggingInfos(_TestCLIMainLogging):
-    @posix_only
+    @pytest.mark.posix_only()
     @patch("streamlink_cli.main.log")
     def test_log_root_warning(self, mock_log):
         self.subject(["streamlink"], euid=0)
@@ -774,7 +773,7 @@ class TestCLIMainLoggingLogfile(_TestCLIMainLogging):
         )
 
 
-@posix_only
+@pytest.mark.posix_only()
 class TestCLIMainLoggingLogfilePosix(_TestCLIMainLogging):
     @patch("sys.stdout")
     @patch("builtins.open")
@@ -813,7 +812,7 @@ class TestCLIMainLoggingLogfilePosix(_TestCLIMainLogging):
         )
 
 
-@windows_only
+@pytest.mark.windows_only()
 class TestCLIMainLoggingLogfileWindows(_TestCLIMainLogging):
     @patch("sys.stdout")
     @patch("builtins.open")

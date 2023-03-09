@@ -1,8 +1,9 @@
-from tests import posix_only, windows_only
+import pytest
+
 from tests.cli.test_cmdline import CommandLineTestCase
 
 
-@posix_only
+@pytest.mark.posix_only()
 class TestCommandLineWithTitlePOSIX(CommandLineTestCase):
     def test_open_player_with_title_vlc(self):
         self._test_args(["streamlink", "-p", "/usr/bin/vlc",
@@ -26,7 +27,7 @@ class TestCommandLineWithTitlePOSIX(CommandLineTestCase):
                         ["mpv", "--force-media-title=★ ★ ★", "-"])
 
 
-@windows_only
+@pytest.mark.windows_only()
 class TestCommandLineWithTitleWindows(CommandLineTestCase):
     def test_open_player_with_title_vlc(self):
         self._test_args(

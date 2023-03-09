@@ -4,7 +4,6 @@ from unittest.mock import Mock, call, patch
 import pytest
 
 from streamlink_cli.output import PlayerOutput
-from tests import posix_only, windows_only
 
 
 @pytest.fixture()
@@ -28,25 +27,25 @@ def mock_popen(playeroutput: PlayerOutput):
     pytest.param(
         dict(cmd="mpv", title="foo bar"),
         ["mpv", "--force-media-title=foo bar", "-"],
-        marks=posix_only,
+        marks=pytest.mark.posix_only,
         id="MPV title POSIX",
     ),
     pytest.param(
         {"cmd": "mpv.exe", "title": "foo bar"},
         "mpv.exe \"--force-media-title=foo bar\" -",
-        marks=windows_only,
+        marks=pytest.mark.windows_only,
         id="MPV title Windows",
     ),
     pytest.param(
         {"cmd": "vlc", "title": "foo bar"},
         ["vlc", "--input-title-format", "foo bar", "-"],
-        marks=posix_only,
+        marks=pytest.mark.posix_only,
         id="VLC title POSIX",
     ),
     pytest.param(
         {"cmd": "vlc.exe", "title": "foo bar"},
         "vlc.exe --input-title-format \"foo bar\" -",
-        marks=windows_only,
+        marks=pytest.mark.windows_only,
         id="VLC title Windows",
     ),
 ], indirect=["playeroutput"])
@@ -61,73 +60,73 @@ def test_playeroutput(mock_popen: Mock, playeroutput: PlayerOutput, expected):
     pytest.param(
         dict(cmd="foo"),
         ["foo", "-"],
-        marks=posix_only,
+        marks=pytest.mark.posix_only,
         id="None POSIX",
     ),
     pytest.param(
         dict(cmd="foo", args="--bar"),
         ["foo", "--bar", "-"],
-        marks=posix_only,
+        marks=pytest.mark.posix_only,
         id="Implicit POSIX",
     ),
     pytest.param(
         dict(cmd="foo", args="--bar {playerinput}"),
         ["foo", "--bar", "-"],
-        marks=posix_only,
+        marks=pytest.mark.posix_only,
         id="Explicit POSIX",
     ),
     pytest.param(
         dict(cmd="foo", args="--bar {filename}"),
         ["foo", "--bar", "-"],
-        marks=posix_only,
+        marks=pytest.mark.posix_only,
         id="Fallback POSIX",
     ),
     pytest.param(
         dict(cmd="foo", args="--bar {playerinput} {filename}"),
         ["foo", "--bar", "-", "-"],
-        marks=posix_only,
+        marks=pytest.mark.posix_only,
         id="Fallback duplicate POSIX",
     ),
     pytest.param(
         dict(cmd="foo", args="--bar {qux}"),
         ["foo", "--bar", "{qux}", "-"],
-        marks=posix_only,
+        marks=pytest.mark.posix_only,
         id="Unknown POSIX",
     ),
     pytest.param(
         dict(cmd="foo"),
         "foo -",
-        marks=windows_only,
+        marks=pytest.mark.windows_only,
         id="None Windows",
     ),
     pytest.param(
         dict(cmd="foo", args="--bar"),
         "foo --bar -",
-        marks=windows_only,
+        marks=pytest.mark.windows_only,
         id="Implicit Windows",
     ),
     pytest.param(
         dict(cmd="foo", args="--bar {playerinput}"),
         "foo --bar -",
-        marks=windows_only,
+        marks=pytest.mark.windows_only,
         id="Explicit Windows",
     ),
     pytest.param(
         dict(cmd="foo", args="--bar {filename}"),
         "foo --bar -",
-        marks=windows_only,
+        marks=pytest.mark.windows_only,
         id="Fallback Windows",
     ),
     pytest.param(
         dict(cmd="foo", args="--bar {playerinput} {filename}"),
         "foo --bar - -",
-        marks=windows_only,
+        marks=pytest.mark.windows_only,
         id="Fallback duplicate Windows",
     ),
     pytest.param(
         dict(cmd="foo", args="--bar {qux}"),
         "foo --bar {qux} -",
-        marks=windows_only,
+        marks=pytest.mark.windows_only,
         id="Unknown Windows",
     ),
 ], indirect=["playeroutput"])
