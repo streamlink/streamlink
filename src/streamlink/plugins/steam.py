@@ -187,8 +187,8 @@ class SteamBroadcastPlugin(Plugin):
                 validate.parse_json(),
                 {
                     "success": str,
-                    "url": validate.url(),
-                    "cdn_auth_url_parameters": validate.any(str, None),
+                    validate.optional("url"): validate.url(),
+                    validate.optional("cdn_auth_url_parameters"): validate.any(str, None),
                 },
                 validate.union_get("success", "url", "cdn_auth_url_parameters"),
             ),
@@ -232,7 +232,7 @@ class SteamBroadcastPlugin(Plugin):
         sessionid = res.cookies.get("sessionid")
 
         success, url, cdn_auth = self._get_broadcast_stream(steamid, sessionid=sessionid)
-        if success != "ready":
+        if success != "ready" or not url:
             log.error("This stream is currently unavailable")
             return
 
