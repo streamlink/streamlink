@@ -44,23 +44,34 @@ log = logging.getLogger(__name__)
 EPOCH_START = fromtimestamp(0)
 ONE_SECOND = timedelta(seconds=1)
 
+SEGMENT_TIME_FORMAT = "%Y-%m-%dT%H:%M:%S.%fZ"
+
 
 @dataclasses.dataclass
 class Segment:
     url: str
+    number: Optional[int] = None
     duration: Optional[float] = None
+    available_at: datetime = EPOCH_START
     init: bool = False
     content: bool = True
-    available_at: datetime = EPOCH_START
     byterange: Optional[Tuple[int, Optional[int]]] = None
 
     @property
     def name(self) -> str:
+        if self.init and not self.content:
+            return "initialization"
+        if self.number is not None:
+            return str(self.number)
         return Path(urlparse(self.url).path).resolve().name
 
     @property
     def available_in(self) -> float:
         return max(0.0, (self.available_at - now()).total_seconds())
+
+    @property
+    def availability(self) -> str:
+        return f"{self.available_at.strftime(SEGMENT_TIME_FORMAT)} / {now().strftime(SEGMENT_TIME_FORMAT)}"
 
 
 @dataclasses.dataclass
@@ -542,17 +553,21 @@ class SegmentList(MPDNode):
         if self.initialization:  # pragma: no branch
             yield Segment(
                 url=self.make_url(self.initialization.source_url),
+                number=None,
                 duration=None,
+                available_at=self.period.availabilityStartTime,
                 init=True,
                 content=False,
-                available_at=self.period.availabilityStartTime,
                 byterange=self.initialization.range,
             )
-        for n, segment_url in enumerate(self.segment_urls, self.start_number):
+        for number, segment_url in enumerate(self.segment_urls, self.start_number):
             yield Segment(
                 url=self.make_url(segment_url.media),
+                number=number,
                 duration=self.duration_seconds,
                 available_at=self.period.availabilityStartTime,
+                init=False,
+                content=True,
                 byterange=segment_url.media_range,
             )
 
@@ -678,18 +693,22 @@ class SegmentTemplate(MPDNode):
             if init_url:  # pragma: no branch
                 yield Segment(
                     url=init_url,
+                    number=None,
                     duration=None,
+                    available_at=self.period.availabilityStartTime,
                     init=True,
                     content=False,
-                    available_at=self.period.availabilityStartTime,
+                    byterange=None,
                 )
-        for media_url, available_at in self.format_media(ident, base_url, **kwargs):
+        for media_url, number, available_at in self.format_media(ident, base_url, **kwargs):
             yield Segment(
                 url=media_url,
+                number=number,
                 duration=self.duration_seconds,
+                available_at=available_at,
                 init=False,
                 content=True,
-                available_at=available_at,
+                byterange=None,
             )
 
     @staticmethod
@@ -762,7 +781,7 @@ class SegmentTemplate(MPDNode):
 
         yield from zip(number_iter, available_iter)
 
-    def format_media(self, ident: TTimelineIdent, base_url: str, **kwargs) -> Iterator[Tuple[str, datetime]]:
+    def format_media(self, ident: TTimelineIdent, base_url: str, **kwargs) -> Iterator[Tuple[str, Optional[int], datetime]]:
         if self.media is None:  # pragma: no cover
             return
 
@@ -770,16 +789,16 @@ class SegmentTemplate(MPDNode):
             log.debug(f"Generating segment numbers for {self.root.type} playlist: {ident!r}")
             for number, available_at in self.segment_numbers():
                 url = self.make_url(base_url, self.media(Number=number, **kwargs))
-                yield url, available_at
+                yield url, number, available_at
             return
 
         log.debug(f"Generating segment timeline for {self.root.type} playlist: {ident!r}")
 
         if self.root.type == "static":
             available_at = self.period.availabilityStartTime
-            for segment, n in zip(self.segmentTimeline.segments, count(self.startNumber)):
-                url = self.make_url(base_url, self.media(Time=segment.t, Number=n, **kwargs))
-                yield url, available_at
+            for number, segment in zip(count(self.startNumber), self.segmentTimeline.segments):
+                url = self.make_url(base_url, self.media(Time=segment.t, Number=number, **kwargs))
+                yield url, number, available_at
             return
 
         # Convert potential `isodate.Duration` instance to `datetime.timedelta` (relative to now)
@@ -810,7 +829,7 @@ class SegmentTemplate(MPDNode):
         for url, available_at, t in reversed(timeline):
             if t > self.root.timelines[ident]:
                 self.root.timelines[ident] = t
-                yield url, available_at
+                yield url, None, available_at
 
 
 class Representation(MPDNode):
@@ -913,10 +932,12 @@ class Representation(MPDNode):
         else:
             yield Segment(
                 url=self.base_url,
+                number=None,
                 duration=None,
+                available_at=self.period.availabilityStartTime,
                 init=True,
                 content=True,
-                available_at=self.period.availabilityStartTime,
+                byterange=None,
             )
 
 

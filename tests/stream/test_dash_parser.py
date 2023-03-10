@@ -15,15 +15,19 @@ UTC = datetime.timezone.utc
 
 
 class TestSegment:
-    @pytest.mark.parametrize(("url", "expected"), [
-        ("https://foo/bar", "bar"),
-        ("https://foo/bar/", "bar"),
-        ("https://foo/bar/baz.qux", "baz.qux"),
-        ("https://foo/bar/baz.qux", "baz.qux"),
-        ("https://foo/bar/baz.qux?asdf", "baz.qux"),
+    @pytest.mark.parametrize(("segmentdata", "expected"), [
+        ({"url": "https://foo/bar", "number": 123, "init": True, "content": False}, "initialization"),
+        ({"url": "https://foo/bar", "number": 123, "init": True, "content": True}, "123"),
+        ({"url": "https://foo/bar", "number": None, "init": True, "content": True}, "bar"),
+        ({"url": "https://foo/bar", "number": 123}, "123"),
+        ({"url": "https://foo/bar"}, "bar"),
+        ({"url": "https://foo/bar/"}, "bar"),
+        ({"url": "https://foo/bar/baz.qux"}, "baz.qux"),
+        ({"url": "https://foo/bar/baz.qux"}, "baz.qux"),
+        ({"url": "https://foo/bar/baz.qux?asdf"}, "baz.qux"),
     ])
-    def test_name(self, url: str, expected: str):
-        segment = Segment(url=url)
+    def test_name(self, segmentdata: dict, expected: str):
+        segment = Segment(**segmentdata)
         assert segment.name == expected
 
     @pytest.mark.parametrize(("available_at", "expected"), [
@@ -35,6 +39,11 @@ class TestSegment:
         segment = Segment(url="foo", available_at=available_at)
         with freeze_time("2000-01-01T00:00:00Z"):
             assert segment.available_in == pytest.approx(expected)
+
+    def test_availability(self):
+        segment = Segment(url="foo", available_at=datetime.datetime(2000, 1, 2, 3, 4, 5, 123456, tzinfo=UTC))
+        with freeze_time("2000-01-01T00:00:00Z"):
+            assert segment.availability == "2000-01-02T03:04:05.123456Z / 2000-01-01T00:00:00.000000Z"
 
 
 class TestMPDParsers(unittest.TestCase):

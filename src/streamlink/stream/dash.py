@@ -28,15 +28,17 @@ class DASHStreamWriter(SegmentedStreamWriter):
         if self.closed or not retries:
             return
 
-        request_args = copy.deepcopy(self.reader.stream.args)
-        headers = request_args.pop("headers", {})
+        name = segment.name
         available_in = segment.available_in
         if available_in > 0:
-            segment_name = segment.name
-            log.debug(f"Waiting for {self.reader.mime_type} segment: {segment_name} ({available_in:.01f}s)")
+            log.debug(f"{self.reader.mime_type} segment {name}: waiting {available_in:.01f}s ({segment.availability})")
             if not self.wait(available_in):
-                log.debug(f"Waiting for {self.reader.mime_type} segment: {segment_name} aborted")
+                log.debug(f"{self.reader.mime_type} segment {name}: cancelled")
                 return
+        log.debug(f"{self.reader.mime_type} segment {name}: downloading ({segment.availability})")
+
+        request_args = copy.deepcopy(self.reader.stream.args)
+        headers = request_args.pop("headers", {})
 
         if segment.byterange:
             start, length = segment.byterange
@@ -53,16 +55,16 @@ class DASHStreamWriter(SegmentedStreamWriter):
                 **request_args,
             )
         except StreamError as err:
-            log.error(f"Download of {self.reader.mime_type} segment: {segment.name} failed ({err})")
+            log.error(f"{self.reader.mime_type} segment {name}: failed ({err})")
 
     def write(self, segment, res, chunk_size=8192):
         for chunk in res.iter_content(chunk_size):
             if self.closed:
-                log.warning(f"Download of {self.reader.mime_type} segment: {segment.name} aborted")
+                log.warning(f"{self.reader.mime_type} segment {segment.name}: aborted")
                 return
             self.reader.buffer.write(chunk)
 
-        log.debug(f"Download of {self.reader.mime_type} segment: {segment.name} complete")
+        log.debug(f"{self.reader.mime_type} segment {segment.name}: completed")
 
 
 class DASHStreamWorker(SegmentedStreamWorker):
