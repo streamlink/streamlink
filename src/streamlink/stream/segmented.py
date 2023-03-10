@@ -139,8 +139,8 @@ class SegmentedStreamWriter(AwaitableMixin, Thread):
 
         self.closed = True
         self.reader.close()
-        self.executor.shutdown(wait=True, cancel_futures=True)
         self._wait.set()
+        self.executor.shutdown(wait=True, cancel_futures=True)
 
     def put(self, segment):
         """Adds a segment to the download pool and write queue."""
