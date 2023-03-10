@@ -1,11 +1,11 @@
 import copy
 import dataclasses
-import datetime
 import logging
 import math
 import re
 from collections import defaultdict
 from contextlib import contextmanager
+from datetime import datetime, timedelta
 from itertools import count, repeat
 from pathlib import Path
 from typing import (
@@ -32,6 +32,8 @@ from isodate import Duration, parse_datetime, parse_duration  # type: ignore[imp
 # noinspection PyProtectedMember
 from lxml.etree import _Attrib, _Element
 
+from streamlink.utils.times import UTC, fromtimestamp, now
+
 
 if TYPE_CHECKING:  # pragma: no cover
     from typing_extensions import Literal
@@ -39,9 +41,8 @@ if TYPE_CHECKING:  # pragma: no cover
 
 log = logging.getLogger(__name__)
 
-UTC = datetime.timezone.utc
-EPOCH_START = datetime.datetime(1970, 1, 1, tzinfo=UTC)
-ONE_SECOND = datetime.timedelta(seconds=1)
+EPOCH_START = fromtimestamp(0)
+ONE_SECOND = timedelta(seconds=1)
 
 
 @dataclasses.dataclass
@@ -50,7 +51,7 @@ class Segment:
     duration: Optional[float] = None
     init: bool = False
     content: bool = True
-    available_at: datetime.datetime = EPOCH_START
+    available_at: datetime = EPOCH_START
     byterange: Optional[Tuple[int, Optional[int]]] = None
 
     @property
@@ -59,7 +60,7 @@ class Segment:
 
     @property
     def available_in(self) -> float:
-        return max(0.0, (self.available_at - datetime.datetime.now(tz=UTC)).total_seconds())
+        return max(0.0, (self.available_at - now()).total_seconds())
 
 
 @dataclasses.dataclass
@@ -76,11 +77,8 @@ def datetime_to_seconds(dt):
     return (dt - EPOCH_START).total_seconds()
 
 
-def count_dt(
-    firstval: Optional[datetime.datetime] = None,
-    step: datetime.timedelta = ONE_SECOND,
-) -> Iterator[datetime.datetime]:
-    current = datetime.datetime.now(tz=UTC) if firstval is None else firstval
+def count_dt(firstval: Optional[datetime] = None, step: timedelta = ONE_SECOND) -> Iterator[datetime]:
+    current = now() if firstval is None else firstval
     while True:
         yield current
         current += step
@@ -108,11 +106,11 @@ class MPDParsers:
         return mpdtype
 
     @staticmethod
-    def duration(duration: str) -> Union[datetime.timedelta, Duration]:
+    def duration(duration: str) -> Union[timedelta, Duration]:
         return parse_duration(duration)
 
     @staticmethod
-    def datetime(dt: str) -> datetime.datetime:
+    def datetime(dt: str) -> datetime:
         return parse_datetime(dt).replace(tzinfo=UTC)
 
     @staticmethod
@@ -136,7 +134,7 @@ class MPDParsers:
     @staticmethod
     def timedelta(timescale: float = 1):
         def _timedelta(seconds):
-            return datetime.timedelta(seconds=int(float(seconds) / float(timescale)))
+            return timedelta(seconds=int(float(seconds) / float(timescale)))
 
         return _timedelta
 
@@ -331,7 +329,7 @@ class MPD(MPDNode):
         self.minimumUpdatePeriod = self.attr(
             "minimumUpdatePeriod",
             parser=MPDParsers.duration,
-            default=datetime.timedelta(),
+            default=timedelta(),
         )
         self.minBufferTime = self.attr(
             "minBufferTime",
@@ -360,14 +358,14 @@ class MPD(MPDNode):
         self.mediaPresentationDuration = self.attr(
             "mediaPresentationDuration",
             parser=MPDParsers.duration,
-            default=datetime.timedelta(),
+            default=timedelta(),
         )
         self.suggestedPresentationDelay = self.attr(
             "suggestedPresentationDelay",
             parser=MPDParsers.duration,
             # if there is no delay, use a delay of 3 seconds
             # TODO: add a customizable parameter for this
-            default=datetime.timedelta(seconds=3),
+            default=timedelta(seconds=3),
         )
 
         # parse children
@@ -445,16 +443,16 @@ class Period(MPDNode):
         self.duration = self.attr(
             "duration",
             parser=MPDParsers.duration,
-            default=datetime.timedelta(),
+            default=timedelta(),
         )
         self.start = self.attr(
             "start",
             parser=MPDParsers.duration,
-            default=datetime.timedelta(),
+            default=timedelta(),
         )
 
         # anchor time for segment availability
-        offset = self.start if self.root.type == "dynamic" else datetime.timedelta()
+        offset = self.start if self.root.type == "dynamic" else timedelta()
         self.availabilityStartTime = self.root.availabilityStartTime + offset
 
         # TODO: Early Access Periods
@@ -666,7 +664,7 @@ class SegmentTemplate(MPDNode):
         self.presentationTimeOffset = self.attr(
             "presentationTimeOffset",
             parser=MPDParsers.timedelta(self.timescale),
-            default=datetime.timedelta(),
+            default=timedelta(),
         )
 
         self.duration_seconds = self.duration / self.timescale if self.duration and self.timescale else None
@@ -702,7 +700,7 @@ class SegmentTemplate(MPDNode):
         if self.initialization is not None:
             return self.make_url(base_url, self.initialization(**kwargs))
 
-    def segment_numbers(self) -> Iterator[Tuple[int, datetime.datetime]]:
+    def segment_numbers(self) -> Iterator[Tuple[int, datetime]]:
         """
         yield the segment number and when it will be available.
 
@@ -719,7 +717,7 @@ class SegmentTemplate(MPDNode):
             raise MPDParsingError("Unknown segment durations: missing duration/timescale attributes on SegmentTemplate")
 
         number_iter: Union[Iterator[int], Sequence[int]]
-        available_iter: Iterator[datetime.datetime]
+        available_iter: Iterator[datetime]
 
         if self.root.type == "static":
             available_iter = repeat(self.period.availabilityStartTime)
@@ -729,8 +727,8 @@ class SegmentTemplate(MPDNode):
             else:
                 number_iter = count(self.startNumber)
         else:
-            now = datetime.datetime.now(UTC)
-            since_start = now - self.period.availabilityStartTime - self.presentationTimeOffset
+            current_time = now()
+            since_start = current_time - self.period.availabilityStartTime - self.presentationTimeOffset
 
             suggested_delay = self.root.suggestedPresentationDelay
             buffer_time = self.root.minBufferTime
@@ -741,15 +739,15 @@ class SegmentTemplate(MPDNode):
             number_iter = count(self.startNumber + number_offset)
 
             # Segment availability time
-            available_offset = datetime.timedelta(seconds=number_offset * self.duration_seconds)
+            available_offset = timedelta(seconds=number_offset * self.duration_seconds)
             available_start = self.period.availabilityStartTime + available_offset
             available_iter = count_dt(
                 available_start,
-                datetime.timedelta(seconds=self.duration_seconds),
+                timedelta(seconds=self.duration_seconds),
             )
 
             log.debug(f"Stream start: {self.period.availabilityStartTime}")
-            log.debug(f"Current time: {now}")
+            log.debug(f"Current time: {current_time}")
             log.debug(f"Availability: {available_start}")
             log.debug("; ".join([
                 f"presentationTimeOffset: {self.presentationTimeOffset}",
@@ -764,7 +762,7 @@ class SegmentTemplate(MPDNode):
 
         yield from zip(number_iter, available_iter)
 
-    def format_media(self, ident: TTimelineIdent, base_url: str, **kwargs) -> Iterator[Tuple[str, datetime.datetime]]:
+    def format_media(self, ident: TTimelineIdent, base_url: str, **kwargs) -> Iterator[Tuple[str, datetime]]:
         if self.media is None:  # pragma: no cover
             return
 
@@ -785,8 +783,8 @@ class SegmentTemplate(MPDNode):
             return
 
         # Convert potential `isodate.Duration` instance to `datetime.timedelta` (relative to now)
-        now = datetime.datetime.now(UTC)
-        suggested_delay: datetime.timedelta = now + self.root.suggestedPresentationDelay - now
+        current_time = now()
+        suggested_delay: timedelta = current_time + self.root.suggestedPresentationDelay - current_time
 
         publish_time = self.root.publishTime or EPOCH_START
 
@@ -798,7 +796,7 @@ class SegmentTemplate(MPDNode):
             # so, work backwards and calculate when each of the segments was
             # available, based on the durations relative to the publish-time
             url = self.make_url(base_url, self.media(Time=segment.t, Number=n, **kwargs))
-            duration = datetime.timedelta(seconds=segment.d / self.timescale)
+            duration = timedelta(seconds=segment.d / self.timescale)
 
             # once the suggested_delay is reached, stop
             if self.root.timelines[ident] == -1 and publish_time - available_at >= suggested_delay:
