@@ -1,5 +1,6 @@
 import argparse
 import re
+from typing import Optional, Type
 
 
 _filesize_re = re.compile(r"""
@@ -47,7 +48,7 @@ def filesize(value):
     elif modifier in ("K", "k"):
         size *= 1024
 
-    return num(int, min=0)(size)
+    return num(int, ge=1)(size)
 
 
 def keyvalue(value):
@@ -58,33 +59,37 @@ def keyvalue(value):
     return match.group("key", "value")
 
 
-# noinspection PyShadowingBuiltins
-def num(type, min=None, max=None):  # noqa: A002
+def num(
+    numtype: Type[float],
+    ge: Optional[float] = None,
+    gt: Optional[float] = None,
+    le: Optional[float] = None,
+    lt: Optional[float] = None,
+):
     def func(value):
-        value = type(value)
+        value = numtype(value)
 
-        if min is not None and not (value > min):
-            raise argparse.ArgumentTypeError(
-                "{0} value must be more than {1} but is {2}".format(
-                    type.__name__, min, value,
-                ),
-            )
-
-        if max is not None and not (value <= max):
-            raise argparse.ArgumentTypeError(
-                "{0} value must be at most {1} but is {2}".format(
-                    type.__name__, max, value,
-                ),
-            )
+        if ge is not None and value < ge:
+            raise argparse.ArgumentTypeError(f"{numtype.__name__} value must be >={ge}, but is {value}")
+        if gt is not None and value <= gt:
+            raise argparse.ArgumentTypeError(f"{numtype.__name__} value must be >{gt}, but is {value}")
+        if le is not None and value > le:
+            raise argparse.ArgumentTypeError(f"{numtype.__name__} value must be <={le}, but is {value}")
+        if lt is not None and value >= lt:
+            raise argparse.ArgumentTypeError(f"{numtype.__name__} value must be <{lt}, but is {value}")
 
         return value
 
-    func.__name__ = type.__name__
+    func.__name__ = numtype.__name__
 
     return func
 
 
 __all__ = [
-    "boolean", "comma_list", "comma_list_filter", "filesize", "keyvalue",
+    "boolean",
+    "comma_list",
+    "comma_list_filter",
+    "filesize",
+    "keyvalue",
     "num",
 ]

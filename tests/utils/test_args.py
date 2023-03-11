@@ -1,12 +1,16 @@
-import unittest
 from argparse import ArgumentTypeError
+from contextlib import nullcontext
+from typing import Type
 
 import pytest
 
 from streamlink.utils.args import boolean, comma_list, comma_list_filter, filesize, keyvalue, num
 
 
-class TestUtilsArgs(unittest.TestCase):
+does_not_raise = nullcontext()
+
+
+class TestUtilsArgs:
     def test_boolean_true(self):
         assert boolean("1") is True
         assert boolean("on") is True
@@ -88,30 +92,47 @@ class TestUtilsArgs(unittest.TestCase):
         with pytest.raises(ValueError):  # noqa: PT011
             keyvalue("127.0.0.1")
 
-    def test_num(self):
-        # (value, func, result)
-        test_data = [
-            ("33", num(int, 5, 120), 33),
-            ("234", num(int, min=10), 234),
-            ("50.222", num(float, 10, 120), 50.222),
-        ]
 
-        for _v, _f, _r in test_data:
-            assert _f(_v) == _r
+class TestNum:
+    @pytest.mark.parametrize(("numtype", "value", "expected", "raises"), [
+        (int, 123, 123, does_not_raise),
+        (float, 123, 123.0, does_not_raise),
+        (int, 123.456, 123, does_not_raise),
+        (int, "123", 123, does_not_raise),
+        (int, "-123", -123, does_not_raise),
+        (float, "123.456", 123.456, does_not_raise),
+        (float, "3.1415e2", 314.15, does_not_raise),
+        (int, "", None, pytest.raises(ValueError, match=r"^invalid literal for int\(\) with base 10:")),
+        (int, ".", None, pytest.raises(ValueError, match=r"^invalid literal for int\(\) with base 10:")),
+        (int, "-", None, pytest.raises(ValueError, match=r"^invalid literal for int\(\) with base 10:")),
+        (int, "foo", None, pytest.raises(ValueError, match=r"^invalid literal for int\(\) with base 10:")),
+        (float, "", None, pytest.raises(ValueError, match=r"^could not convert string to float:")),
+        (float, ".", None, pytest.raises(ValueError, match=r"^could not convert string to float:")),
+        (float, "-", None, pytest.raises(ValueError, match=r"^could not convert string to float:")),
+        (float, "foo", None, pytest.raises(ValueError, match=r"^could not convert string to float:")),
+    ])
+    def test_numtype(self, numtype: Type[float], value: float, expected: float, raises: nullcontext):
+        func = num(numtype)
+        assert func.__name__ == numtype.__name__
+        with raises:
+            result = func(value)
+            assert type(result) is numtype
+            assert result == expected
 
-    def test_num_error(self):
-        func = num(int, 5, 10)
-        with pytest.raises(ArgumentTypeError):
-            func("3")
-
-        func = num(int, max=11)
-        with pytest.raises(ArgumentTypeError):
-            func("12")
-
-        func = num(int, min=15)
-        with pytest.raises(ArgumentTypeError):
-            func("8")
-
-        func = num(float, 10, 20)
-        with pytest.raises(ArgumentTypeError):
-            func("40.222")
+    @pytest.mark.parametrize(("operators", "value", "raises"), [
+        ({"ge": 1}, 1, does_not_raise),
+        ({"ge": 0}, 1, does_not_raise),
+        ({"gt": 0}, 1, does_not_raise),
+        ({"le": 1}, 1, does_not_raise),
+        ({"le": 2}, 1, does_not_raise),
+        ({"lt": 2}, 1, does_not_raise),
+        ({"ge": 1, "gt": 0, "le": 1, "lt": 2}, 1, does_not_raise),
+        ({"ge": 2}, 1, pytest.raises(ArgumentTypeError, match=r"^int value must be >=2, but is 1$")),
+        ({"gt": 1}, 1, pytest.raises(ArgumentTypeError, match=r"^int value must be >1, but is 1$")),
+        ({"le": 0}, 1, pytest.raises(ArgumentTypeError, match=r"^int value must be <=0, but is 1$")),
+        ({"lt": 1}, 1, pytest.raises(ArgumentTypeError, match=r"^int value must be <1, but is 1$")),
+        ({"ge": 1, "gt": 0, "le": 0, "lt": 2}, 1, pytest.raises(ArgumentTypeError, match=r"^int value must be <=0, but is 1$")),
+    ])
+    def test_operator(self, operators: dict, value: float, raises: nullcontext):
+        with raises:
+            assert num(int, **operators)(value) == value

@@ -519,7 +519,7 @@ def build_parser():
     player.add_argument(
         "--player-external-http-port",
         metavar="PORT",
-        type=num(int, min=0, max=65535),
+        type=num(int, ge=0, le=65535),
         default=0,
         help="""
         A fixed port to use for the external HTTP server if that mode is
@@ -727,7 +727,7 @@ def build_parser():
     stream.add_argument(
         "--retry-streams",
         metavar="DELAY",
-        type=num(float, min=0),
+        type=num(float, gt=0),
         help="""
         Retry fetching the list of available streams until streams are found
         while waiting `DELAY` second(s) between each attempt. If unset, only one
@@ -739,7 +739,7 @@ def build_parser():
     stream.add_argument(
         "--retry-max",
         metavar="COUNT",
-        type=num(int, min=-1),
+        type=num(int, ge=0),
         help="""
         When using --retry-streams, stop retrying the fetch after `COUNT` retry
         attempt(s). Fetch will retry infinitely if `COUNT` is zero or unset.
@@ -751,7 +751,7 @@ def build_parser():
     stream.add_argument(
         "--retry-open",
         metavar="ATTEMPTS",
-        type=num(int, min=0),
+        type=num(int, ge=1),
         default=1,
         help="""
         After a successful fetch, try `ATTEMPTS` time(s) to open the stream until
@@ -836,7 +836,7 @@ def build_parser():
     )
     transport.add_argument(
         "--stream-segment-attempts",
-        type=num(int, min=0),
+        type=num(int, ge=1),
         metavar="ATTEMPTS",
         help="""
         How many attempts should be done to download each segment before giving up.
@@ -848,7 +848,7 @@ def build_parser():
     )
     transport.add_argument(
         "--stream-segment-threads",
-        type=num(int, max=10),
+        type=num(int, ge=1, le=10),
         metavar="THREADS",
         help="""
         The size of the thread pool used to download segments. Minimum value is `1` and maximum is `10`.
@@ -860,7 +860,7 @@ def build_parser():
     )
     transport.add_argument(
         "--stream-segment-timeout",
-        type=num(float, min=0),
+        type=num(float, gt=0),
         metavar="TIMEOUT",
         help="""
         Segment connect and read timeout.
@@ -872,7 +872,7 @@ def build_parser():
     )
     transport.add_argument(
         "--stream-timeout",
-        type=num(float, min=0),
+        type=num(float, gt=0),
         metavar="TIMEOUT",
         help="""
         Timeout for reading data from streams.
@@ -894,7 +894,7 @@ def build_parser():
 
     transport_hls.add_argument(
         "--hls-live-edge",
-        type=num(int, min=0),
+        type=num(int, ge=1),
         metavar="SEGMENTS",
         help="""
         Number of segments from the live stream's current live position to begin streaming.
@@ -921,7 +921,7 @@ def build_parser():
     )
     transport_hls.add_argument(
         "--hls-playlist-reload-attempts",
-        type=num(int, min=0),
+        type=num(int, ge=1),
         metavar="ATTEMPTS",
         help="""
         Max number of attempts when reloading the HLS playlist before giving up.
@@ -1033,7 +1033,7 @@ def build_parser():
 
     transport_dash.add_argument(
         "--dash-manifest-reload-attempts",
-        type=num(int, min=0),
+        type=num(int, ge=1),
         metavar="ATTEMPTS",
         help="""
         Max number of attempts when reloading the DASH manifest before giving up.
@@ -1223,7 +1223,7 @@ def build_parser():
     http.add_argument(
         "--http-timeout",
         metavar="TIMEOUT",
-        type=num(float, min=0),
+        type=num(float, gt=0),
         help="""
         General timeout used by all HTTP requests except the ones covered by
         other options.
