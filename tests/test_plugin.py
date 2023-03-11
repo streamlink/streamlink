@@ -290,10 +290,6 @@ def _create_cookie_dict(name, value, expires=None):
 
 class TestCookies:
     @pytest.fixture()
-    def session(self):
-        return Streamlink()
-
-    @pytest.fixture()
     def pluginclass(self):
         class MyPlugin(FakePlugin):
             __module__ = "myplugin"

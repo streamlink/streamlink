@@ -22,9 +22,10 @@ def _logger(caplog: pytest.LogCaptureFixture):
 
 
 @pytest.fixture()
-def session():
-    with patch("streamlink.session.Streamlink.load_builtin_plugins"):
-        yield Streamlink({"ffmpeg-no-validation": True})
+def session(session: Streamlink):
+    session.set_option("ffmpeg-no-validation", True)
+
+    return session
 
 
 class TestCommand:

@@ -2,17 +2,11 @@ from unittest.mock import Mock
 
 import pytest
 
-from streamlink import Streamlink
 from streamlink.stream.dash import DASHStream
 from streamlink.stream.file import FileStream
 from streamlink.stream.hls import HLSStream
 from streamlink.stream.http import HTTPStream
 from streamlink.stream.stream import Stream
-
-
-@pytest.fixture(scope="module")
-def session():
-    return Streamlink()
 
 
 @pytest.fixture(scope="module")

@@ -24,14 +24,6 @@ def test_opcode_export(name, value):
 
 class TestWebsocketClient:
     @pytest.fixture()
-    def session(self, request: pytest.FixtureRequest):
-        with patch("streamlink.session.Streamlink.load_builtin_plugins"):
-            session = Streamlink()
-            for key, value in getattr(request, "param", {}).items():
-                session.set_option(key, value)
-            yield session
-
-    @pytest.fixture()
     def websocketapp(self):
         with patch("streamlink.plugin.api.websocket.WebSocketApp") as mock_websocketapp:
             yield mock_websocketapp
