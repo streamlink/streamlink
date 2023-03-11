@@ -138,8 +138,9 @@ class SegmentedStreamWriter(AwaitableMixin, Thread):
         log.debug("Closing writer thread")
 
         self.closed = True
-        self.reader.close()
         self._wait.set()
+
+        self.reader.close()
         self.executor.shutdown(wait=True, cancel_futures=True)
 
     def put(self, segment):
