@@ -1,8 +1,11 @@
 import os
 import sys
 from typing import Dict, List, Tuple
+from unittest.mock import patch
 
 import pytest
+
+from streamlink.session import Streamlink
 
 
 _TEST_CONDITION_MARKERS: Dict[str, Tuple[bool, str]] = {
@@ -54,3 +57,17 @@ def _check_test_condition(item: pytest.Item):  # pragma: no cover
         cond, msg = _TEST_CONDITION_MARKERS[m.name]
         if not cond:
             pytest.skip(msg if not m.args and not m.kwargs else f"{msg} ({m.kwargs.get('reason') or m.args[0]})")
+
+
+# ========================
+# globally shared fixtures
+# ========================
+
+
+@pytest.fixture()
+def session(request: pytest.FixtureRequest) -> Streamlink:
+    with patch.object(Streamlink, "load_builtin_plugins"):
+        session = Streamlink()
+        for key, value in getattr(request, "param", {}).items():
+            session.set_option(key, value)
+        return session

@@ -16,10 +16,6 @@ def test_session():
 
 class TestPluginUserInput:
     @pytest.fixture()
-    def session(self):
-        return Streamlink()
-
-    @pytest.fixture()
     def testplugin(self, session: Streamlink):
         return _TestPlugin(session, "http://example.com/stream")
 

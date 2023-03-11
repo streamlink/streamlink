@@ -13,12 +13,6 @@ from streamlink.utils.parse import parse_xml as original_parse_xml
 from tests.resources import text, xml
 
 
-@pytest.fixture()
-def session(monkeypatch: pytest.MonkeyPatch):
-    monkeypatch.setattr(Streamlink, "load_builtin_plugins", Mock())
-    return Streamlink()
-
-
 class TestDASHStreamParseManifest:
     @pytest.fixture(autouse=True)
     def _response(self, request: pytest.FixtureRequest, requests_mock: rm.Mocker):

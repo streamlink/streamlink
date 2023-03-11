@@ -13,9 +13,8 @@ from streamlink.stream.http import HTTPStream
 from streamlink.stream.stream import Stream
 
 
-@pytest.fixture(scope="module")
-def session():
-    session = Streamlink()
+@pytest.fixture()
+def session(session: Streamlink):
     session.set_option("http-cookies", {"sessioncookiekey": "sessioncookieval"})
     session.set_option("http-headers", {"sessionheaderkey": "sessionheaderval"})
     session.set_option("http-query-params", {"sessionqueryparamkey": "sessionqueryparamval"})

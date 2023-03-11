@@ -23,12 +23,6 @@ PATH_TESTPLUGINS_OVERRIDE = PATH_TESTPLUGINS / "override"
 _original_allowed_gai_family = urllib3.util.connection.allowed_gai_family  # type: ignore[attr-defined]
 
 
-@pytest.fixture()
-def session():
-    with patch("streamlink.session.Streamlink.load_builtin_plugins"):
-        yield Streamlink()
-
-
 class EmptyPlugin(Plugin):
     def _get_streams(self):
         pass  # pragma: no cover
