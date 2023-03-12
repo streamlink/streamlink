@@ -175,6 +175,7 @@ class TestPlayerOutput:
             output = FakePlayerOutput("mocked")
             output.open()
             yield output
+            output.close()
 
     @pytest.fixture()
     def stream_runner(self, stream: FakeStream, output: FakePlayerOutput):
