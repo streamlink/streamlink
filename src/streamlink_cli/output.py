@@ -117,8 +117,8 @@ class PlayerOutput(Output):
             self.stdin = subprocess.PIPE
 
         if self.quiet:
-            self.stdout = open(os.devnull, "w")
-            self.stderr = open(os.devnull, "w")
+            self.stdout = subprocess.DEVNULL
+            self.stderr = subprocess.DEVNULL
         else:
             self.stdout = sys.stdout
             self.stderr = sys.stderr
@@ -203,18 +203,12 @@ class PlayerOutput(Output):
         return shlex.split(cmd) + extra_args + shlex.split(args)
 
     def _open(self):
-        try:
-            if self.record:
-                self.record.open()
-            if self.call and self.filename:
-                self._open_call()
-            else:
-                self._open_subprocess()
-        finally:
-            if self.quiet:
-                # Output streams no longer needed in parent process
-                self.stdout.close()
-                self.stderr.close()
+        if self.record:
+            self.record.open()
+        if self.call and self.filename:
+            self._open_call()
+        else:
+            self._open_subprocess()
 
     def _open_call(self):
         args = self._create_arguments()

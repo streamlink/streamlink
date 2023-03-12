@@ -1,4 +1,3 @@
-from contextlib import suppress
 from unittest.mock import Mock, call, patch
 
 import pytest
@@ -8,11 +7,10 @@ from streamlink_cli.output import PlayerOutput
 
 @pytest.fixture()
 def playeroutput(request: pytest.FixtureRequest):
-    playeroutput = PlayerOutput(**getattr(request, "param", {}))
-    yield playeroutput
-    for stream in playeroutput.stdout, playeroutput.stderr:
-        with suppress(OSError):
-            stream.close()
+    with patch("streamlink_cli.output.sleep"):
+        playeroutput = PlayerOutput(**getattr(request, "param", {}))
+        yield playeroutput
+        playeroutput.close()
 
 
 @pytest.fixture()
