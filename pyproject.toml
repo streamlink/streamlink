@@ -84,7 +84,8 @@ select = [
   # flake8-commas
   "COM",
   # flake8-comprehensions
-  "C4",
+  "C40",
+  "C41",
   # flake8-datetimez
   "DTZ",
   # flake8-implicit-str-concat
@@ -102,6 +103,7 @@ extend-ignore = [
   "A003",  # builtin-attribute-shadowing
   "C408",  # unnecessary-collection-call
   "ISC003",  # explicit-string-concatenation
+  "PLC1901",  # compare-to-empty-string
   "PLW2901",  # redefined-loop-name
 ]
 extend-exclude = [
