@@ -666,12 +666,12 @@ class SegmentTemplate(MPDNode):
             parser=int,
             default=self.defaultSegmentTemplate.duration if self.defaultSegmentTemplate else None,
         )
-        self.timescale = self.attr(
+        self.timescale: int = self.attr(
             "timescale",
             parser=int,
             default=self.defaultSegmentTemplate.timescale if self.defaultSegmentTemplate else 1,
         )
-        self.startNumber = self.attr(
+        self.startNumber: int = self.attr(
             "startNumber",
             parser=int,
             default=self.defaultSegmentTemplate.startNumber if self.defaultSegmentTemplate else 1,
@@ -781,7 +781,41 @@ class SegmentTemplate(MPDNode):
 
         yield from zip(number_iter, available_iter)
 
-    def format_media(self, ident: TTimelineIdent, base_url: str, **kwargs) -> Iterator[Tuple[str, Optional[int], datetime]]:
+    def segment_timeline(self, ident: TTimelineIdent) -> Iterator[Tuple[int, TimelineSegment, datetime]]:
+        if not self.segmentTimeline:  # pragma: no cover
+            raise MPDParsingError("Missing SegmentTimeline in SegmentTemplate")
+
+        if self.root.type == "static":
+            yield from zip(count(self.startNumber), self.segmentTimeline.segments, repeat(self.period.availabilityStartTime))
+        else:
+            time = self.root.timelines[ident]
+            is_initial = time == -1
+
+            publish_time = self.root.publishTime or EPOCH_START
+            threshold = publish_time - self.root.suggestedPresentationDelay
+
+            # transform the timeline into a segment list
+            timeline = []
+            available_at = publish_time
+
+            # the last segment in the timeline is the most recent one
+            # so, work backwards and calculate when each of the segments was
+            # available, based on the durations relative to the publish-time
+            for number, segment in reversed(list(zip(count(self.startNumber), self.segmentTimeline.segments))):
+                # stop once the suggestedPresentationDelay is reached on the first manifest parsing
+                # or when a segment with a lower or equal time value was already returned from an earlier manifest
+                if is_initial and available_at <= threshold or segment.t <= time:
+                    break
+
+                timeline.append((number, segment, available_at))
+                available_at -= timedelta(seconds=segment.d / self.timescale)
+
+            # return the segments in chronological order
+            for number, segment, available_at in reversed(timeline):
+                self.root.timelines[ident] = segment.t
+                yield number, segment, available_at
+
+    def format_media(self, ident: TTimelineIdent, base_url: str, **kwargs) -> Iterator[Tuple[str, int, datetime]]:
         if self.media is None:  # pragma: no cover
             return
 
@@ -790,46 +824,11 @@ class SegmentTemplate(MPDNode):
             for number, available_at in self.segment_numbers():
                 url = self.make_url(base_url, self.media(Number=number, **kwargs))
                 yield url, number, available_at
-            return
-
-        log.debug(f"Generating segment timeline for {self.root.type} playlist: {ident!r}")
-
-        if self.root.type == "static":
-            available_at = self.period.availabilityStartTime
-            for number, segment in zip(count(self.startNumber), self.segmentTimeline.segments):
+        else:
+            log.debug(f"Generating segment timeline for {self.root.type} playlist: {ident!r}")
+            for number, segment, available_at in self.segment_timeline(ident):
                 url = self.make_url(base_url, self.media(Time=segment.t, Number=number, **kwargs))
                 yield url, number, available_at
-            return
-
-        # Convert potential `isodate.Duration` instance to `datetime.timedelta` (relative to now)
-        current_time = now()
-        suggested_delay: timedelta = current_time + self.root.suggestedPresentationDelay - current_time
-
-        publish_time = self.root.publishTime or EPOCH_START
-
-        # transform the timeline into a segment list
-        timeline = []
-        available_at = publish_time
-        for segment, n in reversed(list(zip(self.segmentTimeline.segments, count(self.startNumber)))):
-            # the last segment in the timeline is the most recent one
-            # so, work backwards and calculate when each of the segments was
-            # available, based on the durations relative to the publish-time
-            url = self.make_url(base_url, self.media(Time=segment.t, Number=n, **kwargs))
-            duration = timedelta(seconds=segment.d / self.timescale)
-
-            # once the suggested_delay is reached, stop
-            if self.root.timelines[ident] == -1 and publish_time - available_at >= suggested_delay:
-                break
-
-            timeline.append((url, available_at, segment.t))
-
-            available_at -= duration  # walk backwards in time
-
-        # return the segments in chronological order
-        for url, available_at, t in reversed(timeline):
-            if t > self.root.timelines[ident]:
-                self.root.timelines[ident] = t
-                yield url, None, available_at
 
 
 class Representation(MPDNode):
