@@ -556,7 +556,7 @@ class SegmentList(MPDNode):
         self.duration_seconds = self.duration / self.timescale if self.duration and self.timescale else None
 
         self.initialization = self.only_child(Initialization)
-        self.segment_urls = self.children(SegmentURL, minimum=1)
+        self.segmentURLs = self.children(SegmentURL)
 
     def segments(self) -> Iterator[Segment]:
         if self.initialization:  # pragma: no branch
@@ -569,7 +569,7 @@ class SegmentList(MPDNode):
                 content=False,
                 byterange=self.initialization.range,
             )
-        for number, segment_url in enumerate(self.segment_urls, self.startNumber):
+        for number, segment_url in enumerate(self.segmentURLs, self.startNumber):
             yield Segment(
                 url=self.make_url(segment_url.media),
                 number=number,
