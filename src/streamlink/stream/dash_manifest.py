@@ -530,19 +530,27 @@ class SegmentList(MPDNode):
 
         self.period = period
 
-        self.presentation_time_offset = self.attr("presentationTimeOffset")
-        self.timescale = self.attr(
-            "timescale",
-            parser=int,
-        )
+        self.defaultSegmentList = self.walk_back_get_attr("segmentList")
+
         self.duration = self.attr(
             "duration",
             parser=int,
+            default=self.defaultSegmentList.duration if self.defaultSegmentList else None,
         )
-        self.start_number = self.attr(
+        self.timescale: int = self.attr(
+            "timescale",
+            parser=int,
+            default=self.defaultSegmentList.timescale if self.defaultSegmentList else 1,
+        )
+        self.startNumber: int = self.attr(
             "startNumber",
             parser=int,
-            default=1,
+            default=self.defaultSegmentList.startNumber if self.defaultSegmentList else 1,
+        )
+        self.presentationTimeOffset = self.attr(
+            "presentationTimeOffset",
+            parser=MPDParsers.timedelta(self.timescale),
+            default=self.defaultSegmentList.presentationTimeOffset if self.defaultSegmentList else timedelta(),
         )
 
         self.duration_seconds = self.duration / self.timescale if self.duration and self.timescale else None
@@ -561,7 +569,7 @@ class SegmentList(MPDNode):
                 content=False,
                 byterange=self.initialization.range,
             )
-        for number, segment_url in enumerate(self.segment_urls, self.start_number):
+        for number, segment_url in enumerate(self.segment_urls, self.startNumber):
             yield Segment(
                 url=self.make_url(segment_url.media),
                 number=number,
@@ -682,7 +690,7 @@ class SegmentTemplate(MPDNode):
         self.presentationTimeOffset = self.attr(
             "presentationTimeOffset",
             parser=MPDParsers.timedelta(self.timescale),
-            default=timedelta(),
+            default=self.defaultSegmentTemplate.presentationTimeOffset if self.defaultSegmentTemplate else timedelta(),
         )
 
         self.duration_seconds = self.duration / self.timescale if self.duration and self.timescale else None
