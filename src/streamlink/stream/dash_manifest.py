@@ -555,7 +555,12 @@ class SegmentList(MPDNode):
 
         self.duration_seconds = self.duration / self.timescale if self.duration and self.timescale else None
 
+        # children
         self.initialization = self.only_child(Initialization)
+        self.segmentTimeline = (
+            self.only_child(SegmentTimeline)
+            or (self.defaultSegmentList.segmentTimeline if self.defaultSegmentList else None)
+        )
         self.segmentURLs = self.children(SegmentURL)
 
     def segments(self) -> Iterator[Segment]:
@@ -696,7 +701,10 @@ class SegmentTemplate(MPDNode):
         self.duration_seconds = self.duration / self.timescale if self.duration and self.timescale else None
 
         # children
-        self.segmentTimeline = self.only_child(SegmentTimeline)
+        self.segmentTimeline = (
+            self.only_child(SegmentTimeline)
+            or (self.defaultSegmentTemplate.segmentTimeline if self.defaultSegmentTemplate else None)
+        )
 
     def segments(self, ident: TTimelineIdent, base_url: str, **kwargs) -> Iterator[Segment]:
         if kwargs.pop("init", True):  # pragma: no branch
