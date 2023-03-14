@@ -523,6 +523,8 @@ class SegmentURL(MPDNode):
 class SegmentList(MPDNode):
     __tag__ = "SegmentList"
 
+    parent: Union["Period", "AdaptationSet", "Representation"]
+
     def __init__(self, *args, period: "Period", **kwargs) -> None:
         super().__init__(*args, **kwargs)
 
@@ -548,7 +550,6 @@ class SegmentList(MPDNode):
         self.initialization = self.only_child(Initialization)
         self.segment_urls = self.children(SegmentURL, minimum=1)
 
-    @property
     def segments(self) -> Iterator[Segment]:
         if self.initialization:  # pragma: no branch
             yield Segment(
@@ -636,6 +637,8 @@ class AdaptationSet(MPDNode):
         )
 
         self.baseURLs = self.children(BaseURL)
+        self.segmentBase = self.only_child(SegmentBase, period=self.parent)
+        self.segmentList = self.only_child(SegmentList, period=self.parent)
         self.segmentTemplate = self.only_child(SegmentTemplate, period=self.parent)
         self.representations = self.children(Representation, minimum=1, period=self.parent)
         self.contentProtection = self.children(ContentProtection)
@@ -894,7 +897,7 @@ class Representation(MPDNode):
         self.baseURLs = self.children(BaseURL)
         self.subRepresentation = self.children(SubRepresentation)
         self.segmentBase = self.only_child(SegmentBase, period=self.period)
-        self.segmentList = self.children(SegmentList, period=self.period)
+        self.segmentList = self.only_child(SegmentList, period=self.period)
         self.segmentTemplate = self.only_child(SegmentTemplate, period=self.period)
         self.contentProtection = self.children(ContentProtection)
 
@@ -914,7 +917,7 @@ class Representation(MPDNode):
         """
 
         # segmentBase = self.segmentBase or self.walk_back_get_attr("segmentBase")
-        segmentLists = self.segmentList or self.walk_back_get_attr("segmentList")
+        segmentList = self.segmentList or self.walk_back_get_attr("segmentList")
         segmentTemplate = self.segmentTemplate or self.walk_back_get_attr("segmentTemplate")
 
         if segmentTemplate:
@@ -925,9 +928,8 @@ class Representation(MPDNode):
                 Bandwidth=int(self.bandwidth * 1000),
                 **kwargs,
             )
-        elif segmentLists:
-            for segmentList in segmentLists:
-                yield from segmentList.segments
+        elif segmentList:
+            yield from segmentList.segments()
         else:
             yield Segment(
                 url=self.base_url,
