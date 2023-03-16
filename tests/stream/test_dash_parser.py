@@ -265,7 +265,15 @@ class TestMPDParser(unittest.TestCase):
                 },
             )
             node.findall.return_value = []
-            return Representation(node, root=Mock(), parent=Mock(), period=Mock())
+
+            root = Mock()
+            root.parent = None
+            period = Mock()
+            period.parent = root
+            aset = Mock()
+            aset.parent = period
+
+            return Representation(node, root=root, parent=aset, period=period)
 
         assert mock_rep(1.2 * 1000.0).bandwidth_rounded == pytest.approx(1.2)
         assert mock_rep(45.6 * 1000.0).bandwidth_rounded == pytest.approx(46.0)

@@ -202,8 +202,8 @@ class MPDNode:
         parser: None = None,
         default: None = None,
         required: bool = False,
-        inherited: bool = False,
-    ) -> Optional[str]:
+        inherited: Optional[Union[Type[TMPDNode], Sequence[Type[TMPDNode]]]] = None,
+    ) -> Optional[str]:  # pragma: no cover
         pass
 
     @overload
@@ -213,8 +213,8 @@ class MPDNode:
         parser: None,
         default: TAttrDefault,
         required: bool = False,
-        inherited: bool = False,
-    ) -> TAttrDefault:
+        inherited: Optional[Union[Type[TMPDNode], Sequence[Type[TMPDNode]]]] = None,
+    ) -> TAttrDefault:  # pragma: no cover
         pass
 
     @overload
@@ -224,8 +224,8 @@ class MPDNode:
         parser: Callable[[Any], TAttrParseResult],
         default: None = None,
         required: bool = False,
-        inherited: bool = False,
-    ) -> Optional[TAttrParseResult]:
+        inherited: Optional[Union[Type[TMPDNode], Sequence[Type[TMPDNode]]]] = None,
+    ) -> Optional[TAttrParseResult]:  # pragma: no cover
         pass
 
     @overload
@@ -235,11 +235,11 @@ class MPDNode:
         parser: Callable[[Any], TAttrParseResult],
         default: TAttrDefault,
         required: bool = False,
-        inherited: bool = False,
-    ) -> Union[TAttrParseResult, TAttrDefault]:
+        inherited: Optional[Union[Type[TMPDNode], Sequence[Type[TMPDNode]]]] = None,
+    ) -> Union[TAttrParseResult, TAttrDefault]:  # pragma: no cover
         pass
 
-    def attr(self, key, parser=None, default=None, required=False, inherited=False):
+    def attr(self, key, parser=None, default=None, required=False, inherited=None):
         self.attributes.add(key)
         if key in self.attrib:
             value = self.attrib.get(key)
@@ -248,10 +248,11 @@ class MPDNode:
             else:
                 return value
         elif inherited:
-            if self.parent and hasattr(self.parent, key) and getattr(self.parent, key):
-                return getattr(self.parent, key)
+            value = self.walk_back_get_attr(key, inherited)
+            if value is not None:
+                return value
 
-        if required:
+        if required:  # pragma: no cover
             raise MPDParsingError(f"Could not find required attribute {self.__tag__}@{key} ")
 
         return default
@@ -283,18 +284,27 @@ class MPDNode:
 
     def walk_back(
         self,
-        cls: Optional[Type[TMPDNode]] = None,
-        f: Callable[["MPDNode"], "MPDNode"] = _identity,
-    ) -> Iterator[Union[TMPDNode, "MPDNode"]]:
+        cls: Optional[Union[Type[TMPDNode], Sequence[Type[TMPDNode]]]] = None,
+        mapper: Callable[["MPDNode"], Optional["MPDNode"]] = _identity,
+    ) -> Iterator["MPDNode"]:
         node = self.parent
         while node:
-            if cls is None or cls.__tag__ == node.__tag__:
-                yield f(node)
+            if cls is None or isinstance(node, cls):  # type: ignore[arg-type]
+                n = mapper(node)  # type: ignore[arg-type]
+                if n is not None:
+                    yield n
             node = node.parent
 
-    def walk_back_get_attr(self, attr: str) -> Optional[Any]:
-        parent_attrs = [getattr(n, attr) for n in self.walk_back() if hasattr(n, attr)]
-        return parent_attrs[0] if len(parent_attrs) else None
+    def walk_back_get_attr(
+        self,
+        attr: str,
+        cls: Optional[Union[Type[TMPDNode], Sequence[Type[TMPDNode]]]] = None,
+        mapper: Callable[["MPDNode"], Optional["MPDNode"]] = _identity,
+    ) -> Optional[Any]:
+        for ancestor in self.walk_back(cls, mapper):
+            value = getattr(ancestor, attr, None)
+            if value is not None:
+                return value
 
     @property
     def base_url(self):
@@ -872,7 +882,7 @@ class Representation(MPDNode):
         self.mimeType: str = self.attr(  # type: ignore[assignment]
             "mimeType",
             required=True,
-            inherited=True,
+            inherited=AdaptationSet,
         )
 
         self.codecs = self.attr("codecs")
@@ -905,7 +915,7 @@ class Representation(MPDNode):
         # subtitle
         self.lang = self.attr(
             "lang",
-            inherited=True,
+            inherited=AdaptationSet,
         )
 
         self.ident = self.parent.parent.id, self.parent.id, self.id
