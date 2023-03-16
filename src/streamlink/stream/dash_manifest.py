@@ -504,6 +504,182 @@ class EventStream(MPDNode):
     __tag__ = "EventStream"
 
 
+class _RepresentationBaseType(MPDNode):
+    def __init__(self, *args, **kwargs) -> None:
+        super().__init__(*args, **kwargs)
+
+        # mimeType must be set on the AdaptationSet or Representation
+        self.mimeType: str = self.attr(  # type: ignore[assignment]
+            "mimeType",
+            required=type(self) is Representation,
+            inherited=_RepresentationBaseType,
+        )
+
+        self.profiles = self.attr(
+            "profiles",
+            inherited=_RepresentationBaseType,
+        )
+        self.width = self.attr(
+            "width",
+            parser=int,
+            inherited=_RepresentationBaseType,
+        )
+        self.height = self.attr(
+            "height",
+            parser=int,
+            inherited=_RepresentationBaseType,
+        )
+        self.sar = self.attr(
+            "sar",
+            inherited=_RepresentationBaseType,
+        )
+        self.frameRate = self.attr(
+            "frameRate",
+            parser=MPDParsers.frame_rate,
+            inherited=_RepresentationBaseType,
+        )
+        self.audioSamplingRate = self.attr(
+            "audioSamplingRate",
+            parser=int,
+            inherited=_RepresentationBaseType,
+        )
+        self.codecs = self.attr(
+            "codecs",
+            inherited=_RepresentationBaseType,
+        )
+        self.scanType = self.attr(
+            "scanType",
+            inherited=_RepresentationBaseType,
+        )
+
+        self.contentProtections = self.children(ContentProtection)
+
+
+class AdaptationSet(_RepresentationBaseType):
+    __tag__ = "AdaptationSet"
+
+    parent: Period
+
+    def __init__(self, *args, **kwargs) -> None:
+        super().__init__(*args, **kwargs)
+
+        self.id = self.attr("id")
+        self.group = self.attr("group")
+        self.lang = self.attr("lang")
+        self.contentType = self.attr("contentType")
+        self.par = self.attr("par")
+        self.minBandwidth = self.attr("minBandwidth", parser=int)
+        self.maxBandwidth = self.attr("maxBandwidth", parser=int)
+        self.minWidth = self.attr("minWidth", parser=int)
+        self.maxWidth = self.attr("maxWidth", parser=int)
+        self.minHeight = self.attr("minHeight", parser=int)
+        self.maxHeight = self.attr("maxHeight", parser=int)
+        self.minFrameRate = self.attr("minFrameRate", parser=MPDParsers.frame_rate)
+        self.maxFrameRate = self.attr("maxFrameRate", parser=MPDParsers.frame_rate)
+        self.segmentAlignment = self.attr(
+            "segmentAlignment",
+            parser=MPDParsers.bool_str,
+            default=False,
+        )
+        self.subsegmentAlignment = self.attr(
+            "subsegmentAlignment",
+            parser=MPDParsers.bool_str,
+            default=False,
+        )
+        self.subsegmentStartsWithSAP = self.attr(
+            "subsegmentStartsWithSAP",
+            parser=int,
+            default=0,
+        )
+        self.bitstreamSwitching = self.attr(
+            "bitstreamSwitching",
+            parser=MPDParsers.bool_str,
+        )
+
+        self.baseURLs = self.children(BaseURL)
+        self.segmentBase = self.only_child(SegmentBase, period=self.parent)
+        self.segmentList = self.only_child(SegmentList, period=self.parent)
+        self.segmentTemplate = self.only_child(SegmentTemplate, period=self.parent)
+        self.representations = self.children(Representation, minimum=1, period=self.parent)
+
+
+class Representation(_RepresentationBaseType):
+    __tag__ = "Representation"
+
+    parent: AdaptationSet
+
+    def __init__(self, *args, period: Period, **kwargs) -> None:
+        super().__init__(*args, **kwargs)
+
+        self.period = period
+
+        self.id: str = self.attr(  # type: ignore[assignment]
+            "id",
+            required=True,
+        )
+        self.bandwidth: float = self.attr(  # type: ignore[assignment]
+            "bandwidth",
+            parser=lambda b: float(b) / 1000.0,
+            required=True,
+        )
+
+        self.ident = self.parent.parent.id, self.parent.id, self.id
+
+        self.baseURLs = self.children(BaseURL)
+        self.subRepresentations = self.children(SubRepresentation)
+        self.segmentBase = self.only_child(SegmentBase, period=self.period)
+        self.segmentList = self.only_child(SegmentList, period=self.period)
+        self.segmentTemplate = self.only_child(SegmentTemplate, period=self.period)
+
+    @property
+    def lang(self):
+        return self.parent.lang
+
+    @property
+    def bandwidth_rounded(self) -> float:
+        return round(self.bandwidth, 1 - int(math.log10(self.bandwidth)))
+
+    def segments(self, **kwargs) -> Iterator[Segment]:
+        """
+        Segments are yielded when they are available
+
+        Segments appear on a timeline, for dynamic content they are only available at a certain time
+        and sometimes for a limited time. For static content they are all available at the same time.
+
+        :param kwargs: extra args to pass to the segment template
+        :return: yields Segments
+        """
+
+        # segmentBase = self.segmentBase or self.walk_back_get_attr("segmentBase")
+        segmentList = self.segmentList or self.walk_back_get_attr("segmentList")
+        segmentTemplate = self.segmentTemplate or self.walk_back_get_attr("segmentTemplate")
+
+        if segmentTemplate:
+            yield from segmentTemplate.segments(
+                self.ident,
+                self.base_url,
+                RepresentationID=self.id,
+                Bandwidth=int(self.bandwidth * 1000),
+                **kwargs,
+            )
+        elif segmentList:
+            yield from segmentList.segments()
+        else:
+            yield Segment(
+                url=self.base_url,
+                number=None,
+                duration=None,
+                available_at=self.period.availabilityStartTime,
+                init=True,
+                content=True,
+                byterange=None,
+            )
+
+
+class SubRepresentation(_RepresentationBaseType):
+    __tag__ = "SubRepresentation"
+
+
 class Initialization(MPDNode):
     __tag__ = "Initialization"
 
@@ -597,74 +773,6 @@ class SegmentList(MPDNode):
 
     def make_url(self, url: Optional[str]) -> str:
         return BaseURL.join(self.base_url, url) if url else self.base_url
-
-
-class AdaptationSet(MPDNode):
-    __tag__ = "AdaptationSet"
-
-    parent: "Period"
-
-    def __init__(self, *args, **kwargs) -> None:
-        super().__init__(*args, **kwargs)
-
-        self.id = self.attr("id")
-        self.group = self.attr("group")
-        self.mimeType = self.attr("mimeType")
-        self.lang = self.attr("lang")
-        self.contentType = self.attr("contentType")
-        self.par = self.attr("par")
-        self.minBandwidth = self.attr("minBandwidth")
-        self.maxBandwidth = self.attr("maxBandwidth")
-        self.minWidth = self.attr(
-            "minWidth",
-            parser=int,
-        )
-        self.maxWidth = self.attr(
-            "maxWidth",
-            parser=int,
-        )
-        self.minHeight = self.attr(
-            "minHeight",
-            parser=int,
-        )
-        self.maxHeight = self.attr(
-            "maxHeight",
-            parser=int,
-        )
-        self.minFrameRate = self.attr(
-            "minFrameRate",
-            parser=MPDParsers.frame_rate,
-        )
-        self.maxFrameRate = self.attr(
-            "maxFrameRate",
-            parser=MPDParsers.frame_rate,
-        )
-        self.segmentAlignment = self.attr(
-            "segmentAlignment",
-            parser=MPDParsers.bool_str,
-            default=False,
-        )
-        self.bitstreamSwitching = self.attr(
-            "bitstreamSwitching",
-            parser=MPDParsers.bool_str,
-        )
-        self.subsegmentAlignment = self.attr(
-            "subsegmentAlignment",
-            parser=MPDParsers.bool_str,
-            default=False,
-        )
-        self.subsegmentStartsWithSAP = self.attr(
-            "subsegmentStartsWithSAP",
-            parser=int,
-            default=0,
-        )
-
-        self.baseURLs = self.children(BaseURL)
-        self.segmentBase = self.only_child(SegmentBase, period=self.parent)
-        self.segmentList = self.only_child(SegmentList, period=self.parent)
-        self.segmentTemplate = self.only_child(SegmentTemplate, period=self.parent)
-        self.representations = self.children(Representation, minimum=1, period=self.parent)
-        self.contentProtection = self.children(ContentProtection)
 
 
 class SegmentTemplate(MPDNode):
@@ -858,118 +966,6 @@ class SegmentTemplate(MPDNode):
             for number, segment, available_at in self.segment_timeline(ident):
                 url = self.make_url(base_url, self.media(Time=segment.t, Number=number, **kwargs))
                 yield url, number, available_at
-
-
-class Representation(MPDNode):
-    __tag__ = "Representation"
-
-    parent: "AdaptationSet"
-
-    def __init__(self, *args, period: "Period", **kwargs) -> None:
-        super().__init__(*args, **kwargs)
-
-        self.period = period
-
-        self.id: str = self.attr(  # type: ignore[assignment]
-            "id",
-            required=True,
-        )
-        self.bandwidth: float = self.attr(  # type: ignore[assignment]
-            "bandwidth",
-            parser=lambda b: float(b) / 1000.0,
-            required=True,
-        )
-        self.mimeType: str = self.attr(  # type: ignore[assignment]
-            "mimeType",
-            required=True,
-            inherited=AdaptationSet,
-        )
-
-        self.codecs = self.attr("codecs")
-        self.startWithSAP = self.attr("startWithSAP")
-
-        # video
-        self.width = self.attr(
-            "width",
-            parser=int,
-        )
-        self.height = self.attr(
-            "height",
-            parser=int,
-        )
-        self.frameRate = self.attr(
-            "frameRate",
-            parser=MPDParsers.frame_rate,
-        )
-
-        # audio
-        self.audioSamplingRate = self.attr(
-            "audioSamplingRate",
-            parser=int,
-        )
-        self.numChannels = self.attr(
-            "numChannels",
-            parser=int,
-        )
-
-        # subtitle
-        self.lang = self.attr(
-            "lang",
-            inherited=AdaptationSet,
-        )
-
-        self.ident = self.parent.parent.id, self.parent.id, self.id
-
-        self.baseURLs = self.children(BaseURL)
-        self.subRepresentation = self.children(SubRepresentation)
-        self.segmentBase = self.only_child(SegmentBase, period=self.period)
-        self.segmentList = self.only_child(SegmentList, period=self.period)
-        self.segmentTemplate = self.only_child(SegmentTemplate, period=self.period)
-        self.contentProtection = self.children(ContentProtection)
-
-    @property
-    def bandwidth_rounded(self) -> float:
-        return round(self.bandwidth, 1 - int(math.log10(self.bandwidth)))
-
-    def segments(self, **kwargs) -> Iterator[Segment]:
-        """
-        Segments are yielded when they are available
-
-        Segments appear on a timeline, for dynamic content they are only available at a certain time
-        and sometimes for a limited time. For static content they are all available at the same time.
-
-        :param kwargs: extra args to pass to the segment template
-        :return: yields Segments
-        """
-
-        # segmentBase = self.segmentBase or self.walk_back_get_attr("segmentBase")
-        segmentList = self.segmentList or self.walk_back_get_attr("segmentList")
-        segmentTemplate = self.segmentTemplate or self.walk_back_get_attr("segmentTemplate")
-
-        if segmentTemplate:
-            yield from segmentTemplate.segments(
-                self.ident,
-                self.base_url,
-                RepresentationID=self.id,
-                Bandwidth=int(self.bandwidth * 1000),
-                **kwargs,
-            )
-        elif segmentList:
-            yield from segmentList.segments()
-        else:
-            yield Segment(
-                url=self.base_url,
-                number=None,
-                duration=None,
-                available_at=self.period.availabilityStartTime,
-                init=True,
-                content=True,
-                byterange=None,
-            )
-
-
-class SubRepresentation(MPDNode):
-    __tag__ = "SubRepresentation"
 
 
 class SegmentTimeline(MPDNode):

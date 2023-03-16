@@ -49,10 +49,10 @@ class TestDASHStreamParseManifest:
 
     def test_video_only(self, session: Streamlink, mpd: Mock):
         adaptationset = Mock(
-            contentProtection=None,
+            contentProtections=None,
             representations=[
-                Mock(id="1", contentProtection=None, mimeType="video/mp4", height=720),
-                Mock(id="2", contentProtection=None, mimeType="video/mp4", height=1080),
+                Mock(id="1", contentProtections=None, mimeType="video/mp4", height=720),
+                Mock(id="2", contentProtections=None, mimeType="video/mp4", height=1080),
             ],
         )
         mpd.return_value = Mock(periods=[Mock(adaptationSets=[adaptationset])])
@@ -63,10 +63,10 @@ class TestDASHStreamParseManifest:
 
     def test_audio_only(self, session: Streamlink, mpd: Mock):
         adaptationset = Mock(
-            contentProtection=None,
+            contentProtections=None,
             representations=[
-                Mock(id="1", contentProtection=None, mimeType="audio/mp4", bandwidth=128.0, lang="en"),
-                Mock(id="2", contentProtection=None, mimeType="audio/mp4", bandwidth=256.0, lang="en"),
+                Mock(id="1", contentProtections=None, mimeType="audio/mp4", bandwidth=128.0, lang="en"),
+                Mock(id="2", contentProtections=None, mimeType="audio/mp4", bandwidth=256.0, lang="en"),
             ],
         )
         mpd.return_value = Mock(periods=[Mock(adaptationSets=[adaptationset])])
@@ -77,11 +77,11 @@ class TestDASHStreamParseManifest:
 
     def test_audio_single(self, session: Streamlink, mpd: Mock):
         adaptationset = Mock(
-            contentProtection=None,
+            contentProtections=None,
             representations=[
-                Mock(id="1", contentProtection=None, mimeType="video/mp4", height=720),
-                Mock(id="2", contentProtection=None, mimeType="video/mp4", height=1080),
-                Mock(id="3", contentProtection=None, mimeType="audio/aac", bandwidth=128.0, lang="en"),
+                Mock(id="1", contentProtections=None, mimeType="video/mp4", height=720),
+                Mock(id="2", contentProtections=None, mimeType="video/mp4", height=1080),
+                Mock(id="3", contentProtections=None, mimeType="audio/aac", bandwidth=128.0, lang="en"),
             ],
         )
         mpd.return_value = Mock(periods=[Mock(adaptationSets=[adaptationset])])
@@ -92,12 +92,12 @@ class TestDASHStreamParseManifest:
 
     def test_audio_multi(self, session: Streamlink, mpd: Mock):
         adaptationset = Mock(
-            contentProtection=None,
+            contentProtections=None,
             representations=[
-                Mock(id="1", contentProtection=None, mimeType="video/mp4", height=720),
-                Mock(id="2", contentProtection=None, mimeType="video/mp4", height=1080),
-                Mock(id="3", contentProtection=None, mimeType="audio/aac", bandwidth=128.0, lang="en"),
-                Mock(id="4", contentProtection=None, mimeType="audio/aac", bandwidth=256.0, lang="en"),
+                Mock(id="1", contentProtections=None, mimeType="video/mp4", height=720),
+                Mock(id="2", contentProtections=None, mimeType="video/mp4", height=1080),
+                Mock(id="3", contentProtections=None, mimeType="audio/aac", bandwidth=128.0, lang="en"),
+                Mock(id="4", contentProtections=None, mimeType="audio/aac", bandwidth=256.0, lang="en"),
             ],
         )
         mpd.return_value = Mock(periods=[Mock(adaptationSets=[adaptationset])])
@@ -108,12 +108,12 @@ class TestDASHStreamParseManifest:
 
     def test_audio_multi_lang(self, session: Streamlink, mpd: Mock):
         adaptationset = Mock(
-            contentProtection=None,
+            contentProtections=None,
             representations=[
-                Mock(id="1", contentProtection=None, mimeType="video/mp4", height=720),
-                Mock(id="2", contentProtection=None, mimeType="video/mp4", height=1080),
-                Mock(id="3", contentProtection=None, mimeType="audio/aac", bandwidth=128.0, lang="en"),
-                Mock(id="4", contentProtection=None, mimeType="audio/aac", bandwidth=128.0, lang="es"),
+                Mock(id="1", contentProtections=None, mimeType="video/mp4", height=720),
+                Mock(id="2", contentProtections=None, mimeType="video/mp4", height=1080),
+                Mock(id="3", contentProtections=None, mimeType="audio/aac", bandwidth=128.0, lang="en"),
+                Mock(id="4", contentProtections=None, mimeType="audio/aac", bandwidth=128.0, lang="es"),
             ],
         )
         mpd.return_value = Mock(periods=[Mock(adaptationSets=[adaptationset])])
@@ -126,12 +126,12 @@ class TestDASHStreamParseManifest:
 
     def test_audio_multi_lang_alpha3(self, session: Streamlink, mpd: Mock):
         adaptationset = Mock(
-            contentProtection=None,
+            contentProtections=None,
             representations=[
-                Mock(id="1", contentProtection=None, mimeType="video/mp4", height=720),
-                Mock(id="2", contentProtection=None, mimeType="video/mp4", height=1080),
-                Mock(id="3", contentProtection=None, mimeType="audio/aac", bandwidth=128.0, lang="eng"),
-                Mock(id="4", contentProtection=None, mimeType="audio/aac", bandwidth=128.0, lang="spa"),
+                Mock(id="1", contentProtections=None, mimeType="video/mp4", height=720),
+                Mock(id="2", contentProtections=None, mimeType="video/mp4", height=1080),
+                Mock(id="3", contentProtections=None, mimeType="audio/aac", bandwidth=128.0, lang="eng"),
+                Mock(id="4", contentProtections=None, mimeType="audio/aac", bandwidth=128.0, lang="spa"),
             ],
         )
         mpd.return_value = Mock(periods=[Mock(adaptationSets=[adaptationset])])
@@ -144,11 +144,11 @@ class TestDASHStreamParseManifest:
 
     def test_audio_invalid_lang(self, session: Streamlink, mpd: Mock):
         adaptationset = Mock(
-            contentProtection=None,
+            contentProtections=None,
             representations=[
-                Mock(id="1", contentProtection=None, mimeType="video/mp4", height=720),
-                Mock(id="2", contentProtection=None, mimeType="video/mp4", height=1080),
-                Mock(id="3", contentProtection=None, mimeType="audio/aac", bandwidth=128.0, lang="en_no_voice"),
+                Mock(id="1", contentProtections=None, mimeType="video/mp4", height=720),
+                Mock(id="2", contentProtections=None, mimeType="video/mp4", height=1080),
+                Mock(id="3", contentProtections=None, mimeType="audio/aac", bandwidth=128.0, lang="en_no_voice"),
             ],
         )
         mpd.return_value = Mock(periods=[Mock(adaptationSets=[adaptationset])])
@@ -163,12 +163,12 @@ class TestDASHStreamParseManifest:
         session.set_option("locale", "es_ES")
 
         adaptationset = Mock(
-            contentProtection=None,
+            contentProtections=None,
             representations=[
-                Mock(id="1", contentProtection=None, mimeType="video/mp4", height=720),
-                Mock(id="2", contentProtection=None, mimeType="video/mp4", height=1080),
-                Mock(id="3", contentProtection=None, mimeType="audio/aac", bandwidth=128.0, lang="en"),
-                Mock(id="4", contentProtection=None, mimeType="audio/aac", bandwidth=128.0, lang="es"),
+                Mock(id="1", contentProtections=None, mimeType="video/mp4", height=720),
+                Mock(id="2", contentProtections=None, mimeType="video/mp4", height=1080),
+                Mock(id="3", contentProtections=None, mimeType="audio/aac", bandwidth=128.0, lang="en"),
+                Mock(id="4", contentProtections=None, mimeType="audio/aac", bandwidth=128.0, lang="es"),
             ],
         )
         mpd.return_value = Mock(periods=[Mock(adaptationSets=[adaptationset])])
@@ -182,12 +182,12 @@ class TestDASHStreamParseManifest:
     # Verify the fix for https://github.com/streamlink/streamlink/issues/3365
     def test_duplicated_resolutions(self, session: Streamlink, mpd: Mock):
         adaptationset = Mock(
-            contentProtection=None,
+            contentProtections=None,
             representations=[
-                Mock(id="1", contentProtection=None, mimeType="video/mp4", height=1080, bandwidth=128.0),
-                Mock(id="2", contentProtection=None, mimeType="video/mp4", height=1080, bandwidth=64.0),
-                Mock(id="3", contentProtection=None, mimeType="video/mp4", height=1080, bandwidth=32.0),
-                Mock(id="4", contentProtection=None, mimeType="video/mp4", height=720),
+                Mock(id="1", contentProtections=None, mimeType="video/mp4", height=1080, bandwidth=128.0),
+                Mock(id="2", contentProtections=None, mimeType="video/mp4", height=1080, bandwidth=64.0),
+                Mock(id="3", contentProtections=None, mimeType="video/mp4", height=1080, bandwidth=32.0),
+                Mock(id="4", contentProtections=None, mimeType="video/mp4", height=720),
             ],
         )
         mpd.return_value = Mock(periods=[Mock(adaptationSets=[adaptationset])])
@@ -199,11 +199,11 @@ class TestDASHStreamParseManifest:
     # Verify the fix for https://github.com/streamlink/streamlink/issues/4217
     def test_duplicated_resolutions_sorted_bandwidth(self, session: Streamlink, mpd: Mock):
         adaptationset = Mock(
-            contentProtection=None,
+            contentProtections=None,
             representations=[
-                Mock(id="1", contentProtection=None, mimeType="video/mp4", height=1080, bandwidth=64.0),
-                Mock(id="2", contentProtection=None, mimeType="video/mp4", height=1080, bandwidth=128.0),
-                Mock(id="3", contentProtection=None, mimeType="video/mp4", height=1080, bandwidth=32.0),
+                Mock(id="1", contentProtections=None, mimeType="video/mp4", height=1080, bandwidth=64.0),
+                Mock(id="2", contentProtections=None, mimeType="video/mp4", height=1080, bandwidth=128.0),
+                Mock(id="3", contentProtections=None, mimeType="video/mp4", height=1080, bandwidth=32.0),
             ],
         )
         mpd.return_value = Mock(periods=[Mock(adaptationSets=[adaptationset])])
@@ -216,11 +216,11 @@ class TestDASHStreamParseManifest:
 
     @pytest.mark.parametrize("adaptationset", [
         pytest.param(
-            Mock(contentProtection="DRM", representations=[]),
+            Mock(contentProtections="DRM", representations=[]),
             id="ContentProtection on AdaptationSet",
         ),
         pytest.param(
-            Mock(contentProtection=None, representations=[Mock(id="1", contentProtection="DRM")]),
+            Mock(contentProtections=None, representations=[Mock(id="1", contentProtections="DRM")]),
             id="ContentProtection on Representation",
         ),
     ])
@@ -239,7 +239,7 @@ class TestDASHStreamParseManifest:
 
         streams = DASHStream.parse_manifest(session, test_manifest)
         assert mpd.call_args_list == [call(ANY)]
-        assert list(streams.keys()) == ["2500k"]
+        assert list(streams.keys()) == ["480p"]
 
     # TODO: Move this test to test_dash_parser and properly test segment URLs.
     #       This test currently achieves nothing... (manifest fixture added in 7aada92)
@@ -249,7 +249,7 @@ class TestDASHStreamParseManifest:
 
         streams = DASHStream.parse_manifest(session, "http://test/manifest.mpd")
         assert mpd.call_args_list == [call(ANY, url="http://test/manifest.mpd", base_url="http://test")]
-        assert list(streams.keys()) == ["2500k"]
+        assert list(streams.keys()) == ["480p"]
 
 
 class TestDASHStreamOpen:
@@ -318,7 +318,7 @@ class TestDASHStreamWorker:
             height=720,
         )
         adaptationset = Mock(
-            contentProtection=None,
+            contentProtections=None,
             representations=[representation],
         )
         period = Mock(
