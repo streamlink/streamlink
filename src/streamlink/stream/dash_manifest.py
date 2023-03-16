@@ -352,7 +352,7 @@ class MPD(MPDNode):
             parser=MPDParsers.duration,
             default=timedelta(),
         )
-        self.minBufferTime = self.attr(
+        self.minBufferTime: Union[timedelta, Duration] = self.attr(
             "minBufferTime",
             parser=MPDParsers.duration,
             required=True,
@@ -486,10 +486,6 @@ class Period(MPDNode):
         self.assetIdentifier = self.only_child(AssetIdentifier)
         self.eventStream = self.children(EventStream)
         self.subset = self.children(Subset)
-
-
-class SegmentBase(MPDNode):
-    __tag__ = "SegmentBase"
 
 
 class AssetIdentifier(MPDNode):
@@ -680,73 +676,77 @@ class SubRepresentation(_RepresentationBaseType):
     __tag__ = "SubRepresentation"
 
 
-class Initialization(MPDNode):
-    __tag__ = "Initialization"
+class _SegmentBaseType(MPDNode):
+    parent: Union[Period, AdaptationSet, Representation]
 
-    def __init__(self, *args, **kwargs) -> None:
-        super().__init__(*args, **kwargs)
-
-        self.source_url = self.attr("sourceURL")
-        self.range = self.attr(
-            "range",
-            parser=MPDParsers.range,
-        )
-
-
-class SegmentURL(MPDNode):
-    __tag__ = "SegmentURL"
-
-    def __init__(self, *args, **kwargs) -> None:
-        super().__init__(*args, **kwargs)
-
-        self.media = self.attr("media")
-        self.media_range = self.attr(
-            "mediaRange",
-            parser=MPDParsers.range,
-        )
-
-
-class SegmentList(MPDNode):
-    __tag__ = "SegmentList"
-
-    parent: Union["Period", "AdaptationSet", "Representation"]
+    _ancestors = (Period, AdaptationSet, Representation)
 
     def __init__(self, *args, period: "Period", **kwargs) -> None:
         super().__init__(*args, **kwargs)
 
         self.period = period
 
-        self.defaultSegmentList = self.walk_back_get_attr("segmentList")
+        self.timescale: int = self.attr(
+            "timescale",
+            parser=int,
+            default=self._find_default("timescale", 1),
+        )
+        self.presentationTimeOffset: timedelta = self.attr(
+            "presentationTimeOffset",
+            parser=MPDParsers.timedelta(self.timescale),
+            default=self._find_default("presentationTimeOffset", timedelta()),
+        )
+        self.availabilityTimeOffset: timedelta = self.attr(
+            "availabilityTimeOffset",
+            parser=MPDParsers.timedelta(self.timescale),
+            default=self._find_default("availabilityTimeOffset", timedelta()),
+        )
+
+        self.initialization = self.only_child(Initialization) or self._find_default("initialization")
+
+    def _find_default(self, attr: str, default: TAttrDefault = None) -> Union[TAttrDefault, Any]:
+        """Find default values from nodes of the same type on ancestor nodes"""
+        # the node attribute on each ancestor is named after its node tag, with the first character being lowercase
+        nodeattr = f"{self.__tag__[0].lower()}{self.__tag__[1:]}"
+        # start with the parent node, to avoid an unnecessary failed lookup on the current node
+        value = self.parent.walk_back_get_attr(
+            attr,
+            self._ancestors,
+            lambda node: getattr(node, nodeattr, None),
+        )
+        return default if value is None else value
+
+
+class _MultipleSegmentBaseType(_SegmentBaseType):
+    def __init__(self, *args, **kwargs) -> None:
+        super().__init__(*args, **kwargs)
 
         self.duration = self.attr(
             "duration",
             parser=int,
-            default=self.defaultSegmentList.duration if self.defaultSegmentList else None,
-        )
-        self.timescale: int = self.attr(
-            "timescale",
-            parser=int,
-            default=self.defaultSegmentList.timescale if self.defaultSegmentList else 1,
+            default=self._find_default("duration"),
         )
         self.startNumber: int = self.attr(
             "startNumber",
             parser=int,
-            default=self.defaultSegmentList.startNumber if self.defaultSegmentList else 1,
-        )
-        self.presentationTimeOffset = self.attr(
-            "presentationTimeOffset",
-            parser=MPDParsers.timedelta(self.timescale),
-            default=self.defaultSegmentList.presentationTimeOffset if self.defaultSegmentList else timedelta(),
+            default=self._find_default("startNumber", 1),
         )
 
-        self.duration_seconds = self.duration / self.timescale if self.duration and self.timescale else None
+        self.duration_seconds = self.duration / self.timescale if self.duration else None
 
-        # children
-        self.initialization = self.only_child(Initialization)
-        self.segmentTimeline = (
-            self.only_child(SegmentTimeline)
-            or (self.defaultSegmentList.segmentTimeline if self.defaultSegmentList else None)
-        )
+        self.segmentTimeline = self.only_child(SegmentTimeline) or self._find_default("segmentTimeline")
+
+
+class SegmentBase(_SegmentBaseType):
+    __tag__ = "SegmentBase"
+
+
+class SegmentList(_MultipleSegmentBaseType):
+    __tag__ = "SegmentList"
+
+    def __init__(self, *args, **kwargs) -> None:
+        super().__init__(*args, **kwargs)
+
         self.segmentURLs = self.children(SegmentURL)
 
     def segments(self) -> Iterator[Segment]:
@@ -775,53 +775,19 @@ class SegmentList(MPDNode):
         return BaseURL.join(self.base_url, url) if url else self.base_url
 
 
-class SegmentTemplate(MPDNode):
+class SegmentTemplate(_MultipleSegmentBaseType):
     __tag__ = "SegmentTemplate"
 
-    parent: Union["Period", "AdaptationSet", "Representation"]
-
-    def __init__(self, *args, period: "Period", **kwargs) -> None:
+    def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
 
-        self.period = period
-
-        self.defaultSegmentTemplate = self.walk_back_get_attr("segmentTemplate")
-
-        self.initialization = self.attr(
+        self.fmt_initialization = self.attr(
             "initialization",
             parser=MPDParsers.segment_template,
         )
-        self.media = self.attr(
+        self.fmt_media = self.attr(
             "media",
             parser=MPDParsers.segment_template,
-        )
-        self.duration = self.attr(
-            "duration",
-            parser=int,
-            default=self.defaultSegmentTemplate.duration if self.defaultSegmentTemplate else None,
-        )
-        self.timescale: int = self.attr(
-            "timescale",
-            parser=int,
-            default=self.defaultSegmentTemplate.timescale if self.defaultSegmentTemplate else 1,
-        )
-        self.startNumber: int = self.attr(
-            "startNumber",
-            parser=int,
-            default=self.defaultSegmentTemplate.startNumber if self.defaultSegmentTemplate else 1,
-        )
-        self.presentationTimeOffset = self.attr(
-            "presentationTimeOffset",
-            parser=MPDParsers.timedelta(self.timescale),
-            default=self.defaultSegmentTemplate.presentationTimeOffset if self.defaultSegmentTemplate else timedelta(),
-        )
-
-        self.duration_seconds = self.duration / self.timescale if self.duration and self.timescale else None
-
-        # children
-        self.segmentTimeline = (
-            self.only_child(SegmentTimeline)
-            or (self.defaultSegmentTemplate.segmentTimeline if self.defaultSegmentTemplate else None)
         )
 
     def segments(self, ident: TTimelineIdent, base_url: str, **kwargs) -> Iterator[Segment]:
@@ -851,10 +817,6 @@ class SegmentTemplate(MPDNode):
     @staticmethod
     def make_url(base_url: str, url: str) -> str:
         return BaseURL.join(base_url, url)
-
-    def format_initialization(self, base_url: str, **kwargs) -> Optional[str]:
-        if self.initialization is not None:
-            return self.make_url(base_url, self.initialization(**kwargs))
 
     def segment_numbers(self) -> Iterator[Tuple[int, datetime]]:
         """
@@ -952,19 +914,23 @@ class SegmentTemplate(MPDNode):
                 self.root.timelines[ident] = segment.t
                 yield number, segment, available_at
 
+    def format_initialization(self, base_url: str, **kwargs) -> Optional[str]:
+        if self.fmt_initialization is not None:  # pragma: no branch
+            return self.make_url(base_url, self.fmt_initialization(**kwargs))
+
     def format_media(self, ident: TTimelineIdent, base_url: str, **kwargs) -> Iterator[Tuple[str, int, datetime]]:
-        if self.media is None:  # pragma: no cover
+        if self.fmt_media is None:  # pragma: no cover
             return
 
         if not self.segmentTimeline:
             log.debug(f"Generating segment numbers for {self.root.type} playlist: {ident!r}")
             for number, available_at in self.segment_numbers():
-                url = self.make_url(base_url, self.media(Number=number, **kwargs))
+                url = self.make_url(base_url, self.fmt_media(Number=number, **kwargs))
                 yield url, number, available_at
         else:
             log.debug(f"Generating segment timeline for {self.root.type} playlist: {ident!r}")
             for number, segment, available_at in self.segment_timeline(ident):
-                url = self.make_url(base_url, self.media(Time=segment.t, Number=number, **kwargs))
+                url = self.make_url(base_url, self.fmt_media(Time=segment.t, Number=number, **kwargs))
                 yield url, number, available_at
 
 
@@ -999,6 +965,32 @@ class _TimelineSegment(MPDNode):
         self.t = self.attr("t", parser=int)
         self.d: int = self.attr("d", parser=int, required=True)  # type: ignore[assignment]
         self.r = self.attr("r", parser=int, default=0)
+
+
+class Initialization(MPDNode):
+    __tag__ = "Initialization"
+
+    def __init__(self, *args, **kwargs) -> None:
+        super().__init__(*args, **kwargs)
+
+        self.source_url = self.attr("sourceURL")
+        self.range = self.attr(
+            "range",
+            parser=MPDParsers.range,
+        )
+
+
+class SegmentURL(MPDNode):
+    __tag__ = "SegmentURL"
+
+    def __init__(self, *args, **kwargs) -> None:
+        super().__init__(*args, **kwargs)
+
+        self.media = self.attr("media")
+        self.media_range = self.attr(
+            "mediaRange",
+            parser=MPDParsers.range,
+        )
 
 
 class ContentProtection(MPDNode):
