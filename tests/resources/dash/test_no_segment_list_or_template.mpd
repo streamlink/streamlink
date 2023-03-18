@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<MPD
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns="urn:mpeg:dash:schema:mpd:2011"
+    xsi:schemaLocation="urn:mpeg:dash:schema:mpd:2011 DASH-MPD.xsd"
+    type="static"
+    mediaPresentationDuration="PT3256S"
+    minBufferTime="PT1.2S"
+    profiles="urn:mpeg:dash:profile:isoff-on-demand:2011"
+>
+    <BaseURL>http://cdn1.example.com/</BaseURL>
+    <BaseURL>http://cdn2.example.com/</BaseURL>
+    <Period>
+        <!-- English Audio -->
+        <AdaptationSet mimeType="audio/mp4" codecs="mp4a.40" lang="en" subsegmentAlignment="true" subsegmentStartsWithSAP="1">
+            <Representation id="1" bandwidth="64000">
+                <BaseURL>7657412348.mp4</BaseURL>
+            </Representation>
+            <Representation id="2" bandwidth="32000">
+                <BaseURL>3463646346.mp4</BaseURL>
+            </Representation>
+        </AdaptationSet>
+        <!-- French Audio -->
+        <AdaptationSet mimeType="audio/mp4" codecs="mp4a.40.2" lang="fr" subsegmentAlignment="true" subsegmentStartsWithSAP="1">
+            <Role schemeIdUri="urn:mpeg:dash:role:2011" value="dub"/>
+            <Representation id="3" bandwidth="64000">
+                <BaseURL>3463275477.mp4</BaseURL>
+            </Representation>
+            <Representation id="4" bandwidth="32000">
+                <BaseURL>5685763463.mp4</BaseURL>
+            </Representation>
+        </AdaptationSet>
+        <!-- Timed text -->
+        <AdaptationSet mimeType="application/ttml+xml" lang="de">
+            <Role schemeIdUri="urn:mpeg:dash:role" value="subtitle"/>
+            <Representation id="5" bandwidth="256">
+                <BaseURL>796735657.xml</BaseURL>
+            </Representation>
+        </AdaptationSet>
+        <!-- Video -->
+        <AdaptationSet mimeType="video/mp4" codecs="avc1.4d0228" subsegmentAlignment="true" subsegmentStartsWithSAP="2">
+            <Representation id="6" bandwidth="256000" width="320" height="240">
+                <BaseURL>8563456473.mp4</BaseURL>
+            </Representation>
+            <Representation id="7" bandwidth="512000" width="320" height="240">
+                <BaseURL>56363634.mp4</BaseURL>
+            </Representation>
+            <Representation id="8" bandwidth="1024000" width="640" height="480">
+                <BaseURL>562465736.mp4</BaseURL>
+            </Representation>
+            <Representation id="9" bandwidth="1384000" width="640" height="480">
+                <BaseURL>41325645.mp4</BaseURL>
+            </Representation>
+            <Representation id="A" bandwidth="1536000" width="1280" height="720">
+                <BaseURL>89045625.mp4</BaseURL>
+            </Representation>
+            <Representation id="B" bandwidth="2048000" width="1280" height="720">
+                <BaseURL>23536745734.mp4</BaseURL>
+            </Representation>
+        </AdaptationSet>
+    </Period>
+</MPD>

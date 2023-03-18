@@ -664,7 +664,7 @@ class Representation(_RepresentationBaseType):
             yield Segment(
                 url=self.base_url,
                 number=None,
-                duration=None,
+                duration=self.period.duration.total_seconds() or self.root.mediaPresentationDuration.total_seconds(),
                 available_at=self.period.availabilityStartTime,
                 init=True,
                 content=True,
