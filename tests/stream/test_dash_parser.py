@@ -92,6 +92,41 @@ class TestMPDParsers(unittest.TestCase):
 class TestMPDParser(unittest.TestCase):
     maxDiff = None
 
+    def test_no_segment_list_or_template(self):
+        with xml("dash/test_no_segment_list_or_template.mpd") as mpd_xml:
+            mpd = MPD(mpd_xml, base_url="http://test/", url="http://test/manifest.mpd")
+            segments = [
+                {
+                    "ident": representation.ident,
+                    "mimeType": representation.mimeType,
+                    "segments": [
+                        (segment.url, segment.number, segment.duration, segment.available_at, segment.init, segment.content)
+                        for segment in itertools.islice(representation.segments(), 100)
+                    ],
+                }
+                for adaptationset in mpd.periods[0].adaptationSets for representation in adaptationset.representations
+                if representation.id in ("1", "5", "6")
+            ]
+        availability = datetime.datetime(1970, 1, 1, 0, 0, 0, tzinfo=UTC)
+
+        assert segments == [
+            {
+                "ident": (None, None, "1"),
+                "mimeType": "audio/mp4",
+                "segments": [("http://cdn1.example.com/7657412348.mp4", None, 3256.0, availability, True, True)],
+            },
+            {
+                "ident": (None, None, "5"),
+                "mimeType": "application/ttml+xml",
+                "segments": [("http://cdn1.example.com/796735657.xml", None, 3256.0, availability, True, True)],
+            },
+            {
+                "ident": (None, None, "6"),
+                "mimeType": "video/mp4",
+                "segments": [("http://cdn1.example.com/8563456473.mp4", None, 3256.0, availability, True, True)],
+            },
+        ]
+
     def test_segments_number_time(self):
         with xml("dash/test_1.mpd") as mpd_xml:
             mpd = MPD(mpd_xml, base_url="http://test.se/", url="http://test.se/manifest.mpd")
