@@ -7,11 +7,14 @@ $type live
 import hashlib
 import logging
 import re
+import sys
+from time import time
 
 from streamlink.buffers import RingBuffer
-from streamlink.plugin import Plugin, PluginError, pluginargument, pluginmatcher
+from streamlink.plugin import Plugin, pluginargument, pluginmatcher
 from streamlink.plugin.api import validate
 from streamlink.plugin.api.websocket import WebsocketClient
+from streamlink.stream.hls import HLSStream
 from streamlink.stream.stream import Stream, StreamIO
 from streamlink.utils.url import update_qsd
 
@@ -29,66 +32,103 @@ log = logging.getLogger(__name__)
     help="Password for private Twitcasting streams.",
 )
 class TwitCasting(Plugin):
-    _STREAM_INFO_URL = "https://twitcasting.tv/streamserver.php?target={channel}&mode=client"
-    _STREAM_REAL_URL = "{proto}://{host}/ws.app/stream/{movie_id}/fmp4/bd/1/1500?mode={mode}"
+    _URL_API_STREAMSERVER = "https://twitcasting.tv/streamserver.php"
+    _URL_STREAM_HLS = "https://{host}/{channel}/metastream.m3u8"
+    _URL_STREAM_WEBSOCKET = "wss://{host}/ws.app/stream/{id}/fmp4/bd/1/1500?mode={mode}"
 
-    _STREAM_INFO_SCHEMA = validate.Schema({
-        validate.optional("movie"): {
-            "id": int,
-            "live": bool,
-        },
-        validate.optional("fmp4"): {
-            "host": str,
-            "proto": str,
-            "source": bool,
-            "mobilesource": bool,
-        },
-    })
+    _STREAM_HOST_DEFAULT = "twitcasting.tv"
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.channel = self.match.group("channel")
+    _WEBSOCKET_MODES = {
+        "main": "source",
+        "mobilesource": "mobilesource",
+        "base": None,
+    }
+
+    # prefer websocket streams over HLS streams due to latency reasons
+    _WEIGHTS = {
+        "main": sys.maxsize,
+        "mobilesource": sys.maxsize - 1,
+        "base": sys.maxsize - 2,
+    }
+
+    @classmethod
+    def stream_weight(cls, stream):
+        return (cls._WEIGHTS[stream], "none") if stream in cls._WEIGHTS else super().stream_weight(stream)
+
+    def _api_query_streamserver(self):
+        return self.session.http.get(
+            self._URL_API_STREAMSERVER,
+            params={
+                "target": self.match["channel"],
+                "mode": "client",
+            },
+            schema=validate.Schema(
+                validate.parse_json(),
+                {
+                    validate.optional("movie"): {
+                        "id": int,
+                        "live": bool,
+                    },
+                    # ignore llfmp4 websocket streams, as those seem to cause video/audio desync
+                    validate.optional("fmp4"): {
+                        "proto": str,
+                        "host": str,
+                        "source": bool,
+                        "mobilesource": bool,
+                    },
+                    # ignore the "dvr" HLS URL, as it results in a 403 response
+                    validate.optional("hls"): {
+                        "host": str,
+                        "proto": str,
+                        "source": bool,
+                    },
+                },
+                validate.union_get("movie", "fmp4", "hls"),
+            ),
+        )
+
+    def _get_streams_hls(self, data):
+        host = data.get("host") or self._STREAM_HOST_DEFAULT
+        url = self._URL_STREAM_HLS.format(host=host, channel=self.match["channel"])
+        params = {"__n": int(time() * 1000)}
+
+        streams = [params]
+        if data.get("source"):
+            streams.append({"mode": "source", **params})
+
+        for params in streams:
+            yield from HLSStream.parse_variant_playlist(self.session, url, params=params).items()
+
+    def _get_streams_websocket(self, data):
+        host = data.get("host") or self._STREAM_HOST_DEFAULT
+        password = self.options.get("password")
+
+        for mode, prop in self._WEBSOCKET_MODES.items():
+            if prop is not None and not data.get(prop):
+                continue
+
+            url = self._URL_STREAM_WEBSOCKET.format(host=host, id=self.id, mode=mode)
+            if password is not None:
+                password_hash = hashlib.md5(password.encode()).hexdigest()
+                url = update_qsd(url, {"word": password_hash})
+
+            yield mode, TwitCastingStream(self.session, url)
 
     def _get_streams(self):
-        stream_info = self._get_stream_info()
-        log.debug(f"Live stream info: {stream_info}")
+        movie, websocket, hls = self._api_query_streamserver()
+        if not movie or not movie.get("id") or not movie.get("live"):
+            log.error(f"No live stream available for user {self.match['channel']}")
+            return
+        if not websocket and not hls:
+            log.error("Unsupported stream type")
+            return
 
-        if not stream_info.get("movie") or not stream_info["movie"]["live"]:
-            raise PluginError("The live stream is offline")
+        self.id = movie.get("id")
 
-        if not stream_info.get("fmp4"):
-            raise PluginError("Login required")
-
-        # Keys are already validated by schema above
-        proto = stream_info["fmp4"]["proto"]
-        host = stream_info["fmp4"]["host"]
-        movie_id = stream_info["movie"]["id"]
-
-        if stream_info["fmp4"]["source"]:
-            mode = "main"  # High quality
-        elif stream_info["fmp4"]["mobilesource"]:
-            mode = "mobilesource"  # Medium quality
-        else:
-            mode = "base"  # Low quality
-
-        if (proto == "") or (host == "") or (not movie_id):
-            raise PluginError(f"No stream available for user {self.channel}")
-
-        real_stream_url = self._STREAM_REAL_URL.format(proto=proto, host=host, movie_id=movie_id, mode=mode)
-
-        password = self.options.get("password")
-        if password is not None:
-            password_hash = hashlib.md5(password.encode()).hexdigest()
-            real_stream_url = update_qsd(real_stream_url, {"word": password_hash})
-
-        log.debug(f"Real stream url: {real_stream_url}")
-
-        return {mode: TwitCastingStream(session=self.session, url=real_stream_url)}
-
-    def _get_stream_info(self):
-        url = self._STREAM_INFO_URL.format(channel=self.channel)
-        res = self.session.http.get(url)
-        return self.session.http.json(res, schema=self._STREAM_INFO_SCHEMA)
+        if websocket:
+            yield from self._get_streams_websocket(websocket)
+        if hls:
+            yield from self._get_streams_hls(hls)
 
 
 class TwitCastingWsClient(WebsocketClient):
