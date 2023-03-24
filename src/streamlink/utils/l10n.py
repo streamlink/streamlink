@@ -31,8 +31,8 @@ class Country:
                 c.name,
                 getattr(c, "official_name", c.name),
             )
-        except (LookupError, KeyError):
-            raise LookupError(f"Invalid country code: {country}")
+        except LookupError as err:
+            raise LookupError(f"Invalid country code: {country}") from err
 
     def __eq__(self, other):
         return (
@@ -76,8 +76,8 @@ class Language:
                 lang.name,
                 getattr(lang, "bibliographic", ""),
             )
-        except (LookupError, KeyError):
-            raise LookupError(f"Invalid language code: {language}")
+        except LookupError as err:
+            raise LookupError(f"Invalid language code: {language}") from err
 
     def __eq__(self, other):
         return (

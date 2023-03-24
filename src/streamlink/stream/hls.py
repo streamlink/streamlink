@@ -330,7 +330,7 @@ class HLSStreamWorker(SegmentedStreamWorker):
         try:
             playlist = self._reload_playlist(res)
         except ValueError as err:
-            raise StreamError(err)
+            raise StreamError(err) from err
 
         if playlist.is_master:
             raise StreamError(f"Attempted to play a variant playlist, use 'hls://{self.stream.url}' instead")
@@ -656,7 +656,7 @@ class HLSStream(HTTPStream):
         try:
             multivariant = cls._get_variant_playlist(res)
         except ValueError as err:
-            raise OSError(f"Failed to parse playlist: {err}")
+            raise OSError(f"Failed to parse playlist: {err}") from err
 
         stream_name: Optional[str]
         stream: Union["HLSStream", "MuxedHLSStream"]

@@ -511,7 +511,7 @@ class Streamlink:
             plugincls = self.plugins[plugin]
             return plugincls.get_option(key)
 
-    @lru_cache(maxsize=128)
+    @lru_cache(maxsize=128)  # noqa: B019
     def resolve_url(
         self,
         url: str,
@@ -614,7 +614,7 @@ class Streamlink:
         """
 
         success = False
-        for loader, name, ispkg in pkgutil.iter_modules([path]):
+        for _loader, name, _ispkg in pkgutil.iter_modules([path]):
             # set the full plugin module name
             # use the "streamlink.plugins." prefix even for sideloaded plugins
             module_name = f"streamlink.plugins.{name}"

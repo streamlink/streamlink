@@ -7,7 +7,7 @@ from docutils import nodes
 from sphinx.util.nodes import split_explicit_title
 
 
-def releaseref_role(name, rawtext, text, lineno, inliner, options={}, content=[]):
+def releaseref_role(name, rawtext, text, lineno, inliner, options=None, content=None):
     config = inliner.document.settings.env.config
     text = text.replace("|version|", config.version)
     text = text.replace("|release|", config.release)
@@ -16,7 +16,7 @@ def releaseref_role(name, rawtext, text, lineno, inliner, options={}, content=[]
     if not has_explicit_title:
         title = os.path.basename(target)
 
-    node = nodes.reference(rawtext, title, refuri=target, **options)
+    node = nodes.reference(rawtext, title, refuri=target, **(options or {}))
 
     return [node], []
 

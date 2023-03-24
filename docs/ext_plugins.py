@@ -217,7 +217,7 @@ class PluginFinder:
                 return pluginmetadata
 
             except Exception as err:
-                raise ExtensionError(f"Error while parsing plugin file {pluginfile.name}", err)
+                raise ExtensionError(f"Error while parsing plugin file {pluginfile.name}", err) from err
 
 
 class PluginsDirective(Directive):

@@ -1,5 +1,5 @@
 """
-$description Russian live streaming social platform.
+$description Russian live-streaming social platform.
 $url wasd.tv
 $type live
 """
@@ -75,11 +75,11 @@ class WASD(Plugin):
         for stream in json_res["media_container_streams"]:
             log.debug("media_container_status: {0}, media_container_online_status: {1}".format(
                 json_res["media_container_status"], json_res["media_container_online_status"]))
-            for stream in stream["stream_media"]:
-                if stream["media_status"] == "STOPPED":
-                    hls_url = stream["media_meta"]["media_archive_url"]
-                elif stream["media_status"] == "RUNNING":
-                    hls_url = stream["media_meta"]["media_url"]
+            for stream_media in stream["stream_media"]:
+                if stream_media["media_status"] == "STOPPED":
+                    hls_url = stream_media["media_meta"]["media_archive_url"]
+                else:
+                    hls_url = stream_media["media_meta"]["media_url"]
 
                 yield from HLSStream.parse_variant_playlist(self.session, hls_url).items()
 

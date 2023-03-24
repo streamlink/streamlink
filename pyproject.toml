@@ -81,6 +81,8 @@ select = [
   "I",
   # flake8-builtins
   "A",
+  # flake8-bugbear
+  "B",
   # flake8-commas
   "COM",
   # flake8-comprehensions
@@ -100,6 +102,7 @@ select = [
 ]
 extend-ignore = [
   "A003",  # builtin-attribute-shadowing
+  "B028",  # no-explicit-stacklevel
   "C408",  # unnecessary-collection-call
   "ISC003",  # explicit-string-concatenation
   "PLC1901",  # compare-to-empty-string

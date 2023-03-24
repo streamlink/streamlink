@@ -152,11 +152,11 @@ class HTTPSession(Session):
                 res = super().request(
                     method,
                     url,
+                    *args,
                     headers=headers,
                     params=params,
                     timeout=timeout,
                     proxies=proxies,
-                    *args,
                     **kwargs,
                 )
                 if raise_for_status and res.status_code not in acceptable_status:

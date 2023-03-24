@@ -15,7 +15,7 @@ def _parse(parser, data, name, exception, schema, *args, **kwargs):
         if len(snippet) > 35:
             snippet = f"{snippet[:35]} ..."
 
-        raise exception(f"Unable to parse {name}: {err} ({snippet})")
+        raise exception(f"Unable to parse {name}: {err} ({snippet})")  # noqa: B904
 
     if schema:
         parsed = schema.validate(parsed, name=name, exception=exception)

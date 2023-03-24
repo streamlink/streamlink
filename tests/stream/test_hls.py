@@ -447,7 +447,7 @@ class TestHlsPlaylistReloadTime(TestMixinStreamHLS, unittest.TestCase):
         }))
 
     def subject(self, *args, **kwargs):
-        thread, segments = super().subject(start=False, *args, **kwargs)
+        thread, segments = super().subject(*args, start=False, **kwargs)
 
         # mock the worker thread's _playlist_reload_time method, so that the main thread can wait on its call
         playlist_reload_time_called = Event()

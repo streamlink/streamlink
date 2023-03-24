@@ -67,7 +67,7 @@ class ArteTV(Plugin):
 
         self.title = f"{metadata['title']} - {metadata['subtitle']}" if metadata["subtitle"] else metadata["title"]
 
-        for slot, protocol, url in sorted(streams, key=itemgetter(0)):
+        for _slot, _protocol, url in sorted(streams, key=itemgetter(0)):
             return HLSStream.parse_variant_playlist(self.session, url)
 
 

@@ -121,8 +121,8 @@ class TestDASHStreamParseManifest:
         streams = DASHStream.parse_manifest(session, "http://test/manifest.mpd")
         assert mpd.call_args_list == [call(ANY, url="http://test/manifest.mpd", base_url="http://test")]
         assert sorted(streams.keys()) == sorted(["720p", "1080p"])
-        assert getattr(streams["720p"].audio_representation, "lang") == "en"
-        assert getattr(streams["1080p"].audio_representation, "lang") == "en"
+        assert getattr(streams["720p"].audio_representation, "lang", None) == "en"
+        assert getattr(streams["1080p"].audio_representation, "lang", None) == "en"
 
     def test_audio_multi_lang_alpha3(self, session: Streamlink, mpd: Mock):
         adaptationset = Mock(
@@ -139,8 +139,8 @@ class TestDASHStreamParseManifest:
         streams = DASHStream.parse_manifest(session, "http://test/manifest.mpd")
         assert mpd.call_args_list == [call(ANY, url="http://test/manifest.mpd", base_url="http://test")]
         assert sorted(streams.keys()) == sorted(["720p", "1080p"])
-        assert getattr(streams["720p"].audio_representation, "lang") == "eng"
-        assert getattr(streams["1080p"].audio_representation, "lang") == "eng"
+        assert getattr(streams["720p"].audio_representation, "lang", None) == "eng"
+        assert getattr(streams["1080p"].audio_representation, "lang", None) == "eng"
 
     def test_audio_invalid_lang(self, session: Streamlink, mpd: Mock):
         adaptationset = Mock(
@@ -156,8 +156,8 @@ class TestDASHStreamParseManifest:
         streams = DASHStream.parse_manifest(session, "http://test/manifest.mpd")
         assert mpd.call_args_list == [call(ANY, url="http://test/manifest.mpd", base_url="http://test")]
         assert sorted(streams.keys()) == sorted(["720p", "1080p"])
-        assert getattr(streams["720p"].audio_representation, "lang") == "en_no_voice"
-        assert getattr(streams["1080p"].audio_representation, "lang") == "en_no_voice"
+        assert getattr(streams["720p"].audio_representation, "lang", None) == "en_no_voice"
+        assert getattr(streams["1080p"].audio_representation, "lang", None) == "en_no_voice"
 
     def test_audio_multi_lang_locale(self, monkeypatch: pytest.MonkeyPatch, session: Streamlink, mpd: Mock):
         session.set_option("locale", "es_ES")
@@ -176,8 +176,8 @@ class TestDASHStreamParseManifest:
         streams = DASHStream.parse_manifest(session, "http://test/manifest.mpd")
         assert mpd.call_args_list == [call(ANY, url="http://test/manifest.mpd", base_url="http://test")]
         assert sorted(streams.keys()) == sorted(["720p", "1080p"])
-        assert getattr(streams["720p"].audio_representation, "lang") == "es"
-        assert getattr(streams["1080p"].audio_representation, "lang") == "es"
+        assert getattr(streams["720p"].audio_representation, "lang", None) == "es"
+        assert getattr(streams["1080p"].audio_representation, "lang", None) == "es"
 
     # Verify the fix for https://github.com/streamlink/streamlink/issues/3365
     def test_duplicated_resolutions(self, session: Streamlink, mpd: Mock):
@@ -210,9 +210,9 @@ class TestDASHStreamParseManifest:
 
         streams = DASHStream.parse_manifest(session, "http://test/manifest.mpd")
         assert mpd.call_args_list == [call(ANY, url="http://test/manifest.mpd", base_url="http://test")]
-        assert getattr(streams["1080p"].video_representation, "bandwidth") == pytest.approx(128.0)
-        assert getattr(streams["1080p_alt"].video_representation, "bandwidth") == pytest.approx(64.0)
-        assert getattr(streams["1080p_alt2"].video_representation, "bandwidth") == pytest.approx(32.0)
+        assert getattr(streams["1080p"].video_representation, "bandwidth", None) == pytest.approx(128.0)
+        assert getattr(streams["1080p_alt"].video_representation, "bandwidth", None) == pytest.approx(64.0)
+        assert getattr(streams["1080p_alt2"].video_representation, "bandwidth", None) == pytest.approx(32.0)
 
     @pytest.mark.parametrize("adaptationset", [
         pytest.param(

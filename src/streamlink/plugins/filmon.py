@@ -204,7 +204,7 @@ class Filmon(Plugin):
         self.session.http.get(self.url)
 
         if vod_id:
-            for quality, url, timeout in self.api.vod(vod_id):
+            for quality, url, _timeout in self.api.vod(vod_id):
                 if url.endswith(".m3u8"):
                     streams = HLSStream.parse_variant_playlist(self.session, url)
                     if streams:
@@ -234,7 +234,7 @@ class Filmon(Plugin):
                 raise PluginError(f"Unable to find channel ID: {channel}")
 
             try:
-                for quality, url, timeout in self.api.channel(_id):
+                for quality, url, _timeout in self.api.channel(_id):
                     yield quality, FilmOnHLS(self.session, url, self.api, channel=_id, quality=quality)
             except Exception:
                 if channel and not channel.isdigit():

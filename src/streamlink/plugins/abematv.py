@@ -179,14 +179,14 @@ class AbemaTV(Plugin):
         h = hmac.new(self.SECRETKEY, digestmod=hashlib.sha256)
         h.update(self.SECRETKEY)
         tmp = h.digest()
-        for i in range(time_struct.tm_mon):
+        for _ in range(time_struct.tm_mon):
             h = hmac.new(self.SECRETKEY, digestmod=hashlib.sha256)
             h.update(tmp)
             tmp = h.digest()
         h = hmac.new(self.SECRETKEY, digestmod=hashlib.sha256)
         h.update(urlsafe_b64encode(tmp).rstrip(b"=") + deviceid)
         tmp = h.digest()
-        for i in range(time_struct.tm_mday % 5):
+        for _ in range(time_struct.tm_mday % 5):
             h = hmac.new(self.SECRETKEY, digestmod=hashlib.sha256)
             h.update(tmp)
             tmp = h.digest()
@@ -195,7 +195,7 @@ class AbemaTV(Plugin):
         h.update(urlsafe_b64encode(tmp).rstrip(b"=") + ts_1hour_str)
         tmp = h.digest()
 
-        for i in range(time_struct.tm_hour % 5):  # utc hour
+        for _ in range(time_struct.tm_hour % 5):  # utc hour
             h = hmac.new(self.SECRETKEY, digestmod=hashlib.sha256)
             h.update(tmp)
             tmp = h.digest()

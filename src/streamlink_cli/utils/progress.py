@@ -121,7 +121,7 @@ class ProgressFormatter:
             length = 0
             # Get literal texts, static segments and variable segments from the parsed format
             # and calculate the overall length of the literal texts and static segments after substituting them.
-            for literal_text, field_name, format_spec, conversion in fmt:
+            for literal_text, field_name, format_spec, _conversion in fmt:
                 static.append(literal_text)
                 length += len(literal_text)
                 if field_name is None:
