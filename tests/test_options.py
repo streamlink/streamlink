@@ -242,8 +242,12 @@ class TestSetupOptions:
             def _get_streams(self):  # pragma: no cover
                 pass
 
-        assert [(record.category, str(record.message)) for record in recwarn.list] == [
-            (StreamlinkDeprecationWarning, "Defining global plugin arguments is deprecated. Use the session options instead."),
+        assert [(record.category, str(record.message), record.filename) for record in recwarn.list] == [
+            (
+                StreamlinkDeprecationWarning,
+                "Defining global plugin arguments is deprecated. Use the session options instead.",
+                __file__,
+            ),
         ]
 
         session = Mock()

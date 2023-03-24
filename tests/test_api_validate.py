@@ -19,10 +19,11 @@ def test_text_is_str(recwarn: pytest.WarningsRecorder):
     assert "text" not in getattr(validate, "__dict__", {})
     assert "text" in getattr(validate, "__all__", [])
     assert validate.text is str, "Exports text as str alias for backwards compatiblity"
-    assert [(record.category, str(record.message)) for record in recwarn.list] == [
+    assert [(record.category, str(record.message), record.filename) for record in recwarn.list] == [
         (
             StreamlinkDeprecationWarning,
             "`streamlink.plugin.api.validate.text` is deprecated. Use `str` instead.",
+            __file__,
         ),
     ]
 

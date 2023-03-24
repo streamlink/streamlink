@@ -306,6 +306,7 @@ class Plugin:
                 warnings.warn(
                     f"Initialized {self.module} plugin with deprecated constructor",
                     FutureWarning,
+                    stacklevel=2,
                 )
 
         # Wrapper class which comes after the deprecated plugin in the MRO

@@ -610,6 +610,7 @@ def load_plugins(dirs: List[Path], showwarning: bool = True):
                 warnings.warn(
                     f"Loaded plugins from deprecated path, see CLI docs for how to migrate: {directory}",
                     StreamlinkDeprecationWarning,
+                    stacklevel=1,
                 )
         elif showwarning:
             log.warning(f"Plugin path {directory} does not exist or is not a directory!")
@@ -658,6 +659,7 @@ def setup_config_args(parser, ignore_unknown=False):
                 warnings.warn(
                     f"Loaded config from deprecated path, see CLI docs for how to migrate: {config_file}",
                     StreamlinkDeprecationWarning,
+                    stacklevel=1,
                 )
             config_files.append(config_file)
             break
@@ -674,6 +676,7 @@ def setup_config_args(parser, ignore_unknown=False):
                     warnings.warn(
                         f"Loaded plugin config from deprecated path, see CLI docs for how to migrate: {config_file}",
                         StreamlinkDeprecationWarning,
+                        stacklevel=1,
                     )
                 config_files.append(config_file)
                 break

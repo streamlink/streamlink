@@ -27,6 +27,21 @@ log = logging.getLogger(__name__)
 _original_allowed_gai_family = urllib3_util_connection.allowed_gai_family  # type: ignore[attr-defined]
 
 
+def _get_deprecation_stacklevel_offset():
+    """Deal with stacklevels of both session.{g,s}et_option() and session.options.{g,s}et() calls"""
+    from inspect import currentframe
+
+    frame = currentframe().f_back.f_back
+    offset = 0
+    while frame:
+        if frame.f_code.co_filename == __file__ and frame.f_code.co_name in ("set_option", "get_option"):
+            offset += 1
+            break
+        frame = frame.f_back
+
+    return offset
+
+
 class PythonDeprecatedWarning(UserWarning):
     pass
 
@@ -47,14 +62,19 @@ class StreamlinkOptions(Options):
             except ValueError:
                 continue
 
-    # ---- getters
-
-    def _get_http_proxy(self, key):
+    @staticmethod
+    def _deprecate_https_proxy(key: str) -> None:
         if key == "https-proxy":
             warnings.warn(
                 "The `https-proxy` option has been deprecated in favor of a single `http-proxy` option",
                 StreamlinkDeprecationWarning,
+                stacklevel=4 + _get_deprecation_stacklevel_offset(),
             )
+
+    # ---- getters
+
+    def _get_http_proxy(self, key):
+        self._deprecate_https_proxy(key)
         return self.session.http.proxies.get("https" if key == "https-proxy" else "http")
 
     def _get_http_attr(self, key):
@@ -88,11 +108,7 @@ class StreamlinkOptions(Options):
         self.session.http.proxies["http"] \
             = self.session.http.proxies["https"] \
             = update_scheme("https://", value, force=False)
-        if key == "https-proxy":
-            warnings.warn(
-                "The `https-proxy` option has been deprecated in favor of a single `http-proxy` option",
-                StreamlinkDeprecationWarning,
-            )
+        self._deprecate_https_proxy(key)
 
     def _set_http_attr(self, key, value):
         setattr(self.session.http, self._OPTIONS_HTTP_ATTRS[key], value)
@@ -124,6 +140,7 @@ class StreamlinkOptions(Options):
             warnings.warn(
                 f"`{key}` has been deprecated in favor of the `{name}` option",
                 StreamlinkDeprecationWarning,
+                stacklevel=3 + _get_deprecation_stacklevel_offset(),
             )
 
         return inner
@@ -547,6 +564,7 @@ class Streamlink:
                     warnings.warn(
                         f"Resolved plugin {name} with deprecated can_handle_url API",
                         StreamlinkDeprecationWarning,
+                        stacklevel=1,
                     )
                     candidate = name, plugin
                     priority = prio

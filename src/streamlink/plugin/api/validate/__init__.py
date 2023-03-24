@@ -64,7 +64,7 @@ def _deprecations():
             from streamlink.exceptions import StreamlinkDeprecationWarning
 
             val, msg = deprecations[_attr]
-            warnings.warn(msg, StreamlinkDeprecationWarning)
+            warnings.warn(msg, StreamlinkDeprecationWarning, stacklevel=2)
 
             return val
 

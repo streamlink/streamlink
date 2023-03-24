@@ -10,9 +10,9 @@ import requests_mock
 import urllib3
 
 import tests.plugin
-from streamlink import NoPluginError, Streamlink
-from streamlink.exceptions import StreamlinkDeprecationWarning
+from streamlink.exceptions import NoPluginError, StreamlinkDeprecationWarning
 from streamlink.plugin import HIGH_PRIORITY, LOW_PRIORITY, NO_PRIORITY, NORMAL_PRIORITY, Plugin, pluginmatcher
+from streamlink.session import Streamlink
 from streamlink.stream.hls import HLSStream
 from streamlink.stream.http import HTTPStream
 
@@ -418,10 +418,11 @@ class TestSessionOptionHttpProxy:
     @pytest.fixture()
     def _logs_deprecation(self, recwarn: pytest.WarningsRecorder):
         yield
-        assert [(record.category, str(record.message)) for record in recwarn.list] == [
+        assert [(record.category, str(record.message), record.filename) for record in recwarn.list] == [
             (
                 StreamlinkDeprecationWarning,
                 "The `https-proxy` option has been deprecated in favor of a single `http-proxy` option",
+                __file__,
             ),
         ]
 
@@ -480,6 +481,16 @@ class TestSessionOptionHttpProxy:
         session.http.proxies["http"] = "http://testproxy1.com"
         session.http.proxies["https"] = "http://testproxy2.com"
         assert session.get_option("https-proxy") == "http://testproxy2.com"
+
+    @pytest.mark.usefixtures("_logs_deprecation")
+    def test_https_proxy_get_directly(self, session: Streamlink):
+        # The DeprecationWarning's origin must point to this call, even without the set_option() wrapper
+        session.options.get("https-proxy")
+
+    @pytest.mark.usefixtures("_logs_deprecation")
+    def test_https_proxy_set_directly(self, session: Streamlink):
+        # The DeprecationWarning's origin must point to this call, even without the set_option() wrapper
+        session.options.set("https-proxy", "https://foo")
 
 
 class TestOptionsKeyEqualsValue:
