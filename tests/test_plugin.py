@@ -85,8 +85,12 @@ class TestPlugin:
 
         assert isinstance(plugin, DeprecatedPlugin)
         assert plugin.custom_attribute == "HTTP://LOCALHOST"
-        assert [(record.category, str(record.message)) for record in recwarn.list] == [
-            (FutureWarning, "Initialized test_plugin plugin with deprecated constructor"),
+        assert [(record.category, str(record.message), record.filename) for record in recwarn.list] == [
+            (
+                FutureWarning,
+                "Initialized test_plugin plugin with deprecated constructor",
+                __file__,
+            ),
         ]
 
         assert plugin.session is session

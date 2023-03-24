@@ -136,6 +136,9 @@ class Argument:
             warnings.warn(
                 "Defining global plugin arguments is deprecated. Use the session options instead.",
                 StreamlinkDeprecationWarning,
+                # set stacklevel to 3 because of the @pluginargument decorator
+                # which is the public interface for defining plugin arguments
+                stacklevel=3,
             )
 
     @staticmethod
