@@ -134,9 +134,9 @@ class BBCiPlayer(Plugin):
                 for connection in media["connection"]:
                     urls[connection.get("transferFormat")].add(connection["href"])
 
-        for stream_type, urls in urls.items():
-            log.debug(f"{len(urls)} {stream_type} streams")
-            for url in list(urls):
+        for stream_type, urlitems in urls.items():
+            log.debug(f"{len(urlitems)} {stream_type} streams")
+            for url in list(urlitems):
                 try:
                     if stream_type == "hls":
                         yield from HLSStream.parse_variant_playlist(self.session, url).items()

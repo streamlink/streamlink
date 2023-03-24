@@ -46,7 +46,7 @@ class Formatter:
     def _format(self, string: str, mapper: Callable[[str], str], defaults: Dict[str, str]) -> str:
         result = []
 
-        for literal_text, field_name, format_spec, conversion in _stringformatter.parse(string):
+        for literal_text, field_name, format_spec, _conversion in _stringformatter.parse(string):
             if literal_text:
                 result.append(literal_text)
 

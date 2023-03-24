@@ -151,8 +151,8 @@ def _validate_pattern(schema: Pattern, value):
 
 @validate.register
 def _validate_allschema(schema: AllSchema, value):
-    for schema in schema.schema:
-        value = validate(schema, value)
+    for subschema in schema.schema:
+        value = validate(subschema, value)
 
     return value
 
@@ -173,8 +173,8 @@ def _validate_anyschema(schema: AnySchema, value):
 def _validate_noneorallschema(schema: NoneOrAllSchema, value):
     if value is not None:
         try:
-            for schema in schema.schema:
-                value = validate(schema, value)
+            for subschema in schema.schema:
+                value = validate(subschema, value)
         except ValidationError as err:
             raise ValidationError(err, schema=NoneOrAllSchema) from None
 
@@ -376,13 +376,13 @@ def validate_union(schema, value):
 @validate_union.register(dict)
 def _validate_union_dict(schema, value):
     new = type(schema)()
-    for key, schema in schema.items():
+    for key, subschema in schema.items():
         is_optional = isinstance(key, OptionalSchema)
         if is_optional:
             key = key.key
 
         try:
-            new[key] = validate(schema, value)
+            new[key] = validate(subschema, value)
         except ValidationError as err:
             if is_optional:
                 continue

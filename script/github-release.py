@@ -128,7 +128,7 @@ class Git:
                 ref,
             )
         except subprocess.CalledProcessError as err:
-            raise ValueError(f"Could not get tag from git:\n{err.stderr}")
+            raise ValueError(f"Could not get tag from git:\n{err.stderr}") from err
 
     @classmethod
     def shortlog(cls, start: str, end: str) -> str:
@@ -141,7 +141,7 @@ class Git:
                 f"{start}...{end}",
             )
         except subprocess.CalledProcessError as err:
-            raise ValueError(f"Could not get shortlog from git:\n{err.stderr}")
+            raise ValueError(f"Could not get shortlog from git:\n{err.stderr}") from err
 
 
 class GitHubAPI:
@@ -375,15 +375,15 @@ class Release:
         log.debug(f"Opening release template file: {self.template}")
         try:
             return self._read_file(self.template)
-        except IOError:
-            raise IOError("Missing release template file")
+        except OSError as err:
+            raise OSError("Missing release template file") from err
 
     def _read_changelog(self):
         log.debug(f"Opening changelog file: {self.changelog}")
         try:
             return self._read_file(self.changelog)
-        except IOError:
-            raise IOError("Missing changelog file")
+        except OSError as err:
+            raise OSError("Missing changelog file") from err
 
     def _get_changelog(self) -> dict:
         changelog = self._read_changelog()
@@ -444,7 +444,7 @@ class Release:
         return jinjatemplate.render(context)
 
 
-def main(args: object):
+def main(args: argparse.Namespace):
     # if no tag was provided, get the current tag from `git describe --tags`
     tag = args.tag or Git.tag()
     if not tag:

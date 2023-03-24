@@ -65,8 +65,8 @@ def main(api_key: str, file: Path):
         result: dict = data and data.get("result") or {}
         if result.get("code") != "success":
             raise ValueError(result.get("message") or "Missing version_data in JSON response")
-    except requests.exceptions.RequestException:
-        raise ValueError("Error while querying API or parsing JSON response")
+    except requests.exceptions.RequestException as err:
+        raise ValueError("Error while querying API or parsing JSON response") from err
 
     version_data: dict = data.get("version_data") or {}
     user_agents = {}
@@ -75,8 +75,8 @@ def main(api_key: str, file: Path):
         for item in seq:
             try:
                 obj = obj[item]
-            except KeyError:
-                raise ValueError(f"Invalid key: {item} ({seq})")
+            except KeyError as err:
+                raise ValueError(f"Invalid key: {item} ({seq})") from err
 
         if type(obj) is not str:
             raise ValueError(f"Invalid result: {obj!r} ({seq})")

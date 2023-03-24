@@ -226,7 +226,7 @@ class TestMixinStreamHLS(unittest.TestCase):
     def await_write(self, write_calls=1, timeout=TIMEOUT_AWAIT_WRITE) -> None:
         writer: EventedHLSStreamWriter = self.thread.reader.writer  # type: ignore[assignment]
         assert writer.is_alive()
-        for write_call in range(write_calls):
+        for _ in range(write_calls):
             assert writer.handshake.step(timeout)
 
     # make one read call on the read thread and wait until it has finished

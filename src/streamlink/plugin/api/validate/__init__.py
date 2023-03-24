@@ -73,8 +73,8 @@ def _deprecations():
     __all__ = [k for k in globals().keys() if not k.startswith("_")]
     __all__.extend(deprecations.keys())
 
-    setattr(sys.modules[__name__], "__getattr__", __getattr__)
-    setattr(sys.modules[__name__], "__all__", __all__)
+    sys.modules[__name__].__getattr__ = __getattr__
+    sys.modules[__name__].__all__ = __all__
 
 
 _deprecations()

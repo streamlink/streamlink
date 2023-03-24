@@ -450,7 +450,7 @@ class TestMPDParser(unittest.TestCase):
         assert mpd.get_representation((None, "0", "audio1")) is None
         assert mpd.get_representation(("period-0", None, "audio1")) is None
 
-        assert getattr(mpd.get_representation(("period-0", "0", "audio1")), "mimeType") == "audio/mp4"
-        assert getattr(mpd.get_representation(("period-0", "0", "audio2")), "mimeType") == "audio/mp4"
-        assert getattr(mpd.get_representation(("period-0", None, "video1")), "mimeType") == "video/mp4"
-        assert getattr(mpd.get_representation(("period-0", None, "video2")), "mimeType") == "video/mp4"
+        assert getattr(mpd.get_representation(("period-0", "0", "audio1")), "mimeType", None) == "audio/mp4"
+        assert getattr(mpd.get_representation(("period-0", "0", "audio2")), "mimeType", None) == "audio/mp4"
+        assert getattr(mpd.get_representation(("period-0", None, "video1")), "mimeType", None) == "video/mp4"
+        assert getattr(mpd.get_representation(("period-0", None, "video2")), "mimeType", None) == "video/mp4"

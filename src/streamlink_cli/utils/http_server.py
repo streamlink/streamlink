@@ -50,8 +50,8 @@ class HTTPServer:
     def bind(self, host="127.0.0.1", port=0):
         try:
             self.socket.bind((host or "", port))
-        except OSError as err:
-            raise OSError(err)
+        except OSError:
+            raise
 
         self.socket.listen(1)
         self.bound = True
@@ -65,27 +65,27 @@ class HTTPServer:
         try:
             conn, addr = self.socket.accept()
             conn.settimeout(None)
-        except socket.timeout:
-            raise OSError("Socket accept timed out")
+        except socket.timeout as err:
+            raise OSError("Socket accept timed out") from err
 
         try:
             req_data = conn.recv(1024)
-        except OSError:
-            raise OSError("Failed to read data from socket")
+        except OSError as err:
+            raise OSError("Failed to read data from socket") from err
 
         req = HTTPRequest(req_data)
         if req.command not in ("GET", "HEAD"):
             conn.send(b"HTTP/1.1 501 Not Implemented\r\n")
             conn.close()
-            raise OSError("Invalid request method: {0}".format(req.command))
+            raise OSError(f"Invalid request method: {req.command}")
 
         try:
             conn.send(b"HTTP/1.1 200 OK\r\n")
             conn.send(b"Server: Streamlink\r\n")
             conn.send(b"Content-Type: video/unknown\r\n")
             conn.send(b"\r\n")
-        except OSError:
-            raise OSError("Failed to write data to socket")
+        except OSError as err:
+            raise OSError("Failed to write data to socket") from err
 
         # We don't want to send any data on HEAD requests.
         if req.command == "HEAD":

@@ -315,7 +315,7 @@ class Crunchyroll(Plugin):
             info = api.get_info(media_id, fields=["media.name", "media.series_name",
                                 "media.media_type", "media.stream_data"], schema=_media_schema)
         except CrunchyrollAPIError as err:
-            raise PluginError(f"Media lookup error: {err.msg}")
+            raise PluginError(f"Media lookup error: {err.msg}") from err
 
         if not info:
             return
@@ -390,7 +390,7 @@ class Crunchyroll(Plugin):
                     log.info(f"Logged in as '{login_name}'")
 
                 except CrunchyrollAPIError as err:
-                    raise PluginError(f"Authentication error: {err.msg}")
+                    raise PluginError(f"Authentication error: {err.msg}") from err
             if not api.auth:
                 log.warning("No authentication provided, you won't be able to access premium restricted content")
 

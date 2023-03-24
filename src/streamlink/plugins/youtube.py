@@ -224,7 +224,7 @@ class YouTube(Plugin):
         best_audio_itag = None
 
         # Extract audio streams from the adaptive format list
-        for url, label, itag, mimeType in adaptive_formats:
+        for url, _label, itag, mimeType in adaptive_formats:
             if url is None:
                 continue
 

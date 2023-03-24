@@ -23,7 +23,7 @@ def _parse_xml(data, strip_ns=False):
         if len(snippet) > 35:
             snippet = f"{snippet[:35]} ..."
 
-        raise ValueError("Unable to parse XML: {0} ({1})".format(err, snippet))
+        raise ValueError(f"Unable to parse XML: {err} ({snippet})") from err
 
 
 @contextmanager

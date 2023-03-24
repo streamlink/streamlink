@@ -7,7 +7,7 @@ $type live
 import logging
 import re
 
-from streamlink.exceptions import FatalPluginError, NoStreamsError, PluginError
+from streamlink.exceptions import FatalPluginError, NoStreamsError
 from streamlink.plugin import Plugin, pluginargument, pluginmatcher
 from streamlink.plugin.api import validate
 from streamlink.stream.hls import HLSStream
@@ -158,9 +158,11 @@ class Pixiv(Plugin):
                         # other co-hosts
                         self.set_option("performer", co_hosts[number - 1][0])
                 except FatalPluginError:
-                    raise PluginError("Selected performer is invalid.")
+                    log.error("Selected performer is invalid.")
+                    return
                 except (IndexError, ValueError, TypeError):
-                    raise PluginError("Input is invalid")
+                    log.error("Input is invalid")
+                    return
 
         # ignore the owner stream, if a performer is selected
         # or use it when there are no other performers

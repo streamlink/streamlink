@@ -123,9 +123,9 @@ def iterate_streams(streams):
     for name, stream in streams:
         if isinstance(stream, list):
             for sub_stream in stream:
-                yield (name, sub_stream)
+                yield name, sub_stream
         else:
-            yield (name, stream)
+            yield name, stream
 
 
 def stream_type_priority(stream_types, stream):
@@ -374,7 +374,7 @@ class Plugin:
     def default_stream_types(cls, streams):
         stream_types = ["hls", "http"]
 
-        for name, stream in iterate_streams(streams):
+        for _name, stream in iterate_streams(streams):
             stream_type = type(stream).shortname()
 
             if stream_type not in stream_types:
@@ -428,7 +428,7 @@ class Plugin:
         except NoStreamsError:
             return {}
         except (OSError, ValueError) as err:
-            raise PluginError(err)
+            raise PluginError(err) from err
 
         if not ostreams:
             return {}
@@ -482,7 +482,7 @@ class Plugin:
 
         # Create the best/worst synonyms
         def stream_weight_only(s):
-            return (self.stream_weight(s)[0] or (len(streams) == 1 and 1))
+            return self.stream_weight(s)[0] or (len(streams) == 1 and 1)
 
         stream_names = filter(stream_weight_only, streams.keys())
         sorted_streams = sorted(stream_names, key=stream_weight_only)
@@ -633,7 +633,7 @@ class Plugin:
             try:
                 return user_input_requester.ask(prompt)
             except OSError as err:
-                raise FatalPluginError(f"User input error: {err}")
+                raise FatalPluginError(f"User input error: {err}") from err
         raise FatalPluginError("This plugin requires user input, however it is not supported on this platform")
 
     def input_ask_password(self, prompt: str) -> str:
@@ -642,7 +642,7 @@ class Plugin:
             try:
                 return user_input_requester.ask_password(prompt)
             except OSError as err:
-                raise FatalPluginError(f"User input error: {err}")
+                raise FatalPluginError(f"User input error: {err}") from err
         raise FatalPluginError("This plugin requires user input, however it is not supported on this platform")
 
 

@@ -45,7 +45,7 @@ class TestPlugin(Plugin):
 
         if "UnsortableStreamNames" in self.url:
             def gen():
-                for i in range(3):
+                for _ in range(3):
                     yield "vod", HTTPStream(self.session, "http://test.se/stream")
 
             return gen()

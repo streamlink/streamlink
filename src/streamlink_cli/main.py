@@ -313,7 +313,7 @@ def open_stream(stream):
     try:
         stream_fd = stream.open()
     except StreamError as err:
-        raise StreamError(f"Could not open stream: {err}")
+        raise StreamError(f"Could not open stream: {err}") from err
 
     # Read 8192 bytes before proceeding to check for errors.
     # This is to avoid opening the output unnecessarily.
@@ -322,7 +322,7 @@ def open_stream(stream):
         prebuffer = stream_fd.read(8192)
     except OSError as err:
         stream_fd.close()
-        raise StreamError(f"Failed to read data from stream: {err}")
+        raise StreamError(f"Failed to read data from stream: {err}") from err
 
     if not prebuffer:
         stream_fd.close()
@@ -412,12 +412,12 @@ def handle_stream(plugin: Plugin, streams: Dict[str, Stream], stream_name: str) 
 
         formatter = get_formatter(plugin)
 
-        for stream_name in [stream_name] + alt_streams:
-            stream = streams[stream_name]
+        for name in [stream_name] + alt_streams:
+            stream = streams[name]
             stream_type = type(stream).shortname()
 
             if stream_type in args.player_passthrough and not file_output:
-                log.info(f"Opening stream: {stream_name} ({stream_type})")
+                log.info(f"Opening stream: {name} ({stream_type})")
                 success = output_stream_passthrough(stream, formatter)
             elif args.player_external_http:
                 return output_stream_http(
@@ -431,7 +431,7 @@ def handle_stream(plugin: Plugin, streams: Dict[str, Stream], stream_name: str) 
             elif args.player_continuous_http and not file_output:
                 return output_stream_http(plugin, streams, formatter)
             else:
-                log.info(f"Opening stream: {stream_name} ({stream_type})")
+                log.info(f"Opening stream: {name} ({stream_type})")
                 success = output_stream(stream, formatter)
 
             if success:
@@ -502,17 +502,13 @@ def format_valid_streams(plugin: Plugin, streams: Dict[str, Stream]) -> str:
     delimiter = ", "
     validstreams = []
 
-    for name, stream in sorted(streams.items(),
-                               key=lambda stream: plugin.stream_weight(stream[0])):
+    for name, stream in sorted(streams.items(), key=lambda s: plugin.stream_weight(s[0])):
         if name in STREAM_SYNONYMS:
             continue
 
-        def synonymfilter(n):
-            return stream is streams[n] and n is not name
+        synonyms = [key for key, value in streams.items() if stream is value and key != name]
 
-        synonyms = list(filter(synonymfilter, streams.keys()))
-
-        if len(synonyms) > 0:
+        if synonyms:
             joined = delimiter.join(synonyms)
             name = f"{name} ({joined})"
 

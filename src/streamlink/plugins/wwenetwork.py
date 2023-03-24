@@ -90,7 +90,7 @@ class WWENetwork(Plugin):
         return self.auth_token
 
     @property  # type: ignore
-    @lru_cache(maxsize=128)
+    @lru_cache(maxsize=128)  # noqa: B019
     def item_config(self):
         log.debug("Loading page config")
         p = urlparse(self.url)

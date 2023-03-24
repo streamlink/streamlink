@@ -193,7 +193,7 @@ class M3U8Parser:
         if "_TAGS" in self.__class__.__dict__:
             return
         tags = {}
-        setattr(self.__class__, "_TAGS", tags)
+        self.__class__._TAGS = tags
         for name, method in inspect.getmembers(self.__class__, inspect.isfunction):
             if not name.startswith("parse_tag_"):
                 continue

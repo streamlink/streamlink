@@ -52,7 +52,7 @@ class MuxedStream(Stream):
         maps = self.options.get("maps", [])
         # only update the maps values if they haven't been set
         update_maps = not maps
-        for i, substream in enumerate(self.substreams):
+        for substream in self.substreams:
             log.debug("Opening {0} substream".format(substream.shortname()))
             if update_maps:
                 maps.append(len(fds))

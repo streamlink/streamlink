@@ -638,7 +638,7 @@ class Twitch(Plugin):
                 raise PluginError
             sig, token = data
         except (PluginError, TypeError):
-            raise NoStreamsError
+            raise NoStreamsError  # noqa: B904
 
         try:
             restricted_bitrates = self.api.parse_token(token)
@@ -699,7 +699,7 @@ class Twitch(Plugin):
             if "404 Client Error" in err or "Failed to parse playlist" in err:
                 return
             else:
-                raise PluginError(err)
+                raise PluginError(err) from err
 
         for name in restricted_bitrates:
             if name not in streams:
