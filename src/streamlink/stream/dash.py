@@ -3,6 +3,7 @@ import itertools
 import logging
 from collections import defaultdict
 from contextlib import contextmanager, suppress
+from datetime import datetime
 from time import time
 from typing import Any, Dict, List, Optional, Tuple
 from urllib.parse import urlparse, urlunparse
@@ -15,6 +16,7 @@ from streamlink.stream.segmented import SegmentedStreamReader, SegmentedStreamWo
 from streamlink.stream.stream import Stream
 from streamlink.utils.l10n import Language
 from streamlink.utils.parse import parse_xml
+from streamlink.utils.times import now
 
 
 log = logging.getLogger(__name__)
@@ -108,7 +110,12 @@ class DASHStreamWorker(SegmentedStreamWorker):
                 if not representation:
                     continue
 
-                for segment in representation.segments(init=init):
+                iter_segments = representation.segments(
+                    init=init,
+                    # sync initial timeline generation between audio and video threads
+                    timestamp=self.reader.timestamp if init else None,
+                )
+                for segment in iter_segments:
                     if self.closed:
                         break
                     yield segment
@@ -163,10 +170,18 @@ class DASHStreamReader(SegmentedStreamReader):
     writer: "DASHStreamWriter"
     stream: "DASHStream"
 
-    def __init__(self, stream: "DASHStream", representation: Representation, *args, **kwargs):
+    def __init__(
+        self,
+        stream: "DASHStream",
+        representation: Representation,
+        timestamp: datetime,
+        *args,
+        **kwargs,
+    ):
         super().__init__(stream, *args, **kwargs)
         self.ident = representation.ident
         self.mime_type = representation.mimeType
+        self.timestamp = timestamp
 
 
 class DASHStream(Stream):
@@ -357,13 +372,15 @@ class DASHStream(Stream):
         video, audio = None, None
         rep_video, rep_audio = self.video_representation, self.audio_representation
 
+        timestamp = now()
+
         if rep_video:
-            video = DASHStreamReader(self, rep_video)
+            video = DASHStreamReader(self, rep_video, timestamp)
             log.debug(f"Opening DASH reader for: {rep_video.ident!r} - {rep_video.mimeType}")
             video.open()
 
         if rep_audio:
-            audio = DASHStreamReader(self, rep_audio)
+            audio = DASHStreamReader(self, rep_audio, timestamp)
             log.debug(f"Opening DASH reader for: {rep_audio.ident!r} - {rep_audio.mimeType}")
             audio.open()
 

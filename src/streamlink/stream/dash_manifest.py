@@ -635,13 +635,14 @@ class Representation(_RepresentationBaseType):
     def bandwidth_rounded(self) -> float:
         return round(self.bandwidth, 1 - int(math.log10(self.bandwidth)))
 
-    def segments(self, **kwargs) -> Iterator[Segment]:
+    def segments(self, timestamp: Optional[datetime] = None, **kwargs) -> Iterator[Segment]:
         """
         Segments are yielded when they are available
 
         Segments appear on a timeline, for dynamic content they are only available at a certain time
         and sometimes for a limited time. For static content they are all available at the same time.
 
+        :param timestamp: Optional initial timestamp for syncing timelines of multiple substreams
         :param kwargs: extra args to pass to the segment template
         :return: yields Segments
         """
@@ -654,6 +655,7 @@ class Representation(_RepresentationBaseType):
             yield from segmentTemplate.segments(
                 self.ident,
                 self.base_url,
+                timestamp=timestamp,
                 RepresentationID=self.id,
                 Bandwidth=int(self.bandwidth * 1000),
                 **kwargs,
@@ -790,7 +792,13 @@ class SegmentTemplate(_MultipleSegmentBaseType):
             parser=MPDParsers.segment_template,
         )
 
-    def segments(self, ident: TTimelineIdent, base_url: str, **kwargs) -> Iterator[Segment]:
+    def segments(
+        self,
+        ident: TTimelineIdent,
+        base_url: str,
+        timestamp: Optional[datetime] = None,
+        **kwargs,
+    ) -> Iterator[Segment]:
         if kwargs.pop("init", True):  # pragma: no branch
             init_url = self.format_initialization(base_url, **kwargs)
             if init_url:  # pragma: no branch
@@ -803,7 +811,7 @@ class SegmentTemplate(_MultipleSegmentBaseType):
                     content=False,
                     byterange=None,
                 )
-        for media_url, number, available_at in self.format_media(ident, base_url, **kwargs):
+        for media_url, number, available_at in self.format_media(ident, base_url, timestamp=timestamp, **kwargs):
             yield Segment(
                 url=media_url,
                 number=number,
@@ -818,7 +826,7 @@ class SegmentTemplate(_MultipleSegmentBaseType):
     def make_url(base_url: str, url: str) -> str:
         return BaseURL.join(base_url, url)
 
-    def segment_numbers(self) -> Iterator[Tuple[int, datetime]]:
+    def segment_numbers(self, timestamp: Optional[datetime] = None) -> Iterator[Tuple[int, datetime]]:
         """
         yield the segment number and when it will be available.
 
@@ -845,7 +853,7 @@ class SegmentTemplate(_MultipleSegmentBaseType):
             else:
                 number_iter = count(self.startNumber)
         else:
-            current_time = now()
+            current_time = timestamp or now()
             since_start = current_time - self.period.availabilityStartTime - self.presentationTimeOffset
 
             suggested_delay = self.root.suggestedPresentationDelay
@@ -918,13 +926,19 @@ class SegmentTemplate(_MultipleSegmentBaseType):
         if self.fmt_initialization is not None:  # pragma: no branch
             return self.make_url(base_url, self.fmt_initialization(**kwargs))
 
-    def format_media(self, ident: TTimelineIdent, base_url: str, **kwargs) -> Iterator[Tuple[str, int, datetime]]:
+    def format_media(
+        self,
+        ident: TTimelineIdent,
+        base_url: str,
+        timestamp: Optional[datetime] = None,
+        **kwargs,
+    ) -> Iterator[Tuple[str, int, datetime]]:
         if self.fmt_media is None:  # pragma: no cover
             return
 
         if not self.segmentTimeline:
             log.debug(f"Generating segment numbers for {self.root.type} playlist: {ident!r}")
-            for number, available_at in self.segment_numbers():
+            for number, available_at in self.segment_numbers(timestamp=timestamp):
                 url = self.make_url(base_url, self.fmt_media(Number=number, **kwargs))
                 yield url, number, available_at
         else:

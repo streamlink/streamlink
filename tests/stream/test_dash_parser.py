@@ -1,6 +1,6 @@
 import datetime
 import itertools
-import unittest
+from contextlib import nullcontext
 from operator import attrgetter
 from unittest.mock import Mock
 
@@ -46,7 +46,7 @@ class TestSegment:
             assert segment.availability == "2000-01-02T03:04:05.123456Z / 2000-01-01T00:00:00.000000Z"
 
 
-class TestMPDParsers(unittest.TestCase):
+class TestMPDParsers:
     def test_bool_str(self):
         assert MPDParsers.bool_str("true")
         assert MPDParsers.bool_str("TRUE")
@@ -89,9 +89,7 @@ class TestMPDParsers(unittest.TestCase):
             MPDParsers.range("100")
 
 
-class TestMPDParser(unittest.TestCase):
-    maxDiff = None
-
+class TestMPDParser:
     def test_no_segment_list_or_template(self):
         with xml("dash/test_no_segment_list_or_template.mpd") as mpd_xml:
             mpd = MPD(mpd_xml, base_url="http://test/", url="http://test/manifest.mpd")
@@ -175,14 +173,26 @@ class TestMPDParser(unittest.TestCase):
                 "http://test.se/video-time=1525450872000-2800000-0.m4s?z32=",
             ]
 
-    def test_segments_dynamic_number(self):
-        # access manifest one hour after its availabilityStartTime
+    # access manifest one hour after its availabilityStartTime
+    @pytest.mark.parametrize(("frozen_time", "timestamp"), [
+        pytest.param(
+            freeze_time("2000-01-01T01:00:00Z"),
+            None,
+            id="Without explicit timestamp",
+        ),
+        pytest.param(
+            nullcontext(),
+            datetime.datetime(2000, 1, 1, 1, 0, 0, 0, tzinfo=UTC),
+            id="With explicit timestamp",
+        ),
+    ])
+    def test_segments_dynamic_number(self, frozen_time, timestamp):
         with xml("dash/test_segments_dynamic_number.mpd") as mpd_xml, \
-             freeze_time("2000-01-01T01:00:00Z"):
+             frozen_time:
             mpd = MPD(mpd_xml, base_url="http://test/", url="http://test/manifest.mpd")
             stream_urls = [
                 (segment.url, segment.available_at)
-                for segment in itertools.islice(mpd.periods[0].adaptationSets[0].representations[0].segments(), 4)
+                for segment in itertools.islice(mpd.periods[0].adaptationSets[0].representations[0].segments(timestamp), 4)
             ]
 
         assert stream_urls == [
