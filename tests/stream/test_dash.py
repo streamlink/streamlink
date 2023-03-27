@@ -1,6 +1,8 @@
+from datetime import datetime, timezone
 from typing import List
 from unittest.mock import ANY, Mock, call
 
+import freezegun
 import pytest
 import requests_mock as rm
 from lxml.etree import ParseError
@@ -11,6 +13,12 @@ from streamlink.stream.dash import DASHStream, DASHStreamWorker
 from streamlink.stream.dash_manifest import MPD, MPDParsingError
 from streamlink.utils.parse import parse_xml as original_parse_xml
 from tests.resources import text, xml
+
+
+@pytest.fixture()
+def timestamp():
+    with freezegun.freeze_time("2000-01-01T00:00:00Z"):
+        yield datetime.now(timezone.utc)
 
 
 class TestDASHStreamParseManifest:
@@ -265,28 +273,29 @@ class TestDASHStreamOpen:
         monkeypatch.setattr("streamlink.stream.dash.FFMPEGMuxer", muxer)
         return muxer
 
-    def test_stream_open_video_only(self, session: Streamlink, muxer: Mock, reader: Mock):
+    def test_stream_open_video_only(self, session: Streamlink, timestamp: datetime, muxer: Mock, reader: Mock):
         rep_video = Mock(ident=(None, None, "1"), mimeType="video/mp4")
         stream = DASHStream(session, Mock(), rep_video)
         stream.open()
 
-        assert reader.call_args_list == [call(stream, rep_video)]
-        reader_video = reader(stream, rep_video)
+        assert reader.call_args_list == [call(stream, rep_video, timestamp)]
+        reader_video = reader(stream, rep_video, timestamp)
         assert reader_video.open.called_once
         assert muxer.call_args_list == []
 
-    def test_stream_open_video_audio(self, session: Streamlink, muxer: Mock, reader: Mock):
+    def test_stream_open_video_audio(self, session: Streamlink, timestamp: datetime, muxer: Mock, reader: Mock):
         rep_video = Mock(ident=(None, None, "1"), mimeType="video/mp4")
         rep_audio = Mock(ident=(None, None, "2"), mimeType="audio/mp3", lang="en")
         stream = DASHStream(session, Mock(), rep_video, rep_audio)
         stream.open()
 
-        assert reader.call_args_list == [call(stream, rep_video), call(stream, rep_audio)]
-        reader_video = reader(stream, rep_video)
-        reader_audio = reader(stream, rep_audio)
+        assert reader.call_args_list == [call(stream, rep_video, timestamp), call(stream, rep_audio, timestamp)]
+        reader_video = reader(stream, rep_video, timestamp)
+        reader_audio = reader(stream, rep_audio, timestamp)
         assert reader_video.open.called_once
         assert reader_audio.open.called_once
         assert muxer.call_args_list == [call(session, reader_video, reader_audio, copyts=True)]
+        assert reader_video.timestamp is reader_audio.timestamp
 
 
 class TestDASHStreamWorker:
@@ -339,15 +348,25 @@ class TestDASHStreamWorker:
         return mpd.periods[0].adaptationSets[0].representations[0]
 
     @pytest.fixture()
-    def worker(self, mpd):
-        stream = Mock(mpd=mpd, period=0, args={})
-        reader = Mock(stream=stream, ident=(None, None, "1"))
+    def worker(self, timestamp: datetime, mpd: Mock):
+        stream = Mock(
+            mpd=mpd,
+            period=0,
+            args={},
+        )
+        reader = Mock(
+            stream=stream,
+            ident=(None, None, "1"),
+            timestamp=timestamp,
+        )
         worker = DASHStreamWorker(reader)
+
         return worker
 
     def test_dynamic_reload(
         self,
         monkeypatch: pytest.MonkeyPatch,
+        timestamp: datetime,
         worker: DASHStreamWorker,
         representation: Mock,
         segments: List[Mock],
@@ -361,18 +380,19 @@ class TestDASHStreamWorker:
 
         representation.segments.return_value = segments[:1]
         assert next(segment_iter) is segments[0]
-        assert representation.segments.call_args_list == [call(init=True)]
+        assert representation.segments.call_args_list == [call(init=True, timestamp=timestamp)]
         assert not worker._wait.is_set()
 
         representation.segments.reset_mock()
         representation.segments.return_value = segments[1:]
         assert [next(segment_iter), next(segment_iter)] == segments[1:]
-        assert representation.segments.call_args_list == [call(), call(init=False)]
+        assert representation.segments.call_args_list == [call(), call(init=False, timestamp=None)]
         assert not worker._wait.is_set()
 
     def test_static(
         self,
         worker: DASHStreamWorker,
+        timestamp: datetime,
         representation: Mock,
         segments: List[Mock],
         mpd: Mock,
@@ -382,7 +402,7 @@ class TestDASHStreamWorker:
 
         representation.segments.return_value = segments
         assert list(worker.iter_segments()) == segments
-        assert representation.segments.call_args_list == [call(init=True)]
+        assert representation.segments.call_args_list == [call(init=True, timestamp=timestamp)]
         assert worker._wait.is_set()
 
     # Verify the fix for https://github.com/streamlink/streamlink/issues/2873
@@ -392,13 +412,14 @@ class TestDASHStreamWorker:
     ])
     def test_static_refresh_wait(
         self,
-        duration: float,
+        timestamp: datetime,
         mock_wait: Mock,
         mock_time: Mock,
         worker: DASHStreamWorker,
         representation: Mock,
         segments: List[Mock],
         mpd: Mock,
+        duration: float,
     ):
         mpd.dynamic = False
         mpd.type = "static"
@@ -406,6 +427,6 @@ class TestDASHStreamWorker:
 
         representation.segments.return_value = segments
         assert list(worker.iter_segments()) == segments
-        assert representation.segments.call_args_list == [call(init=True)]
+        assert representation.segments.call_args_list == [call(init=True, timestamp=timestamp)]
         assert mock_wait.call_args_list == [call(5)]
         assert worker._wait.is_set()
