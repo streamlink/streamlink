@@ -3,6 +3,8 @@ import os
 import re
 import sys
 import unittest
+from argparse import Namespace
+from io import BytesIO
 from pathlib import Path, PosixPath, WindowsPath
 from textwrap import dedent
 from unittest.mock import Mock, call, patch
@@ -12,7 +14,7 @@ import pytest
 
 import streamlink_cli.main
 import tests.resources
-from streamlink.exceptions import PluginError, StreamError
+from streamlink.exceptions import PluginError, StreamError, StreamlinkDeprecationWarning
 from streamlink.session import Streamlink
 from streamlink.stream.stream import Stream
 from streamlink_cli.compat import stdout
@@ -474,30 +476,78 @@ class TestCLIMainHandleStream(unittest.TestCase):
         assert isinstance(paramFormatter, Formatter)
 
 
-class TestCLIMainOutputStream(unittest.TestCase):
-    @patch("streamlink_cli.main.args", Mock(retry_open=2))
-    @patch("streamlink_cli.main.log")
-    @patch("streamlink_cli.main.console")
-    def test_stream_failure_no_output_open(self, mock_console: Mock, mock_log: Mock):
+class TestCLIMainOutputStream:
+    def test_stream_failure_no_output_open(self, caplog: pytest.LogCaptureFixture):
         output = Mock()
         stream = Mock(
             __str__=lambda _: "fake-stream",
             open=Mock(side_effect=StreamError("failure")),
         )
-        formatter = Formatter({})
+        formatter = Mock()
 
-        with patch("streamlink_cli.main.output", Mock()), \
+        caplog.set_level(1, "streamlink.cli")
+
+        with patch("streamlink_cli.main.args", Namespace(retry_open=2)), \
+             patch("streamlink_cli.main.console") as mock_console, \
+             patch("streamlink_cli.main.output"), \
              patch("streamlink_cli.main.create_output", return_value=output):
             output_stream(stream, formatter)
 
-        assert mock_log.error.call_args_list == [
-            call("Try 1/2: Could not open stream fake-stream (Could not open stream: failure)"),
-            call("Try 2/2: Could not open stream fake-stream (Could not open stream: failure)"),
+        assert [(record.levelname, record.module, record.message) for record in caplog.records] == [
+            ("error", "main", "Try 1/2: Could not open stream fake-stream (Could not open stream: failure)"),
+            ("error", "main", "Try 2/2: Could not open stream fake-stream (Could not open stream: failure)"),
         ]
         assert mock_console.exit.call_args_list == [
             call("Could not open stream fake-stream, tried 2 times, exiting"),
         ]
         assert not output.open.called, "Does not open the output on stream error"
+
+    @pytest.mark.parametrize(
+        ("args", "isatty", "deprecation", "expected"),
+        [
+            ({"progress": "yes", "force_progress": False}, True, False, True),
+            ({"progress": "no", "force_progress": False}, True, False, False),
+            ({"progress": "yes", "force_progress": False}, False, False, False),
+            ({"progress": "no", "force_progress": False}, False, False, False),
+            ({"progress": "force", "force_progress": False}, False, False, True),
+            ({"progress": "yes", "force_progress": True}, False, True, True),
+            ({"progress": "no", "force_progress": True}, False, True, True),
+        ],
+    )
+    def test_show_progress(
+        self,
+        caplog: pytest.LogCaptureFixture,
+        recwarn: pytest.WarningsRecorder,
+        args: dict,
+        isatty: bool,
+        deprecation: bool,
+        expected: bool,
+    ):
+        streamio = BytesIO(b"0" * 8192 * 2)
+        stream = Mock(open=Mock(return_value=streamio))
+        output = Mock()
+        formatter = Mock()
+
+        caplog.set_level(1, "streamlink.cli")
+
+        with patch("streamlink_cli.main.sys.stderr.isatty", return_value=isatty), \
+             patch("streamlink_cli.main.args", Namespace(retry_open=1, **args)), \
+             patch("streamlink_cli.main.console") as mock_console, \
+             patch("streamlink_cli.main.output"), \
+             patch("streamlink_cli.main.create_output", return_value=output), \
+             patch("streamlink_cli.main.StreamRunner") as mock_streamrunner:
+            assert output_stream(stream, formatter)
+
+        assert not mock_console.exit.called
+        assert [(record.levelname, record.module, record.message) for record in caplog.records] == [
+            ("debug", "main", "Pre-buffering 8192 bytes"),
+            ("debug", "main", "Writing stream to output"),
+        ]
+        assert [(record.category, str(record.message)) for record in recwarn.list] == ([(
+            StreamlinkDeprecationWarning,
+            "The --force-progress option has been deprecated in favor of --progress=force",
+        )] if deprecation else [])
+        assert mock_streamrunner.call_args_list == [call(streamio, output, show_progress=expected)]
 
 
 class _TestCLIMainLogging(unittest.TestCase):

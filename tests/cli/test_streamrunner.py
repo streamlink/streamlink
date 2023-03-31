@@ -102,12 +102,6 @@ def _logging(caplog: pytest.LogCaptureFixture):
     caplog.set_level(1, "streamlink")
 
 
-@pytest.fixture(autouse=True)
-def _isatty(request: pytest.FixtureRequest):
-    with patch("sys.stdout.isatty", return_value=getattr(request, "param", False)):
-        yield
-
-
 @pytest.fixture()
 def stream():
     stream = FakeStream()
@@ -563,14 +557,6 @@ class TestHTTPServer:
         assert [(record.module, record.levelname, record.message) for record in caplog.records] == expectedlogs
 
 
-@pytest.mark.parametrize(
-    ("_isatty", "force_progress"),
-    [
-        pytest.param(False, True, id="No TTY, force"),
-        pytest.param(True, False, id="TTY, no force"),
-    ],
-    indirect=["_isatty"],
-)
 class TestHasProgress:
     @pytest.mark.parametrize(
         "output",
@@ -592,9 +578,8 @@ class TestHasProgress:
     def test_no_progress(
         self,
         output: Union[FakePlayerOutput, FakeFileOutput, FakeHTTPServer],
-        force_progress: bool,
     ):
-        stream_runner = FakeStreamRunner(StreamIO(), output, force_progress)
+        stream_runner = FakeStreamRunner(StreamIO(), output, show_progress=True)
         assert not stream_runner.progress
 
     @pytest.mark.parametrize(
@@ -625,10 +610,9 @@ class TestHasProgress:
     def test_has_progress(
         self,
         output: Union[FakePlayerOutput, FakeFileOutput],
-        force_progress: bool,
         expected: Path,
     ):
-        stream_runner = FakeStreamRunner(StreamIO(), output, force_progress)
+        stream_runner = FakeStreamRunner(StreamIO(), output, show_progress=True)
         assert stream_runner.progress
         assert not stream_runner.progress.is_alive()
         assert stream_runner.progress.stream is sys.stderr
@@ -643,7 +627,7 @@ class TestProgress:
     @pytest.fixture()
     def stream_runner(self, stream: FakeStream, output: FakeFileOutput):
         with patch("streamlink_cli.streamrunner.Progress", FakeProgress):
-            stream_runner = FakeStreamRunner(stream, output, True)
+            stream_runner = FakeStreamRunner(stream, output, show_progress=True)
             assert not stream_runner.playerpoller
             assert not stream_runner.is_http
             assert isinstance(stream_runner.progress, FakeProgress)

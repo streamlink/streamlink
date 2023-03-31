@@ -364,9 +364,17 @@ def output_stream(stream, formatter: Formatter):
     try:
         with closing(output):
             log.debug("Writing stream to output")
+            show_progress = args.progress == "force" or args.progress == "yes" and sys.stderr.isatty()
+            if args.force_progress:
+                show_progress = True
+                warnings.warn(
+                    "The --force-progress option has been deprecated in favor of --progress=force",
+                    StreamlinkDeprecationWarning,
+                    stacklevel=1,
+                )
             # TODO: finally clean up the global variable mess and refactor the streamlink_cli package
             # noinspection PyUnboundLocalVariable
-            stream_runner = StreamRunner(stream_fd, output, args.force_progress)
+            stream_runner = StreamRunner(stream_fd, output, show_progress=show_progress)
             # noinspection PyUnboundLocalVariable
             stream_runner.run(prebuffer)
     except OSError as err:

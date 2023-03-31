@@ -604,21 +604,6 @@ def build_parser():
         """,
     )
     output.add_argument(
-        "-f", "--force",
-        action="store_true",
-        help="""
-        When using --output or --record, always write to file even if it already exists (overwrite).
-        """,
-    )
-    output.add_argument(
-        "--force-progress",
-        action="store_true",
-        help="""
-        When using --output or --record,
-        show the download progress bar even if there is no terminal.
-        """,
-    )
-    output.add_argument(
         "-O", "--stdout",
         action="store_true",
         help="""
@@ -681,6 +666,31 @@ def build_parser():
 
         - POSIX: `\\x00-\\x1F /`
         - Windows: `\\x00-\\x1F \\x7F " * / : < > ? \\ |`
+        """,
+    )
+    output.add_argument(
+        "-f", "--force",
+        action="store_true",
+        help="""
+        When using --output or --record, always write to file even if it already exists (overwrite).
+        """,
+    )
+    output.add_argument(
+        "--progress",
+        metavar="{yes,force,no}",
+        choices=("yes", "force", "no"),
+        default="yes",
+        help="""
+        When using --output or --record, show or hide the download progress bar, or force it if there's no terminal.
+
+        Default is yes.
+        """,
+    )
+    output.add_argument(
+        "--force-progress",
+        action="store_true",
+        help="""
+        Deprecated in favor of --progress=force.
         """,
     )
 

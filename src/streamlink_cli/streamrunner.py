@@ -80,7 +80,7 @@ class StreamRunner:
         self,
         stream: StreamIO,
         output: Union[PlayerOutput, FileOutput, HTTPServer],
-        force_progress: bool = False,
+        show_progress: bool = False,
     ):
         self.stream = stream
         self.output = output
@@ -99,7 +99,7 @@ class StreamRunner:
             elif output.record:
                 filename = output.record.filename
 
-        if filename and (sys.stdout.isatty() or force_progress):
+        if filename and show_progress:
             self.progress = Progress(sys.stderr, filename)
 
     def run(
