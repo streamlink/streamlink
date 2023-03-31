@@ -22,7 +22,7 @@ _block_re = re.compile(r":\n{2}\s{2}")
 _default_re = re.compile(r"Default is (.+)\.\n")
 _note_re = re.compile(r"Note: (.*)(?:\n\n|\n*$)", re.DOTALL)
 _option_line_re = re.compile(r"^(?!\s{2,}%\(prog\)s|\s{2,}--\w[\w-]*\w\b|Example: )(.+)$", re.MULTILINE)
-_option_re = re.compile(r"(?:^|(?<=\s))(--\w[\w-]*\w)\b")
+_option_re = re.compile(r"(?:^|(?<=\s))(?P<arg>--\w[\w-]*\w)(?P<val>=\w+)?\b")
 _prog_re = re.compile(r"%\(prog\)s")
 _percent_re = re.compile(r"%%")
 _cli_metadata_variables_section_cross_link_re = re.compile(r"the \"Metadata variables\" section")
@@ -67,15 +67,9 @@ class ArgparseDirective(Directive):
         # Replace option references with links.
         # Do this before indenting blocks and notes.
         helptext = _option_line_re.sub(
-            lambda m: (
-                _option_re.sub(
-                    lambda m2: (
-                        ":option:`{0}`".format(m2.group(1))
-                        if m2.group(1) in self._available_options
-                        else m2.group(0)
-                    ),
-                    m.group(1),
-                )
+            lambda m: _option_re.sub(
+                lambda m2: f":option:`{m2['arg']}{m2['val'] or ''}`" if m2["arg"] in self._available_options else m2[0],
+                m[1],
             ),
             helptext,
         )
