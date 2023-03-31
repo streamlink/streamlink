@@ -1,6 +1,15 @@
 Deprecations
 ============
 
+streamlink 5.4.0
+----------------
+
+Deprecation of --force-progress
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The ``--force-progress`` CLI argument has been deprecated in favor of :option:`--progress=force`.
+
+
 streamlink 5.3.0
 ----------------
 
