@@ -1,13 +1,14 @@
 """
 $description Russian live-streaming and video hosting social platform.
 $url vk.com
+$url vk.ru
 $type live, vod
 """
 
 import logging
 import re
 from hashlib import md5
-from urllib.parse import parse_qsl, unquote, urlparse
+from urllib.parse import parse_qsl, unquote, urlparse, urlunparse
 
 from streamlink.exceptions import NoStreamsError
 from streamlink.plugin import Plugin, PluginError, pluginmatcher
@@ -21,10 +22,10 @@ log = logging.getLogger(__name__)
 
 
 @pluginmatcher(re.compile(
-    r"https?://(?:\w+\.)?vk\.com/videos?(?:\?z=video)?(?P<video_id>-?\d+_\d+)",
+    r"https?://(?:\w+\.)?vk\.(?:com|ru)/videos?(?:\?z=video)?(?P<video_id>-?\d+_\d+)",
 ))
 @pluginmatcher(re.compile(
-    r"https?://(\w+\.)?vk\.com/.+",
+    r"https?://(\w+\.)?vk\.(?:com|ru)/.+",
 ))
 class VK(Plugin):
     API_URL = "https://vk.com/al_video.php"
@@ -43,7 +44,8 @@ class VK(Plugin):
                     self.session.http.cookies.update(res.cookies)
                     return res
 
-        self.session.http.get("https://vk.com/", hooks={"response": on_response})
+        url = urlunparse(urlparse(self.url)._replace(path="", query="", fragment=""))
+        self.session.http.get(url, hooks={"response": on_response})
 
     def _has_video_id(self):
         return any(self.matches[:-1])
