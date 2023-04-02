@@ -16,9 +16,12 @@ class TestPluginCanHandleUrlVK(PluginCanHandleUrl):
     __plugin__ = VK
 
     should_match = [
-        "https://vk.com/video-9944999_456239622",
         "http://vk.com/video-24136539_456239830",
+        "http://vk.ru/video-24136539_456239830",
+        "https://vk.com/video-9944999_456239622",
+        "https://vk.ru/video-9944999_456239622",
         "https://www.vk.com/video-34453259_456240574",
+        "https://www.vk.ru/video-34453259_456240574",
         "https://vk.com/videos-24136539?z=video-24136539_456241155%2Fpl_-24136539_-2",
         "https://vk.com/video?z=video-15755094_456245149%2Fpl_cat_lives",
         "https://vk.com/video?z=video132886594_167211693%2Fpl_cat_8",
@@ -31,6 +34,7 @@ class TestPluginCanHandleUrlVK(PluginCanHandleUrl):
 
     should_not_match = [
         "https://vk.com/",
+        "https://vk.ru/",
     ]
 
 
