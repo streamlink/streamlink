@@ -476,7 +476,7 @@ class HLSStreamReader(FilteredStream, SegmentedStreamReader):
         super().__init__(stream)
 
 
-class MuxedHLSStream(MuxedStream):
+class MuxedHLSStream(MuxedStream["HLSStream"]):
     """
     Muxes multiple HLS video and audio streams into one output stream.
     """
