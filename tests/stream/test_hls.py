@@ -10,7 +10,7 @@ from Crypto.Cipher import AES
 from Crypto.Util.Padding import pad
 
 from streamlink.session import Streamlink
-from streamlink.stream.hls import HLSStream, HLSStreamReader
+from streamlink.stream.hls import HLSStream, HLSStreamReader, MuxedHLSStream
 from streamlink.stream.hls_playlist import M3U8Parser
 from tests.mixins.stream_hls import EventedHLSStreamWriter, Playlist, Segment, Tag, TestMixinStreamHLS
 from tests.resources import text
@@ -577,106 +577,51 @@ class TestHlsPlaylistParseErrors(TestMixinStreamHLS, unittest.TestCase):
         assert mock_log.error.mock_calls == [call("Streams containing I-frames only are not playable")]
 
 
-@patch("streamlink.stream.hls.FFMPEGMuxer.is_usable", Mock(return_value=True))
-class TestHlsExtAudio(unittest.TestCase):
-    @property
-    def playlist(self):
-        with text("hls/test_2.m3u8") as pl:
-            return pl.read()
+class TestHlsExtAudio:
+    @pytest.fixture(autouse=True)
+    def _is_usable(self, monkeypatch: pytest.MonkeyPatch):
+        monkeypatch.setattr("streamlink.stream.hls.FFMPEGMuxer.is_usable", Mock(return_value=True))
 
-    def run_streamlink(self, playlist, audio_select=None):
-        streamlink = Streamlink()
+    @pytest.fixture(autouse=True)
+    def _playlist(self):
+        with text("hls/test_2.m3u8") as playlist, \
+             requests_mock.Mocker() as mock_requests:
+            mock_requests.get("http://mocked/path/master.m3u8", text=playlist.read())
+            yield
 
-        if audio_select:
-            streamlink.set_option("hls-audio-select", audio_select)
+    @pytest.fixture()
+    def stream(self, session: Streamlink):
+        streams = HLSStream.parse_variant_playlist(session, "http://mocked/path/master.m3u8")
+        assert "video" in streams
 
-        return HLSStream.parse_variant_playlist(streamlink, playlist)
+        return streams["video"]
 
-    def test_hls_ext_audio_not_selected(self):
-        master_url = "http://mocked/path/master.m3u8"
+    def test_no_selection(self, stream: HLSStream):
+        assert not isinstance(stream, MuxedHLSStream)
+        assert stream.url == "http://mocked/path/playlist.m3u8"
 
-        with requests_mock.Mocker() as mock:
-            mock.get(master_url, text=self.playlist)
-            master_stream = self.run_streamlink(master_url)["video"]
+    @pytest.mark.parametrize(("session", "selection"), [
+        pytest.param({"hls-audio-select": ["en"]}, "http://mocked/path/en.m3u8", id="English"),
+        pytest.param({"hls-audio-select": ["es"]}, "http://mocked/path/es.m3u8", id="Spanish"),
+    ], indirect=["session"])
+    def test_selection(self, session: Streamlink, stream: MuxedHLSStream, selection: str):
+        assert isinstance(stream, MuxedHLSStream)
+        assert [substream.url for substream in stream.substreams] == [
+            "http://mocked/path/playlist.m3u8",
+            selection,
+        ]
 
-        with pytest.raises(AttributeError):
-            master_stream.substreams
-
-        assert master_stream.url == "http://mocked/path/playlist.m3u8"
-
-    def test_hls_ext_audio_en(self):
-        """
-        m3u8 with ext audio but no options should not download additional streams
-        :return:
-        """
-
-        master_url = "http://mocked/path/master.m3u8"
-        expected = ["http://mocked/path/playlist.m3u8", "http://mocked/path/en.m3u8"]
-
-        with requests_mock.Mocker() as mock:
-            mock.get(master_url, text=self.playlist)
-            master_stream = self.run_streamlink(master_url, "en")
-
-        substreams = master_stream["video"].substreams
-        result = [x.url for x in substreams]
-
-        # Check result
-        assert result == expected
-
-    def test_hls_ext_audio_es(self):
-        """
-        m3u8 with ext audio but no options should not download additional streams
-        :return:
-        """
-
-        master_url = "http://mocked/path/master.m3u8"
-        expected = ["http://mocked/path/playlist.m3u8", "http://mocked/path/es.m3u8"]
-
-        with requests_mock.Mocker() as mock:
-            mock.get(master_url, text=self.playlist)
-            master_stream = self.run_streamlink(master_url, "es")
-
-        substreams = master_stream["video"].substreams
-
-        result = [x.url for x in substreams]
-
-        # Check result
-        assert result == expected
-
-    def test_hls_ext_audio_all(self):
-        """
-        m3u8 with ext audio but no options should not download additional streams
-        :return:
-        """
-
-        master_url = "http://mocked/path/master.m3u8"
-        expected = ["http://mocked/path/playlist.m3u8", "http://mocked/path/en.m3u8", "http://mocked/path/es.m3u8"]
-
-        with requests_mock.Mocker() as mock:
-            mock.get(master_url, text=self.playlist)
-            master_stream = self.run_streamlink(master_url, "en,es")
-
-        substreams = master_stream["video"].substreams
-
-        result = [x.url for x in substreams]
-
-        # Check result
-        assert result == expected
-
-    def test_hls_ext_audio_wildcard(self):
-        master_url = "http://mocked/path/master.m3u8"
-        expected = ["http://mocked/path/playlist.m3u8", "http://mocked/path/en.m3u8", "http://mocked/path/es.m3u8"]
-
-        with requests_mock.Mocker() as mock:
-            mock.get(master_url, text=self.playlist)
-            master_stream = self.run_streamlink(master_url, "*")
-
-        substreams = master_stream["video"].substreams
-
-        result = [x.url for x in substreams]
-
-        # Check result
-        assert result == expected
+    @pytest.mark.parametrize("session", [
+        pytest.param({"hls-audio-select": ["*"]}, id="wildcard"),
+        pytest.param({"hls-audio-select": ["en", "es"]}, id="multiple locales"),
+    ], indirect=["session"])
+    def test_multiple(self, session: Streamlink, stream: MuxedHLSStream):
+        assert isinstance(stream, MuxedHLSStream)
+        assert [substream.url for substream in stream.substreams] == [
+            "http://mocked/path/playlist.m3u8",
+            "http://mocked/path/en.m3u8",
+            "http://mocked/path/es.m3u8",
+        ]
 
 
 class TestM3U8ParserLogging:
