@@ -8,7 +8,7 @@ from contextlib import suppress
 from functools import lru_cache
 from pathlib import Path
 from shutil import which
-from typing import List, Optional, TextIO, Union
+from typing import Any, Dict, Generic, List, Optional, Sequence, TextIO, TypeVar, Union
 
 from streamlink import StreamError
 from streamlink.stream.stream import Stream, StreamIO
@@ -21,7 +21,10 @@ log = logging.getLogger(__name__)
 _lock_resolve_command = threading.Lock()
 
 
-class MuxedStream(Stream):
+TSubstreams = TypeVar("TSubstreams", bound=Stream)
+
+
+class MuxedStream(Stream, Generic[TSubstreams]):
     """
     Muxes multiple streams into one output stream.
     """
@@ -31,7 +34,7 @@ class MuxedStream(Stream):
     def __init__(
         self,
         session,
-        *substreams: Stream,
+        *substreams: TSubstreams,
         **options,
     ):
         """
@@ -42,9 +45,9 @@ class MuxedStream(Stream):
         """
 
         super().__init__(session)
-        self.substreams = substreams
-        self.subtitles = options.pop("subtitles", {})
-        self.options = options
+        self.substreams: Sequence[TSubstreams] = substreams
+        self.subtitles: Dict[str, Stream] = options.pop("subtitles", {})
+        self.options: Dict[str, Any] = options
 
     def open(self):
         fds = []
