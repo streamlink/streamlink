@@ -3,6 +3,7 @@ from binascii import hexlify
 from functools import partial
 from threading import Event, Thread
 from typing import List
+from unittest.mock import patch
 
 import requests_mock
 
@@ -179,11 +180,16 @@ class TestMixinStreamHLS(unittest.TestCase):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        # FIXME: fix HTTPSession.request()
+        # don't sleep on mocked HTTP request failures
+        self._patch_http_retry_sleep = patch("streamlink.plugin.api.http_session.time.sleep")
         self.mocker = requests_mock.Mocker()
         self.mocks = {}
 
     def setUp(self):
         super().setUp()
+
+        self._patch_http_retry_sleep.start()
         self.mocker.start()
 
     def tearDown(self):
@@ -195,6 +201,8 @@ class TestMixinStreamHLS(unittest.TestCase):
 
         self.mocker.stop()
         self.mocks.clear()
+
+        self._patch_http_retry_sleep.stop()
 
     def mock(self, method, url, *args, **kwargs):
         self.mocks[url] = self.mocker.request(method, url, *args, **kwargs)
