@@ -8,6 +8,7 @@ import pytest
 import requests_mock
 from Crypto.Cipher import AES
 from Crypto.Util.Padding import pad
+from requests.exceptions import InvalidSchema
 
 from streamlink.session import Streamlink
 from streamlink.stream.hls import HLSStream, HLSStreamReader, MuxedHLSStream
@@ -272,12 +273,21 @@ class TestHLSStreamEncrypted(TestMixinStreamHLS, unittest.TestCase):
 
         return session
 
-    def gen_key(self, aes_key=None, aes_iv=None, method="AES-128", uri=None, keyformat="identity", keyformatversions=1):
+    def gen_key(
+        self,
+        aes_key=None,
+        aes_iv=None,
+        method="AES-128",
+        uri=None,
+        keyformat="identity",
+        keyformatversions=1,
+        mock=None,
+    ):
         aes_key = aes_key or os.urandom(16)
         aes_iv = aes_iv or os.urandom(16)
 
         key = TagKey(method=method, uri=uri, iv=aes_iv, keyformat=keyformat, keyformatversions=keyformatversions)
-        self.mock("GET", key.url(self.id()), content=aes_key)
+        self.mock("GET", key.url(self.id()), **(mock if mock else {"content": aes_key}))
 
         return aes_key, aes_iv, key
 
@@ -309,6 +319,21 @@ class TestHLSStreamEncrypted(TestMixinStreamHLS, unittest.TestCase):
         assert b"".join(self.thread.data) == b""
         assert mock_log.error.mock_calls == [
             call("Failed to create decryptor: Missing URI for decryption key"),
+        ]
+
+    @patch("streamlink.stream.hls.log")
+    def test_hls_encrypted_missing_adapter(self, mock_log: Mock):
+        aesKey, aesIv, key = self.gen_key(uri="foo://bar/baz", mock={"exc": InvalidSchema})
+
+        self.subject([
+            Playlist(0, [key, SegmentEnc(1, aesKey, aesIv)], end=True),
+        ])
+        self.await_write()
+
+        assert self.thread.reader.writer.closed
+        assert b"".join(self.thread.data) == b""
+        assert mock_log.error.mock_calls == [
+            call("Failed to create decryptor: Unable to find connection adapter for key URI: foo://bar/baz"),
         ]
 
     def test_hls_encrypted_aes128(self):

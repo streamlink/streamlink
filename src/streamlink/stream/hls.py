@@ -11,7 +11,7 @@ from Crypto.Cipher import AES
 # noinspection PyPackageRequirements
 from Crypto.Util.Padding import unpad
 from requests import Response
-from requests.exceptions import ChunkedEncodingError, ConnectionError, ContentDecodingError
+from requests.exceptions import ChunkedEncodingError, ConnectionError, ContentDecodingError, InvalidSchema
 
 from streamlink.buffers import RingBuffer
 from streamlink.exceptions import StreamError
@@ -112,12 +112,20 @@ class HLSStreamWriter(SegmentedStreamWriter):
             key_uri = formatter.format(self.key_uri_override)
 
         if key_uri and self.key_uri != key_uri:
-            res = self.session.http.get(
-                key_uri,
-                exception=StreamError,
-                retries=self.retries,
-                **self.reader.request_params,
-            )
+            try:
+                res = self.session.http.get(
+                    key_uri,
+                    exception=StreamError,
+                    retries=self.retries,
+                    **self.reader.request_params,
+                )
+            except StreamError as err:
+                # FIXME: fix HTTPSession.request()
+                original_error = getattr(err, "err", None)
+                if isinstance(original_error, InvalidSchema):
+                    raise StreamError(f"Unable to find connection adapter for key URI: {key_uri}") from original_error
+                raise  # pragma: no cover
+
             res.encoding = "binary/octet-stream"
             self.key_data = res.content
             self.key_uri = key_uri
