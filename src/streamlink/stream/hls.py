@@ -443,7 +443,7 @@ class HLSStreamWorker(SegmentedStreamWorker):
                     return
 
                 # End of stream
-                stream_end = self.playlist_end and sequence.num >= self.playlist_end
+                stream_end = self.playlist_end is not None and sequence.num >= self.playlist_end
                 if self.closed or stream_end:
                     return
 
