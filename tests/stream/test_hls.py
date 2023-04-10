@@ -308,7 +308,9 @@ class TestHLSStreamEncrypted(TestMixinStreamHLS, unittest.TestCase):
         ])
         self.await_write()
 
-        assert self.thread.reader.writer.closed
+        self.thread.close()
+        self.await_close()
+
         assert b"".join(self.thread.data) == b""
         assert mock_log.error.mock_calls == [
             call("Failed to create decryptor: Unable to decrypt cipher INVALID"),
@@ -323,7 +325,9 @@ class TestHLSStreamEncrypted(TestMixinStreamHLS, unittest.TestCase):
         ])
         self.await_write()
 
-        assert self.thread.reader.writer.closed
+        self.thread.close()
+        self.await_close()
+
         assert b"".join(self.thread.data) == b""
         assert mock_log.error.mock_calls == [
             call("Failed to create decryptor: Missing URI for decryption key"),
@@ -338,7 +342,9 @@ class TestHLSStreamEncrypted(TestMixinStreamHLS, unittest.TestCase):
         ])
         self.await_write()
 
-        assert self.thread.reader.writer.closed
+        self.thread.close()
+        self.await_close()
+
         assert b"".join(self.thread.data) == b""
         assert mock_log.error.mock_calls == [
             call("Failed to create decryptor: Unable to find connection adapter for key URI: foo://bar/baz"),
@@ -356,6 +362,8 @@ class TestHLSStreamEncrypted(TestMixinStreamHLS, unittest.TestCase):
 
         self.await_write(3 + 4)
         data = self.await_read(read_all=True)
+        self.await_close()
+
         expected = self.content(segments, prop="content_plain", cond=lambda s: s.num >= 1)
         assert data == expected, "Decrypts the AES-128 identity stream"
         assert self.called(key, once=True), "Downloads encryption key only once"
@@ -379,6 +387,8 @@ class TestHLSStreamEncrypted(TestMixinStreamHLS, unittest.TestCase):
 
         self.await_write(2 * 2 + 2 * 2)
         data = self.await_read(read_all=True)
+        self.await_close()
+
         assert data == self.content([
             map1, segments[0], map1, segments[1], map2, segments[2], map2, segments[3],
         ], prop="content_plain")
@@ -396,6 +406,8 @@ class TestHLSStreamEncrypted(TestMixinStreamHLS, unittest.TestCase):
 
         self.await_write(3 + 4)
         data = self.await_read(read_all=True)
+        self.await_close()
+
         expected = self.content(segments, prop="content_plain", cond=lambda s: s.num >= 1)
         assert data == expected, "Decrypts stream from custom key"
         assert not self.called(key_invalid), "Skips encryption key"
@@ -414,10 +426,12 @@ class TestHLSStreamEncrypted(TestMixinStreamHLS, unittest.TestCase):
             ], end=True),
         ])
         self.await_write()
-        assert self.thread.reader.writer.closed is not True
+        assert thread.reader.writer.is_alive()
 
         self.await_write()
         data = self.await_read(read_all=True)
+        self.await_close()
+
         assert data == self.content([segments[1]], prop="content_plain")
         assert mock_log.error.mock_calls == [
             call("Error while decrypting segment 0: Data must be padded to 16 byte boundary in CBC mode"),
@@ -436,10 +450,12 @@ class TestHLSStreamEncrypted(TestMixinStreamHLS, unittest.TestCase):
             ], end=True),
         ])
         self.await_write()
-        assert self.thread.reader.writer.closed is not True
+        assert thread.reader.writer.is_alive()
 
         self.await_write()
         data = self.await_read(read_all=True)
+        self.await_close()
+
         assert data == self.content([segments[1]], prop="content_plain")
         assert mock_log.error.mock_calls == [call("Error while decrypting segment 0: Padding is incorrect.")]
 
@@ -456,10 +472,12 @@ class TestHLSStreamEncrypted(TestMixinStreamHLS, unittest.TestCase):
             ], end=True),
         ])
         self.await_write()
-        assert self.thread.reader.writer.closed is not True
+        assert thread.reader.writer.is_alive()
 
         self.await_write()
         data = self.await_read(read_all=True)
+        self.await_close()
+
         assert data == self.content([segments[1]], prop="content_plain")
         assert mock_log.error.mock_calls == [call("Error while decrypting segment 0: PKCS#7 padding is incorrect.")]
 

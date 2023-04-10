@@ -164,7 +164,7 @@ class HLSStreamReadThread(Thread):
         self.data.clear()
 
     def close(self):
-        self.reader.buffer.close()
+        self.reader.close()
         self.read_once.set()
         # allow reader thread to terminate
         self.handshake.go()
