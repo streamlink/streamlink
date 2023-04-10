@@ -133,6 +133,14 @@ class TestHLSStream(TestMixinStreamHLS, unittest.TestCase):
 
         return session
 
+    def test_playlist_end(self):
+        thread, segments = self.subject([
+            # media sequence = 0
+            Playlist(0, [Segment(0)], end=True),
+        ])
+
+        assert self.await_read(read_all=True) == self.content(segments), "Stream ends and read-all handshake doesn't time out"
+
     def test_offset_and_duration(self):
         thread, segments = self.subject([
             Playlist(1234, [Segment(0), Segment(1, duration=0.5), Segment(2, duration=0.5), Segment(3)], end=True),
