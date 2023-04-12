@@ -1,5 +1,35 @@
 # Changelog
 
+## streamlink 5.4.0 (2023-04-12)
+
+Release highlights:
+
+- Added: `--progress` CLI argument and [deprecated `--force-progress`](https://streamlink.github.io/deprecations.html#deprecation-of-force-progress) ([#5268](https://github.com/streamlink/streamlink/pull/5268))
+- Added: `--dash-manifest-reload-attempts` and respective session option ([#5208](https://github.com/streamlink/streamlink/pull/5208))
+- Improved: DASH segment availability/download logging ([#5214](https://github.com/streamlink/streamlink/pull/5214), [#5235](https://github.com/streamlink/streamlink/pull/5235))
+- Refactored: DASH parser + stream implementation ([#5221](https://github.com/streamlink/streamlink/pull/5221), [#5224](https://github.com/streamlink/streamlink/pull/5224), [#5225](https://github.com/streamlink/streamlink/pull/5225), [#5244](https://github.com/streamlink/streamlink/pull/5244), [#5248](https://github.com/streamlink/streamlink/pull/5248))
+- Fixed: DASH segment template numbers and availability times ([#5213](https://github.com/streamlink/streamlink/pull/5213), [#5217](https://github.com/streamlink/streamlink/pull/5217), [#5233](https://github.com/streamlink/streamlink/pull/5233))
+- Fixed: DASH manifest mediaPresentationDuration and period duration ([#5226](https://github.com/streamlink/streamlink/pull/5226))
+- Fixed: DASH manifest suggestedPresentationDelay ([#5215](https://github.com/streamlink/streamlink/pull/5215))
+- Fixed: various DASH manifest parsing bugs ([#5247](https://github.com/streamlink/streamlink/pull/5247))
+- Fixed: DASH timeline IDs not being unique ([#5199](https://github.com/streamlink/streamlink/pull/5199))
+- Fixed: DASH substreams not having synced timelines ([#5262](https://github.com/streamlink/streamlink/pull/5262))
+- Fixed: queued DASH segments being downloaded after closing the stream ([#5236](https://github.com/streamlink/streamlink/pull/5236), [#5237](https://github.com/streamlink/streamlink/pull/5237))
+- Fixed: incorrect min/max values of certain numeric CLI arguments ([#5239](https://github.com/streamlink/streamlink/pull/5239))
+- Fixed: all naive datetime objects and made them timezone-aware ([#5210](https://github.com/streamlink/streamlink/pull/5210))
+- Fixed: TV5monde plugin with new implementation ([#5206](https://github.com/streamlink/streamlink/pull/5206))
+- Fixed: Steam plugin missing CDN auth data in stream URLs ([#5222](https://github.com/streamlink/streamlink/pull/5222))
+- Fixed: Vimeo plugin's playerConfig regex ([#5227](https://github.com/streamlink/streamlink/pull/5227))
+- Fixed: VKplay plugin's validation schema ([#5251](https://github.com/streamlink/streamlink/pull/5251))
+- Fixed: Twitcasting plugin with new implementation ([#5255](https://github.com/streamlink/streamlink/pull/5255))
+- Tests: fixed setuptools/pkg\_resources DeprecationWarnings ([#5167](https://github.com/streamlink/streamlink/pull/5167), [#5230](https://github.com/streamlink/streamlink/pull/5230))
+- Tests: fixed ResourceWarnings due to stale file handles ([#5242](https://github.com/streamlink/streamlink/pull/5242))
+- Added plugins: indihometv ([#5266](https://github.com/streamlink/streamlink/pull/5266)), telemadrid ([#5212](https://github.com/streamlink/streamlink/pull/5212))
+- Removed plugins: nbcnews ([#5279](https://github.com/streamlink/streamlink/pull/5279)), useetv ([#5266](https://github.com/streamlink/streamlink/pull/5266))
+
+[Full changelog](https://github.com/streamlink/streamlink/compare/5.3.1...5.4.0)
+
+
 ## streamlink 5.3.1 (2023-02-25)
 
 Patch release:
