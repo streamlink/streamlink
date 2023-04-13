@@ -7,7 +7,7 @@ from streamlink_cli.output import PlayerOutput
 
 @pytest.fixture()
 def playeroutput(request: pytest.FixtureRequest):
-    with patch("streamlink_cli.output.sleep"):
+    with patch("streamlink_cli.output.player.sleep"):
         playeroutput = PlayerOutput(**getattr(request, "param", {}))
         yield playeroutput
         playeroutput.close()
@@ -16,7 +16,7 @@ def playeroutput(request: pytest.FixtureRequest):
 @pytest.fixture()
 def mock_popen(playeroutput: PlayerOutput):
     mock_popen = Mock(return_value=Mock(poll=Mock(side_effect=Mock(return_value=None))))
-    with patch("streamlink_cli.output.sleep"), \
+    with patch("streamlink_cli.output.player.sleep"), \
          patch("subprocess.Popen", mock_popen):
         yield mock_popen
 

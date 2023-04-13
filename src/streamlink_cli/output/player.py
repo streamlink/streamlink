@@ -5,85 +5,15 @@ import shlex
 import subprocess
 import sys
 from contextlib import suppress
-from pathlib import Path
 from time import sleep
-from typing import BinaryIO, Optional
 
 from streamlink.compat import is_win32
-from streamlink_cli.compat import stdout
 from streamlink_cli.constants import PLAYER_ARGS_INPUT_DEFAULT, PLAYER_ARGS_INPUT_FALLBACK, SUPPORTED_PLAYERS
+from streamlink_cli.output.abc import Output
 from streamlink_cli.utils import Formatter
 
 
-if is_win32:
-    import msvcrt
-
 log = logging.getLogger("streamlink.cli.output")
-
-
-class Output:
-    def __init__(self):
-        self.opened = False
-
-    def open(self):
-        self._open()
-        self.opened = True
-
-    def close(self):
-        if self.opened:
-            self._close()
-
-        self.opened = False
-
-    def write(self, data):
-        if not self.opened:
-            raise OSError("Output is not opened")
-
-        return self._write(data)
-
-    def _open(self):
-        pass
-
-    def _close(self):
-        pass
-
-    def _write(self, data):
-        pass
-
-
-class FileOutput(Output):
-    def __init__(
-        self,
-        filename: Optional[Path] = None,
-        fd: Optional[BinaryIO] = None,
-        record: Optional["FileOutput"] = None,
-    ):
-        super().__init__()
-        self.filename = filename
-        self.fd = fd
-        self.record = record
-
-    def _open(self):
-        if self.filename:
-            self.filename.parent.mkdir(parents=True, exist_ok=True)
-            self.fd = open(self.filename, "wb")
-
-        if self.record:
-            self.record.open()
-
-        if is_win32:
-            msvcrt.setmode(self.fd.fileno(), os.O_BINARY)
-
-    def _close(self):
-        if self.fd is not stdout:
-            self.fd.close()
-        if self.record:
-            self.record.close()
-
-    def _write(self, data):
-        self.fd.write(data)
-        if self.record:
-            self.record.write(data)
 
 
 class PlayerOutput(Output):
@@ -281,6 +211,3 @@ class PlayerOutput(Output):
             self.http.write(data)
         else:
             self.player.stdin.write(data)
-
-
-__all__ = ["PlayerOutput", "FileOutput"]
