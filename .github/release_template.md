@@ -4,9 +4,6 @@
 
 Please see the [installation instructions](https://streamlink.github.io/install.html) for a list of available install methods and packages on the supported operating systems.
 
-**⚠️ PLEASE NOTE ⚠️**  
-Streamlink's Windows installers have been moved to [streamlink/windows-builds](https://github.com/streamlink/windows-builds).
-
 ## ⚙️ Configuration and Usage
 
 Please see the [CLI documentation](https://streamlink.github.io/cli.html) for how to configure and use Streamlink.
