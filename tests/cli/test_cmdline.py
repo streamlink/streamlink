@@ -34,9 +34,9 @@ class CommandLineTestCase(unittest.TestCase):
              patch("streamlink_cli.main.setup_plugins"), \
              patch("streamlink_cli.main.setup_streamlink") as mock_setup_streamlink, \
              patch("streamlink_cli.main.streamlink", session), \
-             patch("streamlink_cli.output.subprocess.Popen") as mock_popen, \
-             patch("streamlink_cli.output.subprocess.call") as mock_call, \
-             patch("streamlink_cli.output.sleep"):
+             patch("streamlink_cli.output.player.subprocess.Popen") as mock_popen, \
+             patch("streamlink_cli.output.player.subprocess.call") as mock_call, \
+             patch("streamlink_cli.output.player.sleep"):
             mock_argv.__getitem__.side_effect = lambda x: args[x]
             mock_popen.return_value = Mock(poll=Mock(side_effect=poll_factory([None, 0])))
             try:

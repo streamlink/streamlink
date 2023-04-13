@@ -164,7 +164,7 @@ class TestPlayerOutput:
     @pytest.fixture()
     def output(self, player_process: Mock):
         with patch("subprocess.Popen") as mock_popen, \
-             patch("streamlink_cli.output.sleep"):
+             patch("streamlink_cli.output.player.sleep"):
             mock_popen.return_value = player_process
             output = FakePlayerOutput("mocked")
             output.open()
