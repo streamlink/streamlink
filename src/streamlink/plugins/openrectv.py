@@ -152,6 +152,7 @@ class OPENRECtv(Plugin):
                 yield from HLSStream.parse_variant_playlist(
                     self.session,
                     m3u8_file,
+                    headers={"Referer": self.url},
                 ).items()
 
         else:
