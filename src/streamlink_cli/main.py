@@ -23,9 +23,9 @@ from streamlink_cli.argparser import ArgumentParser, build_parser, setup_session
 from streamlink_cli.compat import DeprecatedPath, importlib_metadata, stdout
 from streamlink_cli.console import ConsoleOutput, ConsoleUserInputRequester
 from streamlink_cli.constants import CONFIG_FILES, DEFAULT_STREAM_METADATA, LOG_DIR, PLUGIN_DIRS, STREAM_SYNONYMS
-from streamlink_cli.output import FileOutput, PlayerOutput
+from streamlink_cli.output import FileOutput, HTTPOutput, PlayerOutput
 from streamlink_cli.streamrunner import StreamRunner
-from streamlink_cli.utils import Formatter, HTTPServer, datetime
+from streamlink_cli.utils import Formatter, datetime
 from streamlink_cli.utils.versioncheck import check_version
 
 
@@ -148,35 +148,20 @@ def create_output(formatter: Formatter) -> Union[FileOutput, PlayerOutput]:
         )
 
 
-def create_http_server(*_args, **_kwargs):
-    """Creates an HTTP server listening on a given host and port.
-
-    If host is empty, listen on all available interfaces, and if port is 0,
-    listen on a random high port.
+def create_http_server(host: Optional[str] = None, port: int = 0) -> HTTPOutput:
+    """
+    Create an HTTP server listening on a given host and port.
+    If host is None, listen on all available interfaces.
+    If port is 0, listen on a random high port.
     """
 
     try:
-        http = HTTPServer()
-        http.bind(*_args, **_kwargs)
+        httpoutput = HTTPOutput(host, port)
+        httpoutput.start_server()
+        return httpoutput
     except OSError as err:
         console.exit(f"Failed to create HTTP server: {err}")
-        return
-
-    return http
-
-
-def iter_http_requests(server, player):
-    """Repeatedly accept HTTP connections on a server.
-
-    Forever if the serving externally, or while a player is running if it is not
-    empty.
-    """
-
-    while not player or player.running:
-        try:
-            yield server.open(timeout=2.5)
-        except OSError:
-            continue
+        raise
 
 
 def output_stream_http(
@@ -213,7 +198,7 @@ def output_stream_http(
         except OSError as err:
             console.exit(f"Failed to start player: {args.player} ({err})")
     else:
-        server = create_http_server(host=None, port=port)
+        server = create_http_server(None, port)
         player = None
 
         log.info("Starting server, access with one of:")
@@ -221,8 +206,14 @@ def output_stream_http(
             log.info(f" {url}")
 
     initial_streams_used = False
-    for req in iter_http_requests(server, player):
-        user_agent = req.headers.get("User-Agent") or "unknown player"
+    while not player or player.running:
+        try:
+            server.accept_connection(timeout=2.5)
+            server.open()
+        except OSError:
+            continue
+
+        user_agent = server.request.headers.get("User-Agent") or "unknown player"
         log.info(f"Got HTTP request from {user_agent}")
 
         stream_fd = prebuffer = None
@@ -264,11 +255,11 @@ def output_stream_http(
         if not continuous:
             break
 
-        server.close(True)
+        server.close()
 
     if player:
         player.close()
-    server.close()
+    server.shutdown()
 
 
 def output_stream_passthrough(stream, formatter: Formatter):

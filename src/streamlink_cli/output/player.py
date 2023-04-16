@@ -173,6 +173,7 @@ class PlayerOutput(Output):
         if self.namedpipe:
             self.namedpipe.open()
         elif self.http:
+            self.http.accept_connection()
             self.http.open()
 
     def _close(self):
@@ -181,7 +182,7 @@ class PlayerOutput(Output):
         if self.namedpipe:
             self.namedpipe.close()
         elif self.http:
-            self.http.close()
+            self.http.shutdown()
         elif not self.filename:
             self.player.stdin.close()
 

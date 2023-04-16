@@ -10,9 +10,8 @@ from unittest.mock import Mock, patch
 import pytest
 
 from streamlink.stream.stream import StreamIO
-from streamlink_cli.output import FileOutput, PlayerOutput
+from streamlink_cli.output import FileOutput, HTTPOutput, PlayerOutput
 from streamlink_cli.streamrunner import PlayerPollThread, StreamRunner, log as streamrunnerlogger
-from streamlink_cli.utils.http_server import HTTPServer
 from streamlink_cli.utils.progress import Progress
 from tests.testutils.handshake import Handshake
 
@@ -79,10 +78,8 @@ class FakeFileOutput(FakeOutput, FileOutput):
     pass
 
 
-class FakeHTTPServer(FakeOutput, HTTPServer):
-    def __init__(self, *args, **kwargs):
-        with patch("streamlink_cli.utils.http_server.socket"):
-            super().__init__(*args, **kwargs)
+class FakeHTTPOutput(FakeOutput, HTTPOutput):
+    pass
 
 
 class FakeProgress(FakeOutput, Progress):
@@ -454,10 +451,10 @@ class TestPlayerOutput:
 class TestHTTPServer:
     @pytest.fixture()
     def output(self):
-        return FakeHTTPServer()
+        return FakeHTTPOutput()
 
     @pytest.fixture()
-    def stream_runner(self, stream: FakeStream, output: FakeHTTPServer):
+    def stream_runner(self, stream: FakeStream, output: FakeHTTPOutput):
         stream_runner = StreamRunner(stream, output)
         assert not stream_runner.playerpoller
         assert not stream_runner.progress
@@ -471,7 +468,7 @@ class TestHTTPServer:
         runnerthread: Thread,
         stream_runner: FakeStreamRunner,
         stream: FakeStream,
-        output: FakeHTTPServer,
+        output: FakeHTTPOutput,
     ):
         stream.data.extend((b"foo", b"bar"))
 
@@ -570,14 +567,14 @@ class TestHasProgress:
                 id="FileOutput with file descriptor",
             ),
             pytest.param(
-                FakeHTTPServer(),
+                FakeHTTPOutput(),
                 id="HTTPServer",
             ),
         ],
     )
     def test_no_progress(
         self,
-        output: Union[FakePlayerOutput, FakeFileOutput, FakeHTTPServer],
+        output: Union[FakePlayerOutput, FakeFileOutput, FakeHTTPOutput],
     ):
         stream_runner = FakeStreamRunner(StreamIO(), output, show_progress=True)
         assert not stream_runner.progress
