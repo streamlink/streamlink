@@ -1,72 +1,79 @@
 import socket
+from contextlib import suppress
 from http.server import BaseHTTPRequestHandler
 from io import BytesIO
+from typing import Optional
+
+from streamlink_cli.output.abc import Output
 
 
 class HTTPRequest(BaseHTTPRequestHandler):
+    # noinspection PyMissingConstructor
     def __init__(self, request_text):
         self.rfile = BytesIO(request_text)
         self.raw_requestline = self.rfile.readline()
         self.error_code = self.error_message = None
         self.parse_request()
 
-    def send_error(self, code, message):
+    def send_error(self, code, message=None, explain=None):
         self.error_code = code
         self.error_message = message
 
 
-class HTTPServer:
-    def __init__(self):
-        self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        self.conn = self.host = self.port = None
-        self.bound = False
+class HTTPOutput(Output):
+    socket: socket.socket
+
+    def __init__(self, host: Optional[str] = "127.0.0.1", port: int = 0) -> None:
+        super().__init__()
+        self.host = host
+        self.port = port
+        self.conn: Optional[socket.socket] = None
 
     @property
     def addresses(self):
         if self.host:
             return [self.host]
 
-        addrs = set()
-        try:
-            for info in socket.getaddrinfo(socket.gethostname(), self.port,
-                                           socket.AF_INET):
+        addrs = {"127.0.0.1"}
+        with suppress(socket.gaierror):
+            for info in socket.getaddrinfo(socket.gethostname(), self.port, socket.AF_INET):
                 addrs.add(info[4][0])
-        except socket.gaierror:
-            pass
 
-        addrs.add("127.0.0.1")
         return sorted(addrs)
 
     @property
     def urls(self):
         for addr in self.addresses:
-            yield "http://{0}:{1}/".format(addr, self.port)
+            yield f"http://{addr}:{self.port}/"
 
     @property
     def url(self):
         return next(self.urls, None)
 
-    def bind(self, host="127.0.0.1", port=0):
-        try:
-            self.socket.bind((host or "", port))
-        except OSError:
-            raise
-
+    def start_server(self):
+        self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        self.socket.bind((self.host or "", self.port))
         self.socket.listen(1)
-        self.bound = True
         self.host, self.port = self.socket.getsockname()
         if self.host == "0.0.0.0":
             self.host = None
 
-    def open(self, timeout=30):
+    def accept_connection(self, timeout=30) -> None:
         self.socket.settimeout(timeout)
 
         try:
             conn, addr = self.socket.accept()
             conn.settimeout(None)
+            self.conn = conn
         except socket.timeout as err:
+            self.conn = None
             raise OSError("Socket accept timed out") from err
+
+    def _open(self):
+        conn = self.conn
+        if not conn:
+            raise OSError("No client connection")
 
         try:
             req_data = conn.recv(1024)
@@ -92,23 +99,20 @@ class HTTPServer:
             conn.close()
             raise OSError
 
-        self.conn = conn
+        self.request = req
 
-        return req
-
-    def write(self, data):
-        if not self.conn:
-            raise OSError("No connection")
-
+    def _write(self, data):
         self.conn.sendall(data)
 
-    def close(self, client_only=False):
+    def _close(self):
         if self.conn:
-            self.conn.close()
+            with suppress(OSError):
+                self.conn.close()
+            self.conn = None
 
-        if not client_only:
-            try:
-                self.socket.shutdown(2)
-            except OSError:
-                pass
+    def shutdown(self) -> None:
+        self.close()
+        with suppress(OSError):
+            self.socket.shutdown(socket.SHUT_RDWR)
+        with suppress(OSError):
             self.socket.close()

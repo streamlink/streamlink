@@ -2,12 +2,11 @@ import json
 from datetime import datetime as _datetime
 
 from streamlink_cli.utils.formatter import Formatter
-from streamlink_cli.utils.http_server import HTTPServer
 from streamlink_cli.utils.player import find_default_player
 
 
 __all__ = [
-    "Formatter", "HTTPServer", "JSONEncoder",
+    "Formatter", "JSONEncoder",
     "datetime",
     "find_default_player",
 ]

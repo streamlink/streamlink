@@ -4,11 +4,10 @@ import sys
 from contextlib import suppress
 from pathlib import Path
 from threading import Event, Lock, Thread
-from typing import Optional, Union
+from typing import Optional
 
 from streamlink.stream.stream import StreamIO
-from streamlink_cli.output import FileOutput, PlayerOutput
-from streamlink_cli.utils.http_server import HTTPServer
+from streamlink_cli.output import FileOutput, HTTPOutput, Output, PlayerOutput
 from streamlink_cli.utils.progress import Progress
 
 
@@ -75,16 +74,15 @@ class StreamRunner:
     playerpoller: Optional[PlayerPollThread] = None
     progress: Optional[Progress] = None
 
-    # TODO: refactor all output implementations
     def __init__(
         self,
         stream: StreamIO,
-        output: Union[PlayerOutput, FileOutput, HTTPServer],
+        output: Output,
         show_progress: bool = False,
     ):
         self.stream = stream
         self.output = output
-        self.is_http = isinstance(output, HTTPServer)
+        self.is_http = isinstance(output, HTTPOutput)
 
         filename: Optional[Path] = None
 
