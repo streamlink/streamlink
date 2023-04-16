@@ -149,10 +149,10 @@ class OPENRECtv(Plugin):
                 log.error("There is no video file.")
 
             if m3u8_file is not None:
-                self.session.http.headers.update({"Referer": "https://www.openrec.tv/"})
                 yield from HLSStream.parse_variant_playlist(
                     self.session,
                     m3u8_file,
+                    headers={"Referer": self.url}
                 ).items()
 
         else:
