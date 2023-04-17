@@ -198,7 +198,7 @@ def output_stream_http(
         except OSError as err:
             console.exit(f"Failed to start player: {args.player} ({err})")
     else:
-        server = create_http_server(None, port)
+        server = create_http_server(args.player_external_http_interface, port)
         player = None
 
         log.info("Starting server, access with one of:")

@@ -493,6 +493,9 @@ def build_parser():
         but no player program will be started, and the server will listen on all available
         connections instead of just in the local (loopback) interface.
 
+        See --player-external-http-interface for choosing a specific network interface, and
+        see --player-external-http-port for choosing a non-randomized port.
+
         Optionally, the --player-external-http-continuous option allows for disabling
         the continuous run-mode, so that Streamlink will stop when the stream ends.
 
@@ -514,6 +517,14 @@ def build_parser():
         If set to non-continuous, Streamlink will stop once the stream has ended.
 
         Default is true.
+        """,
+    )
+    player.add_argument(
+        "--player-external-http-interface",
+        metavar="INTERFACE",
+        help="""
+        The network interface on which the HTTP server will be listening on.
+        If unset or set to `0.0.0.0`, all available interfaces will be bound.
         """,
     )
     player.add_argument(
