@@ -33,33 +33,40 @@ class Dogan(Plugin):
     ]
     API_URL_OLD = "/actions/media?id={id}"
 
-    def _get_content_id(self):
-        return self.session.http.get(
-            self.url,
-            schema=validate.Schema(
-                validate.parse_html(),
-                validate.any(
-                    validate.all(
-                        validate.xml_xpath_string("""
-                            .//div[@data-id][
-                                @data-live
-                                or @id='video-element'
-                                or @id='player-container'
-                                or contains(@class, 'player-container')
-                            ][1]/@data-id
-                        """),
-                        str,
+    @staticmethod
+    def _get_hls_url(root):
+        schema = validate.Schema(
+            validate.xml_xpath_string(".//*[@data-live][contains(@data-url,'.m3u8')]/@data-url"),
+        )
+
+        return schema.validate(root)
+
+    @staticmethod
+    def _get_content_id(root):
+        schema=validate.Schema(
+            validate.any(
+                validate.all(
+                    validate.xml_xpath_string("""
+                        .//div[@data-id][
+                            @data-live
+                            or @id='video-element'
+                            or @id='player-container'
+                            or contains(@class, 'player-container')
+                        ][1]/@data-id
+                    """),
+                    str,
+                ),
+                # xpath query needs to have a lower priority
+                validate.all(
+                    validate.xml_xpath_string(
+                        ".//body[@data-content-id][1]/@data-content-id",
                     ),
-                    # xpath query needs to have a lower priority
-                    validate.all(
-                        validate.xml_xpath_string(
-                            ".//body[@data-content-id][1]/@data-content-id",
-                        ),
-                        str,
-                    ),
+                    str,
                 ),
             ),
         )
+
+        return schema.validate(root)
 
     def _api_query_new(self, content_id, api_url):
         url = urljoin(self.url, api_url.format(id=content_id))
@@ -131,7 +138,7 @@ class Dogan(Plugin):
 
         return urljoin(service_url or default_service_url, secure_path)
 
-    def _get_hls_url(self, content_id):
+    def _query_hls_url(self, content_id):
         for idx, match in enumerate(self.matches[:len(self.API_URLS)]):
             if match:
                 return self._api_query_new(content_id, self.API_URLS[idx])
@@ -139,18 +146,21 @@ class Dogan(Plugin):
         return self._api_query_old(content_id)
 
     def _get_streams(self):
-        try:
-            content_id = self._get_content_id()
-        except PluginError:
-            log.error("Could not find the content ID for this stream")
-            return
+        root = self.session.http.get(self.url, schema=validate.Schema(validate.parse_html()))
 
-        log.debug(f"Loading content: {content_id}")
-        hls_url = self._get_hls_url(content_id)
+        hls_url = self._get_hls_url(root)
         if not hls_url:
-            return
+            try:
+                content_id = self._get_content_id(root)
+            except PluginError:
+                log.error("Could not find the content ID for this stream")
+                return
 
-        return HLSStream.parse_variant_playlist(self.session, hls_url)
+            log.debug(f"Loading content: {content_id}")
+            hls_url = self._query_hls_url(content_id)
+
+        if hls_url:
+            return HLSStream.parse_variant_playlist(self.session, hls_url)
 
 
 __plugin__ = Dogan
