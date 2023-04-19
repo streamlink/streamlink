@@ -126,6 +126,8 @@ html_theme_options = {
     "source_repository": "https://github.com/streamlink/streamlink/",
     "source_branch": "master",
     "source_directory": "docs/",
+    "light_logo": "icon.svg",
+    "dark_logo": "icon.svg",
 }
 
 # Add any paths that contain custom themes here, relative to this directory.

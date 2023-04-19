@@ -1,6 +1,7 @@
 <a class="sidebar-brand centered" href="{{ pathto(master_doc) }}">
   <div class="sidebar-logo-container">
-    <img class="sidebar-logo" src="{{ pathto('_static/' + logo, 1) }}" alt="{{ project }}"/>
+    <img class="sidebar-logo only-light" src="{{ pathto('_static/' + theme_light_logo, 1) }}" alt="{{ project }}"/>
+    <img class="sidebar-logo only-dark" src="{{ pathto('_static/' + theme_dark_logo, 1) }}" alt="{{ project }}"/>
   </div>
   <p class="sidebar-brand-text">{{ project }}</p>
   <p class="sidebar-brand-oneliner">{{ oneliner }}</p>
