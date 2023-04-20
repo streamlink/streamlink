@@ -9,13 +9,13 @@ from datetime import datetime, timedelta
 from itertools import count, repeat
 from pathlib import Path
 from typing import (
-    TYPE_CHECKING,
     Any,
     Callable,
     ClassVar,
     Dict,
     Iterator,
     List,
+    Literal,
     Optional,
     Sequence,
     Set,
@@ -33,10 +33,6 @@ from isodate import Duration, parse_datetime, parse_duration  # type: ignore[imp
 from lxml.etree import _Attrib, _Element
 
 from streamlink.utils.times import UTC, fromtimestamp, now
-
-
-if TYPE_CHECKING:  # pragma: no cover
-    from typing_extensions import Literal
 
 
 log = logging.getLogger(__name__)
@@ -111,7 +107,7 @@ class MPDParsers:
         return v.lower() == "true"
 
     @staticmethod
-    def type(mpdtype: "Literal['static', 'dynamic']") -> "Literal['static', 'dynamic']":
+    def type(mpdtype: Literal["static", "dynamic"]) -> Literal["static", "dynamic"]:
         if mpdtype not in ("static", "dynamic"):
             raise MPDParsingError("@type must be static or dynamic")
         return mpdtype
