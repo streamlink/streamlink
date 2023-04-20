@@ -50,4 +50,4 @@ jobs:
       - name: mypy
         run: |
           python -m mypy --no-incremental
-          python -m mypy --no-incremental --python-version 3.8 docs
+          python -m mypy --no-incremental docs
