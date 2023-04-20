@@ -61,7 +61,7 @@ exclude_lines = [
 # https://beta.ruff.rs/docs/configuration/
 [tool.ruff]
 src = ["src", "tests"]
-target-version = "py37"
+target-version = "py38"
 fix = false
 ignore-init-module-imports = true
 line-length = 128
