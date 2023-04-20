@@ -180,8 +180,7 @@ class Arguments:
 
     def __iter__(self) -> Iterator[Argument]:
         # iterate in reverse order due to add() being called by multiple pluginargument decorators in reverse order
-        # TODO: Python 3.7 removal: remove list()
-        return reversed(list(self.arguments.values()))
+        return reversed(self.arguments.values())
 
     def add(self, argument: Argument) -> None:
         self.arguments[argument.name] = argument
