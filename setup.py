@@ -9,7 +9,7 @@ def format_msg(text, *args, **kwargs):
 
 
 CURRENT_PYTHON = version_info[:2]
-REQUIRED_PYTHON = (3, 7)
+REQUIRED_PYTHON = (3, 8)
 
 # This check and everything above must remain compatible with older Python versions
 if CURRENT_PYTHON < REQUIRED_PYTHON:

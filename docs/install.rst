@@ -357,7 +357,7 @@ Streamlink defines a `build system <pyproject.toml_>`__ according to `PEP-517`_ 
 ========= ========================= ===========================================
 Type      Name                       Notes
 ========= ========================= ===========================================
-python    `Python`_                 At least version **3.7**.
+python    `Python`_                 At least version **3.8**.
 
 build     `setuptools`_             At least version **45.0.0**. |br| Used as build backend.
 build     `wheel`_                  Used by the build frontend for creating Python wheels.
