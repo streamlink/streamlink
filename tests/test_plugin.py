@@ -274,26 +274,28 @@ def test_plugin_metadata(attr):
     assert getter() == "baz qux"
 
 
-# TODO: python 3.7 removal: move this as static method to the TestCookies class
-def _create_cookie_dict(name, value, expires=None):
-    return dict(
-        version=0,
-        name=name,
-        value=value,
-        port=None,
-        domain="test.se",
-        path="/",
-        secure=False,
-        expires=expires,
-        discard=True,
-        comment=None,
-        comment_url=None,
-        rest={"HttpOnly": None},
-        rfc2109=False,
-    )
-
-
 class TestCookies:
+    @staticmethod
+    def create_cookie_dict(name, value, expires=None):
+        return dict(
+            version=0,
+            name=name,
+            value=value,
+            port=None,
+            domain="test.se",
+            path="/",
+            secure=False,
+            expires=expires,
+            discard=True,
+            comment=None,
+            comment_url=None,
+            rest={"HttpOnly": None},
+            rfc2109=False,
+        )
+
+    # TODO: py39 support end: remove explicit dummy context binding of static method
+    _create_cookie_dict = create_cookie_dict.__get__(object)
+
     @pytest.fixture()
     def pluginclass(self):
         class MyPlugin(FakePlugin):
@@ -355,7 +357,7 @@ class TestCookies:
         plugin.save_cookies(lambda cookie: cookie.name == "test-name1", default_expires=3600)
         assert plugincache.set.call_args_list == [call(
             "__cookie:test-name1:test.se:80:/",
-            _create_cookie_dict("test-name1", "test-value1", None),
+            self.create_cookie_dict("test-name1", "test-value1", None),
             3600,
         )]
         assert logger.debug.call_args_list == [call("Saved cookies: test-name1")]
@@ -375,7 +377,7 @@ class TestCookies:
         plugin.save_cookies(default_expires=60)
         assert plugincache.set.call_args_list == [call(
             "__cookie:test-name:test.se:80:/",
-            _create_cookie_dict("test-name", "test-value", 3600),
+            self.create_cookie_dict("test-name", "test-value", 3600),
             3600,
         )]
 
