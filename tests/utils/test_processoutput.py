@@ -1,19 +1,13 @@
 import asyncio
 from collections import deque
 from typing import Iterable, Optional
+from unittest.mock import AsyncMock, Mock, call, patch
 
 import freezegun
 import pytest
 import pytest_asyncio
 
 from streamlink.utils.processoutput import ProcessOutput
-
-
-try:
-    from unittest.mock import AsyncMock, Mock, call, patch  # type: ignore
-except ImportError:
-    # noinspection PyUnresolvedReferences
-    from mock import AsyncMock, Mock, call, patch  # type: ignore
 
 
 class AsyncIterator:
