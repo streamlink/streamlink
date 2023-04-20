@@ -694,7 +694,7 @@ class TestCLIMainLoggingInfos(_TestCLIMainLogging):
 
     @patch("streamlink_cli.main.log")
     @patch("streamlink_cli.main.streamlink_version", "streamlink")
-    @patch("streamlink_cli.main.importlib_metadata")
+    @patch("streamlink_cli.main.importlib.metadata")
     @patch("streamlink_cli.main.log_current_arguments", Mock(side_effect=_TestCLIMainLogging.StopTest))
     @patch("platform.python_version", Mock(return_value="python"))
     def test_log_current_versions(self, mock_importlib_metadata: Mock, mock_log: Mock):

@@ -1,4 +1,5 @@
 import argparse
+import importlib.metadata
 import logging
 import os
 import platform
@@ -20,7 +21,7 @@ from streamlink.stream.stream import Stream, StreamIO
 from streamlink.utils.named_pipe import NamedPipe
 from streamlink.utils.times import LOCAL as LOCALTIMEZONE
 from streamlink_cli.argparser import ArgumentParser, build_parser, setup_session_options
-from streamlink_cli.compat import DeprecatedPath, importlib_metadata, stdout
+from streamlink_cli.compat import DeprecatedPath, stdout
 from streamlink_cli.console import ConsoleOutput, ConsoleUserInputRequester
 from streamlink_cli.constants import CONFIG_FILES, DEFAULT_STREAM_METADATA, LOG_DIR, PLUGIN_DIRS, STREAM_SYNONYMS
 from streamlink_cli.output import FileOutput, HTTPOutput, PlayerOutput
@@ -796,12 +797,12 @@ def log_current_versions():
     log.debug("Dependencies:")
     for name in [
         match.group(0)
-        for match in map(re_name.match, importlib_metadata.requires("streamlink"))
+        for match in map(re_name.match, importlib.metadata.requires("streamlink"))
         if match is not None
     ]:
         try:
-            version = importlib_metadata.version(name)
-        except importlib_metadata.PackageNotFoundError:
+            version = importlib.metadata.version(name)
+        except importlib.metadata.PackageNotFoundError:
             continue
         log.debug(f" {name}: {version}")
 
