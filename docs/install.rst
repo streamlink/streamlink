@@ -183,6 +183,10 @@ Python pip                           See the `PyPI package and source code`_ sec
 
                                         sudo zypper install streamlink
 
+`Solus`_                             .. code-block:: bash
+
+                                        sudo eopkg install streamlink
+
 `Void`_                              .. code-block:: bash
 
                                         sudo xbps-install streamlink
@@ -197,6 +201,7 @@ Python pip                           See the `PyPI package and source code`_ sec
 .. _NetBSD (pkgsrc): https://pkgsrc.se/multimedia/streamlink
 .. _NixOS: https://github.com/NixOS/nixpkgs/tree/master/pkgs/applications/video/streamlink
 .. _openSUSE: https://build.opensuse.org/package/show/multimedia:apps/streamlink
+.. _Solus: https://dev.getsol.us/source/streamlink/
 .. _Void: https://github.com/void-linux/void-packages/tree/master/srcpkgs/streamlink
 
 .. _Installing AUR packages: https://wiki.archlinux.org/index.php/Arch_User_Repository#Installing_packages
@@ -221,6 +226,7 @@ Gentoo                               soredake <fdsfgs at krutt.org>
 NetBSD                               Maya Rashish <maya at netbsd.org>
 NixOS                                Tuomas Tynkkynen <tuomas.tynkkynen at iki.fi>
 openSUSE                             Simon Puchert <simonpuchert at alice.de>
+Solus                                Joey Riches <josephriches at gmail.com>
 Void                                 Michal Vasilek <michal at vasilek.cz>
 Windows binaries                     Sebastian Meyer <mail at bastimeyer.de>
 Linux AppImages                      Sebastian Meyer <mail at bastimeyer.de>
