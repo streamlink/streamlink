@@ -113,7 +113,12 @@ class Mitele(Plugin):
             urls.add(update_qsd(stream["stream"], qsd, quote_via=lambda string, *_, **__: string))
 
         for url in urls:
-            yield from HLSStream.parse_variant_playlist(self.session, url, name_fmt="{pixels}_{bitrate}").items()
+            yield from HLSStream.parse_variant_playlist(
+                self.session,
+                url,
+                headers={"Origin": "https://www.mitele.es"},
+                name_fmt="{pixels}_{bitrate}",
+            ).items()
 
 
 __plugin__ = Mitele
