@@ -56,8 +56,8 @@ def test_split_tag(string: str, expected: Union[Tuple[str, str], Tuple[None, Non
 @pytest.mark.parametrize(("attributes", "log", "expected"), [
     pytest.param("", False, {}, id="empty attribute list"),
     pytest.param("invalid", True, {}, id="invalid attribute list"),
+    pytest.param("?=VALUE", True, {}, id="invalid attribute name"),
     pytest.param("key=VALUE", True, {}, id="lowercase attribute name"),
-    pytest.param("123=VALUE", True, {}, id="non-alpha attribute name"),
     pytest.param("KEY = VALUE", True, {}, id="invalid attribute format"),
     pytest.param("KEY=", True, {}, id="missing attribute value"),
     pytest.param("KEY=\"", True, {}, id="invalid attribute value"),
@@ -74,6 +74,7 @@ def test_split_tag(string: str, expected: Union[Tuple[str, str], Tuple[None, Non
     pytest.param("KEY=VALUE", False, {"KEY": "VALUE"}, id="enumerated string"),
     pytest.param("KEY=<@_@>", False, {"KEY": "<@_@>"}, id="enumerated string with special characters"),
     pytest.param("KEY=1920x1080", False, {"KEY": "1920x1080"}, id="decimal resolution"),
+    pytest.param("KEY-123=VALUE", False, {"KEY-123": "VALUE"}, id="attribute name with alphanumerical chars and dashes"),
     pytest.param(
         "A=123,B=0xdeadbeef,C=123.456,D=-123.456,E=\"value, value, value\",F=VALUE,G=1920x1080",
         False,
