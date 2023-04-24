@@ -159,7 +159,7 @@ class M3U8Parser:
 
     _extinf_re = re.compile(r"(?P<duration>\d+(\.\d+)?)(,(?P<title>.+))?")
     _attr_re = re.compile(r"""
-        (?P<key>[A-Z\-]+)
+        (?P<key>[A-Z0-9\-]+)
         =
         (?P<value>
             (?# decimal-integer)
