@@ -11,11 +11,10 @@ from streamlink.session import Streamlink
 from streamlink.utils.args import boolean, comma_list, comma_list_filter, filesize, keyvalue, num
 from streamlink.utils.times import hours_minutes_seconds
 from streamlink_cli.constants import (
-    PLAYER_ARGS_INPUT_DEFAULT,
-    PLAYER_ARGS_INPUT_FALLBACK,
     STREAM_PASSTHROUGH,
     SUPPORTED_PLAYERS,
 )
+from streamlink_cli.output.player import PlayerOutput
 from streamlink_cli.utils import find_default_player
 
 
@@ -420,19 +419,14 @@ def build_parser():
 
         Available formatting variables:
 
-        {{{PLAYER_ARGS_INPUT_DEFAULT}}}
+        `{{{PlayerOutput.PLAYER_ARGS_INPUT}}}`
             This is the input argument that the player will receive. For standard input (stdin),
-            it is `-` (dash), but it can also be a URL, depending on the options used.
-
-        {{{PLAYER_ARGS_INPUT_FALLBACK}}}
-            The old fallback variable name with the same functionality.
+            it is `-` (dash), but it can also be a file path or URL, depending on the options used.
+            If unset, then the player input argument will be appended to the parsed player arguments list.
 
         Example:
 
           %(prog)s -p vlc -a "--play-and-exit --no-one-instance" <url> [stream]
-
-        Note: When neither of the variables are found, `{{{PLAYER_ARGS_INPUT_DEFAULT}}}`
-        will be appended to the whole value, to ensure that the player always receives an input argument.
 
         Default is "".
         """,

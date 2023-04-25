@@ -7,9 +7,6 @@ from streamlink.compat import is_darwin, is_win32
 from streamlink_cli.compat import DeprecatedPath
 
 
-PLAYER_ARGS_INPUT_DEFAULT = "playerinput"
-PLAYER_ARGS_INPUT_FALLBACK = "filename"
-
 DEFAULT_STREAM_METADATA = {
     "id": "Unknown ID",
     "title": "Unknown Title",
@@ -69,8 +66,8 @@ else:
 STREAM_SYNONYMS = ["best", "worst", "best-unfiltered", "worst-unfiltered"]
 STREAM_PASSTHROUGH = ["hls", "http"]
 
+
 __all__ = [
-    "PLAYER_ARGS_INPUT_DEFAULT", "PLAYER_ARGS_INPUT_FALLBACK",
     "DEFAULT_STREAM_METADATA", "SUPPORTED_PLAYERS",
     "CONFIG_FILES", "PLUGIN_DIRS", "LOG_DIR", "STREAM_SYNONYMS", "STREAM_PASSTHROUGH",
 ]

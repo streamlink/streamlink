@@ -58,12 +58,7 @@ def test_playeroutput_title(mock_popen: Mock, playeroutput: PlayerOutput, expect
         id="Explicit playerinput variable",
     ),
     pytest.param(
-        dict(path=Path("foo"), args="--bar {filename}"),
-        ["foo", "--bar", "-"],
-        id="Fallback playerinput variable",
-    ),
-    pytest.param(
-        dict(path=Path("foo"), args="--bar {playerinput} {filename}"),
+        dict(path=Path("foo"), args="--bar {playerinput} {playerinput}"),
         ["foo", "--bar", "-", "-"],
         id="Fallback duplicate playerinput variable",
     ),

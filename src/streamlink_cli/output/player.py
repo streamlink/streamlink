@@ -1,5 +1,4 @@
 import logging
-import re
 import shlex
 import subprocess
 import sys
@@ -10,7 +9,7 @@ from typing import List, Optional, TextIO, Union
 
 from streamlink.compat import is_win32
 from streamlink.utils.named_pipe import NamedPipeBase
-from streamlink_cli.constants import PLAYER_ARGS_INPUT_DEFAULT, PLAYER_ARGS_INPUT_FALLBACK, SUPPORTED_PLAYERS
+from streamlink_cli.constants import SUPPORTED_PLAYERS
 from streamlink_cli.output.abc import Output
 from streamlink_cli.output.file import FileOutput
 from streamlink_cli.output.http import HTTPOutput
@@ -23,10 +22,7 @@ log = logging.getLogger("streamlink.cli.output")
 class PlayerOutput(Output):
     PLAYER_TERMINATE_TIMEOUT = 10.0
 
-    _re_player_args_input = re.compile("|".join(
-        re.escape(f"{{{const}}}")
-        for const in [PLAYER_ARGS_INPUT_DEFAULT, PLAYER_ARGS_INPUT_FALLBACK]
-    ))
+    PLAYER_ARGS_INPUT = "playerinput"
 
     player: subprocess.Popen
     stdin: Union[int, TextIO]
@@ -75,8 +71,8 @@ class PlayerOutput(Output):
             self.stdout = sys.stdout
             self.stderr = sys.stderr
 
-        if not self._re_player_args_input.search(self.args):
-            self.args += f"{' ' if self.args else ''}{{{PLAYER_ARGS_INPUT_DEFAULT}}}"
+        if f"{{{self.PLAYER_ARGS_INPUT}}}" not in self.args:
+            self.args += f"{' ' if self.args else ''}{{{self.PLAYER_ARGS_INPUT}}}"
 
     @property
     def running(self):
@@ -126,8 +122,7 @@ class PlayerOutput(Output):
 
         # format args via the formatter, so that invalid/unknown variables don't raise a KeyError
         argsformatter = Formatter({
-            PLAYER_ARGS_INPUT_DEFAULT: lambda: subprocess.list2cmdline([filename]),
-            PLAYER_ARGS_INPUT_FALLBACK: lambda: subprocess.list2cmdline([filename]),
+            self.PLAYER_ARGS_INPUT: lambda: subprocess.list2cmdline([filename]),
         })
         args = argsformatter.title(self.args)
         args_tokenized = shlex.split(args)
