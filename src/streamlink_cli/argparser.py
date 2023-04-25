@@ -10,10 +10,7 @@ from streamlink import __version__ as streamlink_version, logger
 from streamlink.session import Streamlink
 from streamlink.utils.args import boolean, comma_list, comma_list_filter, filesize, keyvalue, num
 from streamlink.utils.times import hours_minutes_seconds
-from streamlink_cli.constants import (
-    STREAM_PASSTHROUGH,
-    SUPPORTED_PLAYERS,
-)
+from streamlink_cli.constants import STREAM_PASSTHROUGH
 from streamlink_cli.output.player import PlayerOutput
 from streamlink_cli.utils import find_default_player
 
@@ -559,7 +556,7 @@ def build_parser():
 
         Please see the "Metadata variables" section of Streamlink's CLI documentation for all available metadata variables.
 
-        This option is only supported for the following players: {', '.join(sorted(SUPPORTED_PLAYERS.keys()))}
+        This option is only supported for the following players: {', '.join(sorted(PlayerOutput.PLAYERS.keys()))}
 
         VLC specific information:
             VLC does support special formatting variables on its own:
