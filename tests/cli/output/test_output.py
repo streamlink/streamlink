@@ -1,8 +1,6 @@
-import ntpath
 import os
-import posixpath
 import unittest
-from pathlib import Path
+from pathlib import Path, PosixPath, WindowsPath
 from unittest.mock import Mock, call, patch
 
 import pytest
@@ -85,41 +83,30 @@ class TestFileOutput(unittest.TestCase):
         ]
 
 
-class TestPlayerOutput(unittest.TestCase):
+class TestPlayerOutput:
     def test_supported_player_generic(self):
-        assert PlayerOutput.supported_player("vlc") == "vlc"
-        assert PlayerOutput.supported_player("mpv") == "mpv"
-        assert PlayerOutput.supported_player("potplayermini.exe") == "potplayer"
+        assert PlayerOutput.supported_player(Path("vlc")) == "vlc"
+        assert PlayerOutput.supported_player(Path("mpv")) == "mpv"
+        assert PlayerOutput.supported_player(Path("potplayermini.exe")) == "potplayer"
 
-    @patch("streamlink_cli.output.player.os.path.basename", new=ntpath.basename)
-    def test_supported_player_win32(self):
-        assert PlayerOutput.supported_player("C:\\MPV\\mpv.exe") == "mpv"
-        assert PlayerOutput.supported_player("C:\\VLC\\vlc.exe") == "vlc"
-        assert PlayerOutput.supported_player("C:\\PotPlayer\\PotPlayerMini64.exe") == "potplayer"
-
-    @patch("streamlink_cli.output.player.os.path.basename", new=posixpath.basename)
+    @pytest.mark.posix_only()
     def test_supported_player_posix(self):
-        assert PlayerOutput.supported_player("/usr/bin/mpv") == "mpv"
-        assert PlayerOutput.supported_player("/usr/bin/vlc") == "vlc"
+        assert PlayerOutput.supported_player(PosixPath("/usr/bin/mpv")) == "mpv"
+        assert PlayerOutput.supported_player(PosixPath("/usr/bin/vlc")) == "vlc"
 
-    @patch("streamlink_cli.output.player.os.path.basename", new=ntpath.basename)
-    def test_supported_player_args_win32(self):
-        assert PlayerOutput.supported_player("C:\\MPV\\mpv.exe --argh") == "mpv"
-        assert PlayerOutput.supported_player("C:\\VLC\\vlc.exe --argh") == "vlc"
-        assert PlayerOutput.supported_player("C:\\PotPlayer\\PotPlayerMini64.exe --argh") == "potplayer"
-
-    @patch("streamlink_cli.output.player.os.path.basename", new=posixpath.basename)
-    def test_supported_player_args_posix(self):
-        assert PlayerOutput.supported_player("/usr/bin/mpv --argh") == "mpv"
-        assert PlayerOutput.supported_player("/usr/bin/vlc --argh") == "vlc"
-
-    @patch("streamlink_cli.output.player.os.path.basename", new=posixpath.basename)
+    @pytest.mark.posix_only()
     def test_supported_player_negative_posix(self):
-        assert PlayerOutput.supported_player("/usr/bin/xmpvideo") is None
-        assert PlayerOutput.supported_player("/usr/bin/echo") is None
+        assert PlayerOutput.supported_player(PosixPath("/usr/bin/xmpvideo")) is None
+        assert PlayerOutput.supported_player(PosixPath("/usr/bin/echo")) is None
 
-    @patch("streamlink_cli.output.player.os.path.basename", new=ntpath.basename)
+    @pytest.mark.windows_only()
+    def test_supported_player_win32(self):
+        assert PlayerOutput.supported_player(WindowsPath("C:\\MPV\\mpv.exe")) == "mpv"
+        assert PlayerOutput.supported_player(WindowsPath("C:\\VLC\\vlc.exe")) == "vlc"
+        assert PlayerOutput.supported_player(WindowsPath("C:\\PotPlayer\\PotPlayerMini64.exe")) == "potplayer"
+
+    @pytest.mark.windows_only()
     def test_supported_player_negative_win32(self):
-        assert PlayerOutput.supported_player("C:\\mpc\\mpc-hd.exe") is None
-        assert PlayerOutput.supported_player("C:\\mplayer\\not-vlc.exe") is None
-        assert PlayerOutput.supported_player("C:\\NotPlayer\\NotPlayerMini64.exe") is None
+        assert PlayerOutput.supported_player(WindowsPath("C:\\mpc\\mpc-hd.exe")) is None
+        assert PlayerOutput.supported_player(WindowsPath("C:\\mplayer\\not-vlc.exe")) is None
+        assert PlayerOutput.supported_player(WindowsPath("C:\\NotPlayer\\NotPlayerMini64.exe")) is None

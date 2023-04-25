@@ -60,13 +60,10 @@ def _find_default_player_other() -> Optional[Path]:
     )
 
 
-def find_default_player() -> Optional[str]:
+def find_default_player() -> Optional[Path]:
     if is_win32:
-        path = _find_default_player_win32()
+        return _find_default_player_win32()
     elif is_darwin:
-        path = _find_default_player_darwin()
+        return _find_default_player_darwin()
     else:
-        path = _find_default_player_other()
-
-    if path:
-        return str(path)
+        return _find_default_player_other()

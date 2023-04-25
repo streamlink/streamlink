@@ -287,7 +287,7 @@ class TestCLIMainCreateOutput(unittest.TestCase):
         args.player_http = False
         args.title = None
         args.url = "URL"
-        args.player = "mpv"
+        args.player = Path("mpv")
         args.player_args = ""
 
         output = create_output(formatter)
@@ -377,7 +377,7 @@ class TestCLIMainCreateOutput(unittest.TestCase):
         args.fs_safe_rules = None
         args.title = None
         args.url = "URL"
-        args.player = "mpv"
+        args.player = Path("mpv")
         args.player_args = ""
         args.player_fifo = None
         args.player_http = None
@@ -413,7 +413,7 @@ class TestCLIMainCreateOutput(unittest.TestCase):
         args.fs_safe_rules = None
         args.title = "{author} - {title}"
         args.url = "URL"
-        args.player = "mpv"
+        args.player = Path("mpv")
         args.player_args = ""
         args.player_fifo = None
         args.player_http = None

@@ -1,6 +1,7 @@
 import argparse
 import numbers
 import re
+from pathlib import Path
 from string import printable
 from textwrap import dedent
 from typing import Any, Callable, Dict, List, Optional, Tuple
@@ -392,34 +393,21 @@ def build_parser():
     player = parser.add_argument_group("Player options")
     player.add_argument(
         "-p", "--player",
-        metavar="COMMAND",
+        metavar="PATH",
+        type=Path,
         default=find_default_player(),
         help="""
-        Player to feed stream data to. By default, VLC will be used if it can be
-        found in its default location.
+        The player executable that will be launched (unless a different output method was chosen).
 
-        This is a shell-like syntax to support using a specific player:
+        Either set an absolute or relative path to the player executable, or just set the executable's name
+        if it can be resolved from the paths of the system's `PATH` environment variable.
 
-          %(prog)s --player=vlc <url> [stream]
+        In addition to setting the player executable path, custom player arguments can be set via --player-args.
 
-        Absolute or relative paths can also be passed via this option in the
-        event the player's executable can not be resolved:
+        Note: In the past, --player allowed defining additional player arguments, which as a consequence required wrapping
+        player paths that contained spaces in quotation marks. This is unsupported since release `6.0.0`.
 
-          %(prog)s --player=/path/to/vlc <url> [stream]
-          %(prog)s --player=./vlc-player/vlc <url> [stream]
-
-        To use a player that is located in a path with spaces you must quote the
-        parameter or its value:
-
-          %(prog)s "--player=/path/with spaces/vlc" <url> [stream]
-          %(prog)s --player "C:\\path\\with spaces\\mpc-hc64.exe" <url> [stream]
-
-        Options may also be passed to the player. For example:
-
-          %(prog)s --player "vlc --file-caching=5000" <url> [stream]
-
-        As an alternative to this, see the --player-args parameter, which does
-        not log any custom player arguments.
+        Default is VLC player, if available.
         """,
     )
     player.add_argument(
@@ -427,21 +415,15 @@ def build_parser():
         metavar="ARGUMENTS",
         default="",
         help=f"""
-        This option allows you to customize the default arguments which are put
-        together with the value of --player to create a command to execute.
+        This option allows the arguments which are used to launch the player process to be customized.
 
-        It's usually enough to only use --player instead of this unless you need
-        to add arguments after the player's input argument or if you don't want
-        any of the player arguments to be logged.
+        The value can contain formatting variables surrounded by curly braces, `{{` and `}}`.
+        Curly brace characters can be escaped by doubling, e.g. `{{{{` and `}}}}`.
 
-        The value can contain formatting variables surrounded by curly braces,
-        `{{` and `}}`. If you need to include a brace character, it can be escaped
-        by doubling, e.g. `{{{{` and `}}}}`.
-
-        Formatting variables available:
+        Available formatting variables:
 
         {{{PLAYER_ARGS_INPUT_DEFAULT}}}
-            This is the input that the player will use. For standard input (stdin),
+            This is the input argument that the player will receive. For standard input (stdin),
             it is `-` (dash), but it can also be a URL, depending on the options used.
 
         {{{PLAYER_ARGS_INPUT_FALLBACK}}}
@@ -449,11 +431,12 @@ def build_parser():
 
         Example:
 
-          %(prog)s -p vlc -a "--play-and-exit {{{PLAYER_ARGS_INPUT_DEFAULT}}}" <url> [stream]
+          %(prog)s -p vlc -a "--play-and-exit --no-one-instance" <url> [stream]
 
         Note: When neither of the variables are found, `{{{PLAYER_ARGS_INPUT_DEFAULT}}}`
-        will be appended to the whole parameter value, to ensure that the player
-        always receives an input argument.
+        will be appended to the whole value, to ensure that the player always receives an input argument.
+
+        Default is "".
         """,
     )
     player.add_argument(

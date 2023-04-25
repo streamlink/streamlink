@@ -64,9 +64,9 @@ or for an option without value::
 
   option
 
-.. note::
-    Any quotes used will be part of the value, so only use them when the value needs them,
-    e.g. when specifying a player with a path which contains spaces.
+.. warning::
+
+    Any quotes will be used as part of the argument value.
 
 Example
 ^^^^^^^
@@ -78,8 +78,9 @@ Example
     player-no-close
 
 .. note::
+
     Full player paths are supported via configuration file options such as
-    ``player="C:\mpv-x86_64\mpv"``
+    ``player=C:\mpv-x86_64\mpv``
 
 
 Plugin specific configuration file

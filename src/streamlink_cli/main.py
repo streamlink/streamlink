@@ -139,7 +139,7 @@ def create_output(formatter: Formatter) -> Union[FileOutput, PlayerOutput]:
 
         return PlayerOutput(
             args.player,
-            args=args.player_args,
+            args.player_args,
             quiet=not args.verbose_player,
             kill=not args.player_no_close,
             namedpipe=namedpipe,
@@ -186,9 +186,9 @@ def output_stream_http(
         server = create_http_server()
         player = output = PlayerOutput(
             args.player,
-            args=args.player_args,
-            filename=server.url,
+            args.player_args,
             quiet=not args.verbose_player,
+            filename=server.url,
             title=formatter.title(args.title, defaults=DEFAULT_STREAM_METADATA) if args.title else args.url,
         )
 
@@ -275,10 +275,10 @@ def output_stream_passthrough(stream, formatter: Formatter):
 
     output = PlayerOutput(
         args.player,
-        args=args.player_args,
-        filename=f'"{url}"',
-        call=True,
+        args.player_args,
         quiet=not args.verbose_player,
+        call=True,
+        filename=url,
         title=formatter.title(args.title, defaults=DEFAULT_STREAM_METADATA) if args.title else args.url,
     )
 
