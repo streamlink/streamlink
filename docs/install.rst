@@ -245,7 +245,7 @@ If a packaged release of Streamlink is not available for your operating system /
 or if it's out of date or broken, then please contact the respective package maintainers or package-repository maintainers
 of your operating system / distro, as it's up to them to add, update, or fix those packages.
 
-Users of glibc-based Linux distros can find up-to-date Streamlink releases via the available `AppImages <Linux AppImages>`_.
+Users of glibc-based Linux distros can find up-to-date Streamlink releases via the available `AppImages <Linux AppImages_>`_.
 
 Please open an issue or pull request on GitHub if an **available**, **maintained** and **up-to-date** package is missing
 from the install docs.
