@@ -1,10 +1,12 @@
 import subprocess
+from contextlib import nullcontext
 from pathlib import Path
-from typing import Type
+from typing import ContextManager, Type
 from unittest.mock import Mock, call, patch
 
 import pytest
 
+from streamlink.exceptions import StreamlinkWarning
 from streamlink_cli.output.player import (
     PlayerArgs,
     PlayerArgsMPV,
@@ -247,18 +249,27 @@ class TestPlayerOutput:
             playeroutput.close()
 
     @pytest.fixture()
+    def mock_which(self, request: pytest.FixtureRequest, playeroutput: PlayerOutput):
+        with patch("streamlink_cli.output.player.which", return_value=getattr(request, "param", None)) as mock_which:
+            yield mock_which
+
+    @pytest.fixture()
     def mock_popen(self, playeroutput: PlayerOutput):
         with patch("streamlink_cli.output.player.sleep"), \
              patch("subprocess.Popen", return_value=Mock(poll=Mock(side_effect=Mock(return_value=None)))) as mock_popen:
             yield mock_popen
 
-    @pytest.mark.parametrize("playeroutput", [
-        dict(path=Path("player"), args="param1 param2", call=False),
-    ], indirect=["playeroutput"])
+    @pytest.mark.parametrize(("playeroutput", "mock_which"), [
+        (
+            dict(path=Path("player"), args="param1 param2", call=False),
+            "/resolved/player",
+        ),
+    ], indirect=["playeroutput", "mock_which"])
     def test_open_popen_parameters(
         self,
         caplog: pytest.LogCaptureFixture,
         playeroutput: PlayerOutput,
+        mock_which: Mock,
         mock_popen: Mock,
     ):
         caplog.set_level(1, "streamlink")
@@ -267,10 +278,11 @@ class TestPlayerOutput:
 
         playeroutput.open()
         assert [(record.name, record.levelname, record.message) for record in caplog.records] == [
-            ("streamlink.cli.output", "debug", "Opening subprocess: ['player', 'param1', 'param2', '-']"),
+            ("streamlink.cli.output", "debug", "Opening subprocess: ['/resolved/player', 'param1', 'param2', '-']"),
         ]
+        assert mock_which.call_args_list == [call("player")]
         assert mock_popen.call_args_list == [call(
-            ["player", "param1", "param2", "-"],
+            ["/resolved/player", "param1", "param2", "-"],
             bufsize=0,
             stdin=subprocess.PIPE,
             stdout=subprocess.DEVNULL,
@@ -281,3 +293,39 @@ class TestPlayerOutput:
 
         playeroutput.close()
         assert playeroutput.player.terminate.called_once  # type: ignore
+
+    @pytest.mark.parametrize(("playeroutput", "mock_which", "expected", "warns"), [
+        pytest.param(
+            dict(path=Path("foo")),
+            "foo",
+            nullcontext(),
+            False,
+            id="Player found",
+        ),
+        pytest.param(
+            dict(path=Path("foo")),
+            None,
+            pytest.raises(FileNotFoundError, match="^Player executable not found$"),
+            False,
+            id="Player not found",
+        ),
+        pytest.param(
+            dict(path=Path("\"foo bar\"")),
+            None,
+            pytest.raises(FileNotFoundError, match="^Player executable not found$"),
+            True,
+            id="Player not found with quotation warning",
+        ),
+    ], indirect=["playeroutput", "mock_which"])
+    def test_open_error(
+        self,
+        recwarn: pytest.WarningsRecorder,
+        playeroutput: PlayerOutput,
+        mock_which: Mock,
+        mock_popen: Mock,
+        expected: ContextManager,
+        warns: bool,
+    ):
+        with expected:
+            playeroutput.open()
+        assert any(record.category is StreamlinkWarning for record in recwarn.list) is warns
