@@ -292,12 +292,12 @@ class TestCLIMainCreateOutput(unittest.TestCase):
 
         output = create_output(formatter)
         assert type(output) is PlayerOutput
-        assert output.title == "URL"
+        assert output.playerargs.title == "URL"
 
         args.title = "{author} - {title}"
         output = create_output(formatter)
         assert type(output) is PlayerOutput
-        assert output.title == "foo - bar"
+        assert output.playerargs.title == "foo - bar"
 
     @patch("streamlink_cli.main.args")
     @patch("streamlink_cli.main.check_file_output")
@@ -384,7 +384,7 @@ class TestCLIMainCreateOutput(unittest.TestCase):
 
         output = create_output(formatter)
         assert type(output) is PlayerOutput
-        assert output.title == "URL"
+        assert output.playerargs.title == "URL"
         assert type(output.record) is FileOutput
         assert output.record.filename == Path("foo")
         assert output.record.fd is None
@@ -393,7 +393,7 @@ class TestCLIMainCreateOutput(unittest.TestCase):
         args.title = "{author} - {title}"
         output = create_output(formatter)
         assert type(output) is PlayerOutput
-        assert output.title == "foo - bar"
+        assert output.playerargs.title == "foo - bar"
         assert type(output.record) is FileOutput
         assert output.record.filename == Path("foo")
         assert output.record.fd is None
@@ -420,7 +420,7 @@ class TestCLIMainCreateOutput(unittest.TestCase):
 
         output = create_output(formatter)
         assert type(output) is PlayerOutput
-        assert output.title == "foo - bar"
+        assert output.playerargs.title == "foo - bar"
         assert type(output.record) is FileOutput
         assert output.record.filename is None
         assert output.record.fd is stdout

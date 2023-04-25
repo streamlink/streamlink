@@ -1,11 +1,11 @@
 import os
 import unittest
-from pathlib import Path, PosixPath, WindowsPath
+from pathlib import Path
 from unittest.mock import Mock, call, patch
 
 import pytest
 
-from streamlink_cli.output import FileOutput, PlayerOutput
+from streamlink_cli.output import FileOutput
 
 
 @patch("streamlink_cli.output.file.stdout")
@@ -81,32 +81,3 @@ class TestFileOutput(unittest.TestCase):
             call(mock_stdout.fileno(), os.O_BINARY),
             call(mock_open(mock_path, "wb").fileno(), os.O_BINARY),
         ]
-
-
-class TestPlayerOutput:
-    def test_supported_player_generic(self):
-        assert PlayerOutput.supported_player(Path("vlc")) == "vlc"
-        assert PlayerOutput.supported_player(Path("mpv")) == "mpv"
-        assert PlayerOutput.supported_player(Path("potplayermini.exe")) == "potplayer"
-
-    @pytest.mark.posix_only()
-    def test_supported_player_posix(self):
-        assert PlayerOutput.supported_player(PosixPath("/usr/bin/mpv")) == "mpv"
-        assert PlayerOutput.supported_player(PosixPath("/usr/bin/vlc")) == "vlc"
-
-    @pytest.mark.posix_only()
-    def test_supported_player_negative_posix(self):
-        assert PlayerOutput.supported_player(PosixPath("/usr/bin/xmpvideo")) is None
-        assert PlayerOutput.supported_player(PosixPath("/usr/bin/echo")) is None
-
-    @pytest.mark.windows_only()
-    def test_supported_player_win32(self):
-        assert PlayerOutput.supported_player(WindowsPath("C:\\MPV\\mpv.exe")) == "mpv"
-        assert PlayerOutput.supported_player(WindowsPath("C:\\VLC\\vlc.exe")) == "vlc"
-        assert PlayerOutput.supported_player(WindowsPath("C:\\PotPlayer\\PotPlayerMini64.exe")) == "potplayer"
-
-    @pytest.mark.windows_only()
-    def test_supported_player_negative_win32(self):
-        assert PlayerOutput.supported_player(WindowsPath("C:\\mpc\\mpc-hd.exe")) is None
-        assert PlayerOutput.supported_player(WindowsPath("C:\\mplayer\\not-vlc.exe")) is None
-        assert PlayerOutput.supported_player(WindowsPath("C:\\NotPlayer\\NotPlayerMini64.exe")) is None
