@@ -1,15 +1,19 @@
 import logging
-import os
 import re
 import shlex
 import subprocess
 import sys
 from contextlib import suppress
+from pathlib import Path
 from time import sleep
+from typing import List, Optional, TextIO, Union
 
 from streamlink.compat import is_win32
+from streamlink.utils.named_pipe import NamedPipeBase
 from streamlink_cli.constants import PLAYER_ARGS_INPUT_DEFAULT, PLAYER_ARGS_INPUT_FALLBACK, SUPPORTED_PLAYERS
 from streamlink_cli.output.abc import Output
+from streamlink_cli.output.file import FileOutput
+from streamlink_cli.output.http import HTTPOutput
 from streamlink_cli.utils import Formatter
 
 
@@ -24,10 +28,27 @@ class PlayerOutput(Output):
         for const in [PLAYER_ARGS_INPUT_DEFAULT, PLAYER_ARGS_INPUT_FALLBACK]
     ))
 
-    def __init__(self, cmd, args="", filename=None, quiet=True, kill=True,
-                 call=False, http=None, namedpipe=None, record=None, title=None):
+    player: subprocess.Popen
+    stdin: Union[int, TextIO]
+    stdout: Union[int, TextIO]
+    stderr: Union[int, TextIO]
+
+    def __init__(
+        self,
+        path: Path,
+        args: str = "",
+        quiet: bool = True,
+        kill: bool = True,
+        call: bool = False,
+        filename: Optional[str] = None,
+        namedpipe: Optional[NamedPipeBase] = None,
+        http: Optional[HTTPOutput] = None,
+        record: Optional[FileOutput] = None,
+        title: Optional[str] = None,
+    ):
         super().__init__()
-        self.cmd = cmd
+
+        self.path = path
         self.args = args
         self.kill = kill
         self.call = call
@@ -36,10 +57,11 @@ class PlayerOutput(Output):
         self.filename = filename
         self.namedpipe = namedpipe
         self.http = http
-        self.title = title
-        self.player = None
-        self.player_name = self.supported_player(self.cmd)
         self.record = record
+
+        self.title = title
+
+        self.player_name = self.supported_player(self.path)
 
         if self.namedpipe or self.filename or self.http:
             self.stdin = sys.stdin
@@ -62,27 +84,14 @@ class PlayerOutput(Output):
         return self.player.poll() is None
 
     @classmethod
-    def supported_player(cls, cmd):
-        """
-        Check if the current player supports adding a title
-
-        :param cmd: command to test
-        :return: name of the player|None
-        """
-        if not is_win32:
-            # under a POSIX system use shlex to find the actual command
-            # under windows this is not an issue because executables end in .exe
-            cmd = shlex.split(cmd)[0]
-
-        cmd = os.path.basename(cmd.lower())
+    def supported_player(cls, path: Path) -> Optional[str]:
         for player, possiblecmds in SUPPORTED_PLAYERS.items():
-            for possiblecmd in possiblecmds:
-                if cmd.startswith(possiblecmd):
-                    return player
+            if path.name.lower() in possiblecmds:
+                return player
 
-    def _create_arguments(self):
+    def _create_arguments(self) -> List[str]:
         if self.namedpipe:
-            filename = self.namedpipe.path
+            filename = str(self.namedpipe.path)
             if is_win32:
                 if self.player_name == "vlc":
                     filename = f"stream://\\{filename}"
@@ -94,8 +103,8 @@ class PlayerOutput(Output):
             filename = self.http.url
         else:
             filename = "-"
-        extra_args = []
 
+        extra_args = []
         if self.title is not None:
             # vlc
             if self.player_name == "vlc":
@@ -113,24 +122,21 @@ class PlayerOutput(Output):
                 if filename != "-":
                     # PotPlayer - About - Command Line
                     # You can specify titles for URLs by separating them with a backslash (\) at the end of URLs.
-                    # eg. "http://...\title of this url"
-                    self.title = self.title.replace('"', "")
-                    filename = filename[:-1] + "\\" + self.title + filename[-1]
+                    filename = f"{filename}\\{self.title}"
 
         # format args via the formatter, so that invalid/unknown variables don't raise a KeyError
         argsformatter = Formatter({
-            PLAYER_ARGS_INPUT_DEFAULT: lambda: filename,
-            PLAYER_ARGS_INPUT_FALLBACK: lambda: filename,
+            PLAYER_ARGS_INPUT_DEFAULT: lambda: subprocess.list2cmdline([filename]),
+            PLAYER_ARGS_INPUT_FALLBACK: lambda: subprocess.list2cmdline([filename]),
         })
         args = argsformatter.title(self.args)
-        cmd = self.cmd
+        args_tokenized = shlex.split(args)
 
-        # player command
-        if is_win32:
-            eargs = subprocess.list2cmdline(extra_args)
-            # do not insert and extra " " when there are no extra_args
-            return " ".join([cmd] + ([eargs] if eargs else []) + [args])
-        return shlex.split(cmd) + extra_args + shlex.split(args)
+        return [
+            str(self.path),
+            *extra_args,
+            *args_tokenized,
+        ]
 
     def _open(self):
         if self.record:
@@ -142,30 +148,27 @@ class PlayerOutput(Output):
 
     def _open_call(self):
         args = self._create_arguments()
-        if is_win32:
-            fargs = args
-        else:
-            fargs = subprocess.list2cmdline(args)
-        log.debug(f"Calling: {fargs}")
+        log.debug(f"Calling: {args!r}")
 
-        subprocess.call(args,
-                        stdout=self.stdout,
-                        stderr=self.stderr)
+        subprocess.call(
+            args,
+            stdout=self.stdout,
+            stderr=self.stderr,
+        )
 
     def _open_subprocess(self):
+        args = self._create_arguments()
+        log.debug(f"Opening subprocess: {args!r}")
+
         # Force bufsize=0 on all Python versions to avoid writing the
         # unflushed buffer when closing a broken input pipe
-        args = self._create_arguments()
-        if is_win32:
-            fargs = args
-        else:
-            fargs = subprocess.list2cmdline(args)
-        log.debug(f"Opening subprocess: {fargs}")
-
-        self.player = subprocess.Popen(args,
-                                       stdin=self.stdin, bufsize=0,
-                                       stdout=self.stdout,
-                                       stderr=self.stderr)
+        self.player = subprocess.Popen(
+            args,
+            bufsize=0,
+            stdin=self.stdin,
+            stdout=self.stdout,
+            stderr=self.stderr,
+        )
         # Wait 0.5 seconds to see if program exited prematurely
         if not self.running:
             raise OSError("Process exited prematurely")

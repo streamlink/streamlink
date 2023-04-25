@@ -1,3 +1,4 @@
+from pathlib import Path
 from typing import List, Optional
 from unittest.mock import Mock, call, patch
 
@@ -50,7 +51,7 @@ class TestFindDefaultPlayer:
         pytest.param(
             {"vlc.exe": "C:\\Program Files\\VideoLAN\\VLC\\vlc.exe"},
             ["vlc.exe"],
-            "C:\\Program Files\\VideoLAN\\VLC\\vlc.exe",
+            Path("C:\\Program Files\\VideoLAN\\VLC\\vlc.exe"),
             id="PATH lookup success",
         ),
         pytest.param(
@@ -60,7 +61,7 @@ class TestFindDefaultPlayer:
                 "C:\\Program Files\\VideoLAN\\VLC\\vlc.exe",
                 "C:\\Program Files (x86)\\VideoLAN\\VLC\\vlc.exe",
             ],
-            "C:\\Program Files (x86)\\VideoLAN\\VLC\\vlc.exe",
+            Path("C:\\Program Files (x86)\\VideoLAN\\VLC\\vlc.exe"),
             id="fallback paths lookup success",
         ),
         pytest.param(
@@ -87,7 +88,7 @@ class TestFindDefaultPlayer:
         pytest.param(
             {"vlc.exe": "C:\\Program Files\\VideoLAN\\VLC\\vlc.exe"},
             ["vlc.exe"],
-            "C:\\Program Files\\VideoLAN\\VLC\\vlc.exe",
+            Path("C:\\Program Files\\VideoLAN\\VLC\\vlc.exe"),
             id="PATH lookup success",
         ),
         pytest.param(
@@ -107,7 +108,7 @@ class TestFindDefaultPlayer:
         pytest.param(
             {"vlc": "/usr/bin/vlc"},
             ["VLC", "vlc"],
-            "/usr/bin/vlc",
+            Path("/usr/bin/vlc"),
             id="PATH lookup success",
         ),
         pytest.param(
@@ -117,7 +118,7 @@ class TestFindDefaultPlayer:
                 "vlc",
                 "/Applications/VLC.app/Contents/MacOS/VLC",
             ],
-            "/Applications/VLC.app/Contents/MacOS/VLC",
+            Path("/Applications/VLC.app/Contents/MacOS/VLC"),
             id="fallback paths lookup success",
         ),
         pytest.param(
@@ -142,7 +143,7 @@ class TestFindDefaultPlayer:
         pytest.param(
             {"vlc": "/usr/bin/vlc"},
             ["vlc"],
-            "/usr/bin/vlc",
+            Path("/usr/bin/vlc"),
             id="lookup success",
         ),
         pytest.param(

@@ -163,7 +163,7 @@ class TestPlayerOutput:
         with patch("subprocess.Popen") as mock_popen, \
              patch("streamlink_cli.output.player.sleep"):
             mock_popen.return_value = player_process
-            output = FakePlayerOutput("mocked")
+            output = FakePlayerOutput(Path("mocked"))
             output.open()
             yield output
             output.close()
@@ -559,7 +559,7 @@ class TestHasProgress:
         "output",
         [
             pytest.param(
-                FakePlayerOutput("mocked"),
+                FakePlayerOutput(Path("mocked")),
                 id="Player output without record",
             ),
             pytest.param(
@@ -583,7 +583,7 @@ class TestHasProgress:
         ("output", "expected"),
         [
             pytest.param(
-                FakePlayerOutput("mocked", record=FakeFileOutput(Path("record"))),
+                FakePlayerOutput(Path("mocked"), record=FakeFileOutput(Path("record"))),
                 Path("record"),
                 id="PlayerOutput with record",
             ),

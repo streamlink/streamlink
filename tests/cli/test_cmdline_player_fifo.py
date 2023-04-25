@@ -10,9 +10,7 @@ from tests.cli.test_cmdline import CommandLineTestCase
 class TestCommandLineWithPlayerFifoPosix(CommandLineTestCase):
     def test_player_fifo_default(self):
         self._test_args(
-            ["streamlink", "--player-fifo",
-             "-p", "any-player",
-             "http://test.se", "test"],
+            ["streamlink", "--player-fifo", "-p", "any-player", "http://test.se", "test"],
             ["any-player", "/tmp/streamlinkpipe"],
         )
 
@@ -22,24 +20,41 @@ class TestCommandLineWithPlayerFifoPosix(CommandLineTestCase):
 class TestCommandLineWithPlayerFifoWindows(CommandLineTestCase):
     def test_player_fifo_default(self):
         self._test_args(
-            ["streamlink", "--player-fifo",
-             "-p", "any-player.exe",
-             "http://test.se", "test"],
-            "any-player.exe \\\\.\\pipe\\streamlinkpipe",
+            ["streamlink", "--player-fifo", "-p", "any-player.exe", "http://test.se", "test"],
+            ["any-player.exe", "\\\\.\\pipe\\streamlinkpipe"],
         )
 
     def test_player_fifo_vlc(self):
         self._test_args(
-            ["streamlink", "--player-fifo",
-             "-p", "C:\\Program Files\\VideoLAN\\vlc.exe",
-             "http://test.se", "test"],
-            "C:\\Program Files\\VideoLAN\\vlc.exe --input-title-format http://test.se stream://\\\\\\.\\pipe\\streamlinkpipe",
+            [
+                "streamlink",
+                "--player-fifo",
+                "-p",
+                "C:\\Program Files\\VideoLAN\\vlc.exe",
+                "http://test.se",
+                "test",
+            ],
+            [
+                "C:\\Program Files\\VideoLAN\\vlc.exe",
+                "--input-title-format",
+                "http://test.se",
+                "stream://\\\\\\.\\pipe\\streamlinkpipe",
+            ],
         )
 
     def test_player_fifo_mpv(self):
         self._test_args(
-            ["streamlink", "--player-fifo",
-             "-p", "C:\\Program Files\\mpv\\mpv.exe",
-             "http://test.se", "test"],
-            "C:\\Program Files\\mpv\\mpv.exe --force-media-title=http://test.se file://\\\\.\\pipe\\streamlinkpipe",
+            [
+                "streamlink",
+                "--player-fifo",
+                "-p",
+                "C:\\Program Files\\mpv\\mpv.exe",
+                "http://test.se",
+                "test",
+            ],
+            [
+                "C:\\Program Files\\mpv\\mpv.exe",
+                "--force-media-title=http://test.se",
+                "file://\\\\.\\pipe\\streamlinkpipe",
+            ],
         )
