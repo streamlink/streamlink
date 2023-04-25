@@ -34,6 +34,7 @@ class CommandLineTestCase(unittest.TestCase):
              patch("streamlink_cli.main.streamlink", session), \
              patch("streamlink_cli.output.player.subprocess.Popen") as mock_popen, \
              patch("streamlink_cli.output.player.subprocess.call") as mock_call, \
+             patch("streamlink_cli.output.player.which", side_effect=lambda path: path), \
              patch("streamlink_cli.output.player.sleep"):
             mock_argv.__getitem__.side_effect = lambda x: args[x]
             mock_popen.return_value = Mock(poll=Mock(side_effect=poll_factory([None, 0])))

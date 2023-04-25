@@ -3,12 +3,15 @@ import re
 import shlex
 import subprocess
 import sys
+import warnings
 from contextlib import suppress
 from pathlib import Path
+from shutil import which
 from time import sleep
 from typing import ClassVar, Dict, List, Optional, TextIO, Type, Union
 
 from streamlink.compat import is_win32
+from streamlink.exceptions import StreamlinkWarning
 from streamlink.utils.named_pipe import NamedPipeBase
 from streamlink_cli.output.abc import Output
 from streamlink_cli.output.file import FileOutput
@@ -215,6 +218,22 @@ class PlayerOutput(Output):
 
     def _open(self):
         args = self.playerargs.build()
+
+        playerpath = args[0]
+        args[0] = which(playerpath)
+        if not args[0]:
+            if playerpath[:1] in ("\"", "'"):
+                warnings.warn(
+                    "\n".join([
+                        "The --player argument has been changed and now only takes player path values:",
+                        "  Player paths with spaces don't have to be wrapped in quotation marks anymore.",
+                        "  Custom player arguments need to be set via --player-args.",
+                    ]),
+                    StreamlinkWarning,
+                    stacklevel=1,
+                )
+
+            raise FileNotFoundError("Player executable not found")
 
         if self.record:
             self.record.open()

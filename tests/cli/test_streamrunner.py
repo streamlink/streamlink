@@ -71,7 +71,9 @@ class FakeOutput:
 
 
 class FakePlayerOutput(FakeOutput, PlayerOutput):
-    pass
+    def open(self):
+        with patch("streamlink_cli.output.player.which", side_effect=lambda path: path):
+            return super().open()
 
 
 class FakeFileOutput(FakeOutput, FileOutput):
