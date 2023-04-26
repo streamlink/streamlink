@@ -234,6 +234,16 @@ class TestPlayerArgs:
             ["potplayer", "namedpipe\\foo bar"],
             id="Potplayer title (namedpipe)",
         ),
+        pytest.param(
+            dict(path=Path("vlc"), args="param1 {playertitleargs} param2", title="foo bar"),
+            ["vlc", "param1", "--input-title-format", "foo bar", "param2", "-"],
+            id="Explicit playertitleargs variable",
+        ),
+        pytest.param(
+            dict(path=Path("vlc"), args="param1{playertitleargs}param2", title="foo bar"),
+            ["vlc", "param1--input-title-format", "foo barparam2", "-"],
+            id="Explicit playertitleargs variable with improper usage (correct tokenization)",
+        ),
     ], indirect=True)
     def test_title(self):
         pass

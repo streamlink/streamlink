@@ -39,6 +39,7 @@ class PlayerArgs:
         self.title = title
 
         self._has_var_playerinput = f"{{{PlayerOutput.PLAYER_ARGS_INPUT}}}" in args
+        self._has_var_playertitleargs = f"{{{PlayerOutput.PLAYER_ARGS_TITLE}}}" in args
 
         if namedpipe:
             self._input = self.get_namedpipe(namedpipe)
@@ -50,21 +51,24 @@ class PlayerArgs:
             self._input = self.get_stdin()
 
     def build(self) -> List[str]:
-        extra_args = []
+        args_title = []
         if self.title is not None:
-            extra_args.extend(self.get_title(self.title))
+            args_title.extend(self.get_title(self.title))
 
         # format args via the formatter, so that invalid/unknown variables don't raise a KeyError
         argsformatter = Formatter({
             PlayerOutput.PLAYER_ARGS_INPUT: lambda: subprocess.list2cmdline([self._input]),
+            PlayerOutput.PLAYER_ARGS_TITLE: lambda: subprocess.list2cmdline(args_title),
         })
         args = argsformatter.title(self.args)
         args_tokenized = shlex.split(args)
 
+        if not self._has_var_playertitleargs:
+            args_tokenized = [*args_title, *args_tokenized]
         if not self._has_var_playerinput:
             args_tokenized.append(self._input)
 
-        return [str(self.path), *extra_args, *args_tokenized]
+        return [str(self.path), *args_tokenized]
 
     # noinspection PyMethodMayBeStatic
     def get_stdin(self) -> str:
@@ -137,6 +141,7 @@ class PlayerOutput(Output):
     PLAYER_TERMINATE_TIMEOUT = 10.0
 
     PLAYER_ARGS_INPUT = "playerinput"
+    PLAYER_ARGS_TITLE = "playertitleargs"
 
     PLAYERS: ClassVar[Dict[str, Type[PlayerArgs]]] = {
         "vlc": PlayerArgsVLC,

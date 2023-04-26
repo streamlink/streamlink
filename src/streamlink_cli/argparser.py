@@ -423,6 +423,10 @@ def build_parser():
             it is `-` (dash), but it can also be a file path or URL, depending on the options used.
             If unset, then the player input argument will be appended to the parsed player arguments list.
 
+        `{{{PlayerOutput.PLAYER_ARGS_TITLE}}}`
+            The automatically generated player title arguments, if a supported player was found. See --title for more.
+            If unset, automatically generated player title arguments will be prepended to the parsed player arguments list.
+
         Example:
 
           %(prog)s -p vlc -a "--play-and-exit --no-one-instance" <url> [stream]
