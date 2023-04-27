@@ -269,6 +269,13 @@ def build_parser():
         """,
     )
     general.add_argument(
+        "--no-config",
+        action="store_true",
+        help="""
+        Disable loading any default or custom config files.
+        """,
+    )
+    general.add_argument(
         "-l", "--loglevel",
         metavar="LEVEL",
         choices=logger.levels,

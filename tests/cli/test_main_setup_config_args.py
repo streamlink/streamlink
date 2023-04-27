@@ -48,6 +48,7 @@ def _session():
 @pytest.mark.parametrize(("_args", "_config_files", "expected", "deprecations"), [
     pytest.param(
         {
+            "no_config": False,
             "config": None,
             "url": None,
         },
@@ -63,6 +64,7 @@ def _session():
     ),
     pytest.param(
         {
+            "no_config": False,
             "config": [
                 str(configdir / "non-existent"),
             ],
@@ -78,6 +80,7 @@ def _session():
     ),
     pytest.param(
         {
+            "no_config": False,
             "config": None,
             "url": "noplugin",
         },
@@ -93,6 +96,7 @@ def _session():
     ),
     pytest.param(
         {
+            "no_config": False,
             "config": [
                 str(configdir / "non-existent"),
             ],
@@ -108,6 +112,7 @@ def _session():
     ),
     pytest.param(
         {
+            "no_config": False,
             "config": None,
             "url": "testplugin",
         },
@@ -124,6 +129,7 @@ def _session():
     ),
     pytest.param(
         {
+            "no_config": False,
             "config": None,
             "url": "testplugin",
         },
@@ -151,6 +157,7 @@ def _session():
     ),
     pytest.param(
         {
+            "no_config": False,
             "config": [
                 str(configdir / "custom"),
             ],
@@ -169,6 +176,7 @@ def _session():
     ),
     pytest.param(
         {
+            "no_config": False,
             "config": [
                 str(configdir / "custom"),
             ],
@@ -193,6 +201,7 @@ def _session():
     ),
     pytest.param(
         {
+            "no_config": False,
             "config": [
                 str(configdir / "non-existent"),
                 str(configdir / "primary"),
@@ -211,6 +220,45 @@ def _session():
         ],
         [],
         id="Multiple custom configs",
+    ),
+    pytest.param(
+        {
+            "no_config": True,
+            "config": [],
+            "url": "testplugin",
+        },
+        [],
+        [],
+        [],
+        id="No config",
+    ),
+    pytest.param(
+        {
+            "no_config": True,
+            "config": [
+                str(configdir / "primary"),
+                str(configdir / "secondary"),
+            ],
+            "url": "testplugin",
+        },
+        [],
+        [],
+        [],
+        id="No config with multiple custom configs",
+    ),
+    pytest.param(
+        {
+            "no_config": True,
+            "config": [],
+            "url": "testplugin",
+        },
+        [
+            configdir / "primary",
+            DeprecatedPath(configdir / "secondary"),
+        ],
+        [],
+        [],
+        id="No config with multiple default configs",
     ),
 ], indirect=["_args", "_config_files"])
 def test_setup_config_args(
