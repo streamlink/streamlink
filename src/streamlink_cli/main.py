@@ -641,6 +641,9 @@ def setup_args(
 
 
 def setup_config_args(parser, ignore_unknown=False):
+    if args.no_config:
+        return
+
     config_files = []
 
     if args.config:
