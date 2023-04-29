@@ -104,6 +104,67 @@ Adhering to the following process is the best way to get your work included in t
 under the terms of the [BSD 2-clause license][license].
 
 
+## Pull request feedback
+
+Please don't hesitate to provide feedback after a pull request was submitted which will close/resolve an issue you've opened or which you've been following. Depending on the kind of issue the pull request will solve, additional feedback from users is important. This feedback can either be a comment, a simple code review, or better, a validation of all the changes by installing and running Streamlink from the pull request's branch and [providing a full debug log][debug-log].
+
+### Sideloading plugin changes
+
+If the pull request is just about a plugin fix or a new plugin inclusion **without additional changes to Streamlink's codebase**, then the new plugin file can be [sideloaded][plugin-sideloading] **when running the latest stable release version of Streamlink**. However, if the pull request is based on changes that have been made to Streamlink's master branch since the latest stable release, then an installation from the pull request's own git branch or Streamlink's master branch will be necessary.
+
+Nightly development builds from Streamlink's **master branch** are available [on Windows][nightly-builds-windows] as well as on [Linux (via AppImages)][nightly-builds-linux].
+
+In case sideloading is possible, simply download the pull request's plugin changes using your web browser from GitHub's pull request interface: "Files changed" tab at the top -> breadcrumbs button of the specific plugin file ("...") -> "View raw". Then download the file into the directory described by the [plugin sideloading documentation][plugin-sideloading].
+
+When sideloaded correctly, a log message will be shown:
+```
+[session][debug] Plugin XYZ is being overridden by path/to/custom/plugin.py
+```
+
+### Installing Streamlink from a pull request's branch
+
+This is the preferred way, to ensure that no side effects arise, but it requires a bit more effort.
+
+First, make sure that you have set up [Git][Git] on your system, as well as a working Python environment that matches the [Python version requirements][python-version] of Streamlink.
+
+Then [create and activate a virtual environment][python-venv] where Streamlink can be installed into, without causing incompatibilities with other packages in your main Python environment.
+
+```bash
+# install "virtualenv" package using pip (or use your system's package manager)
+python -m pip install virtualenv
+# create new virtual environment
+python -m virtualenv "PATH/TO/NEW/VENV"
+# activate virtual environment
+# non-Windows (no file extension on POSIX compliant shells, .fish for FISH, etc.)
+source "PATH/TO/NEW/VENV/bin/activate"
+# Windows (.ps1 for PowerShell, .bat for Windows Batch)
+"PATH\TO\NEW\VENV\Script\activate.ps1"
+```
+
+After that's done, either install Streamlink by cloning its git repository and fetching + checking out the pull request branch, or by using pip to install from the pull request's git branch directly.
+
+```bash
+# via git (further code modifications are simple)
+git clone https://github.com/streamlink/streamlink
+cd streamlink
+# install in "development mode" (changes to the code are picked up automatically)
+python -m pip install -e .
+# fetch and checkout pull request branch
+git fetch --force origin "refs/pull/PULL-REQUEST-ID/head:LOCAL-BRANCH-NAME"
+git checkout "LOCAL-BRANCH-NAME"
+```
+
+```bash
+# via pip (whole install needs to be done on each follow-up code change)
+python -m pip install "git+https://github.com/streamlink/streamlink@refs/pull/PULL-REQUEST-ID/head"
+```
+
+```bash
+# validate install (version string includes git commit ID)
+streamlink --loglevel=debug
+```
+
+
 ## Acknowledgements
 
 This contributing guide has been adapted from [HTML5 boilerplate's guide][ref-h5bp].
@@ -118,4 +179,10 @@ This contributing guide has been adapted from [HTML5 boilerplate's guide][ref-h5
   [howto-open-pull-requests]: https://help.github.com/articles/using-pull-requests
   [Git]: https://git-scm.com
   [license]: https://github.com/streamlink/streamlink/blob/master/LICENSE
+  [debug-log]: https://streamlink.github.io/latest/cli.html#cmdoption-loglevel
+  [plugin-sideloading]: https://streamlink.github.io/latest/cli/plugin-sideloading.html
+  [nightly-builds-windows]: https://streamlink.github.io/latest/install.html#windows-binaries
+  [nightly-builds-linux]: https://streamlink.github.io/latest/install.html#linux-appimages
+  [python-version]: https://streamlink.github.io/latest/install.html#dependencies
+  [python-venv]: https://streamlink.github.io/latest/install.html#virtual-environment
   [ref-h5bp]: https://github.com/h5bp/html5-boilerplate/blob/master/CONTRIBUTING.md

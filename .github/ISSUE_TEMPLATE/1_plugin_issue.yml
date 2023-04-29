@@ -75,6 +75,8 @@ body:
         - [ ] properly filled in the title of this plugin issue (at the very top of this page)
         - [ ] checked the rendered text previews to avoid unnecessary formatting errors
 
+        Please [don't forget to provide feedback](https://github.com/streamlink/streamlink/blob/master/CONTRIBUTING.md#pull-request-feedback) once a pull request gets submitted for fixing the plugin issue.
+
         ----
 
         [❤️ Love Streamlink? Please consider supporting the project maintainers. Thanks! ❤️](https://streamlink.github.io/latest/donate.html)
