@@ -550,6 +550,7 @@ class TestCLIMainOutputStream:
         assert mock_streamrunner.call_args_list == [call(streamio, output, show_progress=expected)]
 
 
+# TODO: rewrite using pytest (caplog+capsys fixtures) and move to separate test module
 class _TestCLIMainLogging(unittest.TestCase):
     # stop test execution at the setup_signals() call, as we're not interested in what comes afterwards
     class StopTest(Exception):
@@ -577,12 +578,7 @@ class _TestCLIMainLogging(unittest.TestCase):
     def tearDown(self):
         streamlink_cli.main.logger.root.handlers.clear()
 
-    # python >=3.7.2: https://bugs.python.org/issue35046
-    _write_call_log_cli_info = (
-        [call("[cli][info] foo\n")]
-        if sys.version_info >= (3, 7, 2) else
-        [call("[cli][info] foo"), call("\n")]
-    )
+    _write_call_log_cli_info = [call("[cli][info] foo\n")]
     _write_call_console_msg = [call("bar\n")]
     _write_call_console_msg_error = [call("error: bar\n")]
     _write_call_console_msg_json = [call("{\n  \"error\": \"bar\"\n}\n")]
@@ -598,12 +594,7 @@ class _TestCLIMainLogging(unittest.TestCase):
 
 
 class TestCLIMainLoggingStreams(_TestCLIMainLogging):
-    # python >=3.7.2: https://bugs.python.org/issue35046
-    _write_call_log_testcli_err = (
-        [call("[test_cli_main][error] baz\n")]
-        if sys.version_info >= (3, 7, 2) else
-        [call("[test_cli_main][error] baz"), call("\n")]
-    )
+    _write_call_log_testcli_err = [call("[test_cli_main][error] baz\n")]
 
     def subject(self, argv, stream=None):
         super().subject(argv)
