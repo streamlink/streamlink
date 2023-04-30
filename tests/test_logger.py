@@ -27,9 +27,12 @@ def log(request, output: StringIO):
     fakeroot = logging.getLogger("streamlink.test")
     with patch("streamlink.logger.root", fakeroot), \
          patch("streamlink.utils.times.LOCAL", timezone.utc):
-        logger.basicConfig(stream=output, **params)
+        handler = logger.basicConfig(stream=output, **params)
+        assert isinstance(handler, logging.Handler)
         yield fakeroot
         logger.capturewarnings(False)
+        fakeroot.removeHandler(handler)
+        assert not fakeroot.handlers
 
 
 class TestLogging:

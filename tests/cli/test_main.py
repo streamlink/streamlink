@@ -920,6 +920,9 @@ class TestCLIMainPrint(unittest.TestCase):
                 mock_resolve_url.assert_not_called()
                 mock_resolve_url_no_redirect.assert_not_called()
 
+    def tearDown(self):
+        streamlink_cli.main.logger.root.handlers.clear()
+
     @staticmethod
     def get_stdout(mock_stdout):
         return "".join([call_arg[0][0] for call_arg in mock_stdout.write.call_args_list])
