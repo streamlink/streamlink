@@ -8,13 +8,15 @@ from unittest.mock import patch
 import requests_mock
 
 from streamlink import Streamlink
-from streamlink.stream.hls import HLSStream, HLSStreamWriter as _HLSStreamWriter
+from streamlink.stream.hls import HLSStream, HLSStreamWorker as _HLSStreamWorker, HLSStreamWriter as _HLSStreamWriter
 from tests.testutils.handshake import Handshake
 
 
 TIMEOUT_AWAIT_READ = 5
 TIMEOUT_AWAIT_READ_ONCE = 5
 TIMEOUT_AWAIT_WRITE = 60  # https://github.com/streamlink/streamlink/issues/3868
+TIMEOUT_AWAIT_PLAYLIST_RELOAD = 5
+TIMEOUT_AWAIT_PLAYLIST_WAIT = 5
 TIMEOUT_AWAIT_CLOSE = 5
 
 
@@ -88,6 +90,23 @@ class Segment(HLSItemBase):
             title=self.title,
             path=self.path if self.path_relative else self.url(namespace),
         )
+
+
+class EventedHLSStreamWorker(_HLSStreamWorker):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.handshake_reload = Handshake()
+        self.handshake_wait = Handshake()
+        self.time_wait = None
+
+    def reload_playlist(self):
+        with self.handshake_reload():
+            return super().reload_playlist()
+
+    def wait(self, time):
+        self.time_wait = time
+        with self.handshake_wait():
+            return not self.closed
 
 
 class EventedHLSStreamWriter(_HLSStreamWriter):
@@ -229,6 +248,16 @@ class TestMixinStreamHLS(unittest.TestCase):
         thread.reader.worker.join(timeout)
         thread.join(timeout)
         assert self.thread.reader.closed, "Stream reader is closed"
+
+    def await_playlist_reload(self, timeout=TIMEOUT_AWAIT_PLAYLIST_RELOAD) -> None:
+        worker: EventedHLSStreamWorker = self.thread.reader.worker  # type: ignore[assignment]
+        assert worker.is_alive()
+        assert worker.handshake_reload.step(timeout)
+
+    def await_playlist_wait(self, timeout=TIMEOUT_AWAIT_PLAYLIST_WAIT) -> None:
+        worker: EventedHLSStreamWorker = self.thread.reader.worker  # type: ignore[assignment]
+        assert worker.is_alive()
+        assert worker.handshake_wait.step(timeout)
 
     # make write calls on the write-thread and wait until it has finished
     def await_write(self, write_calls=1, timeout=TIMEOUT_AWAIT_WRITE) -> None:

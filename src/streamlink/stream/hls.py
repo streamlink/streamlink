@@ -2,6 +2,7 @@ import logging
 import re
 import struct
 from concurrent.futures import Future
+from datetime import datetime, timedelta
 from typing import Any, Dict, List, NamedTuple, Optional, Tuple, Union
 from urllib.parse import urlparse
 
@@ -22,6 +23,7 @@ from streamlink.stream.http import HTTPStream
 from streamlink.stream.segmented import SegmentedStreamReader, SegmentedStreamWorker, SegmentedStreamWriter
 from streamlink.utils.cache import LRUCache
 from streamlink.utils.formatter import Formatter
+from streamlink.utils.times import now
 
 
 log = logging.getLogger(__name__)
@@ -297,6 +299,7 @@ class HLSStreamWorker(SegmentedStreamWorker):
         self.playlist_end: Optional[int] = None
         self.playlist_sequence: int = -1
         self.playlist_sequences: List[Sequence] = []
+        self.playlist_reload_last: datetime = now()
         self.playlist_reload_time: float = 6
         self.playlist_reload_time_override = self.session.options.get("hls-playlist-reload-time")
         self.playlist_reload_retries = self.session.options.get("hls-playlist-reload-attempts")
@@ -412,6 +415,7 @@ class HLSStreamWorker(SegmentedStreamWorker):
         return default
 
     def iter_segments(self):
+        self.playlist_reload_last = now()
         try:
             self.reload_playlist()
         except StreamError as err:
@@ -457,7 +461,20 @@ class HLSStreamWorker(SegmentedStreamWorker):
 
                 self.playlist_sequence = sequence.num + 1
 
-            if self.wait(self.playlist_reload_time):
+            # Exclude playlist fetch+processing time from the overall playlist reload time
+            # and reload playlist in a strict time interval
+            time_completed = now()
+            time_elapsed = max(0.0, (time_completed - self.playlist_reload_last).total_seconds())
+            time_wait = max(0.0, self.playlist_reload_time - time_elapsed)
+            if self.wait(time_wait):
+                if time_wait > 0:
+                    # If we had to wait, then don't call now() twice and instead reference the timestamp from before
+                    # the wait() call, to prevent a shifting time offset due to the execution time.
+                    self.playlist_reload_last = time_completed + timedelta(seconds=time_wait)
+                else:
+                    # Otherwise, get the current time, as the reload interval already has shifted.
+                    self.playlist_reload_last = now()
+
                 try:
                     self.reload_playlist()
                 except StreamError as err:
