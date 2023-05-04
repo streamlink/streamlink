@@ -1,10 +1,11 @@
-import ssl
+import re
 import time
 from typing import Any, Dict, Pattern, Tuple
 
 import requests.adapters
 import urllib3
 from requests import PreparedRequest, Request, Session
+from requests.adapters import HTTPAdapter
 
 from streamlink.exceptions import PluginError
 from streamlink.packages.requests_file import FileAdapter
@@ -12,6 +13,7 @@ from streamlink.plugin.api import useragents
 from streamlink.utils.parse import parse_json, parse_xml
 
 
+# urllib3>=2.0.0: enforce_content_length now defaults to True (keep the override for backwards compatibility)
 class _HTTPResponse(urllib3.response.HTTPResponse):
     def __init__(self, *args, **kwargs):
         # Always enforce content length validation!
@@ -50,7 +52,9 @@ requests.adapters.HTTPResponse = _HTTPResponse  # type: ignore[misc]
 # > normalizers should use uppercase hexadecimal digits for all percent-
 # > encodings.
 class Urllib3UtilUrlPercentReOverride:
-    _re_percent_encoding: Pattern = urllib3.util.url.PERCENT_RE  # type: ignore[attr-defined]
+    # urllib3>=2.0.0: _PERCENT_RE, urllib3<2.0.0: PERCENT_RE
+    _re_percent_encoding: Pattern \
+        = getattr(urllib3.util.url, "_PERCENT_RE", getattr(urllib3.util.url, "PERCENT_RE", re.compile(r"%[a-fA-F0-9]{2}")))
 
     # urllib3>=1.25.8
     # https://github.com/urllib3/urllib3/blame/1.25.8/src/urllib3/util/url.py#L219-L227
@@ -59,7 +63,8 @@ class Urllib3UtilUrlPercentReOverride:
         return string, len(cls._re_percent_encoding.findall(string))
 
 
-urllib3.util.url.PERCENT_RE = Urllib3UtilUrlPercentReOverride  # type: ignore[attr-defined]
+# urllib3>=2.0.0: _PERCENT_RE, urllib3<2.0.0: PERCENT_RE
+urllib3.util.url._PERCENT_RE = urllib3.util.url.PERCENT_RE = Urllib3UtilUrlPercentReOverride  # type: ignore[attr-defined]
 
 
 # requests.Request.__init__ keywords, except for "hooks"
@@ -181,12 +186,24 @@ class HTTPSession(Session):
         return res
 
 
-class TLSSecLevel1Adapter(requests.adapters.HTTPAdapter):
+class TLSNoDHAdapter(HTTPAdapter):
     def init_poolmanager(self, *args, **kwargs):
-        ctx = ssl.create_default_context()
+        ctx = urllib3.util.create_urllib3_context()
+        ctx.load_default_certs()
+        ciphers = ":".join(cipher.get("name") for cipher in ctx.get_ciphers())
+        ciphers += ":!DH"
+        ctx.set_ciphers(ciphers)
+        kwargs["ssl_context"] = ctx
+        return super().init_poolmanager(*args, **kwargs)
+
+
+class TLSSecLevel1Adapter(HTTPAdapter):
+    def init_poolmanager(self, *args, **kwargs):
+        ctx = urllib3.util.create_urllib3_context()
+        ctx.load_default_certs()
         ctx.set_ciphers("DEFAULT:@SECLEVEL=1")
         kwargs["ssl_context"] = ctx
         return super().init_poolmanager(*args, **kwargs)
 
 
-__all__ = ["HTTPSession", "TLSSecLevel1Adapter"]
+__all__ = ["HTTPSession", "TLSNoDHAdapter", "TLSSecLevel1Adapter"]

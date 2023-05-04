@@ -8,10 +8,12 @@ from unittest.mock import Mock, call, patch
 import pytest
 import requests_mock
 import urllib3
+from requests.adapters import HTTPAdapter
 
 import tests.plugin
 from streamlink.exceptions import NoPluginError, StreamlinkDeprecationWarning
 from streamlink.plugin import HIGH_PRIORITY, LOW_PRIORITY, NO_PRIORITY, NORMAL_PRIORITY, Plugin, pluginmatcher
+from streamlink.plugin.api.http_session import TLSNoDHAdapter
 from streamlink.session import Streamlink
 from streamlink.stream.hls import HLSStream
 from streamlink.stream.http import HTTPStream
@@ -394,19 +396,17 @@ class TestSession(unittest.TestCase):
         assert session.get_option("ipv6") is False
         assert mock_urllib3_util_connection.allowed_gai_family is _original_allowed_gai_family
 
-    @patch("streamlink.session.urllib3_util_ssl", DEFAULT_CIPHERS="foo:!bar:baz")
-    def test_http_disable_dh(self, mock_urllib3_util_ssl):
+    def test_http_disable_dh(self):
         session = self.subject(load_plugins=False)
-        assert mock_urllib3_util_ssl.DEFAULT_CIPHERS == "foo:!bar:baz"
+        assert isinstance(session.http.adapters["https://"], HTTPAdapter)
+        assert not isinstance(session.http.adapters["https://"], TLSNoDHAdapter)
 
         session.set_option("http-disable-dh", True)
-        assert mock_urllib3_util_ssl.DEFAULT_CIPHERS == "foo:!bar:baz:!DH"
-
-        session.set_option("http-disable-dh", True)
-        assert mock_urllib3_util_ssl.DEFAULT_CIPHERS == "foo:!bar:baz:!DH"
+        assert isinstance(session.http.adapters["https://"], TLSNoDHAdapter)
 
         session.set_option("http-disable-dh", False)
-        assert mock_urllib3_util_ssl.DEFAULT_CIPHERS == "foo:!bar:baz"
+        assert isinstance(session.http.adapters["https://"], HTTPAdapter)
+        assert not isinstance(session.http.adapters["https://"], TLSNoDHAdapter)
 
 
 class TestSessionOptionHttpProxy:

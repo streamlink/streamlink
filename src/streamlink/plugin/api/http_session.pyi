@@ -71,6 +71,10 @@ _Exception: TypeAlias = type[Exception]
 # ----
 
 
+class TLSNoDHAdapter(HTTPAdapter):
+    ...
+
+
 class TLSSecLevel1Adapter(HTTPAdapter):
     ...
 
