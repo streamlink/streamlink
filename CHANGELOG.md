@@ -1,5 +1,20 @@
 # Changelog
 
+## streamlink 5.5.0 (2023-05-05)
+
+Release highlights:
+
+- Added: `--no-config` ([#5314](https://github.com/streamlink/streamlink/pull/5314))
+- Added: `--player-external-http-interface` ([#5295](https://github.com/streamlink/streamlink/pull/5295))
+- Fixed: M3U8 attribute parsing issue ([#5307](https://github.com/streamlink/streamlink/pull/5307))
+- Fixed: various minor plugin issues ([#5291](https://github.com/streamlink/streamlink/pull/5291), [#5299](https://github.com/streamlink/streamlink/pull/5299), [#5306](https://github.com/streamlink/streamlink/pull/5306))
+- Build: bumped urllib3 to `>=1.26.0,<3` and fixed compatibility issues with `urllib3 >=2.0.0` ([#5326](https://github.com/streamlink/streamlink/pull/5326), [#5325](https://github.com/streamlink/streamlink/pull/5325))
+- Docs: bumped furo theme to `2023.03.27` ([#5301](https://github.com/streamlink/streamlink/pull/5301))
+- Docs: bumped build dependencies `sphinx >=5.0.0,<7`, `myst-parser >=1.0.0,<2` and `sphinx-design >=0.4.1,<1` ([#5301](https://github.com/streamlink/streamlink/pull/5301))
+
+[Full changelog](https://github.com/streamlink/streamlink/compare/5.4.0...5.5.0)
+
+
 ## streamlink 5.4.0 (2023-04-12)
 
 Release highlights:
