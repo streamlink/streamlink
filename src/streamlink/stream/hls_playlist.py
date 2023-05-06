@@ -129,7 +129,7 @@ class M3U8:
         self.iframes_only: Optional[bool] = None  # version >= 4
         self.media_sequence: Optional[int] = None
         self.playlist_type: Optional[str] = None
-        self.target_duration: Optional[int] = None
+        self.targetduration: Optional[float] = None
         self.start: Optional[Start] = None
         self.version: Optional[int] = None
 
@@ -423,7 +423,7 @@ class M3U8Parser:
         EXT-X-TARGETDURATION
         https://datatracker.ietf.org/doc/html/rfc8216#section-4.3.3.1
         """
-        self.m3u8.target_duration = int(value)
+        self.m3u8.targetduration = float(value)
 
     def parse_tag_ext_x_media_sequence(self, value: str) -> None:
         """
