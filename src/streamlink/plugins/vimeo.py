@@ -82,20 +82,20 @@ class Vimeo(Plugin):
         else:
             viewer = self.session.http.get(
                 "https://vimeo.com/_next/viewer",
-                schema=self._viewer_schema
+                schema=self._viewer_schema,
             )
 
             uri = self.session.http.get(
                 "https://vimeo.com/api/oembed.json",
                 params={"url": self.url},
-                schema=self._uri_schema
+                schema=self._uri_schema,
             )
 
             if viewer and uri:
                 api_url = self.session.http.get(
-                    self.API_URL.format(viewer["apiUrl"], uri['uri']),
-                    headers={"Authorization": "jwt {}".format(viewer['jwt'])},
-                    schema=self._config_url_schema
+                    self.API_URL.format(viewer["apiUrl"], uri["uri"]),
+                    headers={"Authorization": "jwt {}".format(viewer["jwt"])},
+                    schema=self._config_url_schema,
                 )
 
             if not api_url:
