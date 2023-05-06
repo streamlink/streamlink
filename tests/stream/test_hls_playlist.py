@@ -381,7 +381,7 @@ class TestHLSPlaylist(unittest.TestCase):
         delta_30 = timedelta(seconds=30, milliseconds=500)
         delta_60 = timedelta(seconds=60)
 
-        assert playlist.target_duration == 120
+        assert playlist.targetduration == 120
 
         assert list(playlist.dateranges) == [
             DateRange(
