@@ -12,6 +12,7 @@ class TestPluginCanHandleUrlVimeo(PluginCanHandleUrl):
         "https://vimeo.com/ondemand/surveyopenspace/92630739",
         "https://vimeo.com/ondemand/100footsurfingdays",
         "https://player.vimeo.com/video/176894130",
+        "https://vimeo.com/771745400/840d05200c",
     ]
 
     should_not_match = [
