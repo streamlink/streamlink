@@ -25,6 +25,7 @@ log = logging.getLogger(__name__)
     r"https?://(player\.vimeo\.com/video/\d+|(www\.)?vimeo\.com/.+)",
 ))
 class Vimeo(Plugin):
+    VIEWER_URL = "https://vimeo.com/_next/viewer"
     OEMBED_URL = "https://vimeo.com/api/oembed.json"
     API_URL = "https://{0}/{1}?fields=config_url"
     _uri_schema = validate.Schema(
@@ -81,12 +82,12 @@ class Vimeo(Plugin):
             data = self.session.http.get(self.url, schema=self._player_schema)
         else:
             viewer = self.session.http.get(
-                "https://vimeo.com/_next/viewer",
+                self.VIEWER_URL,
                 schema=self._viewer_schema,
             )
 
             uri = self.session.http.get(
-                "https://vimeo.com/api/oembed.json",
+                self.OEMBED_URL,
                 params={"url": self.url},
                 schema=self._uri_schema,
             )
