@@ -8,7 +8,7 @@ $notes Password protected streams are not supported
 import logging
 import re
 from html import unescape as html_unescape
-from urllib.parse import urlparse
+from urllib.parse import urljoin, urlparse
 
 from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.api import validate
@@ -16,6 +16,7 @@ from streamlink.stream.dash import DASHStream
 from streamlink.stream.ffmpegmux import MuxedStream
 from streamlink.stream.hls import HLSStream
 from streamlink.stream.http import HTTPStream
+from streamlink.utils.url import update_scheme
 
 
 log = logging.getLogger(__name__)
@@ -25,6 +26,8 @@ log = logging.getLogger(__name__)
     r"https?://(player\.vimeo\.com/video/\d+|(www\.)?vimeo\.com/.+)",
 ))
 class Vimeo(Plugin):
+    VIEWER_URL = "https://vimeo.com/_next/viewer"
+    OEMBED_URL = "https://vimeo.com/api/oembed.json"
     _config_url_re = re.compile(r'(?:"config_url"|\bdata-config-url)\s*[:=]\s*(".+?")')
     _config_re = re.compile(r"playerConfig\s*=\s*({.+?})\s*var")
     _config_url_schema = validate.Schema(
@@ -61,11 +64,49 @@ class Vimeo(Plugin):
         validate.any(None, validate.Schema(validate.get(1), _config_schema)),
     )
 
+    def get_config_url(self) -> str:
+        jwt, api_url = self.session.http.get(
+            self.VIEWER_URL,
+            schema=validate.Schema(
+                validate.parse_json(),
+                {
+                    "jwt": str,
+                    "apiUrl": str,
+                },
+                validate.union_get("jwt", "apiUrl"),
+            ),
+        )
+        uri = self.session.http.get(
+            self.OEMBED_URL,
+            params={"url": self.url},
+            schema=validate.Schema(
+                validate.parse_json(),
+                {"uri": str},
+                validate.get("uri"),
+            ),
+        )
+        player_config_url = urljoin(update_scheme("https://", api_url), uri)
+
+        return self.session.http.get(
+            player_config_url,
+            params={"fields": "config_url"},
+            headers={"Authorization": f"jwt {jwt}"},
+            schema=validate.Schema(
+                validate.parse_json(),
+                {"config_url": validate.url()},
+                validate.get("config_url"),
+            ),
+        )
+
     def _get_streams(self):
         if "player.vimeo.com" in self.url:
             data = self.session.http.get(self.url, schema=self._player_schema)
         else:
             api_url = self.session.http.get(self.url, schema=self._config_url_schema)
+
+            if not api_url:
+                api_url = self.get_config_url()
+
             if not api_url:
                 return
             data = self.session.http.get(api_url, schema=self._config_schema)
