@@ -13,6 +13,13 @@ from streamlink.plugin.api import useragents
 from streamlink.utils.parse import parse_json, parse_xml
 
 
+try:
+    from urllib3.util import create_urllib3_context  # type: ignore[attr-defined]
+except ImportError:  # pragma: no cover
+    # urllib3 <2.0.0 compat import
+    from urllib3.util.ssl_ import create_urllib3_context
+
+
 # urllib3>=2.0.0: enforce_content_length now defaults to True (keep the override for backwards compatibility)
 class _HTTPResponse(urllib3.response.HTTPResponse):
     def __init__(self, *args, **kwargs):
@@ -188,7 +195,7 @@ class HTTPSession(Session):
 
 class TLSNoDHAdapter(HTTPAdapter):
     def init_poolmanager(self, *args, **kwargs):
-        ctx = urllib3.util.create_urllib3_context()
+        ctx = create_urllib3_context()
         ctx.load_default_certs()
         ciphers = ":".join(cipher.get("name") for cipher in ctx.get_ciphers())
         ciphers += ":!DH"
@@ -199,7 +206,7 @@ class TLSNoDHAdapter(HTTPAdapter):
 
 class TLSSecLevel1Adapter(HTTPAdapter):
     def init_poolmanager(self, *args, **kwargs):
-        ctx = urllib3.util.create_urllib3_context()
+        ctx = create_urllib3_context()
         ctx.load_default_certs()
         ctx.set_ciphers("DEFAULT:@SECLEVEL=1")
         kwargs["ssl_context"] = ctx
