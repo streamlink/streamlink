@@ -8,7 +8,6 @@ $notes Password protected streams are not supported
 import logging
 import re
 from html import unescape as html_unescape
-from typing import Optional
 from urllib.parse import urljoin, urlparse
 
 from streamlink.plugin import Plugin, pluginmatcher
@@ -65,7 +64,7 @@ class Vimeo(Plugin):
         validate.any(None, validate.Schema(validate.get(1), _config_schema)),
     )
 
-    def get_config_url(self) -> Optional[str]:
+    def get_config_url(self) -> str:
         jwt, api_url = self.session.http.get(
             self.VIEWER_URL,
             schema=validate.Schema(
