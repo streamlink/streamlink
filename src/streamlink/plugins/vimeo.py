@@ -66,7 +66,7 @@ class Vimeo(Plugin):
     )
 
     def get_config_url(self) -> Optional[str]:
-        viewer = self.session.http.get(
+        jwt, api_url = self.session.http.get(
             self.VIEWER_URL,
             schema=validate.Schema(
                 validate.parse_json(),
@@ -74,25 +74,29 @@ class Vimeo(Plugin):
                     "jwt": str,
                     "apiUrl": str,
                 },
+                validate.union_get("jwt", "apiUrl"),
             ),
         )
-
         uri = self.session.http.get(
             self.OEMBED_URL,
             params={"url": self.url},
             schema=validate.Schema(
                 validate.parse_json(),
-                {
-                    "uri": str,
-                },
+                {"uri": str},
+                validate.get("uri"),
             ),
         )
+        player_config_url = urljoin(update_scheme("https://", api_url), uri)
 
         return self.session.http.get(
-            urljoin(update_scheme("https://", viewer["apiUrl"]), uri["uri"]),
+            player_config_url,
             params={"fields": "config_url"},
-            headers={"Authorization": "jwt {}".format(viewer["jwt"])},
-            schema=self._config_url_schema,
+            headers={"Authorization": f"jwt {jwt}"},
+            schema=validate.Schema(
+                validate.parse_json(),
+                {"config_url": validate.url()},
+                validate.get("config_url"),
+            ),
         )
 
     def _get_streams(self):
