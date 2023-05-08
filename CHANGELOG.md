@@ -1,5 +1,16 @@
 # Changelog
 
+## streamlink 5.5.1 (2023-05-08)
+
+Patch release:
+
+- Fixed: shifting time offset when reloading HLS playlists ([#5321](https://github.com/streamlink/streamlink/pull/5321))
+- Fixed: import of `create_urllib3_context` on `urllib3 <2.0.0` ([#5333](https://github.com/streamlink/streamlink/pull/5333))
+- Fixed: Vimeo plugin ([#5331](https://github.com/streamlink/streamlink/pull/5331))
+
+[Full changelog](https://github.com/streamlink/streamlink/compare/5.5.0...5.5.1)
+
+
 ## streamlink 5.5.0 (2023-05-05)
 
 Release highlights:
