@@ -83,6 +83,60 @@ class TestDASHStreamParseManifest:
         assert mpd.call_args_list == [call(ANY, url="http://test/manifest.mpd", base_url="http://test")]
         assert sorted(streams.keys()) == sorted(["a128k", "a256k"])
 
+    @pytest.mark.parametrize(("with_video_only", "with_audio_only", "expected"), [
+        pytest.param(
+            False,
+            False,
+            ["720p+a128k", "720p+a256k", "1080p+a128k", "1080p+a256k"],
+            id="Only muxed streams",
+        ),
+        pytest.param(
+            True,
+            False,
+            ["720p", "720p+a128k", "720p+a256k", "1080p", "1080p+a128k", "1080p+a256k"],
+            id="With video-only streams",
+        ),
+        pytest.param(
+            False,
+            True,
+            ["a128k", "a256k", "720p+a128k", "720p+a256k", "1080p+a128k", "1080p+a256k"],
+            id="With audio-only streams",
+        ),
+        pytest.param(
+            True,
+            True,
+            ["a128k", "a256k", "720p", "720p+a128k", "720p+a256k", "1080p", "1080p+a128k", "1080p+a256k"],
+            id="With video-only and audio-only streams",
+        ),
+    ])
+    def test_with_videoaudio_only(
+        self,
+        session: Streamlink,
+        mpd: Mock,
+        with_video_only: bool,
+        with_audio_only: bool,
+        expected: List[str],
+    ):
+        adaptationset = Mock(
+            contentProtections=None,
+            representations=[
+                Mock(id="1", contentProtections=None, mimeType="video/mp4", height=720),
+                Mock(id="2", contentProtections=None, mimeType="video/mp4", height=1080),
+                Mock(id="3", contentProtections=None, mimeType="audio/mp4", bandwidth=128.0, lang="en"),
+                Mock(id="4", contentProtections=None, mimeType="audio/mp4", bandwidth=256.0, lang="en"),
+            ],
+        )
+        mpd.return_value = Mock(periods=[Mock(adaptationSets=[adaptationset])])
+
+        streams = DASHStream.parse_manifest(
+            session,
+            "http://test/manifest.mpd",
+            with_video_only=with_video_only,
+            with_audio_only=with_audio_only,
+        )
+        assert mpd.call_args_list == [call(ANY, url="http://test/manifest.mpd", base_url="http://test")]
+        assert list(streams.keys()) == expected
+
     def test_audio_single(self, session: Streamlink, mpd: Mock):
         adaptationset = Mock(
             contentProtections=None,

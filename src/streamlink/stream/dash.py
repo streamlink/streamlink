@@ -264,6 +264,8 @@ class DASHStream(Stream):
         session: Streamlink,
         url_or_manifest: str,
         period: int = 0,
+        with_video_only: bool = False,
+        with_audio_only: bool = False,
         **args,
     ) -> Dict[str, "DASHStream"]:
         """
@@ -272,6 +274,8 @@ class DASHStream(Stream):
         :param session: Streamlink session instance
         :param url_or_manifest: URL of the manifest file or an XML manifest string
         :param period: Which MPD period to use (index number) for finding representations
+        :param with_video_only: Also return video-only streams, otherwise only return muxed streams
+        :param with_audio_only: Also return audio-only streams, otherwise only return muxed streams
         :param args: Additional keyword arguments passed to :meth:`requests.Session.request`
         """
 
@@ -283,8 +287,8 @@ class DASHStream(Stream):
             raise PluginError(f"Failed to parse MPD manifest: {err}") from err
 
         source = mpd_params.get("url", "MPD manifest")
-        video: List[Optional[Representation]] = []
-        audio: List[Optional[Representation]] = []
+        video: List[Optional[Representation]] = [None] if with_audio_only else []
+        audio: List[Optional[Representation]] = [None] if with_video_only else []
 
         # Search for suitable video and audio representations
         for aset in mpd.periods[period].adaptationSets:
@@ -330,6 +334,9 @@ class DASHStream(Stream):
 
         ret = []
         for vid, aud in itertools.product(video, audio):
+            if not vid and not aud:
+                continue
+
             stream = DASHStream(session, mpd, vid, aud, **args)
             stream_name = []
 
