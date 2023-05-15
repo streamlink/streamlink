@@ -211,7 +211,7 @@ class DASHStream(Stream):
         self.mpd = mpd
         self.video_representation = video_representation
         self.audio_representation = audio_representation
-        self.args = args
+        self.args = session.http.valid_request_args(**args)
 
     def __json__(self):
         json = dict(type=self.shortname())
@@ -275,7 +275,7 @@ class DASHStream(Stream):
         :param args: Additional keyword arguments passed to :meth:`requests.Session.request`
         """
 
-        manifest, mpd_params = cls.fetch_manifest(session, url_or_manifest)
+        manifest, mpd_params = cls.fetch_manifest(session, url_or_manifest, **args)
 
         try:
             mpd = cls.parse_mpd(manifest, mpd_params)
