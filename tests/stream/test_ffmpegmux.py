@@ -425,7 +425,7 @@ class TestOpen:
             assert popen.call_args_list[0][1]["stderr"] is mock_stderr
 
             streamio.close()
-            assert not mock_stderr.close.called
+            assert mock_stderr.close.call_count == 0
 
     @pytest.mark.parametrize(("options", "side_effect"), [
         pytest.param({"ffmpeg-verbose-path": "foo"}, None, id="verbose-path"),
@@ -441,7 +441,7 @@ class TestOpen:
 
             streamio.open()
             assert popen.call_args_list[0][1]["stderr"] is file
-            assert not file.close.called
+            assert file.close.call_count == 0
 
             streamio.close()
-            assert file.close.called_once
+            assert file.close.call_count == 1
