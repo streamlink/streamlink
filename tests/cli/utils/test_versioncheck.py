@@ -17,12 +17,21 @@ def test_logger_name():
 
 class TestGetLatest:
     @pytest.fixture()
-    def pypi(self, request, requests_mock: rm.Mocker):
-        invalid = requests_mock.register_uri(rm.ANY, rm.ANY, exc=rm.exceptions.InvalidRequest("Invalid request"))
-        response = requests_mock.register_uri("GET", "https://pypi.python.org/pypi/streamlink/json", **(request.param or {}))
+    def pypi(self, request: pytest.FixtureRequest, requests_mock: rm.Mocker):
+        # TODO: add global requests_mock fixture which sets up InvalidRequest exceptions for unknown requests
+        invalid = requests_mock.register_uri(
+            rm.ANY,
+            rm.ANY,
+            exc=rm.exceptions.InvalidRequest("Invalid request"),
+        )
+        response = requests_mock.register_uri(
+            "GET",
+            "https://pypi.python.org/pypi/streamlink/json",
+            **getattr(request, "param", {}),
+        )
         yield response
-        assert not invalid.called  # type: ignore[attr-defined]
-        assert response.called_once  # type: ignore[attr-defined]
+        assert invalid.call_count == 0  # type: ignore[attr-defined]
+        assert response.call_count == 1  # type: ignore[attr-defined]
 
     @pytest.mark.parametrize(("pypi", "error"), [
         (
@@ -61,13 +70,13 @@ class TestVersionCheck:
         return mock_get_latest
 
     @pytest.fixture()
-    def cache(self, request, monkeypatch: pytest.MonkeyPatch):
-        Cache = Mock()
-        cache = Cache("cli.json")
-        cache.get.side_effect = request.param.get
-        monkeypatch.setattr("streamlink_cli.utils.versioncheck.Cache", Cache)
-        yield cache
-        assert cache.called_once
+    def cache(self, request: pytest.FixtureRequest, monkeypatch: pytest.MonkeyPatch):
+        mock_cache = Mock()
+        mock_cache.get.side_effect = getattr(request, "param", {}).get
+        MockCache = Mock(return_value=mock_cache)
+        monkeypatch.setattr("streamlink_cli.utils.versioncheck.Cache", MockCache)
+        yield mock_cache
+        assert MockCache.call_args_list == [call(filename="cli.json")]
 
     @pytest.mark.parametrize("cache", [{}], indirect=True)
     def test_auto_uncached_outdated(self, caplog: pytest.LogCaptureFixture, cache: Mock, latest: Mock):
