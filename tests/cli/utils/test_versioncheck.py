@@ -18,20 +18,13 @@ def test_logger_name():
 class TestGetLatest:
     @pytest.fixture()
     def pypi(self, request: pytest.FixtureRequest, requests_mock: rm.Mocker):
-        # TODO: add global requests_mock fixture which sets up InvalidRequest exceptions for unknown requests
-        invalid = requests_mock.register_uri(
-            rm.ANY,
-            rm.ANY,
-            exc=rm.exceptions.InvalidRequest("Invalid request"),
-        )
         response = requests_mock.register_uri(
             "GET",
             "https://pypi.python.org/pypi/streamlink/json",
             **getattr(request, "param", {}),
         )
         yield response
-        assert invalid.call_count == 0  # type: ignore[attr-defined]
-        assert response.call_count == 1  # type: ignore[attr-defined]
+        assert response.call_count == 1
 
     @pytest.mark.parametrize(("pypi", "error"), [
         (

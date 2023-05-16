@@ -86,7 +86,6 @@ def test_url_redirect(url: str, newurl: str, raises: nullcontext, requests_mock:
     session = Streamlink()
     # noinspection PyTypeChecker
     plugin: VK = VK(session, url)
-    requests_mock.register_uri(rm.ANY, rm.ANY, exc=rm.exceptions.InvalidRequest)
     requests_mock.get(url, text=f"""<!DOCTYPE html><html><head><meta property="og:url" content="{newurl}"/></head></html>""")
     with raises:
         plugin.follow_vk_redirect()

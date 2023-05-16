@@ -4,6 +4,7 @@ from typing import Dict, List, Tuple
 from unittest.mock import patch
 
 import pytest
+import requests_mock as rm
 
 from streamlink.session import Streamlink
 
@@ -71,3 +72,12 @@ def session(request: pytest.FixtureRequest) -> Streamlink:
         for key, value in getattr(request, "param", {}).items():
             session.set_option(key, value)
         return session
+
+
+@pytest.fixture()
+def requests_mock(requests_mock: rm.Mocker) -> rm.Mocker:  # noqa: PT004
+    """
+    Override of the default `requests_mock` fixture, with `InvalidRequest` raised on unknown requests
+    """
+    requests_mock.register_uri(rm.ANY, rm.ANY, exc=rm.exceptions.InvalidRequest)
+    return requests_mock
