@@ -24,11 +24,9 @@ def timestamp():
 class TestDASHStreamParseManifest:
     @pytest.fixture(autouse=True)
     def _response(self, request: pytest.FixtureRequest, requests_mock: rm.Mocker):
-        invalid = requests_mock.register_uri(rm.ANY, rm.ANY, exc=rm.exceptions.InvalidRequest("Invalid request"))
         response = requests_mock.register_uri("GET", "http://test/manifest.mpd", **getattr(request, "param", {}))
         called_once = "nomockedhttprequest" not in request.keywords
         yield
-        assert not invalid.called
         assert response.called_once is called_once
 
     @pytest.fixture()
