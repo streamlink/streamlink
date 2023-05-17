@@ -32,10 +32,10 @@ jobs:
           - "3.9"
           - "3.10"
           - "3.11"
-#        include:
-#          - python: "3.12-dev"
-#            os: ubuntu-20.04
-#            continue: true
+        include:
+          - python: "3.12-dev"
+            os: ubuntu-latest
+            continue: true
 #          - python: "3.12-dev"
 #            os: windows-latest
 #            continue: true
