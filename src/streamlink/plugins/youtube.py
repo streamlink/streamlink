@@ -135,7 +135,7 @@ class YouTube(Plugin):
         schema = validate.Schema(
             {"playabilityStatus": {
                 "status": str,
-                validate.optional("reason"): str,
+                validate.optional("reason"): validate.any(str, None),
             }},
             validate.get("playabilityStatus"),
             validate.union_get("status", "reason"),
@@ -341,7 +341,8 @@ class YouTube(Plugin):
         if not data:
             return False
         status, reason = self._schema_playabilitystatus(data)
-        if status != "OK":
+        # assume that there's an error if reason is set (status will still be "OK" for some reason)
+        if status != "OK" or reason:
             if errorlog:
                 log.error(f"Could not get video info - {status}: {reason}")
             return False
