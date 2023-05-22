@@ -43,7 +43,7 @@ class Dogan(Plugin):
 
     @staticmethod
     def _get_content_id(root):
-        schema=validate.Schema(
+        schema = validate.Schema(
             validate.any(
                 validate.all(
                     validate.xml_xpath_string("""
