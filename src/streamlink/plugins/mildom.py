@@ -102,7 +102,7 @@ class MildomAPI:
                     validate.optional("message"): str,
                     validate.optional("body"): {
                         "data": [
-                            {"token": str },
+                            {"token": str},
                         ],
                     },
                 },
