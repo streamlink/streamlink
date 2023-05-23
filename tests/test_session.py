@@ -396,20 +396,20 @@ class TestSession(unittest.TestCase):
         assert session.get_option("ipv6") is False
         assert mock_urllib3_util_connection.allowed_gai_family is _original_allowed_gai_family
 
-    def test_http_disable_dh(self):
-        session = self.subject(load_plugins=False)
-        assert isinstance(session.http.adapters["https://"], HTTPAdapter)
-        assert not isinstance(session.http.adapters["https://"], TLSNoDHAdapter)
 
-        session.set_option("http-disable-dh", True)
-        assert isinstance(session.http.adapters["https://"], TLSNoDHAdapter)
+def test_options_http_disable_dh(session: Streamlink):
+    assert isinstance(session.http.adapters["https://"], HTTPAdapter)
+    assert not isinstance(session.http.adapters["https://"], TLSNoDHAdapter)
 
-        session.set_option("http-disable-dh", False)
-        assert isinstance(session.http.adapters["https://"], HTTPAdapter)
-        assert not isinstance(session.http.adapters["https://"], TLSNoDHAdapter)
+    session.set_option("http-disable-dh", True)
+    assert isinstance(session.http.adapters["https://"], TLSNoDHAdapter)
+
+    session.set_option("http-disable-dh", False)
+    assert isinstance(session.http.adapters["https://"], HTTPAdapter)
+    assert not isinstance(session.http.adapters["https://"], TLSNoDHAdapter)
 
 
-class TestSessionOptionHttpProxy:
+class TestOptionsHttpProxy:
     @pytest.fixture()
     def _no_deprecation(self, recwarn: pytest.WarningsRecorder):
         yield
