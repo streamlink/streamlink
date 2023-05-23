@@ -361,40 +361,42 @@ class TestSession(unittest.TestCase):
         assert adapter_foo.poolmanager.connection_pool_kw == {}
         assert session.get_option("interface") is None
 
-    @patch("streamlink.session.urllib3_util_connection", allowed_gai_family=_original_allowed_gai_family)
-    def test_ipv4_ipv6(self, mock_urllib3_util_connection):
-        session = self.subject(load_plugins=False)
-        assert session.get_option("ipv4") is False
-        assert session.get_option("ipv6") is False
-        assert mock_urllib3_util_connection.allowed_gai_family is _original_allowed_gai_family
 
-        session.set_option("ipv4", True)
-        assert session.get_option("ipv4") is True
-        assert session.get_option("ipv6") is False
-        assert mock_urllib3_util_connection.allowed_gai_family is not _original_allowed_gai_family
-        assert mock_urllib3_util_connection.allowed_gai_family() is AF_INET
+def test_options_ipv4_ipv6(monkeypatch: pytest.MonkeyPatch, session: Streamlink):
+    mock_urllib3_util_connection = Mock(allowed_gai_family=_original_allowed_gai_family)
+    monkeypatch.setattr("streamlink.session.urllib3_util_connection", mock_urllib3_util_connection)
 
-        session.set_option("ipv4", False)
-        assert session.get_option("ipv4") is False
-        assert session.get_option("ipv6") is False
-        assert mock_urllib3_util_connection.allowed_gai_family is _original_allowed_gai_family
+    assert session.get_option("ipv4") is False
+    assert session.get_option("ipv6") is False
+    assert mock_urllib3_util_connection.allowed_gai_family is _original_allowed_gai_family
 
-        session.set_option("ipv6", True)
-        assert session.get_option("ipv4") is False
-        assert session.get_option("ipv6") is True
-        assert mock_urllib3_util_connection.allowed_gai_family is not _original_allowed_gai_family
-        assert mock_urllib3_util_connection.allowed_gai_family() is AF_INET6
+    session.set_option("ipv4", True)
+    assert session.get_option("ipv4") is True
+    assert session.get_option("ipv6") is False
+    assert mock_urllib3_util_connection.allowed_gai_family is not _original_allowed_gai_family
+    assert mock_urllib3_util_connection.allowed_gai_family() is AF_INET
 
-        session.set_option("ipv6", False)
-        assert session.get_option("ipv4") is False
-        assert session.get_option("ipv6") is False
-        assert mock_urllib3_util_connection.allowed_gai_family is _original_allowed_gai_family
+    session.set_option("ipv4", False)
+    assert session.get_option("ipv4") is False
+    assert session.get_option("ipv6") is False
+    assert mock_urllib3_util_connection.allowed_gai_family is _original_allowed_gai_family
 
-        session.set_option("ipv4", True)
-        session.set_option("ipv6", False)
-        assert session.get_option("ipv4") is True
-        assert session.get_option("ipv6") is False
-        assert mock_urllib3_util_connection.allowed_gai_family is _original_allowed_gai_family
+    session.set_option("ipv6", True)
+    assert session.get_option("ipv4") is False
+    assert session.get_option("ipv6") is True
+    assert mock_urllib3_util_connection.allowed_gai_family is not _original_allowed_gai_family
+    assert mock_urllib3_util_connection.allowed_gai_family() is AF_INET6
+
+    session.set_option("ipv6", False)
+    assert session.get_option("ipv4") is False
+    assert session.get_option("ipv6") is False
+    assert mock_urllib3_util_connection.allowed_gai_family is _original_allowed_gai_family
+
+    session.set_option("ipv4", True)
+    session.set_option("ipv6", False)
+    assert session.get_option("ipv4") is True
+    assert session.get_option("ipv6") is False
+    assert mock_urllib3_util_connection.allowed_gai_family is _original_allowed_gai_family
 
 
 def test_options_http_disable_dh(session: Streamlink):
