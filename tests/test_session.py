@@ -330,12 +330,29 @@ class TestSession(unittest.TestCase):
         assert "vod_alt" in streams
         assert "vod_alt2" in streams
 
-    def test_set_and_get_locale(self):
-        session = Streamlink()
-        session.set_option("locale", "en_US")
-        assert session.localization.country.alpha2 == "US"
-        assert session.localization.language.alpha2 == "en"
-        assert session.localization.language_code == "en_US"
+
+def test_options_locale(monkeypatch: pytest.MonkeyPatch, session: Streamlink):
+    monkeypatch.setattr("locale.getlocale", lambda: ("C", None))
+    assert session.get_option("locale") is None
+
+    localization = session.localization
+    assert localization.explicit is False
+    assert localization.language_code == "en_US"
+    assert localization.country.alpha2 == "US"
+    assert localization.country.name == "United States"
+    assert localization.language.alpha2 == "en"
+    assert localization.language.name == "English"
+
+    session.set_option("locale", "de_DE")
+    assert session.get_option("locale") == "de_DE"
+
+    localization = session.localization
+    assert localization.explicit is True
+    assert localization.language_code == "de_DE"
+    assert localization.country.alpha2 == "DE"
+    assert localization.country.name == "Germany"
+    assert localization.language.alpha2 == "de"
+    assert localization.language.name == "German"
 
 
 class TestOptionsInterface:
