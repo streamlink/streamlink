@@ -3,6 +3,7 @@ import unittest
 import warnings
 from pathlib import Path
 from socket import AF_INET, AF_INET6
+from typing import Dict
 from unittest.mock import Mock, call, patch
 
 import pytest
@@ -336,30 +337,35 @@ class TestSession(unittest.TestCase):
         assert session.localization.language.alpha2 == "en"
         assert session.localization.language_code == "en_US"
 
-    @patch("streamlink.session.HTTPSession")
-    def test_interface(self, mock_httpsession):
-        adapter_http = Mock(poolmanager=Mock(connection_pool_kw={}))
-        adapter_https = Mock(poolmanager=Mock(connection_pool_kw={}))
-        adapter_foo = Mock(poolmanager=Mock(connection_pool_kw={}))
-        mock_httpsession.return_value = Mock(adapters={
-            "http://": adapter_http,
-            "https://": adapter_https,
-            "foo://": adapter_foo,
-        })
-        session = self.subject(load_plugins=False)
+
+class TestOptionsInterface:
+    @pytest.fixture()
+    def adapters(self, monkeypatch: pytest.MonkeyPatch):
+        adapters = {
+            scheme: Mock(poolmanager=Mock(connection_pool_kw={}))
+            for scheme in ("http://", "https://", "foo://")
+        }
+        monkeypatch.setattr("streamlink.session.HTTPSession", Mock(return_value=Mock(adapters=adapters)))
+
+        return adapters
+
+    def test_options_interface(self, adapters: Dict[str, Mock], session: Streamlink):
         assert session.get_option("interface") is None
 
         session.set_option("interface", "my-interface")
-        assert adapter_http.poolmanager.connection_pool_kw == {"source_address": ("my-interface", 0)}
-        assert adapter_https.poolmanager.connection_pool_kw == {"source_address": ("my-interface", 0)}
-        assert adapter_foo.poolmanager.connection_pool_kw == {}
+        assert adapters["http://"].poolmanager.connection_pool_kw == {"source_address": ("my-interface", 0)}
+        assert adapters["https://"].poolmanager.connection_pool_kw == {"source_address": ("my-interface", 0)}
+        assert adapters["foo://"].poolmanager.connection_pool_kw == {}
         assert session.get_option("interface") == "my-interface"
 
         session.set_option("interface", None)
-        assert adapter_http.poolmanager.connection_pool_kw == {}
-        assert adapter_https.poolmanager.connection_pool_kw == {}
-        assert adapter_foo.poolmanager.connection_pool_kw == {}
+        assert adapters["http://"].poolmanager.connection_pool_kw == {}
+        assert adapters["https://"].poolmanager.connection_pool_kw == {}
+        assert adapters["foo://"].poolmanager.connection_pool_kw == {}
         assert session.get_option("interface") is None
+
+        # doesn't raise
+        session.set_option("interface", None)
 
 
 def test_options_ipv4_ipv6(monkeypatch: pytest.MonkeyPatch, session: Streamlink):
