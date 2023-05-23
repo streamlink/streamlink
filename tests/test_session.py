@@ -254,8 +254,13 @@ class TestSession(unittest.TestCase):
             (StreamlinkDeprecationWarning, "Resolved plugin dep-high with deprecated can_handle_url API"),
         ]
 
-    def test_streams(self):
-        session = self.subject()
+
+class TestStreams:
+    @pytest.fixture(autouse=True)
+    def _load_builtins(self, session: Streamlink):
+        session.load_plugins(str(PATH_TESTPLUGINS))
+
+    def test_streams(self, session: Streamlink):
         streams = session.streams("http://test.se/channel")
 
         assert "best" in streams
@@ -265,9 +270,7 @@ class TestSession(unittest.TestCase):
         assert isinstance(streams["http"], HTTPStream)
         assert isinstance(streams["hls"], HLSStream)
 
-    def test_streams_stream_types(self):
-        session = self.subject()
-
+    def test_stream_types(self, session: Streamlink):
         streams = session.streams("http://test.se/channel", stream_types=["http", "hls"])
         assert isinstance(streams["480p"], HTTPStream)
         assert isinstance(streams["480p_hls"], HLSStream)
@@ -276,9 +279,7 @@ class TestSession(unittest.TestCase):
         assert isinstance(streams["480p"], HLSStream)
         assert isinstance(streams["480p_http"], HTTPStream)
 
-    def test_streams_stream_sorting_excludes(self):
-        session = self.subject()
-
+    def test_stream_sorting_excludes(self, session: Streamlink):
         streams = session.streams("http://test.se/channel", sorting_excludes=[])
         assert "best" in streams
         assert "worst" in streams
