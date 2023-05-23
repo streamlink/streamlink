@@ -254,18 +254,6 @@ class TestSession(unittest.TestCase):
             (StreamlinkDeprecationWarning, "Resolved plugin dep-high with deprecated can_handle_url API"),
         ]
 
-    def test_options(self):
-        session = self.subject()
-        session.set_option("test_option", "option")
-        assert session.get_option("test_option") == "option"
-        assert session.get_option("non_existing") is None
-
-        assert session.get_plugin_option("testplugin", "a_option") == "default"
-        session.set_plugin_option("testplugin", "another_option", "test")
-        assert session.get_plugin_option("testplugin", "another_option") == "test"
-        assert session.get_plugin_option("non_existing", "non_existing") is None
-        assert session.get_plugin_option("testplugin", "non_existing") is None
-
     def test_streams(self):
         session = self.subject()
         streams = session.streams("http://test.se/channel")
@@ -329,6 +317,24 @@ class TestSession(unittest.TestCase):
         assert "vod" in streams
         assert "vod_alt" in streams
         assert "vod_alt2" in streams
+
+
+def test_pluginoptions(session: Streamlink):
+    assert session.get_plugin_option("testplugin", "a_option") is None
+
+    session.load_plugins(str(PATH_TESTPLUGINS))
+    assert session.get_plugin_option("testplugin", "a_option") == "default"
+
+    session.set_plugin_option("testplugin", "another_option", "test")
+    assert session.get_plugin_option("testplugin", "another_option") == "test"
+    assert session.get_plugin_option("non_existing", "non_existing") is None
+    assert session.get_plugin_option("testplugin", "non_existing") is None
+
+
+def test_options(session: Streamlink):
+    session.set_option("test_option", "option")
+    assert session.get_option("test_option") == "option"
+    assert session.get_option("non_existing") is None
 
 
 def test_options_locale(monkeypatch: pytest.MonkeyPatch, session: Streamlink):
