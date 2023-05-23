@@ -1,13 +1,12 @@
 import re
 import unittest
-import warnings
 from pathlib import Path
 from socket import AF_INET, AF_INET6
 from typing import Dict
 from unittest.mock import Mock, call, patch
 
 import pytest
-import requests_mock
+import requests_mock as rm
 import urllib3
 from requests.adapters import HTTPAdapter
 
@@ -26,24 +25,8 @@ PATH_TESTPLUGINS_OVERRIDE = PATH_TESTPLUGINS / "override"
 _original_allowed_gai_family = urllib3.util.connection.allowed_gai_family  # type: ignore[attr-defined]
 
 
-class EmptyPlugin(Plugin):
-    def _get_streams(self):
-        pass  # pragma: no cover
-
-
 # TODO: rewrite using pytest
 class TestSession(unittest.TestCase):
-    mocker: requests_mock.Mocker
-
-    def setUp(self):
-        self.mocker = requests_mock.Mocker()
-        self.mocker.register_uri(requests_mock.ANY, requests_mock.ANY, text="")
-        self.mocker.start()
-
-    def tearDown(self):
-        self.mocker.stop()
-        Streamlink.resolve_url.cache_clear()
-
     def subject(self, load_plugins=True):
         session = Streamlink()
         if load_plugins:
@@ -94,64 +77,71 @@ class TestSession(unittest.TestCase):
         with pytest.raises(SyntaxError):
             self.subject()
 
-    def test_resolve_url(self):
-        session = self.subject()
-        plugins = session.get_plugins()
 
-        with warnings.catch_warnings(record=True) as record_warnings:
-            pluginname, pluginclass, resolved_url = session.resolve_url("http://test.se/channel")
+class _EmptyPlugin(Plugin):
+    def _get_streams(self):
+        pass  # pragma: no cover
+
+
+class TestResolveURL:
+    @pytest.fixture(autouse=True)
+    def _load_builtins(self, session: Streamlink):
+        session.load_plugins(str(PATH_TESTPLUGINS))
+
+    @pytest.fixture(autouse=True)
+    def requests_mock(self, requests_mock: rm.Mocker):
+        return requests_mock
+
+    def test_resolve_url(self, recwarn: pytest.WarningsRecorder, session: Streamlink):
+        plugins = session.get_plugins()
+        pluginname, pluginclass, resolved_url = session.resolve_url("http://test.se/channel")
 
         assert issubclass(pluginclass, Plugin)
         assert pluginclass is plugins["testplugin"]
         assert resolved_url == "http://test.se/channel"
         assert hasattr(session.resolve_url, "cache_info"), "resolve_url has a lookup cache"
-        assert record_warnings == []
+        assert recwarn.list == []
 
-    def test_resolve_url__noplugin(self):
-        session = self.subject()
-        self.mocker.get("http://invalid2", status_code=301, headers={"Location": "http://invalid3"})
+    def test_resolve_url__noplugin(self, requests_mock: rm.Mocker, session: Streamlink):
+        requests_mock.get("http://invalid2", status_code=301, headers={"Location": "http://invalid3"})
 
         with pytest.raises(NoPluginError):
             session.resolve_url("http://invalid1")
         with pytest.raises(NoPluginError):
             session.resolve_url("http://invalid2")
 
-    def test_resolve_url__redirected(self):
-        session = self.subject()
-        plugins = session.get_plugins()
-        self.mocker.head("http://redirect1", status_code=501)
-        self.mocker.get("http://redirect1", status_code=301, headers={"Location": "http://redirect2"})
-        self.mocker.head("http://redirect2", status_code=301, headers={"Location": "http://test.se/channel"})
+    def test_resolve_url__redirected(self, requests_mock: rm.Mocker, session: Streamlink):
+        requests_mock.request("HEAD", "http://redirect1", status_code=501)
+        requests_mock.request("GET", "http://redirect1", status_code=301, headers={"Location": "http://redirect2"})
+        requests_mock.request("GET", "http://redirect2", status_code=301, headers={"Location": "http://test.se/channel"})
+        requests_mock.request("GET", "http://test.se/channel", content=b"")
 
+        plugins = session.get_plugins()
         pluginname, pluginclass, resolved_url = session.resolve_url("http://redirect1")
         assert issubclass(pluginclass, Plugin)
         assert pluginclass is plugins["testplugin"]
         assert resolved_url == "http://test.se/channel"
 
-    def test_resolve_url_no_redirect(self):
-        session = self.subject()
+    def test_resolve_url_no_redirect(self, session: Streamlink):
         plugins = session.get_plugins()
-
         pluginname, pluginclass, resolved_url = session.resolve_url_no_redirect("http://test.se/channel")
         assert issubclass(pluginclass, Plugin)
         assert pluginclass is plugins["testplugin"]
         assert resolved_url == "http://test.se/channel"
 
-    def test_resolve_url_no_redirect__noplugin(self):
-        session = self.subject()
+    def test_resolve_url_no_redirect__noplugin(self, session: Streamlink):
         with pytest.raises(NoPluginError):
             session.resolve_url_no_redirect("http://invalid")
 
-    def test_resolve_url_scheme(self):
+    def test_resolve_url_scheme(self, session: Streamlink):
         @pluginmatcher(re.compile("http://insecure"))
-        class PluginHttp(EmptyPlugin):
+        class PluginHttp(_EmptyPlugin):
             pass
 
         @pluginmatcher(re.compile("https://secure"))
-        class PluginHttps(EmptyPlugin):
+        class PluginHttps(_EmptyPlugin):
             pass
 
-        session = self.subject(load_plugins=False)
         session.plugins = {
             "insecure": PluginHttp,
             "secure": PluginHttps,
@@ -168,32 +158,31 @@ class TestSession(unittest.TestCase):
             session.resolve_url("http://secure")
         assert session.resolve_url("https://secure")[1] is PluginHttps
 
-    def test_resolve_url_priority(self):
+    def test_resolve_url_priority(self, session: Streamlink):
         @pluginmatcher(priority=HIGH_PRIORITY, pattern=re.compile(
             "https://(high|normal|low|no)$",
         ))
-        class HighPriority(EmptyPlugin):
+        class HighPriority(_EmptyPlugin):
             pass
 
         @pluginmatcher(priority=NORMAL_PRIORITY, pattern=re.compile(
             "https://(normal|low|no)$",
         ))
-        class NormalPriority(EmptyPlugin):
+        class NormalPriority(_EmptyPlugin):
             pass
 
         @pluginmatcher(priority=LOW_PRIORITY, pattern=re.compile(
             "https://(low|no)$",
         ))
-        class LowPriority(EmptyPlugin):
+        class LowPriority(_EmptyPlugin):
             pass
 
         @pluginmatcher(priority=NO_PRIORITY, pattern=re.compile(
             "https://(no)$",
         ))
-        class NoPriority(EmptyPlugin):
+        class NoPriority(_EmptyPlugin):
             pass
 
-        session = self.subject(load_plugins=False)
         session.plugins = {
             "high": HighPriority,
             "normal": NormalPriority,
@@ -217,14 +206,14 @@ class TestSession(unittest.TestCase):
         with pytest.raises(NoPluginError):
             session.resolve_url_no_redirect("no")
 
-    def test_resolve_deprecated(self):
+    def test_resolve_deprecated(self, session: Streamlink):
         @pluginmatcher(priority=LOW_PRIORITY, pattern=re.compile(
             "https://low",
         ))
-        class LowPriority(EmptyPlugin):
+        class LowPriority(_EmptyPlugin):
             pass
 
-        class DeprecatedNormalPriority(EmptyPlugin):
+        class DeprecatedNormalPriority(_EmptyPlugin):
             # noinspection PyUnusedLocal
             @classmethod
             def can_handle_url(cls, url):
@@ -236,9 +225,8 @@ class TestSession(unittest.TestCase):
             def priority(cls, url):
                 return HIGH_PRIORITY
 
-        session = self.subject(load_plugins=False)
         session.plugins = {
-            "empty": EmptyPlugin,
+            "empty": _EmptyPlugin,
             "low": LowPriority,
             "dep-normal-one": DeprecatedNormalPriority,
             "dep-normal-two": DeprecatedNormalPriority,
