@@ -636,8 +636,8 @@ class Streamlink:
             module_name = f"streamlink.plugins.{name}"
             try:
                 mod = load_module(module_name, path)
-            except ImportError:
-                log.exception(f"Failed to load plugin {name} from {path}\n")
+            except ImportError as err:
+                log.exception(f"Failed to load plugin {name} from {path}", exc_info=err)
                 continue
 
             if not hasattr(mod, "__plugin__") or not issubclass(mod.__plugin__, Plugin):
