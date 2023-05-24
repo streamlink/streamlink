@@ -1,9 +1,9 @@
 import re
-import unittest
+from contextlib import nullcontext
 from pathlib import Path
 from socket import AF_INET, AF_INET6
 from typing import Dict
-from unittest.mock import Mock, call, patch
+from unittest.mock import Mock
 
 import pytest
 import requests_mock as rm
@@ -25,57 +25,89 @@ PATH_TESTPLUGINS_OVERRIDE = PATH_TESTPLUGINS / "override"
 _original_allowed_gai_family = urllib3.util.connection.allowed_gai_family  # type: ignore[attr-defined]
 
 
-# TODO: rewrite using pytest
-class TestSession(unittest.TestCase):
-    def subject(self, load_plugins=True):
-        session = Streamlink()
-        if load_plugins:
-            session.load_plugins(str(PATH_TESTPLUGINS))
-            session.load_plugins(str(PATH_TESTPLUGINS_OVERRIDE))
+class TestLoadPlugins:
+    @pytest.fixture(autouse=True)
+    def caplog(self, caplog: pytest.LogCaptureFixture) -> pytest.LogCaptureFixture:
+        caplog.set_level(1, "streamlink")
+        return caplog
 
-        return session
-
-    # ----
-
-    def test_load_plugins(self):
-        session = self.subject()
+    def test_load_plugins(self, caplog: pytest.LogCaptureFixture, session: Streamlink):
+        session.load_plugins(str(PATH_TESTPLUGINS))
         plugins = session.get_plugins()
-        assert "testplugin" in plugins
-        assert "testplugin_missing" not in plugins
-        assert "testplugin_invalid" not in plugins
+        assert list(plugins.keys()) == ["testplugin"]
+        assert plugins["testplugin"].__name__ == "TestPlugin"
+        assert plugins["testplugin"].__module__ == "streamlink.plugins.testplugin"
+        assert caplog.records == []
+
+    def test_load_plugins_override(self, caplog: pytest.LogCaptureFixture, session: Streamlink):
+        session.load_plugins(str(PATH_TESTPLUGINS))
+        session.load_plugins(str(PATH_TESTPLUGINS_OVERRIDE))
+        plugins = session.get_plugins()
+        assert list(plugins.keys()) == ["testplugin"]
+        assert plugins["testplugin"].__name__ == "TestPluginOverride"
+        assert plugins["testplugin"].__module__ == "streamlink.plugins.testplugin"
+        assert [(record.name, record.levelname, record.message) for record in caplog.records] == [
+            (
+                "streamlink.session",
+                "debug",
+                f"Plugin testplugin is being overridden by {PATH_TESTPLUGINS_OVERRIDE / 'testplugin.py'}",
+            ),
+        ]
 
     def test_load_plugins_builtin(self):
-        session = self.subject()
+        session = Streamlink()
         plugins = session.get_plugins()
         assert "twitch" in plugins
         assert plugins["twitch"].__module__ == "streamlink.plugins.twitch"
 
-    @patch("streamlink.session.log")
-    def test_load_plugins_override(self, mock_log):
-        session = self.subject()
-        plugins = session.get_plugins()
-        assert "testplugin" in plugins
-        assert "testplugin_override" not in plugins
-        assert plugins["testplugin"].__name__ == "TestPluginOverride"
-        assert plugins["testplugin"].__module__ == "streamlink.plugins.testplugin"
-        assert mock_log.debug.call_args_list == [
-            call(f"Plugin testplugin is being overridden by {PATH_TESTPLUGINS_OVERRIDE / 'testplugin.py'}"),
-        ]
-
-    @patch("streamlink.session.load_module")
-    @patch("streamlink.session.log")
-    def test_load_plugins_importerror(self, mock_log, mock_load_module):
-        mock_load_module.side_effect = ImportError()
-        session = self.subject()
-        assert not session.get_plugins()
-        assert len(mock_log.exception.call_args_list) > 0
-
-    @patch("streamlink.session.load_module")
-    @patch("streamlink.session.log")
-    def test_load_plugins_syntaxerror(self, mock_log, mock_load_module):
-        mock_load_module.side_effect = SyntaxError()
-        with pytest.raises(SyntaxError):
-            self.subject()
+    @pytest.mark.parametrize(("side_effect", "raises", "logs"), [
+        pytest.param(
+            ImportError,
+            nullcontext(),
+            [
+                (
+                    "streamlink.session",
+                    "error",
+                    f"Failed to load plugin testplugin from {PATH_TESTPLUGINS}",
+                    True,
+                ),
+                (
+                    "streamlink.session",
+                    "error",
+                    f"Failed to load plugin testplugin_invalid from {PATH_TESTPLUGINS}",
+                    True,
+                ),
+                (
+                    "streamlink.session",
+                    "error",
+                    f"Failed to load plugin testplugin_missing from {PATH_TESTPLUGINS}",
+                    True,
+                ),
+            ],
+            id="ImportError",
+        ),
+        pytest.param(
+            SyntaxError,
+            pytest.raises(SyntaxError),
+            [],
+            id="SyntaxError",
+        ),
+    ])
+    def test_load_plugins_failure(
+        self,
+        monkeypatch: pytest.MonkeyPatch,
+        caplog: pytest.LogCaptureFixture,
+        side_effect: Exception,
+        raises: nullcontext,
+        logs: list,
+    ):
+        monkeypatch.setattr("streamlink.session.Streamlink.load_builtin_plugins", Mock())
+        monkeypatch.setattr("streamlink.session.load_module", Mock(side_effect=side_effect))
+        session = Streamlink()
+        with raises:
+            session.load_plugins(str(PATH_TESTPLUGINS))
+        assert session.get_plugins() == {}
+        assert [(record.name, record.levelname, record.message, bool(record.exc_info)) for record in caplog.records] == logs
 
 
 class _EmptyPlugin(Plugin):
