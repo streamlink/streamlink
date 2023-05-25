@@ -1,5 +1,3 @@
-import unittest
-
 from streamlink.plugins.bbciplayer import BBCiPlayer
 from tests.plugins import PluginCanHandleUrl
 
@@ -17,6 +15,6 @@ class TestPluginCanHandleUrlBBCiPlayer(PluginCanHandleUrl):
     ]
 
 
-class TestPluginBBCiPlayer(unittest.TestCase):
+class TestPluginBBCiPlayer:
     def test_vpid_hash(self):
         assert BBCiPlayer._hash_vpid("1234567890") == "71c345435589c6ddeea70d6f252e2a52281ecbf3"

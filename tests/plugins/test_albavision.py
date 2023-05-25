@@ -1,5 +1,3 @@
-import unittest
-
 from streamlink.plugins.albavision import Albavision
 from tests.plugins import PluginCanHandleUrl
 
@@ -55,7 +53,7 @@ class TestPluginCanHandleUrlAlbavision(PluginCanHandleUrl):
     ]
 
 
-class TestPluginAlbavision(unittest.TestCase):
+class TestPluginAlbavision:
     def test_transform(self):
         token = Albavision.transform_token("6b425761cc8a86569b1a05a9bf1870c95fca717dOK", 436171)
         assert token == "6b425761cc8a86569b1a05a9bf1870c95fca717d"

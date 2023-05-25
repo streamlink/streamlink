@@ -1,5 +1,3 @@
-import unittest
-
 from streamlink.plugins.ustvnow import USTVNow
 from tests.plugins import PluginCanHandleUrl
 
@@ -12,7 +10,7 @@ class TestPluginCanHandleUrlUSTVNow(PluginCanHandleUrl):
     ]
 
 
-class TestPluginUSTVNow(unittest.TestCase):
+class TestPluginUSTVNow:
     def test_encrypt_data(self):
         key = "80035ad42d7d-bb08-7a14-f726-78403b29"
         iv = "3157b5680927cc4a"

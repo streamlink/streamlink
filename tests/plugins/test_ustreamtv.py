@@ -1,4 +1,3 @@
-import unittest
 from unittest.mock import ANY, MagicMock
 
 from streamlink import Streamlink
@@ -53,7 +52,7 @@ class TestPluginCanHandleUrlUStreamTV(PluginCanHandleUrl):
     ]
 
 
-class TestPluginUStreamTV(unittest.TestCase):
+class TestPluginUStreamTV:
     def test_arguments(self):
         from streamlink_cli.main import setup_plugin_args
         session = Streamlink()
