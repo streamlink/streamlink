@@ -1,6 +1,7 @@
 import logging
 import re
 import time
+from operator import eq, gt, lt
 from typing import Type
 from unittest.mock import Mock, call, patch
 
@@ -19,7 +20,7 @@ from streamlink.plugin import (
 )
 
 # noinspection PyProtectedMember
-from streamlink.plugin.plugin import _COOKIE_KEYS, Matcher
+from streamlink.plugin.plugin import _COOKIE_KEYS, Matcher, parse_params, stream_weight
 from streamlink.session import Streamlink
 
 
@@ -411,3 +412,58 @@ class TestCookies:
         assert call("__cookie:test-name1:test.se:80:/", None, 0) not in plugincache.set.call_args_list
         assert call("__cookie:test-name2:test.se:80:/", None, 0) in plugincache.set.call_args_list
         assert tuple(session.http.cookies.keys()) == ("test-name1",)
+
+
+@pytest.mark.parametrize(("params", "expected"), [
+    (
+        None,
+        {},
+    ),
+    (
+        "foo=bar",
+        dict(foo="bar"),
+    ),
+    (
+        "verify=False",
+        dict(verify=False),
+    ),
+    (
+        "timeout=123.45",
+        dict(timeout=123.45),
+    ),
+    (
+        "verify=False params={'key': 'a value'}",
+        dict(verify=False, params=dict(key="a value")),
+    ),
+    (
+        "\"conn=['B:1', 'S:authMe', 'O:1', 'NN:code:1.23', 'NS:flag:ok', 'O:0']",
+        dict(conn=["B:1", "S:authMe", "O:1", "NN:code:1.23", "NS:flag:ok", "O:0"]),
+    ),
+])
+def test_parse_params(params, expected):
+    assert parse_params(params) == expected
+
+
+@pytest.mark.parametrize(("weight", "expected"), [
+    ("720p", (720, "pixels")),
+    ("720p+", (721, "pixels")),
+    ("720p60", (780, "pixels")),
+])
+def test_stream_weight_value(weight, expected):
+    assert stream_weight(weight) == expected
+
+
+@pytest.mark.parametrize(("weight_a", "operator", "weight_b"), [
+    ("720p+", gt, "720p"),
+    ("720p_3000k", gt, "720p_2500k"),
+    ("720p60_3000k", gt, "720p_3000k"),
+    ("3000k", gt, "2500k"),
+    ("720p", eq, "720p"),
+    ("720p_3000k", lt, "720p+_3000k"),
+    # with audio
+    ("720p+a256k", gt, "720p+a128k"),
+    ("720p+a256k", gt, "360p+a256k"),
+    ("720p+a128k", gt, "360p+a256k"),
+])
+def test_stream_weight(weight_a, weight_b, operator):
+    assert operator(stream_weight(weight_a), stream_weight(weight_b))

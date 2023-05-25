@@ -5,6 +5,7 @@ import operator
 import re
 import time
 import warnings
+from contextlib import suppress
 from functools import partial
 from http.cookiejar import Cookie
 from typing import (
@@ -171,11 +172,8 @@ def parse_params(params: Optional[str] = None) -> Dict[str, Any]:
     matches = re.findall(PARAMS_REGEX, params)
 
     for key, value in matches:
-        try:
+        with suppress(Exception):
             value = ast.literal_eval(value)
-        except Exception:
-            pass
-
         rval[key] = value
 
     return rval
