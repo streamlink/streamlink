@@ -1,5 +1,3 @@
-import unittest
-
 from streamlink.plugins.welt import Welt
 from tests.plugins import PluginCanHandleUrl
 
@@ -23,7 +21,7 @@ class TestPluginCanHandleUrlWelt(PluginCanHandleUrl):
     ]
 
 
-class TestPluginWelt(unittest.TestCase):
+class TestPluginWelt:
     def test_validate_live(self):
         hls_url = Welt._schema.validate("""
             <!DOCTYPE html><html><body>

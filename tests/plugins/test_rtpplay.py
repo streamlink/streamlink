@@ -1,5 +1,3 @@
-import unittest
-
 import requests_mock
 
 from streamlink import Streamlink
@@ -27,7 +25,7 @@ class TestPluginCanHandleUrlRTPPlay(PluginCanHandleUrl):
     ]
 
 
-class TestRTPPlay(unittest.TestCase):
+class TestRTPPlay:
     # all invalid HLS URLs at the beginning need to be ignored ("https://invalid")
     _content_pre = """
         /*  var player1 = new RTPPlayer({
