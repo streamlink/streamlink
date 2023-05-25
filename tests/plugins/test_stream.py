@@ -1,11 +1,9 @@
 import unittest
-from unittest.mock import patch
 
 import requests_mock
 
 from streamlink import Streamlink
 from streamlink.plugin.plugin import parse_params, stream_weight
-from streamlink.stream.hls import HLSStream
 from streamlink.stream.http import HTTPStream
 
 
@@ -23,34 +21,6 @@ class TestPluginStream(unittest.TestCase):
         for key, value in a.items():
             assert b[key] == value
 
-    @patch("streamlink.stream.HLSStream.parse_variant_playlist")
-    def _test_hls(self, surl, url, mock_parse):
-        mock_parse.return_value = {}
-
-        streams = self.session.streams(surl)
-
-        assert "live" in streams
-        mock_parse.assert_called_with(self.session, url)
-
-        stream = streams["live"]
-        assert isinstance(stream, HLSStream)
-        assert stream.url == url
-
-    @patch("streamlink.stream.HLSStream.parse_variant_playlist")
-    def _test_hlsvariant(self, surl, url, mock_parse):
-        mock_parse.return_value = {"best": HLSStream(self.session, url)}
-
-        streams = self.session.streams(surl)
-
-        mock_parse.assert_called_with(self.session, url)
-
-        assert "live" not in streams
-        assert "best" in streams
-
-        stream = streams["best"]
-        assert isinstance(stream, HLSStream)
-        assert stream.url == url
-
     def _test_http(self, surl, url, params):
         streams = self.session.streams(surl)
 
@@ -60,19 +30,6 @@ class TestPluginStream(unittest.TestCase):
         assert isinstance(stream, HTTPStream)
         assert stream.url == url
         self.assertDictHas(params, stream.args)
-
-    def test_plugin_hls(self):
-        self._test_hls("hls://hostname.se/foo", "https://hostname.se/foo")
-        self._test_hls("hls://http://hostname.se/foo", "http://hostname.se/foo")
-        self._test_hls("hls://https://hostname.se/foo", "https://hostname.se/foo")
-
-        self._test_hls("hostname.se/playlist.m3u8", "https://hostname.se/playlist.m3u8")
-        self._test_hls("http://hostname.se/playlist.m3u8", "http://hostname.se/playlist.m3u8")
-        self._test_hls("https://hostname.se/playlist.m3u8", "https://hostname.se/playlist.m3u8")
-
-        self._test_hlsvariant("hls://hostname.se/playlist.m3u8", "https://hostname.se/playlist.m3u8")
-        self._test_hlsvariant("hls://http://hostname.se/playlist.m3u8", "http://hostname.se/playlist.m3u8")
-        self._test_hlsvariant("hls://https://hostname.se/playlist.m3u8", "https://hostname.se/playlist.m3u8")
 
     def test_plugin_http(self):
         self._test_http("httpstream://hostname.se/auth.php auth=('test','test2')",
