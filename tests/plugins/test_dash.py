@@ -1,10 +1,10 @@
-import unittest
-from unittest.mock import Mock, patch
+from unittest.mock import Mock, call
 
 import pytest
 
 from streamlink.plugin.plugin import BIT_RATE_WEIGHT_RATIO, LOW_PRIORITY, NO_PRIORITY, NORMAL_PRIORITY
 from streamlink.plugins.dash import MPEGDASH
+from streamlink.session import Streamlink
 from tests.plugins import PluginCanHandleUrl
 
 
@@ -39,18 +39,22 @@ def test_priority(url, priority):
     ("dash://http://example.com/foo", "http://example.com/foo"),
     ("dash://https://example.com/foo", "https://example.com/foo"),
 ])
-@patch("streamlink.stream.DASHStream.parse_manifest")
-def test_get_streams(parse_manifest, url, expected):
-    session = Mock()
+def test_get_streams(monkeypatch: pytest.MonkeyPatch, session: Streamlink, url, expected):
+    mock_parse_manifest = Mock(return_value={})
+    monkeypatch.setattr("streamlink.stream.dash.DASHStream.parse_manifest", mock_parse_manifest)
+
     p = MPEGDASH(session, url)
     p.streams()
-    parse_manifest.assert_called_with(session, expected)
+
+    assert mock_parse_manifest.call_args_list == [call(session, expected)]
 
 
-class TestPluginMPEGDASH(unittest.TestCase):
-    def test_stream_weight(self):
-        assert MPEGDASH.stream_weight("720p") == pytest.approx((720, "pixels"))
-        assert MPEGDASH.stream_weight("1080p") == pytest.approx((1080, "pixels"))
-        assert MPEGDASH.stream_weight("720p+a128k") == pytest.approx((720 + 128, "pixels"))
-        assert MPEGDASH.stream_weight("720p+a0k") == pytest.approx((720, "pixels"))
-        assert MPEGDASH.stream_weight("a128k") == pytest.approx((128 / BIT_RATE_WEIGHT_RATIO, "bitrate"))
+@pytest.mark.parametrize(("weight", "expected"), [
+    ("720p", pytest.approx((720, "pixels"))),
+    ("1080p", pytest.approx((1080, "pixels"))),
+    ("720p+a128k", pytest.approx((720 + 128, "pixels"))),
+    ("720p+a0k", pytest.approx((720, "pixels"))),
+    ("a128k", pytest.approx((128 / BIT_RATE_WEIGHT_RATIO, "bitrate"))),
+])
+def test_stream_weight(weight: str, expected):
+    assert MPEGDASH.stream_weight(weight) == expected
