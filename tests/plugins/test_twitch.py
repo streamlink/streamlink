@@ -1,6 +1,6 @@
 import unittest
 from datetime import datetime, timedelta, timezone
-from unittest.mock import MagicMock, call, patch
+from unittest.mock import MagicMock, Mock, call, patch
 
 import pytest
 import requests_mock as rm
@@ -732,31 +732,61 @@ class TestTwitchMetadata(unittest.TestCase):
         assert title is None
 
 
-@patch("streamlink.plugins.twitch.log")
-class TestTwitchReruns(unittest.TestCase):
-    log_call = call("Reruns were disabled by command line option")
+@pytest.mark.parametrize(("stream_type", "offline", "disable", "expected", "logs"), [
+    pytest.param(
+        "live",
+        False,
+        True,
+        False,
+        [],
+        id="disable live",
+    ),
+    pytest.param(
+        "rerun",
+        False,
+        True,
+        True,
+        [("streamlink.plugins.twitch", "info", "Reruns were disabled by command line option")],
+        id="disable not live",
+    ),
+    pytest.param(
+        "live",
+        True,
+        True,
+        False,
+        [],
+        id="disable offline",
+    ),
+    pytest.param(
+        "rerun",
+        True,
+        False,
+        False,
+        [],
+        id="enable",
+    ),
+])
+def test_reruns(
+    monkeypatch: pytest.MonkeyPatch,
+    caplog: pytest.LogCaptureFixture,
+    session: Streamlink,
+    stream_type: str,
+    offline: bool,
+    disable: bool,
+    expected: bool,
+    logs: list,
+):
+    caplog.set_level(1, "streamlink")
+    mock_stream_metadata = Mock(return_value=None if offline else {"type": stream_type})
+    monkeypatch.setattr("streamlink.plugins.twitch.TwitchAPI.stream_metadata", mock_stream_metadata)
 
-    def subject(self, **params):
-        with patch("streamlink.plugins.twitch.TwitchAPI.stream_metadata") as mock:
-            mock.return_value = None if params.pop("offline", False) else {"type": params.pop("stream_type", "live")}
-            session = Streamlink()
-            plugin = Twitch(session, "https://www.twitch.tv/foo")
-            plugin.options.set("disable-reruns", params.pop("disable", True))
+    # noinspection PyTypeChecker
+    plugin: Twitch = Twitch(session, "https://www.twitch.tv/foo")
+    try:
+        plugin.options.set("disable-reruns", disable)
+        result = plugin._check_for_rerun()
+    finally:
+        plugin.options.clear()
 
-            return plugin._check_for_rerun()
-
-    def test_disable_reruns_live(self, mock_log):
-        assert not self.subject()
-        assert self.log_call not in mock_log.info.call_args_list
-
-    def test_disable_reruns_not_live(self, mock_log):
-        assert self.subject(stream_type="rerun")
-        assert self.log_call in mock_log.info.call_args_list
-
-    def test_disable_reruns_offline(self, mock_log):
-        assert not self.subject(offline=True)
-        assert self.log_call not in mock_log.info.call_args_list
-
-    def test_enable_reruns(self, mock_log):
-        assert not self.subject(stream_type="rerun", disable=False)
-        assert self.log_call not in mock_log.info.call_args_list
+    assert result is expected
+    assert [(record.name, record.levelname, record.message) for record in caplog.records] == logs
