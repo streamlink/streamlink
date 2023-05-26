@@ -540,23 +540,19 @@ class TestTwitchAPIAccessToken:
         ]
 
 
-class TestTwitchMetadata(unittest.TestCase):
-    def setUp(self):
-        self.mock = rm.Mocker()
-        self.mock.register_uri(rm.ANY, rm.ANY, exc=rm.exceptions.InvalidRequest)
-        self.mock.start()
-
-    def tearDown(self):
-        self.mock.stop()
-
-    @staticmethod
-    def subject(url):
-        session = Streamlink()
+class TestTwitchMetadata:
+    @pytest.fixture()
+    def metadata(self, request: pytest.FixtureRequest, session: Streamlink):
+        url = getattr(request, "param", "")
         plugin = Twitch(session, url)
+
         return plugin.get_id(), plugin.get_author(), plugin.get_category(), plugin.get_title()
 
-    def mock_request_channel(self, data=True):
-        return self.mock.post(
+    @pytest.fixture()
+    def mock_request_channel(self, request: pytest.FixtureRequest, requests_mock: rm.Mocker):
+        data = getattr(request, "param", True)
+
+        return requests_mock.post(
             "https://gql.twitch.tv/gql",
             json=[
                 {"data": {"userOrError": {"userDoesNotExist": "error"} if not data else {
@@ -576,8 +572,11 @@ class TestTwitchMetadata(unittest.TestCase):
             ],
         )
 
-    def mock_request_video(self, data=True):
-        return self.mock.post(
+    @pytest.fixture()
+    def mock_request_video(self, request: pytest.FixtureRequest, requests_mock: rm.Mocker):
+        data = getattr(request, "param", True)
+
+        return requests_mock.post(
             "https://gql.twitch.tv/gql",
             json={"data": {"video": None if not data else {
                 "id": "video id",
@@ -591,8 +590,11 @@ class TestTwitchMetadata(unittest.TestCase):
             }}},
         )
 
-    def mock_request_clip(self, data=True):
-        return self.mock.post(
+    @pytest.fixture()
+    def mock_request_clip(self, request: pytest.FixtureRequest, requests_mock: rm.Mocker):
+        data = getattr(request, "param", True)
+
+        return requests_mock.post(
             "https://gql.twitch.tv/gql",
             json=[
                 {"data": {
@@ -614,15 +616,15 @@ class TestTwitchMetadata(unittest.TestCase):
             ],
         )
 
-    def test_metadata_channel(self):
-        mock = self.mock_request_channel()
-        _id, author, category, title = self.subject("https://twitch.tv/foo")
+    @pytest.mark.parametrize(("mock_request_channel", "metadata"), [(True, "https://twitch.tv/foo")], indirect=True)
+    def test_metadata_channel(self, mock_request_channel, metadata):
+        _id, author, category, title = metadata
         assert _id == "stream id"
         assert author == "channel name"
         assert category == "channel game"
         assert title == "channel status"
-        assert mock.call_count == 1
-        assert mock.request_history[0].json() == [
+        assert mock_request_channel.call_count == 1
+        assert mock_request_channel.request_history[0].json() == [
             {
                 "operationName": "ChannelShell",
                 "extensions": {
@@ -650,23 +652,24 @@ class TestTwitchMetadata(unittest.TestCase):
             },
         ]
 
-    def test_metadata_channel_no_data(self):
-        self.mock_request_channel(data=False)
-        _id, author, category, title = self.subject("https://twitch.tv/foo")
+    @pytest.mark.parametrize(("mock_request_channel", "metadata"), [(False, "https://twitch.tv/foo")], indirect=True)
+    def test_metadata_channel_no_data(self, mock_request_channel, metadata):
+        _id, author, category, title = metadata
         assert _id is None
         assert author is None
         assert category is None
         assert title is None
+        assert mock_request_channel.call_count == 1
 
-    def test_metadata_video(self):
-        mock = self.mock_request_video()
-        _id, author, category, title = self.subject("https://twitch.tv/videos/1337")
+    @pytest.mark.parametrize(("mock_request_video", "metadata"), [(True, "https://twitch.tv/videos/1337")], indirect=True)
+    def test_metadata_video(self, mock_request_video, metadata):
+        _id, author, category, title = metadata
         assert _id == "video id"
         assert author == "channel name"
         assert category == "video game"
         assert title == "video title"
-        assert mock.call_count == 1
-        assert mock.request_history[0].json() == {
+        assert mock_request_video.call_count == 1
+        assert mock_request_video.request_history[0].json() == {
             "operationName": "VideoMetadata",
             "extensions": {
                 "persistedQuery": {
@@ -680,23 +683,24 @@ class TestTwitchMetadata(unittest.TestCase):
             },
         }
 
-    def test_metadata_video_no_data(self):
-        self.mock_request_video(data=False)
-        _id, author, category, title = self.subject("https://twitch.tv/videos/1337")
+    @pytest.mark.parametrize(("mock_request_video", "metadata"), [(False, "https://twitch.tv/videos/1337")], indirect=True)
+    def test_metadata_video_no_data(self, mock_request_video, metadata):
+        _id, author, category, title = metadata
         assert _id is None
         assert author is None
         assert category is None
         assert title is None
+        assert mock_request_video.call_count == 1
 
-    def test_metadata_clip(self):
-        mock = self.mock_request_clip()
-        _id, author, category, title = self.subject("https://clips.twitch.tv/foo")
+    @pytest.mark.parametrize(("mock_request_clip", "metadata"), [(True, "https://clips.twitch.tv/foo")], indirect=True)
+    def test_metadata_clip(self, mock_request_clip, metadata):
+        _id, author, category, title = metadata
         assert _id == "clip id"
         assert author == "channel name"
         assert category == "game name"
         assert title == "clip title"
-        assert mock.call_count == 1
-        assert mock.request_history[0].json() == [
+        assert mock_request_clip.call_count == 1
+        assert mock_request_clip.request_history[0].json() == [
             {
                 "operationName": "ClipsView",
                 "extensions": {
@@ -723,9 +727,9 @@ class TestTwitchMetadata(unittest.TestCase):
             },
         ]
 
-    def test_metadata_clip_no_data(self):
-        self.mock_request_clip(data=False)
-        _id, author, category, title = self.subject("https://clips.twitch.tv/foo")
+    @pytest.mark.parametrize(("mock_request_clip", "metadata"), [(False, "https://clips.twitch.tv/foo")], indirect=True)
+    def test_metadata_clip_no_data(self, mock_request_clip, metadata):
+        _id, author, category, title = metadata
         assert _id is None
         assert author is None
         assert category is None
