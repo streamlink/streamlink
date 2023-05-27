@@ -1,10 +1,9 @@
 import base64
-import unittest
 
 from streamlink.utils.crypto import decrypt_openssl, evp_bytestokey
 
 
-class TestUtil(unittest.TestCase):
+class TestUtil:
     def test_evp_bytestokey(self):
         assert evp_bytestokey(b"hello", b"", 16, 16) == (
             b"]A@*\xbcK*v\xb9q\x9d\x91\x10\x17\xc5\x92",

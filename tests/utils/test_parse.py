@@ -1,5 +1,3 @@
-import unittest
-
 import pytest
 from lxml.etree import Element
 
@@ -9,7 +7,7 @@ from streamlink.plugin.api.validate import xml_element
 from streamlink.utils.parse import parse_html, parse_json, parse_qsd, parse_xml
 
 
-class TestUtilsParse(unittest.TestCase):
+class TestUtilsParse:
     def test_parse_json(self):
         assert parse_json("{}") == {}
         assert parse_json('{"test": 1}') == {"test": 1}
