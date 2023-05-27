@@ -1,9 +1,7 @@
-import unittest
-
 from streamlink.stream.wrappers import StreamIOIterWrapper
 
 
-class TestPluginStream(unittest.TestCase):
+class TestPluginStream:
     def test_iter(self):
         def generator():
             yield b"1" * 8192
