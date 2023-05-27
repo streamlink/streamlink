@@ -1,12 +1,18 @@
-import unittest
 from io import StringIO
 from textwrap import dedent
-from unittest.mock import Mock, patch
+from unittest.mock import Mock
+
+import pytest
 
 from streamlink_cli.console import ConsoleOutput
 
 
-class TestConsoleOutput(unittest.TestCase):
+class TestConsoleOutput:
+    @pytest.fixture(autouse=True)
+    def _isatty(self, request: pytest.FixtureRequest, monkeypatch: pytest.MonkeyPatch):
+        isatty = not request.function.__name__.endswith("_no_tty")
+        monkeypatch.setattr("sys.stdin.isatty", lambda: isatty)
+
     def test_msg(self):
         output = StringIO()
         console = ConsoleOutput(output)
@@ -74,69 +80,68 @@ class TestConsoleOutput(unittest.TestCase):
         """).lstrip()
         assert test_list1 == ["foo", "bar"]
 
-    @patch("streamlink_cli.console.sys.exit")
-    def test_msg_json_error(self, mock_exit):
+    def test_msg_json_error(self):
         output = StringIO()
         console = ConsoleOutput(output, json=True)
-        console.msg_json({"error": "bad"})
+        with pytest.raises(SystemExit) as cm:
+            console.msg_json({"error": "bad"})
+        assert cm.value.code == 1
         assert output.getvalue() == '{\n  "error": "bad"\n}\n'
-        mock_exit.assert_called_with(1)
 
-    @patch("streamlink_cli.console.sys.exit")
-    def test_exit(self, mock_exit: Mock):
+    def test_exit(self):
         output = StringIO()
         console = ConsoleOutput(output)
-        console.exit("error")
+        with pytest.raises(SystemExit) as cm:
+            console.exit("error")
+        assert cm.value.code == 1
         assert output.getvalue() == "error: error\n"
-        mock_exit.assert_called_with(1)
 
-    @patch("streamlink_cli.console.sys.exit")
-    def test_exit_json(self, mock_exit: Mock):
+    def test_exit_json(self):
         output = StringIO()
         console = ConsoleOutput(output, json=True)
-        console.exit("error")
+        with pytest.raises(SystemExit) as cm:
+            console.exit("error")
+        assert cm.value.code == 1
         assert output.getvalue() == '{\n  "error": "error"\n}\n'
-        mock_exit.assert_called_with(1)
 
-    @patch("streamlink_cli.console.input", Mock(return_value="hello"))
-    @patch("streamlink_cli.console.sys.stdin.isatty", Mock(return_value=True))
-    def test_ask(self):
+    def test_ask(self, monkeypatch: pytest.MonkeyPatch):
+        monkeypatch.setattr("builtins.input", Mock(return_value="hello"))
+
         output = StringIO()
         console = ConsoleOutput(output)
         assert console.ask("test: ") == "hello"
         assert output.getvalue() == "test: "
 
-    @patch("streamlink_cli.console.input")
-    @patch("streamlink_cli.console.sys.stdin.isatty", Mock(return_value=False))
-    def test_ask_no_tty(self, mock_input: Mock):
+    def test_ask_no_tty(self, monkeypatch: pytest.MonkeyPatch):
+        mock_input = Mock()
+        monkeypatch.setattr("builtins.input", mock_input)
+
         output = StringIO()
         console = ConsoleOutput(output)
         assert console.ask("test: ") is None
         assert output.getvalue() == ""
-        mock_input.assert_not_called()
+        assert mock_input.call_args_list == []
 
-    @patch("streamlink_cli.console.input", Mock(side_effect=ValueError))
-    @patch("streamlink_cli.console.sys.stdin.isatty", Mock(return_value=True))
-    def test_ask_input_exception(self):
+    def test_ask_input_exception(self, monkeypatch: pytest.MonkeyPatch):
+        monkeypatch.setattr("builtins.input", Mock(side_effect=ValueError))
+
         output = StringIO()
         console = ConsoleOutput(output)
         assert console.ask("test: ") is None
         assert output.getvalue() == "test: "
 
-    @patch("streamlink_cli.console.getpass")
-    @patch("streamlink_cli.console.sys.stdin.isatty", Mock(return_value=True))
-    def test_askpass(self, mock_getpass: Mock):
+    def test_askpass(self, monkeypatch: pytest.MonkeyPatch):
         def getpass(prompt, stream):
             stream.write(prompt)
             return "hello"
 
+        monkeypatch.setattr("streamlink_cli.console.getpass", getpass)
+
         output = StringIO()
         console = ConsoleOutput(output)
-        mock_getpass.side_effect = getpass
         assert console.askpass("test: ") == "hello"
         assert output.getvalue() == "test: "
 
-    @patch("streamlink_cli.console.sys.stdin.isatty", Mock(return_value=False))
     def test_askpass_no_tty(self):
         output = StringIO()
         console = ConsoleOutput(output)
