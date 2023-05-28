@@ -89,7 +89,7 @@ class TestPlugins:
 
 
 class TestPluginTests:
-    @pytest.mark.parametrize("plugin", plugins_no_protocols)
+    @pytest.mark.parametrize("plugin", plugins)
     def test_plugin_has_tests(self, plugin):
         assert plugin in plugintests, "Test module exists for plugin"
 
