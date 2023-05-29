@@ -12,16 +12,39 @@ from tests.plugins import PluginCanHandleUrl
 class TestPluginCanHandleUrlHLSPlugin(PluginCanHandleUrl):
     __plugin__ = HLSPlugin
 
-    should_match = [
-        "example.com/foo.m3u8",
-        "http://example.com/foo.m3u8",
-        "https://example.com/foo.m3u8",
-        "hls://example.com/foo",
-        "hls://http://example.com/foo",
-        "hls://https://example.com/foo",
-        "hlsvariant://example.com/foo",
-        "hlsvariant://http://example.com/foo",
-        "hlsvariant://https://example.com/foo",
+    should_match_groups = [
+        # implicit HLS URLs
+        ("example.com/foo.m3u8", {"url": "example.com/foo.m3u8"}),
+        ("example.com/foo.m3u8?bar", {"url": "example.com/foo.m3u8?bar"}),
+        ("http://example.com/foo.m3u8", {"url": "http://example.com/foo.m3u8"}),
+        ("http://example.com/foo.m3u8?bar", {"url": "http://example.com/foo.m3u8?bar"}),
+        ("https://example.com/foo.m3u8", {"url": "https://example.com/foo.m3u8"}),
+        ("https://example.com/foo.m3u8?bar", {"url": "https://example.com/foo.m3u8?bar"}),
+        # explicit HLS URLs with protocol prefix
+        ("hls://example.com/foo?bar", {"url": "example.com/foo?bar"}),
+        ("hls://http://example.com/foo?bar", {"url": "http://example.com/foo?bar"}),
+        ("hls://https://example.com/foo?bar", {"url": "https://example.com/foo?bar"}),
+        ("hlsvariant://example.com/foo?bar", {"url": "example.com/foo?bar"}),
+        ("hlsvariant://http://example.com/foo?bar", {"url": "http://example.com/foo?bar"}),
+        ("hlsvariant://https://example.com/foo?bar", {"url": "https://example.com/foo?bar"}),
+        # optional parameters
+        ("example.com/foo.m3u8?bar abc=def", {"url": "example.com/foo.m3u8?bar", "params": "abc=def"}),
+        ("http://example.com/foo.m3u8?bar abc=def", {"url": "http://example.com/foo.m3u8?bar", "params": "abc=def"}),
+        ("https://example.com/foo.m3u8?bar abc=def", {"url": "https://example.com/foo.m3u8?bar", "params": "abc=def"}),
+        ("hls://https://example.com/foo?bar abc=def", {"url": "https://example.com/foo?bar", "params": "abc=def"}),
+        ("hlsvariant://https://example.com/foo?bar abc=def", {"url": "https://example.com/foo?bar", "params": "abc=def"}),
+    ]
+
+    should_not_match = [
+        # implicit HLS URLs must have their path end with ".m3u8"
+        "example.com/m3u8",
+        "example.com/m3u8 abc=def",
+        "example.com/foo.m3u8,bar",
+        "example.com/foo.m3u8,bar abc=def",
+        # missing parameters
+        "example.com/foo.m3u8 ",
+        "hls://example.com/foo ",
+        "hlsvariant://example.com/foo ",
     ]
 
 

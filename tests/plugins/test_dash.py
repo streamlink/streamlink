@@ -11,13 +11,34 @@ from tests.plugins import PluginCanHandleUrl
 class TestPluginCanHandleUrlMPEGDASH(PluginCanHandleUrl):
     __plugin__ = MPEGDASH
 
-    should_match = [
-        "example.com/foo.mpd",
-        "http://example.com/foo.mpd",
-        "https://example.com/foo.mpd",
-        "dash://example.com/foo",
-        "dash://http://example.com/foo",
-        "dash://https://example.com/foo",
+    should_match_groups = [
+        # implicit DASH URLs
+        ("example.com/foo.mpd", {"url": "example.com/foo.mpd"}),
+        ("example.com/foo.mpd?bar", {"url": "example.com/foo.mpd?bar"}),
+        ("http://example.com/foo.mpd", {"url": "http://example.com/foo.mpd"}),
+        ("http://example.com/foo.mpd?bar", {"url": "http://example.com/foo.mpd?bar"}),
+        ("https://example.com/foo.mpd", {"url": "https://example.com/foo.mpd"}),
+        ("https://example.com/foo.mpd?bar", {"url": "https://example.com/foo.mpd?bar"}),
+        # explicit DASH URLs with protocol prefix
+        ("dash://example.com/foo?bar", {"url": "example.com/foo?bar"}),
+        ("dash://http://example.com/foo?bar", {"url": "http://example.com/foo?bar"}),
+        ("dash://https://example.com/foo?bar", {"url": "https://example.com/foo?bar"}),
+        # optional parameters
+        ("example.com/foo.mpd?bar abc=def", {"url": "example.com/foo.mpd?bar", "params": "abc=def"}),
+        ("http://example.com/foo.mpd?bar abc=def", {"url": "http://example.com/foo.mpd?bar", "params": "abc=def"}),
+        ("https://example.com/foo.mpd?bar abc=def", {"url": "https://example.com/foo.mpd?bar", "params": "abc=def"}),
+        ("dash://https://example.com/foo?bar abc=def", {"url": "https://example.com/foo?bar", "params": "abc=def"}),
+    ]
+
+    should_not_match = [
+        # implicit DASH URLs must have their path end with ".mpd"
+        "example.com/mpd",
+        "example.com/mpd abc=def",
+        "example.com/foo.mpd,bar",
+        "example.com/foo.mpd,bar abc=def",
+        # missing parameters
+        "example.com/foo.mpd ",
+        "dash://example.com/foo ",
     ]
 
 
