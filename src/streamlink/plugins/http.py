@@ -11,7 +11,7 @@ log = logging.getLogger(__name__)
 
 
 @pluginmatcher(re.compile(
-    r"httpstream://(?P<url>\S+)(?:\s(?P<params>.+))?",
+    r"httpstream://(?P<url>\S+)(?:\s(?P<params>.+))?$",
 ))
 class HTTPStreamPlugin(Plugin):
     def _get_streams(self):

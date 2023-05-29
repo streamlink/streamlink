@@ -11,10 +11,20 @@ from tests.plugins import PluginCanHandleUrl
 class TestPluginCanHandleUrlHTTPStreamPlugin(PluginCanHandleUrl):
     __plugin__ = HTTPStreamPlugin
 
-    should_match = [
-        "httpstream://example.com/foo",
-        "httpstream://http://example.com/foo",
-        "httpstream://https://example.com/foo",
+    should_match_groups = [
+        # explicit HTTPStream URLs
+        ("httpstream://example.com/foo", {"url": "example.com/foo"}),
+        ("httpstream://http://example.com/foo", {"url": "http://example.com/foo"}),
+        ("httpstream://https://example.com/foo", {"url": "https://example.com/foo"}),
+        # optional parameters
+        ("httpstream://example.com/foo abc=def", {"url": "example.com/foo", "params": "abc=def"}),
+        ("httpstream://http://example.com/foo abc=def", {"url": "http://example.com/foo", "params": "abc=def"}),
+        ("httpstream://https://example.com/foo abc=def", {"url": "https://example.com/foo", "params": "abc=def"}),
+    ]
+
+    should_not_match = [
+        # missing parameters
+        "httpstream://example.com/foo ",
     ]
 
 
