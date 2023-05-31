@@ -80,7 +80,7 @@ class Pluzz(Plugin):
                         str,
                     ),
                     validate.all(
-                        validate.xml_xpath_string(".//*[@data-id][@class='magneto'][1]/@data-id"),
+                        validate.xml_xpath_string(".//*[@data-id][contains(@class,'magneto')][1]/@data-id"),
                         str,
                     ),
                 ),
