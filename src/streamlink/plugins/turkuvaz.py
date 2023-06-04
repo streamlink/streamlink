@@ -10,58 +10,85 @@ $url atvavrupa.tv
 $url minikacocuk.com.tr
 $url minikago.com.tr
 $url vavtv.com.tr
-$type live
+$type live, vod
 $region various
 """
 
+import logging
 import re
-from urllib.parse import urlparse
 
 from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.api import validate
 from streamlink.stream.hls import HLSStream
 
 
+log = logging.getLogger(__name__)
+
+
 @pluginmatcher(re.compile(r"""
     https?://(?:www\.)?
     (?:
-        (?:
-            atvavrupa\.tv
-            |
-            (?:atv|a2tv|ahaber|aspor|minikago|minikacocuk|anews)\.com\.tr
-        )/webtv/(?:live-broadcast|canli-yayin)
+        atvavrupa\.tv
         |
-        ahaber\.com\.tr/video/canli-yayin
-        |
-        (?:atv|apara|vavtv)\.com\.tr/canli-yayin
-        |
-        atv\.com\.tr/a2tv/canli-yayin
+        (?:a2tv|ahaber|anews|apara|aspor|atv|minikacocuk|minikago|vavtv)\.com\.tr
     )
 """, re.VERBOSE))
 class Turkuvaz(Plugin):
-    _URL_HLS = "https://trkvz-live.ercdn.net/{channel}/{channel}.m3u8"
-    _URL_TOKEN = "https://securevideotoken.tmgrup.com.tr/webtv/secure"
-
-    _MAP_HOST_TO_CHANNEL = {
-        "atv": "atvhd",
-        "ahaber": "ahaberhd",
-        "apara": "aparahd",
-        "aspor": "asporhd",
-        "anews": "anewshd",
-        "vavtv": "vavtv",
-        "minikacocuk": "minikagococuk",
-    }
-
     def _get_streams(self):
-        hostname = re.sub(r"^www\.", "", urlparse(self.url).netloc).split(".")[0]
+        _find_and_get_attrs = validate.Schema(
+            validate.xml_find(".//div[@data-videoid][@data-websiteid]"),
+            validate.union_get("data-videoid", "data-websiteid"),
+        )
 
-        # remap the domain to channel
-        channel = self._MAP_HOST_TO_CHANNEL.get(hostname, hostname)
-        hls_url = self._URL_HLS.format(channel=channel)
+        id_data = self.session.http.get(
+            self.url,
+            schema=validate.Schema(
+                validate.parse_html(),
+                validate.any(
+                    _find_and_get_attrs,
+                    validate.all(
+                        validate.xml_xpath_string(
+                            ".//script[contains(text(),'data-videoid') and contains(text(),'data-websiteid')]/text()",
+                        ),
+                        validate.none_or_all(
+                            str,
+                            validate.regex(re.compile(r"""var\s+tmdPlayer\s*=\s*(?P<q>["'])(.*?)(?P=q)""")),
+                            validate.get(0),
+                            validate.parse_html(),
+                            _find_and_get_attrs,
+                        ),
+                    ),
+                ),
+            ),
+        )
 
-        # get the secure HLS URL
+        if not id_data:
+            return
+
+        video_id, website_id = id_data
+        log.debug(f"video_id={video_id}")
+        log.debug(f"website_id={website_id}")
+
+        self.id, self.title, hls_url = self.session.http.get(
+            f"https://videojs.tmgrup.com.tr/getvideo/{website_id}/{video_id}",
+            schema=validate.Schema(
+                validate.parse_json(),
+                {
+                    "success": True,
+                    "video": {
+                        "VideoId": str,
+                        "Title": str,
+                        "VideoSmilUrl": validate.url(),
+                    },
+                },
+                validate.get("video"),
+                validate.union_get("VideoId", "Title", "VideoSmilUrl"),
+            ),
+        )
+        log.debug(f"hls_url={hls_url}")
+
         secure_hls_url = self.session.http.get(
-            self._URL_TOKEN,
+            "https://securevideotoken.tmgrup.com.tr/webtv/secure",
             params=f"url={hls_url}",
             headers={"Referer": self.url},
             schema=validate.Schema(
@@ -73,6 +100,7 @@ class Turkuvaz(Plugin):
                 validate.get("Url"),
             ),
         )
+        log.debug(f"secure_hls_url={secure_hls_url}")
 
         if secure_hls_url:
             return HLSStream.parse_variant_playlist(self.session, secure_hls_url)
