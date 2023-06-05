@@ -34,6 +34,7 @@ class TestPluginCanHandleUrlMediaVitrina(PluginCanHandleUrl):
         "https://player.mediavitrina.ru/tvc/tvc/moretv_web/player.html",
         "https://player.mediavitrina.ru/tvzvezda/moretv_web/player.html",
         "https://player.mediavitrina.ru/u_ott/u/moretv_web/player.html",
+        "https://player.mediavitrina.ru/gpm_tnt_v2/tnt/vitrinatv_web/player.html",
     ]
 
     should_not_match = [
