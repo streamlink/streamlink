@@ -27,7 +27,7 @@ log = logging.getLogger(__name__)
 )\.ru/(?:live|online)""", re.VERBOSE))
 @pluginmatcher(re.compile(r"https?://player\.mediavitrina\.ru/.+/player\.html"))
 class MediaVitrina(Plugin):
-    _re_url_json = re.compile(r"https://media\.mediavitrina\.ru/(?:proxy)?api/v3/\w+/playlist/[\w-]+_as_array\.json[^\"']+")
+    _re_url_json = re.compile(r"https://media\.mediavitrina\.ru/(?:proxy)?api/v3/[\w-]+/playlist/[\w-]+_as_array\.json[^\"']+")
 
     def _get_streams(self):
         self.session.http.headers.update({"Referer": self.url})
