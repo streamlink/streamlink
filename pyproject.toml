@@ -48,6 +48,7 @@ source = [
 [tool.coverage.report]
 omit = [
   "src/streamlink/packages/*",
+  "src/streamlink/webbrowser/cdp/devtools/*",
   "src/streamlink_cli/packages/*",
 ]
 exclude_lines = [
@@ -126,6 +127,7 @@ extend-exclude = [
 "src/streamlink/__init__.py" = ["I"]
 "src/streamlink/_version.py" = ["I"]
 "src/streamlink/plugin/api/useragents.py" = ["E501"]
+"src/streamlink/webbrowser/cdp/devtools/*" = ["E501"]
 "src/streamlink_cli/main.py" = ["PLW0603"]
 
 [tool.ruff.isort]
