@@ -8,6 +8,9 @@ freezegun>=1.0.0
 shtab
 versioningit >=2.0.0, <3
 
+# required by script/generate-cdp.py
+inflection
+
 ruff ==0.0.272
 
 mypy
