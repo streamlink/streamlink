@@ -139,7 +139,6 @@ class Odysee(Plugin):
 
         odysee_vid_stream = self._fetch_odysee_vid(lbry_url)
         if odysee_vid_stream is not None:
-            print(odysee_vid_stream)
             return self._vid_stream_generator(odysee_vid_stream)
         else:
             odysee_livestream_url = self._fetch_odysee_livestream(lbry_url)
