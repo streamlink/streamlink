@@ -2,6 +2,7 @@ pip>=9
 pytest >=6.0.0
 pytest-asyncio
 pytest-cov
+pytest-trio
 coverage[toml]
 requests-mock
 freezegun>=1.0.0
@@ -15,6 +16,7 @@ ruff ==0.0.272
 
 mypy
 lxml-stubs
+trio-typing
 types-freezegun
 types-requests
 types-urllib3
