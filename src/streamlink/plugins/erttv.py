@@ -10,10 +10,7 @@ from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.api import validate
 from streamlink.stream.hls import HLSStream
 
-# example inputs urls:
-# https://www.ert.gr/webtv/ert/tv/live-glm/ert1.html
-# https://www.ert.gr/webtv/ert/tv/live-glm/ert2.html
-# https://www.ert.gr/webtv/ert/tv/live-glm/ert3.html 
+
 @pluginmatcher(re.compile(
     r"https?://(?:www\.)?ert.gr/",
 ))
