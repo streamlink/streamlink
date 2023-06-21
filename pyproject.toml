@@ -33,6 +33,7 @@ build-file = "streamlink/_version.py"
 filterwarnings = [
   "always",
   "ignore:::pkg_resources",
+  "ignore::DeprecationWarning:pycountry",
 ]
 
 
