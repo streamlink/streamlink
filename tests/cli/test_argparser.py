@@ -59,6 +59,23 @@ def test_setup_session_options(parser: ArgumentParser, session: Streamlink, argv
     assert session.get_option(option) == expected
 
 
+@pytest.mark.parametrize(("default", "new", "expected"), [
+    pytest.param(False, None, False, id="Default False, unset"),
+    pytest.param(True, None, True, id="Default True, unset"),
+    pytest.param(False, False, False, id="Default False, set to False"),
+    pytest.param(False, True, True, id="Default False, set to True"),
+    pytest.param(True, False, False, id="Default True, set to False"),
+    pytest.param(True, True, True, id="Default True, set to True"),
+])
+def test_setup_session_options_override(monkeypatch: pytest.MonkeyPatch, session: Streamlink, default, new, expected):
+    arg = "NON_EXISTING_ARGPARSER_ARGUMENT"
+    key = "NON-EXISTING-SESSION-OPTION-KEY"
+    monkeypatch.setattr("streamlink_cli.argparser._ARGUMENT_TO_SESSIONOPTION", [(arg, key, None)])
+    session.set_option(key, default)
+    setup_session_options(session, Namespace(**{arg: new}))
+    assert session.get_option(key) == expected
+
+
 def test_cli_main_setup_session_options(monkeypatch: pytest.MonkeyPatch, parser: ArgumentParser, session: Streamlink):
     class StopTest(Exception):
         pass
