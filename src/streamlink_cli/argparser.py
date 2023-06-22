@@ -1329,7 +1329,7 @@ _ARGUMENT_TO_SESSIONOPTION: List[Tuple[str, str, Optional[Callable[[Any], Any]]]
 def setup_session_options(session: Streamlink, args: argparse.Namespace):
     for arg, option, mapper in _ARGUMENT_TO_SESSIONOPTION:
         value = getattr(args, arg)
-        if value:
+        if value is not None:
             if mapper is not None:
                 value = mapper(value)
             session.set_option(option, value)
