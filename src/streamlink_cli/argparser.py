@@ -375,6 +375,7 @@ def build_parser():
     general.add_argument(
         "-4", "--ipv4",
         action="store_true",
+        default=None,
         help="""
         Resolve address names to IPv4 only. This option overrides --ipv6.
         """,
@@ -382,6 +383,7 @@ def build_parser():
     general.add_argument(
         "-6", "--ipv6",
         action="store_true",
+        default=None,
         help="""
         Resolve address names to IPv6 only. This option overrides --ipv4.
         """,
@@ -913,6 +915,7 @@ def build_parser():
     transport.add_argument(
         "--mux-subtitles",
         action="store_true",
+        default=None,
         help="""
         Automatically mux available subtitles into the output stream.
 
@@ -943,6 +946,7 @@ def build_parser():
     transport_hls.add_argument(
         "--hls-segment-stream-data",
         action="store_true",
+        default=None,
         help="""
         Immediately write segment data into output buffer while downloading.
         """,
@@ -1054,6 +1058,7 @@ def build_parser():
     transport_hls.add_argument(
         "--hls-live-restart",
         action="store_true",
+        default=None,
         help="""
         Skip to the beginning of a live stream, or as far back as possible.
         """,
@@ -1090,6 +1095,7 @@ def build_parser():
     transport_ffmpeg.add_argument(
         "--ffmpeg-no-validation",
         action="store_true",
+        default=None,
         help="""
         Disable FFmpeg validation and version logging.
         """,
@@ -1097,6 +1103,7 @@ def build_parser():
     transport_ffmpeg.add_argument(
         "--ffmpeg-verbose",
         action="store_true",
+        default=None,
         help="""
         Write the console output from ffmpeg to the console.
         """,
@@ -1146,6 +1153,7 @@ def build_parser():
     transport_ffmpeg.add_argument(
         "--ffmpeg-copyts",
         action="store_true",
+        default=None,
         help="""
         Forces the `-copyts` ffmpeg option and does not remove
         the initial start time offset value.
@@ -1154,6 +1162,7 @@ def build_parser():
     transport_ffmpeg.add_argument(
         "--ffmpeg-start-at-zero",
         action="store_true",
+        default=None,
         help="""
         Enable the `-start_at_zero` ffmpeg option when using --ffmpeg-copyts.
         """,
@@ -1205,7 +1214,8 @@ def build_parser():
     )
     http.add_argument(
         "--http-ignore-env",
-        action="store_true",
+        action="store_false",
+        default=None,
         help="""
         Ignore HTTP settings set in the environment such as environment
         variables (`HTTP_PROXY`, etc) or `~/.netrc` authentication.
@@ -1213,7 +1223,8 @@ def build_parser():
     )
     http.add_argument(
         "--http-no-ssl-verify",
-        action="store_true",
+        action="store_false",
+        default=None,
         help="""
         Don't attempt to verify SSL certificates.
 
@@ -1223,6 +1234,7 @@ def build_parser():
     http.add_argument(
         "--http-disable-dh",
         action="store_true",
+        default=None,
         help="""
         Disable Diffie Hellman key exchange
 
@@ -1263,10 +1275,8 @@ def build_parser():
     return parser
 
 
-def false(_): return False  # noqa: E704
-
-
 # The order of arguments determines if options get overridden by `Streamlink.set_option()`
+# NOTE: arguments with `action=store_{true,false}` must set `default=None`
 _ARGUMENT_TO_SESSIONOPTION: List[Tuple[str, str, Optional[Callable[[Any], Any]]]] = [
     # generic arguments
     ("locale", "locale", None),
@@ -1282,8 +1292,8 @@ _ARGUMENT_TO_SESSIONOPTION: List[Tuple[str, str, Optional[Callable[[Any], Any]]]
     ("http_cookie", "http-cookies", dict),
     ("http_header", "http-headers", dict),
     ("http_query_param", "http-query-params", dict),
-    ("http_ignore_env", "http-trust-env", false),
-    ("http_no_ssl_verify", "http-ssl-verify", false),
+    ("http_ignore_env", "http-trust-env", None),
+    ("http_no_ssl_verify", "http-ssl-verify", None),
     ("http_disable_dh", "http-disable-dh", None),
     ("http_ssl_cert", "http-ssl-cert", None),
     ("http_ssl_cert_crt_key", "http-ssl-cert", tuple),
@@ -1329,7 +1339,7 @@ _ARGUMENT_TO_SESSIONOPTION: List[Tuple[str, str, Optional[Callable[[Any], Any]]]
 def setup_session_options(session: Streamlink, args: argparse.Namespace):
     for arg, option, mapper in _ARGUMENT_TO_SESSIONOPTION:
         value = getattr(args, arg)
-        if value:
+        if value is not None:
             if mapper is not None:
                 value = mapper(value)
             session.set_option(option, value)
