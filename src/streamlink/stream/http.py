@@ -23,7 +23,7 @@ class HTTPStream(Stream):
         **args,
     ):
         """
-        :param streamlink.Streamlink session_: Streamlink session instance
+        :param streamlink.session.Streamlink session_: Streamlink session instance
         :param url: The URL of the HTTP stream
         :param buffered: Wrap stream output in an additional reader-thread
         :param args: Additional keyword arguments passed to :meth:`requests.Session.request`

@@ -52,8 +52,8 @@ Session.resolve_url() return type changes
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Due to the changes of the :py:class:`Plugin <streamlink.plugin.Plugin>` class mentioned above, the return value of
-:py:meth:`Streamlink.resolve_url <streamlink.Streamlink.resolve_url>` and
-:py:meth:`Streamlink.resolve_url_no_redirect <streamlink.Streamlink.resolve_url_no_redirect>` had to be changed
+:py:meth:`Streamlink.resolve_url() <streamlink.session.Streamlink.resolve_url>` and
+:py:meth:`Streamlink.resolve_url_no_redirect() <streamlink.session.Streamlink.resolve_url_no_redirect>` had to be changed
 from ``tuple[type[Plugin], str]`` to ``tuple[str, type[Plugin], str]``, and both methods now return the resolved plugin name
 as the first item, in addition to the plugin class and resolved URL.
 
@@ -64,9 +64,10 @@ streamlink 4.2.0
 Deprecation of url_master in HLSStream
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The ``url_master`` parameter and attribute of the :py:class:`streamlink.stream.HLSStream`
-and :py:class:`streamlink.stream.MuxedHLSStream` classes have been deprecated in favor of the ``multivariant`` parameter
-and attribute. ``multivariant`` is an :py:class:`M3U8` reference of the parsed HLS multivariant playlist.
+The ``url_master`` parameter and attribute of the :py:class:`HLSStream <streamlink.stream.HLSStream>`
+and :py:class:`MuxedHLSStream <streamlink.stream.MuxedHLSStream>` classes have been deprecated in favor of
+the ``multivariant`` parameter and attribute. ``multivariant`` is an :py:class:`M3U8` reference of the parsed
+HLS multivariant playlist.
 
 
 streamlink 4.0.0

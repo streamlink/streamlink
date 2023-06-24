@@ -603,9 +603,9 @@ class Streamlink:
         Attempts to find a plugin and extracts streams from the *url* if a plugin was found.
 
         :param url: a URL to match against loaded plugins
-        :param params: Additional keyword arguments passed to :meth:`streamlink.plugin.Plugin.streams`
+        :param params: Additional keyword arguments passed to :meth:`Plugin.streams() <streamlink.plugin.Plugin.streams>`
         :raises NoPluginError: on plugin resolve failure
-        :return: A :class:`dict` of stream names and :class:`streamlink.stream.Stream` instances
+        :return: A :class:`dict` of stream names and :class:`Stream <streamlink.stream.Stream>` instances
         """
 
         pluginname, pluginclass, resolved_url = self.resolve_url(url)

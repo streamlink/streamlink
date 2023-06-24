@@ -387,7 +387,7 @@ class Plugin:
 
         Returns a :class:`dict` containing the streams, where the key is
         the name of the stream (most commonly the quality name), with the value
-        being a :class:`Stream` instance.
+        being a :class:`Stream <streamlink.stream.Stream>` instance.
 
         The result can contain the synonyms **best** and **worst** which
         point to the streams which are likely to be of highest and
@@ -413,7 +413,7 @@ class Plugin:
 
         :param stream_types: A list of stream types to return
         :param sorting_excludes: Specify which streams to exclude from the best/worst synonyms
-        :returns: A :class:`dict` of stream names and :class:`streamlink.stream.Stream` instances
+        :returns: A :class:`dict` of stream names and :class:`Stream <streamlink.stream.Stream>` instances
         """
 
         try:
@@ -516,8 +516,9 @@ class Plugin:
         """
         Implement the stream and metadata retrieval here.
 
-        Needs to return either a dict of :class:`streamlink.stream.Stream` instances mapped by stream name, or needs to act
-        as a generator which yields tuples of stream names and :class:`streamlink.stream.Stream` instances.
+        Needs to return either a dict of :class:`Stream <streamlink.stream.Stream>` instances mapped by stream name,
+        or needs to act as a generator which yields tuples of stream names and :class:`Stream <streamlink.stream.Stream>`
+        instances.
         """
 
         raise NotImplementedError
@@ -606,7 +607,7 @@ class Plugin:
     def clear_cookies(self, cookie_filter: Optional[Callable] = None) -> List[str]:
         """
         Removes all saved cookies for this plugin. To filter the cookies that are deleted
-        specify the ``cookie_filter`` argument (see :func:`save_cookies`).
+        specify the ``cookie_filter`` argument (see :meth:`save_cookies`).
 
         :param cookie_filter: a function to filter the cookies
         :type cookie_filter: function
@@ -656,7 +657,7 @@ def pluginmatcher(
     A matcher consists of a compiled regular expression pattern for the plugin's input URL,
     a priority value and an optional name.
     The priority value determines which plugin gets chosen by
-    :meth:`Streamlink.resolve_url <streamlink.Streamlink.resolve_url>` if multiple plugins match the input URL.
+    :meth:`Streamlink.resolve_url() <streamlink.session.Streamlink.resolve_url>` if multiple plugins match the input URL.
     The matcher name can be used for accessing it and its matching result when multiple matchers are defined.
 
     Plugins must at least have one matcher. If multiple matchers are defined, then the first matching one
@@ -711,7 +712,7 @@ def pluginargument(
     **options,
 ) -> Callable[[Type[Plugin]], Type[Plugin]]:
     """
-    Decorator for plugin arguments. Takes the same arguments as :class:`streamlink.options.Argument`.
+    Decorator for plugin arguments. Takes the same arguments as :class:`Argument <streamlink.options.Argument>`.
 
     .. code-block:: python
 
