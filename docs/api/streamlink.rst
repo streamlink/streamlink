@@ -1,0 +1,4 @@
+Streamlink
+----------
+
+.. autofunction:: streamlink.streams
