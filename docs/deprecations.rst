@@ -87,7 +87,7 @@ streamlink 3.0.0
 Removal of separate https-proxy option
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-:ref:`HTTPS proxy CLI option <cli:HTTP options>` and the respective :ref:`Session options <api:Session>`
+:ref:`HTTPS proxy CLI option <cli:HTTP options>` and the respective :ref:`Session options <api/session:Session>`
 have been deprecated in favor of a single :option:`--http-proxy` that sets the proxy for all HTTP and
 HTTPS requests, including WebSocket connections.
 
@@ -98,8 +98,9 @@ streamlink 2.4.0
 Stream-type related CLI arguments
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-:ref:`Stream-type related CLI arguments <cli:Stream transport options>` and the respective :ref:`Session options <api:Session>`
-have been deprecated in favor of existing generic arguments/options, to avoid redundancy and potential confusion.
+:ref:`Stream-type related CLI arguments <cli:Stream transport options>` and the respective
+:ref:`Session options <api/session:Session>` have been deprecated in favor of existing generic arguments/options,
+to avoid redundancy and potential confusion.
 
 - use :option:`--stream-segment-attempts` instead of ``--{dash,hds,hls}-segment-attempts``
 - use :option:`--stream-segment-threads` instead of ``--{dash,hds,hls}-segment-threads``
