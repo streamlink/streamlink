@@ -16,6 +16,7 @@ from requests.exceptions import ChunkedEncodingError, ConnectionError, ContentDe
 
 from streamlink.buffers import RingBuffer
 from streamlink.exceptions import StreamError
+from streamlink.session import Streamlink
 from streamlink.stream.ffmpegmux import FFMPEGMuxer, MuxedStream
 from streamlink.stream.filtered import FilteredStream
 from streamlink.stream.hls_playlist import M3U8, ByteRange, Key, Map, Media, Segment, load as load_hls_playlist
@@ -534,7 +535,7 @@ class MuxedHLSStream(MuxedStream["HLSStream"]):
 
     def __init__(
         self,
-        session,
+        session: Streamlink,
         video: str,
         audio: Union[str, List[str]],
         url_master: Optional[str] = None,
@@ -544,7 +545,7 @@ class MuxedHLSStream(MuxedStream["HLSStream"]):
         **args,
     ):
         """
-        :param streamlink.Streamlink session: Streamlink session instance
+        :param session: Streamlink session instance
         :param video: Video stream URL
         :param audio: Audio stream URL or list of URLs
         :param url_master: The URL of the HLS playlist's multivariant playlist (deprecated)
@@ -603,7 +604,7 @@ class HLSStream(HTTPStream):
         **args,
     ):
         """
-        :param streamlink.Streamlink session_: Streamlink session instance
+        :param streamlink.session.Streamlink session_: Streamlink session instance
         :param url: The URL of the HLS playlist
         :param url_master: The URL of the HLS playlist's multivariant playlist (deprecated)
         :param multivariant: The parsed multivariant playlist
@@ -684,7 +685,7 @@ class HLSStream(HTTPStream):
         """
         Parse a variant playlist and return its streams.
 
-        :param streamlink.Streamlink session_: Streamlink session instance
+        :param streamlink.session.Streamlink session_: Streamlink session instance
         :param url: The URL of the variant playlist
         :param name_key: Prefer to use this key as stream name, valid keys are: name, pixels, bitrate
         :param name_prefix: Add this prefix to the stream names

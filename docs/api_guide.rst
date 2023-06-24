@@ -75,7 +75,7 @@ Session object
 
 The session allows you to set various options and is more efficient
 when extracting streams more than once. You start by creating a
-:py:class:`Streamlink <streamlink.Streamlink>` object:
+:py:class:`Streamlink <streamlink.session.Streamlink>` object:
 
 .. code-block:: python
 
@@ -95,4 +95,4 @@ and extract streams like this:
     >>> streams = session.streams("URL")
 
 
-See :py:meth:`Streamlink.set_option <streamlink.Streamlink.set_option>` to see which options are available.
+See :py:meth:`Streamlink.set_option() <streamlink.session.Streamlink.set_option>` to see which options are available.

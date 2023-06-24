@@ -90,7 +90,7 @@ class Options:
 
 class Argument:
     """
-    Accepts most of the parameters accepted by :meth:`ArgumentParser.add_argument`,
+    Accepts most of the parameters accepted by :meth:`ArgumentParser.add_argument()`,
     except that ``requires`` is a special case which is only enforced if the plugin is in use.
     In addition, the ``name`` parameter is the name relative to the plugin name, but can be overridden by ``argument_name``.
 
@@ -118,7 +118,7 @@ class Argument:
         :param argument_name: Custom CLI argument name without plugin name prefix
         :param dest: Custom plugin option name
         :param is_global: Whether this plugin argument refers to a global CLI argument (deprecated)
-        :param options: Arguments passed to :meth:`ArgumentParser.add_argument`, excluding ``requires`` and ``dest``
+        :param options: Arguments passed to :meth:`ArgumentParser.add_argument()`, excluding ``requires`` and ``dest``
         """
 
         self.required = required
