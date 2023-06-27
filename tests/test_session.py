@@ -238,42 +238,6 @@ class TestResolveURL:
         with pytest.raises(NoPluginError):
             session.resolve_url_no_redirect("no")
 
-    def test_resolve_deprecated(self, session: Streamlink):
-        @pluginmatcher(priority=LOW_PRIORITY, pattern=re.compile(
-            "https://low",
-        ))
-        class LowPriority(_EmptyPlugin):
-            pass
-
-        class DeprecatedNormalPriority(_EmptyPlugin):
-            # noinspection PyUnusedLocal
-            @classmethod
-            def can_handle_url(cls, url):
-                return True
-
-        class DeprecatedHighPriority(DeprecatedNormalPriority):
-            # noinspection PyUnusedLocal
-            @classmethod
-            def priority(cls, url):
-                return HIGH_PRIORITY
-
-        session.plugins = {
-            "empty": _EmptyPlugin,
-            "low": LowPriority,
-            "dep-normal-one": DeprecatedNormalPriority,
-            "dep-normal-two": DeprecatedNormalPriority,
-            "dep-high": DeprecatedHighPriority,
-        }
-
-        with pytest.warns() as recwarn:
-            plugin = session.resolve_url_no_redirect("low")[1]
-
-        assert plugin is DeprecatedHighPriority
-        assert [(record.category, str(record.message)) for record in recwarn.list] == [
-            (StreamlinkDeprecationWarning, "Resolved plugin dep-normal-one with deprecated can_handle_url API"),
-            (StreamlinkDeprecationWarning, "Resolved plugin dep-high with deprecated can_handle_url API"),
-        ]
-
 
 class TestStreams:
     @pytest.fixture(autouse=True)
