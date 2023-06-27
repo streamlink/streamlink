@@ -44,12 +44,6 @@ class CustomConstructorTwoPlugin(FakePlugin):
         super().__init__(session, url)
 
 
-class DeprecatedPlugin(FakePlugin):
-    def __init__(self, url):
-        super().__init__(url)  # type: ignore[call-arg]
-        self.custom_attribute = url.upper()
-
-
 class TestPlugin:
     @pytest.mark.parametrize(("pluginclass", "module", "logger"), [
         (Plugin, "plugin", "streamlink.plugin.plugin"),
@@ -75,35 +69,6 @@ class TestPlugin:
         assert plugin.logger.name == logger
 
         assert mock_cache.call_args_list == [call(filename="plugin-cache.json", key_prefix=module)]
-        assert plugin.cache == mock_cache()
-
-        assert mock_load_cookies.call_args_list == [call()]
-
-    def test_constructor_wrapper(self, recwarn: pytest.WarningsRecorder):
-        session = Mock()
-        with patch("streamlink.plugin.plugin.Cache") as mock_cache, \
-             patch.object(DeprecatedPlugin, "load_cookies") as mock_load_cookies:
-            plugin = DeprecatedPlugin(session, "http://localhost")  # type: ignore[call-arg]
-
-        assert isinstance(plugin, DeprecatedPlugin)
-        assert plugin.custom_attribute == "HTTP://LOCALHOST"
-        assert [(record.category, str(record.message), record.filename) for record in recwarn.list] == [
-            (
-                FutureWarning,
-                "Initialized test_plugin plugin with deprecated constructor",
-                __file__,
-            ),
-        ]
-
-        assert plugin.session is session
-        assert plugin.url == "http://localhost"
-
-        assert plugin.module == "test_plugin"
-
-        assert isinstance(plugin.logger, logging.Logger)
-        assert plugin.logger.name == "tests.test_plugin"
-
-        assert mock_cache.call_args_list == [call(filename="plugin-cache.json", key_prefix="test_plugin")]
         assert plugin.cache == mock_cache()
 
         assert mock_load_cookies.call_args_list == [call()]
