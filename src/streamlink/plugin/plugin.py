@@ -260,11 +260,6 @@ class Plugin:
 
     _url: str = ""
 
-    # deprecated
-    can_handle_url: Callable[[str], bool]
-    # deprecated
-    priority: Callable[[str], int]
-
     def __init__(self, session: "Streamlink", url: str, options: Optional[Options] = None):
         """
         :param session: The Streamlink session instance
