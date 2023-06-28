@@ -1129,6 +1129,15 @@ def build_parser():
         """,
     )
     transport_ffmpeg.add_argument(
+        "--ffmpeg-dkey",
+        type=str,
+        metavar="DKEY",
+        help="""
+        Set the decryption key
+        
+        """
+    )
+    transport_ffmpeg.add_argument(
         "--ffmpeg-video-transcode",
         metavar="CODEC",
         help="""
@@ -1329,6 +1338,7 @@ _ARGUMENT_TO_SESSIONOPTION: List[Tuple[str, str, Optional[Callable[[Any], Any]]]
     ("ffmpeg_verbose", "ffmpeg-verbose", None),
     ("ffmpeg_verbose_path", "ffmpeg-verbose-path", None),
     ("ffmpeg_fout", "ffmpeg-fout", None),
+    ("ffmpeg_dkey", "ffmpeg-dkey", None),
     ("ffmpeg_video_transcode", "ffmpeg-video-transcode", None),
     ("ffmpeg_audio_transcode", "ffmpeg-audio-transcode", None),
     ("ffmpeg_copyts", "ffmpeg-copyts", None),
