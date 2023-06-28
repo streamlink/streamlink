@@ -481,6 +481,10 @@ class Streamlink:
               - ``str | None``
               - ``None``
               - The codec to use if transcoding video when muxing streams, e.g. ``"aac"``
+            * - ffmpeg-dkey
+              - ``str | None``
+              - ``None``
+              - Widewine key 
             * - ffmpeg-copyts
               - ``bool``
               - ``False``
