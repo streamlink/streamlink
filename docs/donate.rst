@@ -26,23 +26,9 @@ Team members
 
     .. grid-item-card::
         :padding: 3
-        :img-top: https://github.com/back-to.png?size=100
-        :link: https://github.com/back-to
-        :link-alt: @back-to
-        :text-align: center
-
-    .. grid-item-card::
-        :padding: 3
         :img-top: https://github.com/bastimeyer.png?size=100
         :link: https://github.com/bastimeyer
         :link-alt: @bastimeyer
-        :text-align: center
-
-    .. grid-item-card::
-        :padding: 3
-        :img-top: https://github.com/beardypig.png?size=100
-        :link: https://github.com/beardypig
-        :link-alt: @beardypig
         :text-align: center
 
     .. grid-item-card::
@@ -57,6 +43,28 @@ Team members
         :img-top: https://github.com/mkbloke.png?size=100
         :link: https://github.com/mkbloke
         :link-alt: @mkbloke
+        :text-align: center
+
+
+Inactive / former
+^^^^^^^^^^^^^^^^^
+
+.. grid:: 2 3 5 5
+    :padding: 0
+    :class-container: team-members
+
+    .. grid-item-card::
+        :padding: 3
+        :img-top: https://github.com/back-to.png?size=100
+        :link: https://github.com/back-to
+        :link-alt: @back-to
+        :text-align: center
+
+    .. grid-item-card::
+        :padding: 3
+        :img-top: https://github.com/beardypig.png?size=100
+        :link: https://github.com/beardypig
+        :link-alt: @beardypig
         :text-align: center
 
 
