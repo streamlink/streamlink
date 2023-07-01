@@ -8,7 +8,6 @@ $region Norway
 
 import logging
 import re
-from urllib.parse import urljoin
 
 from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.api import validate
@@ -23,83 +22,85 @@ log = logging.getLogger(__name__)
     r"https?://(?:tv|radio)\.nrk\.no/(program|direkte|serie|podkast)(?:/.+)?/([^/]+)",
 ))
 class NRK(Plugin):
-    _psapi_url = "https://psapi.nrk.no"
-    # Program type to manifest type mapping
-    _program_type_map = {
+    _URL_MANIFEST = "https://psapi.nrk.no/playback/manifest/{manifest_type}/{program_id}"
+    _URL_METADATA = "https://psapi.nrk.no/playback/metadata/{manifest_type}/{program_id}?eea-portability=true"
+
+    _MAP_MANIFEST_TYPE = {
         "direkte": "channel",
         "serie": "program",
         "program": "program",
         "podkast": "podcast",
     }
 
-    _program_id_re = re.compile(r'<meta property="nrk:program-id" content="([^"]+)"')
-
-    _playable_schema = validate.Schema(validate.any(
-        {
-            "playable": {
-                "assets": [{
-                    "url": validate.url(),
-                    "format": str,
-                }],
-            },
-            "statistics": {
-                validate.optional("luna"): validate.any(None, {
-                    "data": {
-                        "title": str,
-                        "category": validate.any(None, str),
+    def _get_metadata(self, manifest_type, program_id):
+        url_metadata = self._URL_METADATA.format(manifest_type=manifest_type, program_id=program_id)
+        non_playable = self.session.http.get(url_metadata, schema=validate.Schema(
+            validate.parse_json(),
+            {
+                validate.optional("nonPlayable"): validate.none_or_all(
+                    {
+                        "reason": str,
+                        "endUserMessage": str,
                     },
-                }),
+                    validate.union_get("reason", "endUserMessage"),
+                ),
             },
-        },
-        {
-            "nonPlayable": {
-                "reason": str,
-            },
-        },
-    ))
+            validate.get("nonPlayable"),
+        ))
+        if non_playable:
+            reason, end_user_message = non_playable
+            log.error(f"Not playable: {reason} - {end_user_message or 'error'}")
+            return False
+
+        return True
+
+    def _update_program_id(self, program_id):
+        new_program_id = self.session.http.get(self.url, schema=validate.Schema(
+            validate.parse_html(),
+            validate.xml_xpath_string(".//meta[@property='nrk:program-id']/@content"),
+        ))
+        return new_program_id or program_id
+
+    def _get_assets(self, manifest_type, program_id):
+        return self.session.http.get(
+            self._URL_MANIFEST.format(manifest_type=manifest_type, program_id=program_id),
+            schema=validate.Schema(
+                validate.parse_json(),
+                {
+                    "playable": {
+                        "assets": [
+                            validate.all(
+                                {
+                                    "url": validate.url(),
+                                    "format": str,
+                                },
+                                validate.union_get("format", "url"),
+                            ),
+                        ],
+                    },
+                },
+                validate.get(("playable", "assets")),
+            ),
+        )
 
     def _get_streams(self):
-        # Construct manifest URL for this program.
         program_type, program_id = self.match.groups()
-        manifest_type = self._program_type_map.get(program_type)
+        manifest_type = self._MAP_MANIFEST_TYPE.get(program_type)
         if manifest_type is None:
             log.error(f"Unknown program type '{program_type}'")
-            return None
-
-        # Fetch program_id.
-        res = self.session.http.get(self.url)
-        m = self._program_id_re.search(res.text)
-        if m is not None:
-            program_id = m.group(1)
-        elif program_id is None:
-            log.error("Could not extract program ID from URL")
-            return None
-
-        manifest_url = urljoin(self._psapi_url, f"playback/manifest/{manifest_type}/{program_id}")
-
-        # Extract media URL.
-        res = self.session.http.get(manifest_url)
-        manifest = self.session.http.json(res, schema=self._playable_schema)
-        if "nonPlayable" in manifest:
-            reason = manifest["nonPlayable"]["reason"]
-            log.error(f"Not playable ({reason})")
-            return None
-        self._set_metadata(manifest)
-        asset = manifest["playable"]["assets"][0]
-
-        # Some streams such as podcasts are not HLS but plain files.
-        if asset["format"] == "HLS":
-            return HLSStream.parse_variant_playlist(self.session, asset["url"])
-        else:
-            return [("live", HTTPStream(self.session, asset["url"]))]
-
-    def _set_metadata(self, manifest):
-        luna = manifest.get("statistics").get("luna")
-        if not luna:
             return
-        data = luna["data"]
-        self.category = data.get("category")
-        self.title = data.get("title")
+
+        program_id = self._update_program_id(program_id)
+        if self._get_metadata(manifest_type, program_id) is False:
+            return
+
+        assets = self._get_assets(manifest_type, program_id)
+
+        # just return the first item
+        for stream_type, stream_url in assets:
+            if stream_type == "HLS":
+                return HLSStream.parse_variant_playlist(self.session, stream_url)
+            return [("live", HTTPStream(self.session, stream_url))]
 
 
 __plugin__ = NRK
