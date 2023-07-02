@@ -7,3 +7,5 @@ Exceptions
 .. autoexception:: streamlink.exceptions.NoPluginError
 .. autoexception:: streamlink.exceptions.NoStreamsError
 .. autoexception:: streamlink.exceptions.StreamError
+.. autoexception:: streamlink.webbrowser.exceptions.WebbrowserError
+.. autoexception:: streamlink.webbrowser.cdp.exceptions.CDPError
