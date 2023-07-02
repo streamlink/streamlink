@@ -1250,6 +1250,84 @@ def build_parser():
         """,
     )
 
+    webbrowser = parser.add_argument_group("Web browser options")
+    webbrowser.add_argument(
+        "--webbrowser",
+        type=boolean,
+        metavar="{yes,true,1,on,no,false,0,off}",
+        default=None,
+        help="""
+        Enable or disable support for Streamlink's webbrowser API.
+
+        Streamlink's webbrowser API allows plugins which implement it to launch a web browser and extract data from websites
+        which they otherwise couldn't do via the regular HTTP session in Python due to specific JavaScript restrictions.
+
+        The web browser is run isolated and in a clean environment without access to regular user data.
+
+        Streamlink currently only supports Chromium-based web browsers using the Chrome Devtools Protocol (CDP).
+        This includes Chromium itself, Google Chrome, Brave, Vivaldi, and others.
+
+        Default is true.
+        """,
+    )
+    webbrowser.add_argument(
+        "--webbrowser-executable",
+        metavar="PATH",
+        help="""
+        Path to the web browser's executable.
+
+        By default, it is looked up automatically according to the rules of the used webbrowser API implementation.
+        This usually involves a list of known executable names and fallback paths on all supported operating systems.
+        """,
+    )
+    webbrowser.add_argument(
+        "--webbrowser-timeout",
+        metavar="TIME",
+        type=num(float, gt=0),
+        help="""
+        The maximum amount of time which the web browser can take to launch and execute.
+        """,
+    )
+    webbrowser.add_argument(
+        "--webbrowser-cdp-host",
+        metavar="HOST",
+        help="""
+        Host for the web browser's inter-process communication interface (CDP specific).
+
+        Default is 127.0.0.1.
+        """,
+    )
+    webbrowser.add_argument(
+        "--webbrowser-cdp-port",
+        metavar="PORT",
+        type=num(int, ge=0, le=65535),
+        help="""
+        Port for the web browser's inter-process communication interface (CDP specific).
+
+        Tries to find a free port by default.
+        """,
+    )
+    webbrowser.add_argument(
+        "--webbrowser-cdp-timeout",
+        metavar="TIME",
+        type=num(float, gt=0),
+        help="""
+        The maximum amount of time for waiting on a single CDP command response.
+        """,
+    )
+    webbrowser.add_argument(
+        "--webbrowser-headless",
+        type=boolean,
+        metavar="{yes,true,1,on,no,false,0,off}",
+        default=None,
+        help="""
+        Whether to launch the web browser in headless mode or not.
+        When enabled, it stays completely hidden and doesn't require a desktop environment to run.
+
+        Default is true.
+        """,
+    )
+
     return parser
 
 
@@ -1311,6 +1389,15 @@ _ARGUMENT_TO_SESSIONOPTION: List[Tuple[str, str, Optional[Callable[[Any], Any]]]
     ("ffmpeg_audio_transcode", "ffmpeg-audio-transcode", None),
     ("ffmpeg_copyts", "ffmpeg-copyts", None),
     ("ffmpeg_start_at_zero", "ffmpeg-start-at-zero", None),
+
+    # web browser arguments
+    ("webbrowser", "webbrowser", None),
+    ("webbrowser_executable", "webbrowser-executable", None),
+    ("webbrowser_timeout", "webbrowser-timeout", None),
+    ("webbrowser_cdp_host", "webbrowser-cdp-host", None),
+    ("webbrowser_cdp_port", "webbrowser-cdp-port", None),
+    ("webbrowser_cdp_timeout", "webbrowser-cdp-timeout", None),
+    ("webbrowser_headless", "webbrowser-headless", None),
 ]
 
 

@@ -9,4 +9,5 @@ This is an incomplete reference of the relevant Streamlink APIs.
     api/session
     api/plugin
     api/stream
+    api/webbrowser
     api/exceptions

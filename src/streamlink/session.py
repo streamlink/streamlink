@@ -249,6 +249,13 @@ class Streamlink:
             "ffmpeg-audio-transcode": None,
             "ffmpeg-copyts": False,
             "ffmpeg-start-at-zero": False,
+            "webbrowser": True,
+            "webbrowser-executable": None,
+            "webbrowser-timeout": 20.0,
+            "webbrowser-cdp-host": None,
+            "webbrowser-cdp-port": None,
+            "webbrowser-cdp-timeout": 2.0,
+            "webbrowser-headless": True,
         })
         if options:
             self.options.update(options)
@@ -488,6 +495,34 @@ class Streamlink:
               - ``bool``
               - ``False``
               - When ``ffmpeg-copyts`` is ``True``, shift timestamps to zero
+            * - webbrowser
+              - ``bool``
+              - ``True``
+              - Enable or disable support for Streamlink's webbrowser API
+            * - webbrowser-executable
+              - ``str | None``
+              - ``None``
+              - Path to the web browser's executable
+            * - webbrowser-timeout
+              - ``float``
+              - ``20.0``
+              - The maximum amount of time which the webbrowser can take to launch and execute
+            * - webbrowser-cdp-host
+              - ``str | None``
+              - ``None``
+              - Custom host for the Chrome Devtools Protocol (CDP) interface
+            * - webbrowser-cdp-port
+              - ``int | None``
+              - ``None``
+              - Custom port for the Chrome Devtools Protocol (CDP) interface
+            * - webbrowser-cdp-timeout
+              - ``float``
+              - ``2.0``
+              - The maximum amount of time for waiting on a single CDP command response
+            * - webbrowser-headless
+              - ``bool``
+              - ``True``
+              - Whether to launch the webbrowser in headless mode or not
         """
 
         self.options.set(key, value)
