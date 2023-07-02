@@ -41,7 +41,7 @@ def _find_default_player_win32() -> Optional[Path]:
 
 
 def _find_default_player_darwin() -> Optional[Path]:
-    subpath = Path() / "Applications" / "VLC.app"/ "Contents" / "MacOS"
+    subpath = Path() / "Applications" / "VLC.app" / "Contents" / "MacOS"
 
     return _resolve_executable(
         [
