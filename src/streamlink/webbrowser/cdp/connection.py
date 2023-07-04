@@ -12,7 +12,7 @@ from typing import AsyncGenerator, Dict, Generator, Generic, Optional, Set, Type
 import trio
 from trio_websocket import ConnectionClosed, WebSocketConnection, connect_websocket_url  # type: ignore[import]
 
-from streamlink.logger import ALL
+from streamlink.logger import ALL, ERROR, WARNING
 from streamlink.webbrowser.cdp.devtools.target import SessionID, TargetID, attach_to_target, create_target
 from streamlink.webbrowser.cdp.devtools.util import T_JSON_DICT, parse_json_event
 from streamlink.webbrowser.cdp.exceptions import CDPError
@@ -181,7 +181,7 @@ class CDPBase:
             cmd_data["sessionId"] = self.session_id
 
         message = json.dumps(cmd_data, separators=(",", ":"), sort_keys=True)
-        log.log(ALL, f"Sending message: {message}")
+        log.log(ALL, "Sending message: %(message)s", dict(message=message))
         with trio.move_on_after(self.cmd_timeout if timeout is None else timeout) as cancel_scope:
             try:
                 await self.websocket.send_message(message)
@@ -225,7 +225,7 @@ class CDPBase:
             cmd_id: int = data["id"]
             cmd_buffer = self.cmd_buffers.pop(cmd_id)
         except KeyError:
-            log.warning(f"Got a CDP command response with an unknown ID: {data['id']}")
+            log.log(WARNING, "Got a CDP command response with an unknown ID: %(id)r", dict(id=data.get("id")))
             return
 
         if "error" in data:
@@ -259,13 +259,13 @@ class CDPBase:
             log.warning(f"Unknown CDP event message received: {data['method']}")
             return
 
-        log.log(ALL, f"Received event: {event!r}")
+        log.log(ALL, "Received event: %(event)r", dict(event=event))
         broken_channels = set()
         for sender in self.event_channels[type(event)]:
             try:
                 sender.send_nowait(event)
             except trio.WouldBlock:
-                log.error(f"Unable to propagate CDP event {event!r} due to full channel")
+                log.log(ERROR, "Unable to propagate CDP event %(event)r due to full channel", dict(event=event))
             except trio.BrokenResourceError:
                 broken_channels.add(sender)
                 sender.close()
@@ -346,7 +346,7 @@ class CDPConnection(CDPBase, trio.abc.AsyncResource):
             except json.JSONDecodeError as err:
                 raise CDPError(f"Received invalid CDP JSON data: {err}") from err
 
-            log.log(ALL, f"Received message: {message}")
+            log.log(ALL, "Received message: %(message)s", dict(message=message))
             if "sessionId" not in data:
                 self._handle_data(data)
             else:
