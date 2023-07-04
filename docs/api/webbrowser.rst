@@ -12,5 +12,7 @@ Webbrowser
 .. autoclass:: streamlink.webbrowser.cdp.client.CMRequestProxy
 .. autoclass:: streamlink.webbrowser.cdp.connection.CDPBase
 .. autoclass:: streamlink.webbrowser.cdp.connection.CDPConnection
+.. autoclass:: streamlink.webbrowser.cdp.connection.CDPSession
+.. autoclass:: streamlink.webbrowser.cdp.connection.CDPEventListener
 .. autoclass:: streamlink.webbrowser.webbrowser.Webbrowser
 .. autoclass:: streamlink.webbrowser.chromium.ChromiumWebbrowser

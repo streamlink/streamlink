@@ -36,6 +36,27 @@ TEventChannels: TypeAlias = "Dict[Type[TEvent], Set[trio.MemorySendChannel[TEven
 
 
 class CDPEventListener(Generic[TEvent]):
+    """
+    Instances of this class are returned by :meth:`CDPBase.listen()`.
+
+    The return types of each of its methods depend on the event type.
+
+    Can be used as an async for-loop which indefinitely waits for events to be emitted,
+    or can be used as an async context manager which yields the event and closes the listener when leaving the context manager.
+
+    Example:
+
+    .. code-block:: python
+
+        async def listen(cdp_session: CDPSession):
+            async for request in cdp_session.listen(devtools.fetch.RequestPaused):
+                ...
+
+        async def listen_once(cdp_session: CDPSession):
+            async with cdp_session.listen(devtools.fetch.RequestPaused) as request:
+                ...
+    """
+
     _sender: trio.MemorySendChannel[TEvent]
     _receiver: trio.MemoryReceiveChannel[TEvent]
 
@@ -44,6 +65,10 @@ class CDPEventListener(Generic[TEvent]):
         event_channels[event].add(self._sender)
 
     async def receive(self) -> TEvent:
+        """
+        Await a single event without closing the listener's memory channel.
+        """
+
         return await self._receiver.receive()
 
     def close(self) -> None:
@@ -108,6 +133,14 @@ class _CDPCmdBuffer(Generic[TCmdResponse]):
 
 
 class CDPBase:
+    """
+    Low-level base class for Chrome Devtools Protocol connection & session management.
+
+    It provides methods for sending CDP commands and receiving their responses, as well as for listening to CDP events.
+
+    Both CDP commands and events can be sent and received in a global context and in a session context.
+    """
+
     def __init__(
         self,
         websocket: WebSocketConnection,
@@ -128,6 +161,15 @@ class CDPBase:
         cmd: Generator[T_JSON_DICT, T_JSON_DICT, TCmdResponse],
         timeout: Optional[float] = None,
     ) -> TCmdResponse:
+        """
+        Send a specific CDP command and await its response.
+
+        :param cmd: See the ``streamlink.webbrowser.cdp.devtools`` package for the available commands.
+        :param timeout: Override of the max amount of time a response can take. Uses the class's default value otherwise.
+                        This override is mostly only relevant for awaiting JS code evaluations.
+        :return: The return value depends on the used command.
+        """
+
         cmd_id = next(self.cmd_id)
         cmd_buffer = _CDPCmdBuffer(cmd)
 
@@ -161,6 +203,15 @@ class CDPBase:
         return response
 
     def listen(self, event: Type[TEvent], max_buffer_size: int = MAX_BUFFER_SIZE) -> CDPEventListener[TEvent]:
+        """
+        Listen to a CDP event and return a new :class:`CDPEventListener` instance.
+
+        :param event: See the ``streamlink.webbrowser.cdp.devtools`` package for the available events.
+                      For events to be sent over the CDP connection, a specific domain needs to be enabled first.
+        :param max_buffer_size: The buffer size of the ``trio`` memory channel.
+        :return:
+        """
+
         return CDPEventListener(self.event_channels, event, max_buffer_size)
 
     def _handle_data(self, data: T_JSON_DICT) -> None:
@@ -222,6 +273,10 @@ class CDPBase:
 
 
 class CDPConnection(CDPBase, trio.abc.AsyncResource):
+    """
+    Don't instantiate this class yourself, see its :meth:`create()` classmethod.
+    """
+
     def __init__(self, websocket: WebSocketConnection, cmd_timeout: float) -> None:
         super().__init__(websocket=websocket, cmd_timeout=cmd_timeout)
         self.sessions: Dict[SessionID, CDPSession] = {}
@@ -229,6 +284,14 @@ class CDPConnection(CDPBase, trio.abc.AsyncResource):
     @classmethod
     @asynccontextmanager
     async def create(cls, url: str, timeout: Optional[float] = None) -> AsyncGenerator[Self, None]:
+        """
+        Establish a new CDP connection to the Chromium-based web browser's remote debugging interface.
+
+        :param url: The websocket address
+        :param timeout: The max amount of time a single CDP command response can take.
+        :return:
+        """
+
         async with trio.open_nursery() as nursery:
             websocket = await connect_websocket_url(nursery, url, max_message_size=MAX_MESSAGE_SIZE)
             cdp_connection = cls(websocket, timeout or CMD_TIMEOUT)
@@ -239,6 +302,10 @@ class CDPConnection(CDPBase, trio.abc.AsyncResource):
                 await cdp_connection.aclose()
 
     async def aclose(self) -> None:
+        """
+        Close the websocket connection, close all memory channels and clean up all opened sessions.
+        """
+
         await self.websocket.aclose()
         inst: CDPBase
         for inst in (self, *self.sessions.values()):
@@ -249,6 +316,13 @@ class CDPConnection(CDPBase, trio.abc.AsyncResource):
         self.sessions.clear()
 
     async def new_target(self, url: str = "") -> CDPSession:
+        """
+        Create a new target (browser tab) and return a new :class:`CDPSession` instance.
+
+        :param url: Optional URL. Leave empty for a blank target (preferred for proper navigation handling).
+        :return:
+        """
+
         target_id = await self.send(create_target(url))
 
         return await self.get_session(target_id)
