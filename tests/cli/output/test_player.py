@@ -302,7 +302,7 @@ class TestPlayerOutput:
         assert not playeroutput.player.terminate.called  # type: ignore
 
         playeroutput.close()
-        assert playeroutput.player.terminate.called_once  # type: ignore
+        assert playeroutput.player.terminate.call_count == 1  # type: ignore
 
     @pytest.mark.parametrize(("playeroutput", "mock_which", "expected", "warns"), [
         pytest.param(

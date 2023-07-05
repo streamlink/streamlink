@@ -567,6 +567,7 @@ class _TestCLIMainLogging(unittest.TestCase):
              patch("streamlink_cli.main.CONFIG_FILES", []), \
              patch("streamlink_cli.main.setup_streamlink"), \
              patch("streamlink_cli.main.setup_plugins"), \
+             patch("streamlink_cli.argparser.find_default_player"), \
              patch("streamlink.session.Streamlink.load_builtin_plugins"), \
              patch("sys.argv") as mock_argv:
             mock_argv.__getitem__.side_effect = lambda x: argv[x]
