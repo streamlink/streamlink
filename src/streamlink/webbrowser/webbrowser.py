@@ -17,6 +17,8 @@ log = logging.getLogger(__name__)
 
 
 class Webbrowser:
+    ERROR_RESOLVE = "Could not find web browser executable"
+
     TIMEOUT = 10
 
     @classmethod
@@ -34,7 +36,11 @@ class Webbrowser:
     def __init__(self, executable: Optional[str] = None):
         resolved = resolve_executable(executable, self.names(), self.fallback_paths())
         if not resolved:
-            raise WebbrowserError(f"Could not resolve web browser executable{f': {executable}' if executable else ''}")
+            raise WebbrowserError(
+                f"Invalid web browser executable: {executable}"
+                if executable else
+                f"{self.ERROR_RESOLVE}: Please set the path to a supported web browser using --webbrowser-executable",
+            )
 
         self.executable: Union[str, Path] = resolved
         self.arguments: List[str] = self.launch_args().copy()

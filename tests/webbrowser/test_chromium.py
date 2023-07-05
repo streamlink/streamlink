@@ -1,7 +1,7 @@
 from contextlib import nullcontext
 from pathlib import Path, PurePosixPath, PureWindowsPath
 from signal import SIGTERM
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 import pytest
 import requests_mock as rm
@@ -12,6 +12,39 @@ from streamlink.compat import is_win32
 from streamlink.exceptions import PluginError
 from streamlink.session import Streamlink
 from streamlink.webbrowser.chromium import ChromiumWebbrowser
+from streamlink.webbrowser.exceptions import WebbrowserError
+
+
+class TestInit:
+    @pytest.mark.parametrize(("executable", "resolve_executable", "raises"), [
+        pytest.param(
+            None,
+            None,
+            pytest.raises(WebbrowserError, match="^Could not find Chromium-based web browser executable: Please set the path "),
+            id="Failure with unset path",
+        ),
+        pytest.param(
+            "custom",
+            None,
+            pytest.raises(WebbrowserError, match="^Invalid web browser executable: custom$"),
+            id="Failure with custom path",
+        ),
+        pytest.param(
+            None,
+            "default",
+            nullcontext(),
+            id="Success with default path",
+        ),
+        pytest.param(
+            "custom",
+            "custom",
+            nullcontext(),
+            id="Success with custom path",
+        ),
+    ], indirect=["resolve_executable"])
+    def test_resolve_executable(self, resolve_executable, executable: Optional[str], raises: nullcontext):
+        with raises:
+            ChromiumWebbrowser(executable=executable)
 
 
 class TestFallbacks:

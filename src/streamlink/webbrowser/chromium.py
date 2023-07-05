@@ -13,6 +13,8 @@ from streamlink.webbrowser.webbrowser import Webbrowser
 
 
 class ChromiumWebbrowser(Webbrowser):
+    ERROR_RESOLVE = "Could not find Chromium-based web browser executable"
+
     @classmethod
     def names(cls) -> List[str]:
         return [
