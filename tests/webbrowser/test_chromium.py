@@ -25,6 +25,12 @@ class TestFallbacks:
             "LOCALAPPDATA": "C:\\Users\\user\\AppData\\Local",
         }.get)
         assert ChromiumWebbrowser.fallback_paths() == [
+            "C:\\Program Files\\Microsoft\\Edge\\Application\\msedge.exe",
+            "C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe",
+            "C:\\Program Files\\Microsoft\\Edge Beta\\Application\\msedge.exe",
+            "C:\\Program Files (x86)\\Microsoft\\Edge Beta\\Application\\msedge.exe",
+            "C:\\Program Files\\Microsoft\\Edge Dev\\Application\\msedge.exe",
+            "C:\\Program Files (x86)\\Microsoft\\Edge Dev\\Application\\msedge.exe",
             "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
             "C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe",
             "C:\\Users\\user\\AppData\\Local\\Google\\Chrome\\Application\\chrome.exe",

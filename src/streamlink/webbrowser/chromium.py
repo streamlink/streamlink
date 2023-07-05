@@ -26,7 +26,20 @@ class ChromiumWebbrowser(Webbrowser):
     @classmethod
     def fallback_paths(cls) -> List[Union[str, Path]]:
         if is_win32:
-            return [
+            ms_edge: List[Union[str, Path]] = [
+                str(Path(base) / sub / "msedge.exe")
+                for sub in (
+                    "Microsoft\\Edge\\Application",
+                    "Microsoft\\Edge Beta\\Application",
+                    "Microsoft\\Edge Dev\\Application",
+                )
+                for base in [os.getenv(env) for env in (
+                    "PROGRAMFILES",
+                    "PROGRAMFILES(X86)",
+                )]
+                if base is not None
+            ]
+            google_chrome: List[Union[str, Path]] = [
                 str(Path(base) / sub / "chrome.exe")
                 for sub in (
                     "Google\\Chrome\\Application",
@@ -40,6 +53,7 @@ class ChromiumWebbrowser(Webbrowser):
                 )]
                 if base is not None
             ]
+            return ms_edge + google_chrome
 
         if is_darwin:
             return [
