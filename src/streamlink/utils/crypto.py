@@ -1,6 +1,21 @@
+# ruff: noqa: F401
 import hashlib
 
-from Crypto.Cipher import AES
+
+# re-export pycryptodome / pycryptodomex stuff in a single place
+# so packagers don't have to maintain dozens of patches
+try:
+    # pycryptodome (drop-in replacement for the old PyCrypto library)
+    from Crypto.Cipher import AES, PKCS1_v1_5
+    from Crypto.Hash import SHA256
+    from Crypto.PublicKey import RSA
+    from Crypto.Util.Padding import pad, unpad
+except ImportError:  # pragma: no cover
+    # pycryptodomex (independent of the old PyCrypto library)
+    from Cryptodome.Cipher import AES, PKCS1_v1_5  # type: ignore
+    from Cryptodome.Hash import SHA256  # type: ignore
+    from Cryptodome.PublicKey import RSA  # type: ignore
+    from Cryptodome.Util.Padding import pad, unpad  # type: ignore
 
 
 def evp_bytestokey(password, salt, key_len, iv_len):

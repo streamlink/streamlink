@@ -15,7 +15,6 @@ import uuid
 from base64 import urlsafe_b64encode
 from binascii import unhexlify
 
-from Crypto.Cipher import AES
 from requests import Response
 from requests.adapters import BaseAdapter
 
@@ -23,6 +22,7 @@ from streamlink.exceptions import NoStreamsError
 from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.api import useragents, validate
 from streamlink.stream.hls import HLSStream, HLSStreamReader, HLSStreamWriter
+from streamlink.utils.crypto import AES
 from streamlink.utils.url import update_qsd
 
 

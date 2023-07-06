@@ -12,12 +12,9 @@ import re
 from urllib.parse import urljoin, urlparse
 from uuid import uuid4
 
-from Crypto.Cipher import AES
-from Crypto.Hash import SHA256
-from Crypto.Util.Padding import pad, unpad
-
 from streamlink.plugin import Plugin, PluginError, pluginargument, pluginmatcher
 from streamlink.stream.hls import HLSStream
+from streamlink.utils.crypto import AES, SHA256, pad, unpad
 
 
 log = logging.getLogger(__name__)

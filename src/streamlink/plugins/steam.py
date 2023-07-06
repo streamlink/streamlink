@@ -11,13 +11,11 @@ import logging
 import re
 import time
 
-from Crypto.Cipher import PKCS1_v1_5
-from Crypto.PublicKey import RSA
-
 from streamlink.exceptions import FatalPluginError
 from streamlink.plugin import Plugin, pluginargument, pluginmatcher
 from streamlink.plugin.api import validate
 from streamlink.stream.dash import DASHStream
+from streamlink.utils.crypto import RSA, PKCS1_v1_5
 
 
 log = logging.getLogger(__name__)

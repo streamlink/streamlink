@@ -9,13 +9,12 @@ from unittest.mock import Mock, call, patch
 import freezegun
 import pytest
 import requests_mock as rm
-from Crypto.Cipher import AES
-from Crypto.Util.Padding import pad
 from requests.exceptions import InvalidSchema
 
 from streamlink.session import Streamlink
 from streamlink.stream.hls import HLSStream, HLSStreamReader, MuxedHLSStream
 from streamlink.stream.hls_playlist import M3U8Parser
+from streamlink.utils.crypto import AES, pad
 from tests.mixins.stream_hls import EventedHLSStreamWorker, EventedHLSStreamWriter, Playlist, Segment, Tag, TestMixinStreamHLS
 from tests.resources import text
 
