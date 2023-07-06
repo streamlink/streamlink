@@ -10,12 +10,10 @@ import logging
 import re
 from urllib.parse import urljoin
 
-from Crypto.Cipher import AES
-from Crypto.Util.Padding import unpad
-
 from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.api import validate
 from streamlink.stream.hls import HLSStream
+from streamlink.utils.crypto import AES, unpad
 from streamlink.utils.parse import parse_json
 
 

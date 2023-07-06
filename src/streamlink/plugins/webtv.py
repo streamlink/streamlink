@@ -9,12 +9,10 @@ import binascii
 import logging
 import re
 
-from Crypto.Cipher import AES
-
 from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.api import validate
 from streamlink.stream.hls import HLSStream
-from streamlink.utils.crypto import unpad_pkcs5
+from streamlink.utils.crypto import AES, unpad_pkcs5
 from streamlink.utils.parse import parse_json
 from streamlink.utils.url import update_scheme
 

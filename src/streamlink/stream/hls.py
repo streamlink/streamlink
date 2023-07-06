@@ -6,11 +6,6 @@ from datetime import datetime, timedelta
 from typing import Any, Dict, List, Mapping, NamedTuple, Optional, Tuple, Union
 from urllib.parse import urlparse
 
-# noinspection PyPackageRequirements
-from Crypto.Cipher import AES
-
-# noinspection PyPackageRequirements
-from Crypto.Util.Padding import unpad
 from requests import Response
 from requests.exceptions import ChunkedEncodingError, ConnectionError, ContentDecodingError, InvalidSchema
 
@@ -23,6 +18,7 @@ from streamlink.stream.hls_playlist import M3U8, ByteRange, Key, Map, Media, Seg
 from streamlink.stream.http import HTTPStream
 from streamlink.stream.segmented import SegmentedStreamReader, SegmentedStreamWorker, SegmentedStreamWriter
 from streamlink.utils.cache import LRUCache
+from streamlink.utils.crypto import AES, unpad
 from streamlink.utils.formatter import Formatter
 from streamlink.utils.times import now
 
