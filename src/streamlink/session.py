@@ -1,5 +1,5 @@
+import os
 import logging
-import pkgutil
 import warnings
 from functools import lru_cache
 from socket import AF_INET, AF_INET6
@@ -15,7 +15,6 @@ from streamlink.options import Options
 from streamlink.plugin.api.http_session import HTTPSession, TLSNoDHAdapter
 from streamlink.plugin.plugin import NO_PRIORITY, Matcher, Plugin
 from streamlink.utils.l10n import Localization
-from streamlink.utils.module import load_module
 from streamlink.utils.url import update_scheme
 
 
@@ -259,8 +258,7 @@ class Streamlink:
         })
         if options:
             self.options.update(options)
-        self.plugins: Dict[str, Type[Plugin]] = {}
-        self.load_builtin_plugins()
+        self.plugins: Dict[str, Type[Plugin]] = self.load_builtin_plugins(plugins.__path__[0])
 
     def set_option(self, key: str, value: Any) -> None:
         """
@@ -614,40 +612,32 @@ class Streamlink:
 
     def get_plugins(self):
         """Returns the loaded plugins for the session."""
-
         return self.plugins
 
-    def load_builtin_plugins(self):
-        self.load_plugins(plugins.__path__[0])
 
-    def load_plugins(self, path: str) -> bool:
+    def load_builtin_plugins(self, path: str) -> Dict[str, Type[Plugin]]:
         """
         Attempt to load plugins from the path specified.
-
         :param path: full path to a directory where to look for plugins
-        :return: success
+        :return: Dict of available plugins
         """
-
-        success = False
-        for _loader, name, _ispkg in pkgutil.iter_modules([path]):
+        ret = {}
+        for name in os.listdir(path):
             # set the full plugin module name
             # use the "streamlink.plugins." prefix even for sideloaded plugins
-            module_name = f"streamlink.plugins.{name}"
+            name = name.rpartition('.')[0]
             try:
-                mod = load_module(module_name, path)
+                mod = __import__(f"streamlink.plugins.{name}", locals=None, globals=None, fromlist=[None], level=0)
             except ImportError as err:
                 log.exception(f"Failed to load plugin {name} from {path}", exc_info=err)
                 continue
 
             if not hasattr(mod, "__plugin__") or not issubclass(mod.__plugin__, Plugin):
                 continue
-            success = True
-            plugin = mod.__plugin__
-            if name in self.plugins:
-                log.debug(f"Plugin {name} is being overridden by {mod.__file__}")
-            self.plugins[name] = plugin
 
-        return success
+            ret[name] = mod.__plugin__
+
+        return ret
 
     @property
     def version(self):

@@ -1,3 +1,4 @@
+import os
 import re
 import time
 import warnings
@@ -6,10 +7,9 @@ from typing import Any, Dict, Pattern, Tuple
 import requests.adapters
 import urllib3
 from requests import PreparedRequest, Request, Session
-from requests.adapters import HTTPAdapter
+from requests.adapters import HTTPAdapter, BaseAdapter
 
 from streamlink.exceptions import PluginError, StreamlinkDeprecationWarning
-from streamlink.packages.requests_file import FileAdapter
 from streamlink.plugin.api import useragents
 from streamlink.utils.parse import parse_json, parse_xml
 
@@ -20,6 +20,41 @@ except ImportError:  # pragma: no cover
     # urllib3 <2.0.0 compat import
     from urllib3.util.ssl_ import create_urllib3_context
 
+class FileAdapter(BaseAdapter):
+    @staticmethod
+    def _chkpath(method, path):
+        """Return an HTTP status for the given filesystem path."""
+        if method.lower() in ('put', 'delete'):
+            return 501, "Not Implemented"
+        elif method.lower() not in ('get', 'head'):
+            return 405, "Method Not Allowed"
+        elif os.path.isdir(path):
+            return 400, "Path Not A File"
+        elif not os.path.isfile(path):
+            return 404, "File Not Found"
+        elif not os.access(path, os.R_OK):
+            return 403, "Access Denied"
+        else:
+            return 200, "OK"
+
+    def send(self, req, **kwargs):
+        """Return the file specified by the given request
+        """
+        path = os.path.normcase(os.path.normpath(url2pathname(req.path_url)))
+        response = requests.Response()
+        response.encoding = 'utf-8'
+        response.status_code, response.reason = self._chkpath(req.method, path)
+        if response.status_code == 200 and req.method.lower() != 'head':
+            try:
+                response.raw = open(path, 'rb')
+            except (OSError, IOError) as err:
+                response.status_code = 500
+                response.reason = str(err)
+
+        response.url = req.url.decode('utf-8') if isinstance(req.url, bytes) else req.url
+        response.request = req
+        response.connection = self
+        return response
 
 # urllib3>=2.0.0: enforce_content_length now defaults to True (keep the override for backwards compatibility)
 class _HTTPResponse(urllib3.response.HTTPResponse):
