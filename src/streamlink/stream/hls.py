@@ -3,7 +3,7 @@ import re
 import struct
 from concurrent.futures import Future
 from datetime import datetime, timedelta
-from typing import Any, Dict, List, Mapping, NamedTuple, Optional, Tuple, Union
+from typing import Any, Dict, List, NamedTuple, Optional, Tuple, Union
 from urllib.parse import urlparse
 
 from requests import Response
@@ -538,7 +538,7 @@ class MuxedHLSStream(MuxedStream["HLSStream"]):
         multivariant: Optional[M3U8] = None,
         force_restart: bool = False,
         ffmpeg_options: Optional[Dict[str, Any]] = None,
-        **args,
+        **kwargs,
     ):
         """
         :param session: Streamlink session instance
@@ -548,7 +548,7 @@ class MuxedHLSStream(MuxedStream["HLSStream"]):
         :param multivariant: The parsed multivariant playlist
         :param force_restart: Start from the beginning after reaching the playlist's end
         :param ffmpeg_options: Additional keyword arguments passed to :class:`ffmpegmux.FFMPEGMuxer`
-        :param args: Additional keyword arguments passed to :class:`HLSStream`
+        :param kwargs: Additional keyword arguments passed to :class:`HLSStream`
         """
 
         tracks = [video]
@@ -559,7 +559,7 @@ class MuxedHLSStream(MuxedStream["HLSStream"]):
             else:
                 tracks.append(audio)
         maps.extend(f"{i}:a" for i in range(1, len(tracks)))
-        substreams = [HLSStream(session, url, force_restart=force_restart, **args) for url in tracks]
+        substreams = [HLSStream(session, url, force_restart=force_restart, **kwargs) for url in tracks]
         ffmpeg_options = ffmpeg_options or {}
 
         super().__init__(session, *substreams, format="mpegts", maps=maps, **ffmpeg_options)
@@ -597,8 +597,7 @@ class HLSStream(HTTPStream):
         force_restart: bool = False,
         start_offset: float = 0,
         duration: Optional[float] = None,
-        # TODO: turn args into dedicated keyword
-        **args,
+        **kwargs,
     ):
         """
         :param streamlink.session.Streamlink session_: Streamlink session instance
@@ -608,10 +607,10 @@ class HLSStream(HTTPStream):
         :param force_restart: Start from the beginning after reaching the playlist's end
         :param start_offset: Number of seconds to be skipped from the beginning
         :param duration: Number of seconds until ending the stream
-        :param args: Additional keyword arguments passed to :meth:`requests.Session.request`
+        :param kwargs: Additional keyword arguments passed to :meth:`requests.Session.request`
         """
 
-        super().__init__(session_, url, **args)
+        super().__init__(session_, url, **kwargs)
         self._url_master = url_master
         self.multivariant = multivariant if multivariant and multivariant.is_master else None
         self.force_restart = force_restart
@@ -654,8 +653,8 @@ class HLSStream(HTTPStream):
         return reader
 
     @classmethod
-    def _fetch_variant_playlist(cls, session, url: str, **request_params) -> Response:
-        res = session.http.get(url, exception=OSError, **request_params)
+    def _fetch_variant_playlist(cls, session, url: str, **request_args) -> Response:
+        res = session.http.get(url, exception=OSError, **request_args)
         res.encoding = "utf-8"
 
         return res
@@ -677,9 +676,7 @@ class HLSStream(HTTPStream):
         name_fmt: Optional[str] = None,
         start_offset: float = 0,
         duration: Optional[float] = None,
-        keywords: Optional[Mapping] = None,
-        # TODO: turn request_params into a dedicated keyword
-        **request_params,
+        **kwargs,
     ) -> Dict[str, Union["HLSStream", "MuxedHLSStream"]]:
         """
         Parse a variant playlist and return its streams.
@@ -693,15 +690,15 @@ class HLSStream(HTTPStream):
         :param name_fmt: A format string for the name, allowed format keys are: name, pixels, bitrate
         :param start_offset: Number of seconds to be skipped from the beginning
         :param duration: Number of second until ending the stream
-        :param keywords: Optional keywords to be passed to the :class:`HLSStream` or :class:`MuxedHLSStream`
-        :param request_params: Additional keyword arguments passed to :class:`HLSStream`, :class:`MuxedHLSStream`,
-                               or :py:meth:`requests.Session.request`
+        :param kwargs: Additional keyword arguments passed to :class:`HLSStream`, :class:`MuxedHLSStream`,
+                       or :py:meth:`requests.Session.request`
         """
 
         locale = session_.localization
         audio_select = session_.options.get("hls-audio-select")
 
-        res = cls._fetch_variant_playlist(session_, url, **request_params)
+        request_args = session_.http.valid_request_args(**kwargs)
+        res = cls._fetch_variant_playlist(session_, url, **request_args)
 
         try:
             multivariant = cls._get_variant_playlist(res)
@@ -711,7 +708,6 @@ class HLSStream(HTTPStream):
         stream_name: Optional[str]
         stream: Union["HLSStream", "MuxedHLSStream"]
         streams: Dict[str, Union["HLSStream", "MuxedHLSStream"]] = {}
-        keywords = keywords or {}
 
         for playlist in filter(lambda p: not p.is_iframe, multivariant.playlists):
             names: Dict[str, Optional[str]] = dict(name=None, pixels=None, bitrate=None)
@@ -797,7 +793,7 @@ class HLSStream(HTTPStream):
             if check_streams:
                 # noinspection PyBroadException
                 try:
-                    session_.http.get(playlist.uri, **request_params)
+                    session_.http.get(playlist.uri, **request_args)
                 except KeyboardInterrupt:
                     raise
                 except Exception:
@@ -820,8 +816,7 @@ class HLSStream(HTTPStream):
                     force_restart=force_restart,
                     start_offset=start_offset,
                     duration=duration,
-                    **keywords,
-                    **request_params,
+                    **kwargs,
                 )
             else:
                 stream = cls(
@@ -831,8 +826,7 @@ class HLSStream(HTTPStream):
                     force_restart=force_restart,
                     start_offset=start_offset,
                     duration=duration,
-                    **keywords,
-                    **request_params,
+                    **kwargs,
                 )
 
             streams[stream_name] = stream

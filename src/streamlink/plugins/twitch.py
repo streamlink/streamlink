@@ -706,10 +706,8 @@ class Twitch(Plugin):
                 self.session,
                 url,
                 start_offset=time_offset,
-                keywords={
-                    "disable_ads": self.get_option("disable-ads"),
-                    "low_latency": self.get_option("low-latency"),
-                },
+                disable_ads=self.get_option("disable-ads"),
+                low_latency=self.get_option("low-latency"),
                 **extra_params,
             )
         except OSError as err:
