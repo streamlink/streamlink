@@ -23,15 +23,15 @@ log = logging.getLogger(__name__)
 class OnePlusOneHLS(HLSStream):
     __shortname__ = "hls-oneplusone"
 
-    def __init__(self, session_, url, self_url=None, **args):
-        super().__init__(session_, url, None, **args)
+    def __init__(self, session, url, self_url=None, **args):
+        super().__init__(session, url, None, **args)
         self._url = url
 
         first_parsed = urlparse(self._url)
         self._first_netloc = first_parsed.netloc
         self._first_path_chunklist = first_parsed.path.split("/")[-1]
         self.watch_timeout = int(first_parsed.path.split("/")[2]) - 15
-        self.api = OnePlusOneAPI(session_, self_url)
+        self.api = OnePlusOneAPI(session, self_url)
 
     def _next_watch_timeout(self):
         _next = fromlocaltimestamp(self.watch_timeout).isoformat(" ")

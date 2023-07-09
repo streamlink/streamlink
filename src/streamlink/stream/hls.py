@@ -590,7 +590,7 @@ class HLSStream(HTTPStream):
 
     def __init__(
         self,
-        session_,
+        session: Streamlink,
         url: str,
         url_master: Optional[str] = None,
         multivariant: Optional[M3U8] = None,
@@ -600,7 +600,7 @@ class HLSStream(HTTPStream):
         **kwargs,
     ):
         """
-        :param streamlink.session.Streamlink session_: Streamlink session instance
+        :param session: Streamlink session instance
         :param url: The URL of the HLS playlist
         :param url_master: The URL of the HLS playlist's multivariant playlist (deprecated)
         :param multivariant: The parsed multivariant playlist
@@ -610,7 +610,7 @@ class HLSStream(HTTPStream):
         :param kwargs: Additional keyword arguments passed to :meth:`requests.Session.request`
         """
 
-        super().__init__(session_, url, **kwargs)
+        super().__init__(session, url, **kwargs)
         self._url_master = url_master
         self.multivariant = multivariant if multivariant and multivariant.is_master else None
         self.force_restart = force_restart
@@ -667,7 +667,7 @@ class HLSStream(HTTPStream):
     @classmethod
     def parse_variant_playlist(
         cls,
-        session_,
+        session: Streamlink,
         url: str,
         name_key: str = "name",
         name_prefix: str = "",
@@ -681,7 +681,7 @@ class HLSStream(HTTPStream):
         """
         Parse a variant playlist and return its streams.
 
-        :param streamlink.session.Streamlink session_: Streamlink session instance
+        :param session: Streamlink session instance
         :param url: The URL of the variant playlist
         :param name_key: Prefer to use this key as stream name, valid keys are: name, pixels, bitrate
         :param name_prefix: Add this prefix to the stream names
@@ -694,11 +694,11 @@ class HLSStream(HTTPStream):
                        or :py:meth:`requests.Session.request`
         """
 
-        locale = session_.localization
-        audio_select = session_.options.get("hls-audio-select")
+        locale = session.localization
+        audio_select = session.options.get("hls-audio-select")
 
-        request_args = session_.http.valid_request_args(**kwargs)
-        res = cls._fetch_variant_playlist(session_, url, **request_args)
+        request_args = session.http.valid_request_args(**kwargs)
+        res = cls._fetch_variant_playlist(session, url, **request_args)
 
         try:
             multivariant = cls._get_variant_playlist(res)
@@ -793,7 +793,7 @@ class HLSStream(HTTPStream):
             if check_streams:
                 # noinspection PyBroadException
                 try:
-                    session_.http.get(playlist.uri, **request_args)
+                    session.http.get(playlist.uri, **request_args)
                 except KeyboardInterrupt:
                     raise
                 except Exception:
@@ -801,7 +801,7 @@ class HLSStream(HTTPStream):
 
             external_audio = preferred_audio or default_audio or fallback_audio
 
-            if external_audio and FFMPEGMuxer.is_usable(session_):
+            if external_audio and FFMPEGMuxer.is_usable(session):
                 external_audio_msg = ", ".join([
                     f"(language={x.language}, name={x.name or 'N/A'})"
                     for x in external_audio
@@ -809,7 +809,7 @@ class HLSStream(HTTPStream):
                 log.debug(f"Using external audio tracks for stream {stream_name} {external_audio_msg}")
 
                 stream = MuxedHLSStream(
-                    session_,
+                    session,
                     video=playlist.uri,
                     audio=[x.uri for x in external_audio if x.uri],
                     multivariant=multivariant,
@@ -820,7 +820,7 @@ class HLSStream(HTTPStream):
                 )
             else:
                 stream = cls(
-                    session_,
+                    session,
                     playlist.uri,
                     multivariant=multivariant,
                     force_restart=force_restart,
