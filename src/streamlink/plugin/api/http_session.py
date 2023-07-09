@@ -8,6 +8,7 @@ import requests.adapters
 import urllib3
 from requests import PreparedRequest, Request, Session
 from requests.adapters import HTTPAdapter, BaseAdapter
+from urllib.request import url2pathname
 
 from streamlink.exceptions import PluginError, StreamlinkDeprecationWarning
 from streamlink.plugin.api import useragents
