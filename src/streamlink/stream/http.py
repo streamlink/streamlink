@@ -20,17 +20,18 @@ class HTTPStream(Stream):
         session_,
         url: str,
         buffered: bool = True,
-        **args,
+        **kwargs,
     ):
         """
         :param streamlink.session.Streamlink session_: Streamlink session instance
         :param url: The URL of the HTTP stream
         :param buffered: Wrap stream output in an additional reader-thread
-        :param args: Additional keyword arguments passed to :meth:`requests.Session.request`
+        :param kwargs: Additional keyword arguments passed to :meth:`requests.Session.request`
         """
 
         super().__init__(session_)
-        self.args = dict(url=url, **args)
+        self.args = self.session.http.valid_request_args(**kwargs)
+        self.args["url"] = url
         self.buffered = buffered
 
     def __json__(self):
