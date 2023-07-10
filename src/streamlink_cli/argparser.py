@@ -1265,7 +1265,8 @@ def build_parser():
         The web browser is run isolated and in a clean environment without access to regular user data.
 
         Streamlink currently only supports Chromium-based web browsers using the Chrome Devtools Protocol (CDP).
-        This includes Chromium itself, Google Chrome, Brave, Vivaldi, and others.
+        This includes Chromium itself, Google Chrome, Microsoft Edge, Brave, Vivaldi, and others, but full support for
+        third party Chromium forks is not guaranteed. If you encounter any issues, please try Chromium or Google Chrome instead.
 
         Default is true.
         """,
