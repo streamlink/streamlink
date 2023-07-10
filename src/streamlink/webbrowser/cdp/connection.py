@@ -139,6 +139,8 @@ class CDPBase:
     It provides methods for sending CDP commands and receiving their responses, as well as for listening to CDP events.
 
     Both CDP commands and events can be sent and received in a global context and in a session context.
+
+    The Chrome Devtools Protocol is documented at https://chromedevtools.github.io/devtools-protocol/
     """
 
     def __init__(
