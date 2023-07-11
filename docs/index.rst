@@ -80,6 +80,7 @@ Table of contents
     players
     issues
     deprecations
+    migrations
     developing
     api_guide
     api
