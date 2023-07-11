@@ -6,7 +6,7 @@ import pytest
 import requests_mock as rm
 
 from streamlink import Streamlink
-from streamlink.exceptions import NoStreamsError
+from streamlink.exceptions import NoStreamsError, PluginError
 from streamlink.options import Options
 from streamlink.plugins.twitch import Twitch, TwitchAPI, TwitchHLSStream, TwitchHLSStreamReader, TwitchHLSStreamWriter
 from tests.mixins.stream_hls import EventedHLSStreamWriter, Playlist, Segment as _Segment, Tag, TestMixinStreamHLS
@@ -396,6 +396,11 @@ class TestTwitchHLSStream(TestMixinStreamHLS, unittest.TestCase):
 
 
 class TestTwitchAPIAccessToken:
+    @pytest.fixture(autouse=True)
+    def _client_integrity_token(self, monkeypatch: pytest.MonkeyPatch):
+        mock_client_integrity_token = Mock(return_value=("device-id", "client-integrity-token"))
+        monkeypatch.setattr(Twitch, "_client_integrity_token", mock_client_integrity_token)
+
     @pytest.fixture()
     def plugin(self, request: pytest.FixtureRequest):
         session = Streamlink()
@@ -409,7 +414,7 @@ class TestTwitchAPIAccessToken:
     def mock(self, request: pytest.FixtureRequest, requests_mock: rm.Mocker):
         mock = requests_mock.post("https://gql.twitch.tv/gql", **getattr(request, "param", {"json": {}}))
         yield mock
-        assert mock.call_count == 1
+        assert mock.call_count > 0
         payload = mock.last_request.json()  # type: ignore[union-attr]
         assert tuple(sorted(payload.keys())) == ("extensions", "operationName", "variables")
         assert payload.get("operationName") == "PlaybackAccessToken"
@@ -480,7 +485,7 @@ class TestTwitchAPIAccessToken:
         ),
     ], indirect=["plugin"])
     def test_plugin_options(self, plugin: Twitch, mock: rm.Mocker, exp_headers: dict, exp_variables: dict):
-        with pytest.raises(NoStreamsError):
+        with pytest.raises(PluginError):
             plugin._access_token(True, "channelname")
         requestheaders = dict(mock.last_request._request.headers)  # type: ignore[union-attr]
         for header in plugin.session.http.headers.keys():
@@ -505,6 +510,7 @@ class TestTwitchAPIAccessToken:
     def test_live_failure(self, plugin: Twitch, mock: rm.Mocker):
         with pytest.raises(NoStreamsError):
             plugin._access_token(True, "channelname")
+        assert len(mock.request_history) == 1, "Only gets the access token once when the channel is offline"
 
     @pytest.mark.usefixtures("_assert_vod")
     @pytest.mark.parametrize("mock", [{
@@ -521,6 +527,7 @@ class TestTwitchAPIAccessToken:
     def test_vod_failure(self, plugin: Twitch, mock: rm.Mocker):
         with pytest.raises(NoStreamsError):
             plugin._access_token(False, "vodid")
+        assert len(mock.request_history) == 1, "Only gets the access token once when the VOD doesn't exist"
 
     @pytest.mark.usefixtures("_assert_live")
     @pytest.mark.parametrize(("plugin", "mock"), [
@@ -532,13 +539,50 @@ class TestTwitchAPIAccessToken:
             },
         ),
     ], indirect=True)
-    def test_auth_failure(self, caplog: pytest.LogCaptureFixture, plugin: Twitch, mock: rm.Mocker):
-        with pytest.raises(NoStreamsError):
+    def test_auth_failure(self, plugin: Twitch, mock: rm.Mocker):
+        with pytest.raises(PluginError, match="^Unauthorized: The \"Authorization\" token is invalid\\.$"):
             plugin._access_token(True, "channelname")
-        assert mock.last_request._request.headers["Authorization"] == "OAuth invalid-token"  # type: ignore[union-attr]
-        assert [(record.levelname, record.module, record.message) for record in caplog.records] == [
-            ("error", "twitch", "Unauthorized: The \"Authorization\" token is invalid."),
-        ]
+        assert len(mock.request_history) == 2, "Always tries again on error, with integrity-token on second attempt"
+
+        headers: dict = mock.request_history[0]._request.headers
+        assert headers["Authorization"] == "OAuth invalid-token"
+        assert "Device-Id" not in headers
+        assert "Client-Integrity" not in headers
+
+        headers = mock.request_history[1]._request.headers
+        assert headers["Authorization"] == "OAuth invalid-token"
+        assert headers["Device-Id"] == "device-id"
+        assert headers["Client-Integrity"] == "client-integrity-token"
+
+    @pytest.mark.usefixtures("_assert_live")
+    @pytest.mark.parametrize(("plugin", "mock"), [
+        (
+            [("api-header", [("Authorization", "OAuth invalid-token")])],
+            {"response_list": [
+                {
+                    "status_code": 401,
+                    "json": {"errors": [{"message": "failed integrity check"}]},
+                },
+                {
+                    "json": {"data": {"streamPlaybackAccessToken": {"value": '{"channel":"foo"}', "signature": "sig"}}},
+                },
+            ]},
+        ),
+    ], indirect=True)
+    def test_failed_integrity_check(self, plugin: Twitch, mock: rm.Mocker):
+        data = plugin._access_token(True, "channelname")
+        assert data == ("sig", '{"channel":"foo"}', [])
+        assert len(mock.request_history) == 2, "Always tries again on error, with integrity-token on second attempt"
+
+        headers: dict = mock.request_history[0]._request.headers
+        assert headers["Authorization"] == "OAuth invalid-token"
+        assert "Device-Id" not in headers
+        assert "Client-Integrity" not in headers
+
+        headers = mock.request_history[1]._request.headers
+        assert headers["Authorization"] == "OAuth invalid-token"
+        assert headers["Device-Id"] == "device-id"
+        assert headers["Client-Integrity"] == "client-integrity-token"
 
 
 class TestTwitchMetadata:
