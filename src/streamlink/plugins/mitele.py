@@ -109,6 +109,8 @@ class Mitele(Plugin):
                 log.warning("Stream may be protected by DRM")
                 continue
             cdn_token = tokens.get(stream["lid"], {}).get("cdn", "")
+            if not cdn_token:
+                continue
             qsd = parse_qsd(cdn_token)
             urls.add(update_qsd(stream["stream"], qsd, quote_via=lambda string, *_, **__: string))
 
