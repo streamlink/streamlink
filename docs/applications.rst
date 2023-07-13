@@ -8,7 +8,7 @@ Streamlink Applications
 Streamlink Twitch GUI
 ---------------------
 
-.. image:: https://user-images.githubusercontent.com/467294/151660267-97a8c0a3-62b3-4aa5-b960-c307da1b4fb2.png
+.. image:: https://user-images.githubusercontent.com/467294/199009198-011d23f2-a884-4bf8-94d0-bb304ceecc08.jpg
     :alt: Streamlink Twitch GUI
 
 :Description: A multi platform Twitch.tv browser for Streamlink
