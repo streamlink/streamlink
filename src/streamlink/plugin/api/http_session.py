@@ -32,7 +32,7 @@ class _HTTPResponse(urllib3.response.HTTPResponse):
         # Summary:
         # This bug is related to urllib3.response.HTTPResponse.stream() which calls urllib3.response.HTTPResponse.read() as
         # a wrapper for http.client.HTTPResponse.read(amt=...), where no http.client.IncompleteRead exception gets raised
-        # due to "backwards compatiblity" of an old bug if a specific amount is attempted to be read on an incomplete response.
+        # due to "backwards compatibility" of an old bug if a specific amount is attempted to be read on an incomplete response.
         #
         # urllib3.response.HTTPResponse.read() however has an additional check implemented via the enforce_content_length
         # parameter, but it doesn't check by default and requests doesn't set the parameter for enabling it either.

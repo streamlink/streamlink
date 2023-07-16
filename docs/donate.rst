@@ -9,7 +9,7 @@ Donations/tips can be sent in a variety of ways.
 If you want to show your support for the project and its team members by making an optionally recurring financial contribution,
 then please take a look at the most recent or past contributions to one of Streamlink's repositories, issue trackers and
 discussion forums on GitHub, and send your donations/tips directly to the people involved.
-The necessary informations can be found on the respective GitHub profile of each person.
+The necessary information can be found on the respective GitHub profile of each person.
 
 Note that donations are not tax deductible, as Streamlink does not operate as a charitable organization.
 

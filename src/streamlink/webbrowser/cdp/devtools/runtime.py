@@ -858,7 +858,7 @@ def call_function_on(
     :param object_id: *(Optional)* Identifier of the object to call function on. Either objectId or executionContextId should be specified.
     :param arguments: *(Optional)* Call arguments. All call arguments must belong to the same JavaScript world as the target object.
     :param silent: *(Optional)* In silent mode exceptions thrown during evaluation are not reported and do not pause execution. Overrides ```setPauseOnException```` state.
-    :param return_by_value: *(Optional)* Whether the result is expected to be a JSON object which should be sent by value. Can be overriden by ````serializationOptions````.
+    :param return_by_value: *(Optional)* Whether the result is expected to be a JSON object which should be sent by value. Can be overridden by ````serializationOptions````.
     :param generate_preview: **(EXPERIMENTAL)** *(Optional)* Whether preview should be generated for the result.
     :param user_gesture: *(Optional)* Whether execution should be treated as initiated by user in the UI.
     :param await_promise: *(Optional)* Whether execution should ````await```` for resulting value and return once awaited promise is resolved.

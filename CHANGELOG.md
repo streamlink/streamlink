@@ -211,7 +211,7 @@ Release highlights:
 - Fixed: albavision, hiplayer and htv plugins ([#4770](https://github.com/streamlink/streamlink/pull/4770))
 - Fixed: OKru plugin with support for the mobile page ([#4780](https://github.com/streamlink/streamlink/pull/4780))
 - Fixed: trovo plugin VODs ([#4812](https://github.com/streamlink/streamlink/pull/4812))
-- API: added `Streamlink` and `HTTPSession` typing informations to `Plugin` and `Stream` (including its various subclasses) ([#4802](https://github.com/streamlink/streamlink/pull/4802), [#4814](https://github.com/streamlink/streamlink/pull/4814))
+- API: added `Streamlink` and `HTTPSession` typing information to `Plugin` and `Stream` (including its various subclasses) ([#4802](https://github.com/streamlink/streamlink/pull/4802), [#4814](https://github.com/streamlink/streamlink/pull/4814))
 - API: added `pluginargument` decorator ([#4747](https://github.com/streamlink/streamlink/pull/4747))
 - Docs: updated `pluginmatcher` and `pluginargument` documentation ([#4771](https://github.com/streamlink/streamlink/pull/4771))
 
@@ -839,7 +839,7 @@ Here are the changes to this months release!
 - Updated API call for api.utils hours_minutes_seconds (https://github.com/streamlink/streamlink/pull/1804)
 - Updated documentation (https://github.com/streamlink/streamlink/pull/1826)
 - Dict structures fix (https://github.com/streamlink/streamlink/pull/1792)
-- Reformated help menu (https://github.com/streamlink/streamlink/pull/1754)
+- Reformatted help menu (https://github.com/streamlink/streamlink/pull/1754)
 - Logger fix (https://github.com/streamlink/streamlink/pull/1773)
 
 [Full changelog](https://github.com/streamlink/streamlink/compare/0.13.0...0.14.0)

@@ -819,7 +819,7 @@ class AppManifestError:
     #: Error message.
     message: str
 
-    #: If criticial, this is a non-recoverable parse error.
+    #: If critical, this is a non-recoverable parse error.
     critical: int
 
     #: Error line.
@@ -1235,7 +1235,7 @@ class CompilationCacheParams:
 
 class AutoResponseMode(enum.Enum):
     """
-    Enum of possible auto-reponse for permisison / prompt dialogs.
+    Enum of possible auto-reponse for permission / prompt dialogs.
     """
     NONE = "none"
     AUTO_ACCEPT = "autoAccept"
@@ -2632,7 +2632,7 @@ def produce_compilation_cache(
 ) -> typing.Generator[T_JSON_DICT, T_JSON_DICT, None]:
     """
     Requests backend to produce compilation cache for the specified scripts.
-    ``scripts`` are appeneded to the list of scripts for which the cache
+    ``scripts`` are appended to the list of scripts for which the cache
     would be produced. The list may be reset during page navigation.
     When script with a matching URL is encountered, the cache is optionally
     produced upon backend discretion, based on internal heuristics.

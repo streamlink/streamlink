@@ -96,7 +96,7 @@ class CertificateSecurityState:
     #: Certificate valid to (expiration) date
     valid_to: network.TimeSinceEpoch
 
-    #: True if the certificate uses a weak signature aglorithm.
+    #: True if the certificate uses a weak signature algorithm.
     certificate_has_weak_signature: bool
 
     #: True if the certificate has a SHA1 signature in the chain.

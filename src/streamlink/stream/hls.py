@@ -735,7 +735,7 @@ class HLSStream(HTTPStream):
                 if not default_audio and (media.autoselect and locale.equivalent(language=media.language)):
                     default_audio = [media]
 
-                # select the first audio stream that matches the user's explict language selection
+                # select the first audio stream that matches the user's explicit language selection
                 if (
                     (
                         "*" in audio_select

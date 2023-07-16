@@ -113,7 +113,7 @@ class XmlElementSchema:
     Validate an XML element.
     """
 
-    # signature is weird because of backwards compatiblity
+    # signature is weird because of backwards compatibility
     def __init__(
         self,
         tag: Optional[Any] = None,

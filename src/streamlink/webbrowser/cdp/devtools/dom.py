@@ -768,7 +768,7 @@ def get_attributes(
     """
     Returns attributes for the specified node.
 
-    :param node_id: Id of the node to retrieve attibutes for.
+    :param node_id: Id of the node to retrieve attributes for.
     :returns: An interleaved array of node attribute names and values.
     """
     params: T_JSON_DICT = {}

@@ -1774,7 +1774,7 @@ class SignedExchangeInfo:
     #: Security details for the signed exchange header.
     security_details: typing.Optional[SecurityDetails] = None
 
-    #: Errors occurred while handling the signed exchagne.
+    #: Errors occurred while handling the signed exchange.
     errors: typing.Optional[typing.List[SignedExchangeError]] = None
 
     def to_json(self) -> T_JSON_DICT:
@@ -2866,7 +2866,7 @@ def set_user_agent_override(
     Allows overriding user agent with the given string.
 
     :param user_agent: User agent to use.
-    :param accept_language: *(Optional)* Browser langugage to emulate.
+    :param accept_language: *(Optional)* Browser language to emulate.
     :param platform: *(Optional)* The platform navigator.platform should return.
     :param user_agent_metadata: **(EXPERIMENTAL)** *(Optional)* To be sent in Sec-CH-UA-* headers and returned in navigator.userAgentData
     """

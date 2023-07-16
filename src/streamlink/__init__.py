@@ -1,6 +1,6 @@
 """Streamlink extracts streams from various services.
 
-The main compontent of Streamlink is a command-line utility that
+The main component of Streamlink is a command-line utility that
 launches the streams in a video player.
 
 An API is also provided that allows direct access to stream data.

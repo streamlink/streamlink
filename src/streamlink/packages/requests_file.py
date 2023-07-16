@@ -108,7 +108,7 @@ class FileAdapter(BaseAdapter):
 
                 # Check if the drive assumptions above were correct. If path_drive
                 # is set, and os.path.splitdrive does not return a drive, it wasn't
-                # reall a drive. Put the path together again treating path_drive
+                # recall a drive. Put the path together again treating path_drive
                 # as a normal path component.
                 if path_drive and not os.path.splitdrive(path):
                     path = os.sep + os.path.join(path_drive, *path_parts)

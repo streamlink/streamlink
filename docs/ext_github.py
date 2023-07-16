@@ -1,6 +1,6 @@
 """Creates Github links from @user and #issue text.
 
-Bascially a much simplified version of sphinxcontrib.issuetracker
+Basically a much simplified version of sphinxcontrib.issuetracker
 with support for @user.
 """
 

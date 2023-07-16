@@ -206,7 +206,7 @@ class CrunchyrollAPI:
             :param media_id: id that identifies the media item to be accessed.
             :param fields: list of the media"s field to be returned. By default the
             API returns some fields, but others are not returned unless they are
-            explicity asked for. I have no real documentation on the fields, but
+            explicitly asked for. I have no real documentation on the fields, but
             they all seem to start with the "media." prefix (e.g. media.name,
             media.stream_data).
             :param schema: validation schema to use

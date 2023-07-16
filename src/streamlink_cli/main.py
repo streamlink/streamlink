@@ -381,7 +381,7 @@ def handle_stream(plugin: Plugin, streams: Dict[str, Stream], stream_name: str) 
     """Decides what to do with the selected stream.
 
     Depending on arguments it can be one of these:
-     - Output JSON represenation
+     - Output JSON representation
      - Output the stream URL
      - Continuously output the stream over HTTP
      - Output stream data to selected output

@@ -111,7 +111,7 @@ class FilterEntry:
     """
     A filter used by target query/discovery/auto-attach operations.
     """
-    #: If set, causes exclusion of mathcing targets from the list.
+    #: If set, causes exclusion of matching targets from the list.
     exclude: typing.Optional[bool] = None
 
     #: If not present, matches any type.
@@ -257,7 +257,7 @@ def expose_dev_tools_protocol(
 
     Injected object will be available as ``window[bindingName]``.
 
-    The object has the follwing API:
+    The object has the following API:
     - ``binding.send(json)`` - a method to send messages over the remote debugging protocol
     - ``binding.onmessage = json => handleMessage(json)`` - a callback that will be called for the protocol notifications and command responses.
 

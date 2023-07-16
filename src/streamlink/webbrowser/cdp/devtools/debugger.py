@@ -670,7 +670,7 @@ def restart_frame(
     Restarts particular call frame from the beginning. The old, deprecated
     behavior of ``restartFrame`` is to stay paused and allow further CDP commands
     after a restart was scheduled. This can cause problems with restarting, so
-    we now continue execution immediatly after it has been scheduled until we
+    we now continue execution immediately after it has been scheduled until we
     reach the beginning of the restarted frame.
 
     To stay back-wards compatible, ``restartFrame`` now expects a ``mode``
