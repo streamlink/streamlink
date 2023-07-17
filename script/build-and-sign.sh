@@ -3,56 +3,81 @@ shopt -s nullglob
 set -e
 
 
-if ! python -m pip -q show "build"; then
-    echo >&2 "build: missing dependency 'build'"
+ROOT=$(git rev-parse --show-toplevel 2>/dev/null || realpath "$(dirname "$(readlink -f "${0}")")/..")
+
+VERSION=$(python setup.py --version)
+DIST=${STREAMLINK_DIST_DIR:-"${ROOT}/dist"}
+
+WHEEL_PLATFORMS=("win32" "win-amd64")
+
+SIGNING_KEY_FILE="${SIGNING_KEY_FILE:-"${ROOT}/signing.key.enc"}"
+
+
+# ----
+
+
+log() {
+    echo >&2 "build: ${@}"
+}
+
+warn() {
+    log "WARNING: ${@}"
+}
+
+err() {
+    log "ERROR: ${@}"
     exit 1
+}
+
+
+# ----
+
+
+if ! python -m pip -q show "build"; then
+    err "Missing python package: build"
 fi
 
 
-KEY_ID=${SIGNING_KEY_ID:-2E390FA0}
-KEY_FILE=${SIGNING_KEY_FILE:-signing.key}
-KEY_FILE_ENC=${KEY_FILE}.gpg
+build() {
+    log "Building Streamlink sdist and generic wheel"
+    python -m build --outdir "${DIST}" --sdist --wheel
 
-version=$(python setup.py --version)
-dist_dir=${STREAMLINK_DIST_DIR:-dist}
+    for platform in "${WHEEL_PLATFORMS[@]}"; do
+        log "Building Streamlink platform-specific wheel for ${platform}"
+        python -m build --outdir "${DIST}" --wheel --config-setting="--build-option=--plat-name=${platform}"
+    done
+}
 
-wheel_platforms_windows=("win32" "win-amd64")
+sign() {
+    [[ -z "${SIGNING_KEY_PASSPHRASE}" ]] && { warn "Empty SIGNING_KEY_PASSPHRASE, not signing built files"; exit; }
+    [[ -z "${SIGNING_KEY_ID}" ]] && err "Missing SIGNING_KEY_ID"
 
-mkdir -p "${dist_dir}"
+    local tmp=$(mktemp -d) && trap "rm -rf ${tmp}" EXIT || exit 255
 
-echo >&2 "build: Building Streamlink sdist"
-python -m build --outdir "${dist_dir}" --sdist
-
-echo >&2 "build: Building Streamlink wheel"
-python -m build --outdir "${dist_dir}" --wheel
-
-for platform in "${wheel_platforms_windows[@]}"; do
-    echo >&2 "build: Building Streamlink wheel (${platform})"
-    python -m build --outdir "${dist_dir}" --wheel --config-setting="--build-option=--plat-name=${platform}"
-done
-
-
-if [[ "${CI}" = true ]] || [[ -n "${GITHUB_ACTIONS}" ]]; then
-    echo >&2 "build: Decrypting signing key"
-    gpg --quiet --batch --yes --decrypt \
+    log "Decrypting signing key"
+    gpg --quiet \
+        --batch \
+        --yes \
+        --decrypt \
         --passphrase-fd 0 \
-        --output "${KEY_FILE}" \
-        "${KEY_FILE_ENC}" \
-        <<< "${RELEASE_KEY_PASSPHRASE}"
-fi
+        --output "${tmp}/signing.key" \
+        "${SIGNING_KEY_FILE}" \
+        <<< "${SIGNING_KEY_PASSPHRASE}"
 
-if ! [[ -f "${KEY_FILE}" ]]; then
-    echo >&2 "warning: No signing key, files not signed"
-else
-    echo >&2 "build: Signing sdist and wheel files"
-    temp_keyring=$(mktemp -d) && trap "rm -rf ${temp_keyring}" EXIT || exit 255
-    gpg --homedir "${temp_keyring}" --import "${KEY_FILE}" 2>&1 >/dev/null
-    for file in "${dist_dir}"/streamlink-"${version}"{.tar.gz,-*.whl}; do
-        gpg --homedir "${temp_keyring}" \
+    log "Signing sdist and wheel files"
+    gpg --homedir "${tmp}" --import "${tmp}/signing.key" 2>&1 >/dev/null
+    for file in "${DIST}"/streamlink-"${VERSION}"{.tar.gz,-*.whl}; do
+        gpg --homedir "${tmp}" \
             --trust-model always \
-            --default-key "${KEY_ID}" \
+            --default-key "${SIGNING_KEY_ID}" \
             --detach-sign \
             --armor \
+            --yes \
             "${file}"
     done
-fi
+}
+
+
+mkdir -p "${DIST}"
+build
+sign
