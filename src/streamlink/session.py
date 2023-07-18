@@ -208,6 +208,12 @@ class Streamlink:
     Used for any kind of HTTP request made by plugin and stream implementations.
     """
 
+    options: Options
+    """
+    Session options, which is a subclass of :class:`Options <streamlink.options.Options>`
+    with additional getter/setter mappings for special options.
+    """
+
     def __init__(
         self,
         options: Optional[Dict[str, Any]] = None,

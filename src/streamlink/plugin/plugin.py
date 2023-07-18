@@ -248,6 +248,9 @@ class Plugin:
     match: Optional[Match] = None
     """A reference to the :class:`re.Match` result of the first matching matcher"""
 
+    options: Options
+    """Plugin options, initialized with the user-set values of the plugin's arguments"""
+
     # plugin metadata attributes
     id: Optional[str] = None
     """Metadata 'id' attribute: unique stream ID, etc."""

@@ -10,7 +10,10 @@ class Options:
     """
 
     _MAP_GETTERS: ClassVar[Mapping[str, Callable[[Any, str], Any]]] = {}
+    """Optional getter mapping for :class:`Options` subclasses"""
+
     _MAP_SETTERS: ClassVar[Mapping[str, Callable[[Any, str, Any], None]]] = {}
+    """Optional setter mapping for :class:`Options` subclasses"""
 
     def __init__(self, defaults: Optional[Mapping[str, Any]] = None):
         if not defaults:
@@ -29,10 +32,14 @@ class Options:
         return {normalize_key(key): value for key, value in src.items()}
 
     def clear(self) -> None:
+        """Restore default options"""
+
         self.options.clear()
         self.options.update(self.defaults.copy())
 
     def get(self, key: str) -> Any:
+        """Get the stored value of a specific key"""
+
         normalized = self._normalize_key(key)
         method = self._MAP_GETTERS.get(normalized)
         if method is not None:
@@ -41,10 +48,14 @@ class Options:
             return self.options.get(normalized)
 
     def get_explicit(self, key: str) -> Any:
+        """Get the stored value of a specific key and ignore any get-mappings"""
+
         normalized = self._normalize_key(key)
         return self.options.get(normalized)
 
     def set(self, key: str, value: Any) -> None:
+        """Set the value for a specific key"""
+
         normalized = self._normalize_key(key)
         method = self._MAP_SETTERS.get(normalized)
         if method is not None:
@@ -53,10 +64,14 @@ class Options:
             self.options[normalized] = value
 
     def set_explicit(self, key: str, value: Any) -> None:
+        """Set the value for a specific key and ignore any set-mappings"""
+
         normalized = self._normalize_key(key)
         self.options[normalized] = value
 
     def update(self, options: Mapping[str, Any]) -> None:
+        """Merge options"""
+
         for key, value in options.items():
             self.set(key, value)
 
