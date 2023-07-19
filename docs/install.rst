@@ -192,7 +192,7 @@ Python pip                           See the `PyPI package and source code`_ sec
                                         sudo xbps-install streamlink
 ==================================== ===========================================
 
-.. _Arch Linux: https://www.archlinux.org/packages/community/any/streamlink/
+.. _Arch Linux: https://archlinux.org/packages/extra/any/streamlink/
 .. _Arch Linux (aur, git): https://aur.archlinux.org/packages/streamlink-git/
 .. _Debian (sid, testing): https://packages.debian.org/unstable/streamlink
 .. _Debian (stable): https://packages.debian.org/unstable/streamlink
