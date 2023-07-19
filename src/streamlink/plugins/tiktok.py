@@ -25,10 +25,10 @@ class TikTok(Plugin):
 
         roomId = re.search(r'room_id=([0-9]*)', html_content).group(0).split("=")[1]
         res =  requests.get(self.API_URL + '/?aid=1988&roomID=' + roomId)
-        print(res.text)
+        
         jsonres = res.json()
         hls_url = jsonres['LiveRoomInfo']['liveUrl']
-        print(hls_url)
+        
         return {"live": HLSStream(self.session, hls_url)}
 
 
