@@ -105,7 +105,6 @@ class TikTok(Plugin):
                     validate.transform(dict)
                 ),
             ))
-            print(media)
             return media
         except (PluginError, TypeError):
             pass
