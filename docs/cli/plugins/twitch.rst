@@ -85,6 +85,32 @@ parameters can be set via :option:`--twitch-access-token-param` that can prevent
 either :ref:`authentication data <cli/plugins/twitch:Authentication>` or other data discovered by the community.
 
 
+Client-integrity token
+----------------------
+
+In 2022, Twitch added client-integrity tokens to their web player when getting streaming access tokens. These client-integrity
+tokens are calculated using sophisticated JavaScript code which is infeasible to re-implement, as it not only involves
+obfuscated code that's much harder to reverse engineer and to extract data from, but also a custom JavaScript virtual machine
+implementation where bytecode gets interpreted which is encoded prior to that using randomization patterns. The interpreted
+bytecode performs various checks of the user's web browser and its features, and then determines whether the client is legit
+or not. The goal is to prevent bots and third party applications from accessing streams.
+
+Client-integrity tokens were treated as an optional request parameter when getting streaming access tokens.
+This changed on 2023-05-31 when Twitch made them a requirement, and it broke Streamlink's Twitch plugin (#5370).
+
+Since the only sensible solution for Streamlink to calculate client-integrity tokens was using a web browser, a new
+implementation was needed which could automate that. So in ``6.0.0`` the
+:ref:`streamlink.webbrowser <api/webbrowser:Webbrowser>` API was implemented, which requires a Chromium-based web browser being
+installed on the user's system. See the :option:`--webbrowser` and related CLI arguments for more details.
+
+However, a couple of days after Twitch made these changes, they reverted the requirement again, but in order for Streamlink
+to be prepared for such requirements to be turned on again, the webbrowser API was added nevertheless. The decision was made
+to only use the webbrowser API when getting an access token fails, so launching a web browser unnecessarily could be avoided,
+even though it would run invisibly in "headless mode". Should client-integrity tokens be made a requirement again, then
+Streamlink will cache the generated token in the plugin cache after launching the web browser once. This cache can be cleared
+using the :option:`--twitch-purge-client-integrity` option.
+
+
 Low latency streaming
 ---------------------
 
