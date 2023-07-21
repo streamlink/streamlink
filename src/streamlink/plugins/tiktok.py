@@ -26,9 +26,10 @@ log = logging.getLogger(__name__)
 class TikTok(Plugin):
     url_re = re.compile(
         r"https?://(?:www\.)?tiktok\.com/@(?P<channel>[^/]+)/live?$")
-    
     _QUALITY_MAP = {
+        "uhd_60": "1280p60",
         "hd_60": "720p60",
+        "uhd": "1280p",
         "hd": "720p",
         "sd": "540p",
         "ld": "360p",
@@ -51,35 +52,60 @@ class TikTok(Plugin):
                 validate.get("data"),
                 validate.all(
                     {
-                        "hd": validate.all(
+                        validate.optional("hd"): validate.all(
                             validate.get("main"),
-                            validate.get("hls"),
-                            validate.any(None, validate.url())
+                            validate.all({
+                                "hls": validate.any(None, validate.url()),
+                                "flv": validate.any(None, validate.url())
+                            })
                         ),
-                        "sd": validate.all(
+                        validate.optional("sd"): validate.all(
                             validate.get("main"),
-                            validate.get("hls"),
-                            validate.any(None, validate.url())
+                            validate.all({
+                                "hls": validate.any(None, validate.url()),
+                                "flv": validate.any(None, validate.url())
+                            })
                         ),
-                        "ld": validate.all(
+                        validate.optional("ld"): validate.all(
                             validate.get("main"),
-                            validate.get("hls"),
-                            validate.any(None, validate.url())
+                            validate.all({
+                                "hls": validate.any(None, validate.url()),
+                                "flv": validate.any(None, validate.url())
+                            })
                         ),
-                        "hd_60": validate.all(
+                        validate.optional("uhd"): validate.all(
                             validate.get("main"),
-                            validate.get("hls"),
-                            validate.any(None, validate.url())
+                            validate.all({
+                                "hls": validate.any(None, validate.url()),
+                                "flv": validate.any(None, validate.url())
+                            })
                         ),
-                        "origin": validate.all(
+                        validate.optional("hd_60"): validate.all(
                             validate.get("main"),
-                            validate.get("hls"),
-                            validate.any(None, validate.url())
+                            validate.all({
+                                "hls": validate.any(None, validate.url()),
+                                "flv": validate.any(None, validate.url())
+                            })
+                        ),
+                        validate.optional("uhd_60"): validate.all(
+                            validate.get("main"),
+                            validate.all({
+                                "hls": validate.any(None, validate.url()),
+                                "flv": validate.any(None, validate.url())
+                            })
+                        ),
+                        validate.optional("origin"): validate.all(
+                            validate.get("main"),
+                            validate.all({
+                                "hls": validate.any(None, validate.url()),
+                                "flv": validate.any(None, validate.url())
+                            })
                         ),
                     },
                     validate.transform(dict)
                 ),
             ))
+            print(media)
             return media
         except (PluginError, TypeError):
             pass
@@ -101,6 +127,9 @@ class TikTok(Plugin):
         self.logger.info("Stream status: {0}".format("active"))
         
         for quality, stream in media.items():
-          yield self._QUALITY_MAP.get(quality, quality), HLSStream(self.session, stream)
+          if not stream.get('hls'):
+            yield self._QUALITY_MAP.get(quality, quality), HTTPStream(self.session, stream.get('flv'))
+          else: 
+            yield self._QUALITY_MAP.get(quality, quality), HLSStream(self.session, stream.get('hls'))
 
 __plugin__ = TikTok
