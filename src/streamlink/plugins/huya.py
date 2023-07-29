@@ -13,6 +13,7 @@ from typing import Dict
 from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.api import validate
 from streamlink.stream.http import HTTPStream
+from streamlink.utils.url import update_scheme
 
 
 log = logging.getLogger(__name__)
@@ -96,7 +97,7 @@ class Huya(Plugin):
         for cdntype, priority, streamname, flvurl, suffix, anticode in streamdata:
             name = f"source_{cdntype.lower()}"
             self.QUALITY_WEIGHTS[name] = priority
-            yield name, HTTPStream(self.session, f"{flvurl}/{streamname}.{suffix}?{anticode}")
+            yield name, HTTPStream(self.session, update_scheme("https://", f"{flvurl}/{streamname}.{suffix}?{anticode}"))
 
         log.debug(f"QUALITY_WEIGHTS: {self.QUALITY_WEIGHTS!r}")
 
