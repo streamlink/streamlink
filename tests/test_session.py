@@ -12,6 +12,7 @@ from requests.adapters import HTTPAdapter
 
 import tests.plugin
 from streamlink.exceptions import NoPluginError, StreamlinkDeprecationWarning
+from streamlink.options import Options
 from streamlink.plugin import HIGH_PRIORITY, LOW_PRIORITY, NO_PRIORITY, NORMAL_PRIORITY, Plugin, pluginmatcher
 from streamlink.plugin.api.http_session import TLSNoDHAdapter
 from streamlink.session import Streamlink
@@ -253,6 +254,13 @@ class TestStreams:
         assert streams["worst"] is streams["350k"]
         assert isinstance(streams["http"], HTTPStream)
         assert isinstance(streams["hls"], HLSStream)
+
+    def test_streams_options(self, session: Streamlink):
+        streams = session.streams("http://test.se/fromoptions", Options({"streamurl": "http://foo/"}))
+
+        assert sorted(streams.keys()) == ["best", "fromoptions", "worst"]
+        assert isinstance(streams["fromoptions"], HTTPStream)
+        assert streams["fromoptions"].url == "http://foo/"
 
     def test_stream_types(self, session: Streamlink):
         streams = session.streams("http://test.se/channel", stream_types=["http", "hls"])
