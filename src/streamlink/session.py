@@ -603,18 +603,19 @@ class Streamlink:
 
         return self.resolve_url(url, follow_redirect=False)
 
-    def streams(self, url: str, **params):
+    def streams(self, url: str, options: Optional[Options] = None, **params):
         """
         Attempts to find a plugin and extracts streams from the *url* if a plugin was found.
 
         :param url: a URL to match against loaded plugins
+        :param options: Optional options instance passed to the resolved plugin
         :param params: Additional keyword arguments passed to :meth:`Plugin.streams() <streamlink.plugin.Plugin.streams>`
         :raises NoPluginError: on plugin resolve failure
         :return: A :class:`dict` of stream names and :class:`Stream <streamlink.stream.Stream>` instances
         """
 
         pluginname, pluginclass, resolved_url = self.resolve_url(url)
-        plugin = pluginclass(self, resolved_url)
+        plugin = pluginclass(self, resolved_url, options)
 
         return plugin.streams(**params)
 
