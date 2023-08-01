@@ -85,6 +85,35 @@ garbage collector to not be able to let go of any loaded built-in plugins when i
       ``*args, **kwargs`` and call ``super().__init__(*args, **kwargs)``
    2. If needed, access the ``url`` using ``self.url``
 
+Streamlink.{g,s}et_plugin_option()
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The ``Streamlink.get_plugin_option()`` and ``Streamlink.set_plugin_option()`` methods were removed as a result of moving
+plugin options from the :py:class:`Plugin <streamlink.plugin.Plugin>` classes to individual ``Plugin`` instances.
+
+Plugin options now must be set referencing the :py:attr:`Plugin.options <streamlink.plugin.Plugin.options>` instance and its
+respective :py:meth:`get <streamlink.options.Options.get>` and :py:meth:`set <streamlink.options.Options.set>` methods.
+
+Alternatively, when initializing a :py:class:`Plugin <streamlink.plugin.Plugin>` class, e.g. after calling
+:py:meth:`Streamlink.resolve_url() <streamlink.session.Streamlink.resolve_url>`, an optional pre-initialized instance of
+:py:class:`Options <streamlink.options.Options>` can be passed to the ``Plugin`` constructor.
+The :py:meth:`Streamlink.streams() <streamlink.session.Streamlink.streams>` method also supports passing an optional ``Options``
+instance to the ``Plugin`` constructor, if a plugin can be resolved from the input URL.
+
+| :octicon:`git-pull-request` #5033
+
+.. admonition:: Migration
+   :class: hint
+
+   1. Initialize an :py:class:`Options <streamlink.options.Options>` object with the desired key-value pairs and pass it to the
+      :py:class:`Plugin <streamlink.plugin.Plugin>` constructor or the
+      :py:meth:`Streamlink.streams() <streamlink.session.Streamlink.streams>` method.
+   2. After instantiating a ``Plugin`` class, get or set its options using the ``get``/``set`` methods on the
+      :py:attr:`Plugin.options <streamlink.plugin.Plugin.options>` instance.
+   3. If plugin options need to be accessed in custom :py:class:`Stream <streamlink.streams.Stream>` implementations related to
+      custom ``Plugin`` implementations, then those options need to be passed from the ``Plugin`` to the ``Stream`` constructor
+      beforehand, since the :py:class:`Streamlink <streamlink.session.Streamlink>` session can't be used for that anymore.
+
 Global plugin arguments
 ^^^^^^^^^^^^^^^^^^^^^^^
 
