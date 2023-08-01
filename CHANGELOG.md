@@ -1,5 +1,17 @@
 # Changelog
 
+## streamlink 6.0.1 (2023-08-02)
+
+Patch release:
+
+- Added: missing `options` argument to `Streamlink.streams()` ([#5469](https://github.com/streamlink/streamlink/pull/5469))
+- Fixed: migration docs and the [`6.0.0` changelog](https://streamlink.github.io/changelog.html#streamlink-6-0-0-2023-07-20) of the [`Streamlink.{g,s}et_plugin_option()` removal](https://streamlink.github.io/migrations.html#streamlink-g-s-et-plugin-option) ([#5471](https://github.com/streamlink/streamlink/pull/5471))
+- Fixed plugins: huya ([#5467](https://github.com/streamlink/streamlink/pull/5467))
+- Docs: updated build-dependencies and the furo theme ([#5464](https://github.com/streamlink/streamlink/pull/5464), [#5465](https://github.com/streamlink/streamlink/pull/5465))
+
+[Full changelog](https://github.com/streamlink/streamlink/compare/6.0.0...6.0.1)
+
+
 ## streamlink 6.0.0 (2023-07-20)
 
 Breaking changes:
