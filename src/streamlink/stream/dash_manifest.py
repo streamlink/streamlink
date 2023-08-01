@@ -159,7 +159,7 @@ class MPDParsingError(Exception):
     pass
 
 
-TMPDNode = TypeVar("TMPDNode", bound="MPDNode", covariant=True)
+TMPDNode_co = TypeVar("TMPDNode_co", bound="MPDNode", covariant=True)
 TAttrDefault = TypeVar("TAttrDefault", Any, None)
 TAttrParseResult = TypeVar("TAttrParseResult")
 
@@ -198,7 +198,7 @@ class MPDNode:
         parser: None = None,
         default: None = None,
         required: bool = False,
-        inherited: Optional[Union[Type[TMPDNode], Sequence[Type[TMPDNode]]]] = None,
+        inherited: Optional[Union[Type[TMPDNode_co], Sequence[Type[TMPDNode_co]]]] = None,
     ) -> Optional[str]:  # pragma: no cover
         pass
 
@@ -209,7 +209,7 @@ class MPDNode:
         parser: None,
         default: TAttrDefault,
         required: bool = False,
-        inherited: Optional[Union[Type[TMPDNode], Sequence[Type[TMPDNode]]]] = None,
+        inherited: Optional[Union[Type[TMPDNode_co], Sequence[Type[TMPDNode_co]]]] = None,
     ) -> TAttrDefault:  # pragma: no cover
         pass
 
@@ -220,7 +220,7 @@ class MPDNode:
         parser: Callable[[Any], TAttrParseResult],
         default: None = None,
         required: bool = False,
-        inherited: Optional[Union[Type[TMPDNode], Sequence[Type[TMPDNode]]]] = None,
+        inherited: Optional[Union[Type[TMPDNode_co], Sequence[Type[TMPDNode_co]]]] = None,
     ) -> Optional[TAttrParseResult]:  # pragma: no cover
         pass
 
@@ -231,7 +231,7 @@ class MPDNode:
         parser: Callable[[Any], TAttrParseResult],
         default: TAttrDefault,
         required: bool = False,
-        inherited: Optional[Union[Type[TMPDNode], Sequence[Type[TMPDNode]]]] = None,
+        inherited: Optional[Union[Type[TMPDNode_co], Sequence[Type[TMPDNode_co]]]] = None,
     ) -> Union[TAttrParseResult, TAttrDefault]:  # pragma: no cover
         pass
 
@@ -255,11 +255,11 @@ class MPDNode:
 
     def children(
         self,
-        cls: Type[TMPDNode],
+        cls: Type[TMPDNode_co],
         minimum: int = 0,
         maximum: Optional[int] = None,
         **kwargs,
-    ) -> List[TMPDNode]:
+    ) -> List[TMPDNode_co]:
         children = self.node.findall(cls.__tag__)
         if len(children) < minimum or (maximum and len(children) > maximum):
             raise MPDParsingError(f"Expected to find {self.__tag__}/{cls.__tag__} required [{minimum}..{maximum or 'unbound'})")
@@ -271,16 +271,16 @@ class MPDNode:
 
     def only_child(
         self,
-        cls: Type[TMPDNode],
+        cls: Type[TMPDNode_co],
         minimum: int = 0,
         **kwargs,
-    ) -> Optional[TMPDNode]:
+    ) -> Optional[TMPDNode_co]:
         children = self.children(cls, minimum=minimum, maximum=1, **kwargs)
         return children[0] if len(children) else None
 
     def walk_back(
         self,
-        cls: Optional[Union[Type[TMPDNode], Sequence[Type[TMPDNode]]]] = None,
+        cls: Optional[Union[Type[TMPDNode_co], Sequence[Type[TMPDNode_co]]]] = None,
         mapper: Callable[["MPDNode"], Optional["MPDNode"]] = _identity,
     ) -> Iterator["MPDNode"]:
         node = self.parent
@@ -294,7 +294,7 @@ class MPDNode:
     def walk_back_get_attr(
         self,
         attr: str,
-        cls: Optional[Union[Type[TMPDNode], Sequence[Type[TMPDNode]]]] = None,
+        cls: Optional[Union[Type[TMPDNode_co], Sequence[Type[TMPDNode_co]]]] = None,
         mapper: Callable[["MPDNode"], Optional["MPDNode"]] = _identity,
     ) -> Optional[Any]:
         for ancestor in self.walk_back(cls, mapper):

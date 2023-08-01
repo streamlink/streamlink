@@ -1452,4 +1452,4 @@ class TestValidationError:
         assert_validationerror(err, """
             ValidationError:
               foo <Some really long error message that exceeds the maximum...> bar <'Some really long error message that exceeds the maximu...> baz
-        """)  # noqa: 501
+        """)  # noqa: E501
