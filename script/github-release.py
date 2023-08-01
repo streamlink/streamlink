@@ -96,7 +96,7 @@ def get_args():
     return parser.parse_args()
 
 
-Email = NewType("email", str)
+Email = NewType("Email", str)
 
 
 @dataclass

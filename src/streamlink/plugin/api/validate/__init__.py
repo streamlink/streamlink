@@ -1,5 +1,7 @@
+# ruff: noqa: A001
+
 # noinspection PyPep8Naming,PyShadowingBuiltins
-from streamlink.plugin.api.validate._schemas import (  # noqa: A001
+from streamlink.plugin.api.validate._schemas import (
     AllSchema as all,
     AnySchema as any,
     AttrSchema as attr,
@@ -20,7 +22,7 @@ from streamlink.plugin.api.validate._validate import (
 )
 
 # noinspection PyShadowingBuiltins
-from streamlink.plugin.api.validate._validators import (  # noqa: A001
+from streamlink.plugin.api.validate._validators import (
     validator_contains as contains,
     validator_endswith as endswith,
     validator_filter as filter,
