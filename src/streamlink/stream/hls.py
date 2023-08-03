@@ -151,7 +151,7 @@ class HLSStreamWriter(SegmentedStreamWriter):
 
         return request_params
 
-    def put(self, sequence: Sequence):
+    def put(self, sequence: Optional[Sequence]):
         if self.closed:
             return
 
@@ -289,8 +289,6 @@ class HLSStreamWorker(SegmentedStreamWorker):
     writer: "HLSStreamWriter"
     stream: "HLSStream"
 
-    SEGMENT_QUEUE_TIMING_THRESHOLD_FACTOR = 2
-
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
 
@@ -304,6 +302,7 @@ class HLSStreamWorker(SegmentedStreamWorker):
         self.playlist_reload_time: float = 6
         self.playlist_reload_time_override = self.session.options.get("hls-playlist-reload-time")
         self.playlist_reload_retries = self.session.options.get("hls-playlist-reload-attempts")
+        self.segment_queue_timing_threshold_factor = self.session.options.get("hls-segment-queue-threshold")
         self.live_edge = self.session.options.get("hls-live-edge")
         self.duration_offset_start = int(self.stream.start_offset + (self.session.options.get("hls-start-offset") or 0))
         self.duration_limit = self.stream.duration or (
@@ -401,7 +400,10 @@ class HLSStreamWorker(SegmentedStreamWorker):
         return sequence.num >= self.playlist_sequence
 
     def _segment_queue_timing_threshold_reached(self) -> bool:
-        threshold = self.playlist_targetduration * self.SEGMENT_QUEUE_TIMING_THRESHOLD_FACTOR
+        if self.segment_queue_timing_threshold_factor <= 0:
+            return False
+
+        threshold = self.playlist_targetduration * self.segment_queue_timing_threshold_factor
         if now() <= self.playlist_sequences_last + timedelta(seconds=threshold):
             return False
 
