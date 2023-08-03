@@ -241,7 +241,7 @@ class Streamlink:
             "hls-duration": None,
             "hls-playlist-reload-attempts": 3,
             "hls-playlist-reload-time": "default",
-            "hls-segment-queue-threshold": 2,
+            "hls-segment-queue-threshold": 3,
             "hls-segment-stream-data": False,
             "hls-segment-ignore-names": [],
             "hls-segment-key-uri": None,
@@ -408,7 +408,7 @@ class Streamlink:
                 - ``default``: the playlist's target duration
             * - hls-segment-queue-threshold
               - ``float``
-              - ``2``
+              - ``3``
               - Factor of the playlist's targetduration which sets the threshold for stopping early on missing segments
             * - hls-segment-stream-data
               - ``bool``
