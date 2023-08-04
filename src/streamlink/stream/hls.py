@@ -289,6 +289,8 @@ class HLSStreamWorker(SegmentedStreamWorker):
     writer: "HLSStreamWriter"
     stream: "HLSStream"
 
+    SEGMENT_QUEUE_TIMING_THRESHOLD_MIN = 5.0
+
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
 
@@ -403,7 +405,10 @@ class HLSStreamWorker(SegmentedStreamWorker):
         if self.segment_queue_timing_threshold_factor <= 0:
             return False
 
-        threshold = self.playlist_targetduration * self.segment_queue_timing_threshold_factor
+        threshold = max(
+            self.SEGMENT_QUEUE_TIMING_THRESHOLD_MIN,
+            self.playlist_targetduration * self.segment_queue_timing_threshold_factor,
+        )
         if now() <= self.playlist_sequences_last + timedelta(seconds=threshold):
             return False
 
