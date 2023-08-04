@@ -48,9 +48,9 @@ class ProcessOutput:
 
         tasks = (
             loop.create_task(ontimeout()),
-            loop.create_task(onexit()),
             loop.create_task(onoutput(self.onstdout, process.stdout)),
             loop.create_task(onoutput(self.onstderr, process.stderr)),
+            loop.create_task(onexit()),
         )
 
         try:
