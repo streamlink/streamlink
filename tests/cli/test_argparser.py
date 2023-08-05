@@ -1,4 +1,6 @@
+import argparse
 from argparse import ArgumentParser, Namespace
+from pathlib import Path
 from typing import Any, List
 from unittest.mock import Mock
 
@@ -12,6 +14,65 @@ from streamlink_cli.main import main as streamlink_cli_main
 @pytest.fixture(scope="module")
 def parser():
     return build_parser()
+
+
+class TestConfigFileArguments:
+    @pytest.fixture()
+    def parsed(self, request: pytest.FixtureRequest, parser: argparse.ArgumentParser, tmp_path: Path):
+        content = "\n".join([
+            "",
+            " ",
+            "# comment",
+            "! comment",
+            "invalid_option_format",
+            *getattr(request, "param", []),
+        ])
+
+        config = tmp_path / "config"
+        with config.open("w") as fd:
+            fd.write(content)
+
+        return parser.parse_args([f"@{config}"])
+
+    @pytest.mark.parametrize("parsed", [[]], indirect=True)
+    def test_nooptions(self, parsed: Namespace):
+        assert parsed.ipv4 is None
+        assert parsed.player_fifo is False
+        assert parsed.player_args == ""
+        assert parsed.title is None
+
+    @pytest.mark.parametrize("parsed", [
+        pytest.param(["4"], id="shorthand name"),
+        pytest.param(["ipv4"], id="full name"),
+    ], indirect=True)
+    def test_alphanumerical(self, parsed: Namespace):
+        assert parsed.ipv4 is True
+
+    @pytest.mark.parametrize("parsed", [
+        pytest.param(["n"], id="shorthand name"),
+        pytest.param(["player-fifo"], id="full name"),
+    ], indirect=True)
+    def test_withoutvalue(self, parsed: Namespace):
+        assert parsed.player_fifo is True
+
+    @pytest.mark.parametrize("parsed", [
+        pytest.param(["a=foo bar "], id="shorthand name with operator"),
+        pytest.param(["a = foo bar "], id="shorthand name with operator and surrounding whitespace"),
+        pytest.param(["a   foo bar "], id="shorthand name without operator"),
+        pytest.param(["player-args=foo bar "], id="full name with operator"),
+        pytest.param(["player-args = foo bar "], id="full name with operator and surrounding whitespace"),
+        pytest.param(["player-args   foo bar "], id="full name without operator"),
+    ], indirect=True)
+    def test_withvalue(self, parsed: Namespace):
+        assert parsed.player_args == "foo bar"
+
+    @pytest.mark.parametrize("parsed", [
+        pytest.param(["title="], id="operator"),
+        pytest.param(["title ="], id="operator with leading whitespace"),
+        pytest.param(["title = "], id="operator with surrounding whitespace"),
+    ], indirect=True)
+    def test_emptyvalue(self, parsed: Namespace):
+        assert parsed.title == ""
 
 
 @pytest.mark.filterwarnings("ignore")
