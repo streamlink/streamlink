@@ -7,21 +7,27 @@ body:
   - type: markdown
     attributes:
       value: |
-        ## Thanks for requesting a plugin!
+        # Thanks for filing a plugin request!
 
-        [READ THE PLUGIN REQUEST REQUIREMENTS IN THE CONTRIBUTION GUIDELINES BEFORE POSTING!](https://github.com/streamlink/streamlink/blob/master/CONTRIBUTING.md#plugin-requests)
+        ## What is a plugin request?
 
-        ----
+        The purpose of Streamlink's plugins is to translate input URLs from certain websites to specific stream URLs with optionally required parameters, access tokens, etc.
+        [READ THE PLUGIN REQUEST REQUIREMENTS IN THE CONTRIBUTION GUIDELINES BEFORE REQUESTING A PLUGIN!](https://github.com/streamlink/streamlink/blob/master/CONTRIBUTING.md#plugin-requests)
 
-        **DON'T IGNORE this template and fill in all the required details.**
-        **Issues that don't adhere to our request will be closed and ignored.**
+        [See the list of already available plugins here.](https://streamlink.github.io/plugins.html)
+
+        ## DON'T IGNORE this template
+
+        **Please fill in all the required details and don't skip any parts.**
+        **Issues that don't adhere to our request will be closed and ignored immediately.**
+
         This is because analyzing bugs, issues or requests without proper details and log output is harder than necessary.
         Low quality and low effort issues are noise and steal the time of the maintainers and contributors.
   - type: checkboxes
     attributes:
       label: Checklist
       options:
-        - label: This is a plugin request and not a different kind of issue
+        - label: This is a plugin request and not [a different kind of issue](https://github.com/streamlink/streamlink/issues/new/choose)
           required: true
         - label: "[I have read the contribution guidelines](https://github.com/streamlink/streamlink/blob/master/CONTRIBUTING.md#contributing-to-streamlink)"
           required: true
@@ -31,12 +37,14 @@ body:
     attributes:
       label: Description
       description: |
-        Explain the plugin and site as clearly as you can according to the plugin request guidelines. For example:
+        Explain the plugin and site as clearly as you can [according to the plugin request guidelines](https://github.com/streamlink/streamlink/blob/master/CONTRIBUTING.md#plugin-requests).
+
+        For example (please provide more details if possible):
 
         - What is the site about?
-        - Who is it run by?
+        - Who is it owned and run by?
         - What kind of content does it provide?
-        - Are there any access restrictions like logins or region checks?
+        - Are there any access restrictions, like logins or region checks?
     validations:
       required: true
   - type: textarea
