@@ -20,25 +20,33 @@ or an empty string (:option:`--output`, :option:`--record`, :option:`--record-an
 
 The :option:`--json` argument always lists the standard plugin metadata: ``id``, ``author``, ``category`` and ``title``.
 
-.. rst-class:: table-custom-layout table-custom-layout-platform-locations
+.. list-table::
+    :header-rows: 1
+    :class: table-custom-layout table-custom-layout-platform-locations
 
-============================== =================================================
-Variable                       Description
-============================== =================================================
-``id``                         The unique ID of the stream, eg. an internal numeric ID or randomized string.
-``plugin``                     The plugin name. See :ref:`Plugins <plugins:Plugins>` for the name of each built-in plugin.
-``title``                      The stream's title, usually a short descriptive text.
-``author``                     The stream's author, eg. a channel or broadcaster name.
-``category``                   The stream's category, eg. the name of a game being played, a music genre, etc.
-``game``                       Alias for ``category``.
-``url``                        The resolved URL of the stream.
-``time``                       The current timestamp. Can optionally be formatted via ``{time:format}``.
+    * - Variable
+      - Description
+    * - ``id``
+      - The unique ID of the stream, eg. an internal numeric ID or randomized string.
+    * - ``plugin``
+      - The plugin name. See :ref:`Plugins <plugins:Plugins>` for the name of each built-in plugin.
+    * - ``title``
+      - The stream's title, usually a short descriptive text.
+    * - ``author``
+      - The stream's author, eg. a channel or broadcaster name.
+    * - ``category``
+      - The stream's category, eg. the name of a game being played, a music genre, etc.
+    * - ``game``
+      - Alias for ``category``.
+    * - ``url``
+      - The resolved URL of the stream.
+    * - ``time``
+      - The current timestamp. Can optionally be formatted via ``{time:format}``.
 
-                               The format parameter string is passed to Python's `datetime.strftime()`_ method,
-                               so all the usual time directives are available.
+        The format parameter string is passed to Python's `datetime.strftime()`_ method,
+        so all the usual time directives are available.
 
-                               The default format is ``%Y-%m-%d_%H-%M-%S``.
-============================== =================================================
+        The default format is ``%Y-%m-%d_%H-%M-%S``.
 
 
 Examples

@@ -209,28 +209,34 @@ To resolve this, move the config file(s) to the correct location or copy the con
 
 **Deprecated paths**
 
-.. rst-class:: table-custom-layout table-custom-layout-platform-locations
+.. list-table::
+    :header-rows: 1
+    :class: table-custom-layout table-custom-layout-platform-locations
 
-========= ========
-Platform  Location
-========= ========
-Linux/BSD - ``${HOME}/.streamlinkrc``
-macOS     - ``${XDG_CONFIG_HOME:-${HOME}/.config}/streamlink/config``
-          - ``${HOME}/.streamlinkrc``
-Windows   - ``%APPDATA%\streamlink\streamlinkrc``
-========= ========
+    * - Platform
+      - Location
+    * - Linux/BSD
+      - - ``${HOME}/.streamlinkrc``
+    * - macOS
+      - - ``${XDG_CONFIG_HOME:-${HOME}/.config}/streamlink/config``
+        - ``${HOME}/.streamlinkrc``
+    * - Windows
+      - - ``%APPDATA%\streamlink\streamlinkrc``
 
 **Migration**
 
-.. rst-class:: table-custom-layout table-custom-layout-platform-locations
+.. list-table::
+    :header-rows: 1
+    :class: table-custom-layout table-custom-layout-platform-locations
 
-========= ========
-Platform  Location
-========= ========
-Linux/BSD ``${XDG_CONFIG_HOME:-${HOME}/.config}/streamlink/config``
-macOS     ``${HOME}/Library/Application Support/streamlink/config``
-Windows   ``%APPDATA%\streamlink\config``
-========= ========
+    * - Platform
+      - Location
+    * - Linux/BSD
+      - ``${XDG_CONFIG_HOME:-${HOME}/.config}/streamlink/config``
+    * - macOS
+      - ``${HOME}/Library/Application Support/streamlink/config``
+    * - Windows
+      - ``%APPDATA%\streamlink\config``
 
 Custom plugins sideloading paths
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -240,22 +246,26 @@ Old and deprecated paths will be dropped in the future.
 
 **Deprecated paths**
 
-.. rst-class:: table-custom-layout table-custom-layout-platform-locations
+.. list-table::
+    :header-rows: 1
+    :class: table-custom-layout table-custom-layout-platform-locations
 
-========= ========
-Platform  Location
-========= ========
-Linux/BSD ``${XDG_CONFIG_HOME:-${HOME}/.config}/streamlink/plugins``
-macOS     ``${XDG_CONFIG_HOME:-${HOME}/.config}/streamlink/plugins``
-========= ========
+    * - Platform
+      - Location
+    * - Linux/BSD
+      - ``${XDG_CONFIG_HOME:-${HOME}/.config}/streamlink/plugins``
+    * - macOS
+      - ``${XDG_CONFIG_HOME:-${HOME}/.config}/streamlink/plugins``
 
 **Migration**
 
-.. rst-class:: table-custom-layout table-custom-layout-platform-locations
+.. list-table::
+    :header-rows: 1
+    :class: table-custom-layout table-custom-layout-platform-locations
 
-========= ========
-Platform  Location
-========= ========
-Linux/BSD ``${XDG_DATA_HOME:-${HOME}/.local/share}/streamlink/plugins``
-macOS     ``${HOME}/Library/Application Support/streamlink/plugins``
-========= ========
+    * - Platform
+      - Location
+    * - Linux/BSD
+      - ``${XDG_DATA_HOME:-${HOME}/.local/share}/streamlink/plugins``
+    * - macOS
+      - ``${HOME}/Library/Application Support/streamlink/plugins``
