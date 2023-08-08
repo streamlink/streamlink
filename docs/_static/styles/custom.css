@@ -244,7 +244,7 @@ table.table-custom-layout th {
   text-align: left;
 }
 table.table-custom-layout th:first-of-type {
-  width: 14rem;
+  width: 15rem;
 }
 table.table-custom-layout tbody tr td {
   overflow: unset;

@@ -59,28 +59,28 @@ Windows
 
     * - Method
       - Installing
-    * - Installers
+    * - :octicon:`verified` Installers
       - See the `Windows binaries`_ section below
-    * - Portable
+    * - :octicon:`verified` Portable
       - See the `Windows binaries`_ section below
-    * - Nightly builds
+    * - :octicon:`verified` Nightly builds
       - See the `Windows binaries`_ section below
-    * - Python pip
+    * - :octicon:`verified` Python pip
       - See the `PyPI package and source code`_ section below
-    * - `Chocolatey`_
+    * - :octicon:`package` `Chocolatey`_
       - .. code-block:: bat
 
             choco install streamlink
 
         `Installing Chocolatey packages`_
-    * - `Scoop`_
+    * - :octicon:`package-dependents` `Scoop`_
       - .. code-block::
 
             scoop bucket add extras
             scoop install streamlink
 
         `Installing Scoop packages`_
-    * - `Windows Package Manager`_
+    * - :octicon:`package-dependents` `Windows Package Manager`_
       - .. code-block:: bat
 
             winget install streamlink
@@ -106,9 +106,9 @@ macOS
 
     * - Method
       - Installing
-    * - Python pip
+    * - :octicon:`verified` Python pip
       - See the `PyPI package and source code`_ section below
-    * - `Homebrew`_
+    * - :octicon:`package-dependents` `Homebrew`_
       - .. code-block:: bash
 
             brew install streamlink
@@ -130,17 +130,17 @@ Linux and BSD
 
     * - Method / Distribution
       - Installing
-    * - AppImage
+    * - :octicon:`verified` AppImage
       - See the `Linux AppImages`_ section below
-    * - AppImage nightly builds
+    * - :octicon:`verified` AppImage nightly builds
       - See the `Linux AppImages`_ section below
-    * - Python pip
+    * - :octicon:`verified` Python pip
       - See the `PyPI package and source code`_ section below
-    * - `Arch Linux`_
+    * - :octicon:`package-dependents` `Arch Linux`_
       - .. code-block:: bash
 
             sudo pacman -S streamlink
-    * - `Arch Linux (aur, git)`_
+    * - :octicon:`package-dependents` `Arch Linux (aur, git)`_
       - .. code-block:: bash
 
             git clone https://aur.archlinux.org/streamlink-git.git
@@ -148,12 +148,12 @@ Linux and BSD
             makepkg -si
 
         `Installing AUR packages`_
-    * - `Debian (sid, testing)`_
+    * - :octicon:`package-dependents` `Debian (sid, testing)`_
       - .. code-block:: bash
 
             sudo apt update
             sudo apt install streamlink
-    * - `Debian (stable)`_
+    * - :octicon:`package-dependents` `Debian (stable)`_
       - .. code-block:: bash
 
             # If you don't have Debian backports already (see link below):
@@ -163,34 +163,34 @@ Linux and BSD
             sudo apt -t bullseye-backports install streamlink
 
         `Installing Debian backported packages`_
-    * - `Fedora`_
+    * - :octicon:`package-dependents` `Fedora`_
       - .. code-block:: bash
 
             sudo dnf install streamlink
-    * - `Gentoo Linux`_
+    * - :octicon:`package-dependents` `Gentoo Linux`_
       - .. code-block:: bash
 
             sudo emerge net-misc/streamlink
-    * - `NetBSD (pkgsrc)`_
+    * - :octicon:`package-dependents` `NetBSD (pkgsrc)`_
       - .. code-block:: bash
 
             cd /usr/pkgsrc/multimedia/streamlink
             sudo make install clean
-    * - `NixOS`_
+    * - :octicon:`package-dependents` `NixOS`_
       - .. code-block:: bash
 
             nix-env -iA nixos.streamlink
 
         `NixOS channel`_
-    * - `openSUSE`_
+    * - :octicon:`package-dependents` `openSUSE`_
       - .. code-block:: bash
 
             sudo zypper install streamlink
-    * - `Solus`_
+    * - :octicon:`package-dependents` `Solus`_
       - .. code-block:: bash
 
             sudo eopkg install streamlink
-    * - `Void`_
+    * - :octicon:`package-dependents` `Void`_
       - .. code-block:: bash
 
             sudo xbps-install streamlink
@@ -297,15 +297,15 @@ On some systems, this isn't the case by default and an alternative, like :comman
 
     * - Version
       - Installing
-    * - `Latest release`_
+    * - :octicon:`verified` `Latest release`_
       - .. code-block:: bash
 
             pip install --user -U streamlink
-    * - `Master branch`_
+    * - :octicon:`verified` `Master branch`_
       - .. code-block:: bash
 
             pip install --user -U git+https://github.com/streamlink/streamlink.git
-    * - `Specific tag/branch/commit`_
+    * - :octicon:`unverified` `Specific tag/branch/commit`_
       - .. code-block:: bash
 
             pip install --user -U git+https://github.com/USERNAME/streamlink.git@REVISION
