@@ -872,6 +872,17 @@ def build_parser():
         """,
     )
     transport.add_argument(
+        "--stream-segmented-duration",
+        type=hours_minutes_seconds_float,
+        metavar="[[XX:]XX:]XX[.XX] | [XXh][XXm][XX[.XX]s]",
+        help="""
+        Limit the playback duration of segmented streams, useful for watching only parts of a stream.
+        The actual duration may be slightly longer, as it is rounded to the nearest segment.
+
+        Default is unlimited.
+        """,
+    )
+    transport.add_argument(
         "--stream-timeout",
         type=num(float, gt=0),
         metavar="TIMEOUT",
@@ -1035,11 +1046,7 @@ def build_parser():
         type=hours_minutes_seconds_float,
         metavar="[[XX:]XX:]XX[.XX] | [XXh][XXm][XX[.XX]s]",
         help="""
-        Limit the playback duration, useful for watching segments of a stream.
-        The actual duration may be slightly longer, as it is rounded to the
-        nearest HLS segment.
-
-        Default is unlimited.
+        Deprecated in favor of --stream-segmented-duration.
         """,
     )
     transport_hls.add_argument(
@@ -1370,6 +1377,7 @@ _ARGUMENT_TO_SESSIONOPTION: List[Tuple[str, str, Optional[Callable[[Any], Any]]]
     ("hls_segment_threads", "hls-segment-threads", None),
     ("hls_segment_timeout", "hls-segment-timeout", None),
     ("hls_timeout", "hls-timeout", None),
+    ("hls_duration", "hls-duration", None),
     ("http_stream_timeout", "http-stream-timeout", None),
 
     # stream transport arguments
@@ -1378,11 +1386,11 @@ _ARGUMENT_TO_SESSIONOPTION: List[Tuple[str, str, Optional[Callable[[Any], Any]]]
     ("stream_segment_attempts", "stream-segment-attempts", None),
     ("stream_segment_threads", "stream-segment-threads", None),
     ("stream_segment_timeout", "stream-segment-timeout", None),
+    ("stream_segmented_duration", "stream-segmented-duration", None),
     ("stream_timeout", "stream-timeout", None),
     ("hls_live_edge", "hls-live-edge", None),
     ("hls_live_restart", "hls-live-restart", None),
     ("hls_start_offset", "hls-start-offset", None),
-    ("hls_duration", "hls-duration", None),
     ("hls_playlist_reload_attempts", "hls-playlist-reload-attempts", None),
     ("hls_playlist_reload_time", "hls-playlist-reload-time", None),
     ("hls_segment_queue_threshold", "hls-segment-queue-threshold", None),

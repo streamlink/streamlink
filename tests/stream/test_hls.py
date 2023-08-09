@@ -3,7 +3,7 @@ import typing
 import unittest
 from datetime import datetime, timedelta, timezone
 from threading import Event
-from typing import Dict
+from typing import Dict, Optional
 from unittest.mock import Mock, call, patch
 
 import freezegun
@@ -11,8 +11,9 @@ import pytest
 import requests_mock as rm
 from requests.exceptions import InvalidSchema
 
+from streamlink.exceptions import StreamlinkDeprecationWarning
 from streamlink.session import Streamlink
-from streamlink.stream.hls import HLSStream, HLSStreamReader, MuxedHLSStream
+from streamlink.stream.hls import HLSStream, HLSStreamReader, HLSStreamWorker, MuxedHLSStream
 from streamlink.stream.hls_playlist import M3U8Parser
 from streamlink.utils.crypto import AES, pad
 from tests.mixins.stream_hls import EventedHLSStreamWorker, EventedHLSStreamWriter, Playlist, Segment, Tag, TestMixinStreamHLS
@@ -148,7 +149,8 @@ class TestHLSStream(TestMixinStreamHLS, unittest.TestCase):
 
         assert self.await_read(read_all=True) == self.content(segments), "Stream ends and read-all handshake doesn't time out"
 
-    def test_offset_and_duration(self):
+    @patch("streamlink.stream.hls.log")
+    def test_offset_and_duration(self, mock_log: Mock):
         thread, segments = self.subject([
             Playlist(1234, [Segment(0), Segment(1, duration=0.5), Segment(2, duration=0.5), Segment(3)], end=True),
         ], streamoptions={"start_offset": 1, "duration": 1})
@@ -157,6 +159,7 @@ class TestHLSStream(TestMixinStreamHLS, unittest.TestCase):
         assert data == self.content(segments, cond=lambda s: 0 < s.num < 3), "Respects the offset and duration"
         assert all(self.called(s) for s in segments.values() if 0 < s.num < 3), "Downloads second and third segment"
         assert not any(self.called(s) for s in segments.values() if 0 > s.num > 3), "Skips other segments"
+        assert mock_log.info.call_args_list == [call("Stopping stream early after 1.00 seconds")]
 
     def test_map(self):
         discontinuity = Tag("EXT-X-DISCONTINUITY")
@@ -436,6 +439,63 @@ class TestHLSStreamWorker(TestMixinStreamHLS, unittest.TestCase):
             assert worker.playlist_sequence == 4, "Doesn't update sequence number once ended"
             assert not worker.handshake_wait.wait_ready(0), "Doesn't wait once ended"
             assert not worker.handshake_reload.wait_ready(0), "Doesn't reload playlist once ended"
+
+
+class TestHLSStreamWorkerOptions:
+    @pytest.mark.parametrize(("options", "session", "expected", "warning"), [
+        pytest.param(
+            {},
+            {},
+            None,
+            [],
+            id="no duration",
+        ),
+        pytest.param(
+            {"duration": 123.45},
+            {},
+            123.45,
+            [],
+            id="duration keyword",
+        ),
+        pytest.param(
+            {},
+            {"stream-segmented-duration": 123.45},
+            123.45,
+            [],
+            id="stream-segmented-duration session option",
+        ),
+        pytest.param(
+            {},
+            {"hls-duration": 123.45},
+            123.45,
+            [(
+                StreamlinkDeprecationWarning,
+                "`hls-duration` has been deprecated in favor of the `stream-segmented-duration` option",
+            )],
+            id="hls-duration session option",
+        ),
+        pytest.param(
+            {"duration": 123.45},
+            {"stream-segmented-duration": 543.21},
+            123.45,
+            [],
+            id="duration keyword priority",
+        ),
+    ], indirect=["session"])
+    def test_duration(
+        self,
+        recwarn: pytest.WarningsRecorder,
+        session: Streamlink,
+        options: dict,
+        expected: Optional[float],
+        warning: list,
+    ):
+        stream = HLSStream(session, "https://foo/", **options)
+        reader = HLSStreamReader(stream)
+        worker = HLSStreamWorker(reader)
+
+        assert worker.duration is expected
+        assert [(record.category, str(record.message)) for record in recwarn.list] == warning
 
 
 @patch("streamlink.stream.hls.HLSStreamWorker.wait", Mock(return_value=True))

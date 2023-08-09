@@ -307,8 +307,7 @@ class HLSStreamWorker(SegmentedStreamWorker):
         self.segment_queue_timing_threshold_factor = self.session.options.get("hls-segment-queue-threshold")
         self.live_edge = self.session.options.get("hls-live-edge")
         self.duration_offset_start = int(self.stream.start_offset + (self.session.options.get("hls-start-offset") or 0))
-        self.duration_limit = self.stream.duration or (
-            int(self.session.options.get("hls-duration")) if self.session.options.get("hls-duration") else None)
+        self.duration = self.stream.duration or self.session.options.get("stream-segmented-duration")
         self.hls_live_restart = self.stream.force_restart or self.session.options.get("hls-live-restart")
 
         if str(self.playlist_reload_time_override).isnumeric() and float(self.playlist_reload_time_override) >= 2:
@@ -459,12 +458,12 @@ class HLSStreamWorker(SegmentedStreamWorker):
             ]))
             log.debug("; ".join([
                 f"Start offset: {self.duration_offset_start}",
-                f"Duration: {self.duration_limit}",
+                f"Duration: {self.duration}",
                 f"Start Sequence: {self.playlist_sequence}",
                 f"End Sequence: {self.playlist_end}",
             ]))
 
-        total_duration = 0
+        duration = 0.0
         while not self.closed:
             queued = False
             for sequence in filter(self.valid_sequence, self.playlist_sequences):
@@ -472,9 +471,9 @@ class HLSStreamWorker(SegmentedStreamWorker):
                 yield sequence
                 queued = True
 
-                total_duration += sequence.segment.duration
-                if self.duration_limit and total_duration >= self.duration_limit:
-                    log.info(f"Stopping stream early after {self.duration_limit}")
+                duration += sequence.segment.duration
+                if self.duration is not None and duration >= self.duration:
+                    log.info(f"Stopping stream early after {self.duration:.2f} seconds")
                     return
 
                 # End of stream
