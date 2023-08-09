@@ -79,6 +79,7 @@ class DASHStreamWorker(SegmentedStreamWorker):
         self.mpd = self.stream.mpd
 
         self.manifest_reload_retries = self.session.options.get("dash-manifest-reload-attempts")
+        self.duration = self.stream.duration or self.session.options.get("stream-segmented-duration")
 
     @contextmanager
     def sleeper(self, duration):
@@ -94,6 +95,7 @@ class DASHStreamWorker(SegmentedStreamWorker):
     def iter_segments(self):
         init = True
         back_off_factor = 1
+        duration = 0.0
         while not self.closed:
             # find the representation by ID
             representation = self.mpd.get_representation(self.reader.ident)
@@ -119,6 +121,13 @@ class DASHStreamWorker(SegmentedStreamWorker):
                     if self.closed:
                         break
                     yield segment
+
+                    # init segments have duration set to None
+                    duration += segment.duration or 0.0
+                    if self.duration is not None and duration >= self.duration:
+                        log.info(f"Stopping stream early after {self.duration:.2f} seconds")
+                        self.close()
+                        return
 
                 # close worker if type is not dynamic (all segments were put into writer queue)
                 if self.mpd.type != "dynamic":
@@ -197,6 +206,7 @@ class DASHStream(Stream):
         mpd: MPD,
         video_representation: Optional[Representation] = None,
         audio_representation: Optional[Representation] = None,
+        duration: Optional[float] = None,
         **kwargs,
     ):
         """
@@ -204,6 +214,7 @@ class DASHStream(Stream):
         :param mpd: Parsed MPD manifest
         :param video_representation: Video representation
         :param audio_representation: Audio representation
+        :param duration: Number of seconds until ending the stream
         :param kwargs: Additional keyword arguments passed to :meth:`requests.Session.request`
         """
 
@@ -211,6 +222,7 @@ class DASHStream(Stream):
         self.mpd = mpd
         self.video_representation = video_representation
         self.audio_representation = audio_representation
+        self.duration = duration
         self.args = session.http.valid_request_args(**kwargs)
 
     def __json__(self):

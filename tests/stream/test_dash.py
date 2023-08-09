@@ -9,7 +9,7 @@ from lxml.etree import ParseError
 
 from streamlink.exceptions import PluginError
 from streamlink.session import Streamlink
-from streamlink.stream.dash import DASHStream, DASHStreamWorker
+from streamlink.stream.dash import DASHStream, DASHStreamReader, DASHStreamWorker
 from streamlink.stream.dash_manifest import MPD, MPDParsingError
 from streamlink.utils.parse import parse_xml as original_parse_xml
 from tests.resources import text, xml
@@ -368,9 +368,9 @@ class TestDASHStreamWorker:
     @pytest.fixture()
     def segments(self) -> List[Mock]:
         return [
-            Mock(url="init_segment"),
-            Mock(url="first_segment"),
-            Mock(url="second_segment"),
+            Mock(url="init_segment", duration=None),
+            Mock(url="first_segment", duration=None),
+            Mock(url="second_segment", duration=None),
         ]
 
     @pytest.fixture()
@@ -402,20 +402,28 @@ class TestDASHStreamWorker:
         return mpd.periods[0].adaptationSets[0].representations[0]
 
     @pytest.fixture()
-    def worker(self, timestamp: datetime, mpd: Mock):
-        stream = Mock(
-            mpd=mpd,
-            period=0,
-            args={},
-        )
-        reader = Mock(
+    def stream(self, request: pytest.FixtureRequest, monkeypatch: pytest.MonkeyPatch, session: Streamlink, mpd: Mock):
+        options = getattr(request, "param", {})
+        options.setdefault("period", 0)
+        options.setdefault("duration", None)
+
+        monkeypatch.setattr(session.http, "request", Mock())
+        monkeypatch.setattr(session.http, "xml", Mock())
+
+        return DASHStream(session, mpd, **options)
+
+    @pytest.fixture()
+    def reader(self, session: Streamlink, stream: DASHStream, timestamp: datetime):
+        return Mock(
+            session=session,
             stream=stream,
             ident=(None, None, "1"),
             timestamp=timestamp,
         )
-        worker = DASHStreamWorker(reader)
 
-        return worker
+    @pytest.fixture()
+    def worker(self, reader: DASHStreamReader):
+        return DASHStreamWorker(reader)
 
     def test_dynamic_reload(
         self,
@@ -484,3 +492,37 @@ class TestDASHStreamWorker:
         assert representation.segments.call_args_list == [call(init=True, timestamp=timestamp)]
         assert mock_wait.call_args_list == [call(5)]
         assert worker._wait.is_set()
+
+    @pytest.mark.parametrize(("stream", "session"), [
+        pytest.param({"duration": 5.0}, {}, id="duration keyword"),
+        pytest.param({}, {"stream-segmented-duration": 5.0}, id="stream-segmented-duration session option"),
+    ], indirect=["stream", "session"])
+    def test_duration(
+        self,
+        caplog: pytest.LogCaptureFixture,
+        worker: DASHStreamWorker,
+        timestamp: datetime,
+        representation: Mock,
+        mpd: Mock,
+        stream: DASHStream,
+        session: Streamlink,
+    ):
+        caplog.set_level("INFO", "streamlink")
+
+        mpd.dynamic = False
+        mpd.type = "static"
+
+        segments = [
+            Mock(url="init_segment", duration=None),
+            Mock(url="first_segment", duration=2.0),
+            Mock(url="second_segment", duration=3.0),
+            Mock(url="third_segment", duration=5.0),
+        ]
+
+        representation.segments.return_value = segments
+        assert list(worker.iter_segments()) == segments[0:-1]
+        assert representation.segments.call_args_list == [call(init=True, timestamp=timestamp)]
+        assert worker._wait.is_set()
+        assert [(record.name, record.levelname, record.message) for record in caplog.records] == [
+            ("streamlink.stream.dash", "info", "Stopping stream early after 5.00 seconds"),
+        ]
