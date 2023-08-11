@@ -7,23 +7,12 @@ from streamlink.compat import is_darwin, is_win32
 from streamlink_cli.compat import DeprecatedPath
 
 
-PLAYER_ARGS_INPUT_DEFAULT = "playerinput"
-PLAYER_ARGS_INPUT_FALLBACK = "filename"
-
 DEFAULT_STREAM_METADATA = {
     "id": "Unknown ID",
     "title": "Unknown Title",
     "author": "Unknown Author",
     "category": "No Category",
     "game": "No Game/Category",
-}
-# these are the players that streamlink knows how to set the window title for with `--title`.
-# key names are used in help text
-SUPPORTED_PLAYERS = {
-    # name: possible binary names (linux/mac and windows)
-    "vlc": ["vlc", "vlc.exe"],
-    "mpv": ["mpv", "mpv.exe"],
-    "potplayer": ["potplayer", "potplayermini64.exe", "potplayermini.exe"],
 }
 
 CONFIG_FILES: List[Path]
@@ -69,8 +58,8 @@ else:
 STREAM_SYNONYMS = ["best", "worst", "best-unfiltered", "worst-unfiltered"]
 STREAM_PASSTHROUGH = ["hls", "http"]
 
+
 __all__ = [
-    "PLAYER_ARGS_INPUT_DEFAULT", "PLAYER_ARGS_INPUT_FALLBACK",
-    "DEFAULT_STREAM_METADATA", "SUPPORTED_PLAYERS",
+    "DEFAULT_STREAM_METADATA",
     "CONFIG_FILES", "PLUGIN_DIRS", "LOG_DIR", "STREAM_SYNONYMS", "STREAM_PASSTHROUGH",
 ]

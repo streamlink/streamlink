@@ -2,7 +2,6 @@ import re
 from io import BytesIO
 
 from streamlink import NoStreamsError
-from streamlink.options import Options
 from streamlink.plugin import pluginargument, pluginmatcher
 from streamlink.plugins import Plugin
 from streamlink.stream.hls import HLSStream
@@ -30,10 +29,6 @@ class TestStream(Stream):
     metavar="PASSWORD",
 )
 class TestPlugin(Plugin):
-    options = Options({
-        "a_option": "default",
-    })
-
     id = "test-id-1234-5678"
     author = "Tѥst Āuƭhǿr"
     category = None
@@ -52,6 +47,9 @@ class TestPlugin(Plugin):
 
         if "NoStreamsError" in self.url:
             raise NoStreamsError
+
+        if "fromoptions" in self.url:
+            return {"fromoptions": HTTPStream(self.session, self.options.get("streamurl"))}
 
         streams = {}
         streams["test"] = TestStream(self.session)

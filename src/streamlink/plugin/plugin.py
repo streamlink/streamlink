@@ -1,10 +1,8 @@
 import ast
-import inspect
 import logging
 import operator
 import re
 import time
-import warnings
 from contextlib import suppress
 from functools import partial
 from http.cookiejar import Cookie
@@ -218,16 +216,6 @@ class Matches(_MCollection[Optional[Match]]):
         return next(((matcher.pattern, match) for matcher, match in matches if match is not None), (None, None))
 
 
-# Add front- and back-wrappers to the deprecated plugin's method resolution order (see Plugin.__new__)
-class PluginWrapperMeta(type):
-    def mro(cls):
-        # cls.__base__ is the PluginWrapperFront which is based on the deprecated plugin class
-        mro = list(cls.__base__.__mro__)
-        # cls is the PluginWrapperBack and needs to be inserted after the deprecated plugin class
-        mro.insert(2, cls)
-        return mro
-
-
 class Plugin:
     """
     Plugin base class for retrieving streams and metadata from the URL specified.
@@ -260,6 +248,9 @@ class Plugin:
     match: Optional[Match] = None
     """A reference to the :class:`re.Match` result of the first matching matcher"""
 
+    options: Options
+    """Plugin options, initialized with the user-set values of the plugin's arguments"""
+
     # plugin metadata attributes
     id: Optional[str] = None
     """Metadata 'id' attribute: unique stream ID, etc."""
@@ -270,62 +261,19 @@ class Plugin:
     category: Optional[str] = None
     """Metadata 'category' attribute: name of a game being played, a music genre, etc."""
 
-    options = Options()
     _url: str = ""
 
-    # deprecated
-    can_handle_url: Callable[[str], bool]
-    # deprecated
-    priority: Callable[[str], int]
-
-    # Handle deprecated plugin constructors which only take the url argument
-    def __new__(cls, *args, **kwargs):
-        # Ignore plugins without custom constructors or wrappers
-        if cls.__init__ is Plugin.__init__ or hasattr(cls, "_IS_DEPRECATED_PLUGIN_WRAPPER"):
-            return super().__new__(cls)
-
-        # Ignore custom constructors which have a formal "session" parameter or a variable positional parameter
-        sig = inspect.signature(cls.__init__).parameters
-        if "session" in sig or any(param.kind == inspect.Parameter.VAR_POSITIONAL for param in sig.values()):
-            return super().__new__(cls)
-
-        # Wrapper class which overrides the very first constructor in the MRO
-        # noinspection PyAbstractClass
-        class PluginWrapperFront(cls):
-            _IS_DEPRECATED_PLUGIN_WRAPPER = True
-
-            # The __module__ value needs to be copied
-            __module__ = cls.__module__
-
-            def __init__(self, session, url):
-                # Take any arguments, but only pass the URL to the custom constructor of the deprecated plugin
-                # noinspection PyArgumentList
-                super().__init__(url)
-                warnings.warn(
-                    f"Initialized {self.module} plugin with deprecated constructor",
-                    FutureWarning,
-                    stacklevel=2,
-                )
-
-        # Wrapper class which comes after the deprecated plugin in the MRO
-        # noinspection PyAbstractClass
-        class PluginWrapperBack(PluginWrapperFront, metaclass=PluginWrapperMeta):
-            def __init__(self, *_, **__):
-                # Take any arguments from the super() call of the constructor of the deprecated plugin,
-                # but pass the right args and keywords to the Plugin constructor
-                super().__init__(*args, **kwargs)
-
-        return cls.__new__(PluginWrapperBack, *args, **kwargs)
-
-    def __init__(self, session: "Streamlink", url: str):
+    def __init__(self, session: "Streamlink", url: str, options: Optional[Options] = None):
         """
         :param session: The Streamlink session instance
         :param url: The input URL used for finding and resolving streams
+        :param options: An optional :class:`Options` instance
         """
 
         modulename = self.__class__.__module__
         self.module = modulename.split(".")[-1]
         self.logger = logging.getLogger(modulename)
+        self.options = Options() if options is None else options
         self.cache = Cache(
             filename="plugin-cache.json",
             key_prefix=self.module,
@@ -353,13 +301,11 @@ class Plugin:
         if self.matchers:
             self.matcher, self.match = self.matches.update(self.matchers, value)
 
-    @classmethod
-    def set_option(cls, key, value):
-        cls.options.set(key, value)
+    def set_option(self, key, value):
+        self.options.set(key, value)
 
-    @classmethod
-    def get_option(cls, key):
-        return cls.options.get(key)
+    def get_option(self, key):
+        return self.options.get(key)
 
     @classmethod
     def get_argument(cls, key):
@@ -708,7 +654,6 @@ def pluginargument(
     sensitive: bool = False,
     argument_name: Optional[str] = None,
     dest: Optional[str] = None,
-    is_global: bool = False,
     **options,
 ) -> Callable[[Type[Plugin]], Type[Plugin]]:
     """
@@ -746,7 +691,6 @@ def pluginargument(
         sensitive=sensitive,
         argument_name=argument_name,
         dest=dest,
-        is_global=is_global,
         **options,
     )
 

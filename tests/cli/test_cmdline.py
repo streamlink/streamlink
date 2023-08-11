@@ -2,8 +2,6 @@ import unittest
 from pathlib import Path
 from unittest.mock import ANY, Mock, call, patch
 
-import pytest
-
 import streamlink_cli.main
 import tests
 from streamlink import Streamlink
@@ -36,6 +34,7 @@ class CommandLineTestCase(unittest.TestCase):
              patch("streamlink_cli.main.streamlink", session), \
              patch("streamlink_cli.output.player.subprocess.Popen") as mock_popen, \
              patch("streamlink_cli.output.player.subprocess.call") as mock_call, \
+             patch("streamlink_cli.output.player.which", side_effect=lambda path: path), \
              patch("streamlink_cli.output.player.sleep"):
             mock_argv.__getitem__.side_effect = lambda x: args[x]
             mock_popen.return_value = Mock(poll=Mock(side_effect=poll_factory([None, 0])))
@@ -47,86 +46,61 @@ class CommandLineTestCase(unittest.TestCase):
         assert exit_code == actual_exit_code
         assert mock_setup_streamlink.call_count == 1
         if not passthrough:
-            assert mock_popen.call_args_list == [call(commandline, stderr=ANY, stdout=ANY, bufsize=ANY, stdin=ANY)]
+            assert mock_popen.call_args_list == [call(commandline, bufsize=ANY, stdin=ANY, stdout=ANY, stderr=ANY)]
         else:
-            assert mock_call.call_args_list == [call(commandline, stderr=ANY, stdout=ANY)]
+            assert mock_call.call_args_list == [call(commandline, stdout=ANY, stderr=ANY)]
 
 
-@pytest.mark.posix_only()
-class TestCommandLinePOSIX(CommandLineTestCase):
-    """
-    Commandline tests under POSIX-like operating systems
-    """
-
+class TestCommandLine(CommandLineTestCase):
     def test_open_regular_path_player(self):
-        self._test_args(["streamlink", "-p", "/usr/bin/player", "http://test.se", "test"],
-                        ["/usr/bin/player", "-"])
-
-    def test_open_space_path_player(self):
-        self._test_args(["streamlink", "-p", "\"/Applications/Video Player/player\"", "http://test.se", "test"],
-                        ["/Applications/Video Player/player", "-"])
-        # escaped
-        self._test_args(["streamlink", "-p", "/Applications/Video\\ Player/player", "http://test.se", "test"],
-                        ["/Applications/Video Player/player", "-"])
+        self._test_args(
+            ["streamlink", "-p", "player", "http://test.se", "test"],
+            ["player", "-"],
+        )
 
     def test_open_player_extra_args_in_player(self):
-        self._test_args(["streamlink", "-p", "/usr/bin/player",
-                         "-a", """--input-title-format "Poker \\"Stars\\"" {filename}""",
-                         "http://test.se", "test"],
-                        ["/usr/bin/player", "--input-title-format", 'Poker "Stars"', "-"])
+        self._test_args(
+            [
+                "streamlink",
+                "-p",
+                "player",
+                "-a",
+                '''--input-title-format "Poker \\"Stars\\""''',
+                "http://test.se",
+                "test",
+            ],
+            [
+                "player",
+                "--input-title-format",
+                "Poker \"Stars\"",
+                "-",
+            ],
+        )
 
     def test_open_player_extra_args_in_player_pass_through(self):
-        self._test_args(["streamlink", "--player-passthrough", "hls", "-p", "/usr/bin/player",
-                         "-a", """--input-title-format "Poker \\"Stars\\"" {filename}""",
-                         "test.se", "hls"],
-                        ["/usr/bin/player", "--input-title-format", 'Poker "Stars"', "http://test.se/playlist.m3u8"],
-                        passthrough=True)
+        self._test_args(
+            [
+                "streamlink",
+                "--player-passthrough",
+                "hls",
+                "-p",
+                "player",
+                "-a",
+                '''--input-title-format "Poker \\"Stars\\""''',
+                "test.se",
+                "hls",
+            ],
+            [
+                "player",
+                "--input-title-format",
+                "Poker \"Stars\"",
+                "http://test.se/playlist.m3u8",
+            ],
+            passthrough=True,
+        )
 
     def test_single_hyphen_extra_player_args_971(self):
-        """single hyphen params at the beginning of --player-args
-           - https://github.com/streamlink/streamlink/issues/971 """
-        self._test_args(["streamlink", "-p", "/usr/bin/player", "-a", "-v {filename}",
-                         "http://test.se", "test"],
-                        ["/usr/bin/player", "-v", "-"])
-
-
-@pytest.mark.windows_only()
-class TestCommandLineWindows(CommandLineTestCase):
-    """
-    Commandline tests for Windows
-    """
-
-    def test_open_space_path_player(self):
-        self._test_args(["streamlink", "-p", "c:\\Program Files\\Player\\player.exe", "http://test.se", "test"],
-                        "c:\\Program Files\\Player\\player.exe -")
-
-    def test_open_space_quote_path_player(self):
-        self._test_args(["streamlink", "-p", "\"c:\\Program Files\\Player\\player.exe\"", "http://test.se", "test"],
-                        "\"c:\\Program Files\\Player\\player.exe\" -")
-
-    def test_open_player_args_with_quote_in_player(self):
-        self._test_args(["streamlink", "-p",
-                         '''c:\\Program Files\\Player\\player.exe --input-title-format "Poker \\"Stars\\""''',
-                         "http://test.se", "test"],
-                        """c:\\Program Files\\Player\\player.exe --input-title-format "Poker \\"Stars\\"" -""")
-
-    def test_open_player_extra_args_in_player(self):
-        self._test_args(["streamlink", "-p", "c:\\Program Files\\Player\\player.exe",
-                         "-a", """--input-title-format "Poker \\"Stars\\"" {filename}""",
-                         "http://test.se", "test"],
-                        """c:\\Program Files\\Player\\player.exe --input-title-format "Poker \\"Stars\\"" -""")
-
-    def test_open_player_extra_args_in_player_pass_through(self):
-        self._test_args(["streamlink", "--player-passthrough", "hls", "-p", "c:\\Program Files\\Player\\player.exe",
-                         "-a", """--input-title-format "Poker \\"Stars\\"" {filename}""",
-                         "test.se", "hls"],
-                        """c:\\Program Files\\Player\\player.exe"""
-                        + ''' --input-title-format "Poker \\"Stars\\"" \"http://test.se/playlist.m3u8\"''',
-                        passthrough=True)
-
-    def test_single_hyphen_extra_player_args_971(self):
-        """single hyphen params at the beginning of --player-args
-           - https://github.com/streamlink/streamlink/issues/971 """
-        self._test_args(["streamlink", "-p", "c:\\Program Files\\Player\\player.exe",
-                         "-a", "-v {filename}", "http://test.se", "test"],
-                        "c:\\Program Files\\Player\\player.exe -v -")
+        self._test_args(
+            ["streamlink", "-p", "player", "-a", "-v {playerinput}", "http://test.se", "test"],
+            ["player", "-v", "-"],
+        )

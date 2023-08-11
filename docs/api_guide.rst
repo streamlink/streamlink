@@ -58,7 +58,7 @@ Inspecting streams
 ------------------
 
 It's also possible to inspect the stream's internal parameters. Go to
-:ref:`Stream subclasses <api/stream:Streams>` to see which attributes are available
+:ref:`Stream subclasses <api/stream:Stream>` to see which attributes are available
 for inspection for each stream type.
 
 For example, this is a :py:class:`HLSStream <streamlink.stream.HLSStream>` object which

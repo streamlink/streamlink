@@ -231,7 +231,7 @@ class TestMixinStreamHLS(unittest.TestCase):
 
     def called(self, item, once=False):
         mock = self.get_mock(item)
-        return mock.called_once if once else mock.called
+        return mock.call_count == 1 if once else mock.called
 
     def url(self, item):
         return item.url(self.id())

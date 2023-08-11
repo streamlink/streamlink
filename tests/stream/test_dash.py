@@ -27,7 +27,7 @@ class TestDASHStreamParseManifest:
         response = requests_mock.register_uri("GET", "http://test/manifest.mpd", **getattr(request, "param", {}))
         called_once = "nomockedhttprequest" not in request.keywords
         yield
-        assert response.called_once is called_once
+        assert (response.call_count == 1) is called_once
 
     @pytest.fixture()
     def parse_xml(self, monkeypatch: pytest.MonkeyPatch):

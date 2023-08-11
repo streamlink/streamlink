@@ -287,17 +287,17 @@ class TestCLIMainCreateOutput(unittest.TestCase):
         args.player_http = False
         args.title = None
         args.url = "URL"
-        args.player = "mpv"
+        args.player = Path("mpv")
         args.player_args = ""
 
         output = create_output(formatter)
         assert type(output) is PlayerOutput
-        assert output.title == "URL"
+        assert output.playerargs.title == "URL"
 
         args.title = "{author} - {title}"
         output = create_output(formatter)
         assert type(output) is PlayerOutput
-        assert output.title == "foo - bar"
+        assert output.playerargs.title == "foo - bar"
 
     @patch("streamlink_cli.main.args")
     @patch("streamlink_cli.main.check_file_output")
@@ -377,14 +377,14 @@ class TestCLIMainCreateOutput(unittest.TestCase):
         args.fs_safe_rules = None
         args.title = None
         args.url = "URL"
-        args.player = "mpv"
+        args.player = Path("mpv")
         args.player_args = ""
         args.player_fifo = None
         args.player_http = None
 
         output = create_output(formatter)
         assert type(output) is PlayerOutput
-        assert output.title == "URL"
+        assert output.playerargs.title == "URL"
         assert type(output.record) is FileOutput
         assert output.record.filename == Path("foo")
         assert output.record.fd is None
@@ -393,7 +393,7 @@ class TestCLIMainCreateOutput(unittest.TestCase):
         args.title = "{author} - {title}"
         output = create_output(formatter)
         assert type(output) is PlayerOutput
-        assert output.title == "foo - bar"
+        assert output.playerargs.title == "foo - bar"
         assert type(output.record) is FileOutput
         assert output.record.filename == Path("foo")
         assert output.record.fd is None
@@ -413,14 +413,14 @@ class TestCLIMainCreateOutput(unittest.TestCase):
         args.fs_safe_rules = None
         args.title = "{author} - {title}"
         args.url = "URL"
-        args.player = "mpv"
+        args.player = Path("mpv")
         args.player_args = ""
         args.player_fifo = None
         args.player_http = None
 
         output = create_output(formatter)
         assert type(output) is PlayerOutput
-        assert output.title == "foo - bar"
+        assert output.playerargs.title == "foo - bar"
         assert type(output.record) is FileOutput
         assert output.record.filename is None
         assert output.record.fd is stdout
@@ -550,6 +550,7 @@ class TestCLIMainOutputStream:
         assert mock_streamrunner.call_args_list == [call(streamio, output, show_progress=expected)]
 
 
+# TODO: rewrite using pytest (caplog+capsys fixtures) and move to separate test module
 class _TestCLIMainLogging(unittest.TestCase):
     # stop test execution at the setup_signals() call, as we're not interested in what comes afterwards
     class StopTest(Exception):
@@ -566,6 +567,7 @@ class _TestCLIMainLogging(unittest.TestCase):
              patch("streamlink_cli.main.CONFIG_FILES", []), \
              patch("streamlink_cli.main.setup_streamlink"), \
              patch("streamlink_cli.main.setup_plugins"), \
+             patch("streamlink_cli.argparser.find_default_player"), \
              patch("streamlink.session.Streamlink.load_builtin_plugins"), \
              patch("sys.argv") as mock_argv:
             mock_argv.__getitem__.side_effect = lambda x: argv[x]
@@ -577,12 +579,7 @@ class _TestCLIMainLogging(unittest.TestCase):
     def tearDown(self):
         streamlink_cli.main.logger.root.handlers.clear()
 
-    # python >=3.7.2: https://bugs.python.org/issue35046
-    _write_call_log_cli_info = (
-        [call("[cli][info] foo\n")]
-        if sys.version_info >= (3, 7, 2) else
-        [call("[cli][info] foo"), call("\n")]
-    )
+    _write_call_log_cli_info = [call("[cli][info] foo\n")]
     _write_call_console_msg = [call("bar\n")]
     _write_call_console_msg_error = [call("error: bar\n")]
     _write_call_console_msg_json = [call("{\n  \"error\": \"bar\"\n}\n")]
@@ -598,12 +595,7 @@ class _TestCLIMainLogging(unittest.TestCase):
 
 
 class TestCLIMainLoggingStreams(_TestCLIMainLogging):
-    # python >=3.7.2: https://bugs.python.org/issue35046
-    _write_call_log_testcli_err = (
-        [call("[test_cli_main][error] baz\n")]
-        if sys.version_info >= (3, 7, 2) else
-        [call("[test_cli_main][error] baz"), call("\n")]
-    )
+    _write_call_log_testcli_err = [call("[test_cli_main][error] baz\n")]
 
     def subject(self, argv, stream=None):
         super().subject(argv)
@@ -694,7 +686,7 @@ class TestCLIMainLoggingInfos(_TestCLIMainLogging):
 
     @patch("streamlink_cli.main.log")
     @patch("streamlink_cli.main.streamlink_version", "streamlink")
-    @patch("streamlink_cli.main.importlib_metadata")
+    @patch("streamlink_cli.main.importlib.metadata")
     @patch("streamlink_cli.main.log_current_arguments", Mock(side_effect=_TestCLIMainLogging.StopTest))
     @patch("platform.python_version", Mock(return_value="python"))
     def test_log_current_versions(self, mock_importlib_metadata: Mock, mock_log: Mock):

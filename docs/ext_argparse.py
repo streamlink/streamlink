@@ -20,7 +20,7 @@ from sphinx.util.nodes import nested_parse_with_titles
 
 _block_re = re.compile(r":\n{2}\s{2}")
 _default_re = re.compile(r"Default is (.+)\.\n")
-_note_re = re.compile(r"Note: (.*)(?:\n\n|\n*$)", re.DOTALL)
+_note_re = re.compile(r"Note: (.*?)(?:\n\n|\n*$)", re.DOTALL)
 _option_line_re = re.compile(r"^(?!\s{2,}%\(prog\)s|\s{2,}--\w[\w-]*\w\b|Example: )(.+)$", re.MULTILINE)
 _option_re = re.compile(r"(?:^|(?<=\s))(?P<arg>--\w[\w-]*\w)(?P<val>=\w+)?\b")
 _prog_re = re.compile(r"%\(prog\)s")

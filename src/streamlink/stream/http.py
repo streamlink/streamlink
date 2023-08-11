@@ -1,6 +1,7 @@
 from typing import Dict
 
 from streamlink.exceptions import StreamError
+from streamlink.session import Streamlink
 from streamlink.stream.stream import Stream
 from streamlink.stream.wrappers import StreamIOIterWrapper, StreamIOThreadWrapper
 
@@ -17,20 +18,21 @@ class HTTPStream(Stream):
 
     def __init__(
         self,
-        session_,
+        session: Streamlink,
         url: str,
         buffered: bool = True,
-        **args,
+        **kwargs,
     ):
         """
-        :param streamlink.session.Streamlink session_: Streamlink session instance
+        :param session: Streamlink session instance
         :param url: The URL of the HTTP stream
         :param buffered: Wrap stream output in an additional reader-thread
-        :param args: Additional keyword arguments passed to :meth:`requests.Session.request`
+        :param kwargs: Additional keyword arguments passed to :meth:`requests.Session.request`
         """
 
-        super().__init__(session_)
-        self.args = dict(url=url, **args)
+        super().__init__(session)
+        self.args = self.session.http.valid_request_args(**kwargs)
+        self.args["url"] = url
         self.buffered = buffered
 
     def __json__(self):

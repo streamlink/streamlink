@@ -13,15 +13,19 @@ to the stream data.
 
 This project was forked from Livestreamer, which is no longer maintained.
 
-Latest release (|version|)
+:octicon:`tag` Latest release (|version|)
     https://github.com/streamlink/streamlink/releases/latest
-GitHub
+:octicon:`mark-github` GitHub
     https://github.com/streamlink/streamlink
-Issue tracker
+:octicon:`issue-opened` Issue tracker
     https://github.com/streamlink/streamlink/issues
-PyPI
+:octicon:`comment-discussion` Discussion forum
+    https://github.com/streamlink/streamlink/discussions
+:octicon:`comment-discussion` Gitter/Matrix channel
+    `streamlink/streamlink:gitter.im <https://matrix.to/#/#streamlink_streamlink:gitter.im>`_
+:octicon:`package` PyPI
     https://pypi.org/project/streamlink/
-Free software
+:octicon:`law` Free software
     Simplified BSD license
 
 Features
@@ -80,6 +84,7 @@ Table of contents
     players
     issues
     deprecations
+    migrations
     developing
     api_guide
     api

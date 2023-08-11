@@ -1,37 +1,69 @@
-import os
-import subprocess
-import sys
+from os import environ
+from pathlib import Path
+from shutil import which
+from typing import Iterable, Optional
+
+from streamlink.compat import is_darwin, is_win32
 
 
-def check_paths(exes, paths):
+def _resolve_executable(paths: Iterable[Path], *exes: str) -> Optional[Path]:
+    for exe in exes:
+        resolved = which(exe)
+        if resolved:
+            return Path(resolved).resolve()
+
+    checked = set()
     for path in paths:
         for exe in exes:
-            path = os.path.expanduser(os.path.join(path, exe))
-            if os.path.isfile(path):
-                return path
+            fullpath = str(path / exe)
+            if fullpath in checked:
+                continue
+            checked.add(fullpath)
+            resolved = which(fullpath)
+            if resolved:
+                return Path(resolved).resolve()
+
+    return None
 
 
-def find_default_player():
-    if "darwin" in sys.platform:
-        paths = os.environ.get("PATH", "").split(":")
-        paths += ["/Applications/VLC.app/Contents/MacOS/"]
-        paths += ["~/Applications/VLC.app/Contents/MacOS/"]
-        path = check_paths(("VLC", "vlc"), paths)
-    elif "win32" in sys.platform:
-        exename = "vlc.exe"
-        paths = os.environ.get("PATH", "").split(";")
-        path = check_paths((exename,), paths)
+def _find_default_player_win32() -> Optional[Path]:
+    envvars = "PROGRAMFILES", "PROGRAMFILES(X86)", "PROGRAMW6432"
+    subpath = Path() / "VideoLAN" / "VLC"
 
-        if not path:
-            subpath = "VideoLAN\\VLC\\"
-            envvars = ("PROGRAMFILES", "PROGRAMFILES(X86)", "PROGRAMW6432")
-            paths = filter(None, (os.environ.get(var) for var in envvars))
-            paths = (os.path.join(p, subpath) for p in paths)
-            path = check_paths((exename,), paths)
+    return _resolve_executable(
+        (
+            Path(p) / subpath
+            for p in (environ.get(envvar, None) for envvar in envvars)
+            if p
+        ),
+        "vlc.exe",
+    )
+
+
+def _find_default_player_darwin() -> Optional[Path]:
+    subpath = Path() / "Applications" / "VLC.app" / "Contents" / "MacOS"
+
+    return _resolve_executable(
+        [
+            Path("/") / subpath,
+            Path.home() / subpath,
+        ],
+        "VLC",
+        "vlc",
+    )
+
+
+def _find_default_player_other() -> Optional[Path]:
+    return _resolve_executable(
+        [],
+        "vlc",
+    )
+
+
+def find_default_player() -> Optional[Path]:
+    if is_win32:
+        return _find_default_player_win32()
+    elif is_darwin:
+        return _find_default_player_darwin()
     else:
-        paths = os.environ.get("PATH", "").split(":")
-        path = check_paths(("vlc",), paths)
-
-    if path:
-        # Quote command because it can contain space
-        return subprocess.list2cmdline([path])
+        return _find_default_player_other()

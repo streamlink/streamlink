@@ -77,7 +77,7 @@ def session(request: pytest.FixtureRequest) -> Iterator[Streamlink]:
 
 
 @pytest.fixture()
-def requests_mock(requests_mock: rm.Mocker) -> rm.Mocker:  # noqa: PT004
+def requests_mock(requests_mock: rm.Mocker) -> rm.Mocker:
     """
     Override of the default `requests_mock` fixture, with `InvalidRequest` raised on unknown requests
     """

@@ -4,8 +4,8 @@ Deprecations
 streamlink 5.4.0
 ----------------
 
-Deprecation of --force-progress
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+--force-progress
+^^^^^^^^^^^^^^^^
 
 The ``--force-progress`` CLI argument has been deprecated in favor of :option:`--progress=force`.
 
@@ -13,29 +13,33 @@ The ``--force-progress`` CLI argument has been deprecated in favor of :option:`-
 streamlink 5.3.0
 ----------------
 
-Deprecation of global plugin arguments
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Global plugin arguments
+^^^^^^^^^^^^^^^^^^^^^^^
 
 The ``is_global=True`` :py:class:`plugin argument <streamlink.options.Argument>` parameter has been deprecated.
 Instead of defining a global plugin argument to set a key-value pair on the plugin's options, use the respective option on
 the plugin's Streamlink session instance instead.
 
+:bdg-ref-danger:`Removed in 6.0.0 <migrations:Global plugin arguments>`
+
 
 streamlink 5.2.0
 ----------------
 
-Deprecation of plugin.api.validate.text
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+plugin.api.validate.text
+^^^^^^^^^^^^^^^^^^^^^^^^
 
 The ``plugin.api.validate.text`` alias for ``str`` has been marked as deprecated, as it is a remnant of the py2 implementation.
 Simply replace ``validate.text`` with ``str`` in each validation schema.
+
+:bdg-ref-danger:`Removed in 6.0.0 <migrations:plugin.api.validate.text>`
 
 
 streamlink 5.0.0
 ----------------
 
-Deprecation of Plugin.__init__(self, url)
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Plugin.__init__(self, url) compatibility wrapper
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 With the removal of the ``Plugin.bind()`` class method which was used for setting up the
 :py:class:`Streamlink <streamlink.session.Streamlink>` session instance and module name in each plugin class,
@@ -47,22 +51,14 @@ arguments when subclassing and adding a custom constructor (``*args, **kwargs``)
 Compatibility wrappers were added for old custom plugin implementations, and a deprecation message will be shown until
 the compatibility wrappers will get removed in a future release.
 
-
-Session.resolve_url() return type changes
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-Due to the changes of the :py:class:`Plugin <streamlink.plugin.Plugin>` class mentioned above, the return value of
-:py:meth:`Streamlink.resolve_url() <streamlink.session.Streamlink.resolve_url>` and
-:py:meth:`Streamlink.resolve_url_no_redirect() <streamlink.session.Streamlink.resolve_url_no_redirect>` had to be changed
-from ``tuple[type[Plugin], str]`` to ``tuple[str, type[Plugin], str]``, and both methods now return the resolved plugin name
-as the first item, in addition to the plugin class and resolved URL.
+:bdg-ref-danger:`Removed in 6.0.0 <migrations:Plugin.__init__(self, url) compatibility wrapper>`
 
 
 streamlink 4.2.0
 ----------------
 
-Deprecation of url_master in HLSStream
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+url_master in HLSStream
+^^^^^^^^^^^^^^^^^^^^^^^
 
 The ``url_master`` parameter and attribute of the :py:class:`HLSStream <streamlink.stream.HLSStream>`
 and :py:class:`MuxedHLSStream <streamlink.stream.MuxedHLSStream>` classes have been deprecated in favor of
@@ -70,23 +66,11 @@ the ``multivariant`` parameter and attribute. ``multivariant`` is an :py:class:`
 HLS multivariant playlist.
 
 
-streamlink 4.0.0
-----------------
-
-Removal of streamlink.plugin.api.utils
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-The ``streamlink.plugin.api.utils`` module including the ``itertags`` function and export aliases for ``streamlink.utils.parse``
-has been removed. Import the parse functions directly and find data in XML/HTML by parsing it via ``parse_{xml,html}`` and
-applying XPath queries to the parsed result via the available methods provided by the ``lxml.etree`` API. The
-``streamlink.plugin.api.validate`` module also has the necessary validation schema functions for this.
-
-
 streamlink 3.0.0
 ----------------
 
-Removal of separate https-proxy option
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+https-proxy option
+^^^^^^^^^^^^^^^^^^
 
 :ref:`HTTPS proxy CLI option <cli:HTTP options>` and the respective :ref:`Session options <api/session:Session>`
 have been deprecated in favor of a single :option:`--http-proxy` that sets the proxy for all HTTP and
@@ -191,6 +175,8 @@ message will be written to the info log output for the first plugin that gets re
    multiple ``@pluginmatcher`` decorators and/or an improved ``_get_streams()`` method which returns ``None`` or raises a
    ``NoStreamsError`` when there are no streams to be found on that particular URL.
 
+:bdg-ref-danger:`Removed in 6.0.0 <migrations:Plugin.can_handle_url() and Plugin.priority()>`
+
 
 streamlink 2.2.0
 ----------------
@@ -223,29 +209,34 @@ To resolve this, move the config file(s) to the correct location or copy the con
 
 **Deprecated paths**
 
-.. rst-class:: table-custom-layout table-custom-layout-platform-locations
+.. list-table::
+    :header-rows: 1
+    :class: table-custom-layout table-custom-layout-platform-locations
 
-========= ========
-Platform  Location
-========= ========
-Linux/BSD - ``${HOME}/.streamlinkrc``
-macOS     - ``${XDG_CONFIG_HOME:-${HOME}/.config}/streamlink/config``
-          - ``${HOME}/.streamlinkrc``
-Windows   - ``%APPDATA%\streamlink\streamlinkrc``
-========= ========
+    * - Platform
+      - Location
+    * - Linux/BSD
+      - - ``${HOME}/.streamlinkrc``
+    * - macOS
+      - - ``${XDG_CONFIG_HOME:-${HOME}/.config}/streamlink/config``
+        - ``${HOME}/.streamlinkrc``
+    * - Windows
+      - - ``%APPDATA%\streamlink\streamlinkrc``
 
 **Migration**
 
-.. rst-class:: table-custom-layout table-custom-layout-platform-locations
+.. list-table::
+    :header-rows: 1
+    :class: table-custom-layout table-custom-layout-platform-locations
 
-========= ========
-Platform  Location
-========= ========
-Linux/BSD ``${XDG_CONFIG_HOME:-${HOME}/.config}/streamlink/config``
-macOS     ``${HOME}/Library/Application Support/streamlink/config``
-Windows   ``%APPDATA%\streamlink\config``
-========= ========
-
+    * - Platform
+      - Location
+    * - Linux/BSD
+      - ``${XDG_CONFIG_HOME:-${HOME}/.config}/streamlink/config``
+    * - macOS
+      - ``${HOME}/Library/Application Support/streamlink/config``
+    * - Windows
+      - ``%APPDATA%\streamlink\config``
 
 Custom plugins sideloading paths
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -255,22 +246,26 @@ Old and deprecated paths will be dropped in the future.
 
 **Deprecated paths**
 
-.. rst-class:: table-custom-layout table-custom-layout-platform-locations
+.. list-table::
+    :header-rows: 1
+    :class: table-custom-layout table-custom-layout-platform-locations
 
-========= ========
-Platform  Location
-========= ========
-Linux/BSD ``${XDG_CONFIG_HOME:-${HOME}/.config}/streamlink/plugins``
-macOS     ``${XDG_CONFIG_HOME:-${HOME}/.config}/streamlink/plugins``
-========= ========
+    * - Platform
+      - Location
+    * - Linux/BSD
+      - ``${XDG_CONFIG_HOME:-${HOME}/.config}/streamlink/plugins``
+    * - macOS
+      - ``${XDG_CONFIG_HOME:-${HOME}/.config}/streamlink/plugins``
 
 **Migration**
 
-.. rst-class:: table-custom-layout table-custom-layout-platform-locations
+.. list-table::
+    :header-rows: 1
+    :class: table-custom-layout table-custom-layout-platform-locations
 
-========= ========
-Platform  Location
-========= ========
-Linux/BSD ``${XDG_DATA_HOME:-${HOME}/.local/share}/streamlink/plugins``
-macOS     ``${HOME}/Library/Application Support/streamlink/plugins``
-========= ========
+    * - Platform
+      - Location
+    * - Linux/BSD
+      - ``${XDG_DATA_HOME:-${HOME}/.local/share}/streamlink/plugins``
+    * - macOS
+      - ``${HOME}/Library/Application Support/streamlink/plugins``

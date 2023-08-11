@@ -197,21 +197,21 @@ class DASHStream(Stream):
         mpd: MPD,
         video_representation: Optional[Representation] = None,
         audio_representation: Optional[Representation] = None,
-        **args,
+        **kwargs,
     ):
         """
         :param session: Streamlink session instance
         :param mpd: Parsed MPD manifest
         :param video_representation: Video representation
         :param audio_representation: Audio representation
-        :param args: Additional keyword arguments passed to :meth:`requests.Session.request`
+        :param kwargs: Additional keyword arguments passed to :meth:`requests.Session.request`
         """
 
         super().__init__(session)
         self.mpd = mpd
         self.video_representation = video_representation
         self.audio_representation = audio_representation
-        self.args = session.http.valid_request_args(**args)
+        self.args = session.http.valid_request_args(**kwargs)
 
     def __json__(self):
         json = dict(type=self.shortname())
@@ -266,7 +266,7 @@ class DASHStream(Stream):
         period: int = 0,
         with_video_only: bool = False,
         with_audio_only: bool = False,
-        **args,
+        **kwargs,
     ) -> Dict[str, "DASHStream"]:
         """
         Parse a DASH manifest file and return its streams.
@@ -276,10 +276,10 @@ class DASHStream(Stream):
         :param period: Which MPD period to use (index number) for finding representations
         :param with_video_only: Also return video-only streams, otherwise only return muxed streams
         :param with_audio_only: Also return audio-only streams, otherwise only return muxed streams
-        :param args: Additional keyword arguments passed to :meth:`requests.Session.request`
+        :param kwargs: Additional keyword arguments passed to :meth:`requests.Session.request`
         """
 
-        manifest, mpd_params = cls.fetch_manifest(session, url_or_manifest, **args)
+        manifest, mpd_params = cls.fetch_manifest(session, url_or_manifest, **kwargs)
 
         try:
             mpd = cls.parse_mpd(manifest, mpd_params)
@@ -333,7 +333,7 @@ class DASHStream(Stream):
             if not vid and not aud:
                 continue
 
-            stream = DASHStream(session, mpd, vid, aud, **args)
+            stream = DASHStream(session, mpd, vid, aud, **kwargs)
             stream_name = []
 
             if vid:

@@ -1,9 +1,87 @@
 [build-system]
 build-backend = "setuptools.build_meta"
 requires = [
-  "setuptools >=45",
+  "setuptools >=64",
   "wheel",
   "versioningit >=2.0.0, <3",
+]
+
+
+# https://peps.python.org/pep-0621/
+# https://packaging.python.org/en/latest/specifications/declaring-project-metadata/
+[project]
+name = "streamlink"
+description = """\
+Streamlink is a command-line utility that extracts streams from various services and pipes them into a video player of choice.\
+"""
+readme = "README.md"
+license = { text = "Simplified BSD" }
+authors = [
+  { name = "Streamlink" },
+  { email = "streamlink@protonmail.com" }
+]
+classifiers = [
+  "Development Status :: 5 - Production/Stable",
+  "License :: OSI Approved :: BSD License",
+  "Environment :: Console",
+  "Intended Audience :: End Users/Desktop",
+  "Operating System :: POSIX",
+  "Operating System :: MacOS",
+  "Operating System :: Microsoft :: Windows",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3 :: Only",
+  "Programming Language :: Python :: 3.8",
+  "Programming Language :: Python :: 3.9",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Topic :: Internet :: WWW/HTTP",
+  "Topic :: Multimedia :: Sound/Audio",
+  "Topic :: Multimedia :: Video",
+  "Topic :: Utilities",
+]
+
+dynamic = [
+  "version",
+  "entry-points",
+]
+
+requires-python = ">=3.8"
+dependencies = [
+  "certifi",
+  "isodate",
+  "lxml >=4.6.4,<6",
+  "pycountry",
+  "pycryptodome >=3.4.3,<4",
+  "PySocks >=1.5.6,!=1.5.7",
+  "requests >=2.26.0,<3",
+  "trio >=0.22.0,<1",
+  "trio-websocket >=0.9.0,<1",
+  "typing-extensions >=4.0.0",
+  "urllib3 >=1.26.0,<3",
+  "websocket-client >=1.2.1,<2",
+]
+
+[project.urls]
+Homepage = "https://github.com/streamlink/streamlink"
+Documentation = "https://streamlink.github.io/"
+Tracker = "https://github.com/streamlink/streamlink/issues"
+Source = "https://github.com/streamlink/streamlink"
+Funding = "https://streamlink.github.io/latest/donate.html"
+
+
+# https://setuptools.pypa.io/en/stable/userguide/pyproject_config.html
+# https://setuptools.pypa.io/en/stable/userguide/package_discovery.html
+# https://setuptools.pypa.io/en/stable/userguide/datafiles.html
+[tool.setuptools]
+license-files = ["LICENSE"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+namespaces = false
+
+[tool.setuptools.package-data]
+streamlink = [
+  "py.typed",
 ]
 
 
@@ -48,6 +126,7 @@ source = [
 [tool.coverage.report]
 omit = [
   "src/streamlink/packages/*",
+  "src/streamlink/webbrowser/cdp/devtools/*",
   "src/streamlink_cli/packages/*",
 ]
 exclude_lines = [
@@ -62,7 +141,7 @@ exclude_lines = [
 # https://beta.ruff.rs/docs/configuration/
 [tool.ruff]
 src = ["src", "tests"]
-target-version = "py37"
+target-version = "py38"
 fix = false
 ignore-init-module-imports = true
 line-length = 128
@@ -126,6 +205,7 @@ extend-exclude = [
 "src/streamlink/__init__.py" = ["I"]
 "src/streamlink/_version.py" = ["I"]
 "src/streamlink/plugin/api/useragents.py" = ["E501"]
+"src/streamlink/webbrowser/cdp/devtools/*" = ["E501"]
 "src/streamlink_cli/main.py" = ["PLW0603"]
 
 [tool.ruff.isort]
@@ -145,7 +225,7 @@ allow-multiline = false
 
 # https://mypy.readthedocs.io/en/stable/config_file.html
 [tool.mypy]
-python_version = 3.7
+python_version = 3.8
 show_error_codes = true
 show_error_context = true
 show_column_numbers = true

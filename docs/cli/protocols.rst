@@ -29,15 +29,18 @@ The following example shows HLS streams (``.m3u8``) and DASH streams (``.mpd``):
 Supported streaming protocols
 -----------------------------
 
-.. rst-class:: table-custom-layout
+.. list-table::
+    :header-rows: 1
+    :class: table-custom-layout
 
-============================== =================================================
-Name                           Explicit prefix
-============================== =================================================
-Apple HTTP Live Streaming      ``hls://``
-MPEG-DASH                      ``dash://``
-Progressive HTTP/HTTPS         ``httpstream://``
-============================== =================================================
+    * - Name
+      - Explicit prefix
+    * - Apple HTTP Live Streaming
+      - ``hls://``
+    * - MPEG-DASH
+      - ``dash://``
+    * - Progressive HTTP/HTTPS
+      - ``httpstream://``
 
 .. note::
 
@@ -75,17 +78,20 @@ Available parameters
 
 Parameters are passed to the following methods of their respective stream implementations:
 
-.. rst-class:: table-custom-layout
+.. list-table::
+    :header-rows: 1
+    :class: table-custom-layout
 
-==================== =======================
-Protocol prefix      Method references
-==================== =======================
-``httpstream://``    - :py:meth:`streamlink.stream.HTTPStream`
-                     - :py:meth:`requests.Session.request`
-``hls://``           - :py:meth:`streamlink.stream.HLSStream.parse_variant_playlist`
-                     - :py:meth:`streamlink.stream.HLSStream`
-                     - :py:meth:`streamlink.stream.MuxedHLSStream`
-                     - :py:meth:`requests.Session.request`
-``dash://``          - :py:meth:`streamlink.stream.DASHStream.parse_manifest`
-                     - :py:meth:`requests.Session.request`
-==================== =======================
+    * - Protocol prefix
+      - Method references
+    * - ``httpstream://``
+      - - :py:meth:`streamlink.stream.HTTPStream`
+        - :py:meth:`requests.Session.request`
+    * - ``hls://``
+      - - :py:meth:`streamlink.stream.HLSStream.parse_variant_playlist`
+        - :py:meth:`streamlink.stream.HLSStream`
+        - :py:meth:`streamlink.stream.MuxedHLSStream`
+        - :py:meth:`requests.Session.request`
+    * - ``dash://``
+      - - :py:meth:`streamlink.stream.DASHStream.parse_manifest`
+        - :py:meth:`requests.Session.request`

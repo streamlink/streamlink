@@ -1,6 +1,7 @@
 import argparse
 import numbers
 import re
+from pathlib import Path
 from string import printable
 from textwrap import dedent
 from typing import Any, Callable, Dict, List, Optional, Tuple
@@ -9,29 +10,17 @@ from streamlink import __version__ as streamlink_version, logger
 from streamlink.session import Streamlink
 from streamlink.utils.args import boolean, comma_list, comma_list_filter, filesize, keyvalue, num
 from streamlink.utils.times import hours_minutes_seconds
-from streamlink_cli.constants import (
-    PLAYER_ARGS_INPUT_DEFAULT,
-    PLAYER_ARGS_INPUT_FALLBACK,
-    STREAM_PASSTHROUGH,
-    SUPPORTED_PLAYERS,
-)
+from streamlink_cli.constants import STREAM_PASSTHROUGH
+from streamlink_cli.output.player import PlayerOutput
 from streamlink_cli.utils import find_default_player
-
-
-_printable_re = re.compile(r"[{0}]".format(printable))
-_option_re = re.compile(r"""
-    (?P<name>[A-z-]+) # A option name, valid characters are A to z and dash.
-    \s*
-    (?P<op>=)? # Separating the option and the value with a equals sign is
-               # common, but optional.
-    \s*
-    (?P<value>.*) # The value, anything goes.
-""", re.VERBOSE)
 
 
 class ArgumentParser(argparse.ArgumentParser):
     # noinspection PyUnresolvedReferences,PyProtectedMember
     NESTED_ARGUMENT_GROUPS: Dict[Optional[argparse._ArgumentGroup], List[argparse._ArgumentGroup]]
+
+    _RE_PRINTABLE = re.compile(fr"[{re.escape(printable)}]")
+    _RE_OPTION = re.compile(r"^(?P<name>[A-Za-z0-9-]+)(?:(?P<op>\s*=\s*|\s+)(?P<value>.*))?$")
 
     def __init__(self, *args, **kwargs):
         self.NESTED_ARGUMENT_GROUPS = {}
@@ -54,21 +43,22 @@ class ArgumentParser(argparse.ArgumentParser):
     def convert_arg_line_to_args(self, line):
         # Strip any non-printable characters that might be in the
         # beginning of the line (e.g. Unicode BOM marker).
-        match = _printable_re.search(line)
+        match = self._RE_PRINTABLE.search(line)
         if not match:
             return
         line = line[match.start():].strip()
 
         # Skip lines that do not start with a valid option (e.g. comments)
-        option = _option_re.match(line)
+        option = self._RE_OPTION.match(line)
         if not option:
             return
 
-        name, value = option.group("name", "value")
-        if name and value:
-            yield f"--{name}={value}"
-        elif name:
-            yield f"--{name}"
+        name, op, value = option.group("name", "op", "value")
+        prefix = self.prefix_chars[0] if len(name) == 1 else self.prefix_chars[0] * 2
+        if value or op:
+            yield f"{prefix}{name}={value}"
+        else:
+            yield f"{prefix}{name}"
 
     def _match_argument(self, action, arg_strings_pattern):
         # - https://github.com/streamlink/streamlink/issues/971
@@ -392,34 +382,21 @@ def build_parser():
     player = parser.add_argument_group("Player options")
     player.add_argument(
         "-p", "--player",
-        metavar="COMMAND",
+        metavar="PATH",
+        type=Path,
         default=find_default_player(),
         help="""
-        Player to feed stream data to. By default, VLC will be used if it can be
-        found in its default location.
+        The player executable that will be launched (unless a different output method was chosen).
 
-        This is a shell-like syntax to support using a specific player:
+        Either set an absolute or relative path to the player executable, or just set the executable's name
+        if it can be resolved from the paths of the system's `PATH` environment variable.
 
-          %(prog)s --player=vlc <url> [stream]
+        In addition to setting the player executable path, custom player arguments can be set via --player-args.
 
-        Absolute or relative paths can also be passed via this option in the
-        event the player's executable can not be resolved:
+        Note: In the past, --player allowed defining additional player arguments, which as a consequence required wrapping
+        player paths that contained spaces in quotation marks. This is unsupported since release `6.0.0`.
 
-          %(prog)s --player=/path/to/vlc <url> [stream]
-          %(prog)s --player=./vlc-player/vlc <url> [stream]
-
-        To use a player that is located in a path with spaces you must quote the
-        parameter or its value:
-
-          %(prog)s "--player=/path/with spaces/vlc" <url> [stream]
-          %(prog)s --player "C:\\path\\with spaces\\mpc-hc64.exe" <url> [stream]
-
-        Options may also be passed to the player. For example:
-
-          %(prog)s --player "vlc --file-caching=5000" <url> [stream]
-
-        As an alternative to this, see the --player-args parameter, which does
-        not log any custom player arguments.
+        Default is VLC player, if available.
         """,
     )
     player.add_argument(
@@ -427,33 +404,27 @@ def build_parser():
         metavar="ARGUMENTS",
         default="",
         help=f"""
-        This option allows you to customize the default arguments which are put
-        together with the value of --player to create a command to execute.
+        This option allows the arguments which are used to launch the player process to be customized.
 
-        It's usually enough to only use --player instead of this unless you need
-        to add arguments after the player's input argument or if you don't want
-        any of the player arguments to be logged.
+        The value can contain formatting variables surrounded by curly braces, `{{` and `}}`.
+        Curly brace characters can be escaped by doubling, e.g. `{{{{` and `}}}}`.
 
-        The value can contain formatting variables surrounded by curly braces,
-        `{{` and `}}`. If you need to include a brace character, it can be escaped
-        by doubling, e.g. `{{{{` and `}}}}`.
+        Available formatting variables:
 
-        Formatting variables available:
+        `{{{PlayerOutput.PLAYER_ARGS_INPUT}}}`
+            This is the input argument that the player will receive. For standard input (stdin),
+            it is `-` (dash), but it can also be a file path or URL, depending on the options used.
+            If unset, then the player input argument will be appended to the parsed player arguments list.
 
-        {{{PLAYER_ARGS_INPUT_DEFAULT}}}
-            This is the input that the player will use. For standard input (stdin),
-            it is `-` (dash), but it can also be a URL, depending on the options used.
-
-        {{{PLAYER_ARGS_INPUT_FALLBACK}}}
-            The old fallback variable name with the same functionality.
+        `{{{PlayerOutput.PLAYER_ARGS_TITLE}}}`
+            The automatically generated player title arguments, if a supported player was found. See --title for more.
+            If unset, automatically generated player title arguments will be prepended to the parsed player arguments list.
 
         Example:
 
-          %(prog)s -p vlc -a "--play-and-exit {{{PLAYER_ARGS_INPUT_DEFAULT}}}" <url> [stream]
+          %(prog)s -p vlc -a "--play-and-exit --no-one-instance" <url> [stream]
 
-        Note: When neither of the variables are found, `{{{PLAYER_ARGS_INPUT_DEFAULT}}}`
-        will be appended to the whole parameter value, to ensure that the player
-        always receives an input argument.
+        Default is "".
         """,
     )
     player.add_argument(
@@ -584,7 +555,7 @@ def build_parser():
 
         Please see the "Metadata variables" section of Streamlink's CLI documentation for all available metadata variables.
 
-        This option is only supported for the following players: {', '.join(sorted(SUPPORTED_PLAYERS.keys()))}
+        This option is only supported for the following players: {', '.join(sorted(PlayerOutput.PLAYERS.keys()))}
 
         VLC specific information:
             VLC does support special formatting variables on its own:
@@ -976,6 +947,24 @@ def build_parser():
         """,
     )
     transport_hls.add_argument(
+        "--hls-segment-queue-threshold",
+        metavar="FACTOR",
+        type=num(float, ge=0),
+        help="""
+        The multiplication factor of the HLS playlist's target duration after which the stream will be stopped early
+        if no new segments were queued after refreshing the playlist (multiple times). The target duration defines the
+        maximum duration a single segment can have, meaning new segments must be available during this time frame,
+        otherwise playback issues can occur.
+
+        The intention of this queue threshold is to be able to stop early when the end of a stream doesn't get
+        announced by the server, so Streamlink doesn't have to wait until a read-timeout occurs. See --stream-timeout.
+
+        Set to ``0`` to disable.
+
+        Default is 3.
+        """,
+    )
+    transport_hls.add_argument(
         "--hls-segment-ignore-names",
         metavar="NAMES",
         type=comma_list,
@@ -1281,6 +1270,85 @@ def build_parser():
         """,
     )
 
+    webbrowser = parser.add_argument_group("Web browser options")
+    webbrowser.add_argument(
+        "--webbrowser",
+        type=boolean,
+        metavar="{yes,true,1,on,no,false,0,off}",
+        default=None,
+        help="""
+        Enable or disable support for Streamlink's webbrowser API.
+
+        Streamlink's webbrowser API allows plugins which implement it to launch a web browser and extract data from websites
+        which they otherwise couldn't do via the regular HTTP session in Python due to specific JavaScript restrictions.
+
+        The web browser is run isolated and in a clean environment without access to regular user data.
+
+        Streamlink currently only supports Chromium-based web browsers using the Chrome Devtools Protocol (CDP).
+        This includes Chromium itself, Google Chrome, Microsoft Edge, Brave, Vivaldi, and others, but full support for
+        third party Chromium forks is not guaranteed. If you encounter any issues, please try Chromium or Google Chrome instead.
+
+        Default is true.
+        """,
+    )
+    webbrowser.add_argument(
+        "--webbrowser-executable",
+        metavar="PATH",
+        help="""
+        Path to the web browser's executable.
+
+        By default, it is looked up automatically according to the rules of the used webbrowser API implementation.
+        This usually involves a list of known executable names and fallback paths on all supported operating systems.
+        """,
+    )
+    webbrowser.add_argument(
+        "--webbrowser-timeout",
+        metavar="TIME",
+        type=num(float, gt=0),
+        help="""
+        The maximum amount of time which the web browser can take to launch and execute.
+        """,
+    )
+    webbrowser.add_argument(
+        "--webbrowser-cdp-host",
+        metavar="HOST",
+        help="""
+        Host for the web browser's inter-process communication interface (CDP specific).
+
+        Default is 127.0.0.1.
+        """,
+    )
+    webbrowser.add_argument(
+        "--webbrowser-cdp-port",
+        metavar="PORT",
+        type=num(int, ge=0, le=65535),
+        help="""
+        Port for the web browser's inter-process communication interface (CDP specific).
+
+        Tries to find a free port by default.
+        """,
+    )
+    webbrowser.add_argument(
+        "--webbrowser-cdp-timeout",
+        metavar="TIME",
+        type=num(float, gt=0),
+        help="""
+        The maximum amount of time for waiting on a single CDP command response.
+        """,
+    )
+    webbrowser.add_argument(
+        "--webbrowser-headless",
+        type=boolean,
+        metavar="{yes,true,1,on,no,false,0,off}",
+        default=None,
+        help="""
+        Whether to launch the web browser in headless mode or not.
+        When enabled, it stays completely hidden and doesn't require a desktop environment to run.
+
+        Default is true.
+        """,
+    )
+
     return parser
 
 
@@ -1328,6 +1396,7 @@ _ARGUMENT_TO_SESSIONOPTION: List[Tuple[str, str, Optional[Callable[[Any], Any]]]
     ("hls_duration", "hls-duration", None),
     ("hls_playlist_reload_attempts", "hls-playlist-reload-attempts", None),
     ("hls_playlist_reload_time", "hls-playlist-reload-time", None),
+    ("hls_segment_queue_threshold", "hls-segment-queue-threshold", None),
     ("hls_segment_stream_data", "hls-segment-stream-data", None),
     ("hls_segment_ignore_names", "hls-segment-ignore-names", None),
     ("hls_segment_key_uri", "hls-segment-key-uri", None),
@@ -1343,6 +1412,15 @@ _ARGUMENT_TO_SESSIONOPTION: List[Tuple[str, str, Optional[Callable[[Any], Any]]]
     ("ffmpeg_audio_transcode", "ffmpeg-audio-transcode", None),
     ("ffmpeg_copyts", "ffmpeg-copyts", None),
     ("ffmpeg_start_at_zero", "ffmpeg-start-at-zero", None),
+
+    # web browser arguments
+    ("webbrowser", "webbrowser", None),
+    ("webbrowser_executable", "webbrowser-executable", None),
+    ("webbrowser_timeout", "webbrowser-timeout", None),
+    ("webbrowser_cdp_host", "webbrowser-cdp-host", None),
+    ("webbrowser_cdp_port", "webbrowser-cdp-port", None),
+    ("webbrowser_cdp_timeout", "webbrowser-cdp-timeout", None),
+    ("webbrowser_headless", "webbrowser-headless", None),
 ]
 
 

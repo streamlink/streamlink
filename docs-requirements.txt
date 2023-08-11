@@ -1,7 +1,13 @@
-sphinx >=5.0.0, <7
-furo ==2023.03.27
-myst-parser >=1.0.0, <2
-sphinx-design >=0.4.1, <1
-versioningit >=2.0.0, <3
+# setup
+versioningit >=2.0.0,<3  # required for reading the version string when building from git
 
+# build
+sphinx >=6.0.0,<8
+
+# themes and extensions
+furo ==2023.07.26
+myst-parser >=1.0.0,<3
+sphinx-design ==0.5.0
+
+# typing
 docutils-stubs

@@ -9,6 +9,7 @@ import freezegun
 import pytest
 import requests.cookies
 
+from streamlink.options import Options
 from streamlink.plugin import (
     HIGH_PRIORITY,
     NORMAL_PRIORITY,
@@ -43,12 +44,6 @@ class CustomConstructorTwoPlugin(FakePlugin):
         super().__init__(session, url)
 
 
-class DeprecatedPlugin(FakePlugin):
-    def __init__(self, url):
-        super().__init__(url)  # type: ignore[call-arg]
-        self.custom_attribute = url.upper()
-
-
 class TestPlugin:
     @pytest.mark.parametrize(("pluginclass", "module", "logger"), [
         (Plugin, "plugin", "streamlink.plugin.plugin"),
@@ -78,34 +73,15 @@ class TestPlugin:
 
         assert mock_load_cookies.call_args_list == [call()]
 
-    def test_constructor_wrapper(self, recwarn: pytest.WarningsRecorder):
-        session = Mock()
-        with patch("streamlink.plugin.plugin.Cache") as mock_cache, \
-             patch.object(DeprecatedPlugin, "load_cookies") as mock_load_cookies:
-            plugin = DeprecatedPlugin(session, "http://localhost")  # type: ignore[call-arg]
+    def test_constructor_options(self):
+        one = FakePlugin(Mock(), "https://mocked", Options({"key": "val"}))
+        two = FakePlugin(Mock(), "https://mocked")
+        assert one.get_option("key") == "val"
+        assert two.get_option("key") is None
 
-        assert isinstance(plugin, DeprecatedPlugin)
-        assert plugin.custom_attribute == "HTTP://LOCALHOST"
-        assert [(record.category, str(record.message), record.filename) for record in recwarn.list] == [
-            (
-                FutureWarning,
-                "Initialized test_plugin plugin with deprecated constructor",
-                __file__,
-            ),
-        ]
-
-        assert plugin.session is session
-        assert plugin.url == "http://localhost"
-
-        assert plugin.module == "test_plugin"
-
-        assert isinstance(plugin.logger, logging.Logger)
-        assert plugin.logger.name == "tests.test_plugin"
-
-        assert mock_cache.call_args_list == [call(filename="plugin-cache.json", key_prefix="test_plugin")]
-        assert plugin.cache == mock_cache()
-
-        assert mock_load_cookies.call_args_list == [call()]
+        one.set_option("key", "other")
+        assert one.get_option("key") == "other"
+        assert two.get_option("key") is None
 
 
 class TestPluginMatcher:
@@ -274,26 +250,28 @@ def test_plugin_metadata(attr):
     assert getter() == "baz qux"
 
 
-# TODO: python 3.7 removal: move this as static method to the TestCookies class
-def _create_cookie_dict(name, value, expires=None):
-    return dict(
-        version=0,
-        name=name,
-        value=value,
-        port=None,
-        domain="test.se",
-        path="/",
-        secure=False,
-        expires=expires,
-        discard=True,
-        comment=None,
-        comment_url=None,
-        rest={"HttpOnly": None},
-        rfc2109=False,
-    )
-
-
 class TestCookies:
+    @staticmethod
+    def create_cookie_dict(name, value, expires=None):
+        return dict(
+            version=0,
+            name=name,
+            value=value,
+            port=None,
+            domain="test.se",
+            path="/",
+            secure=False,
+            expires=expires,
+            discard=True,
+            comment=None,
+            comment_url=None,
+            rest={"HttpOnly": None},
+            rfc2109=False,
+        )
+
+    # TODO: py39 support end: remove explicit dummy context binding of static method
+    _create_cookie_dict = create_cookie_dict.__get__(object)
+
     @pytest.fixture()
     def pluginclass(self):
         class MyPlugin(FakePlugin):
@@ -355,7 +333,7 @@ class TestCookies:
         plugin.save_cookies(lambda cookie: cookie.name == "test-name1", default_expires=3600)
         assert plugincache.set.call_args_list == [call(
             "__cookie:test-name1:test.se:80:/",
-            _create_cookie_dict("test-name1", "test-value1", None),
+            self.create_cookie_dict("test-name1", "test-value1", None),
             3600,
         )]
         assert logger.debug.call_args_list == [call("Saved cookies: test-name1")]
@@ -375,7 +353,7 @@ class TestCookies:
         plugin.save_cookies(default_expires=60)
         assert plugincache.set.call_args_list == [call(
             "__cookie:test-name:test.se:80:/",
-            _create_cookie_dict("test-name", "test-value", 3600),
+            self.create_cookie_dict("test-name", "test-value", 3600),
             3600,
         )]
 

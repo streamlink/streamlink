@@ -1,19 +1,13 @@
 import asyncio
 from collections import deque
 from typing import Iterable, Optional
+from unittest.mock import AsyncMock, Mock, call, patch
 
 import freezegun
 import pytest
 import pytest_asyncio
 
 from streamlink.utils.processoutput import ProcessOutput
-
-
-try:
-    from unittest.mock import AsyncMock, Mock, call, patch  # type: ignore
-except ImportError:
-    # noinspection PyUnresolvedReferences
-    from mock import AsyncMock, Mock, call, patch  # type: ignore
 
 
 class AsyncIterator:
@@ -222,4 +216,24 @@ async def test_onoutput_exception(event_loop: asyncio.BaseEventLoop, processoutp
     assert not processoutput.onexit.called
     assert processoutput.onstdout.call_args_list == [call(0, "foo")]
     assert processoutput.onstderr.call_args_list == []
+    assert mock_process.kill.called
+
+
+@pytest.mark.asyncio()
+async def test_exit_before_onoutput(event_loop: asyncio.BaseEventLoop, processoutput: FakeProcessOutput, mock_process: Mock):
+    # resolve process.wait() in the onexit task immediately
+    mock_process.wait = AsyncMock(return_value=0)
+
+    # add some data to stdout, but don't actually interpret it in onstdout
+    mock_process.stdout.append(b"foo")
+    processoutput.onstdout.return_value = True
+
+    # the result of the `done` future should have already been set by the onoutput task
+    processoutput.onexit.return_value = False
+
+    result = await processoutput._run()
+
+    assert result is True
+    assert processoutput.onexit.called
+    assert processoutput.onstdout.called
     assert mock_process.kill.called

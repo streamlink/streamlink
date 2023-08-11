@@ -1,4 +1,4 @@
-from typing import Any, Callable, FrozenSet, List, Optional, Pattern, Sequence, Set, Tuple, Type, Union
+from typing import Any, Callable, FrozenSet, List, Literal, Optional, Pattern, Sequence, Set, Tuple, Type, Union
 
 
 class SchemaContainer:
@@ -71,8 +71,7 @@ class RegexSchema:
     def __init__(
         self,
         pattern: Pattern,
-        # TODO: change type from str to Literal["search", "match", "fullmatch", "findall", "split", "sub", "subn"]
-        method: str = "search",
+        method: Literal["search", "match", "fullmatch", "findall", "split", "sub", "subn"] = "search",
     ):
         self.pattern = pattern
         self.method = method

@@ -53,38 +53,39 @@ Installation
 Windows
 -------
 
-.. rst-class:: table-custom-layout
+.. list-table::
+    :header-rows: 1
+    :class: table-custom-layout
 
-==================================== ===========================================
-Method                               Installing
-==================================== ===========================================
-Installers                           See the `Windows binaries`_ section below
+    * - Method
+      - Installing
+    * - :octicon:`verified` Installers
+      - See the `Windows binaries`_ section below
+    * - :octicon:`verified` Portable
+      - See the `Windows binaries`_ section below
+    * - :octicon:`verified` Nightly builds
+      - See the `Windows binaries`_ section below
+    * - :octicon:`verified` Python pip
+      - See the `PyPI package and source code`_ section below
+    * - :octicon:`package` `Chocolatey`_
+      - .. code-block:: bat
 
-Portable                             See the `Windows binaries`_ section below
+            choco install streamlink
 
-Nightly builds                       See the `Windows binaries`_ section below
+        `Installing Chocolatey packages`_
+    * - :octicon:`package-dependents` `Scoop`_
+      - .. code-block::
 
-Python pip                           See the `PyPI package and source code`_ section below
+            scoop bucket add extras
+            scoop install streamlink
 
-`Chocolatey`_                        .. code-block:: bat
+        `Installing Scoop packages`_
+    * - :octicon:`package-dependents` `Windows Package Manager`_
+      - .. code-block:: bat
 
-                                        choco install streamlink
+            winget install streamlink
 
-                                     `Installing Chocolatey packages`_
-
-`Scoop`_                             .. code-block::
-
-                                        scoop bucket add extras
-                                        scoop install streamlink
-
-                                     `Installing Scoop packages`_
-
-`Windows Package Manager`_           .. code-block:: bat
-
-                                        winget install streamlink
-
-                                     `Installing Winget packages`_
-==================================== ===========================================
+        `Installing Winget packages`_
 
 .. _Chocolatey: https://chocolatey.org/packages/streamlink
 .. _Scoop: https://scoop.sh/#/apps?q=streamlink&s=0&d=1&o=true
@@ -99,19 +100,20 @@ Python pip                           See the `PyPI package and source code`_ sec
 macOS
 -----
 
-.. rst-class:: table-custom-layout
+.. list-table::
+    :header-rows: 1
+    :class: table-custom-layout
 
-==================================== ===========================================
-Method                               Installing
-==================================== ===========================================
-Python pip                           See the `PyPI package and source code`_ section below
+    * - Method
+      - Installing
+    * - :octicon:`verified` Python pip
+      - See the `PyPI package and source code`_ section below
+    * - :octicon:`package-dependents` `Homebrew`_
+      - .. code-block:: bash
 
-`Homebrew`_                          .. code-block:: bash
+            brew install streamlink
 
-                                        brew install streamlink
-
-                                     `Installing Homebrew packages`_
-==================================== ===========================================
+        `Installing Homebrew packages`_
 
 .. _Homebrew: https://formulae.brew.sh/formula/streamlink
 .. _Installing Homebrew packages: https://brew.sh
@@ -122,77 +124,78 @@ Python pip                           See the `PyPI package and source code`_ sec
 Linux and BSD
 -------------
 
-.. rst-class:: table-custom-layout
+.. list-table::
+    :header-rows: 1
+    :class: table-custom-layout
 
-==================================== ===========================================
-Distribution                         Installing
-==================================== ===========================================
-AppImage                             See the `Linux AppImages`_ section below
+    * - Method / Distribution
+      - Installing
+    * - :octicon:`verified` AppImage
+      - See the `Linux AppImages`_ section below
+    * - :octicon:`verified` AppImage nightly builds
+      - See the `Linux AppImages`_ section below
+    * - :octicon:`verified` Python pip
+      - See the `PyPI package and source code`_ section below
+    * - :octicon:`package-dependents` `Arch Linux`_
+      - .. code-block:: bash
 
-AppImage nightly builds              See the `Linux AppImages`_ section below
+            sudo pacman -S streamlink
+    * - :octicon:`package-dependents` `Arch Linux (aur, git)`_
+      - .. code-block:: bash
 
-Python pip                           See the `PyPI package and source code`_ section below
+            git clone https://aur.archlinux.org/streamlink-git.git
+            cd streamlink-git
+            makepkg -si
 
-`Arch Linux`_                        .. code-block:: bash
+        `Installing AUR packages`_
+    * - :octicon:`package-dependents` `Debian (sid, testing)`_
+      - .. code-block:: bash
 
-                                        sudo pacman -S streamlink
+            sudo apt update
+            sudo apt install streamlink
+    * - :octicon:`package-dependents` `Debian (stable)`_
+      - .. code-block:: bash
 
-`Arch Linux (aur, git)`_             .. code-block:: bash
+            # If you don't have Debian backports already (see link below):
+            echo "deb http://deb.debian.org/debian bullseye-backports main" | sudo tee "/etc/apt/sources.list.d/streamlink.list"
 
-                                        git clone https://aur.archlinux.org/streamlink-git.git
-                                        cd streamlink-git
-                                        makepkg -si
+            sudo apt update
+            sudo apt -t bullseye-backports install streamlink
 
-                                     `Installing AUR packages`_
+        `Installing Debian backported packages`_
+    * - :octicon:`package-dependents` `Fedora`_
+      - .. code-block:: bash
 
-`Debian (sid, testing)`_             .. code-block:: bash
+            sudo dnf install streamlink
+    * - :octicon:`package-dependents` `Gentoo Linux`_
+      - .. code-block:: bash
 
-                                        sudo apt update
-                                        sudo apt install streamlink
+            sudo emerge net-misc/streamlink
+    * - :octicon:`package-dependents` `NetBSD (pkgsrc)`_
+      - .. code-block:: bash
 
-`Debian (stable)`_                   .. code-block:: bash
+            cd /usr/pkgsrc/multimedia/streamlink
+            sudo make install clean
+    * - :octicon:`package-dependents` `NixOS`_
+      - .. code-block:: bash
 
-                                        # If you don't have Debian backports already (see link below):
-                                        echo "deb http://deb.debian.org/debian bullseye-backports main" | sudo tee "/etc/apt/sources.list.d/streamlink.list"
+            nix-env -iA nixos.streamlink
 
-                                        sudo apt update
-                                        sudo apt -t bullseye-backports install streamlink
+        `NixOS channel`_
+    * - :octicon:`package-dependents` `openSUSE`_
+      - .. code-block:: bash
 
-                                     `Installing Debian backported packages`_
+            sudo zypper install streamlink
+    * - :octicon:`package-dependents` `Solus`_
+      - .. code-block:: bash
 
-`Fedora`_                            .. code-block:: bash
+            sudo eopkg install streamlink
+    * - :octicon:`package-dependents` `Void`_
+      - .. code-block:: bash
 
-                                        sudo dnf install streamlink
+            sudo xbps-install streamlink
 
-`Gentoo Linux`_                      .. code-block:: bash
-
-                                        sudo emerge net-misc/streamlink
-
-`NetBSD (pkgsrc)`_                   .. code-block:: bash
-
-                                        cd /usr/pkgsrc/multimedia/streamlink
-                                        sudo make install clean
-
-`NixOS`_                             .. code-block:: bash
-
-                                        nix-env -iA nixos.streamlink
-
-                                     `NixOS channel`_
-
-`openSUSE`_                          .. code-block:: bash
-
-                                        sudo zypper install streamlink
-
-`Solus`_                             .. code-block:: bash
-
-                                        sudo eopkg install streamlink
-
-`Void`_                              .. code-block:: bash
-
-                                        sudo xbps-install streamlink
-==================================== ===========================================
-
-.. _Arch Linux: https://www.archlinux.org/packages/community/any/streamlink/
+.. _Arch Linux: https://archlinux.org/packages/extra/any/streamlink/
 .. _Arch Linux (aur, git): https://aur.archlinux.org/packages/streamlink-git/
 .. _Debian (sid, testing): https://packages.debian.org/unstable/streamlink
 .. _Debian (stable): https://packages.debian.org/unstable/streamlink
@@ -212,25 +215,38 @@ Python pip                           See the `PyPI package and source code`_ sec
 Package maintainers
 -------------------
 
-.. rst-class:: table-custom-layout
+.. list-table::
+    :header-rows: 1
+    :class: table-custom-layout
 
-==================================== ===========================================
-Distribution/Platform                Maintainer
-==================================== ===========================================
-Arch                                 Giancarlo Razzolini <grazzolini at archlinux.org>
-Arch (aur, git)                      Josip Ponjavic <josipponjavic at gmail.com>
-Chocolatey                           Scott Walters <me at scowalt.com>
-Debian                               Alexis Murzeau <amubtdx at gmail.com>
-Fedora                               Mohamed El Morabity <melmorabity at fedoraproject.org>
-Gentoo                               soredake <fdsfgs at krutt.org>
-NetBSD                               Maya Rashish <maya at netbsd.org>
-NixOS                                Tuomas Tynkkynen <tuomas.tynkkynen at iki.fi>
-openSUSE                             Simon Puchert <simonpuchert at alice.de>
-Solus                                Joey Riches <josephriches at gmail.com>
-Void                                 Michal Vasilek <michal at vasilek.cz>
-Windows binaries                     Sebastian Meyer <mail at bastimeyer.de>
-Linux AppImages                      Sebastian Meyer <mail at bastimeyer.de>
-==================================== ===========================================
+    * - Distribution / Platform
+      - Maintainer
+    * - Arch
+      - Giancarlo Razzolini <grazzolini at archlinux.org>
+    * - Arch (aur, git)
+      - Josip Ponjavic <josipponjavic at gmail.com>
+    * - Chocolatey
+      - Scott Walters <me at scowalt.com>
+    * - Debian
+      - Alexis Murzeau <amubtdx at gmail.com>
+    * - Fedora
+      - Mohamed El Morabity <melmorabity at fedoraproject.org>
+    * - Gentoo
+      - soredake <fdsfgs at krutt.org>
+    * - NetBSD
+      - Maya Rashish <maya at netbsd.org>
+    * - NixOS
+      - Tuomas Tynkkynen <tuomas.tynkkynen at iki.fi>
+    * - openSUSE
+      - Simon Puchert <simonpuchert at alice.de>
+    * - Solus
+      - Joey Riches <josephriches at gmail.com>
+    * - Void
+      - Michal Vasilek <michal at vasilek.cz>
+    * - Windows binaries
+      - Sebastian Meyer <mail at bastimeyer.de>
+    * - Linux AppImages
+      - Sebastian Meyer <mail at bastimeyer.de>
 
 
 Package availability
@@ -275,28 +291,30 @@ On some systems, this isn't the case by default and an alternative, like :comman
     needs to be extended. This can be done by adding ``export PATH="${HOME}/.local/bin:${PATH}"``
     to ``~/.profile`` or ``~/.bashrc``.
 
-.. rst-class:: table-custom-layout
+.. list-table::
+    :header-rows: 1
+    :class: table-custom-layout
 
-==================================== ===========================================
-Version                              Installing
-==================================== ===========================================
-`Latest release`_                    .. code-block:: bash
+    * - Version
+      - Installing
+    * - :octicon:`verified` `Latest release`_
+      - .. code-block:: bash
 
-                                         pip install --user -U streamlink
+            pip install --user -U streamlink
+    * - :octicon:`verified` `Master branch`_
+      - .. code-block:: bash
 
-`Master branch`_                     .. code-block:: bash
+            pip install --user -U git+https://github.com/streamlink/streamlink.git
+    * - :octicon:`unverified` `Specific tag/branch/commit`_
+      - .. code-block:: bash
 
-                                         pip install --user -U git+https://github.com/streamlink/streamlink.git
-
-`Specific tag/branch/commit`_        .. code-block:: bash
-
-                                         pip install --user -U git+https://github.com/USERNAME/streamlink.git@REVISION
-==================================== ===========================================
+            pip install --user -U git+https://github.com/USERNAME/streamlink.git@REVISION
 
 .. _pip: https://pip.pypa.io/en/stable/
 .. _Latest release: https://pypi.python.org/pypi/streamlink
 .. _Master branch: https://github.com/streamlink/streamlink/commits/master
 .. _Specific tag/branch/commit: https://pip.pypa.io/en/stable/reference/pip_install/#git
+
 
 Virtual environment
 -------------------
@@ -350,6 +368,7 @@ install it first, either with a system package manager, or using ``pip``, as det
 .. _virtualenv: https://virtualenv.readthedocs.io/en/latest/
 .. _pipx: https://pypa.github.io/pipx/
 
+
 Dependencies
 ------------
 
@@ -358,33 +377,69 @@ To install Streamlink from source you will need these dependencies.
 Since :ref:`4.0.0 <changelog:streamlink 4.0.0 (2022-05-01)>`,
 Streamlink defines a `build system <pyproject.toml_>`__ according to `PEP-517`_ / `PEP-518`_.
 
-.. rst-class:: table-custom-layout table-custom-layout-dependencies
+.. list-table::
+    :header-rows: 1
+    :class: table-custom-layout table-custom-layout-dependencies
 
-========= ========================= ===========================================
-Type      Name                       Notes
-========= ========================= ===========================================
-python    `Python`_                 At least version **3.7**.
+    * - Type
+      - Name
+      - Notes
+    * - python
+      - `Python`_
+      - At least version **3.8**
+    * - build
+      - `setuptools`_
+      - At least version **64.0.0** |br|
+        Used as build backend
+    * - build
+      - `wheel`_
+      - Used by the build frontend for creating Python wheels
+    * - build
+      - `versioningit`_
+      - At least version **2.0.0** |br|
+        Used for generating the version string from git when building, or when running in an editable install
+    * - runtime
+      - `certifi`_
+      - Used for loading the CA bundle extracted from the Mozilla Included CA Certificate List
+    * - runtime
+      - `isodate`_
+      - Used for parsing ISO8601 strings
+    * - runtime
+      - `lxml`_
+      - Used for processing HTML and XML data
+    * - runtime
+      - `pycountry`_
+      - Used for localization settings, provides country and language data
+    * - runtime
+      - `pycryptodome`_
+      - Used for decrypting encrypted streams
+    * - runtime
+      - `PySocks`_
+      - Used for SOCKS Proxies
+    * - runtime
+      - `requests`_
+      - Used for making any kind of HTTP/HTTPS request
+    * - runtime
+      - `trio`_
+      - Used for async concurrency and I/O in some parts of Streamlink
+    * - runtime
+      - `trio-websocket`_
+      - Used for WebSocket connections on top of the async trio framework
+    * - runtime
+      - `typing-extensions`_
+      - Used for backporting runtime support of certain type hints on older Python versions
+    * - runtime
+      - `urllib3`_
+      - Used internally by `requests`_, defined as direct dependency
+    * - runtime
+      - `websocket-client`_
+      - Used for making websocket connections
+    * - optional
+      - `FFmpeg`_
+      - Required for `muxing`_ multiple video/audio/subtitle streams into a single output stream.
 
-build     `setuptools`_             At least version **45.0.0**. |br| Used as build backend.
-build     `wheel`_                  Used by the build frontend for creating Python wheels.
-build     `versioningit`_           At least version **2.0.0**. |br| Used for generating the version string from git
-                                    when building, or when running in an editable install.
-
-runtime   `certifi`_                Used for loading the CA bundle extracted from the Mozilla Included CA Certificate List
-runtime   `isodate`_                Used for parsing ISO8601 strings
-runtime   `lxml`_                   Used for processing HTML and XML data
-runtime   `pycountry`_              Used for localization settings, provides country and language data
-runtime   `pycryptodome`_           Used for decrypting encrypted streams
-runtime   `PySocks`_                Used for SOCKS Proxies
-runtime   `requests`_               Used for making any kind of HTTP/HTTPS request
-runtime   `urllib3`_                Used internally by `requests`_, defined as direct dependency
-runtime   `websocket-client`_       Used for making websocket connections
-
-optional  `FFmpeg`_                 Required for `muxing`_ multiple video/audio/subtitle streams into a single output stream.
-
-                                     - DASH streams with video and audio content always have to get remuxed.
-                                     - HLS streams optionally need to get remuxed depending on the stream selection.
-========= ========================= ===========================================
+        - DASH streams with video and audio content always have to get remuxed.
+        - HLS streams optionally need to get remuxed depending on the stream selection.
 
 .. _pyproject.toml: https://github.com/streamlink/streamlink/blob/master/pyproject.toml
 .. _PEP-517: https://peps.python.org/pep-0517/
@@ -402,6 +457,9 @@ optional  `FFmpeg`_                 Required for `muxing`_ multiple video/audio/
 .. _pycryptodome: https://pycryptodome.readthedocs.io/en/latest/
 .. _PySocks: https://github.com/Anorov/PySocks
 .. _requests: https://requests.readthedocs.io/en/latest/
+.. _trio: https://trio.readthedocs.io/en/stable/
+.. _trio-websocket: https://trio-websocket.readthedocs.io/en/stable/
+.. _typing-extensions: https://typing-extensions.readthedocs.io/en/stable/
 .. _urllib3: https://urllib3.readthedocs.io/en/stable/
 .. _websocket-client: https://pypi.org/project/websocket-client/
 

@@ -1,7 +1,7 @@
-from typing import TYPE_CHECKING
+# ruff: noqa: A001
 
 # noinspection PyPep8Naming,PyShadowingBuiltins
-from streamlink.plugin.api.validate._schemas import (  # noqa: A001
+from streamlink.plugin.api.validate._schemas import (
     AllSchema as all,
     AnySchema as any,
     AttrSchema as attr,
@@ -22,7 +22,7 @@ from streamlink.plugin.api.validate._validate import (
 )
 
 # noinspection PyShadowingBuiltins
-from streamlink.plugin.api.validate._validators import (  # noqa: A001
+from streamlink.plugin.api.validate._validators import (
     validator_contains as contains,
     validator_endswith as endswith,
     validator_filter as filter,
@@ -42,40 +42,3 @@ from streamlink.plugin.api.validate._validators import (  # noqa: A001
     validator_xml_xpath as xml_xpath,
     validator_xml_xpath_string as xml_xpath_string,
 )
-
-
-if TYPE_CHECKING:  # pragma: no cover
-    from typing import Type
-
-    text: Type[str]
-
-
-def _deprecations():
-    import sys
-
-    deprecations = {
-        "text": (str, f"`{__name__}.text` is deprecated. Use `str` instead."),
-    }
-
-    def __getattr__(_attr: str):
-        if _attr in deprecations:
-            import warnings
-
-            from streamlink.exceptions import StreamlinkDeprecationWarning
-
-            val, msg = deprecations[_attr]
-            warnings.warn(msg, StreamlinkDeprecationWarning, stacklevel=2)
-
-            return val
-
-        raise AttributeError
-
-    __all__ = [k for k in globals().keys() if not k.startswith("_")]
-    __all__.extend(deprecations.keys())
-
-    sys.modules[__name__].__getattr__ = __getattr__
-    sys.modules[__name__].__all__ = __all__
-
-
-_deprecations()
-del _deprecations

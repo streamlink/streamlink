@@ -6,15 +6,17 @@ Transport modes
 
 There are three different modes of transporting the stream to the player.
 
-====================== =========================================================
-Name                   Description
-====================== =========================================================
-Standard input pipe    This is the default behaviour when there are no other
-                       options specified.
-Named pipe (FIFO)      Use the :option:`--player-fifo` option to enable.
-HTTP                   Use the :option:`--player-http` or
-                       :option:`--player-continuous-http` options to enable.
-====================== =========================================================
+.. list-table::
+    :header-rows: 1
+
+    * - Name
+      - Description
+    * - Standard input pipe
+      - This is the default behaviour when there are no other options specified.
+    * - Named pipe (FIFO)
+      - Use the :option:`--player-fifo` option to enable.
+    * - HTTP
+      - Use the :option:`--player-http` or :option:`--player-continuous-http` options to enable.
 
 
 Player compatibility
@@ -23,17 +25,41 @@ Player compatibility
 This is a list of video players and their compatibility with the transport
 modes.
 
-===================================================== ========== ========== ====
-Name                                                  Stdin Pipe Named Pipe HTTP
-===================================================== ========== ========== ====
-`Daum Pot Player`_                                    Yes        No         Yes [1]_
-`MPC-HC`_                                             Yes [2]_   No         Yes [1]_
-`MPlayer`_                                            Yes        Yes        Yes
-`mpv`_                                                Yes        Yes        Yes
-`OMXPlayer`_                                          No         Yes        Yes [4]_
-`QuickTime`_                                          No         No         No
-`VLC media player`_                                   Yes [3]_   Yes        Yes
-===================================================== ========== ========== ====
+.. list-table::
+    :header-rows: 1
+
+    * - Name
+      - stdin pipe
+      - named pipe
+      - HTTP
+    * - `Daum Pot Player`_
+      - Yes
+      - No
+      - Yes [1]_
+    * - `MPC-HC`_
+      - Yes [2]_
+      - No
+      - Yes [1]_
+    * - `MPlayer`_
+      - Yes
+      - Yes
+      - Yes
+    * - `mpv`_
+      - Yes
+      - Yes
+      - Yes
+    * - `OMXPlayer`_
+      - No
+      - Yes
+      - Yes [4]_
+    * - `QuickTime`_
+      - No
+      - No
+      - No
+    * - `VLC media player`_
+      - Yes [3]_
+      - Yes
+      - Yes
 
 .. [1] :option:`--player-continuous-http` must be used.
        Using HTTP with players that rely on Windows' codecs to access HTTP

@@ -1,7 +1,4 @@
-import warnings
 from typing import Any, Callable, ClassVar, Dict, Iterator, Mapping, Optional, Sequence, Union
-
-from streamlink.exceptions import StreamlinkDeprecationWarning
 
 
 class Options:
@@ -13,7 +10,10 @@ class Options:
     """
 
     _MAP_GETTERS: ClassVar[Mapping[str, Callable[[Any, str], Any]]] = {}
+    """Optional getter mapping for :class:`Options` subclasses"""
+
     _MAP_SETTERS: ClassVar[Mapping[str, Callable[[Any, str, Any], None]]] = {}
+    """Optional setter mapping for :class:`Options` subclasses"""
 
     def __init__(self, defaults: Optional[Mapping[str, Any]] = None):
         if not defaults:
@@ -32,10 +32,14 @@ class Options:
         return {normalize_key(key): value for key, value in src.items()}
 
     def clear(self) -> None:
+        """Restore default options"""
+
         self.options.clear()
         self.options.update(self.defaults.copy())
 
     def get(self, key: str) -> Any:
+        """Get the stored value of a specific key"""
+
         normalized = self._normalize_key(key)
         method = self._MAP_GETTERS.get(normalized)
         if method is not None:
@@ -44,10 +48,14 @@ class Options:
             return self.options.get(normalized)
 
     def get_explicit(self, key: str) -> Any:
+        """Get the stored value of a specific key and ignore any get-mappings"""
+
         normalized = self._normalize_key(key)
         return self.options.get(normalized)
 
     def set(self, key: str, value: Any) -> None:
+        """Set the value for a specific key"""
+
         normalized = self._normalize_key(key)
         method = self._MAP_SETTERS.get(normalized)
         if method is not None:
@@ -56,10 +64,14 @@ class Options:
             self.options[normalized] = value
 
     def set_explicit(self, key: str, value: Any) -> None:
+        """Set the value for a specific key and ignore any set-mappings"""
+
         normalized = self._normalize_key(key)
         self.options[normalized] = value
 
     def update(self, options: Mapping[str, Any]) -> None:
+        """Merge options"""
+
         for key, value in options.items():
             self.set(key, value)
 
@@ -106,7 +118,6 @@ class Argument:
         sensitive: bool = False,
         argument_name: Optional[str] = None,
         dest: Optional[str] = None,
-        is_global: bool = False,
         **options,
     ):
         """
@@ -117,7 +128,6 @@ class Argument:
         :param sensitive: Whether the argument is sensitive (passwords, etc.) and should be masked
         :param argument_name: Custom CLI argument name without plugin name prefix
         :param dest: Custom plugin option name
-        :param is_global: Whether this plugin argument refers to a global CLI argument (deprecated)
         :param options: Arguments passed to :meth:`ArgumentParser.add_argument()`, excluding ``requires`` and ``dest``
         """
 
@@ -131,15 +141,6 @@ class Argument:
         self.prompt = prompt
         self.sensitive = sensitive
         self._default = options.get("default")
-        self.is_global = is_global
-        if is_global:
-            warnings.warn(
-                "Defining global plugin arguments is deprecated. Use the session options instead.",
-                StreamlinkDeprecationWarning,
-                # set stacklevel to 3 because of the @pluginargument decorator
-                # which is the public interface for defining plugin arguments
-                stacklevel=3,
-            )
 
     @staticmethod
     def _normalize_name(name: str) -> str:
@@ -153,7 +154,7 @@ class Argument:
         return self._argument_name or self._normalize_name(f"{plugin}-{self.name}")
 
     def argument_name(self, plugin):
-        return f"--{self.name if self.is_global else self._name(plugin)}"
+        return f"--{self._name(plugin)}"
 
     def namespace_dest(self, plugin):
         return self._normalize_dest(self._name(plugin))
@@ -180,8 +181,7 @@ class Arguments:
 
     def __iter__(self) -> Iterator[Argument]:
         # iterate in reverse order due to add() being called by multiple pluginargument decorators in reverse order
-        # TODO: Python 3.7 removal: remove list()
-        return reversed(list(self.arguments.values()))
+        return reversed(self.arguments.values())
 
     def add(self, argument: Argument) -> None:
         self.arguments[argument.name] = argument

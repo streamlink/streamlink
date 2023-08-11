@@ -45,11 +45,11 @@ class FilmOnHLS(HLSStream):
     __shortname__ = "hls-filmon"
     __reader__ = FilmOnHLSStreamReader
 
-    def __init__(self, session_, url: str, api: "FilmOnAPI", channel=None, vod_id=None, quality="high", **args):
+    def __init__(self, session, url: str, api: "FilmOnAPI", channel=None, vod_id=None, quality="high", **args):
         if channel is None and vod_id is None:
             raise PluginError("Channel or vod_id must be set")
 
-        super().__init__(session_, url, **args)
+        super().__init__(session, url, **args)
         self.api = api
         self.channel = channel
         self.vod_id = vod_id

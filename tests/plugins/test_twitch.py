@@ -6,7 +6,8 @@ import pytest
 import requests_mock as rm
 
 from streamlink import Streamlink
-from streamlink.exceptions import NoStreamsError
+from streamlink.exceptions import NoStreamsError, PluginError
+from streamlink.options import Options
 from streamlink.plugins.twitch import Twitch, TwitchAPI, TwitchHLSStream, TwitchHLSStreamReader, TwitchHLSStreamWriter
 from tests.mixins.stream_hls import EventedHLSStreamWriter, Playlist, Segment as _Segment, Tag, TestMixinStreamHLS
 from tests.plugins import PluginCanHandleUrl
@@ -119,12 +120,11 @@ def test_stream_weight(requests_mock: rm.Mocker):
 @patch("streamlink.stream.hls.HLSStreamWorker.wait", MagicMock(return_value=True))
 class TestTwitchHLSStream(TestMixinStreamHLS, unittest.TestCase):
     __stream__ = _TwitchHLSStream
+    stream: TwitchHLSStream
 
-    def get_session(self, options=None, disable_ads=False, low_latency=False):
-        session = super().get_session(options)
+    def get_session(self, *args, **kwargs):
+        session = super().get_session(*args, **kwargs)
         session.set_option("hls-live-edge", 4)
-        session.set_plugin_option("twitch", "disable-ads", disable_ads)
-        session.set_plugin_option("twitch", "low-latency", low_latency)
 
         return session
 
@@ -139,7 +139,7 @@ class TestTwitchHLSStream(TestMixinStreamHLS, unittest.TestCase):
 
         thread, segments = self.subject([
             Playlist(0, [daterange, Segment(0), Segment(1)], end=True),
-        ], disable_ads=True, low_latency=False)
+        ], streamoptions={"disable_ads": True, "low_latency": False})
 
         self.await_write(2)
         data = self.await_read(read_all=True)
@@ -157,7 +157,7 @@ class TestTwitchHLSStream(TestMixinStreamHLS, unittest.TestCase):
 
         thread, segments = self.subject([
             Playlist(0, [daterange, Segment(0), Segment(1)], end=True),
-        ], disable_ads=True, low_latency=False)
+        ], streamoptions={"disable_ads": True, "low_latency": False})
 
         self.await_write(2)
         data = self.await_read(read_all=True)
@@ -175,7 +175,7 @@ class TestTwitchHLSStream(TestMixinStreamHLS, unittest.TestCase):
 
         thread, segments = self.subject([
             Playlist(0, [daterange, Segment(0), Segment(1)], end=True),
-        ], disable_ads=True, low_latency=False)
+        ], streamoptions={"disable_ads": True, "low_latency": False})
 
         self.await_write(2)
         data = self.await_read(read_all=True)
@@ -193,7 +193,7 @@ class TestTwitchHLSStream(TestMixinStreamHLS, unittest.TestCase):
 
         thread, segments = self.subject([
             Playlist(0, [daterange, Segment(0), Segment(1)], end=True),
-        ], disable_ads=True, low_latency=False)
+        ], streamoptions={"disable_ads": True, "low_latency": False})
 
         self.await_write(2)
         data = self.await_read(read_all=True)
@@ -207,7 +207,7 @@ class TestTwitchHLSStream(TestMixinStreamHLS, unittest.TestCase):
             Playlist(0, [daterange, Segment(0), Segment(1)]),
             Playlist(2, [daterange, Segment(2), Segment(3)]),
             Playlist(4, [Segment(4), Segment(5)], end=True),
-        ], disable_ads=True, low_latency=False)
+        ], streamoptions={"disable_ads": True, "low_latency": False})
 
         self.await_write(6)
         data = self.await_read(read_all=True)
@@ -225,7 +225,7 @@ class TestTwitchHLSStream(TestMixinStreamHLS, unittest.TestCase):
             Playlist(0, [Segment(0), Segment(1)]),
             Playlist(2, [daterange, Segment(2), Segment(3)]),
             Playlist(4, [Segment(4), Segment(5)], end=True),
-        ], disable_ads=True, low_latency=False)
+        ], streamoptions={"disable_ads": True, "low_latency": False})
 
         self.await_write(6)
         data = self.await_read(read_all=True)
@@ -241,7 +241,7 @@ class TestTwitchHLSStream(TestMixinStreamHLS, unittest.TestCase):
         thread, segments = self.subject([
             Playlist(0, [daterange, Segment(0), Segment(1)]),
             Playlist(2, [Segment(2), Segment(3)], end=True),
-        ], disable_ads=False, low_latency=False)
+        ], streamoptions={"disable_ads": False, "low_latency": False})
 
         self.await_write(4)
         data = self.await_read(read_all=True)
@@ -254,7 +254,7 @@ class TestTwitchHLSStream(TestMixinStreamHLS, unittest.TestCase):
         thread, segments = self.subject([
             Playlist(0, [Segment(0), Segment(1), Segment(2), Segment(3), SegmentPrefetch(4), SegmentPrefetch(5)]),
             Playlist(4, [Segment(4), Segment(5), Segment(6), Segment(7), SegmentPrefetch(8), SegmentPrefetch(9)], end=True),
-        ], disable_ads=False, low_latency=True)
+        ], streamoptions={"disable_ads": False, "low_latency": True})
 
         assert self.session.options.get("hls-live-edge") == 2
         assert self.session.options.get("hls-segment-stream-data")
@@ -273,7 +273,7 @@ class TestTwitchHLSStream(TestMixinStreamHLS, unittest.TestCase):
         thread, segments = self.subject([
             Playlist(0, [Segment(0), Segment(1), Segment(2), Segment(3), SegmentPrefetch(4), SegmentPrefetch(5)]),
             Playlist(4, [Segment(4), Segment(5), Segment(6), Segment(7), SegmentPrefetch(8), SegmentPrefetch(9)], end=True),
-        ], disable_ads=False, low_latency=False)
+        ], streamoptions={"disable_ads": False, "low_latency": False})
 
         assert self.session.options.get("hls-live-edge") == 4
         assert not self.session.options.get("hls-segment-stream-data")
@@ -290,10 +290,10 @@ class TestTwitchHLSStream(TestMixinStreamHLS, unittest.TestCase):
         self.subject([
             Playlist(0, [Segment(0), Segment(1), Segment(2), Segment(3)]),
             Playlist(4, [Segment(4), Segment(5), Segment(6), Segment(7)], end=True),
-        ], disable_ads=False, low_latency=True)
+        ], streamoptions={"disable_ads": False, "low_latency": True})
 
-        assert self.session.get_plugin_option("twitch", "low-latency")
-        assert not self.session.get_plugin_option("twitch", "disable-ads")
+        assert not self.stream.disable_ads
+        assert self.stream.low_latency
 
         self.await_write(6)
         self.await_read(read_all=True)
@@ -308,7 +308,7 @@ class TestTwitchHLSStream(TestMixinStreamHLS, unittest.TestCase):
         thread, segments = self.subject([
             Playlist(0, [daterange, Segment(0), Segment(1), Segment(2), Segment(3)]),
             Playlist(4, [Segment(4), Segment(5), Segment(6), Segment(7), SegmentPrefetch(8), SegmentPrefetch(9)], end=True),
-        ], disable_ads=False, low_latency=True)
+        ], streamoptions={"disable_ads": False, "low_latency": True})
 
         self.await_write(8)
         data = self.await_read(read_all=True)
@@ -323,7 +323,7 @@ class TestTwitchHLSStream(TestMixinStreamHLS, unittest.TestCase):
         self.subject([
             Playlist(0, [daterange, Segment(0), Segment(1), Segment(2), Segment(3)]),
             Playlist(4, [Segment(4), Segment(5), Segment(6), Segment(7), SegmentPrefetch(8), SegmentPrefetch(9)], end=True),
-        ], disable_ads=True, low_latency=True)
+        ], streamoptions={"disable_ads": True, "low_latency": True})
 
         self.await_write(8)
         self.await_read(read_all=True)
@@ -357,7 +357,7 @@ class TestTwitchHLSStream(TestMixinStreamHLS, unittest.TestCase):
             Playlist(5, ads + [Seg(5), Seg(6), Seg(7), Seg(8), Pre(9), Pre(10)]),
             Playlist(6, ads + [Seg(6), Seg(7), Seg(8), Seg(9), Pre(10), Pre(11)]),
             Playlist(7, [Seg(7), Seg(8), Seg(9), Seg(10), Pre(11), Pre(12)], end=True),
-        ], disable_ads=True, low_latency=True)
+        ], streamoptions={"disable_ads": True, "low_latency": True})
 
         self.await_write(11)
         data = self.await_read(read_all=True)
@@ -373,7 +373,7 @@ class TestTwitchHLSStream(TestMixinStreamHLS, unittest.TestCase):
         self.subject([
             Playlist(0, [daterange, Segment(0), Segment(1), Segment(2), Segment(3)]),
             Playlist(4, [Segment(4), Segment(5), Segment(6), Segment(7)], end=True),
-        ], disable_ads=True, low_latency=True)
+        ], streamoptions={"disable_ads": True, "low_latency": True})
 
         self.await_write(6)
         self.await_read(read_all=True)
@@ -388,7 +388,7 @@ class TestTwitchHLSStream(TestMixinStreamHLS, unittest.TestCase):
         Seg, SegPre = Segment, SegmentPrefetch
         self.subject([
             Playlist(0, [Seg(0, duration=5), Seg(1, duration=7), Seg(2, duration=11), SegPre(3)], end=True),
-        ], low_latency=True)
+        ], streamoptions={"low_latency": True})
 
         self.await_write(4)
         self.await_read(read_all=True)
@@ -396,19 +396,25 @@ class TestTwitchHLSStream(TestMixinStreamHLS, unittest.TestCase):
 
 
 class TestTwitchAPIAccessToken:
+    @pytest.fixture(autouse=True)
+    def _client_integrity_token(self, monkeypatch: pytest.MonkeyPatch):
+        mock_client_integrity_token = Mock(return_value=("device-id", "client-integrity-token"))
+        monkeypatch.setattr(Twitch, "_client_integrity_token", mock_client_integrity_token)
+
     @pytest.fixture()
     def plugin(self, request: pytest.FixtureRequest):
         session = Streamlink()
+        options = Options()
         for param in getattr(request, "param", {}):
-            session.set_plugin_option("twitch", *param)
-        yield Twitch(session, "https://twitch.tv/channelname")
-        Twitch.options.clear()
+            options.set(*param)
+
+        return Twitch(session, "https://twitch.tv/channelname", options)
 
     @pytest.fixture()
     def mock(self, request: pytest.FixtureRequest, requests_mock: rm.Mocker):
         mock = requests_mock.post("https://gql.twitch.tv/gql", **getattr(request, "param", {"json": {}}))
         yield mock
-        assert mock.call_count == 1
+        assert mock.call_count > 0
         payload = mock.last_request.json()  # type: ignore[union-attr]
         assert tuple(sorted(payload.keys())) == ("extensions", "operationName", "variables")
         assert payload.get("operationName") == "PlaybackAccessToken"
@@ -479,7 +485,7 @@ class TestTwitchAPIAccessToken:
         ),
     ], indirect=["plugin"])
     def test_plugin_options(self, plugin: Twitch, mock: rm.Mocker, exp_headers: dict, exp_variables: dict):
-        with pytest.raises(NoStreamsError):
+        with pytest.raises(PluginError):
             plugin._access_token(True, "channelname")
         requestheaders = dict(mock.last_request._request.headers)  # type: ignore[union-attr]
         for header in plugin.session.http.headers.keys():
@@ -504,6 +510,7 @@ class TestTwitchAPIAccessToken:
     def test_live_failure(self, plugin: Twitch, mock: rm.Mocker):
         with pytest.raises(NoStreamsError):
             plugin._access_token(True, "channelname")
+        assert len(mock.request_history) == 1, "Only gets the access token once when the channel is offline"
 
     @pytest.mark.usefixtures("_assert_vod")
     @pytest.mark.parametrize("mock", [{
@@ -520,6 +527,7 @@ class TestTwitchAPIAccessToken:
     def test_vod_failure(self, plugin: Twitch, mock: rm.Mocker):
         with pytest.raises(NoStreamsError):
             plugin._access_token(False, "vodid")
+        assert len(mock.request_history) == 1, "Only gets the access token once when the VOD doesn't exist"
 
     @pytest.mark.usefixtures("_assert_live")
     @pytest.mark.parametrize(("plugin", "mock"), [
@@ -531,13 +539,50 @@ class TestTwitchAPIAccessToken:
             },
         ),
     ], indirect=True)
-    def test_auth_failure(self, caplog: pytest.LogCaptureFixture, plugin: Twitch, mock: rm.Mocker):
-        with pytest.raises(NoStreamsError):
+    def test_auth_failure(self, plugin: Twitch, mock: rm.Mocker):
+        with pytest.raises(PluginError, match="^Unauthorized: The \"Authorization\" token is invalid\\.$"):
             plugin._access_token(True, "channelname")
-        assert mock.last_request._request.headers["Authorization"] == "OAuth invalid-token"  # type: ignore[union-attr]
-        assert [(record.levelname, record.module, record.message) for record in caplog.records] == [
-            ("error", "twitch", "Unauthorized: The \"Authorization\" token is invalid."),
-        ]
+        assert len(mock.request_history) == 2, "Always tries again on error, with integrity-token on second attempt"
+
+        headers: dict = mock.request_history[0]._request.headers
+        assert headers["Authorization"] == "OAuth invalid-token"
+        assert "Device-Id" not in headers
+        assert "Client-Integrity" not in headers
+
+        headers = mock.request_history[1]._request.headers
+        assert headers["Authorization"] == "OAuth invalid-token"
+        assert headers["Device-Id"] == "device-id"
+        assert headers["Client-Integrity"] == "client-integrity-token"
+
+    @pytest.mark.usefixtures("_assert_live")
+    @pytest.mark.parametrize(("plugin", "mock"), [
+        (
+            [("api-header", [("Authorization", "OAuth invalid-token")])],
+            {"response_list": [
+                {
+                    "status_code": 401,
+                    "json": {"errors": [{"message": "failed integrity check"}]},
+                },
+                {
+                    "json": {"data": {"streamPlaybackAccessToken": {"value": '{"channel":"foo"}', "signature": "sig"}}},
+                },
+            ]},
+        ),
+    ], indirect=True)
+    def test_failed_integrity_check(self, plugin: Twitch, mock: rm.Mocker):
+        data = plugin._access_token(True, "channelname")
+        assert data == ("sig", '{"channel":"foo"}', [])
+        assert len(mock.request_history) == 2, "Always tries again on error, with integrity-token on second attempt"
+
+        headers: dict = mock.request_history[0]._request.headers
+        assert headers["Authorization"] == "OAuth invalid-token"
+        assert "Device-Id" not in headers
+        assert "Client-Integrity" not in headers
+
+        headers = mock.request_history[1]._request.headers
+        assert headers["Authorization"] == "OAuth invalid-token"
+        assert headers["Device-Id"] == "device-id"
+        assert headers["Client-Integrity"] == "client-integrity-token"
 
 
 class TestTwitchMetadata:

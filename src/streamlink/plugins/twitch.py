@@ -5,26 +5,31 @@ $type live, vod
 $notes See the :ref:`Authentication <cli/plugins/twitch:Authentication>` docs on how to prevent ads.
 $notes Read more about :ref:`embedded ads <cli/plugins/twitch:Embedded ads>` here.
 $notes :ref:`Low latency streaming <cli/plugins/twitch:Low latency streaming>` is supported.
+$notes Acquires a :ref:`client-integrity token <cli/plugins/twitch:Client-integrity token>` on streaming access token failure.
 """
 
 import argparse
+import base64
 import logging
 import re
 import sys
 from datetime import datetime, timedelta
+from json import dumps as json_dumps
 from random import random
-from typing import List, NamedTuple, Optional
+from typing import List, Mapping, NamedTuple, Optional, Tuple
 from urllib.parse import urlparse
 
 from streamlink.exceptions import NoStreamsError, PluginError
 from streamlink.plugin import Plugin, pluginargument, pluginmatcher
 from streamlink.plugin.api import validate
+from streamlink.session import Streamlink
 from streamlink.stream.hls import HLSStream, HLSStreamReader, HLSStreamWorker, HLSStreamWriter
 from streamlink.stream.hls_playlist import M3U8, ByteRange, DateRange, ExtInf, Key, M3U8Parser, Map, load as load_hls_playlist
 from streamlink.stream.http import HTTPStream
 from streamlink.utils.args import keyvalue
 from streamlink.utils.parse import parse_json, parse_qsd
-from streamlink.utils.times import hours_minutes_seconds
+from streamlink.utils.random import CHOICES_ALPHA_NUM, random_token
+from streamlink.utils.times import fromtimestamp, hours_minutes_seconds
 from streamlink.utils.url import update_qsd
 
 
@@ -202,10 +207,10 @@ class TwitchHLSStreamReader(HLSStreamReader):
 class TwitchHLSStream(HLSStream):
     __reader__ = TwitchHLSStreamReader
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, disable_ads: bool = False, low_latency: bool = False, **kwargs):
         super().__init__(*args, **kwargs)
-        self.disable_ads = self.session.get_plugin_option("twitch", "disable-ads")
-        self.low_latency = self.session.get_plugin_option("twitch", "low-latency")
+        self.disable_ads = disable_ads
+        self.low_latency = low_latency
 
 
 class UsherService:
@@ -253,13 +258,13 @@ class UsherService:
 class TwitchAPI:
     CLIENT_ID = "kimne78kx3ncx6brgo4mv6wki5h1ko"
 
-    def __init__(self, session):
+    def __init__(self, session, api_header=None, access_token_param=None):
         self.session = session
         self.headers = {
             "Client-ID": self.CLIENT_ID,
         }
-        self.headers.update(**dict(session.get_plugin_option("twitch", "api-header") or []))
-        self.access_token_params = dict(session.get_plugin_option("twitch", "access-token-param") or [])
+        self.headers.update(**dict(api_header or []))
+        self.access_token_params = dict(access_token_param or [])
         self.access_token_params.setdefault("playerType", "embed")
 
     def call(self, data, schema=None, **kwargs):
@@ -406,7 +411,7 @@ class TwitchAPI:
             ),
         ))
 
-    def access_token(self, is_live, channel_or_vod):
+    def access_token(self, is_live, channel_or_vod, client_integrity: Optional[Tuple[str, str]] = None):
         query = self._gql_persisted_query(
             "PlaybackAccessToken",
             "0828119ded1c13477966434e15800ff57ddacf13ba1911c129dc2200705b0712",
@@ -424,7 +429,11 @@ class TwitchAPI:
             validate.union_get("signature", "value"),
         )
 
-        return self.call(query, acceptable_status=(200, 400, 401, 403), schema=validate.Schema(
+        headers = {}
+        if client_integrity:
+            headers["Device-Id"], headers["Client-Integrity"] = client_integrity
+
+        return self.call(query, acceptable_status=(200, 400, 401, 403), headers=headers, schema=validate.Schema(
             validate.any(
                 validate.all(
                     {"errors": [{"message": str}]},
@@ -450,7 +459,7 @@ class TwitchAPI:
                         ),
                     },
                     validate.get("data"),
-                    validate.transform(lambda data: ("token", *data)),
+                    validate.transform(lambda data: ("token", *data) if data is not None else ("token", None, None)),
                 ),
             ),
         ))
@@ -499,6 +508,117 @@ class TwitchAPI:
             {"data": {"user": {"stream": {"type": str}}}},
             validate.get(("data", "user", "stream")),
         ))
+
+
+class TwitchClientIntegrity:
+    URL_P_SCRIPT = "https://k.twitchcdn.net/149e9513-01fa-4fb0-aad4-566afd725d1b/2d206a39-8ed7-437e-a3be-862e0f06eea3/p.js"
+
+    # language=javascript
+    JS_INTEGRITY_TOKEN = """
+    // noinspection JSIgnoredPromiseFromCall
+    new Promise((resolve, reject) => {
+        function configureKPSDK() {
+            // noinspection JSUnresolvedVariable,JSUnresolvedFunction
+            window.KPSDK.configure([{
+                "protocol": "https:",
+                "method": "POST",
+                "domain": "gql.twitch.tv",
+                "path": "/integrity"
+            }]);
+        }
+
+        async function fetchIntegrity() {
+            // noinspection JSUnresolvedReference
+            const headers = Object.assign(HEADERS, {"x-device-id": "DEVICE_ID"});
+            // window.fetch gets overridden and the patched function needs to be used
+            const resp = await window.fetch("https://gql.twitch.tv/integrity", {
+                "headers": headers,
+                "body": null,
+                "method": "POST",
+                "mode": "cors",
+                "credentials": "omit"
+            });
+
+            if (resp.status !== 200) {
+                throw new Error(`Unexpected integrity response status code ${resp.status}`);
+            }
+
+            return JSON.stringify(await resp.json());
+        }
+
+        document.addEventListener("kpsdk-load", configureKPSDK, {once: true});
+        document.addEventListener("kpsdk-ready", () => fetchIntegrity().then(resolve, reject), {once: true});
+
+        const script = document.createElement("script");
+        script.addEventListener("error", reject);
+        script.src = "SCRIPT_SOURCE";
+        document.body.appendChild(script);
+    });
+    """
+
+    @classmethod
+    def acquire(
+        cls,
+        session: Streamlink,
+        channel: str,
+        headers: Mapping[str, str],
+        device_id: str,
+    ) -> Optional[Tuple[str, int]]:
+        from streamlink.webbrowser.cdp import CDPClient, CDPClientSession, devtools
+        from streamlink.webbrowser.exceptions import WebbrowserError
+
+        url = f"https://www.twitch.tv/{channel}"
+        js_get_integrity_token = cls.JS_INTEGRITY_TOKEN \
+            .replace("SCRIPT_SOURCE", cls.URL_P_SCRIPT) \
+            .replace("HEADERS", json_dumps(headers)) \
+            .replace("DEVICE_ID", device_id)
+        eval_timeout = session.get_option("webbrowser-timeout")
+
+        async def on_main(client_session: CDPClientSession, request: devtools.fetch.RequestPaused):
+            async with client_session.alter_request(request) as cm:
+                cm.body = "<!doctype html>"
+
+        async def acquire_client_integrity_token(client: CDPClient):
+            client_session: CDPClientSession
+            async with client.session() as client_session:
+                client_session.add_request_handler(on_main, url_pattern=url, on_request=True)
+                async with client_session.navigate(url) as frame_id:
+                    await client_session.loaded(frame_id)
+                    return await client_session.evaluate(js_get_integrity_token, timeout=eval_timeout)
+
+        try:
+            client_integrity: Optional[str] = CDPClient.launch(session, acquire_client_integrity_token)
+        except WebbrowserError as err:
+            log.error(f"{type(err).__name__}: {err}")
+            return None
+        if not client_integrity:
+            return None
+
+        token, expiration = parse_json(client_integrity, schema=validate.Schema(
+            {"token": str, "expiration": int},
+            validate.union_get("token", "expiration"),
+        ))
+        is_bad_bot = cls.decode_client_integrity_token(token, schema=validate.Schema(
+            {"is_bad_bot": str},
+            validate.get("is_bad_bot"),
+            validate.transform(lambda val: val.lower() != "false"),
+        ))
+        log.info(f"Is bad bot? {is_bad_bot}")
+        if is_bad_bot:
+            return None
+
+        return token, expiration / 1000
+
+    @staticmethod
+    def decode_client_integrity_token(data: str, schema: Optional[validate.Schema] = None):
+        if not data.startswith("v4.public."):
+            raise PluginError("Invalid client-integrity token format")
+        token = data[len("v4.public."):].replace("-", "+").replace("_", "/")
+        token += "=" * ((4 - (len(token) % 4)) % 4)
+        token = base64.b64decode(token.encode())[:-64].decode()
+        log.debug(f"Client-Integrity token: {token}")
+
+        return parse_json(token, exception=PluginError, schema=schema)
 
 
 @pluginmatcher(re.compile(r"""
@@ -573,7 +693,14 @@ class TwitchAPI:
         Can be repeated to add multiple parameters.
     """,
 )
+@pluginargument(
+    "purge-client-integrity",
+    action="store_true",
+    help="Purge cached Twitch client-integrity token and acquire a new one.",
+)
 class Twitch(Plugin):
+    _CACHE_KEY_CLIENT_INTEGRITY = "client-integrity"
+
     @classmethod
     def stream_weight(cls, stream):
         if stream == "source":
@@ -604,7 +731,11 @@ class Twitch(Plugin):
             self.video_id = match.get("video_id") or match.get("videos_id")
             self.clip_name = match.get("clip_name")
 
-        self.api = TwitchAPI(session=self.session)
+        self.api = TwitchAPI(
+            session=self.session,
+            api_header=self.get_option("api-header"),
+            access_token_param=self.get_option("access-token-param"),
+        )
         self.usher = UsherService(session=self.session)
 
         def method_factory(parent_method):
@@ -634,17 +765,52 @@ class Twitch(Plugin):
         except (PluginError, TypeError):
             pass
 
+    def _client_integrity_token(self, channel: str) -> Optional[Tuple[str, str]]:
+        if self.options.get("purge-client-integrity"):
+            log.info("Removing cached client-integrity token...")
+            self.cache.set(self._CACHE_KEY_CLIENT_INTEGRITY, None, 0)
+
+        client_integrity = self.cache.get(self._CACHE_KEY_CLIENT_INTEGRITY)
+        if client_integrity and isinstance(client_integrity, list) and len(client_integrity) == 2:
+            log.info("Using cached client-integrity token")
+            device_id, token = client_integrity
+        else:
+            log.info("Acquiring new client-integrity token...")
+            device_id = random_token(32, CHOICES_ALPHA_NUM)
+            client_integrity = TwitchClientIntegrity.acquire(
+                self.session,
+                channel,
+                self.api.headers,
+                device_id,
+            )
+            if not client_integrity:
+                log.warning("No client-integrity token acquired")
+                return None
+
+            token, expiration = client_integrity
+            self.cache.set(self._CACHE_KEY_CLIENT_INTEGRITY, [device_id, token], expires_at=fromtimestamp(expiration))
+
+        return device_id, token
+
     def _access_token(self, is_live, channel_or_vod):
-        try:
-            response, *data = self.api.access_token(is_live, channel_or_vod)
+        # try without a client-integrity token first (the web player did the same on 2023-05-31)
+        response, *data = self.api.access_token(is_live, channel_or_vod)
+
+        # try again with a client-integrity token if the API response was erroneous
+        if response != "token":
+            client_integrity = self._client_integrity_token(channel_or_vod) if is_live else None
+            response, *data = self.api.access_token(is_live, channel_or_vod, client_integrity)
+
+            # unknown API response error: abort
             if response != "token":
                 error, message = data
-                log.error(f"{error or 'Error'}: {message or 'Unknown error'}")
-                raise PluginError
-            sig, token = data
-        except (PluginError, TypeError):
-            raise NoStreamsError  # noqa: B904
+                raise PluginError(f"{error or 'Error'}: {message or 'Unknown error'}")
 
+        # access token response was empty: stream is offline or channel doesn't exist
+        if response == "token" and data[0] is None:
+            raise NoStreamsError
+
+        sig, token = data
         try:
             restricted_bitrates = self.api.parse_token(token)
         except PluginError:
@@ -698,7 +864,14 @@ class Twitch(Plugin):
                 time_offset = 0
 
         try:
-            streams = TwitchHLSStream.parse_variant_playlist(self.session, url, start_offset=time_offset, **extra_params)
+            streams = TwitchHLSStream.parse_variant_playlist(
+                self.session,
+                url,
+                start_offset=time_offset,
+                disable_ads=self.get_option("disable-ads"),
+                low_latency=self.get_option("low-latency"),
+                **extra_params,
+            )
         except OSError as err:
             err = str(err)
             if "404 Client Error" in err or "Failed to parse playlist" in err:

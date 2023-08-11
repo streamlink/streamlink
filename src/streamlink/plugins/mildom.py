@@ -22,8 +22,8 @@ class MildomHLSStream(HLSStream):
     __shortname__ = "hls-mildom"
     expiry_time = 60 * 120
 
-    def __init__(self, session_, api, server, token, quality, **args):
-        self.session = session_
+    def __init__(self, session, api, server, token, quality, **args):
+        self.session = session
         self.api = api
         self.server = server
         self.token = token

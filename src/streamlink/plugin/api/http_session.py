@@ -187,7 +187,7 @@ class HTTPSession(Session):
                 if retries >= total_retries:
                     err = exception(f"Unable to open URL: {url} ({rerr})")
                     err.err = rerr
-                    raise err
+                    raise err from None  # TODO: fix this
                 retries += 1
                 # back off retrying, but only to a maximum sleep time
                 delay = min(retry_max_backoff,

@@ -1,5 +1,51 @@
 # Changelog
 
+## streamlink 6.0.1 (2023-08-02)
+
+Patch release:
+
+- Added: missing `options` argument to `Streamlink.streams()` ([#5469](https://github.com/streamlink/streamlink/pull/5469))
+- Fixed: migration docs and the [`6.0.0` changelog](https://streamlink.github.io/changelog.html#streamlink-6-0-0-2023-07-20) of the [`Streamlink.{g,s}et_plugin_option()` removal](https://streamlink.github.io/migrations.html#streamlink-g-s-et-plugin-option) ([#5471](https://github.com/streamlink/streamlink/pull/5471))
+- Fixed plugins: huya ([#5467](https://github.com/streamlink/streamlink/pull/5467))
+- Docs: updated build-dependencies and the furo theme ([#5464](https://github.com/streamlink/streamlink/pull/5464), [#5465](https://github.com/streamlink/streamlink/pull/5465))
+
+[Full changelog](https://github.com/streamlink/streamlink/compare/6.0.0...6.0.1)
+
+
+## streamlink 6.0.0 (2023-07-20)
+
+Breaking changes:
+
+- BREAKING: dropped support for Python 3.7 ([#5302](https://github.com/streamlink/streamlink/pull/5302))
+- BREAKING: [turned `--player` CLI argument into a player-path-only argument](https://streamlink.github.io/migrations.html#player-path-only-player-cli-argument) ([#5305](https://github.com/streamlink/streamlink/issues/5305), [#5310](https://github.com/streamlink/streamlink/pull/5310))  
+  Its value won't be interpreted as a command line string anymore, so paths with whitespace don't require additional quotation. Custom player arguments now always need to be set via `--player-args`.
+- BREAKING: [removed deprecated `{filename}` variable from `--player-args`](https://streamlink.github.io/migrations.html#filename-variable-in-player-args) ([#5310](https://github.com/streamlink/streamlink/pull/5310))
+- BREAKING/API: [removed support for the deprecated `Plugin.can_handle_url()` / `Plugin.priority()` classmethods](https://streamlink.github.io/migrations.html#plugin-can-handle-url-and-plugin-priority) ([#5403](https://github.com/streamlink/streamlink/pull/5403))
+- BREAKING/API: [removed deprecated compatibility wrapper for the `Plugin` constructor](https://streamlink.github.io/migrations.html#plugin-init-self-url-compatibility-wrapper) ([#5402](https://github.com/streamlink/streamlink/pull/5402))
+- BREAKING/API: [removed `Streamlink.{g,s}et_plugin_option()`](https://streamlink.github.io/migrations.html#streamlink-g-s-et-plugin-option) ([#5033](https://github.com/streamlink/streamlink/pull/5033))
+- BREAKING/API: [removed deprecated global plugin arguments](https://streamlink.github.io/migrations.html#global-plugin-arguments) ([#5033](https://github.com/streamlink/streamlink/pull/5033))
+- BREAKING/API: [removed deprecated `streamlink.plugin.api.validate.text`](https://streamlink.github.io/migrations.html#plugin-api-validate-text) ([#5404](https://github.com/streamlink/streamlink/pull/5404))
+- BREAKING/API: [fixed/changed signatures of `HTTPStream`, `HLSStream` and `HLSStream.parse_variant_playlist()`](https://streamlink.github.io/migrations.html#httpstream-and-hlsstream-signature-changes) ([#5429](https://github.com/streamlink/streamlink/pull/5429))
+- BREAKING/packaging: new signing key [`44448A298D5C3618`](https://keyserver.ubuntu.com/pks/lookup?search=44448A298D5C3618&fingerprint=on&op=index) ([#5449](https://github.com/streamlink/streamlink/pull/5449))
+
+Release highlights:
+
+- Added: experimental `streamlink.webbrowser` API for extracting data from websites using the system's Chromium-based web browser ([#5380](https://github.com/streamlink/streamlink/issues/5380), [#5381](https://github.com/streamlink/streamlink/pull/5381), [#5386](https://github.com/streamlink/streamlink/pull/5386), [#5388](https://github.com/streamlink/streamlink/pull/5388), [#5410](https://github.com/streamlink/streamlink/pull/5410))  
+  See the [`--webbrowser`, `--webbrowser-executable` and related CLI arguments](https://streamlink.github.io/cli.html#web-browser-options) for more
+- Added: client-integrity token support to Twitch plugin using the `streamlink.webbrowser` API (currently only used as a fallback when acquiring the access token fails) ([#5414](https://github.com/streamlink/streamlink/pull/5414))
+- Added: `{playertitleargs}` variable to `--player-args` ([#5310](https://github.com/streamlink/streamlink/pull/5310))
+- Added: `with_{video,audio}_only` parameters to `DASHStream.parse_manifest()` ([#5340](https://github.com/streamlink/streamlink/pull/5340))
+- Changed: HLS streams to stop early on missing `EXT-X-ENDLIST` tag when polling the playlist doesn't yield new segments for twice its targetduration value ([#5330](https://github.com/streamlink/streamlink/pull/5330))
+- Fixed: regex of optional protocol plugin parameters ([#5367](https://github.com/streamlink/streamlink/pull/5367))
+- Fixed plugins: lrt ([#5444](https://github.com/streamlink/streamlink/pull/5444)), mediavitrina ([#5376](https://github.com/streamlink/streamlink/pull/5376)), mitele ([#5436](https://github.com/streamlink/streamlink/pull/5436)), NRK ([#5408](https://github.com/streamlink/streamlink/pull/5408)), pluzz ([#5369](https://github.com/streamlink/streamlink/pull/5369)), rtvs ([#5443](https://github.com/streamlink/streamlink/pull/5443)), showroom ([#5390](https://github.com/streamlink/streamlink/pull/5390)), turkuvaz ([#5374](https://github.com/streamlink/streamlink/pull/5374)), vimeo ([#5335](https://github.com/streamlink/streamlink/pull/5335)), youtube ([#5351](https://github.com/streamlink/streamlink/pull/5351))
+- Docs: added migrations page for further guidance on resolving breaking changes ([#5433](https://github.com/streamlink/streamlink/pull/5433))
+- Docs: split up, updated and improved API docs ([#5398](https://github.com/streamlink/streamlink/pull/5398))
+- Build: moved project metadata to pyproject.toml (PEP621) ([#5438](https://github.com/streamlink/streamlink/pull/5438))
+- Dependencies: added `trio` ([#5386](https://github.com/streamlink/streamlink/pull/5386)), `trio-websocket` and `typing-extensions` ([#5388](https://github.com/streamlink/streamlink/pull/5388)), and removed `importlib_metadata` ([#5302](https://github.com/streamlink/streamlink/pull/5302))
+
+[Full changelog](https://github.com/streamlink/streamlink/compare/5.5.1...6.0.0)
+
+
 ## streamlink 5.5.1 (2023-05-08)
 
 Patch release:
