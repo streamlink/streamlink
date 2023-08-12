@@ -152,12 +152,11 @@ class NicoLiveHLSStream(HLSStream):
     "timeshift-offset",
     type=hours_minutes_seconds,
     argument_name="niconico-timeshift-offset",
-    metavar="[HH:]MM:SS",
-    default=None,
+    metavar="[[XX:]XX:]XX | [XXh][XXm][XXs]",
     help="""
         Amount of time to skip from the beginning of a stream.
 
-        Default is 00:00:00.
+        Default is 0.
     """,
 )
 class NicoLive(Plugin):

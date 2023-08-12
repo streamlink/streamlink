@@ -1,5 +1,6 @@
 import re
 from datetime import datetime, timezone, tzinfo
+from typing import Callable, Literal, Union, overload
 
 from isodate import LOCAL, parse_datetime  # type: ignore[import]
 
@@ -23,52 +24,107 @@ def fromlocaltimestamp(timestamp: float) -> datetime:
     return datetime.fromtimestamp(timestamp, tz=LOCAL)
 
 
-_hours_minutes_seconds_re = re.compile(r"""
-    ^-?(?:(?P<hours>\d+):)?(?P<minutes>\d+):(?P<seconds>\d+)$
-""", re.VERBOSE)
+_re_hms_float = re.compile(
+    r"^-?\d+(?:\.\d+)?$",
+)
+_re_hms_s = re.compile(
+    r"""
+        ^
+        -?
+        (?P<seconds>\d+(?:\.\d+)?)
+        s
+        $
+    """,
+    re.VERBOSE | re.IGNORECASE,
+)
+# noinspection RegExpSuspiciousBackref
+_re_hms_ms = re.compile(
+    r"""
+        ^
+        -?
+        (?P<minutes>\d+)
+        (?:(?P<sep>m)|:(?=.))
+        (?:
+            (?P<seconds>[0-5]?[0-9](?:\.\d+)?)
+            (?(sep)s|)
+        )?
+        $
+    """,
+    re.VERBOSE | re.IGNORECASE,
+)
+# noinspection RegExpSuspiciousBackref
+_re_hms_hms = re.compile(
+    r"""
+        ^
+        -?
+        (?P<hours>\d+)
+        (?:(?P<sep>h)|:(?=.))
+        (?:
+            (?P<minutes>[0-5]?[0-9])
+            (?(sep)m|:(?=.))
+        )?
+        (?:
+            (?P<seconds>[0-5]?[0-9](?:\.\d+)?)
+            (?(sep)s|)
+        )?
+        $
+    """,
+    re.VERBOSE | re.IGNORECASE,
+)
 
-_hours_minutes_seconds_2_re = re.compile(r"""^-?
-    (?:
-        (?P<hours>\d+)h
-    )?
-    (?:
-        (?P<minutes>\d+)m
-    )?
-    (?:
-        (?P<seconds>\d+)s
-    )?$
-""", re.VERBOSE | re.IGNORECASE)
+
+@overload
+def _hours_minutes_seconds(as_float: Literal[False]) -> Callable[[str], int]: ...  # pragma: no cover
 
 
-def hours_minutes_seconds(value):
-    """converts a timestamp to seconds
+@overload
+def _hours_minutes_seconds(as_float: Literal[True]) -> Callable[[str], float]: ...  # pragma: no cover
 
-      - hours:minutes:seconds to seconds
-      - minutes:seconds to seconds
-      - 11h22m33s to seconds
-      - 11h to seconds
-      - 20h15m to seconds
-      - seconds to seconds
 
-    :param value: hh:mm:ss ; 00h00m00s ; seconds
-    :return: seconds
+def _hours_minutes_seconds(as_float: bool = True) -> Callable[[str], Union[float, int]]:
     """
-    try:
-        return int(value)
-    except ValueError:
-        pass
+    Convert an optionally negative HMS-timestamp string to seconds, as float or int
 
-    match = (_hours_minutes_seconds_re.match(value)
-             or _hours_minutes_seconds_2_re.match(value))
-    if not match:
-        raise ValueError
+    Accepted formats:
 
-    s = 0
-    s += int(match.group("hours") or "0") * 60 * 60
-    s += int(match.group("minutes") or "0") * 60
-    s += int(match.group("seconds") or "0")
+    - seconds
+    - minutes":"seconds
+    - hours":"minutes":"seconds
+    - seconds"s"
+    - minutes"m"
+    - hours"h"
+    - minutes"m"seconds"s"
+    - hours"h"seconds"s"
+    - hours"h"minutes"m"
+    - hours"h"minutes"m"seconds"s"
+    """
 
-    return s
+    def inner(value: str) -> Union[int, float]:
+        if _re_hms_float.match(value):
+            return float(value) if as_float else int(float(value))
+
+        match = _re_hms_s.match(value) or _re_hms_ms.match(value) or _re_hms_hms.match(value)
+        if not match:
+            raise ValueError
+
+        data = match.groupdict()
+
+        seconds = 0.0
+        seconds += float(data.get("hours") or 0.0) * 3600.0
+        seconds += float(data.get("minutes") or 0.0) * 60.0
+        seconds += float(data.get("seconds") or 0.0)
+
+        res = -seconds if value[0] == "-" else seconds
+
+        return res if as_float else int(res)
+
+    inner.__name__ = "hours_minutes_seconds"
+
+    return inner
+
+
+hours_minutes_seconds = _hours_minutes_seconds(as_float=False)
+hours_minutes_seconds_float = _hours_minutes_seconds(as_float=True)
 
 
 def seconds_to_hhmmss(seconds):
@@ -90,5 +146,6 @@ __all__ = [
     "fromtimestamp",
     "fromlocaltimestamp",
     "hours_minutes_seconds",
+    "hours_minutes_seconds_float",
     "seconds_to_hhmmss",
 ]

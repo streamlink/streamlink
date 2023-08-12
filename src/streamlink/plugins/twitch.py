@@ -29,7 +29,7 @@ from streamlink.stream.http import HTTPStream
 from streamlink.utils.args import keyvalue
 from streamlink.utils.parse import parse_json, parse_qsd
 from streamlink.utils.random import CHOICES_ALPHA_NUM, random_token
-from streamlink.utils.times import fromtimestamp, hours_minutes_seconds
+from streamlink.utils.times import fromtimestamp, hours_minutes_seconds_float
 from streamlink.utils.url import update_qsd
 
 
@@ -859,7 +859,7 @@ class Twitch(Plugin):
         time_offset = self.params.get("t", 0)
         if time_offset:
             try:
-                time_offset = hours_minutes_seconds(time_offset)
+                time_offset = hours_minutes_seconds_float(time_offset)
             except ValueError:
                 time_offset = 0
 
