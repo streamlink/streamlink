@@ -9,7 +9,7 @@ from typing import Any, Callable, Dict, List, Optional, Tuple
 from streamlink import __version__ as streamlink_version, logger
 from streamlink.session import Streamlink
 from streamlink.utils.args import boolean, comma_list, comma_list_filter, filesize, keyvalue, num
-from streamlink.utils.times import hours_minutes_seconds
+from streamlink.utils.times import hours_minutes_seconds_float
 from streamlink_cli.constants import STREAM_PASSTHROUGH
 from streamlink_cli.output.player import PlayerOutput
 from streamlink_cli.utils import find_default_player
@@ -1021,21 +1021,19 @@ def build_parser():
     )
     transport_hls.add_argument(
         "--hls-start-offset",
-        type=hours_minutes_seconds,
-        metavar="[HH:]MM:SS",
-        default=None,
+        type=hours_minutes_seconds_float,
+        metavar="[[XX:]XX:]XX[.XX] | [XXh][XXm][XX[.XX]s]",
         help="""
         Amount of time to skip from the beginning of the stream. For live
         streams, this is a negative offset from the end of the stream (rewind).
 
-        Default is 00:00:00.
+        Default is 0.
         """,
     )
     transport_hls.add_argument(
         "--hls-duration",
-        type=hours_minutes_seconds,
-        metavar="[HH:]MM:SS",
-        default=None,
+        type=hours_minutes_seconds_float,
+        metavar="[[XX:]XX:]XX[.XX] | [XXh][XXm][XX[.XX]s]",
         help="""
         Limit the playback duration, useful for watching segments of a stream.
         The actual duration may be slightly longer, as it is rounded to the
