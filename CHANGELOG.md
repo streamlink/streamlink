@@ -1,5 +1,19 @@
 # Changelog
 
+## streamlink 6.1.0 (2023-08-16)
+
+Release highlights:
+
+- Added: `--hls-segment-queue-threshold` for being able to configure when to stop HLS streams early on missing segments ([#5478](https://github.com/streamlink/streamlink/pull/5478))
+- Fixed: config file parsing issues and made parsing argument values more strict ([#5484](https://github.com/streamlink/streamlink/pull/5484))
+- Fixed: race condition when reading and validating the FFmpeg version string ([#5480](https://github.com/streamlink/streamlink/pull/5480))
+- Fixed plugins: atresplayer ([#5477](https://github.com/streamlink/streamlink/pull/5477))
+- Docs: added code examples for the [removal of `Streamlink.{g,s}et_plugin_option`](https://streamlink.github.io/migrations.html#streamlink-g-s-et-plugin-option) ([#5497](https://github.com/streamlink/streamlink/pull/5497))
+- Build: fixed entry-points config issues with setuptools `68.1.0` ([#5500](https://github.com/streamlink/streamlink/pull/5500))
+
+[Full changelog](https://github.com/streamlink/streamlink/compare/6.0.1...6.1.0)
+
+
 ## streamlink 6.0.1 (2023-08-02)
 
 Patch release:
