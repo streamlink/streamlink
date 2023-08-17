@@ -108,7 +108,7 @@ class SegmentedStreamWriter(AwaitableMixin, Thread):
         if segment is None:
             future = None
         else:
-            future = self.executor.submit(self.fetch, segment, retries=self.retries)
+            future = self.executor.submit(self.fetch, segment)
 
         self.queue(segment, future)
 

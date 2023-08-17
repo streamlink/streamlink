@@ -26,8 +26,8 @@ class DASHStreamWriter(SegmentedStreamWriter):
     reader: "DASHStreamReader"
     stream: "DASHStream"
 
-    def fetch(self, segment: Segment, retries: Optional[int] = None):
-        if self.closed or not retries:
+    def fetch(self, segment: Segment):
+        if self.closed:
             return
 
         name = segment.name
@@ -53,7 +53,7 @@ class DASHStreamWriter(SegmentedStreamWriter):
                 timeout=self.timeout,
                 exception=StreamError,
                 headers=headers,
-                retries=retries,
+                retries=self.retries,
                 **request_args,
             )
         except StreamError as err:
