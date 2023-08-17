@@ -17,7 +17,7 @@ def plugin():
 
     plugin = FakePlugin(Mock(), "https://foo/bar")
     plugin.id = "ID"
-    plugin.author = "AUTHOR"
+    plugin.serial = "AUTHOR"
     plugin.category = "CATEGORY"
     plugin.title = "TITLE"
 
