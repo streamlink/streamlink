@@ -79,7 +79,7 @@ class SegmentedStreamWriter(AwaitableMixin, Thread):
         self.timeout = timeout
         self.threads = threads
         self.executor = CompatThreadPoolExecutor(max_workers=self.threads)
-        self.futures: queue.Queue[Future] = queue.Queue(size)
+        self._queue: queue.Queue[Future] = queue.Queue(size)
 
     def close(self):
         """
@@ -117,18 +117,19 @@ class SegmentedStreamWriter(AwaitableMixin, Thread):
         Puts values into a queue but aborts if this thread is closed.
         """
 
+        item = None if segment is None or future is None else (segment, future, data)
         while not self.closed:  # pragma: no branch
             try:
-                self._futures_put((segment, future, *data))
+                self._queue_put(item)
                 return
             except queue.Full:  # pragma: no cover
                 continue
 
-    def _futures_put(self, item):
-        self.futures.put(item, block=True, timeout=1)
+    def _queue_put(self, item):
+        self._queue.put(item, block=True, timeout=1)
 
-    def _futures_get(self):
-        return self.futures.get(block=True, timeout=0.5)
+    def _queue_get(self):
+        return self._queue.get(block=True, timeout=0.5)
 
     @staticmethod
     def _future_result(future: Future):
@@ -149,14 +150,15 @@ class SegmentedStreamWriter(AwaitableMixin, Thread):
     def run(self):
         while not self.closed:
             try:
-                segment, future, *data = self._futures_get()
+                item = self._queue_get()
             except queue.Empty:  # pragma: no cover
                 continue
 
             # End of stream
-            if future is None:
+            if item is None:
                 break
 
+            segment, future, data = item
             while not self.closed:  # pragma: no branch
                 try:
                     result = self._future_result(future)

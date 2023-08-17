@@ -774,11 +774,11 @@ class TestHlsPlaylistReloadTime(TestMixinStreamHLS, unittest.TestCase):
             return orig_playlist_reload_time(*args, **kwargs)
 
         # immediately kill the writer thread as we don't need it and don't want to wait for its queue polling to end
-        def mocked_futures_get():
-            return None, None
+        def mocked_queue_get():
+            return None
 
         with patch.object(thread.reader.worker, "_playlist_reload_time", side_effect=mocked_playlist_reload_time), \
-             patch.object(thread.reader.writer, "_futures_get", side_effect=mocked_futures_get):
+             patch.object(thread.reader.writer, "_queue_get", side_effect=mocked_queue_get):
             self.start()
 
             if not playlist_reload_time_called.wait(timeout=5):  # pragma: no cover
