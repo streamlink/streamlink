@@ -50,59 +50,10 @@ class AwaitableMixin:
         return not self._wait.wait(time)
 
 
-class SegmentedStreamWorker(AwaitableMixin, Thread):
-    """The general worker thread.
-
-    This thread is responsible for queueing up segments in the
-    writer thread.
-    """
-
-    reader: "SegmentedStreamReader"
-    writer: "SegmentedStreamWriter"
-    stream: "Stream"
-
-    def __init__(self, reader: "SegmentedStreamReader", **kwargs):
-        super().__init__(daemon=True, name=f"Thread-{self.__class__.__name__}")
-        self.closed = False
-        self.reader = reader
-        self.writer = reader.writer
-        self.stream = reader.stream
-        self.session = reader.session
-
-    def close(self):
-        """Shuts down the thread."""
-        if self.closed:  # pragma: no cover
-            return
-
-        log.debug("Closing worker thread")
-
-        self.closed = True
-        self._wait.set()
-
-    def iter_segments(self):
-        """The iterator that generates segments for the worker thread.
-
-        Should be overridden by the inheriting class.
-        """
-        return
-        yield
-
-    def run(self):
-        for segment in self.iter_segments():
-            if self.closed:  # pragma: no cover
-                break
-            self.writer.put(segment)
-
-        # End of stream, tells the writer to exit
-        self.writer.put(None)
-        self.close()
-
-
 class SegmentedStreamWriter(AwaitableMixin, Thread):
-    """The writer thread.
-
-    This thread is responsible for fetching segments, processing them
-    and finally writing the data to the buffer.
+    """
+    The base writer thread.
+    This thread is responsible for fetching segments, processing them and finally writing the data to the buffer.
     """
 
     reader: "SegmentedStreamReader"
@@ -131,7 +82,10 @@ class SegmentedStreamWriter(AwaitableMixin, Thread):
         self.futures: queue.Queue[Future] = queue.Queue(size)
 
     def close(self):
-        """Shuts down the thread, its executor and closes the reader (worker thread and buffer)."""
+        """
+        Shuts down the thread, its executor and closes the reader (worker thread and buffer).
+        """
+
         if self.closed:  # pragma: no cover
             return
 
@@ -144,7 +98,10 @@ class SegmentedStreamWriter(AwaitableMixin, Thread):
         self.executor.shutdown(wait=True, cancel_futures=True)
 
     def put(self, segment):
-        """Adds a segment to the download pool and write queue."""
+        """
+        Adds a segment to the download pool and write queue.
+        """
+
         if self.closed:  # pragma: no cover
             return
 
@@ -156,7 +113,10 @@ class SegmentedStreamWriter(AwaitableMixin, Thread):
         self.queue(segment, future)
 
     def queue(self, segment: Any, future: Optional[Future], *data):
-        """Puts values into a queue but aborts if this thread is closed."""
+        """
+        Puts values into a queue but aborts if this thread is closed.
+        """
+
         while not self.closed:  # pragma: no branch
             try:
                 self._futures_put((segment, future, *data))
@@ -175,14 +135,14 @@ class SegmentedStreamWriter(AwaitableMixin, Thread):
         return future.result(timeout=0.5)
 
     def fetch(self, segment):
-        """Fetches a segment.
-
+        """
+        Fetches a segment.
         Should be overridden by the inheriting class.
         """
 
     def write(self, segment, result, *data):
-        """Writes a segment to the buffer.
-
+        """
+        Writes a segment to the buffer.
         Should be overridden by the inheriting class.
         """
 
@@ -210,6 +170,58 @@ class SegmentedStreamWriter(AwaitableMixin, Thread):
 
                 break
 
+        self.close()
+
+
+class SegmentedStreamWorker(AwaitableMixin, Thread):
+    """
+    The base worker thread.
+    This thread is responsible for queueing up segments in the writer thread.
+    """
+
+    reader: "SegmentedStreamReader"
+    writer: "SegmentedStreamWriter"
+    stream: "Stream"
+
+    def __init__(self, reader: "SegmentedStreamReader", **kwargs):
+        super().__init__(daemon=True, name=f"Thread-{self.__class__.__name__}")
+        self.closed = False
+        self.reader = reader
+        self.writer = reader.writer
+        self.stream = reader.stream
+        self.session = reader.session
+
+    def close(self):
+        """
+        Shuts down the thread.
+        """
+
+        if self.closed:  # pragma: no cover
+            return
+
+        log.debug("Closing worker thread")
+
+        self.closed = True
+        self._wait.set()
+
+    def iter_segments(self):
+        """
+        The iterator that generates segments for the worker thread.
+        Should be overridden by the inheriting class.
+        """
+
+        return
+        # noinspection PyUnreachableCode
+        yield
+
+    def run(self):
+        for segment in self.iter_segments():
+            if self.closed:  # pragma: no cover
+                break
+            self.writer.put(segment)
+
+        # End of stream, tells the writer to exit
+        self.writer.put(None)
         self.close()
 
 
