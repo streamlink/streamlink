@@ -61,23 +61,17 @@ class SegmentedStreamWriter(AwaitableMixin, Thread):
 
     def __init__(self, reader: "SegmentedStreamReader", size=20, retries=None, threads=None, timeout=None):
         super().__init__(daemon=True, name=f"Thread-{self.__class__.__name__}")
+
         self.closed = False
+
         self.reader = reader
         self.stream = reader.stream
         self.session = reader.session
 
-        if not retries:
-            retries = self.session.options.get("stream-segment-attempts")
+        self.retries = retries or self.session.options.get("stream-segment-attempts")
+        self.threads = threads or self.session.options.get("stream-segment-threads")
+        self.timeout = timeout or self.session.options.get("stream-segment-timeout")
 
-        if not threads:
-            threads = self.session.options.get("stream-segment-threads")
-
-        if not timeout:
-            timeout = self.session.options.get("stream-segment-timeout")
-
-        self.retries = retries
-        self.timeout = timeout
-        self.threads = threads
         self.executor = CompatThreadPoolExecutor(max_workers=self.threads)
         self._queue: queue.Queue[Future] = queue.Queue(size)
 
@@ -187,7 +181,9 @@ class SegmentedStreamWorker(AwaitableMixin, Thread):
 
     def __init__(self, reader: "SegmentedStreamReader", **kwargs):
         super().__init__(daemon=True, name=f"Thread-{self.__class__.__name__}")
+
         self.closed = False
+
         self.reader = reader
         self.writer = reader.writer
         self.stream = reader.stream
@@ -237,12 +233,15 @@ class SegmentedStreamReader(StreamIO):
 
     def __init__(self, stream: "Stream"):
         super().__init__()
+
         self.stream = stream
         self.session = stream.session
+
         self.timeout = self.session.options.get("stream-timeout")
 
         buffer_size = self.session.get_option("ringbuffer-size")
         self.buffer = RingBuffer(buffer_size)
+
         self.writer = self.__writer__(self)
         self.worker = self.__worker__(self)
 
