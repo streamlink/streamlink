@@ -5,6 +5,7 @@ import os
 import platform
 import re
 import signal
+import ssl
 import sys
 import warnings
 from contextlib import closing, suppress
@@ -787,6 +788,7 @@ def log_current_versions():
 
     log.debug(f"OS:         {os_version}")
     log.debug(f"Python:     {platform.python_version()}")
+    log.debug(f"OpenSSL:    {ssl.OPENSSL_VERSION}")
     log.debug(f"Streamlink: {streamlink_version}")
 
     # https://peps.python.org/pep-0508/#names
