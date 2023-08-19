@@ -235,11 +235,11 @@ class SegmentedStreamReader(StreamIO):
     writer: "SegmentedStreamWriter"
     stream: "Stream"
 
-    def __init__(self, stream: "Stream", timeout=None):
+    def __init__(self, stream: "Stream"):
         super().__init__()
         self.stream = stream
         self.session = stream.session
-        self.timeout = timeout or self.session.options.get("stream-timeout")
+        self.timeout = self.session.options.get("stream-timeout")
 
         buffer_size = self.session.get_option("ringbuffer-size")
         self.buffer = RingBuffer(buffer_size)

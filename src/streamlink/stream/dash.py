@@ -175,10 +175,8 @@ class DASHStreamReader(SegmentedStreamReader):
         stream: "DASHStream",
         representation: Representation,
         timestamp: datetime,
-        *args,
-        **kwargs,
     ):
-        super().__init__(stream, *args, **kwargs)
+        super().__init__(stream)
         self.ident = representation.ident
         self.mime_type = representation.mimeType
         self.timestamp = timestamp
