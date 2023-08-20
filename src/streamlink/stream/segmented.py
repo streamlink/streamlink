@@ -1,13 +1,21 @@
+from __future__ import annotations
+
 import logging
 import queue
 from concurrent import futures
 from concurrent.futures import Future, ThreadPoolExecutor
 from sys import version_info
 from threading import Event, Thread, current_thread
-from typing import Any, Optional
+from typing import ClassVar, Generator, Generic, Optional, Tuple, Type, TypeVar
 
 from streamlink.buffers import RingBuffer
 from streamlink.stream.stream import Stream, StreamIO
+
+
+try:
+    from typing import TypeAlias  # type: ignore[attr-defined]
+except ImportError:  # pragma: no cover
+    from typing_extensions import TypeAlias
 
 
 log = logging.getLogger(__name__)
@@ -50,16 +58,29 @@ class AwaitableMixin:
         return not self._wait.wait(time)
 
 
-class SegmentedStreamWriter(AwaitableMixin, Thread):
+TSegment = TypeVar("TSegment")
+TResult = TypeVar("TResult")
+TResultFuture: TypeAlias = "Future[Optional[TResult]]"
+TQueueItem: TypeAlias = Optional[Tuple[TSegment, TResultFuture, Tuple]]
+
+
+class SegmentedStreamWriter(AwaitableMixin, Thread, Generic[TSegment, TResult]):
     """
     The base writer thread.
     This thread is responsible for fetching segments, processing them and finally writing the data to the buffer.
     """
 
-    reader: "SegmentedStreamReader"
-    stream: "Stream"
+    reader: SegmentedStreamReader[TSegment, TResult]
+    stream: Stream
 
-    def __init__(self, reader: "SegmentedStreamReader", size=20, retries=None, threads=None, timeout=None):
+    def __init__(
+        self,
+        reader: SegmentedStreamReader,
+        size: int = 20,
+        retries: Optional[int] = None,
+        threads: Optional[int] = None,
+        timeout: Optional[float] = None,
+    ) -> None:
         super().__init__(daemon=True, name=f"Thread-{self.__class__.__name__}")
 
         self.closed = False
@@ -73,9 +94,9 @@ class SegmentedStreamWriter(AwaitableMixin, Thread):
         self.timeout = timeout or self.session.options.get("stream-segment-timeout")
 
         self.executor = CompatThreadPoolExecutor(max_workers=self.threads)
-        self._queue: queue.Queue[Future] = queue.Queue(size)
+        self._queue: queue.Queue[TQueueItem] = queue.Queue(size)
 
-    def close(self):
+    def close(self) -> None:
         """
         Shuts down the thread, its executor and closes the reader (worker thread and buffer).
         """
@@ -91,7 +112,7 @@ class SegmentedStreamWriter(AwaitableMixin, Thread):
         self.reader.close()
         self.executor.shutdown(wait=True, cancel_futures=True)
 
-    def put(self, segment):
+    def put(self, segment: Optional[TSegment]) -> None:
         """
         Adds a segment to the download pool and write queue.
         """
@@ -99,6 +120,7 @@ class SegmentedStreamWriter(AwaitableMixin, Thread):
         if self.closed:  # pragma: no cover
             return
 
+        future: Optional[TResultFuture]
         if segment is None:
             future = None
         else:
@@ -106,7 +128,7 @@ class SegmentedStreamWriter(AwaitableMixin, Thread):
 
         self.queue(segment, future)
 
-    def queue(self, segment: Any, future: Optional[Future], *data):
+    def queue(self, segment: Optional[TSegment], future: Optional[TResultFuture], *data) -> None:
         """
         Puts values into a queue but aborts if this thread is closed.
         """
@@ -119,29 +141,29 @@ class SegmentedStreamWriter(AwaitableMixin, Thread):
             except queue.Full:  # pragma: no cover
                 continue
 
-    def _queue_put(self, item):
+    def _queue_put(self, item: TQueueItem) -> None:
         self._queue.put(item, block=True, timeout=1)
 
-    def _queue_get(self):
+    def _queue_get(self) -> TQueueItem:
         return self._queue.get(block=True, timeout=0.5)
 
     @staticmethod
-    def _future_result(future: Future):
+    def _future_result(future: TResultFuture) -> Optional[TResult]:
         return future.result(timeout=0.5)
 
-    def fetch(self, segment):
+    def fetch(self, segment: TSegment) -> Optional[TResult]:
         """
         Fetches a segment.
         Should be overridden by the inheriting class.
         """
 
-    def write(self, segment, result, *data):
+    def write(self, segment: TSegment, result: TResult, *data) -> None:
         """
         Writes a segment to the buffer.
         Should be overridden by the inheriting class.
         """
 
-    def run(self):
+    def run(self) -> None:
         while not self.closed:
             try:
                 item = self._queue_get()
@@ -169,17 +191,17 @@ class SegmentedStreamWriter(AwaitableMixin, Thread):
         self.close()
 
 
-class SegmentedStreamWorker(AwaitableMixin, Thread):
+class SegmentedStreamWorker(AwaitableMixin, Thread, Generic[TSegment, TResult]):
     """
     The base worker thread.
     This thread is responsible for queueing up segments in the writer thread.
     """
 
-    reader: "SegmentedStreamReader"
-    writer: "SegmentedStreamWriter"
-    stream: "Stream"
+    reader: SegmentedStreamReader[TSegment, TResult]
+    writer: SegmentedStreamWriter[TSegment, TResult]
+    stream: Stream
 
-    def __init__(self, reader: "SegmentedStreamReader", **kwargs):
+    def __init__(self, reader: SegmentedStreamReader, **kwargs) -> None:
         super().__init__(daemon=True, name=f"Thread-{self.__class__.__name__}")
 
         self.closed = False
@@ -189,7 +211,7 @@ class SegmentedStreamWorker(AwaitableMixin, Thread):
         self.stream = reader.stream
         self.session = reader.session
 
-    def close(self):
+    def close(self) -> None:
         """
         Shuts down the thread.
         """
@@ -202,7 +224,7 @@ class SegmentedStreamWorker(AwaitableMixin, Thread):
         self.closed = True
         self._wait.set()
 
-    def iter_segments(self):
+    def iter_segments(self) -> Generator[TSegment, None, None]:
         """
         The iterator that generates segments for the worker thread.
         Should be overridden by the inheriting class.
@@ -212,7 +234,7 @@ class SegmentedStreamWorker(AwaitableMixin, Thread):
         # noinspection PyUnreachableCode
         yield
 
-    def run(self):
+    def run(self) -> None:
         for segment in self.iter_segments():
             if self.closed:  # pragma: no cover
                 break
@@ -223,15 +245,15 @@ class SegmentedStreamWorker(AwaitableMixin, Thread):
         self.close()
 
 
-class SegmentedStreamReader(StreamIO):
-    __worker__ = SegmentedStreamWorker
-    __writer__ = SegmentedStreamWriter
+class SegmentedStreamReader(StreamIO, Generic[TSegment, TResult]):
+    __worker__: ClassVar[Type[SegmentedStreamWorker]] = SegmentedStreamWorker
+    __writer__: ClassVar[Type[SegmentedStreamWriter]] = SegmentedStreamWriter
 
-    worker: "SegmentedStreamWorker"
-    writer: "SegmentedStreamWriter"
-    stream: "Stream"
+    worker: SegmentedStreamWorker[TSegment, TResult]
+    writer: SegmentedStreamWriter[TSegment, TResult]
+    stream: Stream
 
-    def __init__(self, stream: "Stream"):
+    def __init__(self, stream: Stream) -> None:
         super().__init__()
 
         self.stream = stream
@@ -245,11 +267,11 @@ class SegmentedStreamReader(StreamIO):
         self.writer = self.__writer__(self)
         self.worker = self.__worker__(self)
 
-    def open(self):
+    def open(self) -> None:
         self.writer.start()
         self.worker.start()
 
-    def close(self):
+    def close(self) -> None:
         self.worker.close()
         self.writer.close()
         self.buffer.close()
@@ -262,7 +284,7 @@ class SegmentedStreamReader(StreamIO):
 
         super().close()
 
-    def read(self, size):
+    def read(self, size: int) -> bytes:
         return self.buffer.read(
             size,
             block=self.writer.is_alive(),
