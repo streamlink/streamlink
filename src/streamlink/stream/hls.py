@@ -62,7 +62,7 @@ class ByteRangeOffset:
         return bytes_start, self._calc_end(bytes_start, byterange.range)
 
 
-class HLSStreamWriter(SegmentedStreamWriter):
+class HLSStreamWriter(SegmentedStreamWriter[Sequence, Response]):
     WRITE_CHUNK_SIZE = 8192
 
     reader: "HLSStreamReader"
@@ -284,7 +284,7 @@ class HLSStreamWriter(SegmentedStreamWriter):
             log.debug(f"Segment {sequence.num} complete")
 
 
-class HLSStreamWorker(SegmentedStreamWorker):
+class HLSStreamWorker(SegmentedStreamWorker[Sequence, Response]):
     reader: "HLSStreamReader"
     writer: "HLSStreamWriter"
     stream: "HLSStream"
@@ -509,7 +509,7 @@ class HLSStreamWorker(SegmentedStreamWorker):
                     log.warning(f"Failed to reload playlist: {err}")
 
 
-class HLSStreamReader(FilteredStream, SegmentedStreamReader):
+class HLSStreamReader(FilteredStream, SegmentedStreamReader[Sequence, Response]):
     __worker__ = HLSStreamWorker
     __writer__ = HLSStreamWriter
 

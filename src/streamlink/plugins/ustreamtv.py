@@ -337,7 +337,7 @@ class UStreamTVWsClient(WebsocketClient):
     }
 
 
-class UStreamTVStreamWriter(SegmentedStreamWriter):
+class UStreamTVStreamWriter(SegmentedStreamWriter[Segment, Response]):
     reader: "UStreamTVStreamReader"
     stream: "UStreamTVStream"
 
@@ -393,7 +393,7 @@ class UStreamTVStreamWriter(SegmentedStreamWriter):
             log.error(f"Failed to read {self.stream.kind} segment {segment.num}: {err}")
 
 
-class UStreamTVStreamWorker(SegmentedStreamWorker):
+class UStreamTVStreamWorker(SegmentedStreamWorker[Segment, Response]):
     reader: "UStreamTVStreamReader"
     writer: "UStreamTVStreamWriter"
     stream: "UStreamTVStream"
@@ -427,7 +427,7 @@ class UStreamTVStreamWorker(SegmentedStreamWorker):
             self.segment_id = segment.num + 1
 
 
-class UStreamTVStreamReader(SegmentedStreamReader):
+class UStreamTVStreamReader(SegmentedStreamReader[Segment, Response]):
     __worker__ = UStreamTVStreamWorker
     __writer__ = UStreamTVStreamWriter
 
