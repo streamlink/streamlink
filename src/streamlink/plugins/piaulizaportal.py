@@ -6,13 +6,16 @@ $account Purchased tickets are required.
 $notes Tickets purchased at "PIA LIVE STREAM" are used for this platform.
 """
 
+import logging
 import re
 import time
 
-from streamlink.exceptions import FatalPluginError
 from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.api import validate
 from streamlink.stream.hls import HLSStream
+
+
+log = logging.getLogger(__name__)
 
 
 @pluginmatcher(
@@ -30,7 +33,8 @@ class PIAULIZAPortal(Plugin):
 
         expires = self.match.group("expires")
         if expires and int(expires) <= time.time():
-            raise FatalPluginError("The link is expired")
+            log.error("The link is expired")
+            return None
 
         self.title, player_data_url = self.session.http.get(
             self.url,
@@ -46,15 +50,23 @@ class PIAULIZAPortal(Plugin):
                 ),
             ),
         )
+        if not player_data_url:
+            log.error("Player data URL not found")
+            return None
 
         m3u8_url = self.session.http.get(
             player_data_url,
             schema=validate.Schema(
                 re.compile(r"""https://vms-api.p.uliza.jp/v1/prog-index.m3u8[^"]+"""),
-                validate.get(0),
-                validate.url(),
+                validate.none_or_all(
+                    validate.get(0),
+                    validate.url(),
+                ),
             ),
         )
+        if not m3u8_url:
+            log.error("Playlist URL not found")
+            return None
 
         return HLSStream.parse_variant_playlist(self.session, m3u8_url)
 
