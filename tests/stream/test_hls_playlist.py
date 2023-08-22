@@ -13,6 +13,7 @@ from streamlink.stream.hls_playlist import (
     Segment,
     StreamInfo,
     load,
+    parse_tag,
 )
 from tests.resources import text
 
@@ -20,25 +21,36 @@ from tests.resources import text
 UTC = timezone.utc
 
 
-def test_parse_tag_callback_cache():
+def test_parse_tag_mapping():
     class M3U8ParserSubclass(M3U8Parser):
+        @parse_tag("EXT-X-VERSION")
+        def parse_tag_ext_x_version(self):  # pragma: no cover
+            pass
+
+        @parse_tag("FOO-BAR")
         def parse_tag_foo_bar(self):  # pragma: no cover
             pass
 
     parent = M3U8Parser()
     assert hasattr(parent, "_TAGS")
-    assert "EXT-X-VERSION" in parent._TAGS
+    assert parent._TAGS["EXTINF"] is M3U8Parser.parse_tag_extinf
+    assert parent._TAGS["EXT-X-VERSION"] is M3U8Parser.parse_tag_ext_x_version
+    assert "FOO-BAR" not in parent._TAGS
 
     childA = M3U8ParserSubclass()
     assert hasattr(childA, "_TAGS")
-    assert "FOO-BAR" in childA._TAGS
+    assert childA._TAGS["EXTINF"] is M3U8Parser.parse_tag_extinf
+    assert childA._TAGS["EXT-X-VERSION"] is M3U8ParserSubclass.parse_tag_ext_x_version
+    assert childA._TAGS["FOO-BAR"] is M3U8ParserSubclass.parse_tag_foo_bar
+
+    assert parent._TAGS is not childA._TAGS
 
     childB = M3U8ParserSubclass()
     assert hasattr(childB, "_TAGS")
-    assert "FOO-BAR" in childB._TAGS
-
-    assert parent._TAGS is not childA._TAGS
     assert childA._TAGS is childB._TAGS
+
+    assert parent._TAGS["EXT-X-VERSION"].__doc__ is not None
+    assert childA._TAGS["EXT-X-VERSION"].__doc__ is None
 
 
 @pytest.mark.parametrize(("string", "expected"), [

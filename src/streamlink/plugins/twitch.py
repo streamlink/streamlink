@@ -24,7 +24,17 @@ from streamlink.plugin import Plugin, pluginargument, pluginmatcher
 from streamlink.plugin.api import validate
 from streamlink.session import Streamlink
 from streamlink.stream.hls import HLSStream, HLSStreamReader, HLSStreamWorker, HLSStreamWriter
-from streamlink.stream.hls_playlist import M3U8, ByteRange, DateRange, ExtInf, Key, M3U8Parser, Map, load as load_hls_playlist
+from streamlink.stream.hls_playlist import (
+    M3U8,
+    ByteRange,
+    DateRange,
+    ExtInf,
+    Key,
+    M3U8Parser,
+    Map,
+    load as load_hls_playlist,
+    parse_tag,
+)
 from streamlink.stream.http import HTTPStream
 from streamlink.utils.args import keyvalue
 from streamlink.utils.parse import parse_json, parse_qsd
@@ -68,6 +78,7 @@ class TwitchM3U8(M3U8):
 class TwitchM3U8Parser(M3U8Parser):
     m3u8: TwitchM3U8
 
+    @parse_tag("EXT-X-TWITCH-PREFETCH")
     def parse_tag_ext_x_twitch_prefetch(self, value):
         segments = self.m3u8.segments
         if not segments:  # pragma: no cover
@@ -95,6 +106,7 @@ class TwitchM3U8Parser(M3U8Parser):
         )
         segments.append(segment)
 
+    @parse_tag("EXT-X-DATERANGE")
     def parse_tag_ext_x_daterange(self, value):
         super().parse_tag_ext_x_daterange(value)
         daterange = self.m3u8.dateranges[-1]

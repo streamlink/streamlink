@@ -1,4 +1,3 @@
-import inspect
 import logging
 import math
 import re
@@ -11,6 +10,12 @@ from isodate import ISO8601Error, parse_datetime  # type: ignore[import]
 from requests import Response
 
 from streamlink.logger import ALL, StreamlinkLogger
+
+
+try:
+    from typing import Self  # type: ignore[attr-defined]
+except ImportError:  # pragma: no cover
+    from typing_extensions import Self
 
 
 log: StreamlinkLogger = logging.getLogger(__name__)  # type: ignore[assignment]
@@ -154,8 +159,33 @@ class M3U8:
         return daterange.start_date <= date
 
 
-class M3U8Parser:
-    _TAGS: ClassVar[Mapping[str, Callable[["M3U8Parser", str], None]]]
+_symbol_tag_parser = "__PARSE_TAG_NAME"
+
+
+def parse_tag(tag: str):
+    def decorator(func: Callable[[str], None]) -> Callable[[str], None]:
+        setattr(func, _symbol_tag_parser, tag)
+
+        return func
+
+    return decorator
+
+
+class M3U8ParserMeta(type):
+    def __init__(cls, name, bases, namespace, **kwargs):
+        super().__init__(name, bases, namespace, **kwargs)
+
+        tags = dict(**getattr(cls, "_TAGS", {}))
+        for member in namespace.values():
+            tag = getattr(member, _symbol_tag_parser, None)
+            if type(tag) is not str:
+                continue
+            tags[tag] = member
+        cls._TAGS = tags
+
+
+class M3U8Parser(metaclass=M3U8ParserMeta):
+    _TAGS: ClassVar[Mapping[str, Callable[[Self, str], None]]]
 
     _extinf_re = re.compile(r"(?P<duration>\d+(\.\d+)?)(,(?P<title>.+))?")
     _attr_re = re.compile(r"""
@@ -185,20 +215,6 @@ class M3U8Parser:
     def __init__(self, base_uri: Optional[str] = None, m3u8: Type[M3U8] = M3U8):
         self.m3u8: M3U8 = m3u8(base_uri)
         self.state: Dict[str, Any] = {}
-
-        self._add_tag_callbacks()
-
-    def _add_tag_callbacks(self):
-        # ignore previously generated tag-callback mapping on parent classes when initializing subclasses
-        if "_TAGS" in self.__class__.__dict__:
-            return
-        tags = {}
-        self.__class__._TAGS = tags
-        for name, method in inspect.getmembers(self.__class__, inspect.isfunction):
-            if not name.startswith("parse_tag_"):
-                continue
-            tag = name[10:].upper().replace("_", "-")
-            tags[tag] = method
 
     @classmethod
     def create_stream_info(cls, streaminf: Dict[str, Optional[str]], streaminfoclass=None):
@@ -324,6 +340,7 @@ class M3U8Parser:
 
     # 4.3.1: Basic Tags
 
+    @parse_tag("EXT-X-VERSION")
     def parse_tag_ext_x_version(self, value: str) -> None:
         """
         EXT-X-VERSION
@@ -333,6 +350,7 @@ class M3U8Parser:
 
     # 4.3.2: Media Segment Tags
 
+    @parse_tag("EXTINF")
     def parse_tag_extinf(self, value: str) -> None:
         """
         EXTINF
@@ -341,6 +359,7 @@ class M3U8Parser:
         self.state["expect_segment"] = True
         self.state["extinf"] = self.parse_extinf(value)
 
+    @parse_tag("EXT-X-BYTERANGE")
     def parse_tag_ext_x_byterange(self, value: str) -> None:
         """
         EXT-X-BYTERANGE
@@ -350,6 +369,7 @@ class M3U8Parser:
         self.state["byterange"] = self.parse_byterange(value)
 
     # noinspection PyUnusedLocal
+    @parse_tag("EXT-X-DISCONTINUITY")
     def parse_tag_ext_x_discontinuity(self, value: str) -> None:
         """
         EXT-X-DISCONTINUITY
@@ -358,6 +378,7 @@ class M3U8Parser:
         self.state["discontinuity"] = True
         self.state["map"] = None
 
+    @parse_tag("EXT-X-KEY")
     def parse_tag_ext_x_key(self, value: str) -> None:
         """
         EXT-X-KEY
@@ -376,6 +397,7 @@ class M3U8Parser:
             key_format_versions=attr.get("KEYFORMATVERSIONS"),
         )
 
+    @parse_tag("EXT-X-MAP")
     def parse_tag_ext_x_map(self, value: str) -> None:  # version >= 5
         """
         EXT-X-MAP
@@ -391,6 +413,7 @@ class M3U8Parser:
             byterange=byterange,
         )
 
+    @parse_tag("EXT-X-PROGRAM-DATE-TIME")
     def parse_tag_ext_x_program_date_time(self, value: str) -> None:
         """
         EXT-X-PROGRAM-DATE-TIME
@@ -398,6 +421,7 @@ class M3U8Parser:
         """
         self.state["date"] = self.parse_iso8601(value)
 
+    @parse_tag("EXT-X-DATERANGE")
     def parse_tag_ext_x_daterange(self, value: str) -> None:
         """
         EXT-X-DATERANGE
@@ -418,6 +442,7 @@ class M3U8Parser:
 
     # 4.3.3: Media Playlist Tags
 
+    @parse_tag("EXT-X-TARGETDURATION")
     def parse_tag_ext_x_targetduration(self, value: str) -> None:
         """
         EXT-X-TARGETDURATION
@@ -425,6 +450,7 @@ class M3U8Parser:
         """
         self.m3u8.targetduration = float(value)
 
+    @parse_tag("EXT-X-MEDIA-SEQUENCE")
     def parse_tag_ext_x_media_sequence(self, value: str) -> None:
         """
         EXT-X-MEDIA-SEQUENCE
@@ -432,6 +458,7 @@ class M3U8Parser:
         """
         self.m3u8.media_sequence = int(value)
 
+    @parse_tag("EXT-X-DISCONTINUTY-SEQUENCE")
     def parse_tag_ext_x_discontinuity_sequence(self, value: str) -> None:
         """
         EXT-X-DISCONTINUITY-SEQUENCE
@@ -440,6 +467,7 @@ class M3U8Parser:
         self.m3u8.discontinuity_sequence = int(value)
 
     # noinspection PyUnusedLocal
+    @parse_tag("EXT-X-ENDLIST")
     def parse_tag_ext_x_endlist(self, value: str) -> None:
         """
         EXT-X-ENDLIST
@@ -447,6 +475,7 @@ class M3U8Parser:
         """
         self.m3u8.is_endlist = True
 
+    @parse_tag("EXT-X-PLAYLIST-TYPE")
     def parse_tag_ext_x_playlist_type(self, value: str) -> None:
         """
         EXT-X-PLAYLISTTYPE
@@ -455,6 +484,7 @@ class M3U8Parser:
         self.m3u8.playlist_type = value
 
     # noinspection PyUnusedLocal
+    @parse_tag("EXT-X-I-FRAMES-ONLY")
     def parse_tag_ext_x_i_frames_only(self, value: str) -> None:  # version >= 4
         """
         EXT-X-I-FRAMES-ONLY
@@ -464,6 +494,7 @@ class M3U8Parser:
 
     # 4.3.4: Master Playlist Tags
 
+    @parse_tag("EXT-X-MEDIA")
     def parse_tag_ext_x_media(self, value: str) -> None:
         """
         EXT-X-MEDIA
@@ -489,6 +520,7 @@ class M3U8Parser:
         )
         self.m3u8.media.append(media)
 
+    @parse_tag("EXT-X-STREAM-INF")
     def parse_tag_ext_x_stream_inf(self, value: str) -> None:
         """
         EXT-X-STREAM-INF
@@ -497,6 +529,7 @@ class M3U8Parser:
         self.state["streaminf"] = self.parse_attributes(value)
         self.state["expect_playlist"] = True
 
+    @parse_tag("EXT-X-I-FRAME-STREAM-INF")
     def parse_tag_ext_x_i_frame_stream_inf(self, value: str) -> None:
         """
         EXT-X-I-FRAME-STREAM-INF
@@ -516,12 +549,14 @@ class M3U8Parser:
         )
         self.m3u8.playlists.append(playlist)
 
+    @parse_tag("EXT-X-SESSION-DATA")
     def parse_tag_ext_x_session_data(self, value: str) -> None:
         """
         EXT-X-SESSION-DATA
         https://datatracker.ietf.org/doc/html/rfc8216#section-4.3.4.4
         """
 
+    @parse_tag("EXT-X-SESSION-KEY")
     def parse_tag_ext_x_session_key(self, value: str) -> None:
         """
         EXT-X-SESSION-KEY
@@ -530,12 +565,14 @@ class M3U8Parser:
 
     # 4.3.5: Media or Master Playlist Tags
 
+    @parse_tag("EXT-X-INDEPENDENT-SEGMENTS")
     def parse_tag_ext_x_independent_segments(self, value: str) -> None:
         """
         EXT-X-INDEPENDENT-SEGMENTS
         https://datatracker.ietf.org/doc/html/rfc8216#section-4.3.5.1
         """
 
+    @parse_tag("EXT-X-START")
     def parse_tag_ext_x_start(self, value: str) -> None:
         """
         EXT-X-START
@@ -550,6 +587,7 @@ class M3U8Parser:
     # Removed tags
     # https://datatracker.ietf.org/doc/html/rfc8216#section-7
 
+    @parse_tag("EXT-X-ALLOW-CACHE")
     def parse_tag_ext_x_allow_cache(self, value: str) -> None:  # version < 7
         self.m3u8.allow_cache = self.parse_bool(value)
 
