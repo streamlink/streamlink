@@ -25,7 +25,6 @@ _option_line_re = re.compile(r"^(?!\s{2,}%\(prog\)s|\s{2,}--\w[\w-]*\w\b|Example
 _option_re = re.compile(r"(?:^|(?<=\s))(?P<arg>--\w[\w-]*\w)(?P<val>=\w+)?\b")
 _prog_re = re.compile(r"%\(prog\)s")
 _percent_re = re.compile(r"%%")
-_cli_metadata_variables_section_cross_link_re = re.compile(r"the \"Metadata variables\" section")
 _inline_code_block_re = re.compile(r"(?<!`)`([^`]+?)`")
 _example_inline_code_block_re = re.compile(r"(?<=^Example: )(.+)$", re.MULTILINE)
 
@@ -92,9 +91,15 @@ class ArgparseDirective(Directive):
         # fix escaped chars for percent-formatted argparse help strings
         helptext = _percent_re.sub("%", helptext)
 
-        # create cross-link for the "Metadata variables" section
-        helptext = _cli_metadata_variables_section_cross_link_re.sub(
+        # create cross-links for the "Metadata variables" and "Plugins" sections
+        helptext = re.sub(
+            r"the \"Metadata variables\" section",
             "the \":ref:`Metadata variables <cli/metadata:Variables>`\" section",
+            helptext,
+        )
+        helptext = re.sub(
+            r"the \"Plugins\" section",
+            "the \":ref:`Plugins <plugins:Plugins>`\" section",
             helptext,
         )
 
