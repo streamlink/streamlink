@@ -36,6 +36,12 @@ plugintests = [
     if tname.startswith("test_") and tname not in plugintests_ignore
 ]
 
+PLUGIN_TYPES = "live", "vod", "live, vod"
+PLUGIN_METADATA = "id", "author", "category", "title"
+
+re_url = re.compile("^https?://")
+re_metadata = re.compile(rf"^({'|'.join(re.escape(item) for item in PLUGIN_METADATA)})(\s.+)?$")
+
 
 def unique(iterable):
     seen = set()
@@ -102,6 +108,7 @@ class TestPluginMetadata:
             "description",
             "url",
             "type",
+            "metadata",
             "region",
             "account",
             "notes",
@@ -119,6 +126,7 @@ class TestPluginMetadata:
     def metadata_keys_repeat(self):
         return (
             "url",
+            "metadata",
             "notes",
         )
 
@@ -186,9 +194,16 @@ class TestPluginMetadata:
         assert keys == tuple(unique(keys)), "Non-repeatable keys are set at most only once"
 
     def test_key_url(self, metadata_items):
-        assert not any(re.match("^https?://", val) for key, val in metadata_items if key == "url"), \
-            "URL metadata values don't start with http:// or https://"
+        assert not any(re_url.match(val) for key, val in metadata_items if key == "url"), \
+            "$url metadata values don't start with http:// or https://"
 
     def test_key_type(self, metadata_dict):
-        assert metadata_dict.get("type") in ("live", "vod", "live, vod"), \
-            "Type metadata has the correct value"
+        assert metadata_dict.get("type") in PLUGIN_TYPES, \
+            "$type metadata has the correct value"
+
+    def test_key_metadata(self, metadata_items):
+        assert all(re_metadata.match(val) for key, val in metadata_items if key == "metadata"), \
+            "$metadata metadata values have the correct format"
+        indexes = [PLUGIN_METADATA.index(val.split(" ")[0]) for key, val in metadata_items if key == "metadata"]
+        assert [PLUGIN_METADATA[i] for i in indexes] == [PLUGIN_METADATA[i] for i in sorted(indexes)], \
+            "$metadata metadata values are ordered correctly"
