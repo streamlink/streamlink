@@ -52,10 +52,24 @@ class MetadataList(IMetadataItem):
     def generate(self) -> Iterator[str]:
         if not self.value:
             return
+        yield f":{self.title}: - {' '.join(self.get_item(0))}"
         indent = " " * len(f":{self.title}:")
-        yield f":{self.title}: - {self.value[0]}"
-        for val in self.value[1:]:
-            yield f"{indent} - {val}"
+        for idx in range(1, len(self.value)):
+            yield f"{indent} - {' '.join(self.get_item(idx))}"
+
+    def get_item(self, idx: int) -> Iterator[str]:
+        yield self.value[idx]
+
+
+class MetadataMetadataList(MetadataList):
+    def __init__(self):
+        super().__init__("Metadata")
+
+    def get_item(self, idx: int) -> Iterator[str]:
+        variable, *data = str(self.value[idx]).split(" ")
+        yield f":ref:`{variable} <cli/metadata:Variables>`"
+        if data:
+            yield " ".join(["-", *data])
 
 
 class PluginOnGithub(IDatalistItem):
@@ -144,6 +158,7 @@ class PluginMetadata:
             description=MetadataItem("Description"),
             url=MetadataList("URL(s)"),
             type=MetadataItem("Type"),
+            metadata=MetadataMetadataList(),
             region=MetadataItem("Region"),
             account=MetadataItem("Account"),
             notes=MetadataList("Notes"),
