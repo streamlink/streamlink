@@ -1,11 +1,12 @@
 """
-$description Global live streaming and video on-demand hosting platform.
+$description Global live-streaming and video on-demand hosting platform.
 $url ott.streann.com
 $url centroecuador.ec
 $url columnaestilos.com
 $url evtv.online/noticias-de-venezuela
 $url telecuracao.com
 $type live, vod
+$metadata title
 """
 
 import base64

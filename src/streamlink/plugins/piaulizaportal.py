@@ -2,6 +2,8 @@
 $description Japanese live-streaming and video hosting platform owned by PIA Corporation.
 $url ulizaportal.jp
 $type live, vod
+$metadata id
+$metadata title
 $account Purchased tickets are required.
 $notes Tickets purchased at "PIA LIVE STREAM" are used for this platform.
 """

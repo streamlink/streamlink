@@ -2,6 +2,7 @@
 $description America-based television network centred towards business and capital market programming.
 $url bloomberg.com
 $type live, vod
+$metadata title
 """
 
 import logging

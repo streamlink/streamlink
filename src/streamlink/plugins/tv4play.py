@@ -3,6 +3,7 @@ $description Live TV channels and video on-demand service from TV4, a Swedish fr
 $url tv4play.se
 $url fotbollskanalen.se
 $type live, vod
+$metadata title
 $region Sweden
 $notes Only non-premium streams are supported
 """

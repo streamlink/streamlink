@@ -1,7 +1,11 @@
 """
-$description Global video game live streaming and video hosting platform, owned by Tencent.
+$description Global video game live-streaming and video hosting platform, owned by Tencent.
 $url trovo.live
 $type live, vod
+$metadata id
+$metadata author
+$metadata category
+$metadata title
 """
 
 import logging

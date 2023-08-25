@@ -2,6 +2,9 @@
 $description Global live-streaming and video on-demand hosting platform.
 $url dailymotion.com
 $type live, vod
+$metadata id
+$metadata author
+$metadata title
 """
 
 import logging

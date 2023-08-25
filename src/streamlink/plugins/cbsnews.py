@@ -2,6 +2,8 @@
 $description 24-hour live-streaming world news channel, based in the United States of America.
 $url cbsnews.com
 $type live
+$metadata id
+$metadata title
 """
 
 import re

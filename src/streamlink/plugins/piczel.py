@@ -2,6 +2,9 @@
 $description Global live-streaming platform for the creative community.
 $url piczel.tv
 $type live
+$metadata id
+$metadata author
+$metadata title
 """
 
 import re

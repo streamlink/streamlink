@@ -3,6 +3,9 @@ $description Russian live-streaming and video hosting social platform.
 $url vk.com
 $url vk.ru
 $type live, vod
+$metadata id
+$metadata author
+$metadata title
 """
 
 import logging

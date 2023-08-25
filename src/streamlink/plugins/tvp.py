@@ -3,6 +3,8 @@ $description Live TV channels and VODs from TVP, a Polish public, state-owned br
 $url tvp.info
 $url tvp.pl
 $type live, vod
+$metadata id
+$metadata title
 $notes Some VODs may be geo-restricted. Authentication is not supported.
 """
 

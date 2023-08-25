@@ -2,6 +2,9 @@
 $description Live TV channels from SBS, a South Korean public broadcaster.
 $url www.sbs.co.kr/live
 $type live
+$metadata id
+$metadata author
+$metadata title
 $region South Korea
 """
 

@@ -2,6 +2,10 @@
 $description Live TV channels and video on-demand service from the SBA, a Saudi, state-owned broadcaster.
 $url aloula.sa
 $type live, vod
+$metadata id
+$metadata author
+$metadata category
+$metadata title
 """
 
 import logging

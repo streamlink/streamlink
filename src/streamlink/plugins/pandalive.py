@@ -2,6 +2,8 @@
 $description South Korean live-streaming platform for individual live streams.
 $url pandalive.co.kr
 $type live
+$metadata author
+$metadata title
 """
 
 import logging

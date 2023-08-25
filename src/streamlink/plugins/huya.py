@@ -2,6 +2,9 @@
 $description Chinese live-streaming platform for live video game broadcasts and individual live streams.
 $url huya.com
 $type live
+$metadata id
+$metadata author
+$metadata title
 """
 
 import base64

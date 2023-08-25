@@ -2,6 +2,10 @@
 $description Live TV channel and video on-demand service from CMM, a Spanish public, state-owned broadcaster.
 $url cmmedia.es
 $type live, vod
+$metadata id
+$metadata author
+$metadata category
+$metadata title
 $notes Content not licensed for digital distribution is unavailable via the live channel stream.
 """
 
