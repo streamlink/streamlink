@@ -2,6 +2,10 @@
 $description Live TV and video on-demand service owned by Paramount Streaming.
 $url pluto.tv
 $type live, vod
+$metadata id
+$metadata author
+$metadata category
+$metadata title
 """
 
 import logging

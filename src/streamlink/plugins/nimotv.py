@@ -2,6 +2,9 @@
 $description Chinese, global live-streaming platform run by Huya Live.
 $url nimo.tv
 $type live
+$metadata author
+$metadata category
+$metadata title
 """
 
 import logging

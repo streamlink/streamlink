@@ -2,6 +2,7 @@
 $description Global live-streaming and video on-demand hosting platform.
 $url players.brightcove.net
 $type live, vod
+$metadata title
 """
 
 import logging

@@ -2,6 +2,9 @@
 $description British music live-streaming platform for radio shows and DJ mixes.
 $url mixcloud.com
 $type live
+$metadata id
+$metadata author
+$metadata title
 """
 
 import logging

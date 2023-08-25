@@ -1,7 +1,10 @@
 """
-$description Global live streaming and video hosting platform for the creative community.
+$description Global live-streaming and video hosting platform for the creative community.
 $url picarto.tv
 $type live, vod
+$metadata author
+$metadata category
+$metadata title
 """
 
 import logging

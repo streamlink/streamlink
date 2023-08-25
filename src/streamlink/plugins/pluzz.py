@@ -3,6 +3,7 @@ $description Live TV channels and video on-demand service from france.tv, a Fren
 $url france.tv
 $url francetvinfo.fr
 $type live, vod
+$metadata title
 $region France, Andorra, Monaco
 """
 

@@ -11,6 +11,8 @@ $url minikacocuk.com.tr
 $url minikago.com.tr
 $url vavtv.com.tr
 $type live, vod
+$metadata id
+$metadata title
 $region various
 """
 

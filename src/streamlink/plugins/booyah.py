@@ -1,7 +1,10 @@
 """
-$description Global live streaming and video hosting community platform designed for gaming enthusiasts.
+$description Global live-streaming and video hosting community platform designed for gaming enthusiasts.
 $url booyah.live
 $type live, vod
+$metadata author
+$metadata category
+$metadata title
 """
 
 import logging
