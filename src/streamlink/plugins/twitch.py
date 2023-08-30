@@ -95,8 +95,8 @@ class TwitchM3U8Parser(M3U8Parser):
         # Use the last duration for extrapolating the start time of the prefetch segment, which is needed for checking
         # whether it is an ad segment and matches the parsed date ranges or not
         date = last.date + timedelta(seconds=last.duration)
-        # Don't pop() the discontinuity state in prefetch segments (at the bottom of the playlist)
-        discontinuity = self.state.get("discontinuity", False)
+        # Don't reset the discontinuity state in prefetch segments (at the bottom of the playlist)
+        discontinuity = self._discontinuity
         # Always treat prefetch segments after a discontinuity as ad segments
         ad = discontinuity or self._is_segment_ad(date)
         segment = last._replace(
@@ -117,25 +117,36 @@ class TwitchM3U8Parser(M3U8Parser):
         if self._is_daterange_ad(daterange):
             self.m3u8.dateranges_ads.append(daterange)
 
+    # TODO: fix this mess by switching to segment dataclasses with inheritance
     def get_segment(self, uri: str) -> TwitchSegment:  # type: ignore[override]
-        extinf: ExtInf = self.state.pop("extinf", None) or ExtInf(0, None)
-        date = self.state.pop("date", None)
+        extinf: ExtInf = self._extinf or ExtInf(0, None)
+        self._extinf = None
+
+        discontinuity = self._discontinuity
+        self._discontinuity = False
+
+        byterange = self._byterange
+        self._byterange = None
+
+        date = self._date
+        self._date = None
+
         ad = self._is_segment_ad(date, extinf.title)
 
         return TwitchSegment(
             uri=uri,
             duration=extinf.duration,
             title=extinf.title,
-            key=self.state.get("key"),
-            discontinuity=self.state.pop("discontinuity", False),
-            byterange=self.state.pop("byterange", None),
+            key=self._key,
+            discontinuity=discontinuity,
+            byterange=byterange,
             date=date,
-            map=self.state.get("map"),
+            map=self._map,
             ad=ad,
             prefetch=False,
         )
 
-    def _is_segment_ad(self, date: datetime, title: Optional[str] = None) -> bool:
+    def _is_segment_ad(self, date: Optional[datetime], title: Optional[str] = None) -> bool:
         return (
             title is not None and "Amazon" in title
             or any(self.m3u8.is_date_in_daterange(date, daterange) for daterange in self.m3u8.dateranges_ads)

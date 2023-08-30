@@ -3,7 +3,7 @@ import math
 import re
 from binascii import Error as BinasciiError, unhexlify
 from datetime import datetime, timedelta
-from typing import Any, Callable, ClassVar, Dict, Iterator, List, Mapping, NamedTuple, Optional, Tuple, Type, Union
+from typing import Callable, ClassVar, Dict, Iterator, List, Mapping, NamedTuple, Optional, Tuple, Type, Union
 from urllib.parse import urljoin, urlparse
 
 from isodate import ISO8601Error, parse_datetime  # type: ignore[import]
@@ -214,10 +214,20 @@ class M3U8Parser(metaclass=M3U8ParserMeta):
 
     def __init__(self, base_uri: Optional[str] = None, m3u8: Type[M3U8] = M3U8):
         self.m3u8: M3U8 = m3u8(base_uri)
-        self.state: Dict[str, Any] = {}
+
+        self._expect_playlist: bool = False
+        self._streaminf: Optional[Dict[str, str]] = None
+
+        self._expect_segment: bool = False
+        self._extinf: Optional[ExtInf] = None
+        self._byterange: Optional[ByteRange] = None
+        self._discontinuity: bool = False
+        self._map: Optional[Map] = None
+        self._key: Optional[Key] = None
+        self._date: Optional[datetime] = None
 
     @classmethod
-    def create_stream_info(cls, streaminf: Dict[str, Optional[str]], streaminfoclass=None):
+    def create_stream_info(cls, streaminf: Mapping[str, Optional[str]], streaminfoclass=None):
         program_id = streaminf.get("PROGRAM-ID")
 
         _bandwidth = streaminf.get("BANDWIDTH")
@@ -356,8 +366,8 @@ class M3U8Parser(metaclass=M3U8ParserMeta):
         EXTINF
         https://datatracker.ietf.org/doc/html/rfc8216#section-4.3.2.1
         """
-        self.state["expect_segment"] = True
-        self.state["extinf"] = self.parse_extinf(value)
+        self._expect_segment = True
+        self._extinf = self.parse_extinf(value)
 
     @parse_tag("EXT-X-BYTERANGE")
     def parse_tag_ext_x_byterange(self, value: str) -> None:
@@ -365,8 +375,8 @@ class M3U8Parser(metaclass=M3U8ParserMeta):
         EXT-X-BYTERANGE
         https://datatracker.ietf.org/doc/html/rfc8216#section-4.3.2.2
         """
-        self.state["expect_segment"] = True
-        self.state["byterange"] = self.parse_byterange(value)
+        self._expect_segment = True
+        self._byterange = self.parse_byterange(value)
 
     # noinspection PyUnusedLocal
     @parse_tag("EXT-X-DISCONTINUITY")
@@ -375,8 +385,8 @@ class M3U8Parser(metaclass=M3U8ParserMeta):
         EXT-X-DISCONTINUITY
         https://datatracker.ietf.org/doc/html/rfc8216#section-4.3.2.3
         """
-        self.state["discontinuity"] = True
-        self.state["map"] = None
+        self._discontinuity = True
+        self._map = None
 
     @parse_tag("EXT-X-KEY")
     def parse_tag_ext_x_key(self, value: str) -> None:
@@ -387,9 +397,11 @@ class M3U8Parser(metaclass=M3U8ParserMeta):
         attr = self.parse_attributes(value)
         method = attr.get("METHOD")
         uri = attr.get("URI")
+
         if not method:
             return
-        self.state["key"] = Key(
+
+        self._key = Key(
             method=method,
             uri=self.uri(uri) if uri else None,
             iv=self.parse_hex(attr.get("IV")),
@@ -405,10 +417,12 @@ class M3U8Parser(metaclass=M3U8ParserMeta):
         """
         attr = self.parse_attributes(value)
         uri = attr.get("URI")
+
         if not uri:
             return
+
         byterange = self.parse_byterange(attr.get("BYTERANGE", ""))
-        self.state["map"] = Map(
+        self._map = Map(
             uri=self.uri(uri),
             byterange=byterange,
         )
@@ -419,7 +433,7 @@ class M3U8Parser(metaclass=M3U8ParserMeta):
         EXT-X-PROGRAM-DATE-TIME
         https://datatracker.ietf.org/doc/html/rfc8216#section-4.3.2.6
         """
-        self.state["date"] = self.parse_iso8601(value)
+        self._date = self.parse_iso8601(value)
 
     @parse_tag("EXT-X-DATERANGE")
     def parse_tag_ext_x_daterange(self, value: str) -> None:
@@ -505,8 +519,10 @@ class M3U8Parser(metaclass=M3U8ParserMeta):
         uri = attr.get("URI")
         group_id = attr.get("GROUP-ID")
         name = attr.get("NAME")
+
         if not _type or not group_id or not name:
             return
+
         media = Media(
             type=_type,
             uri=self.uri(uri) if uri else None,
@@ -526,8 +542,8 @@ class M3U8Parser(metaclass=M3U8ParserMeta):
         EXT-X-STREAM-INF
         https://datatracker.ietf.org/doc/html/rfc8216#section-4.3.4.2
         """
-        self.state["streaminf"] = self.parse_attributes(value)
-        self.state["expect_playlist"] = True
+        self._expect_playlist = True
+        self._streaminf = self.parse_attributes(value)
 
     @parse_tag("EXT-X-I-FRAME-STREAM-INF")
     def parse_tag_ext_x_i_frame_stream_inf(self, value: str) -> None:
@@ -536,10 +552,14 @@ class M3U8Parser(metaclass=M3U8ParserMeta):
         https://datatracker.ietf.org/doc/html/rfc8216#section-4.3.4.3
         """
         attr = self.parse_attributes(value)
-        streaminf = self.state.pop("streaminf", attr)
         uri = attr.get("URI")
+
+        streaminf = self._streaminf or attr
+        self._streaminf = None
+
         if not uri:
             return
+
         stream_info = self.create_stream_info(streaminf, IFrameStreamInfo)
         playlist = Playlist(
             uri=self.uri(uri),
@@ -599,10 +619,14 @@ class M3U8Parser(metaclass=M3U8ParserMeta):
             if not tag or value is None or tag not in self._TAGS:
                 return
             self._TAGS[tag](self, value)
-        elif self.state.pop("expect_segment", None):
+
+        elif self._expect_segment:
+            self._expect_segment = False
             segment = self.get_segment(self.uri(line))
             self.m3u8.segments.append(segment)
-        elif self.state.pop("expect_playlist", None):
+
+        elif self._expect_playlist:
+            self._expect_playlist = False
             playlist = self.get_playlist(self.uri(line))
             self.m3u8.playlists.append(playlist)
 
@@ -649,21 +673,35 @@ class M3U8Parser(metaclass=M3U8ParserMeta):
             return uri
 
     def get_segment(self, uri: str) -> Segment:
-        extinf: ExtInf = self.state.pop("extinf", None) or ExtInf(0, None)
+        extinf: ExtInf = self._extinf or ExtInf(0, None)
+        self._extinf = None
+
+        discontinuity = self._discontinuity
+        self._discontinuity = False
+
+        byterange = self._byterange
+        self._byterange = None
+
+        date = self._date
+        self._date = None
+
         return Segment(
             uri=uri,
             duration=extinf.duration,
             title=extinf.title,
-            key=self.state.get("key"),
-            discontinuity=self.state.pop("discontinuity", False),
-            byterange=self.state.pop("byterange", None),
-            date=self.state.pop("date", None),
-            map=self.state.get("map"),
+            key=self._key,
+            discontinuity=discontinuity,
+            byterange=byterange,
+            date=date,
+            map=self._map,
         )
 
     def get_playlist(self, uri: str) -> Playlist:
-        streaminf = self.state.pop("streaminf", {})
+        streaminf = self._streaminf or {}
+        self._streaminf = None
+
         stream_info = self.create_stream_info(streaminf)
+
         return Playlist(
             uri=uri,
             stream_info=stream_info,
