@@ -2,6 +2,7 @@ import logging
 import math
 import re
 from binascii import Error as BinasciiError, unhexlify
+from dataclasses import dataclass
 from datetime import datetime, timedelta
 from typing import Callable, ClassVar, Dict, Iterator, List, Mapping, NamedTuple, Optional, Tuple, Type, Union
 from urllib.parse import urljoin, urlparse
@@ -104,14 +105,16 @@ class IFrameStreamInfo(NamedTuple):
     video: Optional[str]
 
 
-class Playlist(NamedTuple):
+@dataclass
+class Playlist:
     uri: str
     stream_info: Union[StreamInfo, IFrameStreamInfo]
     media: List[Media]
     is_iframe: bool
 
 
-class Segment(NamedTuple):
+@dataclass
+class Segment:
     uri: str
     duration: float
     title: Optional[str]
