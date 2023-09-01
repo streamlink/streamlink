@@ -18,6 +18,7 @@ import logging
 import re
 import sys
 from contextlib import suppress
+from dataclasses import asdict as dataclass_asdict, dataclass, replace as dataclass_replace
 from datetime import datetime, timedelta
 from json import dumps as json_dumps
 from random import random
@@ -31,17 +32,7 @@ from streamlink.plugin import Plugin, pluginargument, pluginmatcher
 from streamlink.plugin.api import validate
 from streamlink.session import Streamlink
 from streamlink.stream.hls import HLSStream, HLSStreamReader, HLSStreamWorker, HLSStreamWriter
-from streamlink.stream.hls_playlist import (
-    M3U8,
-    ByteRange,
-    DateRange,
-    ExtInf,
-    Key,
-    M3U8Parser,
-    Map,
-    load as load_hls_playlist,
-    parse_tag,
-)
+from streamlink.stream.hls_playlist import M3U8, DateRange, M3U8Parser, Segment, load as load_hls_playlist, parse_tag
 from streamlink.stream.http import HTTPStream
 from streamlink.utils.args import keyvalue
 from streamlink.utils.parse import parse_json, parse_qsd
@@ -55,15 +46,8 @@ log = logging.getLogger(__name__)
 LOW_LATENCY_MAX_LIVE_EDGE = 2
 
 
-class TwitchSegment(NamedTuple):
-    uri: str
-    duration: float
-    title: Optional[str]
-    key: Optional[Key]
-    discontinuity: bool
-    byterange: Optional[ByteRange]
-    date: Optional[datetime]
-    map: Optional[Map]
+@dataclass
+class TwitchSegment(Segment):
     ad: bool
     prefetch: bool
 
@@ -98,15 +82,13 @@ class TwitchM3U8Parser(M3U8Parser):
         # Use the last duration for extrapolating the start time of the prefetch segment, which is needed for checking
         # whether it is an ad segment and matches the parsed date ranges or not
         date = last.date + timedelta(seconds=last.duration)
-        # Don't reset the discontinuity state in prefetch segments (at the bottom of the playlist)
-        discontinuity = self._discontinuity
         # Always treat prefetch segments after a discontinuity as ad segments
-        ad = discontinuity or self._is_segment_ad(date)
-        segment = last._replace(
+        ad = self._discontinuity or self._is_segment_ad(date)
+        segment = dataclass_replace(
+            last,
             uri=self.uri(value),
             duration=duration,
             title=None,
-            discontinuity=discontinuity,
             date=date,
             ad=ad,
             prefetch=True,
@@ -120,34 +102,13 @@ class TwitchM3U8Parser(M3U8Parser):
         if self._is_daterange_ad(daterange):
             self.m3u8.dateranges_ads.append(daterange)
 
-    # TODO: fix this mess by switching to segment dataclasses with inheritance
-    def get_segment(self, uri: str) -> TwitchSegment:  # type: ignore[override]
-        extinf: ExtInf = self._extinf or ExtInf(0, None)
-        self._extinf = None
+    # TODO: avoid having to copy the segment data
+    def get_segment(self, uri: str) -> TwitchSegment:
+        segment = super().get_segment(uri)
+        data = dataclass_asdict(segment)
+        ad = self._is_segment_ad(segment.date, segment.title)
 
-        discontinuity = self._discontinuity
-        self._discontinuity = False
-
-        byterange = self._byterange
-        self._byterange = None
-
-        date = self._date
-        self._date = None
-
-        ad = self._is_segment_ad(date, extinf.title)
-
-        return TwitchSegment(
-            uri=uri,
-            duration=extinf.duration,
-            title=extinf.title,
-            key=self._key,
-            discontinuity=discontinuity,
-            byterange=byterange,
-            date=date,
-            map=self._map,
-            ad=ad,
-            prefetch=False,
-        )
+        return TwitchSegment(**data, ad=ad, prefetch=False)
 
     def _is_segment_ad(self, date: Optional[datetime], title: Optional[str] = None) -> bool:
         return (
