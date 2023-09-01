@@ -137,21 +137,21 @@ class TwitchHLSStreamWorker(HLSStreamWorker):
 
         return super()._playlist_reload_time(playlist)
 
-    def process_sequences(self, playlist: TwitchM3U8, sequences: List[TwitchSegment]):  # type: ignore[override]
+    def process_segments(self, playlist: TwitchM3U8):  # type: ignore[override]
         # ignore prefetch segments if not LL streaming
         if not self.stream.low_latency:
-            sequences = [seq for seq in sequences if not seq.prefetch]
+            playlist.segments = [segment for segment in playlist.segments if not segment.prefetch]
 
         # check for sequences with real content
         if not self.had_content:
-            self.had_content = next((True for seq in sequences if not seq.ad), False)
+            self.had_content = next((True for segment in playlist.segments if not segment.ad), False)
 
             # When filtering ads, to check whether it's a LL stream, we need to wait for the real content to show up,
             # since playlists with only ad segments don't contain prefetch segments
             if (
                 self.stream.low_latency
                 and self.had_content
-                and not next((True for seq in sequences if seq.prefetch), False)
+                and not next((True for segment in playlist.segments if segment.prefetch), False)
             ):
                 log.info("This is not a low latency stream")
 
@@ -159,15 +159,15 @@ class TwitchHLSStreamWorker(HLSStreamWorker):
         if self.stream.disable_ads and self.playlist_sequence == -1 and not self.had_content:
             log.info("Waiting for pre-roll ads to finish, be patient")
 
-        return super().process_sequences(playlist, sequences)  # type: ignore[arg-type]
+        return super().process_segments(playlist)
 
 
 class TwitchHLSStreamWriter(HLSStreamWriter):
     reader: "TwitchHLSStreamReader"
     stream: "TwitchHLSStream"
 
-    def should_filter_sequence(self, sequence: TwitchSegment) -> bool:  # type: ignore[override]
-        return self.stream.disable_ads and sequence.ad
+    def should_filter_segment(self, segment: TwitchSegment) -> bool:  # type: ignore[override]
+        return self.stream.disable_ads and segment.ad
 
 
 class TwitchHLSStreamReader(HLSStreamReader):
