@@ -26,7 +26,7 @@ class PlutoHLSStreamWriter(HLSStreamWriter):
     ad_re = re.compile(r"_ad/creative/|dai\.google\.com|Pluto_TV_OandO/.*(Bumper|plutotv_filler)")
 
     def should_filter_sequence(self, sequence):
-        return self.ad_re.search(sequence.segment.uri) is not None or super().should_filter_sequence(sequence)
+        return self.ad_re.search(sequence.uri) is not None or super().should_filter_sequence(sequence)
 
 
 class PlutoHLSStreamReader(HLSStreamReader):

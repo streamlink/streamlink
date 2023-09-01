@@ -29,7 +29,7 @@ class LTVHLSStreamWorker(HLSStreamWorker):
         super().process_sequences(playlist, sequences)
         # update the segment URLs with the query string from the playlist URL
         for sequence in sequences:
-            sequence.segment.uri = copy_query_url(sequence.segment.uri, self.stream.url)
+            sequence.uri = copy_query_url(sequence.uri, self.stream.url)
 
 
 class LTVHLSStreamReader(HLSStreamReader):

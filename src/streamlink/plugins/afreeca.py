@@ -17,7 +17,7 @@ log = logging.getLogger(__name__)
 
 class AfreecaHLSStreamWriter(HLSStreamWriter):
     def should_filter_sequence(self, sequence):
-        return "preloading" in sequence.segment.uri or super().should_filter_sequence(sequence)
+        return "preloading" in sequence.uri or super().should_filter_sequence(sequence)
 
 
 class AfreecaHLSStreamReader(HLSStreamReader):

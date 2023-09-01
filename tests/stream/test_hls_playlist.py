@@ -499,6 +499,7 @@ class TestHLSPlaylist:
         assert list(playlist.segments) == [
             Segment(
                 uri="http://test.se/segment0-15.ts",
+                num=0,
                 duration=15.0,
                 title="live",
                 date=start_date,
@@ -509,6 +510,7 @@ class TestHLSPlaylist:
             ),
             Segment(
                 uri="http://test.se/segment15-30.5.ts",
+                num=1,
                 duration=15.5,
                 title="live",
                 date=start_date + delta_15,
@@ -519,6 +521,7 @@ class TestHLSPlaylist:
             ),
             Segment(
                 uri="http://test.se/segment30.5-60.ts",
+                num=2,
                 duration=29.5,
                 title="live",
                 date=start_date + delta_30,
@@ -529,6 +532,7 @@ class TestHLSPlaylist:
             ),
             Segment(
                 uri="http://test.se/segment60-.ts",
+                num=3,
                 duration=60.0,
                 title="live",
                 date=start_date + delta_60,

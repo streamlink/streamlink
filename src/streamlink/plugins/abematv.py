@@ -31,7 +31,7 @@ log = logging.getLogger(__name__)
 
 class AbemaTVHLSStreamWriter(HLSStreamWriter):
     def should_filter_sequence(self, sequence):
-        return "/tsad/" in sequence.segment.uri or super().should_filter_sequence(sequence)
+        return "/tsad/" in sequence.uri or super().should_filter_sequence(sequence)
 
 
 class AbemaTVHLSStreamReader(HLSStreamReader):
