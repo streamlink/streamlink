@@ -25,10 +25,10 @@ def copy_query_url(to, from_):
 
 
 class LTVHLSStreamWorker(HLSStreamWorker):
-    def process_sequences(self, playlist, sequences):
-        super().process_sequences(playlist, sequences)
+    def process_segments(self, playlist, segments):
+        super().process_segments(playlist, segments)
         # update the segment URLs with the query string from the playlist URL
-        for sequence in sequences:
+        for sequence in segments:
             sequence.uri = copy_query_url(sequence.uri, self.stream.url)
 
 
