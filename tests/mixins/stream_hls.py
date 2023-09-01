@@ -61,7 +61,7 @@ class Tag(HLSItemBase):
 
     def build(self, *args, **kwargs):
         attrs = None
-        if type(self.attrs) == dict:
+        if isinstance(self.attrs, dict):
             attrs = ",".join([
                 "{0}={1}".format(key, value(self, *args, **kwargs) if callable(value) else value)
                 for (key, value) in self.attrs.items()

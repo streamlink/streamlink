@@ -82,7 +82,7 @@ class ConsoleOutput:
         msg = dumps(out, cls=JSONEncoder, indent=2)
         self.output.write(f"{msg}\n")
 
-        if type(out) is dict and out.get("error"):
+        if isinstance(out, dict) and out.get("error"):
             sys.exit(1)
 
     def exit(self, msg: str) -> None:

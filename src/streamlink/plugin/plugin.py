@@ -192,7 +192,7 @@ class _MCollection(List[MType]):
         self._names: Dict[str, MType] = {}
 
     def __getitem__(self, item):
-        return self._names[item] if type(item) is str else super().__getitem__(item)
+        return self._names[item] if isinstance(item, str) else super().__getitem__(item)
 
 
 class Matchers(_MCollection[Matcher]):

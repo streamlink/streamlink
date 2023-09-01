@@ -183,7 +183,7 @@ def _validate_noneorallschema(schema: NoneOrAllSchema, value):
 
 @validate.register
 def _validate_listschema(schema: ListSchema, value):
-    if type(value) is not list:
+    if not isinstance(value, list):
         raise ValidationError(
             "Type of {value} should be list, but is {actual}",
             value=repr(value),
