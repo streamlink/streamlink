@@ -22,7 +22,7 @@ from dataclasses import asdict as dataclass_asdict, dataclass, replace as datacl
 from datetime import datetime, timedelta
 from json import dumps as json_dumps
 from random import random
-from typing import List, Mapping, NamedTuple, Optional, Tuple
+from typing import List, Mapping, Optional, Tuple
 from urllib.parse import urlparse
 
 from requests.exceptions import HTTPError
@@ -50,12 +50,6 @@ LOW_LATENCY_MAX_LIVE_EDGE = 2
 class TwitchSegment(Segment):
     ad: bool
     prefetch: bool
-
-
-# generic namedtuples are unsupported, so just subclass
-class TwitchSequence(NamedTuple):
-    num: int
-    segment: TwitchSegment
 
 
 class TwitchM3U8(M3U8):
@@ -137,27 +131,27 @@ class TwitchHLSStreamWorker(HLSStreamWorker):
     def _reload_playlist(self, *args):
         return load_hls_playlist(*args, parser=TwitchM3U8Parser, m3u8=TwitchM3U8)
 
-    def _playlist_reload_time(self, playlist: TwitchM3U8, sequences: List[TwitchSequence]):  # type: ignore[override]
-        if self.stream.low_latency and sequences:
-            return sequences[-1].segment.duration
+    def _playlist_reload_time(self, playlist: TwitchM3U8):  # type: ignore[override]
+        if self.stream.low_latency and playlist.segments:
+            return playlist.segments[-1].duration
 
-        return super()._playlist_reload_time(playlist, sequences)  # type: ignore[arg-type]
+        return super()._playlist_reload_time(playlist)
 
-    def process_sequences(self, playlist: TwitchM3U8, sequences: List[TwitchSequence]):  # type: ignore[override]
+    def process_sequences(self, playlist: TwitchM3U8, sequences: List[TwitchSegment]):  # type: ignore[override]
         # ignore prefetch segments if not LL streaming
         if not self.stream.low_latency:
-            sequences = [seq for seq in sequences if not seq.segment.prefetch]
+            sequences = [seq for seq in sequences if not seq.prefetch]
 
         # check for sequences with real content
         if not self.had_content:
-            self.had_content = next((True for seq in sequences if not seq.segment.ad), False)
+            self.had_content = next((True for seq in sequences if not seq.ad), False)
 
             # When filtering ads, to check whether it's a LL stream, we need to wait for the real content to show up,
             # since playlists with only ad segments don't contain prefetch segments
             if (
                 self.stream.low_latency
                 and self.had_content
-                and not next((True for seq in sequences if seq.segment.prefetch), False)
+                and not next((True for seq in sequences if seq.prefetch), False)
             ):
                 log.info("This is not a low latency stream")
 
@@ -172,8 +166,8 @@ class TwitchHLSStreamWriter(HLSStreamWriter):
     reader: "TwitchHLSStreamReader"
     stream: "TwitchHLSStream"
 
-    def should_filter_sequence(self, sequence: TwitchSequence):  # type: ignore[override]
-        return self.stream.disable_ads and sequence.segment.ad
+    def should_filter_sequence(self, sequence: TwitchSegment) -> bool:  # type: ignore[override]
+        return self.stream.disable_ads and sequence.ad
 
 
 class TwitchHLSStreamReader(HLSStreamReader):

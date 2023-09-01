@@ -19,7 +19,7 @@ class TV8HLSStreamWriter(HLSStreamWriter):
     ad_re = re.compile(r"/ad/|/crea/")
 
     def should_filter_sequence(self, sequence):
-        return self.ad_re.search(sequence.segment.uri) is not None or super().should_filter_sequence(sequence)
+        return self.ad_re.search(sequence.uri) is not None or super().should_filter_sequence(sequence)
 
 
 class TV8HLSStreamReader(HLSStreamReader):

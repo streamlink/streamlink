@@ -32,7 +32,7 @@ class TestFilteredHLSStream(TestMixinStreamHLS, unittest.TestCase):
 
     @classmethod
     def filter_sequence(cls, sequence):
-        return sequence.segment.title == FILTERED
+        return sequence.title == FILTERED
 
     def get_session(self, options=None, *args, **kwargs):
         session = super().get_session(options)

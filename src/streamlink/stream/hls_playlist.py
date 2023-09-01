@@ -116,6 +116,7 @@ class Playlist:
 @dataclass
 class Segment:
     uri: str
+    num: int
     duration: float
     title: Optional[str]
     key: Optional[Key]
@@ -665,6 +666,11 @@ class M3U8Parser(metaclass=M3U8ParserMeta):
 
         self.m3u8.is_master = not not self.m3u8.playlists
 
+        # Update segment numbers
+        media_sequence = self.m3u8.media_sequence or 0
+        for i, segment in enumerate(self.m3u8.segments):
+            segment.num = media_sequence + i
+
         return self.m3u8
 
     def uri(self, uri: str) -> str:
@@ -690,6 +696,7 @@ class M3U8Parser(metaclass=M3U8ParserMeta):
 
         return Segment(
             uri=uri,
+            num=-1,
             duration=extinf.duration,
             title=extinf.title,
             key=self._key,
