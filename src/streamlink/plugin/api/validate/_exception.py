@@ -14,7 +14,7 @@ class ValidationError(ValueError):
         **errkeywords,
     ):
         self.schema = schema
-        if len(errors) == 1 and type(errors[0]) is str:
+        if len(errors) == 1 and isinstance(errors[0], str):
             self.errors = (self._truncate(errors[0], **errkeywords), )
         else:
             self.errors = errors
@@ -28,7 +28,7 @@ class ValidationError(ValueError):
     def _get_schema_name(self) -> str:
         if not self.schema:
             return ""
-        if type(self.schema) is str:
+        if isinstance(self.schema, str):
             return f"({self.schema})"
         return f"({self.schema.__name__})"  # type: ignore[attr-defined]
 

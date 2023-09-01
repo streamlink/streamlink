@@ -178,7 +178,7 @@ class M3U8ParserMeta(type):
         tags = dict(**getattr(cls, "_TAGS", {}))
         for member in namespace.values():
             tag = getattr(member, _symbol_tag_parser, None)
-            if type(tag) is not str:
+            if type(tag) is not str:  # noqa: E721
                 continue
             tags[tag] = member
         cls._TAGS = tags

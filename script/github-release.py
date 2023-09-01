@@ -112,6 +112,7 @@ class Git:
         completedprocess = subprocess.run(
             ["git", "--no-pager"] + list(map(str, gitargs)),
             capture_output=True,
+            check=True,
             **runkwargs,
         )
 

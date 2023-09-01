@@ -141,7 +141,7 @@ class WebsocketClient(Thread):
             )
 
     def close(self, status: int = STATUS_NORMAL, reason: Union[str, bytes] = "", timeout: int = 3) -> None:
-        if type(reason) is str:
+        if isinstance(reason, str):
             reason = bytes(reason, encoding="utf-8")
         self.ws.close(status=status, reason=reason, timeout=timeout)
         if self.is_alive() and current_thread() is not self:

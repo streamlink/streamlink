@@ -98,7 +98,7 @@ class Dogan(Plugin):
                 ),
             ),
         )
-        if type(data) is str:
+        if isinstance(data, str):
             log.error(data)
             return
 
