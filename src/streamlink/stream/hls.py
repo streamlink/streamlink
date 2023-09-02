@@ -3,7 +3,7 @@ import re
 import struct
 from concurrent.futures import Future
 from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, ClassVar, Dict, List, Optional, Tuple, Type, Union
 from urllib.parse import urlparse
 
 from requests import Response
@@ -14,7 +14,7 @@ from streamlink.exceptions import StreamError
 from streamlink.session import Streamlink
 from streamlink.stream.ffmpegmux import FFMPEGMuxer, MuxedStream
 from streamlink.stream.filtered import FilteredStream
-from streamlink.stream.hls_playlist import M3U8, ByteRange, Key, Map, Media, Segment, load as load_hls_playlist
+from streamlink.stream.hls_playlist import M3U8, ByteRange, Key, M3U8Parser, Map, Media, Playlist, Segment, parse_m3u8
 from streamlink.stream.http import HTTPStream
 from streamlink.stream.segmented import SegmentedStreamReader, SegmentedStreamWorker, SegmentedStreamWriter
 from streamlink.utils.cache import LRUCache
@@ -323,10 +323,6 @@ class HLSStreamWorker(SegmentedStreamWorker[Segment, Response]):
 
         return res
 
-    # TODO: rename to _parse_playlist
-    def _reload_playlist(self, *args, **kwargs):
-        return load_hls_playlist(*args, **kwargs)
-
     def reload_playlist(self):
         if self.closed:  # pragma: no cover
             return
@@ -337,7 +333,7 @@ class HLSStreamWorker(SegmentedStreamWorker[Segment, Response]):
         res = self._fetch_playlist()
 
         try:
-            playlist = self._reload_playlist(res)
+            playlist = parse_m3u8(res, parser=self.stream.__parser__)
         except ValueError as err:
             raise StreamError(err) from err
 
@@ -353,7 +349,7 @@ class HLSStreamWorker(SegmentedStreamWorker[Segment, Response]):
         if playlist.segments:
             self.process_segments(playlist)
 
-    def _playlist_reload_time(self, playlist: M3U8) -> float:
+    def _playlist_reload_time(self, playlist: M3U8[Segment, Playlist]) -> float:
         if self.playlist_reload_time_override == "segment" and playlist.segments:
             return playlist.segments[-1].duration
         if self.playlist_reload_time_override == "live-edge" and playlist.segments:
@@ -367,7 +363,7 @@ class HLSStreamWorker(SegmentedStreamWorker[Segment, Response]):
 
         return self.playlist_reload_time
 
-    def process_segments(self, playlist: M3U8) -> None:
+    def process_segments(self, playlist: M3U8[Segment, Playlist]) -> None:
         segments = playlist.segments
         first_segment, last_segment = segments[0], segments[-1]
 
@@ -593,6 +589,7 @@ class HLSStream(HTTPStream):
 
     __shortname__ = "hls"
     __reader__ = HLSStreamReader
+    __parser__: ClassVar[Type[M3U8Parser[M3U8[Segment, Playlist], Segment, Playlist]]] = M3U8Parser
 
     def __init__(
         self,
@@ -665,11 +662,6 @@ class HLSStream(HTTPStream):
 
         return res
 
-    # TODO: rename to _parse_variant_playlist
-    @classmethod
-    def _get_variant_playlist(cls, *args, **kwargs):
-        return load_hls_playlist(*args, **kwargs)
-
     @classmethod
     def parse_variant_playlist(
         cls,
@@ -707,7 +699,7 @@ class HLSStream(HTTPStream):
         res = cls._fetch_variant_playlist(session, url, **request_args)
 
         try:
-            multivariant = cls._get_variant_playlist(res)
+            multivariant = parse_m3u8(res, parser=cls.__parser__)
         except ValueError as err:
             raise OSError(f"Failed to parse playlist: {err}") from err
 
@@ -715,7 +707,10 @@ class HLSStream(HTTPStream):
         stream: Union["HLSStream", "MuxedHLSStream"]
         streams: Dict[str, Union["HLSStream", "MuxedHLSStream"]] = {}
 
-        for playlist in filter(lambda p: not p.is_iframe, multivariant.playlists):
+        for playlist in multivariant.playlists:
+            if playlist.is_iframe:
+                continue
+
             names: Dict[str, Optional[str]] = dict(name=None, pixels=None, bitrate=None)
             audio_streams = []
             fallback_audio: List[Media] = []

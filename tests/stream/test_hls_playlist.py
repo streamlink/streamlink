@@ -12,7 +12,7 @@ from streamlink.stream.hls_playlist import (
     Resolution,
     Segment,
     StreamInfo,
-    load,
+    parse_m3u8,
     parse_tag,
 )
 from tests.resources import text
@@ -212,9 +212,9 @@ def test_parse_resolution(string: str, expected: Resolution):
 
 
 class TestHLSPlaylist:
-    def test_load(self):
+    def test_load(self) -> None:
         with text("hls/test_1.m3u8") as m3u8_fh:
-            playlist = load(m3u8_fh.read(), "http://test.se/")
+            playlist = parse_m3u8(m3u8_fh.read(), "http://test.se/", parser=M3U8Parser)
 
         assert playlist.media == [
             Media(
@@ -382,9 +382,9 @@ class TestHLSPlaylist:
             ),
         ]
 
-    def test_parse_date(self):
+    def test_parse_date(self) -> None:
         with text("hls/test_date.m3u8") as m3u8_fh:
-            playlist = load(m3u8_fh.read(), "http://test.se/")
+            playlist = parse_m3u8(m3u8_fh.read(), "http://test.se/", parser=M3U8Parser)
 
         start_date = datetime(year=2000, month=1, day=1, hour=0, minute=0, second=0, microsecond=0, tzinfo=UTC)
         end_date = datetime(year=2000, month=1, day=1, hour=0, minute=1, second=0, microsecond=0, tzinfo=UTC)
