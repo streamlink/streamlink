@@ -4,7 +4,7 @@ import re
 from binascii import Error as BinasciiError, unhexlify
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-from typing import Callable, ClassVar, Dict, Iterator, List, Mapping, NamedTuple, Optional, Tuple, Type, Union
+from typing import Callable, ClassVar, Dict, Generic, Iterator, List, Mapping, NamedTuple, Optional, Tuple, Type, TypeVar, Union
 from urllib.parse import urljoin, urlparse
 
 from isodate import ISO8601Error, parse_datetime  # type: ignore[import]
@@ -126,7 +126,11 @@ class Segment:
     map: Optional[Map]
 
 
-class M3U8:
+TSegment_co = TypeVar("TSegment_co", bound=Segment, covariant=True)
+TPlaylist_co = TypeVar("TPlaylist_co", bound=Playlist, covariant=True)
+
+
+class M3U8(Generic[TSegment_co, TPlaylist_co]):
     def __init__(self, uri: Optional[str] = None):
         self.uri = uri
 
@@ -143,9 +147,10 @@ class M3U8:
         self.version: Optional[int] = None
 
         self.media: List[Media] = []
-        self.playlists: List[Playlist] = []
         self.dateranges: List[DateRange] = []
-        self.segments: List[Segment] = []
+
+        self.playlists: List[TPlaylist_co] = []
+        self.segments: List[TSegment_co] = []
 
     @classmethod
     def is_date_in_daterange(cls, date: Optional[datetime], daterange: DateRange):
@@ -161,6 +166,9 @@ class M3U8:
             return daterange.start_date <= date < end
 
         return daterange.start_date <= date
+
+
+TM3U8_co = TypeVar("TM3U8_co", bound=M3U8, covariant=True)
 
 
 _symbol_tag_parser = "__PARSE_TAG_NAME"
@@ -188,7 +196,12 @@ class M3U8ParserMeta(type):
         cls._TAGS = tags
 
 
-class M3U8Parser(metaclass=M3U8ParserMeta):
+class M3U8Parser(Generic[TM3U8_co, TSegment_co, TPlaylist_co], metaclass=M3U8ParserMeta):
+    # Can't set type vars as classvars yet (PEP 526 issue)
+    __m3u8__: ClassVar[Type[M3U8[Segment, Playlist]]] = M3U8
+    __segment__: ClassVar[Type[Segment]] = Segment
+    __playlist__: ClassVar[Type[Playlist]] = Playlist
+
     _TAGS: ClassVar[Mapping[str, Callable[[Self, str], None]]]
 
     _extinf_re = re.compile(r"(?P<duration>\d+(\.\d+)?)(,(?P<title>.+))?")
@@ -216,8 +229,8 @@ class M3U8Parser(metaclass=M3U8ParserMeta):
     _tag_re = re.compile(r"#(?P<tag>[\w-]+)(:(?P<value>.+))?")
     _res_re = re.compile(r"(\d+)x(\d+)")
 
-    def __init__(self, base_uri: Optional[str] = None, m3u8: Type[M3U8] = M3U8):
-        self.m3u8: M3U8 = m3u8(base_uri)
+    def __init__(self, base_uri: Optional[str] = None):
+        self.m3u8: TM3U8_co = self.__m3u8__(base_uri)  # type: ignore[assignment]  # PEP 696 might solve this
 
         self._expect_playlist: bool = False
         self._streaminf: Optional[Dict[str, str]] = None
@@ -634,7 +647,7 @@ class M3U8Parser(metaclass=M3U8ParserMeta):
             playlist = self.get_playlist(self.uri(line))
             self.m3u8.playlists.append(playlist)
 
-    def parse(self, data: Union[str, Response]) -> M3U8:
+    def parse(self, data: Union[str, Response]) -> TM3U8_co:
         lines: Iterator[str]
         if isinstance(data, str):
             lines = iter(filter(bool, data.splitlines()))
@@ -681,7 +694,7 @@ class M3U8Parser(metaclass=M3U8ParserMeta):
         else:
             return uri
 
-    def get_segment(self, uri: str) -> Segment:
+    def get_segment(self, uri: str, **data) -> Segment:
         extinf: ExtInf = self._extinf or ExtInf(0, None)
         self._extinf = None
 
@@ -694,7 +707,8 @@ class M3U8Parser(metaclass=M3U8ParserMeta):
         date = self._date
         self._date = None
 
-        return Segment(
+        # noinspection PyArgumentList
+        return self.__segment__(
             uri=uri,
             num=-1,
             duration=extinf.duration,
@@ -704,28 +718,30 @@ class M3U8Parser(metaclass=M3U8ParserMeta):
             byterange=byterange,
             date=date,
             map=self._map,
+            **data,
         )
 
-    def get_playlist(self, uri: str) -> Playlist:
+    def get_playlist(self, uri: str, **data) -> Playlist:
         streaminf = self._streaminf or {}
         self._streaminf = None
 
         stream_info = self.create_stream_info(streaminf)
 
-        return Playlist(
+        # noinspection PyArgumentList
+        return self.__playlist__(
             uri=uri,
             stream_info=stream_info,
             media=[],
             is_iframe=False,
+            **data,
         )
 
 
-def load(
+def parse_m3u8(
     data: Union[str, Response],
     base_uri: Optional[str] = None,
-    parser: Type[M3U8Parser] = M3U8Parser,
-    **kwargs,
-) -> M3U8:
+    parser: Type[M3U8Parser[TM3U8_co, TSegment_co, TPlaylist_co]] = M3U8Parser,
+) -> TM3U8_co:
     """
     Parse an M3U8 playlist from a string of data or an HTTP response.
 
@@ -738,4 +754,4 @@ def load(
     if base_uri is None and isinstance(data, Response):
         base_uri = data.url
 
-    return parser(base_uri, **kwargs).parse(data)
+    return parser(base_uri).parse(data)

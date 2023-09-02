@@ -13,7 +13,7 @@ from requests.exceptions import InvalidSchema
 
 from streamlink.session import Streamlink
 from streamlink.stream.hls import HLSStream, HLSStreamReader, MuxedHLSStream
-from streamlink.stream.hls_playlist import M3U8Parser
+from streamlink.stream.hls_playlist import M3U8, M3U8Parser, Playlist as HLSPlaylist, Segment as HLSSegment
 from streamlink.utils.crypto import AES, pad
 from tests.mixins.stream_hls import EventedHLSStreamWorker, EventedHLSStreamWriter, Playlist, Segment, Tag, TestMixinStreamHLS
 from tests.resources import text
@@ -884,7 +884,7 @@ class TestHlsPlaylistParseErrors(TestMixinStreamHLS, unittest.TestCase):
             call("Failed to reload playlist: Missing #EXTM3U header"),
         ]
 
-    @patch("streamlink.stream.hls.HLSStreamWorker._reload_playlist", Mock(return_value=FakePlaylist(is_master=True)))
+    @patch("streamlink.stream.hls.parse_m3u8", Mock(return_value=FakePlaylist(is_master=True)))
     def test_is_master(self, mock_log):
         self.subject([Playlist()])
         assert self.await_read(read_all=True) == b""
@@ -895,7 +895,7 @@ class TestHlsPlaylistParseErrors(TestMixinStreamHLS, unittest.TestCase):
             call(f"Attempted to play a variant playlist, use 'hls://{self.stream.url}' instead"),
         ]
 
-    @patch("streamlink.stream.hls.HLSStreamWorker._reload_playlist", Mock(return_value=FakePlaylist(iframes_only=True)))
+    @patch("streamlink.stream.hls.parse_m3u8", Mock(return_value=FakePlaylist(iframes_only=True)))
     def test_iframes_only(self, mock_log):
         self.subject([Playlist()])
         assert self.await_read(read_all=True) == b""
@@ -956,7 +956,7 @@ class TestM3U8ParserLogging:
     def test_log(self, caplog: pytest.LogCaptureFixture, loglevel: str, has_logs: bool):
         caplog.set_level(loglevel, "streamlink")
 
-        parser = M3U8Parser()
+        parser = M3U8Parser[M3U8, HLSSegment, HLSPlaylist]()
         with text("hls/test_1.m3u8") as pl:
             data = pl.read()
         parser.parse(data)

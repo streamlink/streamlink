@@ -18,11 +18,11 @@ import logging
 import re
 import sys
 from contextlib import suppress
-from dataclasses import asdict as dataclass_asdict, dataclass, replace as dataclass_replace
+from dataclasses import dataclass, replace as dataclass_replace
 from datetime import datetime, timedelta
 from json import dumps as json_dumps
 from random import random
-from typing import List, Mapping, Optional, Tuple
+from typing import ClassVar, Mapping, Optional, Tuple, Type
 from urllib.parse import urlparse
 
 from requests.exceptions import HTTPError
@@ -32,7 +32,7 @@ from streamlink.plugin import Plugin, pluginargument, pluginmatcher
 from streamlink.plugin.api import validate
 from streamlink.session import Streamlink
 from streamlink.stream.hls import HLSStream, HLSStreamReader, HLSStreamWorker, HLSStreamWriter
-from streamlink.stream.hls_playlist import M3U8, DateRange, M3U8Parser, Segment, load as load_hls_playlist, parse_tag
+from streamlink.stream.hls_playlist import M3U8, DateRange, M3U8Parser, Playlist, Segment, parse_tag
 from streamlink.stream.http import HTTPStream
 from streamlink.utils.args import keyvalue
 from streamlink.utils.parse import parse_json, parse_qsd
@@ -52,16 +52,15 @@ class TwitchSegment(Segment):
     prefetch: bool
 
 
-class TwitchM3U8(M3U8):
-    segments: List[TwitchSegment]  # type: ignore[assignment]
-
+class TwitchM3U8(M3U8[TwitchSegment, Playlist]):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.dateranges_ads = []
 
 
-class TwitchM3U8Parser(M3U8Parser):
-    m3u8: TwitchM3U8
+class TwitchM3U8Parser(M3U8Parser[TwitchM3U8, TwitchSegment, Playlist]):
+    __m3u8__: ClassVar[Type[TwitchM3U8]] = TwitchM3U8
+    __segment__: ClassVar[Type[TwitchSegment]] = TwitchSegment
 
     @parse_tag("EXT-X-TWITCH-PREFETCH")
     def parse_tag_ext_x_twitch_prefetch(self, value):
@@ -96,13 +95,11 @@ class TwitchM3U8Parser(M3U8Parser):
         if self._is_daterange_ad(daterange):
             self.m3u8.dateranges_ads.append(daterange)
 
-    # TODO: avoid having to copy the segment data
-    def get_segment(self, uri: str) -> TwitchSegment:
-        segment = super().get_segment(uri)
-        data = dataclass_asdict(segment)
-        ad = self._is_segment_ad(segment.date, segment.title)
+    def get_segment(self, uri: str, **data) -> TwitchSegment:
+        ad = self._is_segment_ad(self._date, self._extinf.title if self._extinf else None)
+        segment: TwitchSegment = super().get_segment(uri, ad=ad, prefetch=False)  # type: ignore[assignment]
 
-        return TwitchSegment(**data, ad=ad, prefetch=False)
+        return segment
 
     def _is_segment_ad(self, date: Optional[datetime], title: Optional[str] = None) -> bool:
         return (
@@ -127,9 +124,6 @@ class TwitchHLSStreamWorker(HLSStreamWorker):
     def __init__(self, reader, *args, **kwargs):
         self.had_content = False
         super().__init__(reader, *args, **kwargs)
-
-    def _reload_playlist(self, *args):
-        return load_hls_playlist(*args, parser=TwitchM3U8Parser, m3u8=TwitchM3U8)
 
     def _playlist_reload_time(self, playlist: TwitchM3U8):  # type: ignore[override]
         if self.stream.low_latency and playlist.segments:
@@ -191,6 +185,7 @@ class TwitchHLSStreamReader(HLSStreamReader):
 
 class TwitchHLSStream(HLSStream):
     __reader__ = TwitchHLSStreamReader
+    __parser__ = TwitchM3U8Parser
 
     def __init__(self, *args, disable_ads: bool = False, low_latency: bool = False, **kwargs):
         super().__init__(*args, **kwargs)
