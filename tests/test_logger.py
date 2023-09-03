@@ -5,7 +5,6 @@ from inspect import currentframe, getframeinfo
 from io import StringIO
 from pathlib import Path
 from typing import Iterable, Tuple, Type
-from unittest.mock import patch
 
 import freezegun
 import pytest
@@ -20,29 +19,53 @@ def output():
 
 
 @pytest.fixture()
-def log(request, output: StringIO):
+def logfile(tmp_path: Path) -> str:
+    return str(tmp_path / "log.txt")
+
+
+@pytest.fixture()
+def log(request: pytest.FixtureRequest, monkeypatch: pytest.MonkeyPatch, output: StringIO):
     params = getattr(request, "param", {})
     params.setdefault("format", "[{name}][{levelname}] {message}")
     params.setdefault("style", "{")
+
+    if "logfile" in request.fixturenames:
+        params["filename"] = request.getfixturevalue("logfile")
+
     fakeroot = logging.getLogger("streamlink.test")
-    with patch("streamlink.logger.root", fakeroot), \
-         patch("streamlink.utils.times.LOCAL", timezone.utc):
-        handler = logger.basicConfig(stream=output, **params)
-        assert isinstance(handler, logging.Handler)
-        yield fakeroot
-        logger.capturewarnings(False)
-        fakeroot.removeHandler(handler)
-        assert not fakeroot.handlers
+
+    monkeypatch.setattr("streamlink.logger.root", fakeroot)
+    monkeypatch.setattr("streamlink.utils.times.LOCAL", timezone.utc)
+
+    handler = logger.basicConfig(stream=output, **params)
+    assert isinstance(handler, logging.Handler)
+
+    yield fakeroot
+
+    logger.capturewarnings(False)
+
+    handler.close()
+    fakeroot.removeHandler(handler)
+    assert not fakeroot.handlers
 
 
 class TestLogging:
     @pytest.fixture()
-    def log_failure(self, request, log: logging.Logger, output: StringIO):
+    def log_failure(
+        self,
+        request: pytest.FixtureRequest,
+        monkeypatch: pytest.MonkeyPatch,
+        log: logging.Logger,
+        output: StringIO,
+    ):
         params = getattr(request, "param", {})
+
         root = logging.getLogger("streamlink")
-        with patch("streamlink.logger.root", root):
-            with pytest.raises(Exception) as cm:  # noqa: PT011
-                logger.basicConfig(stream=output, **params)
+        monkeypatch.setattr("streamlink.logger.root", root)
+
+        with pytest.raises(Exception) as cm:  # noqa: PT011
+            logger.basicConfig(stream=output, **params)
+
         return cm.value
 
     @pytest.mark.parametrize(("name", "level"), [
@@ -163,6 +186,13 @@ class TestLogging:
         log.setLevel("info")
         log.info("test")
         assert output.getvalue() == "[03:04:05.123456+0000][test][info] test\n"
+
+    def test_logfile(self, logfile: str, log: logging.Logger, output: StringIO):
+        log.setLevel("info")
+        log.info("Hello world, Γειά σου Κόσμε, こんにちは世界")
+        log.handlers[0].flush()
+        with open(logfile, "r", encoding="utf-8") as fh:
+            assert fh.read() == "[test][info] Hello world, Γειά σου Κόσμε, こんにちは世界\n"
 
 
 class TestCaptureWarnings:
