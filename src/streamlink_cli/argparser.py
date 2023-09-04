@@ -428,6 +428,18 @@ def build_parser():
         """,
     )
     player.add_argument(
+        "--player-env",
+        metavar="KEY=VALUE",
+        type=keyvalue,
+        action="append",
+        help="""
+        Add an additional environment variable to the spawned player process, in addition to the ones inherited from
+        the Streamlink/Python parent process. This allows setting player environment variables in config files.
+
+        Can be repeated to add multiple environment variables.
+        """,
+    )
+    player.add_argument(
         "-v", "--verbose-player",
         action="store_true",
         help="""

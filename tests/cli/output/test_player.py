@@ -1,7 +1,7 @@
 import subprocess
 from contextlib import nullcontext
 from pathlib import Path
-from typing import ContextManager, Type
+from typing import ContextManager, Dict, Mapping, Sequence, Type
 from unittest.mock import Mock, call, patch
 
 import pytest
@@ -251,6 +251,12 @@ class TestPlayerArgs:
 
 # TODO: refactor PlayerOutput and write proper tests
 class TestPlayerOutput:
+    @pytest.fixture(autouse=True)
+    def _os_environ(self, os_environ: Dict[str, str]):
+        os_environ["FAKE"] = "ENVIRONMENT"
+        yield
+        assert sorted(os_environ.keys()) == ["FAKE"], "Doesn't pollute the os.environ dict with custom env vars"
+
     @pytest.fixture()
     def playeroutput(self, request: pytest.FixtureRequest):
         with patch("streamlink_cli.output.player.sleep"):
@@ -269,10 +275,22 @@ class TestPlayerOutput:
              patch("subprocess.Popen", return_value=Mock(poll=Mock(side_effect=Mock(return_value=None)))) as mock_popen:
             yield mock_popen
 
-    @pytest.mark.parametrize(("playeroutput", "mock_which"), [
-        (
-            dict(path=Path("player"), args="param1 param2", call=False),
+    @pytest.mark.parametrize(("playeroutput", "mock_which", "args", "env", "logmessage"), [
+        pytest.param(
+            {"path": Path("player"), "args": "param1 param2", "call": False},
             "/resolved/player",
+            ["/resolved/player", "param1", "param2", "-"],
+            {"FAKE": "ENVIRONMENT"},
+            "Opening subprocess: ['/resolved/player', 'param1', 'param2', '-']",
+            id="Without custom env vars",
+        ),
+        pytest.param(
+            {"path": Path("player"), "args": "param1 param2", "env": [("VAR1", "abc"), ("VAR2", "def")], "call": False},
+            "/resolved/player",
+            ["/resolved/player", "param1", "param2", "-"],
+            {"FAKE": "ENVIRONMENT", "VAR1": "abc", "VAR2": "def"},
+            "Opening subprocess: ['/resolved/player', 'param1', 'param2', '-'], env: {'VAR1': 'abc', 'VAR2': 'def'}",
+            id="With custom env vars",
         ),
     ], indirect=["playeroutput", "mock_which"])
     def test_open_popen_parameters(
@@ -281,6 +299,9 @@ class TestPlayerOutput:
         playeroutput: PlayerOutput,
         mock_which: Mock,
         mock_popen: Mock,
+        args: Sequence[str],
+        env: Mapping[str, str],
+        logmessage: str,
     ):
         caplog.set_level(1, "streamlink")
 
@@ -288,12 +309,13 @@ class TestPlayerOutput:
 
         playeroutput.open()
         assert [(record.name, record.levelname, record.message) for record in caplog.records] == [
-            ("streamlink.cli.output", "debug", "Opening subprocess: ['/resolved/player', 'param1', 'param2', '-']"),
+            ("streamlink.cli.output", "debug", logmessage),
         ]
         assert mock_which.call_args_list == [call("player")]
         assert mock_popen.call_args_list == [call(
-            ["/resolved/player", "param1", "param2", "-"],
+            args,
             bufsize=0,
+            env=env,
             stdin=subprocess.PIPE,
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,
