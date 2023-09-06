@@ -477,12 +477,14 @@ class HLSStreamWorker(SegmentedStreamWorker[Sequence, Response]):
                     log.info(f"Stopping stream early after {self.duration_limit}")
                     return
 
-                # End of stream
-                stream_end = self.playlist_end is not None and sequence.num >= self.playlist_end
-                if self.closed or stream_end:
+                if self.closed:  # pragma: no cover
                     return
 
                 self.playlist_sequence = sequence.num + 1
+
+            # End of stream
+            if self.closed or self.playlist_end is not None and (not queued or self.playlist_sequence > self.playlist_end):
+                return
 
             if queued:
                 self.playlist_sequences_last = now()

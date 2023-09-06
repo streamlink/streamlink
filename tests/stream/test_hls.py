@@ -142,7 +142,14 @@ class TestHLSStream(TestMixinStreamHLS, unittest.TestCase):
 
     def test_playlist_end(self):
         thread, segments = self.subject([
-            # media sequence = 0
+            Playlist(0, [Segment(0)], end=True),
+        ])
+
+        assert self.await_read(read_all=True) == self.content(segments), "Stream ends and read-all handshake doesn't time out"
+
+    def test_playlist_end_on_empty_reload(self):
+        thread, segments = self.subject([
+            Playlist(0, [Segment(0)]),
             Playlist(0, [Segment(0)], end=True),
         ])
 
@@ -377,6 +384,7 @@ class TestHLSStreamWorker(TestMixinStreamHLS, unittest.TestCase):
             # time_completed = 00:00:01; time_elapsed = 1s
             assert worker.handshake_wait.wait_ready(1), "Arrives at first wait() call"
             assert worker.playlist_sequence == 1, "Has queued first segment"
+            assert worker.playlist_end is None, "Stream hasn't ended yet"
             assert worker.time_wait == 4.0, "Waits for 4 seconds out of the 5 seconds reload time"
             self.await_playlist_wait()
 
@@ -392,6 +400,7 @@ class TestHLSStreamWorker(TestMixinStreamHLS, unittest.TestCase):
             # time_completed = 00:00:12; time_elapsed = 7s (exceeded 5s targetduration)
             assert worker.handshake_wait.wait_ready(1), "Arrives at second wait() call"
             assert worker.playlist_sequence == 2, "Has queued second segment"
+            assert worker.playlist_end is None, "Stream hasn't ended yet"
             assert worker.time_wait == 0.0, "Doesn't wait when reloading took too long"
             self.await_playlist_wait()
 
@@ -407,6 +416,7 @@ class TestHLSStreamWorker(TestMixinStreamHLS, unittest.TestCase):
             # time_completed = 00:00:13; time_elapsed = 1s
             assert worker.handshake_wait.wait_ready(1), "Arrives at third wait() call"
             assert worker.playlist_sequence == 3, "Has queued third segment"
+            assert worker.playlist_end is None, "Stream hasn't ended yet"
             assert worker.time_wait == 4.0, "Waits for 4 seconds out of the 5 seconds reload time"
             self.await_playlist_wait()
 
@@ -422,6 +432,7 @@ class TestHLSStreamWorker(TestMixinStreamHLS, unittest.TestCase):
             # time_completed = 00:00:17; time_elapsed = 0s
             assert worker.handshake_wait.wait_ready(1), "Arrives at fourth wait() call"
             assert worker.playlist_sequence == 4, "Has queued fourth segment"
+            assert worker.playlist_end is None, "Stream hasn't ended yet"
             assert worker.time_wait == 5.0, "Waits for the whole reload time"
             self.await_playlist_wait()
 
@@ -433,7 +444,7 @@ class TestHLSStreamWorker(TestMixinStreamHLS, unittest.TestCase):
             self.await_playlist_reload()
             assert self.await_read(read_all=True) == self.content(segments)
             self.await_close()
-            assert worker.playlist_sequence == 4, "Doesn't update sequence number once ended"
+            assert worker.playlist_end == 4, "Stream has ended"
             assert not worker.handshake_wait.wait_ready(0), "Doesn't wait once ended"
             assert not worker.handshake_reload.wait_ready(0), "Doesn't reload playlist once ended"
 
