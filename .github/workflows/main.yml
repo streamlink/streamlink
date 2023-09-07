@@ -73,7 +73,7 @@ jobs:
         run: git fetch --depth=300 origin +refs/tags/*:refs/tags/*
       - uses: actions/setup-python@v4
         with:
-          python-version: "3.10"
+          python-version: "3.11"
       - name: Install dependencies
         run: |
           ./script/install-dependencies.sh
@@ -96,7 +96,7 @@ jobs:
         run: git fetch --depth=300 origin +refs/tags/*:refs/tags/*
       - uses: actions/setup-python@v4
         with:
-          python-version: "3.10"
+          python-version: "3.11"
       - name: Install dependencies
         run: |
           ./script/install-dependencies.sh
@@ -124,7 +124,7 @@ jobs:
         run: git fetch --depth=300 origin +refs/tags/*:refs/tags/*
       - uses: actions/setup-python@v4
         with:
-          python-version: "3.10"
+          python-version: "3.11"
       - name: Install dependencies
         run: |
           ./script/install-dependencies.sh
