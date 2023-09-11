@@ -5,6 +5,7 @@ import os
 import platform
 import re
 import signal
+import ssl
 import sys
 import warnings
 from contextlib import closing, suppress
@@ -139,8 +140,9 @@ def create_output(formatter: Formatter) -> Union[FileOutput, PlayerOutput]:
         log.info(f"Starting player: {args.player}")
 
         return PlayerOutput(
-            args.player,
-            args.player_args,
+            path=args.player,
+            args=args.player_args,
+            env=args.player_env,
             quiet=not args.verbose_player,
             kill=not args.player_no_close,
             namedpipe=namedpipe,
@@ -186,8 +188,9 @@ def output_stream_http(
 
         server = create_http_server()
         player = output = PlayerOutput(
-            args.player,
-            args.player_args,
+            path=args.player,
+            args=args.player_args,
+            env=args.player_env,
             quiet=not args.verbose_player,
             filename=server.url,
             title=formatter.title(args.title, defaults=DEFAULT_STREAM_METADATA) if args.title else args.url,
@@ -275,8 +278,9 @@ def output_stream_passthrough(stream, formatter: Formatter):
         return False
 
     output = PlayerOutput(
-        args.player,
-        args.player_args,
+        path=args.player,
+        args=args.player_args,
+        env=args.player_env,
         quiet=not args.verbose_player,
         call=True,
         filename=url,
@@ -787,6 +791,7 @@ def log_current_versions():
 
     log.debug(f"OS:         {os_version}")
     log.debug(f"Python:     {platform.python_version()}")
+    log.debug(f"OpenSSL:    {ssl.OPENSSL_VERSION}")
     log.debug(f"Streamlink: {streamlink_version}")
 
     # https://peps.python.org/pep-0508/#names

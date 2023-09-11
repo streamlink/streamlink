@@ -91,14 +91,17 @@ Streamlink.{g,s}et_plugin_option()
 The ``Streamlink.get_plugin_option()`` and ``Streamlink.set_plugin_option()`` methods were removed as a result of moving
 plugin options from the :py:class:`Plugin <streamlink.plugin.Plugin>` classes to individual ``Plugin`` instances.
 
-Plugin options now must be set referencing the :py:attr:`Plugin.options <streamlink.plugin.Plugin.options>` instance and its
-respective :py:meth:`get <streamlink.options.Options.get>` and :py:meth:`set <streamlink.options.Options.set>` methods.
+Plugin options now must be get/set referencing the :py:attr:`Plugin.options <streamlink.plugin.Plugin.options>` instance and its
+respective :py:meth:`get() <streamlink.options.Options.get>` and :py:meth:`set() <streamlink.options.Options.set>` methods.
 
 Alternatively, when initializing a :py:class:`Plugin <streamlink.plugin.Plugin>` class, e.g. after calling
-:py:meth:`Streamlink.resolve_url() <streamlink.session.Streamlink.resolve_url>`, an optional pre-initialized instance of
-:py:class:`Options <streamlink.options.Options>` can be passed to the ``Plugin`` constructor.
-The :py:meth:`Streamlink.streams() <streamlink.session.Streamlink.streams>` method also supports passing an optional ``Options``
-instance to the ``Plugin`` constructor, if a plugin can be resolved from the input URL.
+:py:meth:`Streamlink.resolve_url() <streamlink.session.Streamlink.resolve_url>`
+or :py:meth:`Streamlink.streams() <streamlink.session.Streamlink.streams>`, an optional pre-initialized instance of
+:py:class:`Options <streamlink.options.Options>` can be passed to the constructor of the resolved ``Plugin`` class.
+
+Be aware that ``Streamlink.resolve_url()`` will return the explicit plugin name, plugin class and the resolved URL, whereas
+``Streamlink.streams()`` will initialize the first matching plugin automatically, so it's possible to pass custom options
+to a different plugin by accident, if the URL matches an unintended plugin.
 
 | :octicon:`git-pull-request` #5033
 
@@ -108,11 +111,49 @@ instance to the ``Plugin`` constructor, if a plugin can be resolved from the inp
    1. Initialize an :py:class:`Options <streamlink.options.Options>` object with the desired key-value pairs and pass it to the
       :py:class:`Plugin <streamlink.plugin.Plugin>` constructor or the
       :py:meth:`Streamlink.streams() <streamlink.session.Streamlink.streams>` method.
-   2. After instantiating a ``Plugin`` class, get or set its options using the ``get``/``set`` methods on the
+   2. After instantiating a ``Plugin`` class, get or set its options using the ``get()``/``set()`` methods on the
       :py:attr:`Plugin.options <streamlink.plugin.Plugin.options>` instance.
    3. If plugin options need to be accessed in custom :py:class:`Stream <streamlink.streams.Stream>` implementations related to
       custom ``Plugin`` implementations, then those options need to be passed from the ``Plugin`` to the ``Stream`` constructor
       beforehand, since the :py:class:`Streamlink <streamlink.session.Streamlink>` session can't be used for that anymore.
+
+   .. tab-set::
+
+      .. tab-item:: Before
+
+         .. code-block:: python
+
+            from streamlink.session import Streamlink
+
+            session = Streamlink()
+            session.set_plugin_option("twitch", "api-header", [("Authorization", "OAuth TOKEN")])
+            streams = session.streams("twitch.tv/...")
+
+      .. tab-item:: After
+
+         .. code-block:: python
+
+            from streamlink.options import Options
+            from streamlink.session import Streamlink
+
+            session = Streamlink()
+            options = Options()
+            options.set("api-header", [("Authorization", "OAuth TOKEN")])
+            streams = session.streams("twitch.tv/...", options)
+
+      .. tab-item:: Alternative
+
+         .. code-block:: python
+
+            from streamlink.options import Options
+            from streamlink.session import Streamlink
+
+            session = Streamlink()
+            pluginname, Pluginclass, resolved_url = session.resolve_url("twitch.tv/...")
+            options = Options()
+            options.set("api-header", [("Authorization", "OAuth TOKEN")])
+            plugin = Pluginclass(session, resolved_url, options)
+            streams = plugin.streams()
 
 Global plugin arguments
 ^^^^^^^^^^^^^^^^^^^^^^^

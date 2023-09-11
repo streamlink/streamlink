@@ -8,10 +8,11 @@ $type live, vod
 import logging
 import re
 from collections import deque
+from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from random import randint
 from threading import Event, RLock
-from typing import Any, Callable, Deque, Dict, List, NamedTuple, Optional, Union
+from typing import Any, Callable, Deque, Dict, List, Optional, Union
 from urllib.parse import urljoin, urlunparse
 
 from requests import Response
@@ -29,26 +30,27 @@ from streamlink.utils.parse import parse_json
 log = logging.getLogger(__name__)
 
 
-# TODO: use dataclasses for stream formats after dropping py36 to be able to subclass
-class StreamFormatVideo(NamedTuple):
+@dataclass
+class _StreamFormat:
     contentType: str
     sourceStreamVersion: int
     initUrl: str
     segmentUrl: str
     bitrate: int
+
+
+@dataclass
+class StreamFormatVideo(_StreamFormat):
     height: int
 
 
-class StreamFormatAudio(NamedTuple):
-    contentType: str
-    sourceStreamVersion: int
-    initUrl: str
-    segmentUrl: str
-    bitrate: int
+@dataclass
+class StreamFormatAudio(_StreamFormat):
     language: str = ""
 
 
-class Segment(NamedTuple):
+@dataclass
+class UStreamTVSegment:
     num: int
     duration: int
     available_at: datetime
@@ -137,8 +139,8 @@ class UStreamTVWsClient(WebsocketClient):
         self.ready = Event()
         self.stream_error = None
         # a list of deques subscribed by worker threads which independently need to read segments
-        self.stream_segments_subscribers: List[Deque[Segment]] = []
-        self.stream_segments_initial: Deque[Segment] = deque()
+        self.stream_segments_subscribers: List[Deque[UStreamTVSegment]] = []
+        self.stream_segments_initial: Deque[UStreamTVSegment] = deque()
         self.stream_segments_lock = RLock()
 
         self.media_id = media_id
@@ -168,7 +170,7 @@ class UStreamTVWsClient(WebsocketClient):
                 log.info("Closing websocket connection")
                 self.ws.close()
 
-    def segments_subscribe(self) -> Deque[Segment]:
+    def segments_subscribe(self) -> Deque[UStreamTVSegment]:
         with self.stream_segments_lock:
             # copy the initial segments deque (segments arrive early)
             new_deque = self.stream_segments_initial.copy()
@@ -176,7 +178,7 @@ class UStreamTVWsClient(WebsocketClient):
 
             return new_deque
 
-    def _segments_append(self, segment: Segment):
+    def _segments_append(self, segment: UStreamTVSegment):
         # if there are no subscribers yet, add segment(s) to the initial deque
         if not self.stream_segments_subscribers:
             self.stream_segments_initial.append(segment)
@@ -308,7 +310,7 @@ class UStreamTVWsClient(WebsocketClient):
                     # the last id->hash item will use the previous diff to extrapolate segment IDs
                     diff = sorted_ids[idx_next] - segment_id
                 for num in range(segment_id, segment_id + diff):
-                    self._segments_append(Segment(
+                    self._segments_append(UStreamTVSegment(
                         num=num,
                         duration=duration,
                         available_at=current_time + timedelta(seconds=(num - current_id - 1) * duration / 1000),
@@ -337,7 +339,7 @@ class UStreamTVWsClient(WebsocketClient):
     }
 
 
-class UStreamTVStreamWriter(SegmentedStreamWriter):
+class UStreamTVStreamWriter(SegmentedStreamWriter[UStreamTVSegment, Response]):
     reader: "UStreamTVStreamReader"
     stream: "UStreamTVStream"
 
@@ -358,7 +360,7 @@ class UStreamTVStreamWriter(SegmentedStreamWriter):
             self.queue(segment, self.executor.submit(self.fetch, segment, False))
 
     # noinspection PyMethodOverriding
-    def fetch(self, segment: Segment, is_init: bool):  # type: ignore[override]
+    def fetch(self, segment: UStreamTVSegment, is_init: bool):  # type: ignore[override]
         if self.closed:  # pragma: no cover
             return
 
@@ -382,7 +384,7 @@ class UStreamTVStreamWriter(SegmentedStreamWriter):
         except StreamError as err:
             log.error(f"Failed to fetch {self.stream.kind} segment {segment.num}: {err}")
 
-    def write(self, segment: Segment, res: Response, *data):
+    def write(self, segment: UStreamTVSegment, res: Response, *data):
         if self.closed:  # pragma: no cover
             return
         try:
@@ -393,7 +395,7 @@ class UStreamTVStreamWriter(SegmentedStreamWriter):
             log.error(f"Failed to read {self.stream.kind} segment {segment.num}: {err}")
 
 
-class UStreamTVStreamWorker(SegmentedStreamWorker):
+class UStreamTVStreamWorker(SegmentedStreamWorker[UStreamTVSegment, Response]):
     reader: "UStreamTVStreamReader"
     writer: "UStreamTVStreamWriter"
     stream: "UStreamTVStream"
@@ -427,7 +429,7 @@ class UStreamTVStreamWorker(SegmentedStreamWorker):
             self.segment_id = segment.num + 1
 
 
-class UStreamTVStreamReader(SegmentedStreamReader):
+class UStreamTVStreamReader(SegmentedStreamReader[UStreamTVSegment, Response]):
     __worker__ = UStreamTVStreamWorker
     __writer__ = UStreamTVStreamWriter
 

@@ -2,6 +2,10 @@
 $description Video streaming service focused on anime, manga, and dorama.
 $url crunchyroll.com
 $type vod
+$metadata id
+$metadata author
+$metadata category
+$metadata title
 """
 
 import logging

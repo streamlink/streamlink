@@ -3,6 +3,10 @@ $description Global live-streaming and video hosting social platform owned by Go
 $url youtube.com
 $url youtu.be
 $type live, vod
+$metadata id
+$metadata author
+$metadata category
+$metadata title
 $notes Protected videos are not supported
 """
 

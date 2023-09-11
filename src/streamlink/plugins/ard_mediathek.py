@@ -3,6 +3,7 @@ $description Live TV channels and video on-demand service from ARD, a German pub
 $url ardmediathek.de
 $url mediathek.daserste.de
 $type live, vod
+$metadata title
 $region Germany
 """
 

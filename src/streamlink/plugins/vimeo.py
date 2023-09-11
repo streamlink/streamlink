@@ -2,6 +2,9 @@
 $description Global live-streaming and video hosting social platform.
 $url vimeo.com
 $type live, vod
+$metadata id
+$metadata author
+$metadata title
 $notes Password protected streams are not supported
 """
 

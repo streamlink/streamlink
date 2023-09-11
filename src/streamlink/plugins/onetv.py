@@ -2,6 +2,7 @@
 $description A state/privately owned Russian live TV channel.
 $url 1tv.ru
 $type live
+$metadata title
 $region Russia
 """
 

@@ -8,6 +8,8 @@ from time import time
 from typing import Any, Dict, List, Optional, Tuple
 from urllib.parse import urlparse, urlunparse
 
+from requests import Response
+
 from streamlink.exceptions import PluginError, StreamError
 from streamlink.session import Streamlink
 from streamlink.stream.dash_manifest import MPD, Representation, Segment, freeze_timeline
@@ -22,12 +24,12 @@ from streamlink.utils.times import now
 log = logging.getLogger(__name__)
 
 
-class DASHStreamWriter(SegmentedStreamWriter):
+class DASHStreamWriter(SegmentedStreamWriter[Segment, Response]):
     reader: "DASHStreamReader"
     stream: "DASHStream"
 
-    def fetch(self, segment: Segment, retries: Optional[int] = None):
-        if self.closed or not retries:
+    def fetch(self, segment: Segment):
+        if self.closed:
             return
 
         name = segment.name
@@ -53,7 +55,7 @@ class DASHStreamWriter(SegmentedStreamWriter):
                 timeout=self.timeout,
                 exception=StreamError,
                 headers=headers,
-                retries=retries,
+                retries=self.retries,
                 **request_args,
             )
         except StreamError as err:
@@ -69,7 +71,7 @@ class DASHStreamWriter(SegmentedStreamWriter):
         log.debug(f"{self.reader.mime_type} segment {segment.name}: completed")
 
 
-class DASHStreamWorker(SegmentedStreamWorker):
+class DASHStreamWorker(SegmentedStreamWorker[Segment, Response]):
     reader: "DASHStreamReader"
     writer: "DASHStreamWriter"
     stream: "DASHStream"
@@ -162,7 +164,7 @@ class DASHStreamWorker(SegmentedStreamWorker):
         return changed
 
 
-class DASHStreamReader(SegmentedStreamReader):
+class DASHStreamReader(SegmentedStreamReader[Segment, Response]):
     __worker__ = DASHStreamWorker
     __writer__ = DASHStreamWriter
 
@@ -175,10 +177,8 @@ class DASHStreamReader(SegmentedStreamReader):
         stream: "DASHStream",
         representation: Representation,
         timestamp: datetime,
-        *args,
-        **kwargs,
     ):
-        super().__init__(stream, *args, **kwargs)
+        super().__init__(stream)
         self.ident = representation.ident
         self.mime_type = representation.mimeType
         self.timestamp = timestamp

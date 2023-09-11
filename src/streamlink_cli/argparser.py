@@ -9,7 +9,7 @@ from typing import Any, Callable, Dict, List, Optional, Tuple
 from streamlink import __version__ as streamlink_version, logger
 from streamlink.session import Streamlink
 from streamlink.utils.args import boolean, comma_list, comma_list_filter, filesize, keyvalue, num
-from streamlink.utils.times import hours_minutes_seconds
+from streamlink.utils.times import hours_minutes_seconds_float
 from streamlink_cli.constants import STREAM_PASSTHROUGH
 from streamlink_cli.output.player import PlayerOutput
 from streamlink_cli.utils import find_default_player
@@ -428,6 +428,18 @@ def build_parser():
         """,
     )
     player.add_argument(
+        "--player-env",
+        metavar="KEY=VALUE",
+        type=keyvalue,
+        action="append",
+        help="""
+        Add an additional environment variable to the spawned player process, in addition to the ones inherited from
+        the Streamlink/Python parent process. This allows setting player environment variables in config files.
+
+        Can be repeated to add multiple environment variables.
+        """,
+    )
+    player.add_argument(
         "-v", "--verbose-player",
         action="store_true",
         help="""
@@ -553,7 +565,8 @@ def build_parser():
         help=f"""
         Change the title of the video player's window.
 
-        Please see the "Metadata variables" section of Streamlink's CLI documentation for all available metadata variables.
+        Please see the "Metadata variables" section of Streamlink's CLI documentation for all available metadata variables,
+        as well as the "Plugins" section for the list of metadata variables defined in each plugin.
 
         This option is only supported for the following players: {', '.join(sorted(PlayerOutput.PLAYERS.keys()))}
 
@@ -585,7 +598,8 @@ def build_parser():
 
         You will be prompted if the file already exists.
 
-        Please see the "Metadata variables" section of Streamlink's CLI documentation for all available metadata variables.
+        Please see the "Metadata variables" section of Streamlink's CLI documentation for all available metadata variables,
+        as well as the "Plugins" section for the list of metadata variables defined in each plugin.
 
         Unsupported characters in substituted variables will be replaced with an underscore.
 
@@ -612,7 +626,8 @@ def build_parser():
 
         You will be prompted if the file already exists.
 
-        Please see the "Metadata variables" section of Streamlink's CLI documentation for all available metadata variables.
+        Please see the "Metadata variables" section of Streamlink's CLI documentation for all available metadata variables,
+        as well as the "Plugins" section for the list of metadata variables defined in each plugin.
 
         Unsupported characters in substituted variables will be replaced with an underscore.
 
@@ -631,7 +646,8 @@ def build_parser():
 
         You will be prompted if the file already exists.
 
-        Please see the "Metadata variables" section of Streamlink's CLI documentation for all available metadata variables.
+        Please see the "Metadata variables" section of Streamlink's CLI documentation for all available metadata variables,
+        as well as the "Plugins" section for the list of metadata variables defined in each plugin.
 
         Unsupported characters in substituted variables will be replaced with an underscore.
 
@@ -1021,21 +1037,19 @@ def build_parser():
     )
     transport_hls.add_argument(
         "--hls-start-offset",
-        type=hours_minutes_seconds,
-        metavar="[HH:]MM:SS",
-        default=None,
+        type=hours_minutes_seconds_float,
+        metavar="[[XX:]XX:]XX[.XX] | [XXh][XXm][XX[.XX]s]",
         help="""
         Amount of time to skip from the beginning of the stream. For live
         streams, this is a negative offset from the end of the stream (rewind).
 
-        Default is 00:00:00.
+        Default is 0.
         """,
     )
     transport_hls.add_argument(
         "--hls-duration",
-        type=hours_minutes_seconds,
-        metavar="[HH:]MM:SS",
-        default=None,
+        type=hours_minutes_seconds_float,
+        metavar="[[XX:]XX:]XX[.XX] | [XXh][XXm][XX[.XX]s]",
         help="""
         Limit the playback duration, useful for watching segments of a stream.
         The actual duration may be slightly longer, as it is rounded to the

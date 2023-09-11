@@ -2,6 +2,7 @@
 $description Live TV channels and video on-demand service from ARD, a German public, independent broadcaster.
 $url daserste.de
 $type live, vod
+$metadata title
 $region Germany
 """
 

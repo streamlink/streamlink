@@ -2,6 +2,7 @@
 $description Global live broadcasting and live broadcast archiving social platform.
 $url twitcasting.tv
 $type live
+$metadata id
 """
 
 import hashlib

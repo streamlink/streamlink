@@ -9,7 +9,7 @@ jobs:
     if: github.repository == 'streamlink/streamlink'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: actions/setup-python@v4
         with:
           python-version: "3.11"
@@ -17,7 +17,7 @@ jobs:
       - run: python ./script/update-user-agents.py
         env:
           WHATISMYBROWSER_API_KEY: ${{ secrets.WHATISMYBROWSER_API_KEY }}
-      - uses: peter-evans/create-pull-request@9e5b2344021c369f621dcb89ffde8fd910dac08c
+      - uses: peter-evans/create-pull-request@6d9c0cdf5825c01278b6e63a0788434e6b3c5e27
         with:
           token: ${{ secrets.STREAMLINKBOT_USERAGENTS_PR }}
           add-paths: |

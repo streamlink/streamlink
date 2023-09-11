@@ -46,9 +46,9 @@ class CommandLineTestCase(unittest.TestCase):
         assert exit_code == actual_exit_code
         assert mock_setup_streamlink.call_count == 1
         if not passthrough:
-            assert mock_popen.call_args_list == [call(commandline, bufsize=ANY, stdin=ANY, stdout=ANY, stderr=ANY)]
+            assert mock_popen.call_args_list == [call(commandline, env=ANY, bufsize=ANY, stdin=ANY, stdout=ANY, stderr=ANY)]
         else:
-            assert mock_call.call_args_list == [call(commandline, stdout=ANY, stderr=ANY)]
+            assert mock_call.call_args_list == [call(commandline, env=ANY, stdout=ANY, stderr=ANY)]
 
 
 class TestCommandLine(CommandLineTestCase):

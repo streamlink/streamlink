@@ -3,6 +3,9 @@ $description Russian live-streaming and video hosting social platform.
 $url ok.ru
 $url mobile.ok.ru
 $type live, vod
+$metadata id
+$metadata author
+$metadata title
 """
 
 import logging

@@ -2,6 +2,8 @@
 $description French live TV channel and video on-demand service owned by IDF1.
 $url idf1.fr
 $type live, vod
+$metadata id
+$metadata title
 """
 
 import logging

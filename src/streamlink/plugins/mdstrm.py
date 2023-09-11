@@ -4,6 +4,8 @@ $url mdstrm.com
 $url latina.pe/tvenvivo
 $url saltillo.multimedios.com/video
 $type live
+$metadata id
+$metadata title
 """
 import logging
 import re

@@ -289,10 +289,12 @@ class TestCLIMainCreateOutput(unittest.TestCase):
         args.url = "URL"
         args.player = Path("mpv")
         args.player_args = ""
+        args.player_env = None
 
         output = create_output(formatter)
         assert type(output) is PlayerOutput
         assert output.playerargs.title == "URL"
+        assert output.env == {}
 
         args.title = "{author} - {title}"
         output = create_output(formatter)
@@ -379,12 +381,14 @@ class TestCLIMainCreateOutput(unittest.TestCase):
         args.url = "URL"
         args.player = Path("mpv")
         args.player_args = ""
+        args.player_env = [("VAR1", "abc"), ("VAR2", "def")]
         args.player_fifo = None
         args.player_http = None
 
         output = create_output(formatter)
         assert type(output) is PlayerOutput
         assert output.playerargs.title == "URL"
+        assert output.env == {"VAR1": "abc", "VAR2": "def"}
         assert type(output.record) is FileOutput
         assert output.record.filename == Path("foo")
         assert output.record.fd is None
@@ -415,12 +419,14 @@ class TestCLIMainCreateOutput(unittest.TestCase):
         args.url = "URL"
         args.player = Path("mpv")
         args.player_args = ""
+        args.player_env = [("VAR1", "abc"), ("VAR2", "def")]
         args.player_fifo = None
         args.player_http = None
 
         output = create_output(formatter)
         assert type(output) is PlayerOutput
         assert output.playerargs.title == "foo - bar"
+        assert output.env == {"VAR1": "abc", "VAR2": "def"}
         assert type(output.record) is FileOutput
         assert output.record.filename is None
         assert output.record.fd is stdout
@@ -689,6 +695,7 @@ class TestCLIMainLoggingInfos(_TestCLIMainLogging):
     @patch("streamlink_cli.main.importlib.metadata")
     @patch("streamlink_cli.main.log_current_arguments", Mock(side_effect=_TestCLIMainLogging.StopTest))
     @patch("platform.python_version", Mock(return_value="python"))
+    @patch("ssl.OPENSSL_VERSION", "OPENSSL_VERSION")
     def test_log_current_versions(self, mock_importlib_metadata: Mock, mock_log: Mock):
         class FakePackageNotFoundError(Exception):
             pass
@@ -714,6 +721,7 @@ class TestCLIMainLoggingInfos(_TestCLIMainLogging):
             assert mock_log.debug.mock_calls == [
                 call("OS:         linux"),
                 call("Python:     python"),
+                call("OpenSSL:    OPENSSL_VERSION"),
                 call("Streamlink: streamlink"),
                 call("Dependencies:"),
                 call(" foo: 1.2.3"),
@@ -729,6 +737,7 @@ class TestCLIMainLoggingInfos(_TestCLIMainLogging):
             assert mock_log.debug.mock_calls == [
                 call("OS:         macOS 0.0.0"),
                 call("Python:     python"),
+                call("OpenSSL:    OPENSSL_VERSION"),
                 call("Streamlink: streamlink"),
                 call("Dependencies:"),
                 call(" foo: 1.2.3"),
@@ -745,6 +754,7 @@ class TestCLIMainLoggingInfos(_TestCLIMainLogging):
             assert mock_log.debug.mock_calls == [
                 call("OS:         Windows 0.0.0"),
                 call("Python:     python"),
+                call("OpenSSL:    OPENSSL_VERSION"),
                 call("Streamlink: streamlink"),
                 call("Dependencies:"),
                 call(" foo: 1.2.3"),

@@ -83,3 +83,17 @@ def requests_mock(requests_mock: rm.Mocker) -> rm.Mocker:
     """
     requests_mock.register_uri(rm.ANY, rm.ANY, exc=rm.exceptions.InvalidRequest)
     return requests_mock
+
+
+@pytest.fixture()
+def os_environ(request: pytest.FixtureRequest, monkeypatch: pytest.MonkeyPatch) -> Dict[str, str]:
+    class FakeEnviron(dict):
+        def __setitem__(self, key, value):
+            if key == "PYTEST_CURRENT_TEST":
+                return
+            return super().__setitem__(key, value)
+
+    fakeenviron = FakeEnviron(getattr(request, "param", {}))
+    monkeypatch.setattr("os.environ", fakeenviron)
+
+    return fakeenviron

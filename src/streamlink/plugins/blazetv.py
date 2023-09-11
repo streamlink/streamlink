@@ -2,6 +2,10 @@
 $description British live TV channel and video on-demand service from Blaze, owned by A&E Networks UK.
 $url blaze.tv
 $type live, vod
+$metadata id
+$metadata author
+$metadata category
+$metadata title
 $region United Kingdom
 """
 

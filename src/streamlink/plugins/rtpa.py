@@ -2,6 +2,7 @@
 $description Live TV channels and video on-demand service from RTPA, a Spanish public broadcaster.
 $url rtpa.es
 $type live, vod
+$metadata title
 """
 
 import re

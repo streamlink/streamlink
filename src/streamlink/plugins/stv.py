@@ -2,6 +2,7 @@
 $description Live TV channels from STV, a Scottish free-to-air broadcaster.
 $url player.stv.tv
 $type live
+$metadata title
 $region United Kingdom
 """
 

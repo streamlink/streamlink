@@ -2,6 +2,7 @@
 $description Video content from Telefe, an Argentine TV station.
 $url mitelefe.com
 $type live
+$metadata title
 $region Argentina
 """
 

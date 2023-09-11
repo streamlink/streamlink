@@ -2,6 +2,9 @@
 $description Japanese live-streaming and video hosting social platform.
 $url live.nicovideo.jp
 $type live, vod
+$metadata id
+$metadata author
+$metadata title
 $account Required by some streams
 $notes Timeshift is supported
 """
@@ -11,7 +14,7 @@ import re
 from threading import Event
 from urllib.parse import urljoin
 
-from streamlink.plugin import Plugin, PluginError, pluginargument, pluginmatcher
+from streamlink.plugin import Plugin, pluginargument, pluginmatcher
 from streamlink.plugin.api import useragents, validate
 from streamlink.plugin.api.websocket import WebsocketClient
 from streamlink.stream.hls import HLSStream, HLSStreamReader
@@ -152,12 +155,11 @@ class NicoLiveHLSStream(HLSStream):
     "timeshift-offset",
     type=hours_minutes_seconds,
     argument_name="niconico-timeshift-offset",
-    metavar="[HH:]MM:SS",
-    default=None,
+    metavar="[[XX:]XX:]XX | [XXh][XXm][XXs]",
     help="""
         Amount of time to skip from the beginning of a stream.
 
-        Default is 00:00:00.
+        Default is 0.
     """,
 )
 class NicoLive(Plugin):
@@ -182,13 +184,17 @@ class NicoLive(Plugin):
 
         self.niconico_web_login()
 
-        wss_api_url = self.get_wss_api_url()
+        data = self.get_data()
+
+        wss_api_url = self.find_wss_api_url(data)
         if not wss_api_url:
             log.error(
                 "Failed to get wss_api_url. "
                 + "Please check if the URL is correct, and make sure your account has access to the video.",
             )
             return
+
+        self.id, self.author, self.title = self.find_metadata(data)
 
         self.wsclient = NicoLiveWsClient(self.session, wss_api_url)
         self.wsclient.start()
@@ -214,26 +220,56 @@ class NicoLive(Plugin):
 
         return self.wsclient.hls_stream_url
 
-    def get_wss_api_url(self):
-        try:
-            data = self.session.http.get(self.url, schema=validate.Schema(
-                validate.parse_html(),
-                validate.xml_find(".//script[@id='embedded-data'][@data-props]"),
-                validate.get("data-props"),
-                validate.parse_json(),
-                {"site": {
+    def get_data(self):
+        return self.session.http.get(self.url, schema=validate.Schema(
+            validate.parse_html(),
+            validate.xml_find(".//script[@id='embedded-data'][@data-props]"),
+            validate.get("data-props"),
+            validate.parse_json(),
+        ))
+
+    @staticmethod
+    def find_metadata(data):
+        schema = validate.Schema(
+            {
+                "program": {
+                    "nicoliveProgramId": str,
+                    "supplier": {"name": str},
+                    "title": str,
+                },
+            },
+            validate.get("program"),
+            validate.union_get(
+                "nicoliveProgramId",
+                ("supplier", "name"),
+                "title",
+            ),
+        )
+
+        return schema.validate(data)
+
+    @staticmethod
+    def find_wss_api_url(data):
+        schema = validate.Schema(
+            {
+                "site": {
                     "relive": {
-                        "webSocketUrl": validate.url(scheme="wss"),
+                        "webSocketUrl": validate.any(
+                            validate.url(scheme="wss"),
+                            "",
+                        ),
                     },
                     validate.optional("frontendId"): int,
-                }},
-                validate.get("site"),
-                validate.union_get(("relive", "webSocketUrl"), "frontendId"),
-            ))
-        except PluginError:
+                },
+            },
+            validate.get("site"),
+            validate.union_get(("relive", "webSocketUrl"), "frontendId"),
+        )
+
+        wss_api_url, frontend_id = schema.validate(data)
+        if not wss_api_url:
             return
 
-        wss_api_url, frontend_id = data
         if frontend_id is not None:
             wss_api_url = update_qsd(wss_api_url, {"frontend_id": frontend_id})
 

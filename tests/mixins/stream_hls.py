@@ -61,7 +61,7 @@ class Tag(HLSItemBase):
 
     def build(self, *args, **kwargs):
         attrs = None
-        if type(self.attrs) == dict:
+        if isinstance(self.attrs, dict):
             attrs = ",".join([
                 "{0}={1}".format(key, value(self, *args, **kwargs) if callable(value) else value)
                 for (key, value) in self.attrs.items()
@@ -114,11 +114,11 @@ class EventedHLSStreamWriter(_HLSStreamWriter):
         super().__init__(*args, **kwargs)
         self.handshake = Handshake()
 
-    def _futures_put(self, item):
-        self.futures.put_nowait(item)
+    def _queue_put(self, item):
+        self._queue.put_nowait(item)
 
-    def _futures_get(self):
-        return self.futures.get_nowait()
+    def _queue_get(self):
+        return self._queue.get_nowait()
 
     @staticmethod
     def _future_result(future):

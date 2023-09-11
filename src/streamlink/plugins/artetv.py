@@ -2,6 +2,7 @@
 $description European public service channel promoting culture, including magazine shows, concerts and documentaries.
 $url arte.tv
 $type live, vod
+$metadata title
 """
 
 import logging

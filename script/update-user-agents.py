@@ -75,10 +75,10 @@ def main(api_key: str, file: Path):
         for item in seq:
             try:
                 obj = obj[item]
-            except KeyError as err:
+            except LookupError as err:
                 raise ValueError(f"Invalid key: {item} ({seq})") from err
 
-        if type(obj) is not str:
+        if not isinstance(obj, str):
             raise ValueError(f"Invalid result: {obj!r} ({seq})")
 
         user_agents[browser] = obj

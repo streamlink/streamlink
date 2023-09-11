@@ -23,7 +23,6 @@ class TestSegment:
         ({"url": "https://foo/bar"}, "bar"),
         ({"url": "https://foo/bar/"}, "bar"),
         ({"url": "https://foo/bar/baz.qux"}, "baz.qux"),
-        ({"url": "https://foo/bar/baz.qux"}, "baz.qux"),
         ({"url": "https://foo/bar/baz.qux?asdf"}, "baz.qux"),
     ])
     def test_name(self, segmentdata: dict, expected: str):

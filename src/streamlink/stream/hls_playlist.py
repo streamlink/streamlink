@@ -1,16 +1,21 @@
-import inspect
 import logging
 import math
 import re
 from binascii import Error as BinasciiError, unhexlify
 from datetime import datetime, timedelta
-from typing import Any, Callable, ClassVar, Dict, Iterator, List, Mapping, NamedTuple, Optional, Tuple, Type, Union
+from typing import Callable, ClassVar, Dict, Iterator, List, Mapping, NamedTuple, Optional, Tuple, Type, Union
 from urllib.parse import urljoin, urlparse
 
 from isodate import ISO8601Error, parse_datetime  # type: ignore[import]
 from requests import Response
 
 from streamlink.logger import ALL, StreamlinkLogger
+
+
+try:
+    from typing import Self  # type: ignore[attr-defined]
+except ImportError:  # pragma: no cover
+    from typing_extensions import Self
 
 
 log: StreamlinkLogger = logging.getLogger(__name__)  # type: ignore[assignment]
@@ -154,8 +159,33 @@ class M3U8:
         return daterange.start_date <= date
 
 
-class M3U8Parser:
-    _TAGS: ClassVar[Mapping[str, Callable[["M3U8Parser", str], None]]]
+_symbol_tag_parser = "__PARSE_TAG_NAME"
+
+
+def parse_tag(tag: str):
+    def decorator(func: Callable[[str], None]) -> Callable[[str], None]:
+        setattr(func, _symbol_tag_parser, tag)
+
+        return func
+
+    return decorator
+
+
+class M3U8ParserMeta(type):
+    def __init__(cls, name, bases, namespace, **kwargs):
+        super().__init__(name, bases, namespace, **kwargs)
+
+        tags = dict(**getattr(cls, "_TAGS", {}))
+        for member in namespace.values():
+            tag = getattr(member, _symbol_tag_parser, None)
+            if type(tag) is not str:  # noqa: E721
+                continue
+            tags[tag] = member
+        cls._TAGS = tags
+
+
+class M3U8Parser(metaclass=M3U8ParserMeta):
+    _TAGS: ClassVar[Mapping[str, Callable[[Self, str], None]]]
 
     _extinf_re = re.compile(r"(?P<duration>\d+(\.\d+)?)(,(?P<title>.+))?")
     _attr_re = re.compile(r"""
@@ -184,24 +214,20 @@ class M3U8Parser:
 
     def __init__(self, base_uri: Optional[str] = None, m3u8: Type[M3U8] = M3U8):
         self.m3u8: M3U8 = m3u8(base_uri)
-        self.state: Dict[str, Any] = {}
 
-        self._add_tag_callbacks()
+        self._expect_playlist: bool = False
+        self._streaminf: Optional[Dict[str, str]] = None
 
-    def _add_tag_callbacks(self):
-        # ignore previously generated tag-callback mapping on parent classes when initializing subclasses
-        if "_TAGS" in self.__class__.__dict__:
-            return
-        tags = {}
-        self.__class__._TAGS = tags
-        for name, method in inspect.getmembers(self.__class__, inspect.isfunction):
-            if not name.startswith("parse_tag_"):
-                continue
-            tag = name[10:].upper().replace("_", "-")
-            tags[tag] = method
+        self._expect_segment: bool = False
+        self._extinf: Optional[ExtInf] = None
+        self._byterange: Optional[ByteRange] = None
+        self._discontinuity: bool = False
+        self._map: Optional[Map] = None
+        self._key: Optional[Key] = None
+        self._date: Optional[datetime] = None
 
     @classmethod
-    def create_stream_info(cls, streaminf: Dict[str, Optional[str]], streaminfoclass=None):
+    def create_stream_info(cls, streaminf: Mapping[str, Optional[str]], streaminfoclass=None):
         program_id = streaminf.get("PROGRAM-ID")
 
         _bandwidth = streaminf.get("BANDWIDTH")
@@ -324,6 +350,7 @@ class M3U8Parser:
 
     # 4.3.1: Basic Tags
 
+    @parse_tag("EXT-X-VERSION")
     def parse_tag_ext_x_version(self, value: str) -> None:
         """
         EXT-X-VERSION
@@ -333,31 +360,35 @@ class M3U8Parser:
 
     # 4.3.2: Media Segment Tags
 
+    @parse_tag("EXTINF")
     def parse_tag_extinf(self, value: str) -> None:
         """
         EXTINF
         https://datatracker.ietf.org/doc/html/rfc8216#section-4.3.2.1
         """
-        self.state["expect_segment"] = True
-        self.state["extinf"] = self.parse_extinf(value)
+        self._expect_segment = True
+        self._extinf = self.parse_extinf(value)
 
+    @parse_tag("EXT-X-BYTERANGE")
     def parse_tag_ext_x_byterange(self, value: str) -> None:
         """
         EXT-X-BYTERANGE
         https://datatracker.ietf.org/doc/html/rfc8216#section-4.3.2.2
         """
-        self.state["expect_segment"] = True
-        self.state["byterange"] = self.parse_byterange(value)
+        self._expect_segment = True
+        self._byterange = self.parse_byterange(value)
 
     # noinspection PyUnusedLocal
+    @parse_tag("EXT-X-DISCONTINUITY")
     def parse_tag_ext_x_discontinuity(self, value: str) -> None:
         """
         EXT-X-DISCONTINUITY
         https://datatracker.ietf.org/doc/html/rfc8216#section-4.3.2.3
         """
-        self.state["discontinuity"] = True
-        self.state["map"] = None
+        self._discontinuity = True
+        self._map = None
 
+    @parse_tag("EXT-X-KEY")
     def parse_tag_ext_x_key(self, value: str) -> None:
         """
         EXT-X-KEY
@@ -366,9 +397,11 @@ class M3U8Parser:
         attr = self.parse_attributes(value)
         method = attr.get("METHOD")
         uri = attr.get("URI")
+
         if not method:
             return
-        self.state["key"] = Key(
+
+        self._key = Key(
             method=method,
             uri=self.uri(uri) if uri else None,
             iv=self.parse_hex(attr.get("IV")),
@@ -376,6 +409,7 @@ class M3U8Parser:
             key_format_versions=attr.get("KEYFORMATVERSIONS"),
         )
 
+    @parse_tag("EXT-X-MAP")
     def parse_tag_ext_x_map(self, value: str) -> None:  # version >= 5
         """
         EXT-X-MAP
@@ -383,21 +417,25 @@ class M3U8Parser:
         """
         attr = self.parse_attributes(value)
         uri = attr.get("URI")
+
         if not uri:
             return
+
         byterange = self.parse_byterange(attr.get("BYTERANGE", ""))
-        self.state["map"] = Map(
+        self._map = Map(
             uri=self.uri(uri),
             byterange=byterange,
         )
 
+    @parse_tag("EXT-X-PROGRAM-DATE-TIME")
     def parse_tag_ext_x_program_date_time(self, value: str) -> None:
         """
         EXT-X-PROGRAM-DATE-TIME
         https://datatracker.ietf.org/doc/html/rfc8216#section-4.3.2.6
         """
-        self.state["date"] = self.parse_iso8601(value)
+        self._date = self.parse_iso8601(value)
 
+    @parse_tag("EXT-X-DATERANGE")
     def parse_tag_ext_x_daterange(self, value: str) -> None:
         """
         EXT-X-DATERANGE
@@ -418,6 +456,7 @@ class M3U8Parser:
 
     # 4.3.3: Media Playlist Tags
 
+    @parse_tag("EXT-X-TARGETDURATION")
     def parse_tag_ext_x_targetduration(self, value: str) -> None:
         """
         EXT-X-TARGETDURATION
@@ -425,6 +464,7 @@ class M3U8Parser:
         """
         self.m3u8.targetduration = float(value)
 
+    @parse_tag("EXT-X-MEDIA-SEQUENCE")
     def parse_tag_ext_x_media_sequence(self, value: str) -> None:
         """
         EXT-X-MEDIA-SEQUENCE
@@ -432,6 +472,7 @@ class M3U8Parser:
         """
         self.m3u8.media_sequence = int(value)
 
+    @parse_tag("EXT-X-DISCONTINUTY-SEQUENCE")
     def parse_tag_ext_x_discontinuity_sequence(self, value: str) -> None:
         """
         EXT-X-DISCONTINUITY-SEQUENCE
@@ -440,6 +481,7 @@ class M3U8Parser:
         self.m3u8.discontinuity_sequence = int(value)
 
     # noinspection PyUnusedLocal
+    @parse_tag("EXT-X-ENDLIST")
     def parse_tag_ext_x_endlist(self, value: str) -> None:
         """
         EXT-X-ENDLIST
@@ -447,6 +489,7 @@ class M3U8Parser:
         """
         self.m3u8.is_endlist = True
 
+    @parse_tag("EXT-X-PLAYLIST-TYPE")
     def parse_tag_ext_x_playlist_type(self, value: str) -> None:
         """
         EXT-X-PLAYLISTTYPE
@@ -455,6 +498,7 @@ class M3U8Parser:
         self.m3u8.playlist_type = value
 
     # noinspection PyUnusedLocal
+    @parse_tag("EXT-X-I-FRAMES-ONLY")
     def parse_tag_ext_x_i_frames_only(self, value: str) -> None:  # version >= 4
         """
         EXT-X-I-FRAMES-ONLY
@@ -464,6 +508,7 @@ class M3U8Parser:
 
     # 4.3.4: Master Playlist Tags
 
+    @parse_tag("EXT-X-MEDIA")
     def parse_tag_ext_x_media(self, value: str) -> None:
         """
         EXT-X-MEDIA
@@ -474,8 +519,10 @@ class M3U8Parser:
         uri = attr.get("URI")
         group_id = attr.get("GROUP-ID")
         name = attr.get("NAME")
+
         if not _type or not group_id or not name:
             return
+
         media = Media(
             type=_type,
             uri=self.uri(uri) if uri else None,
@@ -489,24 +536,30 @@ class M3U8Parser:
         )
         self.m3u8.media.append(media)
 
+    @parse_tag("EXT-X-STREAM-INF")
     def parse_tag_ext_x_stream_inf(self, value: str) -> None:
         """
         EXT-X-STREAM-INF
         https://datatracker.ietf.org/doc/html/rfc8216#section-4.3.4.2
         """
-        self.state["streaminf"] = self.parse_attributes(value)
-        self.state["expect_playlist"] = True
+        self._expect_playlist = True
+        self._streaminf = self.parse_attributes(value)
 
+    @parse_tag("EXT-X-I-FRAME-STREAM-INF")
     def parse_tag_ext_x_i_frame_stream_inf(self, value: str) -> None:
         """
         EXT-X-I-FRAME-STREAM-INF
         https://datatracker.ietf.org/doc/html/rfc8216#section-4.3.4.3
         """
         attr = self.parse_attributes(value)
-        streaminf = self.state.pop("streaminf", attr)
         uri = attr.get("URI")
+
+        streaminf = self._streaminf or attr
+        self._streaminf = None
+
         if not uri:
             return
+
         stream_info = self.create_stream_info(streaminf, IFrameStreamInfo)
         playlist = Playlist(
             uri=self.uri(uri),
@@ -516,12 +569,14 @@ class M3U8Parser:
         )
         self.m3u8.playlists.append(playlist)
 
+    @parse_tag("EXT-X-SESSION-DATA")
     def parse_tag_ext_x_session_data(self, value: str) -> None:
         """
         EXT-X-SESSION-DATA
         https://datatracker.ietf.org/doc/html/rfc8216#section-4.3.4.4
         """
 
+    @parse_tag("EXT-X-SESSION-KEY")
     def parse_tag_ext_x_session_key(self, value: str) -> None:
         """
         EXT-X-SESSION-KEY
@@ -530,12 +585,14 @@ class M3U8Parser:
 
     # 4.3.5: Media or Master Playlist Tags
 
+    @parse_tag("EXT-X-INDEPENDENT-SEGMENTS")
     def parse_tag_ext_x_independent_segments(self, value: str) -> None:
         """
         EXT-X-INDEPENDENT-SEGMENTS
         https://datatracker.ietf.org/doc/html/rfc8216#section-4.3.5.1
         """
 
+    @parse_tag("EXT-X-START")
     def parse_tag_ext_x_start(self, value: str) -> None:
         """
         EXT-X-START
@@ -550,6 +607,7 @@ class M3U8Parser:
     # Removed tags
     # https://datatracker.ietf.org/doc/html/rfc8216#section-7
 
+    @parse_tag("EXT-X-ALLOW-CACHE")
     def parse_tag_ext_x_allow_cache(self, value: str) -> None:  # version < 7
         self.m3u8.allow_cache = self.parse_bool(value)
 
@@ -561,10 +619,14 @@ class M3U8Parser:
             if not tag or value is None or tag not in self._TAGS:
                 return
             self._TAGS[tag](self, value)
-        elif self.state.pop("expect_segment", None):
+
+        elif self._expect_segment:
+            self._expect_segment = False
             segment = self.get_segment(self.uri(line))
             self.m3u8.segments.append(segment)
-        elif self.state.pop("expect_playlist", None):
+
+        elif self._expect_playlist:
+            self._expect_playlist = False
             playlist = self.get_playlist(self.uri(line))
             self.m3u8.playlists.append(playlist)
 
@@ -611,21 +673,35 @@ class M3U8Parser:
             return uri
 
     def get_segment(self, uri: str) -> Segment:
-        extinf: ExtInf = self.state.pop("extinf", None) or ExtInf(0, None)
+        extinf: ExtInf = self._extinf or ExtInf(0, None)
+        self._extinf = None
+
+        discontinuity = self._discontinuity
+        self._discontinuity = False
+
+        byterange = self._byterange
+        self._byterange = None
+
+        date = self._date
+        self._date = None
+
         return Segment(
             uri=uri,
             duration=extinf.duration,
             title=extinf.title,
-            key=self.state.get("key"),
-            discontinuity=self.state.pop("discontinuity", False),
-            byterange=self.state.pop("byterange", None),
-            date=self.state.pop("date", None),
-            map=self.state.get("map"),
+            key=self._key,
+            discontinuity=discontinuity,
+            byterange=byterange,
+            date=date,
+            map=self._map,
         )
 
     def get_playlist(self, uri: str) -> Playlist:
-        streaminf = self.state.pop("streaminf", {})
+        streaminf = self._streaminf or {}
+        self._streaminf = None
+
         stream_info = self.create_stream_info(streaminf)
+
         return Playlist(
             uri=uri,
             stream_info=stream_info,

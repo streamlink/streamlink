@@ -43,6 +43,8 @@ classifiers = [
 dynamic = [
   "version",
   "entry-points",
+  "scripts",
+  "gui-scripts",
 ]
 
 requires-python = ">=3.8"

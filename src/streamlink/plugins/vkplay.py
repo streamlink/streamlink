@@ -2,6 +2,10 @@
 $description Russian live-streaming platform for gaming and esports, owned by VKontakte.
 $url vkplay.live
 $type live
+$metadata id
+$metadata author
+$metadata category
+$metadata title
 """
 
 import logging
@@ -75,7 +79,7 @@ class VKplay(Plugin):
                 ),
             ),
         )
-        if type(data) is str:
+        if isinstance(data, str):
             log.error(data)
             return
 

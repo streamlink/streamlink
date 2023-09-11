@@ -2,6 +2,9 @@
 $description Live TV channels and video on-demand service from SVT, a Swedish public, state-owned broadcaster.
 $url svtplay.se
 $type live, vod
+$metadata author
+$metadata category
+$metadata title
 $region Sweden
 """
 

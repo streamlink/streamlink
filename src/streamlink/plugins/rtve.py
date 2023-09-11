@@ -2,6 +2,7 @@
 $description Live TV channels and video on-demand service from RTVE, a Spanish public, state-owned broadcaster.
 $url rtve.es
 $type live, vod
+$metadata id
 $region Spain
 """
 

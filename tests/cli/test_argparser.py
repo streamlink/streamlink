@@ -1,5 +1,4 @@
-import argparse
-from argparse import ArgumentParser, Namespace
+from argparse import Namespace
 from pathlib import Path
 from typing import Any, List
 from unittest.mock import Mock
@@ -7,7 +6,7 @@ from unittest.mock import Mock
 import pytest
 
 from streamlink.session import Streamlink
-from streamlink_cli.argparser import build_parser, setup_session_options
+from streamlink_cli.argparser import ArgumentParser, build_parser, setup_session_options
 from streamlink_cli.main import main as streamlink_cli_main
 
 
@@ -18,7 +17,7 @@ def parser():
 
 class TestConfigFileArguments:
     @pytest.fixture()
-    def parsed(self, request: pytest.FixtureRequest, parser: argparse.ArgumentParser, tmp_path: Path):
+    def parsed(self, request: pytest.FixtureRequest, parser: ArgumentParser, tmp_path: Path):
         content = "\n".join([
             "",
             " ",
@@ -73,6 +72,13 @@ class TestConfigFileArguments:
     ], indirect=True)
     def test_emptyvalue(self, parsed: Namespace):
         assert parsed.title == ""
+
+    @pytest.mark.parametrize("parsed", [
+        pytest.param(["http-header=foo=bar=baz", "http-header=FOO=BAR=BAZ"], id="With operator"),
+        pytest.param(["http-header foo=bar=baz", "http-header FOO=BAR=BAZ"], id="Without operator"),
+    ], indirect=True)
+    def test_keyequalsvalue(self, parsed: Namespace):
+        assert parsed.http_header == [("foo", "bar=baz"), ("FOO", "BAR=BAZ")]
 
 
 @pytest.mark.filterwarnings("ignore")
