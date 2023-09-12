@@ -10,7 +10,7 @@ $metadata title
 
 import logging
 import re
-from urllib.parse import parse_qs, urljoin
+from urllib.parse import parse_qsl, urljoin
 from uuid import uuid4
 
 from streamlink.plugin import Plugin, pluginmatcher
@@ -23,7 +23,7 @@ log = logging.getLogger(__name__)
 
 
 class PlutoHLSStreamWriter(HLSStreamWriter):
-    ad_re = re.compile(r"_ad/creative/|dai\.google\.com|Pluto_TV_OandO/.*Bumper")
+    ad_re = re.compile(r"_ad/creative/|dai\.google\.com|Pluto_TV_OandO/.*(Bumper|plutotv_filler)")
 
     def should_filter_sequence(self, sequence):
         return self.ad_re.search(sequence.segment.uri) is not None or super().should_filter_sequence(sequence)
@@ -115,9 +115,13 @@ class Pluto(Plugin):
         )
 
     def _get_playlist(self, host, path, params, token):
-        qs = parse_qs(params)
-        qs["jwt"] = token
-        yield from PlutoHLSStream.parse_variant_playlist(self.session, update_qsd(urljoin(host, path), qs)).items()
+        qsd = dict(parse_qsl(params))
+        qsd["jwt"] = token
+
+        url = urljoin(host, path)
+        url = update_qsd(url, qsd)
+
+        return PlutoHLSStream.parse_variant_playlist(self.session, url)
 
     @staticmethod
     def _get_media_data(data, key, slug):
