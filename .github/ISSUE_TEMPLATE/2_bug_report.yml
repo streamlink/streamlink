@@ -40,9 +40,12 @@ body:
     attributes:
       label: Streamlink version
       description: |
-        [Only the **latest stable release** or **latest build from the master branch** will be accepted.](https://streamlink.github.io/install.html)
-        Run [`streamlink --version`](https://streamlink.github.io/cli.html#cmdoption-version) and check the [list of recent releases.](https://streamlink.github.io/changelog.html)
+        [Only the **latest stable release or newer** will be accepted!](https://streamlink.github.io/install.html)
+
+        Post the **exact output** of [`streamlink --no-config --version`](https://streamlink.github.io/cli.html#cmdoption-version).
         Issues without a valid version string will be closed and ignored immediately.
+
+        Before you continue, check the [list of recent releases](https://streamlink.github.io/changelog.html) or run `streamlink --no-config --version-check`.
 
         The mandatory debug log down below still needs to include the explicit version string.
     validations:
