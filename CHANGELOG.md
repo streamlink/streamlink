@@ -1,5 +1,22 @@
 # Changelog
 
+## streamlink 6.2.0 (2023-09-14)
+
+Release highlights:
+
+- Added: `--player-env` CLI argument ([#5535](https://github.com/streamlink/streamlink/pull/5535))
+- Added: OpenSSL version to debug log output ([#5506](https://github.com/streamlink/streamlink/pull/5506))
+- Updated: segmented stream internals and typing ([#5504](https://github.com/streamlink/streamlink/pull/5504), [#5507](https://github.com/streamlink/streamlink/pull/5507))
+- Updated: internal HLS tag parsing setup and parser state ([#5513](https://github.com/streamlink/streamlink/pull/5513), [#5521](https://github.com/streamlink/streamlink/pull/5521))
+- Fixed: HLS streams not ending on playlist reload with endlist tag and no new segments ([#5538](https://github.com/streamlink/streamlink/pull/5538))
+- Fixed: missing file encoding when writing a log file ([#5532](https://github.com/streamlink/streamlink/pull/5532))
+- Added plugins: piaulizaportal ([#5508](https://github.com/streamlink/streamlink/pull/5508))
+- Fixed plugins: hiplayer ([#5534](https://github.com/streamlink/streamlink/pull/5534)), nicolive ([#5529](https://github.com/streamlink/streamlink/pull/5529)), pluto ([#5551](https://github.com/streamlink/streamlink/pull/5551))
+- Docs: added list of supported metadata variables for each plugin ([#5517](https://github.com/streamlink/streamlink/pull/5517), [#5519](https://github.com/streamlink/streamlink/pull/5519))
+
+[Full changelog](https://github.com/streamlink/streamlink/compare/6.1.0...6.2.0)
+
+
 ## streamlink 6.1.0 (2023-08-16)
 
 Release highlights:
