@@ -18,7 +18,7 @@ except ImportError:  # pragma: no cover
     from typing_extensions import TypeAlias
 
 
-log = logging.getLogger(__name__)
+log = logging.getLogger(".".join(__name__.split(".")[:-1]))
 
 
 class CompatThreadPoolExecutor(ThreadPoolExecutor):
