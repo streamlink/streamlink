@@ -14,12 +14,12 @@ from requests.exceptions import InvalidSchema
 from streamlink.session import Streamlink
 from streamlink.stream.hls import (
     M3U8,
+    HLSPlaylist,
+    HLSSegment,
     HLSStream,
     HLSStreamReader,
     M3U8Parser,
     MuxedHLSStream,
-    Playlist as HLSPlaylist,
-    Segment as HLSSegment,
 )
 from streamlink.stream.hls.hls import log
 from streamlink.utils.crypto import AES, pad
