@@ -14,7 +14,7 @@ from streamlink.exceptions import StreamError
 from streamlink.session import Streamlink
 from streamlink.stream.ffmpegmux import FFMPEGMuxer, MuxedStream
 from streamlink.stream.filtered import FilteredStream
-from streamlink.stream.hls_playlist import M3U8, ByteRange, Key, M3U8Parser, Map, Media, Playlist, Segment, parse_m3u8
+from streamlink.stream.hls.m3u8 import M3U8, ByteRange, Key, M3U8Parser, Map, Media, Playlist, Segment, parse_m3u8
 from streamlink.stream.http import HTTPStream
 from streamlink.stream.segmented import SegmentedStreamReader, SegmentedStreamWorker, SegmentedStreamWriter
 from streamlink.utils.cache import LRUCache
@@ -23,7 +23,7 @@ from streamlink.utils.formatter import Formatter
 from streamlink.utils.times import now
 
 
-log = logging.getLogger(__name__)
+log = logging.getLogger(".".join(__name__.split(".")[:-1]))
 
 
 class ByteRangeOffset:
