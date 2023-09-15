@@ -32,6 +32,7 @@ from isodate import Duration, parse_datetime, parse_duration  # type: ignore[imp
 # noinspection PyProtectedMember
 from lxml.etree import _Attrib, _Element
 
+from streamlink.stream.segmented.segment import Segment
 from streamlink.utils.times import UTC, fromtimestamp, now
 
 
@@ -44,10 +45,7 @@ SEGMENT_TIME_FORMAT = "%Y-%m-%dT%H:%M:%S.%fZ"
 
 
 @dataclass
-class DASHSegment:
-    uri: str
-    num: int
-    duration: float
+class DASHSegment(Segment):
     available_at: datetime = EPOCH_START
     init: bool = False
     content: bool = True
