@@ -15,14 +15,14 @@ UTC = datetime.timezone.utc
 
 class TestSegment:
     @pytest.mark.parametrize(("segmentdata", "expected"), [
-        ({"uri": "https://foo/bar", "num": 123, "init": True, "content": False}, "initialization"),
-        ({"uri": "https://foo/bar", "num": 123, "init": True, "content": True}, "123"),
-        ({"uri": "https://foo/bar", "num": -1, "init": True, "content": True}, "bar"),
-        ({"uri": "https://foo/bar", "num": 123}, "123"),
-        ({"uri": "https://foo/bar", "num": -1}, "bar"),
-        ({"uri": "https://foo/bar/", "num": -1}, "bar"),
-        ({"uri": "https://foo/bar/baz.qux", "num": -1}, "baz.qux"),
-        ({"uri": "https://foo/bar/baz.qux?asdf", "num": -1}, "baz.qux"),
+        ({"uri": "https://foo/bar", "num": 123, "duration": 0.0, "init": True, "content": False}, "initialization"),
+        ({"uri": "https://foo/bar", "num": 123, "duration": 0.0, "init": True, "content": True}, "123"),
+        ({"uri": "https://foo/bar", "num": -1, "duration": 0.0, "init": True, "content": True}, "bar"),
+        ({"uri": "https://foo/bar", "num": 123, "duration": 0.0}, "123"),
+        ({"uri": "https://foo/bar", "num": -1, "duration": 0.0}, "bar"),
+        ({"uri": "https://foo/bar/", "num": -1, "duration": 0.0}, "bar"),
+        ({"uri": "https://foo/bar/baz.qux", "num": -1, "duration": 0.0}, "baz.qux"),
+        ({"uri": "https://foo/bar/baz.qux?asdf", "num": -1, "duration": 0.0}, "baz.qux"),
     ])
     def test_name(self, segmentdata: dict, expected: str):
         segment = DASHSegment(**segmentdata)
@@ -34,12 +34,22 @@ class TestSegment:
         (datetime.datetime(1999, 12, 31, 23, 59, 59, 999999, tzinfo=UTC), 0.0),
     ])
     def test_available_in(self, available_at: datetime.datetime, expected: float):
-        segment = DASHSegment(uri="foo", num=-1, available_at=available_at)
+        segment = DASHSegment(
+            uri="foo",
+            num=-1,
+            duration=0.0,
+            available_at=available_at,
+        )
         with freeze_time("2000-01-01T00:00:00Z"):
             assert segment.available_in == pytest.approx(expected)
 
     def test_availability(self):
-        segment = DASHSegment(uri="foo", num=-1, available_at=datetime.datetime(2000, 1, 2, 3, 4, 5, 123456, tzinfo=UTC))
+        segment = DASHSegment(
+            uri="foo",
+            num=-1,
+            duration=0.0,
+            available_at=datetime.datetime(2000, 1, 2, 3, 4, 5, 123456, tzinfo=UTC),
+        )
         with freeze_time("2000-01-01T00:00:00Z"):
             assert segment.availability == "2000-01-02T03:04:05.123456Z / 2000-01-01T00:00:00.000000Z"
 
