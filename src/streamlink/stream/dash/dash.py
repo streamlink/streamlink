@@ -51,7 +51,7 @@ class DASHStreamWriter(SegmentedStreamWriter[DASHSegment, Response]):
 
         try:
             return self.session.http.get(
-                segment.url,
+                segment.uri,
                 timeout=self.timeout,
                 exception=StreamError,
                 headers=headers,
