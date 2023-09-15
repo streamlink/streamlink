@@ -1,10 +1,10 @@
 import copy
-import dataclasses
 import logging
 import math
 import re
 from collections import defaultdict
 from contextlib import contextmanager
+from dataclasses import dataclass
 from datetime import datetime, timedelta
 from itertools import count, repeat
 from pathlib import Path
@@ -43,8 +43,8 @@ ONE_SECOND = timedelta(seconds=1)
 SEGMENT_TIME_FORMAT = "%Y-%m-%dT%H:%M:%S.%fZ"
 
 
-@dataclasses.dataclass
-class Segment:
+@dataclass
+class DASHSegment:
     url: str
     number: Optional[int] = None
     duration: Optional[float] = None
@@ -70,7 +70,7 @@ class Segment:
         return f"{self.available_at.strftime(SEGMENT_TIME_FORMAT)} / {now().strftime(SEGMENT_TIME_FORMAT)}"
 
 
-@dataclasses.dataclass
+@dataclass
 class TimelineSegment:
     t: int
     d: int
@@ -631,7 +631,7 @@ class Representation(_RepresentationBaseType):
     def bandwidth_rounded(self) -> float:
         return round(self.bandwidth, 1 - int(math.log10(self.bandwidth)))
 
-    def segments(self, timestamp: Optional[datetime] = None, **kwargs) -> Iterator[Segment]:
+    def segments(self, timestamp: Optional[datetime] = None, **kwargs) -> Iterator[DASHSegment]:
         """
         Segments are yielded when they are available
 
@@ -659,7 +659,7 @@ class Representation(_RepresentationBaseType):
         elif segmentList:
             yield from segmentList.segments()
         else:
-            yield Segment(
+            yield DASHSegment(
                 url=self.base_url,
                 number=None,
                 duration=self.period.duration.total_seconds() or self.root.mediaPresentationDuration.total_seconds(),
@@ -747,9 +747,9 @@ class SegmentList(_MultipleSegmentBaseType):
 
         self.segmentURLs = self.children(SegmentURL)
 
-    def segments(self) -> Iterator[Segment]:
+    def segments(self) -> Iterator[DASHSegment]:
         if self.initialization:  # pragma: no branch
-            yield Segment(
+            yield DASHSegment(
                 url=self.make_url(self.initialization.source_url),
                 number=None,
                 duration=None,
@@ -759,7 +759,7 @@ class SegmentList(_MultipleSegmentBaseType):
                 byterange=self.initialization.range,
             )
         for number, segment_url in enumerate(self.segmentURLs, self.startNumber):
-            yield Segment(
+            yield DASHSegment(
                 url=self.make_url(segment_url.media),
                 number=number,
                 duration=self.duration_seconds,
@@ -794,11 +794,11 @@ class SegmentTemplate(_MultipleSegmentBaseType):
         base_url: str,
         timestamp: Optional[datetime] = None,
         **kwargs,
-    ) -> Iterator[Segment]:
+    ) -> Iterator[DASHSegment]:
         if kwargs.pop("init", True):  # pragma: no branch
             init_url = self.format_initialization(base_url, **kwargs)
             if init_url:  # pragma: no branch
-                yield Segment(
+                yield DASHSegment(
                     url=init_url,
                     number=None,
                     duration=None,
@@ -808,7 +808,7 @@ class SegmentTemplate(_MultipleSegmentBaseType):
                     byterange=None,
                 )
         for media_url, number, available_at in self.format_media(ident, base_url, timestamp=timestamp, **kwargs):
-            yield Segment(
+            yield DASHSegment(
                 url=media_url,
                 number=number,
                 duration=self.duration_seconds,

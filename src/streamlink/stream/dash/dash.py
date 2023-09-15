@@ -12,7 +12,7 @@ from requests import Response
 
 from streamlink.exceptions import PluginError, StreamError
 from streamlink.session import Streamlink
-from streamlink.stream.dash.manifest import MPD, Representation, Segment, freeze_timeline
+from streamlink.stream.dash.manifest import MPD, DASHSegment, Representation, freeze_timeline
 from streamlink.stream.ffmpegmux import FFMPEGMuxer
 from streamlink.stream.segmented import SegmentedStreamReader, SegmentedStreamWorker, SegmentedStreamWriter
 from streamlink.stream.stream import Stream
@@ -24,11 +24,11 @@ from streamlink.utils.times import now
 log = logging.getLogger(".".join(__name__.split(".")[:-1]))
 
 
-class DASHStreamWriter(SegmentedStreamWriter[Segment, Response]):
+class DASHStreamWriter(SegmentedStreamWriter[DASHSegment, Response]):
     reader: "DASHStreamReader"
     stream: "DASHStream"
 
-    def fetch(self, segment: Segment):
+    def fetch(self, segment: DASHSegment):
         if self.closed:
             return
 
@@ -71,7 +71,7 @@ class DASHStreamWriter(SegmentedStreamWriter[Segment, Response]):
         log.debug(f"{self.reader.mime_type} segment {segment.name}: completed")
 
 
-class DASHStreamWorker(SegmentedStreamWorker[Segment, Response]):
+class DASHStreamWorker(SegmentedStreamWorker[DASHSegment, Response]):
     reader: "DASHStreamReader"
     writer: "DASHStreamWriter"
     stream: "DASHStream"
@@ -164,7 +164,7 @@ class DASHStreamWorker(SegmentedStreamWorker[Segment, Response]):
         return changed
 
 
-class DASHStreamReader(SegmentedStreamReader[Segment, Response]):
+class DASHStreamReader(SegmentedStreamReader[DASHSegment, Response]):
     __worker__ = DASHStreamWorker
     __writer__ = DASHStreamWriter
 
