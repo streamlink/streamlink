@@ -1,7 +1,6 @@
 import datetime
 import itertools
 from contextlib import nullcontext
-from operator import attrgetter
 from unittest.mock import Mock
 
 import pytest
@@ -16,14 +15,14 @@ UTC = datetime.timezone.utc
 
 class TestSegment:
     @pytest.mark.parametrize(("segmentdata", "expected"), [
-        ({"url": "https://foo/bar", "number": 123, "init": True, "content": False}, "initialization"),
-        ({"url": "https://foo/bar", "number": 123, "init": True, "content": True}, "123"),
-        ({"url": "https://foo/bar", "number": None, "init": True, "content": True}, "bar"),
-        ({"url": "https://foo/bar", "number": 123}, "123"),
-        ({"url": "https://foo/bar"}, "bar"),
-        ({"url": "https://foo/bar/"}, "bar"),
-        ({"url": "https://foo/bar/baz.qux"}, "baz.qux"),
-        ({"url": "https://foo/bar/baz.qux?asdf"}, "baz.qux"),
+        ({"uri": "https://foo/bar", "number": 123, "init": True, "content": False}, "initialization"),
+        ({"uri": "https://foo/bar", "number": 123, "init": True, "content": True}, "123"),
+        ({"uri": "https://foo/bar", "number": None, "init": True, "content": True}, "bar"),
+        ({"uri": "https://foo/bar", "number": 123}, "123"),
+        ({"uri": "https://foo/bar"}, "bar"),
+        ({"uri": "https://foo/bar/"}, "bar"),
+        ({"uri": "https://foo/bar/baz.qux"}, "baz.qux"),
+        ({"uri": "https://foo/bar/baz.qux?asdf"}, "baz.qux"),
     ])
     def test_name(self, segmentdata: dict, expected: str):
         segment = DASHSegment(**segmentdata)
@@ -35,12 +34,12 @@ class TestSegment:
         (datetime.datetime(1999, 12, 31, 23, 59, 59, 999999, tzinfo=UTC), 0.0),
     ])
     def test_available_in(self, available_at: datetime.datetime, expected: float):
-        segment = DASHSegment(url="foo", available_at=available_at)
+        segment = DASHSegment(uri="foo", available_at=available_at)
         with freeze_time("2000-01-01T00:00:00Z"):
             assert segment.available_in == pytest.approx(expected)
 
     def test_availability(self):
-        segment = DASHSegment(url="foo", available_at=datetime.datetime(2000, 1, 2, 3, 4, 5, 123456, tzinfo=UTC))
+        segment = DASHSegment(uri="foo", available_at=datetime.datetime(2000, 1, 2, 3, 4, 5, 123456, tzinfo=UTC))
         with freeze_time("2000-01-01T00:00:00Z"):
             assert segment.availability == "2000-01-02T03:04:05.123456Z / 2000-01-01T00:00:00.000000Z"
 
@@ -97,7 +96,7 @@ class TestMPDParser:
                     "ident": representation.ident,
                     "mimeType": representation.mimeType,
                     "segments": [
-                        (segment.url, segment.number, segment.duration, segment.available_at, segment.init, segment.content)
+                        (segment.uri, segment.number, segment.duration, segment.available_at, segment.init, segment.content)
                         for segment in itertools.islice(representation.segments(), 100)
                     ],
                 }
@@ -130,11 +129,10 @@ class TestMPDParser:
 
             segments = mpd.periods[0].adaptationSets[0].representations[0].segments()
             init_segment = next(segments)
-            assert init_segment.url == "http://test.se/tracks-v3/init-1526842800.g_m4v"
+            assert init_segment.uri == "http://test.se/tracks-v3/init-1526842800.g_m4v"
 
-            video_segments = list(map(attrgetter("url"), (itertools.islice(segments, 5))))
             # suggested delay is 11 seconds, each segment is 5 seconds long - so there should be 3
-            assert video_segments == [
+            assert [segment.uri for segment in itertools.islice(segments, 5)] == [
                 "http://test.se/tracks-v3/dvr-1526842800-698.g_m4v?t=3403000",
                 "http://test.se/tracks-v3/dvr-1526842800-699.g_m4v?t=3408000",
                 "http://test.se/tracks-v3/dvr-1526842800-700.g_m4v?t=3413000",
@@ -146,9 +144,9 @@ class TestMPDParser:
 
             segments = mpd.periods[0].adaptationSets[3].representations[0].segments()
             init_segment = next(segments)
-            assert init_segment.url == "http://test.se/video/250kbit/init.mp4"
+            assert init_segment.uri == "http://test.se/video/250kbit/init.mp4"
 
-            video_segments = list(map(attrgetter("url"), (itertools.islice(segments, 100000))))
+            video_segments = [segment.uri for segment in itertools.islice(segments, 100000)]
             assert len(video_segments) == 444
             assert video_segments[:5] == [
                 "http://test.se/video/250kbit/segment_1.m4s",
@@ -164,11 +162,10 @@ class TestMPDParser:
 
             segments = mpd.periods[0].adaptationSets[0].representations[0].segments()
             init_segment = next(segments)
-            assert init_segment.url == "http://test.se/video-2800000-0.mp4?z32="
+            assert init_segment.uri == "http://test.se/video-2800000-0.mp4?z32="
 
-            video_segments = list(map(attrgetter("url"), (itertools.islice(segments, 3))))
             # default suggested delay is 3 seconds, each segment is 4 seconds long - so there should be 1 segment
-            assert video_segments == [
+            assert [segment.uri for segment in itertools.islice(segments, 3)] == [
                 "http://test.se/video-time=1525450872000-2800000-0.m4s?z32=",
             ]
 
@@ -190,7 +187,7 @@ class TestMPDParser:
              frozen_time:
             mpd = MPD(mpd_xml, base_url="http://test/", url="http://test/manifest.mpd")
             stream_urls = [
-                (segment.url, segment.available_at)
+                (segment.uri, segment.available_at)
                 for segment in itertools.islice(mpd.periods[0].adaptationSets[0].representations[0].segments(timestamp), 4)
             ]
 
@@ -218,7 +215,7 @@ class TestMPDParser:
             mpd = MPD(mpd_xml, base_url="http://test/", url="http://test/manifest.mpd")
 
         segments = mpd.periods[0].adaptationSets[1].representations[0].segments()
-        segment_urls = [(segment.url, segment.available_at) for segment in itertools.islice(segments, 4)]
+        segment_urls = [(segment.uri, segment.available_at) for segment in itertools.islice(segments, 4)]
         # ignores period start time in static manifests
         expected_availability = datetime.datetime(2020, 1, 1, 0, 0, 0, tzinfo=UTC)
 
@@ -234,7 +231,7 @@ class TestMPDParser:
             mpd = MPD(mpd_xml, base_url="http://test/", url="http://test/manifest.mpd")
 
         segments = mpd.periods[0].adaptationSets[0].representations[0].segments()
-        segment_urls = [(segment.url, segment.available_at) for segment in itertools.islice(segments, 4)]
+        segment_urls = [(segment.uri, segment.available_at) for segment in itertools.islice(segments, 4)]
         # ignores period start time in static manifests
         expected_availability = datetime.datetime(2020, 1, 1, 0, 0, 0, tzinfo=UTC)
 
@@ -250,7 +247,7 @@ class TestMPDParser:
             mpd_p1 = MPD(mpd_xml_p1, base_url="http://test/", url="http://test/manifest.mpd")
             iter_segment_p1 = mpd_p1.periods[0].adaptationSets[0].representations[0].segments()
             segments_p1 = [
-                (segment.url, segment.number, segment.available_at)
+                (segment.uri, segment.number, segment.available_at)
                 for segment in itertools.islice(iter_segment_p1, 100)
             ]
 
@@ -268,7 +265,7 @@ class TestMPDParser:
             mpd_p2 = MPD(mpd_xml_p2, base_url=mpd_p1.base_url, url=mpd_p1.url, timelines=mpd_p1.timelines)
             iter_segment_p2 = mpd_p2.periods[0].adaptationSets[0].representations[0].segments(init=False)
             segments_p2 = [
-                (segment.url, segment.number, segment.available_at)
+                (segment.uri, segment.number, segment.available_at)
                 for segment in itertools.islice(iter_segment_p2, 100)
             ]
 
@@ -289,9 +286,9 @@ class TestMPDParser:
 
             segments = mpd.periods[0].adaptationSets[0].representations[0].segments()
             init_segment = next(segments)
-            assert init_segment.url == "http://test.se/video-2799000-0.mp4?z32=CENSORED_SESSION"
+            assert init_segment.uri == "http://test.se/video-2799000-0.mp4?z32=CENSORED_SESSION"
 
-            video_segments = [x.url for x in itertools.islice(segments, 3)]
+            video_segments = [x.uri for x in itertools.islice(segments, 3)]
             assert video_segments == [
                 "http://test.se/video-time=0-2799000-0.m4s?z32=CENSORED_SESSION",
                 "http://test.se/video-time=4000-2799000-0.m4s?z32=CENSORED_SESSION",
@@ -353,7 +350,7 @@ class TestMPDParser:
 
         segment_urls = [
             [
-                (seg.url, seg.init, seg.byterange)
+                (seg.uri, seg.init, seg.byterange)
                 for seg in adaptationset.representations[0].segments()
             ]
             for adaptationset in mpd.periods[0].adaptationSets
@@ -381,7 +378,7 @@ class TestMPDParser:
             mpd = MPD(mpd_xml, base_url="https://foo/", url="https://test/manifest.mpd")
 
         segment_urls = [
-            [(segment.url, segment.available_at) for segment in itertools.islice(representation.segments(), 2)]
+            [(segment.uri, segment.available_at) for segment in itertools.islice(representation.segments(), 2)]
             for adaptationset in mpd.periods[0].adaptationSets for representation in adaptationset.representations
         ]
         # ignores period start time in static manifests
@@ -416,7 +413,7 @@ class TestMPDParser:
             mpd = MPD(mpd_xml, base_url="http://test/", url="http://test/manifest.mpd")
             segment_urls = [
                 [
-                    segment.url
+                    segment.uri
                     for segment in itertools.islice(representation.segments(), 3)
                 ]
                 for adaptationset in mpd.periods[0].adaptationSets for representation in adaptationset.representations
