@@ -7,7 +7,7 @@ from unittest.mock import Mock
 import pytest
 from freezegun import freeze_time
 
-from streamlink.stream.dash_manifest import MPD, MPDParsers, MPDParsingError, Representation, Segment
+from streamlink.stream.dash.manifest import MPD, MPDParsers, MPDParsingError, Representation, Segment
 from tests.resources import xml
 
 

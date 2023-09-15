@@ -9,8 +9,8 @@ from lxml.etree import ParseError
 
 from streamlink.exceptions import PluginError
 from streamlink.session import Streamlink
-from streamlink.stream.dash import DASHStream, DASHStreamWorker
-from streamlink.stream.dash_manifest import MPD, MPDParsingError
+from streamlink.stream.dash import MPD, DASHStream, DASHStreamWorker, MPDParsingError
+from streamlink.stream.dash.dash import log
 from streamlink.utils.parse import parse_xml as original_parse_xml
 from tests.resources import text, xml
 
@@ -19,6 +19,10 @@ from tests.resources import text, xml
 def timestamp():
     with freezegun.freeze_time("2000-01-01T00:00:00Z"):
         yield datetime.now(timezone.utc)
+
+
+def test_logger_name():
+    assert log.name == "streamlink.stream.dash"
 
 
 class TestDASHStreamParseManifest:
@@ -32,13 +36,13 @@ class TestDASHStreamParseManifest:
     @pytest.fixture()
     def parse_xml(self, monkeypatch: pytest.MonkeyPatch):
         parse_xml = Mock(return_value=Mock())
-        monkeypatch.setattr("streamlink.stream.dash.parse_xml", parse_xml)
+        monkeypatch.setattr("streamlink.stream.dash.dash.parse_xml", parse_xml)
         return parse_xml
 
     @pytest.fixture()
     def mpd(self, monkeypatch: pytest.MonkeyPatch, parse_xml: Mock):
         mpd = Mock()
-        monkeypatch.setattr("streamlink.stream.dash.MPD", mpd)
+        monkeypatch.setattr("streamlink.stream.dash.dash.MPD", mpd)
         return mpd
 
     @pytest.mark.parametrize(("se_parse_xml", "se_mpd"), [
@@ -316,13 +320,13 @@ class TestDASHStreamOpen:
     @pytest.fixture()
     def reader(self, monkeypatch: pytest.MonkeyPatch):
         reader = Mock()
-        monkeypatch.setattr("streamlink.stream.dash.DASHStreamReader", reader)
+        monkeypatch.setattr("streamlink.stream.dash.dash.DASHStreamReader", reader)
         return reader
 
     @pytest.fixture()
     def muxer(self, monkeypatch: pytest.MonkeyPatch):
         muxer = Mock()
-        monkeypatch.setattr("streamlink.stream.dash.FFMPEGMuxer", muxer)
+        monkeypatch.setattr("streamlink.stream.dash.dash.FFMPEGMuxer", muxer)
         return muxer
 
     def test_stream_open_video_only(self, session: Streamlink, timestamp: datetime, muxer: Mock, reader: Mock):
@@ -356,13 +360,13 @@ class TestDASHStreamWorker:
     @pytest.fixture()
     def mock_time(self, monkeypatch: pytest.MonkeyPatch) -> Mock:
         mock = Mock(return_value=1)
-        monkeypatch.setattr("streamlink.stream.dash.time", mock)
+        monkeypatch.setattr("streamlink.stream.dash.dash.time", mock)
         return mock
 
     @pytest.fixture(autouse=True)
     def mock_wait(self, monkeypatch: pytest.MonkeyPatch) -> Mock:
         mock = Mock(return_value=True)
-        monkeypatch.setattr("streamlink.stream.dash.DASHStreamWorker.wait", mock)
+        monkeypatch.setattr("streamlink.stream.dash.dash.DASHStreamWorker.wait", mock)
         return mock
 
     @pytest.fixture()
@@ -428,7 +432,7 @@ class TestDASHStreamWorker:
     ):
         mpd.dynamic = True
         mpd.type = "dynamic"
-        monkeypatch.setattr("streamlink.stream.dash.MPD", lambda *args, **kwargs: mpd)
+        monkeypatch.setattr("streamlink.stream.dash.dash.MPD", lambda *args, **kwargs: mpd)
 
         segment_iter = worker.iter_segments()
 
