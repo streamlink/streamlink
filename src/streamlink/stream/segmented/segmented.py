@@ -3,12 +3,12 @@ from __future__ import annotations
 import logging
 import queue
 from concurrent import futures
-from concurrent.futures import Future, ThreadPoolExecutor
-from sys import version_info
+from concurrent.futures import Future
 from threading import Event, Thread, current_thread
 from typing import ClassVar, Generator, Generic, Optional, Tuple, Type, TypeVar
 
 from streamlink.buffers import RingBuffer
+from streamlink.stream.segmented.concurrent import ThreadPoolExecutor
 from streamlink.stream.stream import Stream, StreamIO
 
 
@@ -19,30 +19,6 @@ except ImportError:  # pragma: no cover
 
 
 log = logging.getLogger(".".join(__name__.split(".")[:-1]))
-
-
-class CompatThreadPoolExecutor(ThreadPoolExecutor):
-    if version_info < (3, 9):
-        def shutdown(self, wait=True, cancel_futures=False):  # pragma: no cover
-            with self._shutdown_lock:
-                self._shutdown = True
-                if cancel_futures:
-                    # Drain all work items from the queue, and then cancel their
-                    # associated futures.
-                    while True:
-                        try:
-                            work_item = self._work_queue.get_nowait()
-                        except queue.Empty:
-                            break
-                        if work_item is not None:
-                            work_item.future.cancel()
-
-                # Send a wake-up to prevent threads calling
-                # _work_queue.get(block=True) from permanently blocking.
-                self._work_queue.put(None)
-            if wait:
-                for t in self._threads:
-                    t.join()
 
 
 class AwaitableMixin:
@@ -93,7 +69,7 @@ class SegmentedStreamWriter(AwaitableMixin, Thread, Generic[TSegment, TResult]):
         self.threads = threads or self.session.options.get("stream-segment-threads")
         self.timeout = timeout or self.session.options.get("stream-segment-timeout")
 
-        self.executor = CompatThreadPoolExecutor(max_workers=self.threads)
+        self.executor = ThreadPoolExecutor(max_workers=self.threads)
         self._queue: queue.Queue[TQueueItem] = queue.Queue(size)
 
     def close(self) -> None:
