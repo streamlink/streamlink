@@ -58,7 +58,7 @@ class TestFilteredHLSStream(TestMixinStreamHLS, unittest.TestCase):
         assert reader.filter_wait(timeout=0)
 
     @patch("streamlink.stream.hls.HLSStreamWriter.should_filter_segment", new=filter_segment)
-    @patch("streamlink.stream.hls.log")
+    @patch("streamlink.stream.hls.hls.log")
     def test_filtered_logging(self, mock_log):
         thread, reader, writer, segments = self.subject([
             Playlist(0, [SegmentFiltered(0), SegmentFiltered(1)]),

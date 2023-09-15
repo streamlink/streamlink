@@ -31,8 +31,18 @@ from streamlink.exceptions import NoStreamsError, PluginError
 from streamlink.plugin import Plugin, pluginargument, pluginmatcher
 from streamlink.plugin.api import validate
 from streamlink.session import Streamlink
-from streamlink.stream.hls import HLSStream, HLSStreamReader, HLSStreamWorker, HLSStreamWriter
-from streamlink.stream.hls_playlist import M3U8, DateRange, M3U8Parser, Playlist, Segment, parse_tag
+from streamlink.stream.hls import (
+    M3U8,
+    DateRange,
+    HLSStream,
+    HLSStreamReader,
+    HLSStreamWorker,
+    HLSStreamWriter,
+    M3U8Parser,
+    Playlist,
+    Segment,
+    parse_tag,
+)
 from streamlink.stream.http import HTTPStream
 from streamlink.utils.args import keyvalue
 from streamlink.utils.parse import parse_json, parse_qsd
