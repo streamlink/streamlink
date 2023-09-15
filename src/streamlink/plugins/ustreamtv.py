@@ -22,7 +22,7 @@ from streamlink.plugin import Plugin, pluginargument, pluginmatcher
 from streamlink.plugin.api import useragents, validate
 from streamlink.plugin.api.websocket import WebsocketClient
 from streamlink.stream.ffmpegmux import MuxedStream
-from streamlink.stream.segmented import SegmentedStreamReader, SegmentedStreamWorker, SegmentedStreamWriter
+from streamlink.stream.segmented import Segment, SegmentedStreamReader, SegmentedStreamWorker, SegmentedStreamWriter
 from streamlink.stream.stream import Stream
 from streamlink.utils.parse import parse_json
 
@@ -50,9 +50,7 @@ class StreamFormatAudio(_StreamFormat):
 
 
 @dataclass
-class UStreamTVSegment:
-    num: int
-    duration: int
+class UStreamTVSegment(Segment):
     available_at: datetime
     hash: str
     path: str
@@ -311,6 +309,7 @@ class UStreamTVWsClient(WebsocketClient):
                     diff = sorted_ids[idx_next] - segment_id
                 for num in range(segment_id, segment_id + diff):
                     self._segments_append(UStreamTVSegment(
+                        uri="",
                         num=num,
                         duration=duration,
                         available_at=current_time + timedelta(seconds=(num - current_id - 1) * duration / 1000),

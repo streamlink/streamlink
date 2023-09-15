@@ -9,6 +9,7 @@ from typing import ClassVar, Generator, Generic, Optional, Tuple, Type, TypeVar
 
 from streamlink.buffers import RingBuffer
 from streamlink.stream.segmented.concurrent import ThreadPoolExecutor
+from streamlink.stream.segmented.segment import Segment
 from streamlink.stream.stream import Stream, StreamIO
 
 
@@ -34,7 +35,7 @@ class AwaitableMixin:
         return not self._wait.wait(time)
 
 
-TSegment = TypeVar("TSegment")
+TSegment = TypeVar("TSegment", bound=Segment)
 TResult = TypeVar("TResult")
 TResultFuture: TypeAlias = "Future[Optional[TResult]]"
 TQueueItem: TypeAlias = Optional[Tuple[TSegment, TResultFuture, Tuple]]

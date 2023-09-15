@@ -11,6 +11,7 @@ from isodate import ISO8601Error, parse_datetime  # type: ignore[import]
 from requests import Response
 
 from streamlink.logger import ALL, StreamlinkLogger
+from streamlink.stream.segmented.segment import Segment
 
 
 try:
@@ -114,10 +115,7 @@ class HLSPlaylist:
 
 
 @dataclass
-class HLSSegment:
-    uri: str
-    num: int
-    duration: float
+class HLSSegment(Segment):
     title: Optional[str]
     key: Optional[Key]
     discontinuity: bool
