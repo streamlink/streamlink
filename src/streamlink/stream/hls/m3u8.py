@@ -106,7 +106,7 @@ class IFrameStreamInfo(NamedTuple):
 
 
 @dataclass
-class Playlist:
+class HLSPlaylist:
     uri: str
     stream_info: Union[StreamInfo, IFrameStreamInfo]
     media: List[Media]
@@ -114,7 +114,7 @@ class Playlist:
 
 
 @dataclass
-class Segment:
+class HLSSegment:
     uri: str
     num: int
     duration: float
@@ -126,11 +126,11 @@ class Segment:
     map: Optional[Map]
 
 
-TSegment_co = TypeVar("TSegment_co", bound=Segment, covariant=True)
-TPlaylist_co = TypeVar("TPlaylist_co", bound=Playlist, covariant=True)
+THLSSegment_co = TypeVar("THLSSegment_co", bound=HLSSegment, covariant=True)
+THLSPlaylist_co = TypeVar("THLSPlaylist_co", bound=HLSPlaylist, covariant=True)
 
 
-class M3U8(Generic[TSegment_co, TPlaylist_co]):
+class M3U8(Generic[THLSSegment_co, THLSPlaylist_co]):
     def __init__(self, uri: Optional[str] = None):
         self.uri = uri
 
@@ -149,8 +149,8 @@ class M3U8(Generic[TSegment_co, TPlaylist_co]):
         self.media: List[Media] = []
         self.dateranges: List[DateRange] = []
 
-        self.playlists: List[TPlaylist_co] = []
-        self.segments: List[TSegment_co] = []
+        self.playlists: List[THLSPlaylist_co] = []
+        self.segments: List[THLSSegment_co] = []
 
     @classmethod
     def is_date_in_daterange(cls, date: Optional[datetime], daterange: DateRange):
@@ -196,11 +196,11 @@ class M3U8ParserMeta(type):
         cls._TAGS = tags
 
 
-class M3U8Parser(Generic[TM3U8_co, TSegment_co, TPlaylist_co], metaclass=M3U8ParserMeta):
+class M3U8Parser(Generic[TM3U8_co, THLSSegment_co, THLSPlaylist_co], metaclass=M3U8ParserMeta):
     # Can't set type vars as classvars yet (PEP 526 issue)
-    __m3u8__: ClassVar[Type[M3U8[Segment, Playlist]]] = M3U8
-    __segment__: ClassVar[Type[Segment]] = Segment
-    __playlist__: ClassVar[Type[Playlist]] = Playlist
+    __m3u8__: ClassVar[Type[M3U8[HLSSegment, HLSPlaylist]]] = M3U8
+    __segment__: ClassVar[Type[HLSSegment]] = HLSSegment
+    __playlist__: ClassVar[Type[HLSPlaylist]] = HLSPlaylist
 
     _TAGS: ClassVar[Mapping[str, Callable[[Self, str], None]]]
 
@@ -578,7 +578,7 @@ class M3U8Parser(Generic[TM3U8_co, TSegment_co, TPlaylist_co], metaclass=M3U8Par
             return
 
         stream_info = self.create_stream_info(streaminf, IFrameStreamInfo)
-        playlist = Playlist(
+        playlist = HLSPlaylist(
             uri=self.uri(uri),
             stream_info=stream_info,
             media=[],
@@ -694,7 +694,7 @@ class M3U8Parser(Generic[TM3U8_co, TSegment_co, TPlaylist_co], metaclass=M3U8Par
         else:
             return uri
 
-    def get_segment(self, uri: str, **data) -> Segment:
+    def get_segment(self, uri: str, **data) -> HLSSegment:
         extinf: ExtInf = self._extinf or ExtInf(0, None)
         self._extinf = None
 
@@ -721,7 +721,7 @@ class M3U8Parser(Generic[TM3U8_co, TSegment_co, TPlaylist_co], metaclass=M3U8Par
             **data,
         )
 
-    def get_playlist(self, uri: str, **data) -> Playlist:
+    def get_playlist(self, uri: str, **data) -> HLSPlaylist:
         streaminf = self._streaminf or {}
         self._streaminf = None
 
@@ -740,7 +740,7 @@ class M3U8Parser(Generic[TM3U8_co, TSegment_co, TPlaylist_co], metaclass=M3U8Par
 def parse_m3u8(
     data: Union[str, Response],
     base_uri: Optional[str] = None,
-    parser: Type[M3U8Parser[TM3U8_co, TSegment_co, TPlaylist_co]] = M3U8Parser,
+    parser: Type[M3U8Parser[TM3U8_co, THLSSegment_co, THLSPlaylist_co]] = M3U8Parser,
 ) -> TM3U8_co:
     """
     Parse an M3U8 playlist from a string of data or an HTTP response.

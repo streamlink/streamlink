@@ -34,13 +34,13 @@ from streamlink.session import Streamlink
 from streamlink.stream.hls import (
     M3U8,
     DateRange,
+    HLSPlaylist,
+    HLSSegment,
     HLSStream,
     HLSStreamReader,
     HLSStreamWorker,
     HLSStreamWriter,
     M3U8Parser,
-    Playlist,
-    Segment,
     parse_tag,
 )
 from streamlink.stream.http import HTTPStream
@@ -57,20 +57,20 @@ LOW_LATENCY_MAX_LIVE_EDGE = 2
 
 
 @dataclass
-class TwitchSegment(Segment):
+class TwitchHLSSegment(HLSSegment):
     ad: bool
     prefetch: bool
 
 
-class TwitchM3U8(M3U8[TwitchSegment, Playlist]):
+class TwitchM3U8(M3U8[TwitchHLSSegment, HLSPlaylist]):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.dateranges_ads = []
 
 
-class TwitchM3U8Parser(M3U8Parser[TwitchM3U8, TwitchSegment, Playlist]):
+class TwitchM3U8Parser(M3U8Parser[TwitchM3U8, TwitchHLSSegment, HLSPlaylist]):
     __m3u8__: ClassVar[Type[TwitchM3U8]] = TwitchM3U8
-    __segment__: ClassVar[Type[TwitchSegment]] = TwitchSegment
+    __segment__: ClassVar[Type[TwitchHLSSegment]] = TwitchHLSSegment
 
     @parse_tag("EXT-X-TWITCH-PREFETCH")
     def parse_tag_ext_x_twitch_prefetch(self, value):
@@ -105,9 +105,9 @@ class TwitchM3U8Parser(M3U8Parser[TwitchM3U8, TwitchSegment, Playlist]):
         if self._is_daterange_ad(daterange):
             self.m3u8.dateranges_ads.append(daterange)
 
-    def get_segment(self, uri: str, **data) -> TwitchSegment:
+    def get_segment(self, uri: str, **data) -> TwitchHLSSegment:
         ad = self._is_segment_ad(self._date, self._extinf.title if self._extinf else None)
-        segment: TwitchSegment = super().get_segment(uri, ad=ad, prefetch=False)  # type: ignore[assignment]
+        segment: TwitchHLSSegment = super().get_segment(uri, ad=ad, prefetch=False)  # type: ignore[assignment]
 
         return segment
 
@@ -170,7 +170,7 @@ class TwitchHLSStreamWriter(HLSStreamWriter):
     reader: "TwitchHLSStreamReader"
     stream: "TwitchHLSStream"
 
-    def should_filter_segment(self, segment: TwitchSegment) -> bool:  # type: ignore[override]
+    def should_filter_segment(self, segment: TwitchHLSSegment) -> bool:  # type: ignore[override]
         return self.stream.disable_ads and segment.ad
 
 
