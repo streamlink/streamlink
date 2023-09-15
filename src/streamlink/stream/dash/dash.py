@@ -12,7 +12,7 @@ from requests import Response
 
 from streamlink.exceptions import PluginError, StreamError
 from streamlink.session import Streamlink
-from streamlink.stream.dash_manifest import MPD, Representation, Segment, freeze_timeline
+from streamlink.stream.dash.manifest import MPD, Representation, Segment, freeze_timeline
 from streamlink.stream.ffmpegmux import FFMPEGMuxer
 from streamlink.stream.segmented import SegmentedStreamReader, SegmentedStreamWorker, SegmentedStreamWriter
 from streamlink.stream.stream import Stream
@@ -21,7 +21,7 @@ from streamlink.utils.parse import parse_xml
 from streamlink.utils.times import now
 
 
-log = logging.getLogger(__name__)
+log = logging.getLogger(".".join(__name__.split(".")[:-1]))
 
 
 class DASHStreamWriter(SegmentedStreamWriter[Segment, Response]):
