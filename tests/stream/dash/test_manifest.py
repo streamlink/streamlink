@@ -15,14 +15,14 @@ UTC = datetime.timezone.utc
 
 class TestSegment:
     @pytest.mark.parametrize(("segmentdata", "expected"), [
-        ({"uri": "https://foo/bar", "number": 123, "init": True, "content": False}, "initialization"),
-        ({"uri": "https://foo/bar", "number": 123, "init": True, "content": True}, "123"),
-        ({"uri": "https://foo/bar", "number": None, "init": True, "content": True}, "bar"),
-        ({"uri": "https://foo/bar", "number": 123}, "123"),
-        ({"uri": "https://foo/bar"}, "bar"),
-        ({"uri": "https://foo/bar/"}, "bar"),
-        ({"uri": "https://foo/bar/baz.qux"}, "baz.qux"),
-        ({"uri": "https://foo/bar/baz.qux?asdf"}, "baz.qux"),
+        ({"uri": "https://foo/bar", "num": 123, "init": True, "content": False}, "initialization"),
+        ({"uri": "https://foo/bar", "num": 123, "init": True, "content": True}, "123"),
+        ({"uri": "https://foo/bar", "num": -1, "init": True, "content": True}, "bar"),
+        ({"uri": "https://foo/bar", "num": 123}, "123"),
+        ({"uri": "https://foo/bar", "num": -1}, "bar"),
+        ({"uri": "https://foo/bar/", "num": -1}, "bar"),
+        ({"uri": "https://foo/bar/baz.qux", "num": -1}, "baz.qux"),
+        ({"uri": "https://foo/bar/baz.qux?asdf", "num": -1}, "baz.qux"),
     ])
     def test_name(self, segmentdata: dict, expected: str):
         segment = DASHSegment(**segmentdata)
@@ -34,12 +34,12 @@ class TestSegment:
         (datetime.datetime(1999, 12, 31, 23, 59, 59, 999999, tzinfo=UTC), 0.0),
     ])
     def test_available_in(self, available_at: datetime.datetime, expected: float):
-        segment = DASHSegment(uri="foo", available_at=available_at)
+        segment = DASHSegment(uri="foo", num=-1, available_at=available_at)
         with freeze_time("2000-01-01T00:00:00Z"):
             assert segment.available_in == pytest.approx(expected)
 
     def test_availability(self):
-        segment = DASHSegment(uri="foo", available_at=datetime.datetime(2000, 1, 2, 3, 4, 5, 123456, tzinfo=UTC))
+        segment = DASHSegment(uri="foo", num=-1, available_at=datetime.datetime(2000, 1, 2, 3, 4, 5, 123456, tzinfo=UTC))
         with freeze_time("2000-01-01T00:00:00Z"):
             assert segment.availability == "2000-01-02T03:04:05.123456Z / 2000-01-01T00:00:00.000000Z"
 
@@ -96,7 +96,7 @@ class TestMPDParser:
                     "ident": representation.ident,
                     "mimeType": representation.mimeType,
                     "segments": [
-                        (segment.uri, segment.number, segment.duration, segment.available_at, segment.init, segment.content)
+                        (segment.uri, segment.num, segment.duration, segment.available_at, segment.init, segment.content)
                         for segment in itertools.islice(representation.segments(), 100)
                     ],
                 }
@@ -109,17 +109,17 @@ class TestMPDParser:
             {
                 "ident": (None, None, "1"),
                 "mimeType": "audio/mp4",
-                "segments": [("http://cdn1.example.com/7657412348.mp4", None, 3256.0, availability, True, True)],
+                "segments": [("http://cdn1.example.com/7657412348.mp4", -1, 3256.0, availability, True, True)],
             },
             {
                 "ident": (None, None, "5"),
                 "mimeType": "application/ttml+xml",
-                "segments": [("http://cdn1.example.com/796735657.xml", None, 3256.0, availability, True, True)],
+                "segments": [("http://cdn1.example.com/796735657.xml", -1, 3256.0, availability, True, True)],
             },
             {
                 "ident": (None, None, "6"),
                 "mimeType": "video/mp4",
-                "segments": [("http://cdn1.example.com/8563456473.mp4", None, 3256.0, availability, True, True)],
+                "segments": [("http://cdn1.example.com/8563456473.mp4", -1, 3256.0, availability, True, True)],
             },
         ]
 
@@ -247,12 +247,12 @@ class TestMPDParser:
             mpd_p1 = MPD(mpd_xml_p1, base_url="http://test/", url="http://test/manifest.mpd")
             iter_segment_p1 = mpd_p1.periods[0].adaptationSets[0].representations[0].segments()
             segments_p1 = [
-                (segment.uri, segment.number, segment.available_at)
+                (segment.uri, segment.num, segment.available_at)
                 for segment in itertools.islice(iter_segment_p1, 100)
             ]
 
         assert segments_p1 == [
-            ("http://test/video/init.mp4", None, datetime.datetime(2018, 1, 1, 1, 0, 0, tzinfo=UTC)),
+            ("http://test/video/init.mp4", -1, datetime.datetime(2018, 1, 1, 1, 0, 0, tzinfo=UTC)),
             ("http://test/video/1006000.mp4", 7, datetime.datetime(2018, 1, 1, 12, 59, 56, tzinfo=UTC)),
             ("http://test/video/1007000.mp4", 8, datetime.datetime(2018, 1, 1, 12, 59, 57, tzinfo=UTC)),
             ("http://test/video/1008000.mp4", 9, datetime.datetime(2018, 1, 1, 12, 59, 58, tzinfo=UTC)),
@@ -265,7 +265,7 @@ class TestMPDParser:
             mpd_p2 = MPD(mpd_xml_p2, base_url=mpd_p1.base_url, url=mpd_p1.url, timelines=mpd_p1.timelines)
             iter_segment_p2 = mpd_p2.periods[0].adaptationSets[0].representations[0].segments(init=False)
             segments_p2 = [
-                (segment.uri, segment.number, segment.available_at)
+                (segment.uri, segment.num, segment.available_at)
                 for segment in itertools.islice(iter_segment_p2, 100)
             ]
 

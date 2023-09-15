@@ -46,7 +46,7 @@ SEGMENT_TIME_FORMAT = "%Y-%m-%dT%H:%M:%S.%fZ"
 @dataclass
 class DASHSegment:
     uri: str
-    number: Optional[int] = None
+    num: int
     duration: Optional[float] = None
     available_at: datetime = EPOCH_START
     init: bool = False
@@ -57,8 +57,8 @@ class DASHSegment:
     def name(self) -> str:
         if self.init and not self.content:
             return "initialization"
-        if self.number is not None:
-            return str(self.number)
+        if self.num > -1:
+            return str(self.num)
         return Path(urlparse(self.uri).path).resolve().name
 
     @property
@@ -661,7 +661,7 @@ class Representation(_RepresentationBaseType):
         else:
             yield DASHSegment(
                 uri=self.base_url,
-                number=None,
+                num=-1,
                 duration=self.period.duration.total_seconds() or self.root.mediaPresentationDuration.total_seconds(),
                 available_at=self.period.availabilityStartTime,
                 init=True,
@@ -751,17 +751,19 @@ class SegmentList(_MultipleSegmentBaseType):
         if self.initialization:  # pragma: no branch
             yield DASHSegment(
                 uri=self.make_url(self.initialization.source_url),
-                number=None,
+                num=-1,
                 duration=None,
                 available_at=self.period.availabilityStartTime,
                 init=True,
                 content=False,
                 byterange=self.initialization.range,
             )
-        for number, segment_url in enumerate(self.segmentURLs, self.startNumber):
+        num: int
+        segment_url: SegmentURL
+        for num, segment_url in enumerate(self.segmentURLs, self.startNumber):
             yield DASHSegment(
                 uri=self.make_url(segment_url.media),
-                number=number,
+                num=num,
                 duration=self.duration_seconds,
                 available_at=self.period.availabilityStartTime,
                 init=False,
@@ -800,17 +802,17 @@ class SegmentTemplate(_MultipleSegmentBaseType):
             if init_url:  # pragma: no branch
                 yield DASHSegment(
                     uri=init_url,
-                    number=None,
+                    num=-1,
                     duration=None,
                     available_at=self.period.availabilityStartTime,
                     init=True,
                     content=False,
                     byterange=None,
                 )
-        for media_url, number, available_at in self.format_media(ident, base_url, timestamp=timestamp, **kwargs):
+        for media_url, num, available_at in self.format_media(ident, base_url, timestamp=timestamp, **kwargs):
             yield DASHSegment(
                 uri=media_url,
-                number=number,
+                num=num,
                 duration=self.duration_seconds,
                 available_at=available_at,
                 init=False,
