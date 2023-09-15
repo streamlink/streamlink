@@ -47,7 +47,7 @@ SEGMENT_TIME_FORMAT = "%Y-%m-%dT%H:%M:%S.%fZ"
 class DASHSegment:
     uri: str
     num: int
-    duration: Optional[float] = None
+    duration: float
     available_at: datetime = EPOCH_START
     init: bool = False
     content: bool = True
@@ -730,7 +730,7 @@ class _MultipleSegmentBaseType(_SegmentBaseType):
             default=self._find_default("startNumber", 1),
         )
 
-        self.duration_seconds = self.duration / self.timescale if self.duration else None
+        self.duration_seconds = self.duration / self.timescale if self.duration else 0.0
 
         self.segmentTimeline = self.only_child(SegmentTimeline) or self._find_default("segmentTimeline")
 
@@ -752,7 +752,7 @@ class SegmentList(_MultipleSegmentBaseType):
             yield DASHSegment(
                 uri=self.make_url(self.initialization.source_url),
                 num=-1,
-                duration=None,
+                duration=0.0,
                 available_at=self.period.availabilityStartTime,
                 init=True,
                 content=False,
@@ -803,7 +803,7 @@ class SegmentTemplate(_MultipleSegmentBaseType):
                 yield DASHSegment(
                     uri=init_url,
                     num=-1,
-                    duration=None,
+                    duration=0.0,
                     available_at=self.period.availabilityStartTime,
                     init=True,
                     content=False,
