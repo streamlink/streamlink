@@ -32,6 +32,7 @@ coverage:
       streamlink:
         threshold: 1
         paths:
+          - "build_backend/"
           - "src/streamlink/"
           - "!src/streamlink/plugins/"
       streamlink_cli:

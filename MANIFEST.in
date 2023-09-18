@@ -5,6 +5,7 @@ include LICENSE*
 include *requirements.txt
 include icon.svg
 
+recursive-include build_backend *
 recursive-include completions *
 recursive-include docs *
 recursive-include tests *

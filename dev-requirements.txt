@@ -22,6 +22,7 @@ lxml-stubs
 trio-typing
 types-freezegun
 types-requests
+types-setuptools
 types-urllib3
 
 # scripts
