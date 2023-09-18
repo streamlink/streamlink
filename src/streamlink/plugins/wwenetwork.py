@@ -20,7 +20,7 @@ log = logging.getLogger(__name__)
 
 
 @pluginmatcher(re.compile(
-    r"https?://network\.wwe\.com/video/(?P<video_id>\d+)?",
+    r"https?://network\.wwe\.com/(video/(?P<video_id>\d+))?",
 ))
 @pluginargument(
     "email",
@@ -95,7 +95,10 @@ class WWENetwork(Plugin):
         return self.request("GET", info.get("playerUrlCallback"))
 
     def _get_video_id(self, video_id):
-        return "vod/{0}".format(video_id)
+        if video_id is None:
+            return self._get_live_id()
+        else:
+            return "vod/{0}".format(video_id)
 
     def _get_live_id(self):
         log.debug("Loading live event")
