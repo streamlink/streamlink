@@ -6,5 +6,10 @@ class TestPluginCanHandleUrlWWENetwork(PluginCanHandleUrl):
     __plugin__ = WWENetwork
 
     should_match = [
-        "https://watch.wwe.com/in-ring/3622",
+        "https://network.wwe.com/"
     ]
+
+    should_match_groups = [
+        ("https://network.wwe.com/video/3622", {"video_id": "3622"}),
+    ]
+
