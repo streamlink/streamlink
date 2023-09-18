@@ -20,7 +20,10 @@ log = logging.getLogger(__name__)
 
 
 @pluginmatcher(re.compile(
-    r"https?://network\.wwe\.com/(video/(?P<video_id>\d+))?",
+    r"https?://network\.wwe\.com/video/(?P<stream_id>\d+)?",
+))
+@pluginmatcher(re.compile(
+    r"https?://network\.wwe\.com/live/(?P<stream_id>\d+)?",
 ))
 @pluginargument(
     "email",
@@ -94,17 +97,19 @@ class WWENetwork(Plugin):
         info = self.request("GET", self.stream_url.format(id=content_id))
         return self.request("GET", info.get("playerUrlCallback"))
 
-    def _get_video_id(self, video_id):
-        if video_id is None:
-            return self._get_live_id()
-        else:
-            return "vod/{0}".format(video_id)
+    def _get_video_id(self, stream_id):
+        live_id = self._get_live_id(stream_id)
+        if not live_id:
+            return "vod/{0}".format(stream_id)
 
-    def _get_live_id(self):
+        return live_id
+
+    def _get_live_id(self, stream_id):
         log.debug("Loading live event")
         res = self.request("GET", self.live_url)
         for event in res.get("events", []):
-            return "event/{sportId}/{propertyId}/{tournamentId}/{id}".format(**event)
+            if str(event["id"]) == stream_id:
+                return "event/{sportId}/{propertyId}/{tournamentId}/{id}".format(**event)
 
     def _get_streams(self):
         if not self.login(self.get_option("email"), self.get_option("password")):
@@ -117,8 +122,9 @@ class WWENetwork(Plugin):
         except ValueError:
             start_point = 0
 
-        video_id = self.match.group("video_id")
-        content_id = self._get_video_id(video_id)
+        stream_id = self.match.group("stream_id")
+
+        content_id = self._get_video_id(stream_id)
 
         if content_id:
             log.debug("Found content ID: {0}".format(content_id))
