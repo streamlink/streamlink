@@ -15,6 +15,7 @@ _TEST_CONDITION_MARKERS: Dict[str, Tuple[bool, str]] = {
 }
 
 _TEST_PRIORITIES = (
+    "build_backend/",
     "tests/testutils/",
     "tests/utils/",
     None,

@@ -1,10 +1,13 @@
 [build-system]
-build-backend = "setuptools.build_meta"
 requires = [
   "setuptools >=64",
   "wheel",
   "versioningit >=2.0.0, <3",
 ]
+# setuptools build-backend override
+# https://setuptools.pypa.io/en/stable/build_meta.html
+backend-path = ["build_backend"]
+build-backend = "__init__"
 
 
 # https://peps.python.org/pep-0621/
@@ -110,6 +113,10 @@ build-file = "streamlink/_version.py"
 # https://docs.pytest.org/en/latest/reference/customize.html#configuration
 # https://docs.pytest.org/en/latest/reference/reference.html#ini-options-ref
 [tool.pytest.ini_options]
+testpaths = [
+  "build_backend",
+  "tests",
+]
 filterwarnings = [
   "always",
   "ignore:::pkg_resources",
@@ -121,6 +128,7 @@ filterwarnings = [
 [tool.coverage.run]
 branch = true
 source = [
+  "build_backend",
   "src",
   "tests",
 ]
@@ -142,7 +150,11 @@ exclude_lines = [
 
 # https://beta.ruff.rs/docs/configuration/
 [tool.ruff]
-src = ["src", "tests"]
+src = [
+  "build_backend",
+  "src",
+  "tests",
+]
 target-version = "py38"
 fix = false
 ignore-init-module-imports = true
@@ -233,6 +245,7 @@ show_error_context = true
 show_column_numbers = true
 warn_no_return = false
 files = [
+  "build_backend",
   "src/streamlink/",
   "src/streamlink_cli/",
   "tests/",

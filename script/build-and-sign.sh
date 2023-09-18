@@ -54,11 +54,10 @@ build() {
     log "Building Streamlink sdist and generic wheel"
     python -m build --outdir "${DIST}" --sdist --wheel
 
-    # TODO: switch from `--build-option` (transitional/"escape hatch") to a custom setuptools build-backend override
-    # Adding `bdist_wheel` in front of `--plat-name=...` is required since `build>=1.0.0` as a workaround
+    # see custom build-system override in pyproject.toml
     for platform in "${WHEEL_PLATFORMS[@]}"; do
         log "Building Streamlink platform-specific wheel for ${platform}"
-        python -m build --outdir "${DIST}" --wheel --config-setting="--build-option=bdist_wheel --plat-name=${platform}"
+        python -m build --outdir "${DIST}" --wheel --config-setting="--build-option=--plat-name=${platform}"
     done
 }
 
