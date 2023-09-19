@@ -207,7 +207,7 @@ Linux and BSD
 .. _Solus: https://github.com/getsolus/packages/tree/main/packages/s/streamlink
 .. _Void: https://github.com/void-linux/void-packages/tree/master/srcpkgs/streamlink
 
-.. _Installing AUR packages: https://wiki.archlinux.org/index.php/Arch_User_Repository#Installing_packages
+.. _Installing AUR packages: https://wiki.archlinux.org/index.php/Arch_User_Repository
 .. _Installing Debian backported packages: https://wiki.debian.org/Backports
 .. _NixOS channel: https://search.nixos.org/packages?show=streamlink&query=streamlink
 
