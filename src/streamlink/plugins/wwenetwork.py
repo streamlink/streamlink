@@ -20,10 +20,7 @@ log = logging.getLogger(__name__)
 
 
 @pluginmatcher(re.compile(
-    r"https?://network\.wwe\.com/video/(?P<stream_id>\d+)?",
-))
-@pluginmatcher(re.compile(
-    r"https?://network\.wwe\.com/live/(?P<stream_id>\d+)?",
+    r"https?://network\.wwe\.com/(?:video|live)/(?P<stream_id>\d+)"
 ))
 @pluginargument(
     "email",
@@ -123,7 +120,6 @@ class WWENetwork(Plugin):
             start_point = 0
 
         stream_id = self.match.group("stream_id")
-
         content_id = self._get_video_id(stream_id)
 
         if content_id:
