@@ -6,15 +6,17 @@ class TestPluginCanHandleUrlNOS(PluginCanHandleUrl):
     __plugin__ = NOS
 
     should_match = [
-        "https://nos.nl/livestream/2220100-wk-sprint-schaatsen-1-000-meter-mannen.html",
+        "https://nos.nl/live",
         "https://nos.nl/collectie/13781/livestream/2385081-ek-voetbal-engeland-schotland",
-        "https://nos.nl/collectie/13781/livestream/2385461-ek-voetbal-voorbeschouwing-italie-wales-18-00-uur",
-        "https://nos.nl/collectie/13781/video/2385846-ek-in-2-21-gosens-show-tegen-portugal-en-weer-volle-bak-in-boedapest",
-        "https://nos.nl/video/2385779-dronebeelden-tonen-spoor-van-vernieling-bij-leersum",
-        "https://nos.nl/uitzendingen",
-        "https://nos.nl/uitzendingen/livestream/2385462",
+        "https://nos.nl/collectie/13951/video/2491092-dit-was-prinsjesdag",
+        "https://nos.nl/video/2490788-meteoor-gespot-boven-noord-nederland",
     ]
 
     should_not_match = [
         "https://nos.nl/artikel/2385784-explosieve-situatie-leidde-tot-verwoeste-huizen-en-omgewaaide-bomen-leersum",
+        "https://nos.nl/sport",
+        "https://nos.nl/sport/videos",
+        "https://nos.nl/programmas",
+        "https://nos.nl/uitzendingen",
+        "https://nos.nl/uitzendingen/livestream/2385462",
     ]
