@@ -626,7 +626,7 @@ class HLSStream(HTTPStream):
         self.start_offset = start_offset
         self.duration = duration
 
-    def __json__(self):
+    def __json__(self):  # noqa: PLW3201
         json = super().__json__()
 
         try:

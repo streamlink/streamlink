@@ -213,7 +213,7 @@ class DASHStream(Stream):
         self.audio_representation = audio_representation
         self.args = session.http.valid_request_args(**kwargs)
 
-    def __json__(self):
+    def __json__(self):  # noqa: PLW3201
         json = dict(type=self.shortname())
 
         if self.mpd.url:
