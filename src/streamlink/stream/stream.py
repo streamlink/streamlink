@@ -37,7 +37,7 @@ class Stream:
 
         return f"<{self.__class__.__name__} [{', '.join(params)}]>"
 
-    def __json__(self):
+    def __json__(self):  # noqa: PLW3201
         return dict(type=self.shortname())
 
     @property

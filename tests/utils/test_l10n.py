@@ -99,6 +99,13 @@ class TestCountry:
         with pytest.raises(LookupError):
             l10n.Localization.get_country(country)
 
+    def test_hash(self):
+        one = l10n.Country("DE", "DEU", "276", "Germany", "Federal Republic of Germany")
+        two = l10n.Country("DE", "DEU", "276", "Germany", "Federal Republic of Germany")
+        mapping = {one: "1", two: "2"}
+        assert one is not two
+        assert mapping[one] is mapping[two]
+
     def test_country_compare(self):
         assert l10n.Country("AA", "AAA", "001", "Test") == l10n.Country("AA", "AAA", "001", "Test")
 
@@ -125,6 +132,13 @@ class TestLanguage:
     def test_get_language_miss(self, language):
         with pytest.raises(LookupError):
             l10n.Localization.get_language(language)
+
+    def test_hash(self):
+        one = l10n.Language("de", "deu", "German", "ger")
+        two = l10n.Language("de", "deu", "German", "ger")
+        mapping = {one: "1", two: "2"}
+        assert one is not two
+        assert mapping[one] is mapping[two]
 
     def test_language_compare(self):
         assert l10n.Language("AA", "AAA", "Test") == l10n.Language("AA", None, "Test")

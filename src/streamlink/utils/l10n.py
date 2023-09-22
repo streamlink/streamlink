@@ -34,6 +34,9 @@ class Country:
         except LookupError as err:
             raise LookupError(f"Invalid country code: {country}") from err
 
+    def __hash__(self):
+        return hash((self.alpha2, self.alpha3, self.numeric, self.name, self.official_name))
+
     def __eq__(self, other):
         return (
             (self.alpha2 and self.alpha2 == other.alpha2)
@@ -78,6 +81,9 @@ class Language:
             )
         except LookupError as err:
             raise LookupError(f"Invalid language code: {language}") from err
+
+    def __hash__(self):
+        return hash((self.alpha2, self.alpha3, self.name, self.bibliographic))
 
     def __eq__(self, other):
         return (

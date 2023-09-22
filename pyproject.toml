@@ -148,7 +148,7 @@ exclude_lines = [
 ]
 
 
-# https://beta.ruff.rs/docs/configuration/
+# https://docs.astral.sh/ruff/configuration/
 [tool.ruff]
 src = [
   "build_backend",
@@ -160,7 +160,8 @@ fix = false
 ignore-init-module-imports = true
 line-length = 128
 show-source = true
-format = "grouped"
+output-format = "grouped"
+preview = true
 select = [
   # pycodestyle
   "E",

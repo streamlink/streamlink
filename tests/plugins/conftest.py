@@ -27,7 +27,7 @@ def pytest_generate_tests(metafunc: pytest.Metafunc):
 
 
 def _parametrize_plugincanhandleurl_test_all_matchers_match(metafunc: pytest.Metafunc):
-    matchers: List[Tuple[int, Matcher]] = [(i, m) for i, m in enumerate(metafunc.cls.matchers())]
+    matchers: List[Tuple[int, Matcher]] = list(enumerate(metafunc.cls.matchers()))
     metafunc.parametrize(
         "matcher",
         [m for i, m in matchers],
