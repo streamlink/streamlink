@@ -33,9 +33,9 @@ jobs:
           - python: "3.12-dev"
             os: ubuntu-latest
             continue: true
-#          - python: "3.12-dev"
-#            os: windows-latest
-#            continue: true
+          - python: "3.12-dev"
+            os: windows-latest
+            continue: true
     runs-on: ${{ matrix.os }}
     timeout-minutes: 60
     steps:
