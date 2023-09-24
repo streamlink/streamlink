@@ -18,7 +18,7 @@ log = logging.getLogger(__name__)
 
 
 @pluginmatcher(re.compile(
-    r"https?://(?:www\.)?pandalive\.co\.kr/",
+    r"https?://(?:www\.)?pandalive\.co\.kr/live/play/[^/]+",
 ))
 class Pandalive(Plugin):
     def _get_streams(self):
@@ -34,10 +34,14 @@ class Pandalive(Plugin):
 
         json = self.session.http.post(
             "https://api.pandalive.co.kr/v1/live/play",
+            headers={
+                "Referer": self.url,
+            },
             data={
                 "action": "watch",
                 "userId": media_code,
             },
+            acceptable_status=(200, 400),
             schema=validate.Schema(
                 validate.parse_json(),
                 validate.any(
