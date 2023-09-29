@@ -8,7 +8,6 @@ $account Required
 import json
 import logging
 import re
-from functools import lru_cache
 from urllib.parse import parse_qsl, urlparse
 
 from streamlink.plugin import Plugin, PluginError, pluginargument, pluginmatcher
@@ -21,7 +20,7 @@ log = logging.getLogger(__name__)
 
 
 @pluginmatcher(re.compile(
-    r"https?://watch\.wwe\.com/(channel)?",
+    r"https?://network\.wwe\.com/(?:video|live)/(?P<stream_id>\d+)",
 ))
 @pluginargument(
     "email",
@@ -42,7 +41,7 @@ class WWENetwork(Plugin):
     stream_url = "https://dce-frontoffice.imggaming.com/api/v2/stream/{id}"
     live_url = "https://dce-frontoffice.imggaming.com/api/v2/event/live"
     login_url = "https://dce-frontoffice.imggaming.com/api/v2/login"
-    page_config_url = "https://cdn.watch.wwe.com/api/page"
+
     API_KEY = "cca51ea0-7837-40df-a055-75eb6347b2e7"
 
     customer_id = 16
@@ -52,14 +51,11 @@ class WWENetwork(Plugin):
         self.session.http.headers.update({"User-Agent": useragents.CHROME})
         self.auth_token = None
 
-    def get_title(self):
-        return self.item_config["title"]
-
     def request(self, method, url, **kwargs):
         headers = kwargs.pop("headers", {})
         headers.update({"x-api-key": self.API_KEY,
-                        "Origin": "https://watch.wwe.com",
-                        "Referer": "https://watch.wwe.com/signin",
+                        "Origin": "https://network.wwe.com",
+                        "Referer": "https://network.wwe.com/signin",
                         "Accept": "application/json",
                         "Realm": "dce.wwe"})
         if self.auth_token:
@@ -89,25 +85,6 @@ class WWENetwork(Plugin):
 
         return self.auth_token
 
-    @property  # type: ignore
-    @lru_cache(maxsize=128)  # noqa: B019
-    def item_config(self):
-        log.debug("Loading page config")
-        p = urlparse(self.url)
-        res = self.session.http.get(self.page_config_url,
-                                    params=dict(device="web_browser",
-                                                ff="idp,ldp",
-                                                item_detail_expand="all",
-                                                lang="en-US",
-                                                list_page_size="1",
-                                                max_list_prefetch="1",
-                                                path=p.path,
-                                                segments="es",
-                                                sub="Registered",
-                                                text_entry_format="html"))
-        data = self.session.http.json(res)
-        return data["item"]
-
     def _get_media_info(self, content_id):
         """
         Get the info about the content, based on the ID
@@ -117,23 +94,19 @@ class WWENetwork(Plugin):
         info = self.request("GET", self.stream_url.format(id=content_id))
         return self.request("GET", info.get("playerUrlCallback"))
 
-    def _get_video_id(self):
-        #  check the page to find the contentId
-        log.debug("Searching for content ID")
-        try:
-            if self.item_config["type"] == "channel":
-                return self._get_live_id()
-            else:
-                return "vod/{id}".format(id=self.item_config["customFields"]["DiceVideoId"])
-        except KeyError:
-            log.error("Could not find video ID")
-            return
+    def _get_video_id(self, stream_id):
+        live_id = self._get_live_id(stream_id)
+        if not live_id:
+            return "vod/{0}".format(stream_id)
 
-    def _get_live_id(self):
+        return live_id
+
+    def _get_live_id(self, stream_id):
         log.debug("Loading live event")
         res = self.request("GET", self.live_url)
         for event in res.get("events", []):
-            return "event/{sportId}/{propertyId}/{tournamentId}/{id}".format(**event)
+            if str(event["id"]) == stream_id:
+                return "event/{sportId}/{propertyId}/{tournamentId}/{id}".format(**event)
 
     def _get_streams(self):
         if not self.login(self.get_option("email"), self.get_option("password")):
@@ -146,7 +119,8 @@ class WWENetwork(Plugin):
         except ValueError:
             start_point = 0
 
-        content_id = self._get_video_id()
+        stream_id = self.match.group("stream_id")
+        content_id = self._get_video_id(stream_id)
 
         if content_id:
             log.debug("Found content ID: {0}".format(content_id))
