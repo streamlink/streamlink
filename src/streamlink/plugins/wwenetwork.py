@@ -20,7 +20,7 @@ log = logging.getLogger(__name__)
 
 
 @pluginmatcher(re.compile(
-    r"https?://network\.wwe\.com/(?:video|live)/(?P<stream_id>\d+)"
+    r"https?://network\.wwe\.com/(?:video|live)/(?P<stream_id>\d+)",
 ))
 @pluginargument(
     "email",
