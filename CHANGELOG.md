@@ -1,5 +1,16 @@
 # Changelog
 
+## streamlink 6.2.1 (2023-10-03)
+
+Patch release:
+
+- Added: official support for Python 3.12 ([#5576](https://github.com/streamlink/streamlink/pull/5576))
+- Fixed plugins: goodgame ([#5557](https://github.com/streamlink/streamlink/pull/5557)), nos ([#5565](https://github.com/streamlink/streamlink/pull/5565)), pandalive ([#5569](https://github.com/streamlink/streamlink/pull/5569)), wwenetwork ([#5559](https://github.com/streamlink/streamlink/pull/5559))
+- Build: added custom setuptools build-backend override which fixes issues with building Windows-specific wheels ([#5558](https://github.com/streamlink/streamlink/pull/5558))
+
+[Full changelog](https://github.com/streamlink/streamlink/compare/6.2.0...6.2.1)
+
+
 ## streamlink 6.2.0 (2023-09-14)
 
 Release highlights:
