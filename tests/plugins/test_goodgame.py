@@ -1,7 +1,4 @@
-import pytest
-
 from streamlink.plugins.goodgame import GoodGame
-from streamlink.session import Streamlink
 from tests.plugins import PluginCanHandleUrl
 
 
@@ -9,15 +6,21 @@ class TestPluginCanHandleUrlGoodGame(PluginCanHandleUrl):
     __plugin__ = GoodGame
 
     should_match_groups = [
-        ("https://goodgame.ru/CHANNELNAME", {"user": "CHANNELNAME"}),
-        ("https://goodgame.ru/channel/CHANNELNAME", {"user": "CHANNELNAME"}),
+        (("default", "https://goodgame.ru/CHANNELNAME"), {"name": "CHANNELNAME"}),
+        (("default", "https://goodgame.ru/CHANNELNAME/"), {"name": "CHANNELNAME"}),
+        (("default", "https://goodgame.ru/CHANNELNAME?foo=bar"), {"name": "CHANNELNAME"}),
+        (("default", "https://www.goodgame.ru/CHANNELNAME"), {"name": "CHANNELNAME"}),
+
+        (("channel", "https://goodgame.ru/channel/CHANNELNAME"), {"channel": "CHANNELNAME"}),
+        (("channel", "https://goodgame.ru/channel/CHANNELNAME/"), {"channel": "CHANNELNAME"}),
+        (("channel", "https://goodgame.ru/channel/CHANNELNAME?foo=bar"), {"channel": "CHANNELNAME"}),
+        (("channel", "https://www.goodgame.ru/channel/CHANNELNAME"), {"channel": "CHANNELNAME"}),
+
+        (("player", "https://goodgame.ru/player?1234"), {"id": "1234"}),
+        (("player", "https://www.goodgame.ru/player?1234"), {"id": "1234"}),
     ]
 
-
-@pytest.mark.parametrize(("url", "expected"), [
-    ("https://goodgame.ru/CHANNELNAME", "https://goodgame.ru/CHANNELNAME"),
-    ("https://goodgame.ru/channel/CHANNELNAME", "https://goodgame.ru/CHANNELNAME"),
-])
-def test_url_translation(session: Streamlink, url: str, expected: str):
-    plugin = GoodGame(session, url)
-    assert plugin.url == expected
+    should_not_match = [
+        "https://goodgame.ru/channel",
+        "https://goodgame.ru/player",
+    ]
