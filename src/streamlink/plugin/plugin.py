@@ -45,7 +45,7 @@ BIT_RATE_WEIGHT_RATIO = 2.8
 
 ALT_WEIGHT_MOD = 0.01
 
-QUALITY_WEIGTHS_EXTRA = {
+QUALITY_WEIGHTS_EXTRA = {
     "other": {
         "live": 1080,
     },
@@ -79,7 +79,7 @@ _COOKIE_KEYS = \
 
 
 def stream_weight(stream):
-    for group, weights in QUALITY_WEIGTHS_EXTRA.items():
+    for group, weights in QUALITY_WEIGHTS_EXTRA.items():
         if stream in weights:
             return weights[stream], group
 
