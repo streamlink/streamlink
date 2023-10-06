@@ -17,11 +17,14 @@ import base64
 import logging
 import re
 import sys
+from contextlib import suppress
 from datetime import datetime, timedelta
 from json import dumps as json_dumps
 from random import random
 from typing import List, Mapping, NamedTuple, Optional, Tuple
 from urllib.parse import urlparse
+
+from requests.exceptions import HTTPError
 
 from streamlink.exceptions import NoStreamsError, PluginError
 from streamlink.plugin import Plugin, pluginargument, pluginmatcher
@@ -900,11 +903,22 @@ class Twitch(Plugin):
                 **extra_params,
             )
         except OSError as err:
-            err = str(err)
-            if "404 Client Error" in err or "Failed to parse playlist" in err:
+            # TODO: fix the "err" attribute set by HTTPSession.request()
+            orig = getattr(err, "err", None)
+            if isinstance(orig, HTTPError) and orig.response.status_code >= 400:
+                error = None
+                with suppress(PluginError):
+                    error = validate.Schema(
+                        validate.parse_json(),
+                        [{
+                            "type": "error",
+                            "error": str,
+                        }],
+                        validate.get((0, "error")),
+                    ).validate(orig.response.text)
+                log.error(error or "Could not access HLS playlist")
                 return
-            else:
-                raise PluginError(err) from err
+            raise PluginError(err) from err
 
         for name in restricted_bitrates:
             if name not in streams:

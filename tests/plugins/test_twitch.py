@@ -1,4 +1,5 @@
 import unittest
+from contextlib import nullcontext
 from datetime import datetime, timedelta, timezone
 from unittest.mock import MagicMock, Mock, call, patch
 
@@ -583,6 +584,60 @@ class TestTwitchAPIAccessToken:
         assert headers["Authorization"] == "OAuth invalid-token"
         assert headers["Device-Id"] == "device-id"
         assert headers["Client-Integrity"] == "client-integrity-token"
+
+
+class TestTwitchHLSMultivariantResponse:
+    @pytest.fixture()
+    def plugin(self, request: pytest.FixtureRequest, requests_mock: rm.Mocker, session: Streamlink):
+        requests_mock.get("mock://multivariant", **getattr(request, "param", {}))
+        return Twitch(session, "https://twitch.tv/channelname")
+
+    @pytest.mark.parametrize(("plugin", "raises", "streams", "log"), [
+        pytest.param(
+            {"text": "#EXTM3U\n"},
+            nullcontext(),
+            {},
+            [],
+            id="success",
+        ),
+        pytest.param(
+            {"text": "Not an HLS playlist"},
+            pytest.raises(PluginError),
+            {},
+            [],
+            id="invalid HLS playlist",
+        ),
+        pytest.param(
+            {
+                "status_code": 403,
+                "json": [{
+                    "url": "mock://multivariant",
+                    "error": "Content Restricted In Region",
+                    "error_code": "content_geoblocked",
+                    "type": "error",
+                }],
+            },
+            nullcontext(),
+            None,
+            [("streamlink.plugins.twitch", "error", "Content Restricted In Region")],
+            id="geo restriction",
+        ),
+        pytest.param(
+            {
+                "status_code": 404,
+                "text": "Not found",
+            },
+            nullcontext(),
+            None,
+            [("streamlink.plugins.twitch", "error", "Could not access HLS playlist")],
+            id="non-json error response",
+        ),
+    ], indirect=["plugin"])
+    def test_multivariant_response(self, caplog: pytest.LogCaptureFixture, plugin: Twitch, raises, streams, log):
+        caplog.set_level("error", "streamlink.plugins.twitch")
+        with raises:
+            assert plugin._get_hls_streams("mock://multivariant", []) == streams
+        assert [(record.name, record.levelname, record.message) for record in caplog.records] == log
 
 
 class TestTwitchMetadata:
