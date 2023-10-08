@@ -12,7 +12,8 @@ from requests import Response
 
 from streamlink.exceptions import PluginError, StreamError
 from streamlink.session import Streamlink
-from streamlink.stream.dash.manifest import MPD, DASHSegment, Representation, freeze_timeline
+from streamlink.stream.dash.manifest import MPD, Representation, freeze_timeline
+from streamlink.stream.dash.segment import DASHSegment
 from streamlink.stream.ffmpegmux import FFMPEGMuxer
 from streamlink.stream.segmented import SegmentedStreamReader, SegmentedStreamWorker, SegmentedStreamWriter
 from streamlink.stream.stream import Stream
