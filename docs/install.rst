@@ -163,10 +163,10 @@ Linux and BSD
       - .. code-block:: bash
 
             # If you don't have Debian backports already (see link below):
-            echo "deb http://deb.debian.org/debian bullseye-backports main" | sudo tee "/etc/apt/sources.list.d/streamlink.list"
+            echo "deb http://deb.debian.org/debian bookworm-backports main" | sudo tee "/etc/apt/sources.list.d/streamlink.list"
 
             sudo apt update
-            sudo apt -t bullseye-backports install streamlink
+            sudo apt -t bookworm-backports install streamlink
 
         `Installing Debian backported packages`_
     * - :octicon:`package-dependents` `Fedora`_
@@ -215,7 +215,7 @@ Linux and BSD
 .. _Arch Linux: https://archlinux.org/packages/extra/any/streamlink/
 .. _Arch Linux (aur, git): https://aur.archlinux.org/packages/streamlink-git/
 .. _Debian (sid, testing): https://packages.debian.org/sid/streamlink
-.. _Debian (stable): https://packages.debian.org/bullseye-backports/streamlink
+.. _Debian (stable): https://packages.debian.org/bookworm-backports/streamlink
 .. _Fedora: https://src.fedoraproject.org/rpms/python-streamlink
 .. _FreeBSD (pkg): https://ports.freebsd.org/cgi/ports.cgi?query=streamlink&stype=name
 .. _FreeBSD (ports): https://www.freshports.org/multimedia/streamlink
