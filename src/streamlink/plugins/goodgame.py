@@ -80,6 +80,7 @@ class GoodGame(Plugin):
                         "streamer": {
                             "username": str,
                         },
+                        "streamKey": str,
                         "game": {
                             "title": validate.none_or_all(str),
                         },
@@ -111,6 +112,7 @@ class GoodGame(Plugin):
                         ("streamer", "username"),
                         ("game", "title"),
                         "title",
+                        "streamKey",
                         "players",
                     ),
                     validate.transform(lambda data: ("data", *data)),
@@ -127,8 +129,8 @@ class GoodGame(Plugin):
             log.error(data[0] or "Unknown error")
             return
 
-        online, self.id, self.author, self.category, self.title, players = data
-        hls_url = self._URL_HLS.format(id=self.id)
+        online, self.id, self.author, self.category, self.title, stream_key, players = data
+        hls_url = self._URL_HLS.format(id=stream_key)
 
         if online and self.session.http.get(hls_url, raise_for_status=False).status_code < 400:
             return HLSStream.parse_variant_playlist(self.session, hls_url)
