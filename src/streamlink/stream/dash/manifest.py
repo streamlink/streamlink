@@ -4,10 +4,8 @@ import math
 import re
 from collections import defaultdict
 from contextlib import contextmanager
-from dataclasses import dataclass
 from datetime import datetime, timedelta
 from itertools import count, repeat
-from pathlib import Path
 from typing import (
     Any,
     Callable,
@@ -32,7 +30,7 @@ from isodate import Duration, parse_datetime, parse_duration  # type: ignore[imp
 # noinspection PyProtectedMember
 from lxml.etree import _Attrib, _Element
 
-from streamlink.stream.segmented.segment import Segment
+from streamlink.stream.dash.segment import DASHSegment, TimelineSegment
 from streamlink.utils.times import UTC, fromtimestamp, now
 
 
@@ -40,38 +38,6 @@ log = logging.getLogger(__name__)
 
 EPOCH_START = fromtimestamp(0)
 ONE_SECOND = timedelta(seconds=1)
-
-SEGMENT_TIME_FORMAT = "%Y-%m-%dT%H:%M:%S.%fZ"
-
-
-@dataclass
-class DASHSegment(Segment):
-    available_at: datetime = EPOCH_START
-    init: bool = False
-    content: bool = True
-    byterange: Optional[Tuple[int, Optional[int]]] = None
-
-    @property
-    def name(self) -> str:
-        if self.init and not self.content:
-            return "initialization"
-        if self.num > -1:
-            return str(self.num)
-        return Path(urlparse(self.uri).path).resolve().name
-
-    @property
-    def available_in(self) -> float:
-        return max(0.0, (self.available_at - now()).total_seconds())
-
-    @property
-    def availability(self) -> str:
-        return f"{self.available_at.strftime(SEGMENT_TIME_FORMAT)} / {now().strftime(SEGMENT_TIME_FORMAT)}"
-
-
-@dataclass
-class TimelineSegment:
-    t: int
-    d: int
 
 
 def _identity(x):
