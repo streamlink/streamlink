@@ -1,7 +1,7 @@
 from collections import abc
 from copy import copy, deepcopy
 from functools import singledispatch
-from re import Match, Pattern
+from re import Pattern
 
 from lxml.etree import Element, iselement
 
@@ -253,8 +253,6 @@ def _validate_getitemschema(schema: GetItemSchema, value):
         for key in item:
             if iselement(value):
                 value = value.attrib[key]
-            elif isinstance(value, Match):
-                value = value.group(key)
             else:
                 value = value[key]
             idx += 1
