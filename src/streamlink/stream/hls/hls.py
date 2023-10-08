@@ -14,7 +14,8 @@ from streamlink.exceptions import StreamError
 from streamlink.session import Streamlink
 from streamlink.stream.ffmpegmux import FFMPEGMuxer, MuxedStream
 from streamlink.stream.filtered import FilteredStream
-from streamlink.stream.hls.m3u8 import M3U8, ByteRange, HLSPlaylist, HLSSegment, Key, M3U8Parser, Map, Media, parse_m3u8
+from streamlink.stream.hls.m3u8 import M3U8, M3U8Parser, parse_m3u8
+from streamlink.stream.hls.segment import ByteRange, HLSPlaylist, HLSSegment, Key, Map, Media
 from streamlink.stream.http import HTTPStream
 from streamlink.stream.segmented import SegmentedStreamReader, SegmentedStreamWorker, SegmentedStreamWriter
 from streamlink.utils.cache import LRUCache
