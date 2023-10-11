@@ -9,7 +9,7 @@ dist_dir=${STREAMLINK_DIST_DIR:-dist}
 
 if [[ "${1}" = "-n" ]] || [[ "${1}" = "--dry-run" ]]; then
     echo >&2 "deploy: dry-run (${version})"
-    for file in "${dist_dir}"/streamlink-"${version}"{.tar.gz,-*.whl}{,.asc}; do
+    for file in "${dist_dir}"/streamlink-"${version}"{.tar.gz,-*.whl}; do
         echo >&2 "${file}"
     done
 
@@ -28,5 +28,5 @@ else
     twine upload \
         --username "${PYPI_USER}" \
         --password "${PYPI_PASSWORD}" \
-        "${dist_dir}"/streamlink-"${version}"{.tar.gz,-*.whl}{,.asc}
+        "${dist_dir}"/streamlink-"${version}"{.tar.gz,-*.whl}
 fi
