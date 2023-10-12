@@ -198,6 +198,57 @@ class TestHLSStream(TestMixinStreamHLS, unittest.TestCase):
         assert self.called(map2, once=True), "Downloads second map only once"
 
 
+# TODO: finally rewrite the segmented/HLS test setup using pytest and replace redundant setups with parametrization
+@patch("streamlink.stream.hls.hls.HLSStreamWorker.wait", Mock(return_value=True))
+class TestHLSStreamPlaylistReloadDiscontinuity(TestMixinStreamHLS, unittest.TestCase):
+    @patch("streamlink.stream.hls.hls.log")
+    def test_no_discontinuity(self, mock_log: Mock):
+        thread, segments = self.subject([
+            Playlist(0, [Segment(0), Segment(1)]),
+            Playlist(2, [Segment(2), Segment(3)]),
+            Playlist(4, [Segment(4), Segment(5)], end=True),
+        ])
+
+        data = self.await_read(read_all=True)
+        assert data == self.content(segments)
+        assert all(self.called(s) for s in segments.values())
+        assert mock_log.warning.call_args_list == []
+
+    @patch("streamlink.stream.hls.hls.log")
+    def test_discontinuity_single_segment(self, mock_log: Mock):
+        thread, segments = self.subject([
+            Playlist(0, [Segment(0), Segment(1)]),
+            Playlist(2, [Segment(2), Segment(3)]),
+            Playlist(5, [Segment(5), Segment(6)]),
+            Playlist(8, [Segment(8), Segment(9)], end=True),
+        ])
+
+        data = self.await_read(read_all=True)
+        assert data == self.content(segments)
+        assert all(self.called(s) for s in segments.values())
+        assert mock_log.warning.call_args_list == [
+            call("Skipped segment 4 after playlist reload. This is unsupported and will result in incoherent output data."),
+            call("Skipped segment 7 after playlist reload. This is unsupported and will result in incoherent output data."),
+        ]
+
+    @patch("streamlink.stream.hls.hls.log")
+    def test_discontinuity_multiple_segments(self, mock_log: Mock):
+        thread, segments = self.subject([
+            Playlist(0, [Segment(0), Segment(1)]),
+            Playlist(2, [Segment(2), Segment(3)]),
+            Playlist(6, [Segment(6), Segment(7)]),
+            Playlist(10, [Segment(10), Segment(11)], end=True),
+        ])
+
+        data = self.await_read(read_all=True)
+        assert data == self.content(segments)
+        assert all(self.called(s) for s in segments.values())
+        assert mock_log.warning.call_args_list == [
+            call("Skipped segments 4-5 after playlist reload. This is unsupported and will result in incoherent output data."),
+            call("Skipped segments 8-9 after playlist reload. This is unsupported and will result in incoherent output data."),
+        ]
+
+
 class TestHLSStreamWorker(TestMixinStreamHLS, unittest.TestCase):
     __stream__ = EventedWorkerHLSStream
 
