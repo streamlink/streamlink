@@ -112,6 +112,16 @@ class TestMPDParsers:
 
 
 class TestMPDParser:
+    @pytest.mark.parametrize(("min_buffer_time", "expected"), [
+        pytest.param("PT1S", 3.0, id="minBufferTime lower than suggestedPresentationDelay"),
+        pytest.param("PT5S", 5.0, id="minBufferTime greater than suggestedPresentationDelay"),
+    ])
+    def test_suggested_presentation_delay(self, min_buffer_time: str, expected: float):
+        with xml("dash/test_suggested_presentation_delay.mpd") as mpd_xml:
+            mpd_xml.attrib["minBufferTime"] = min_buffer_time
+            mpd = MPD(mpd_xml, base_url="http://test/", url="http://test/manifest.mpd")
+        assert mpd.suggestedPresentationDelay.total_seconds() == expected
+
     def test_no_segment_list_or_template(self):
         with xml("dash/test_no_segment_list_or_template.mpd") as mpd_xml:
             mpd = MPD(mpd_xml, base_url="http://test/", url="http://test/manifest.mpd")
