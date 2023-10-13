@@ -77,8 +77,14 @@ class MPDParsers:
         return mpdtype
 
     @staticmethod
-    def duration(duration: str) -> Union[timedelta, Duration]:
-        return parse_duration(duration)
+    def duration(anchor: Optional[datetime] = None) -> Callable[[str], timedelta]:
+        def duration_to_timedelta(duration: str) -> timedelta:
+            parsed: Union[timedelta, Duration] = parse_duration(duration)
+            if isinstance(parsed, Duration):
+                return parsed.totimedelta(start=anchor or now())
+            return parsed
+
+        return duration_to_timedelta
 
     @staticmethod
     def datetime(dt: str) -> datetime:
@@ -307,19 +313,10 @@ class MPD(MPDNode):
             parser=MPDParsers.type,
             default="static",
         )
-        self.minimumUpdatePeriod = self.attr(
-            "minimumUpdatePeriod",
-            parser=MPDParsers.duration,
-            default=timedelta(),
-        )
-        self.minBufferTime: Union[timedelta, Duration] = self.attr(
-            "minBufferTime",
-            parser=MPDParsers.duration,
-            required=True,
-        )
-        self.timeShiftBufferDepth = self.attr(
-            "timeShiftBufferDepth",
-            parser=MPDParsers.duration,
+        self.publishTime = self.attr(
+            "publishTime",
+            parser=MPDParsers.datetime,
+            required=self.type == "dynamic",
         )
         self.availabilityStartTime = self.attr(
             "availabilityStartTime",
@@ -327,23 +324,32 @@ class MPD(MPDNode):
             default=EPOCH_START,
             required=self.type == "dynamic",
         )
-        self.publishTime = self.attr(
-            "publishTime",
-            parser=MPDParsers.datetime,
-            required=self.type == "dynamic",
-        )
         self.availabilityEndTime = self.attr(
             "availabilityEndTime",
             parser=MPDParsers.datetime,
         )
+        self.minBufferTime: timedelta = self.attr(  # type: ignore[assignment]
+            "minBufferTime",
+            parser=MPDParsers.duration(self.publishTime),
+            required=True,
+        )
+        self.minimumUpdatePeriod = self.attr(
+            "minimumUpdatePeriod",
+            parser=MPDParsers.duration(self.publishTime),
+            default=timedelta(),
+        )
+        self.timeShiftBufferDepth = self.attr(
+            "timeShiftBufferDepth",
+            parser=MPDParsers.duration(self.publishTime),
+        )
         self.mediaPresentationDuration = self.attr(
             "mediaPresentationDuration",
-            parser=MPDParsers.duration,
+            parser=MPDParsers.duration(self.publishTime),
             default=timedelta(),
         )
         self.suggestedPresentationDelay = self.attr(
             "suggestedPresentationDelay",
-            parser=MPDParsers.duration,
+            parser=MPDParsers.duration(self.publishTime),
             # if there is no delay, use a delay of 3 seconds
             # TODO: add a customizable parameter for this
             default=timedelta(seconds=3),
@@ -423,12 +429,12 @@ class Period(MPDNode):
         )
         self.duration = self.attr(
             "duration",
-            parser=MPDParsers.duration,
+            parser=MPDParsers.duration(self.root.publishTime),
             default=timedelta(),
         )
         self.start = self.attr(
             "start",
-            parser=MPDParsers.duration,
+            parser=MPDParsers.duration(self.root.publishTime),
             default=timedelta(),
         )
 
