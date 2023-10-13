@@ -292,6 +292,8 @@ class MPD(MPDNode):
     parent: None  # type: ignore[assignment]
     timelines: Dict[TTimelineIdent, int]
 
+    DEFAULT_MINBUFFERTIME = 3.0
+
     def __init__(self, *args, url: Optional[str] = None, **kwargs) -> None:
         # top level has no parent
         kwargs["root"] = self
@@ -350,9 +352,12 @@ class MPD(MPDNode):
         self.suggestedPresentationDelay = self.attr(
             "suggestedPresentationDelay",
             parser=MPDParsers.duration(self.publishTime),
-            # if there is no delay, use a delay of 3 seconds
+            # if there is no delay, use a delay of 3 seconds, but respect the manifest's minBufferTime
             # TODO: add a customizable parameter for this
-            default=timedelta(seconds=3),
+            default=timedelta(seconds=max(
+                self.DEFAULT_MINBUFFERTIME,
+                self.minBufferTime.total_seconds(),
+            )),
         )
 
         # parse children
