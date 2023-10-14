@@ -29,13 +29,14 @@ jobs:
           - "3.9"
           - "3.10"
           - "3.11"
-        include:
-          - python: "3.12-dev"
-            os: ubuntu-latest
-            continue: true
-          - python: "3.12-dev"
-            os: windows-latest
-            continue: true
+          - "3.12"
+#        include:
+#          - python: "3.13-dev"
+#            os: ubuntu-latest
+#            continue: true
+#          - python: "3.13-dev"
+#            os: windows-latest
+#            continue: true
     runs-on: ${{ matrix.os }}
     timeout-minutes: 60
     steps:
