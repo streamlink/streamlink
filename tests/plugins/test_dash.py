@@ -14,6 +14,7 @@ class TestPluginCanHandleUrlMPEGDASH(PluginCanHandleUrl):
     should_match_groups = [
         # implicit DASH URLs
         ("example.com/foo.mpd", {"url": "example.com/foo.mpd"}),
+        ("example.com/foo.MPD", {"url": "example.com/foo.MPD"}),
         ("example.com/foo.mpd?bar", {"url": "example.com/foo.mpd?bar"}),
         ("http://example.com/foo.mpd", {"url": "http://example.com/foo.mpd"}),
         ("http://example.com/foo.mpd?bar", {"url": "http://example.com/foo.mpd?bar"}),
@@ -33,6 +34,7 @@ class TestPluginCanHandleUrlMPEGDASH(PluginCanHandleUrl):
     should_not_match = [
         # implicit DASH URLs must have their path end with ".mpd"
         "example.com/mpd",
+        "example.com/MPD",
         "example.com/mpd abc=def",
         "example.com/foo.mpd,bar",
         "example.com/foo.mpd,bar abc=def",
@@ -44,6 +46,7 @@ class TestPluginCanHandleUrlMPEGDASH(PluginCanHandleUrl):
 
 @pytest.mark.parametrize(("url", "priority"), [
     ("http://example.com/foo.mpd", LOW_PRIORITY),
+    ("http://example.com/foo.MPD", LOW_PRIORITY),
     ("dash://http://example.com/foo.mpd", NORMAL_PRIORITY),
     ("dash://http://example.com/bar", NORMAL_PRIORITY),
     ("http://example.com/bar", NO_PRIORITY),

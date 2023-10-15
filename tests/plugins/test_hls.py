@@ -15,6 +15,7 @@ class TestPluginCanHandleUrlHLSPlugin(PluginCanHandleUrl):
     should_match_groups = [
         # implicit HLS URLs
         ("example.com/foo.m3u8", {"url": "example.com/foo.m3u8"}),
+        ("example.com/foo.M3U8", {"url": "example.com/foo.M3U8"}),
         ("example.com/foo.m3u8?bar", {"url": "example.com/foo.m3u8?bar"}),
         ("http://example.com/foo.m3u8", {"url": "http://example.com/foo.m3u8"}),
         ("http://example.com/foo.m3u8?bar", {"url": "http://example.com/foo.m3u8?bar"}),
@@ -38,6 +39,7 @@ class TestPluginCanHandleUrlHLSPlugin(PluginCanHandleUrl):
     should_not_match = [
         # implicit HLS URLs must have their path end with ".m3u8"
         "example.com/m3u8",
+        "example.com/M3U8",
         "example.com/m3u8 abc=def",
         "example.com/foo.m3u8,bar",
         "example.com/foo.m3u8,bar abc=def",
@@ -50,6 +52,7 @@ class TestPluginCanHandleUrlHLSPlugin(PluginCanHandleUrl):
 
 @pytest.mark.parametrize(("url", "priority"), [
     ("http://example.com/foo.m3u8", LOW_PRIORITY),
+    ("http://example.com/foo.M3U8", LOW_PRIORITY),
     ("hls://http://example.com/foo.m3u8", NORMAL_PRIORITY),
     ("hls://http://example.com/bar", NORMAL_PRIORITY),
     ("hlsvariant://http://example.com/foo.m3u8", NORMAL_PRIORITY),
