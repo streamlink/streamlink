@@ -14,7 +14,8 @@ log = logging.getLogger(__name__)
     r"hls(?:variant)?://(?P<url>\S+)(?:\s(?P<params>.+))?$",
 ))
 @pluginmatcher(priority=LOW_PRIORITY, pattern=re.compile(
-    r"(?P<url>\S+\.m3u8(?:\?\S*)?)(?:\s(?P<params>.+))?$",
+    # URL with explicit scheme, or URL with implicit HTTPS scheme and a path
+    r"(?P<url>[^/]+/\S+\.m3u8(?:\?\S*)?)(?:\s(?P<params>.+))?$",
     re.IGNORECASE,
 ))
 class HLSPlugin(Plugin):

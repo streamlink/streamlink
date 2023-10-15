@@ -20,10 +20,14 @@ class TestPluginCanHandleUrlMPEGDASH(PluginCanHandleUrl):
         ("http://example.com/foo.mpd?bar", {"url": "http://example.com/foo.mpd?bar"}),
         ("https://example.com/foo.mpd", {"url": "https://example.com/foo.mpd"}),
         ("https://example.com/foo.mpd?bar", {"url": "https://example.com/foo.mpd?bar"}),
+        ("file://foo.mpd", {"url": "file://foo.mpd"}),
+        ("file:///foo.mpd", {"url": "file:///foo.mpd"}),
+        ("file://../foo.mpd", {"url": "file://../foo.mpd"}),
         # explicit DASH URLs with protocol prefix
         ("dash://example.com/foo?bar", {"url": "example.com/foo?bar"}),
         ("dash://http://example.com/foo?bar", {"url": "http://example.com/foo?bar"}),
         ("dash://https://example.com/foo?bar", {"url": "https://example.com/foo?bar"}),
+        ("dash://file://foo", {"url": "file://foo"}),
         # optional parameters
         ("example.com/foo.mpd?bar abc=def", {"url": "example.com/foo.mpd?bar", "params": "abc=def"}),
         ("http://example.com/foo.mpd?bar abc=def", {"url": "http://example.com/foo.mpd?bar", "params": "abc=def"}),
@@ -33,6 +37,8 @@ class TestPluginCanHandleUrlMPEGDASH(PluginCanHandleUrl):
 
     should_not_match = [
         # implicit DASH URLs must have their path end with ".mpd"
+        "example.mpd",
+        "/example.mpd",
         "example.com/mpd",
         "example.com/MPD",
         "example.com/mpd abc=def",
@@ -59,6 +65,9 @@ def test_priority(url, priority):
     ("example.com/foo.mpd", "https://example.com/foo.mpd"),
     ("http://example.com/foo.mpd", "http://example.com/foo.mpd"),
     ("https://example.com/foo.mpd", "https://example.com/foo.mpd"),
+    ("file://foo.mpd", "file://foo.mpd"),
+    ("file:///foo.mpd", "file:///foo.mpd"),
+    ("file://../foo.mpd", "file://../foo.mpd"),
     ("dash://example.com/foo", "https://example.com/foo"),
     ("dash://http://example.com/foo", "http://example.com/foo"),
     ("dash://https://example.com/foo", "https://example.com/foo"),
