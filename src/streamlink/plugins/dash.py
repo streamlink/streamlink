@@ -15,6 +15,7 @@ log = logging.getLogger(__name__)
 ))
 @pluginmatcher(priority=LOW_PRIORITY, pattern=re.compile(
     r"(?P<url>\S+\.mpd(?:\?\S*)?)(?:\s(?P<params>.+))?$",
+    re.IGNORECASE,
 ))
 class MPEGDASH(Plugin):
     @classmethod
