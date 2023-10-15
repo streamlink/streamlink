@@ -21,13 +21,18 @@ class TestPluginCanHandleUrlHLSPlugin(PluginCanHandleUrl):
         ("http://example.com/foo.m3u8?bar", {"url": "http://example.com/foo.m3u8?bar"}),
         ("https://example.com/foo.m3u8", {"url": "https://example.com/foo.m3u8"}),
         ("https://example.com/foo.m3u8?bar", {"url": "https://example.com/foo.m3u8?bar"}),
+        ("file://foo.m3u8", {"url": "file://foo.m3u8"}),
+        ("file:///foo.m3u8", {"url": "file:///foo.m3u8"}),
+        ("file://../foo.m3u8", {"url": "file://../foo.m3u8"}),
         # explicit HLS URLs with protocol prefix
         ("hls://example.com/foo?bar", {"url": "example.com/foo?bar"}),
         ("hls://http://example.com/foo?bar", {"url": "http://example.com/foo?bar"}),
         ("hls://https://example.com/foo?bar", {"url": "https://example.com/foo?bar"}),
+        ("hls://file://foo", {"url": "file://foo"}),
         ("hlsvariant://example.com/foo?bar", {"url": "example.com/foo?bar"}),
         ("hlsvariant://http://example.com/foo?bar", {"url": "http://example.com/foo?bar"}),
         ("hlsvariant://https://example.com/foo?bar", {"url": "https://example.com/foo?bar"}),
+        ("hlsvariant://file://foo", {"url": "file://foo"}),
         # optional parameters
         ("example.com/foo.m3u8?bar abc=def", {"url": "example.com/foo.m3u8?bar", "params": "abc=def"}),
         ("http://example.com/foo.m3u8?bar abc=def", {"url": "http://example.com/foo.m3u8?bar", "params": "abc=def"}),
@@ -38,6 +43,8 @@ class TestPluginCanHandleUrlHLSPlugin(PluginCanHandleUrl):
 
     should_not_match = [
         # implicit HLS URLs must have their path end with ".m3u8"
+        "example.m3u8",
+        "/example.m3u8",
         "example.com/m3u8",
         "example.com/M3U8",
         "example.com/m3u8 abc=def",
@@ -67,6 +74,9 @@ def test_priority(url, priority):
     ("example.com/foo.m3u8", "https://example.com/foo.m3u8"),
     ("http://example.com/foo.m3u8", "http://example.com/foo.m3u8"),
     ("https://example.com/foo.m3u8", "https://example.com/foo.m3u8"),
+    ("file://foo.m3u8", "file://foo.m3u8"),
+    ("file:///foo.m3u8", "file:///foo.m3u8"),
+    ("file://../foo.m3u8", "file://../foo.m3u8"),
     ("hls://example.com/foo", "https://example.com/foo"),
     ("hls://http://example.com/foo", "http://example.com/foo"),
     ("hls://https://example.com/foo", "https://example.com/foo"),
