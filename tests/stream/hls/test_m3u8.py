@@ -4,9 +4,11 @@ from typing import Optional, Tuple, Union
 import pytest
 
 from streamlink.stream.hls import (
+    M3U8,
     ByteRange,
     DateRange,
     ExtInf,
+    HLSPlaylist,
     HLSSegment,
     M3U8Parser,
     Media,
@@ -551,3 +553,16 @@ class TestHLSPlaylist:
                == [None, True, True, True, False, False, False, True, True, None]
         assert [playlist.is_date_in_daterange(playlist.segments[3].date, daterange) for daterange in playlist.dateranges] \
                == [None, True, True, True, False, False, False, False, False, None]
+
+    def test_parse_bandwidth(self) -> None:
+        with text("hls/test_multivariant_bandwidth.m3u8") as m3u8_fh:
+            playlist: M3U8[HLSSegment, HLSPlaylist] = parse_m3u8(m3u8_fh.read(), "http://mocked/", parser=M3U8Parser)
+
+        assert [(pl.stream_info.video, pl.stream_info.bandwidth) for pl in playlist.playlists] == [
+            ("chunked", 0),
+            ("audio_only", 0),
+            ("720p60", 3000000),
+            ("480p30", 1500000),
+            ("360p30", 700000),
+            ("160p30", 300000),
+        ]

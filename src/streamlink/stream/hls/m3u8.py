@@ -156,8 +156,11 @@ class M3U8Parser(Generic[TM3U8_co, THLSSegment_co, THLSPlaylist_co], metaclass=M
     def create_stream_info(cls, streaminf: Mapping[str, Optional[str]], streaminfoclass=None):
         program_id = streaminf.get("PROGRAM-ID")
 
-        _bandwidth = streaminf.get("BANDWIDTH")
-        bandwidth = 0 if not _bandwidth else round(int(_bandwidth), 1 - int(math.log10(int(_bandwidth))))
+        try:
+            bandwidth = int(streaminf.get("BANDWIDTH") or 0)
+            bandwidth = round(bandwidth, 1 - int(math.log10(bandwidth)))
+        except ValueError:
+            bandwidth = 0
 
         _resolution = streaminf.get("RESOLUTION")
         resolution = None if not _resolution else cls.parse_resolution(_resolution)
