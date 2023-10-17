@@ -417,7 +417,7 @@ def handle_stream(plugin: Plugin, streams: Dict[str, Stream], stream_name: str) 
 
         formatter = get_formatter(plugin)
 
-        for name in [stream_name] + alt_streams:
+        for name in [stream_name, *alt_streams]:
             stream = streams[name]
             stream_type = type(stream).shortname()
 

@@ -188,7 +188,7 @@ class TestWidth:
     @pytest.mark.parametrize(("chars", "expected"), [
         ("ABCDEFGHIJ", 10),
         ("A你好世界こんにちは안녕하세요B", 30),
-        ("·「」『』【】-=！@#￥%……&×（）", 30),
+        ("·「」『』【】-=！@#￥%……&×（）", 30),  # noqa: RUF001
     ])
     def test_width(self, chars, expected):
         assert ProgressFormatter.width(chars) == expected

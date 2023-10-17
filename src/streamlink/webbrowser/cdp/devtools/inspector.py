@@ -8,11 +8,11 @@
 
 from __future__ import annotations
 
-import enum  # noqa
+import enum
 import typing
-from dataclasses import dataclass  # noqa
+from dataclasses import dataclass
 
-from streamlink.webbrowser.cdp.devtools.util import T_JSON_DICT, event_class  # noqa
+from streamlink.webbrowser.cdp.devtools.util import T_JSON_DICT, event_class
 
 
 def disable() -> typing.Generator[T_JSON_DICT, T_JSON_DICT, None]:

@@ -64,7 +64,7 @@ class TestHTTPSession:
 
     @pytest.mark.parametrize("encoding", ["UTF-32BE", "UTF-32LE", "UTF-16BE", "UTF-16LE", "UTF-8"])
     def test_determine_json_encoding(self, recwarn: pytest.WarningsRecorder, encoding: str):
-        data = "Hello world, Γειά σου Κόσμε, こんにちは世界".encode(encoding)
+        data = "Hello world, Γειά σου Κόσμε, こんにちは世界".encode(encoding)  # noqa: RUF001
         assert HTTPSession.determine_json_encoding(data) == encoding
         assert [(record.category, str(record.message)) for record in recwarn.list] == [
             (StreamlinkDeprecationWarning, "Deprecated HTTPSession.determine_json_encoding() call"),
@@ -85,10 +85,10 @@ class TestHTTPSession:
         ("cp949", "cp949"),
     ])
     def test_json(self, monkeypatch: pytest.MonkeyPatch, encoding: str, override: Optional[str]):
-        mock_content = PropertyMock(return_value="{\"test\": \"Α and Ω\"}".encode(encoding))
+        mock_content = PropertyMock(return_value="{\"test\": \"Α and Ω\"}".encode(encoding))  # noqa: RUF001
         monkeypatch.setattr("requests.Response.content", mock_content)
 
         res = requests.Response()
         res.encoding = override
 
-        assert HTTPSession.json(res) == {"test": "Α and Ω"}
+        assert HTTPSession.json(res) == {"test": "Α and Ω"}  # noqa: RUF001

@@ -170,7 +170,7 @@ def capturewarnings(capture=False):
 
     if capture:
         if _showwarning_default is None:
-            _showwarning_default = warnings.showwarning  # noqa: PLW0603
+            _showwarning_default = warnings.showwarning
             warnings.showwarning = _showwarning
     else:
         if _showwarning_default is not None:

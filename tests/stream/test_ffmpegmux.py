@@ -186,212 +186,263 @@ class TestOpen:
         pytest.param(
             {},
             {},
-            FFMPEG_ARGS_DEFAULT_BASE
-            + FFMPEG_ARGS_DEFAULT_CODECS
-            + FFMPEG_ARGS_DEFAULT_FORMAT
-            + FFMPEG_ARGS_DEFAULT_OUTPUT,
+            [
+                *FFMPEG_ARGS_DEFAULT_BASE,
+                *FFMPEG_ARGS_DEFAULT_CODECS,
+                *FFMPEG_ARGS_DEFAULT_FORMAT,
+                *FFMPEG_ARGS_DEFAULT_OUTPUT,
+            ],
             id="default",
         ),
         pytest.param(
             {},
             {"format": "mpegts"},
-            FFMPEG_ARGS_DEFAULT_BASE
-            + FFMPEG_ARGS_DEFAULT_CODECS
-            + ["-f", "mpegts"]
-            + FFMPEG_ARGS_DEFAULT_OUTPUT,
+            [
+                *FFMPEG_ARGS_DEFAULT_BASE,
+                *FFMPEG_ARGS_DEFAULT_CODECS,
+                "-f", "mpegts",
+                *FFMPEG_ARGS_DEFAULT_OUTPUT,
+            ],
             id="format",
         ),
         pytest.param(
             {"ffmpeg-fout": "avi"},
             {"format": "mpegts"},
-            FFMPEG_ARGS_DEFAULT_BASE
-            + FFMPEG_ARGS_DEFAULT_CODECS
-            + ["-f", "avi"]
-            + FFMPEG_ARGS_DEFAULT_OUTPUT,
+            [
+                *FFMPEG_ARGS_DEFAULT_BASE,
+                *FFMPEG_ARGS_DEFAULT_CODECS,
+                "-f", "avi",
+                *FFMPEG_ARGS_DEFAULT_OUTPUT,
+            ],
             id="format-user-override",
         ),
         pytest.param(
             {},
             {"copyts": True},
-            FFMPEG_ARGS_DEFAULT_BASE
-            + FFMPEG_ARGS_DEFAULT_CODECS
-            + ["-copyts"]
-            + FFMPEG_ARGS_DEFAULT_FORMAT
-            + FFMPEG_ARGS_DEFAULT_OUTPUT,
+            [
+                *FFMPEG_ARGS_DEFAULT_BASE,
+                *FFMPEG_ARGS_DEFAULT_CODECS,
+                "-copyts",
+                *FFMPEG_ARGS_DEFAULT_FORMAT,
+                *FFMPEG_ARGS_DEFAULT_OUTPUT,
+            ],
             id="copyts",
         ),
         pytest.param(
             {"ffmpeg-copyts": True},
             {"copyts": False},
-            FFMPEG_ARGS_DEFAULT_BASE
-            + FFMPEG_ARGS_DEFAULT_CODECS
-            + ["-copyts"]
-            + FFMPEG_ARGS_DEFAULT_FORMAT
-            + FFMPEG_ARGS_DEFAULT_OUTPUT,
+            [
+                *FFMPEG_ARGS_DEFAULT_BASE,
+                *FFMPEG_ARGS_DEFAULT_CODECS,
+                "-copyts",
+                *FFMPEG_ARGS_DEFAULT_FORMAT,
+                *FFMPEG_ARGS_DEFAULT_OUTPUT,
+            ],
             id="copyts-user-override",
         ),
         pytest.param(
             {"ffmpeg-start-at-zero": False},
             {"copyts": True},
-            FFMPEG_ARGS_DEFAULT_BASE
-            + FFMPEG_ARGS_DEFAULT_CODECS
-            + ["-copyts"]
-            + FFMPEG_ARGS_DEFAULT_FORMAT
-            + FFMPEG_ARGS_DEFAULT_OUTPUT,
+            [
+                *FFMPEG_ARGS_DEFAULT_BASE,
+                *FFMPEG_ARGS_DEFAULT_CODECS,
+                "-copyts",
+                *FFMPEG_ARGS_DEFAULT_FORMAT,
+                *FFMPEG_ARGS_DEFAULT_OUTPUT,
+            ],
             id="copyts-disable-session-start-at-zero",
         ),
         pytest.param(
             {"ffmpeg-copyts": True, "ffmpeg-start-at-zero": False},
             {"copyts": False},
-            FFMPEG_ARGS_DEFAULT_BASE
-            + FFMPEG_ARGS_DEFAULT_CODECS
-            + ["-copyts"]
-            + FFMPEG_ARGS_DEFAULT_FORMAT
-            + FFMPEG_ARGS_DEFAULT_OUTPUT,
+            [
+                *FFMPEG_ARGS_DEFAULT_BASE,
+                *FFMPEG_ARGS_DEFAULT_CODECS,
+                "-copyts",
+                *FFMPEG_ARGS_DEFAULT_FORMAT,
+                *FFMPEG_ARGS_DEFAULT_OUTPUT,
+            ],
             id="copyts-disable-session-start-at-zero-user-override",
         ),
         pytest.param(
             {"ffmpeg-start-at-zero": True},
             {"copyts": True},
-            FFMPEG_ARGS_DEFAULT_BASE
-            + FFMPEG_ARGS_DEFAULT_CODECS
-            + ["-copyts", "-start_at_zero"]
-            + FFMPEG_ARGS_DEFAULT_FORMAT
-            + FFMPEG_ARGS_DEFAULT_OUTPUT,
+            [
+                *FFMPEG_ARGS_DEFAULT_BASE,
+                *FFMPEG_ARGS_DEFAULT_CODECS,
+                "-copyts", "-start_at_zero",
+                *FFMPEG_ARGS_DEFAULT_FORMAT,
+                *FFMPEG_ARGS_DEFAULT_OUTPUT,
+            ],
             id="copyts-enable-session-start-at-zero",
         ),
         pytest.param(
             {"ffmpeg-copyts": True, "ffmpeg-start-at-zero": True},
             {"copyts": False},
-            FFMPEG_ARGS_DEFAULT_BASE
-            + FFMPEG_ARGS_DEFAULT_CODECS
-            + ["-copyts", "-start_at_zero"]
-            + FFMPEG_ARGS_DEFAULT_FORMAT
-            + FFMPEG_ARGS_DEFAULT_OUTPUT,
+            [
+                *FFMPEG_ARGS_DEFAULT_BASE,
+                *FFMPEG_ARGS_DEFAULT_CODECS,
+                "-copyts", "-start_at_zero",
+                *FFMPEG_ARGS_DEFAULT_FORMAT,
+                *FFMPEG_ARGS_DEFAULT_OUTPUT,
+            ],
             id="copyts-enable-session-start-at-zero-user-override",
         ),
         pytest.param(
             {},
             {"copyts": True, "start_at_zero": False},
-            FFMPEG_ARGS_DEFAULT_BASE
-            + FFMPEG_ARGS_DEFAULT_CODECS
-            + ["-copyts"]
-            + FFMPEG_ARGS_DEFAULT_FORMAT
-            + FFMPEG_ARGS_DEFAULT_OUTPUT,
+            [
+                *FFMPEG_ARGS_DEFAULT_BASE,
+                *FFMPEG_ARGS_DEFAULT_CODECS,
+                "-copyts",
+                *FFMPEG_ARGS_DEFAULT_FORMAT,
+                *FFMPEG_ARGS_DEFAULT_OUTPUT,
+            ],
             id="copyts-disable-start-at-zero",
         ),
         pytest.param(
             {"ffmpeg-copyts": True},
             {"copyts": False, "start_at_zero": False},
-            FFMPEG_ARGS_DEFAULT_BASE
-            + FFMPEG_ARGS_DEFAULT_CODECS
-            + ["-copyts"]
-            + FFMPEG_ARGS_DEFAULT_FORMAT
-            + FFMPEG_ARGS_DEFAULT_OUTPUT,
+            [
+                *FFMPEG_ARGS_DEFAULT_BASE,
+                *FFMPEG_ARGS_DEFAULT_CODECS,
+                "-copyts",
+                *FFMPEG_ARGS_DEFAULT_FORMAT,
+                *FFMPEG_ARGS_DEFAULT_OUTPUT,
+            ],
             id="copyts-disable-start-at-zero-user-override",
         ),
         pytest.param(
             {},
             {"copyts": True, "start_at_zero": True},
-            FFMPEG_ARGS_DEFAULT_BASE
-            + FFMPEG_ARGS_DEFAULT_CODECS
-            + ["-copyts", "-start_at_zero"]
-            + FFMPEG_ARGS_DEFAULT_FORMAT
-            + FFMPEG_ARGS_DEFAULT_OUTPUT,
+            [
+                *FFMPEG_ARGS_DEFAULT_BASE,
+                *FFMPEG_ARGS_DEFAULT_CODECS,
+                "-copyts", "-start_at_zero",
+                *FFMPEG_ARGS_DEFAULT_FORMAT,
+                *FFMPEG_ARGS_DEFAULT_OUTPUT,
+            ],
             id="copyts-enable-start-at-zero",
         ),
         pytest.param(
             {"ffmpeg-copyts": True},
             {"copyts": False, "start_at_zero": True},
-            FFMPEG_ARGS_DEFAULT_BASE
-            + FFMPEG_ARGS_DEFAULT_CODECS
-            + ["-copyts", "-start_at_zero"]
-            + FFMPEG_ARGS_DEFAULT_FORMAT
-            + FFMPEG_ARGS_DEFAULT_OUTPUT,
+            [
+                *FFMPEG_ARGS_DEFAULT_BASE,
+                *FFMPEG_ARGS_DEFAULT_CODECS,
+                "-copyts", "-start_at_zero",
+                *FFMPEG_ARGS_DEFAULT_FORMAT,
+                *FFMPEG_ARGS_DEFAULT_OUTPUT,
+            ],
             id="copyts-enable-start-at-zero-user-override",
         ),
         pytest.param(
             {},
             {"vcodec": "avc"},
-            FFMPEG_ARGS_DEFAULT_BASE
-            + ["-c:v", "avc", "-c:a", FFMPEGMuxer.DEFAULT_AUDIO_CODEC]
-            + FFMPEG_ARGS_DEFAULT_FORMAT
-            + FFMPEG_ARGS_DEFAULT_OUTPUT,
+            [
+                *FFMPEG_ARGS_DEFAULT_BASE,
+                "-c:v", "avc",
+                "-c:a", FFMPEGMuxer.DEFAULT_AUDIO_CODEC,
+                *FFMPEG_ARGS_DEFAULT_FORMAT,
+                *FFMPEG_ARGS_DEFAULT_OUTPUT,
+            ],
             id="vcodec",
         ),
         pytest.param(
             {"ffmpeg-video-transcode": "divx"},
             {"vcodec": "avc"},
-            FFMPEG_ARGS_DEFAULT_BASE
-            + ["-c:v", "divx", "-c:a", FFMPEGMuxer.DEFAULT_AUDIO_CODEC]
-            + FFMPEG_ARGS_DEFAULT_FORMAT
-            + FFMPEG_ARGS_DEFAULT_OUTPUT,
+            [
+                *FFMPEG_ARGS_DEFAULT_BASE,
+                "-c:v", "divx",
+                "-c:a", FFMPEGMuxer.DEFAULT_AUDIO_CODEC,
+                *FFMPEG_ARGS_DEFAULT_FORMAT,
+                *FFMPEG_ARGS_DEFAULT_OUTPUT,
+            ],
             id="vcodec-user-override",
         ),
         pytest.param(
             {},
             {"acodec": "mp3"},
-            FFMPEG_ARGS_DEFAULT_BASE
-            + ["-c:v", FFMPEGMuxer.DEFAULT_VIDEO_CODEC, "-c:a", "mp3"]
-            + FFMPEG_ARGS_DEFAULT_FORMAT
-            + FFMPEG_ARGS_DEFAULT_OUTPUT,
+            [
+                *FFMPEG_ARGS_DEFAULT_BASE,
+                "-c:v", FFMPEGMuxer.DEFAULT_VIDEO_CODEC,
+                "-c:a", "mp3",
+                *FFMPEG_ARGS_DEFAULT_FORMAT,
+                *FFMPEG_ARGS_DEFAULT_OUTPUT,
+            ],
             id="acodec",
         ),
         pytest.param(
             {"ffmpeg-audio-transcode": "ogg"},
             {"acodec": "mp3"},
-            FFMPEG_ARGS_DEFAULT_BASE
-            + ["-c:v", FFMPEGMuxer.DEFAULT_VIDEO_CODEC, "-c:a", "ogg"]
-            + FFMPEG_ARGS_DEFAULT_FORMAT
-            + FFMPEG_ARGS_DEFAULT_OUTPUT,
+            [
+                *FFMPEG_ARGS_DEFAULT_BASE,
+                "-c:v", FFMPEGMuxer.DEFAULT_VIDEO_CODEC,
+                "-c:a", "ogg",
+                *FFMPEG_ARGS_DEFAULT_FORMAT,
+                *FFMPEG_ARGS_DEFAULT_OUTPUT,
+            ],
             id="acodec-user-override",
         ),
         pytest.param(
             {},
             {"vcodec": "avc", "acodec": "mp3"},
-            FFMPEG_ARGS_DEFAULT_BASE
-            + ["-c:v", "avc", "-c:a", "mp3"]
-            + FFMPEG_ARGS_DEFAULT_FORMAT
-            + FFMPEG_ARGS_DEFAULT_OUTPUT,
+            [
+                *FFMPEG_ARGS_DEFAULT_BASE,
+                "-c:v", "avc",
+                "-c:a", "mp3",
+                *FFMPEG_ARGS_DEFAULT_FORMAT,
+                *FFMPEG_ARGS_DEFAULT_OUTPUT,
+            ],
             id="vcodec-acodec",
         ),
         pytest.param(
             {"ffmpeg-video-transcode": "divx", "ffmpeg-audio-transcode": "ogg"},
             {"vcodec": "avc", "acodec": "mp3"},
-            FFMPEG_ARGS_DEFAULT_BASE
-            + ["-c:v", "divx", "-c:a", "ogg"]
-            + FFMPEG_ARGS_DEFAULT_FORMAT
-            + FFMPEG_ARGS_DEFAULT_OUTPUT,
+            [
+                *FFMPEG_ARGS_DEFAULT_BASE,
+                "-c:v", "divx",
+                "-c:a", "ogg",
+                *FFMPEG_ARGS_DEFAULT_FORMAT,
+                *FFMPEG_ARGS_DEFAULT_OUTPUT,
+            ],
             id="vcodec-acodec-user-override",
         ),
         pytest.param(
             {},
             {"maps": ["test", "test2"]},
-            FFMPEG_ARGS_DEFAULT_BASE
-            + FFMPEG_ARGS_DEFAULT_CODECS
-            + ["-map", "test", "-map", "test2"]
-            + FFMPEG_ARGS_DEFAULT_FORMAT
-            + FFMPEG_ARGS_DEFAULT_OUTPUT,
+            [
+                *FFMPEG_ARGS_DEFAULT_BASE,
+                *FFMPEG_ARGS_DEFAULT_CODECS,
+                "-map", "test",
+                "-map", "test2",
+                *FFMPEG_ARGS_DEFAULT_FORMAT,
+                *FFMPEG_ARGS_DEFAULT_OUTPUT,
+            ],
             id="maps",
         ),
         pytest.param(
             {},
             {"metadata": {"s:a:0": ["language=eng"]}},
-            FFMPEG_ARGS_DEFAULT_BASE
-            + FFMPEG_ARGS_DEFAULT_CODECS
-            + ["-metadata:s:a:0", "language=eng"]
-            + FFMPEG_ARGS_DEFAULT_FORMAT
-            + FFMPEG_ARGS_DEFAULT_OUTPUT,
+            [
+                *FFMPEG_ARGS_DEFAULT_BASE,
+                *FFMPEG_ARGS_DEFAULT_CODECS,
+                "-metadata:s:a:0", "language=eng",
+                *FFMPEG_ARGS_DEFAULT_FORMAT,
+                *FFMPEG_ARGS_DEFAULT_OUTPUT,
+            ],
             id="metadata-stream-audio",
         ),
         pytest.param(
             {},
             {"metadata": {None: ["title=test"]}},
-            FFMPEG_ARGS_DEFAULT_BASE
-            + FFMPEG_ARGS_DEFAULT_CODECS
-            + ["-metadata", "title=test"]
-            + FFMPEG_ARGS_DEFAULT_FORMAT
-            + FFMPEG_ARGS_DEFAULT_OUTPUT,
+            [
+                *FFMPEG_ARGS_DEFAULT_BASE,
+                *FFMPEG_ARGS_DEFAULT_CODECS,
+                "-metadata", "title=test",
+                *FFMPEG_ARGS_DEFAULT_FORMAT,
+                *FFMPEG_ARGS_DEFAULT_OUTPUT,
+            ],
             id="metadata-title",
         ),
     ])
@@ -408,7 +459,7 @@ class TestOpen:
 
         streamio.open()
         assert popen.call_args_list == [call(
-            ["ffmpeg"] + expected,
+            ["ffmpeg", *expected],
             stdin=subprocess.PIPE,
             stdout=subprocess.PIPE,
             stderr=subprocess.DEVNULL,

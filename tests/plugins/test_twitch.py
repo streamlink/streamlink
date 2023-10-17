@@ -348,15 +348,15 @@ class TestTwitchHLSStream(TestMixinStreamHLS, unittest.TestCase):
             # regular stream data with prefetch segments
             Playlist(0, [Seg(0), Seg(1, duration=0.5), Pre(2), Pre(3)]),
             # three prefetch segments, one regular (2) and two ads (3 and 4)
-            Playlist(1, [Seg(1, duration=0.5), Pre(2)] + ads + [Pre(3), Pre(4)]),
+            Playlist(1, [Seg(1, duration=0.5), Pre(2), *ads, Pre(3), Pre(4)]),
             # all prefetch segments are gone once regular prefetch segments have shifted
-            Playlist(2, [Seg(2, duration=1.5)] + ads + [Seg(3), Seg(4), Seg(5)]),
+            Playlist(2, [Seg(2, duration=1.5), *ads, Seg(3), Seg(4), Seg(5)]),
             # still no prefetch segments while ads are playing
-            Playlist(3, ads + [Seg(3), Seg(4), Seg(5), Seg(6)]),
+            Playlist(3, [*ads, Seg(3), Seg(4), Seg(5), Seg(6)]),
             # new prefetch segments on the first regular segment occurrence
-            Playlist(4, ads + [Seg(4), Seg(5), Seg(6), Seg(7), Pre(8), Pre(9)]),
-            Playlist(5, ads + [Seg(5), Seg(6), Seg(7), Seg(8), Pre(9), Pre(10)]),
-            Playlist(6, ads + [Seg(6), Seg(7), Seg(8), Seg(9), Pre(10), Pre(11)]),
+            Playlist(4, [*ads, Seg(4), Seg(5), Seg(6), Seg(7), Pre(8), Pre(9)]),
+            Playlist(5, [*ads, Seg(5), Seg(6), Seg(7), Seg(8), Pre(9), Pre(10)]),
+            Playlist(6, [*ads, Seg(6), Seg(7), Seg(8), Seg(9), Pre(10), Pre(11)]),
             Playlist(7, [Seg(7), Seg(8), Seg(9), Seg(10), Pre(11), Pre(12)], end=True),
         ], streamoptions={"disable_ads": True, "low_latency": True})
 

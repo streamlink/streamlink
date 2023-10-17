@@ -8,12 +8,12 @@
 
 from __future__ import annotations
 
-import enum  # noqa
+import enum
 import typing
-from dataclasses import dataclass  # noqa
+from dataclasses import dataclass
 
 import streamlink.webbrowser.cdp.devtools.network as network
-from streamlink.webbrowser.cdp.devtools.util import T_JSON_DICT, event_class  # noqa
+from streamlink.webbrowser.cdp.devtools.util import T_JSON_DICT, event_class
 
 
 class CertificateId(int):

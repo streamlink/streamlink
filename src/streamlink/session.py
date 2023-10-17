@@ -149,7 +149,7 @@ class StreamlinkOptions(Options):
 
     # ----
 
-    _OPTIONS_HTTP_ATTRS = {
+    _OPTIONS_HTTP_ATTRS: ClassVar[Dict[str, str]] = {
         "http-cookies": "cookies",
         "http-headers": "headers",
         "http-query-params": "params",

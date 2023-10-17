@@ -8,13 +8,13 @@
 
 from __future__ import annotations
 
-import enum  # noqa
+import enum
 import typing
-from dataclasses import dataclass  # noqa
+from dataclasses import dataclass
 
 import streamlink.webbrowser.cdp.devtools.page as page
 import streamlink.webbrowser.cdp.devtools.target as target
-from streamlink.webbrowser.cdp.devtools.util import T_JSON_DICT, event_class  # noqa
+from streamlink.webbrowser.cdp.devtools.util import T_JSON_DICT, event_class
 
 
 class BrowserContextID(str):

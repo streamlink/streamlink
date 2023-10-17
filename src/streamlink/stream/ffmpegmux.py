@@ -8,7 +8,7 @@ from contextlib import suppress
 from functools import lru_cache
 from pathlib import Path
 from shutil import which
-from typing import Any, Dict, Generic, List, Optional, Sequence, TextIO, TypeVar, Union
+from typing import Any, ClassVar, Dict, Generic, List, Optional, Sequence, TextIO, TypeVar, Union
 
 from streamlink import StreamError
 from streamlink.stream.stream import Stream, StreamIO
@@ -80,7 +80,7 @@ class MuxedStream(Stream, Generic[TSubstreams]):
 
 
 class FFMPEGMuxer(StreamIO):
-    __commands__ = ["ffmpeg"]
+    __commands__: ClassVar[List[str]] = ["ffmpeg"]
 
     DEFAULT_OUTPUT_FORMAT = "matroska"
     DEFAULT_VIDEO_CODEC = "copy"

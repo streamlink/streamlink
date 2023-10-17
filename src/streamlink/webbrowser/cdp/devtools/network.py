@@ -8,9 +8,9 @@
 
 from __future__ import annotations
 
-import enum  # noqa
+import enum
 import typing
-from dataclasses import dataclass  # noqa
+from dataclasses import dataclass
 
 import streamlink.webbrowser.cdp.devtools.debugger as debugger
 import streamlink.webbrowser.cdp.devtools.emulation as emulation
@@ -18,7 +18,7 @@ import streamlink.webbrowser.cdp.devtools.io as io
 import streamlink.webbrowser.cdp.devtools.page as page
 import streamlink.webbrowser.cdp.devtools.runtime as runtime
 import streamlink.webbrowser.cdp.devtools.security as security
-from streamlink.webbrowser.cdp.devtools.util import T_JSON_DICT, event_class  # noqa
+from streamlink.webbrowser.cdp.devtools.util import T_JSON_DICT, event_class
 
 
 class ResourceType(enum.Enum):

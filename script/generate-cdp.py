@@ -82,9 +82,9 @@ MODULE_HEADER = f"""{SHARED_HEADER}
 
 from __future__ import annotations
 
-import enum  # noqa
+import enum
 import typing
-from dataclasses import dataclass  # noqa
+from dataclasses import dataclass
 
 {{imports}}
 
@@ -896,7 +896,7 @@ class CdpDomain:
         """
         dependencies = self.get_imports()
         imports = [f"import {package}.{d} as {d}\n" for d in sorted(dependencies)]
-        imports.append(f"from {package}.util import T_JSON_DICT, event_class  # noqa")
+        imports.append(f"from {package}.util import T_JSON_DICT, event_class")
 
         return "".join(imports)
 
