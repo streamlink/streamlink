@@ -191,6 +191,8 @@ select = [
   "INP",
   # flake8-pie
   "PIE",
+  # flake8-print
+  "T20",
   # flake8-pytest-style
   "PT",
   # flake8-quotes
