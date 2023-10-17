@@ -83,7 +83,7 @@ class PluginCanHandleUrl:
 
     @classmethod
     def urls_named(cls) -> List[TUrlNamed]:
-        return [item for item in cls.urls_all() if type(item) is tuple]  # noqa: E721
+        return [item for item in cls.urls_all() if type(item) is tuple]
 
     @classmethod
     def urlgroups_unnamed(cls) -> List[Tuple[TUrl, TMatchGroup]]:
@@ -91,7 +91,7 @@ class PluginCanHandleUrl:
 
     @classmethod
     def urlgroups_named(cls) -> List[Tuple[TName, TUrl, TMatchGroup]]:
-        return [(item[0], item[1], groups) for item, groups in cls.should_match_groups if type(item) is tuple]  # noqa: E721
+        return [(item[0], item[1], groups) for item, groups in cls.should_match_groups if type(item) is tuple]
 
     @classmethod
     def urls_negative(cls) -> List[TUrl]:

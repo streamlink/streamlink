@@ -96,7 +96,7 @@ class Pandalive(Plugin):
         playlist = json["PlayList"]
         for key in ("hls", "hls2", "hls3"):
             # use the first available HLS stream
-            if key in playlist and playlist[key]:
+            if playlist.get(key):
                 # all stream qualities share the same URL, so just use the first one
                 return HLSStream.parse_variant_playlist(self.session, playlist[key][0]["url"])
 

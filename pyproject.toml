@@ -195,6 +195,8 @@ select = [
   "Q",
   # flake8-tidy-imports
   "TID",
+  # Ruff-specific rules
+  "RUF",
 ]
 extend-ignore = [
   "A003",  # builtin-attribute-shadowing
@@ -211,11 +213,14 @@ extend-exclude = [
 
 [tool.ruff.per-file-ignores]
 "__init__.py" = ["F401"]
+"docs/**" = ["RUF012"]
 "src/streamlink/__init__.py" = ["I"]
 "src/streamlink/_version.py" = ["I"]
 "src/streamlink/plugin/api/useragents.py" = ["E501"]
-"src/streamlink/webbrowser/cdp/devtools/*" = ["E501"]
+"src/streamlink/plugins/*" = ["RUF012"]
+"src/streamlink/webbrowser/cdp/devtools/*" = ["E501", "F401"]
 "src/streamlink_cli/main.py" = ["PLW0603"]
+"tests/**" = ["RUF012"]
 
 [tool.ruff.isort]
 known-first-party = ["streamlink", "streamlink_cli"]

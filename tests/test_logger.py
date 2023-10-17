@@ -189,10 +189,10 @@ class TestLogging:
 
     def test_logfile(self, logfile: str, log: logging.Logger, output: StringIO):
         log.setLevel("info")
-        log.info("Hello world, Γειά σου Κόσμε, こんにちは世界")
+        log.info("Hello world, Γειά σου Κόσμε, こんにちは世界")  # noqa: RUF001
         log.handlers[0].flush()
         with open(logfile, "r", encoding="utf-8") as fh:
-            assert fh.read() == "[test][info] Hello world, Γειά σου Κόσμε, こんにちは世界\n"
+            assert fh.read() == "[test][info] Hello world, Γειά σου Κόσμε, こんにちは世界\n"  # noqa: RUF001
 
 
 class TestCaptureWarnings:

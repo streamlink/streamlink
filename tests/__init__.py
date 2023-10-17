@@ -5,7 +5,7 @@ import pytest
 
 # import streamlink_cli as early as possible to execute its default signal overrides
 # noinspection PyUnresolvedReferences
-import streamlink_cli  # noqa: F401
+import streamlink_cli
 
 
 # immediately restore default signal handlers for the test runner

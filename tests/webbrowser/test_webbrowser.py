@@ -62,7 +62,7 @@ class TestLaunch:
     async def test_terminate_on_nursery_exit(self, caplog: pytest.LogCaptureFixture, webbrowser_launch):
         nursery: trio.Nursery
         process: trio.Process
-        async with webbrowser_launch() as (nursery, process):  # noqa: F841
+        async with webbrowser_launch() as (nursery, process):
             assert process.poll() is None, "process is still running"
 
         assert process.poll() == (1 if is_win32 else -SIGTERM), "Process has been terminated"
@@ -87,7 +87,7 @@ class TestLaunch:
     async def test_terminate_on_nursery_timeout(self, caplog: pytest.LogCaptureFixture, mock_clock, webbrowser_launch):
         nursery: trio.Nursery
         process: trio.Process
-        async with webbrowser_launch(timeout=10) as (nursery, process):  # noqa: F841
+        async with webbrowser_launch(timeout=10) as (nursery, process):
             assert process.poll() is None, "process is still running"
             mock_clock.jump(20)
             await trio.sleep(0)
@@ -106,7 +106,7 @@ class TestLaunch:
         nursery: trio.Nursery
         process: trio.Process
         with pytest.raises(FakeBaseException):  # noqa: PT012
-            async with webbrowser_launch() as (nursery, process):  # noqa: F841
+            async with webbrowser_launch() as (nursery, process):
                 assert process.poll() is None, "process is still running"
                 raise FakeBaseException()
 
@@ -123,7 +123,7 @@ class TestLaunch:
     async def test_process_ended_early(self, caplog: pytest.LogCaptureFixture, webbrowser_launch, exit_code):
         nursery: trio.Nursery
         process: trio.Process
-        async with webbrowser_launch(timeout=10) as (nursery, process):  # noqa: F841
+        async with webbrowser_launch(timeout=10) as (nursery, process):
             assert process.poll() is None, "process is still running"
             assert process.stdin
             await process.stdin.send_all(str(exit_code).encode() + b"\r\n")

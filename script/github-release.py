@@ -110,7 +110,7 @@ class Git:
     @staticmethod
     def _output(*gitargs, **runkwargs) -> str:
         completedprocess = subprocess.run(
-            ["git", "--no-pager"] + list(map(str, gitargs)),
+            ["git", "--no-pager", *map(str, gitargs)],
             capture_output=True,
             check=True,
             **runkwargs,
@@ -345,7 +345,7 @@ class GitHubAPI:
                 authors[email].commits += 1
 
         # sort by commits in descending order and by login name in ascending order
-        return sorted(  # noqa: C414
+        return sorted(
             sorted(
                 authors.values(),
                 key=lambda author: author.name,

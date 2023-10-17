@@ -696,7 +696,7 @@ def pluginargument(
 
     def decorator(cls: Type[Plugin]) -> Type[Plugin]:
         if not issubclass(cls, Plugin):
-            raise TypeError(f"{repr(cls)} is not a Plugin")
+            raise TypeError(f"{repr(cls)} is not a Plugin")  # noqa: RUF010  # builtins.repr gets monkeypatched in tests
         if cls.arguments is None:
             cls.arguments = Arguments()
         cls.arguments.add(arg)

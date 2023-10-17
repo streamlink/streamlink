@@ -91,7 +91,7 @@ class PlayerArgs:
 
 
 class PlayerArgsVLC(PlayerArgs):
-    EXECUTABLES = [
+    EXECUTABLES: ClassVar[List[re.Pattern]] = [
         re.compile(r"^vlc$", re.IGNORECASE),
     ]
 
@@ -110,7 +110,7 @@ class PlayerArgsVLC(PlayerArgs):
 
 
 class PlayerArgsMPV(PlayerArgs):
-    EXECUTABLES = [
+    EXECUTABLES: ClassVar[List[re.Pattern]] = [
         re.compile(r"^mpv$", re.IGNORECASE),
     ]
 
@@ -125,7 +125,7 @@ class PlayerArgsMPV(PlayerArgs):
 
 
 class PlayerArgsPotplayer(PlayerArgs):
-    EXECUTABLES = [
+    EXECUTABLES: ClassVar[List[re.Pattern]] = [
         re.compile(r"^potplayer(?:mini(?:64)?)?$", re.IGNORECASE),
     ]
 
