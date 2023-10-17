@@ -195,13 +195,6 @@ select = [
   "Q",
   # flake8-tidy-imports
   "TID",
-  # explicitly select rules under the nursery-flag introduced in ruff 0.0.269
-  # remove once enabled via the "E" selector
-  "E111", "E112", "E113", "E114", "E115", "E116", "E117",
-  "E201", "E202", "E203", "E211", "E221", "E222", "E223",
-  "E224", "E225", "E226", "E227", "E228", "E231", "E251",
-  "E252", "E261", "E262", "E265", "E266", "E271", "E272",
-  "E273", "E274", "E275",
 ]
 extend-ignore = [
   "A003",  # builtin-attribute-shadowing
