@@ -187,6 +187,8 @@ select = [
   "DTZ",
   # flake8-implicit-str-concat
   "ISC",
+  # flake8-no-pep420
+  "INP",
   # flake8-pie
   "PIE",
   # flake8-pytest-style
@@ -213,7 +215,8 @@ extend-exclude = [
 
 [tool.ruff.per-file-ignores]
 "__init__.py" = ["F401"]
-"docs/**" = ["RUF012"]
+"docs/**" = ["INP", "RUF012"]
+"script/**" = ["INP"]
 "src/streamlink/__init__.py" = ["I"]
 "src/streamlink/_version.py" = ["I"]
 "src/streamlink/plugin/api/useragents.py" = ["E501"]

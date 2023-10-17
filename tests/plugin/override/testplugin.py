@@ -1,3 +1,5 @@
+# ruff: noqa: INP001
+
 from tests.plugin.testplugin import __plugin__ as TestPlugin
 
 
