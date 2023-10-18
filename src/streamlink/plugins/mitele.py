@@ -70,7 +70,7 @@ class Mitele(Plugin):
             self.URL_GBX,
             params={
                 "oid": "mtmw",
-                "eid": f"/api/mtmw/v2/gbx/mtweb/live/mmc/{channel}",
+                "eid": f"/api/mtmw/v3/gbx/mtweb/{channel}",
             },
             schema=validate.Schema(
                 validate.parse_json(),
