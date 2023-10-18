@@ -86,7 +86,7 @@ class DLive(Plugin):
         self.author = channel
         self.title = livestream["title"]
 
-        return HLSStream.parse_variant_playlist(self.session, self.URL_LIVE.format(username=username))
+        return HLSStream.parse_variant_playlist(self.session, self.URL_LIVE.format(username=username), headers={"Referer": "https://dlive.tv/"})
 
     def _get_streams(self):
         video = self.match.group("video")
