@@ -1,15 +1,15 @@
-# Always get the current version in "editable" installs
-# `pip install -e .` / `python setup.py develop`
+# This module will get replaced by versioningit when building a source distribution
+# and instead of trying to get the version string from git, a static version string will be set
+
 def _get_version() -> str:
+    """
+    Get the current version from git in "editable" installs
+    """
     from pathlib import Path
     from versioningit import get_version
     import streamlink
 
-    return get_version(
-        project_dir=Path(streamlink.__file__).parents[2],
-    )
+    return get_version(project_dir=Path(streamlink.__file__).parents[2])
 
 
-# The following _get_version() call will get replaced by versioningit with a static version string when building streamlink
-# `pip install .` / `pip wheel .` / `python setup.py build` / `python setup.py bdist_wheel` / etc.
 __version__ = _get_version()
