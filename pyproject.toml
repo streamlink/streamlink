@@ -2,7 +2,9 @@
 requires = [
   "setuptools >=64",
   "wheel",
-  "versioningit >=2.0.0, <3",
+  # The versioningit build-requirement gets removed from the source distribution,
+  # as the version string is already built into it (see the onbuild versioningit hook):
+  "versioningit >=2.0.0, <3",  # disabled in sdist
 ]
 # setuptools build-backend override
 # https://setuptools.pypa.io/en/stable/build_meta.html
@@ -93,6 +95,10 @@ streamlink = [
 
 # https://versioningit.readthedocs.io/en/stable/index.html
 [tool.versioningit]
+# Packagers: don't patch the `default-version` string while using the tarball built by GitHub from the tagged git commit!
+# Instead, use Streamlink's signed source distribution as package source, which has the correct version string built in.
+# This fallback `default-version` string is only used when not building from the sdist or a git repo with at least one tag.
+# See the versioningit comment at the very top of this file!
 default-version = "0.0.0+unknown"
 
 [tool.versioningit.vcs]
@@ -107,8 +113,8 @@ distance-dirty = "{base_version}+{distance}.{vcs}{rev}.dirty"
 method = "null"
 
 [tool.versioningit.onbuild]
-source-file = "src/streamlink/_version.py"
-build-file = "streamlink/_version.py"
+# When building the sdist or wheel, remove versioningit build-requirement and set the static version string
+method = { module = "build_backend.onbuild", value = "onbuild" }
 
 
 # https://docs.pytest.org/en/latest/reference/customize.html#configuration

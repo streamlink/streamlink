@@ -74,10 +74,17 @@ data_files = [
 
 if __name__ == "__main__":
     from setuptools import setup  # type: ignore[import]
-    from versioningit import get_cmdclasses
+
+    try:
+        # versioningit is only required when building from git (see pyproject.toml)
+        from versioningit import get_cmdclasses
+    except ImportError:  # pragma: no cover
+        def get_cmdclasses():  # type: ignore
+            return {}
 
     setup(
         cmdclass=get_cmdclasses(),
         entry_points=entry_points,
         data_files=data_files,
+        # version="",  # static version string template, uncommented and substituted by versioningit's onbuild hook
     )
