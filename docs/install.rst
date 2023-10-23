@@ -343,18 +343,24 @@ On some systems, this isn't the case by default and an alternative, like :comman
 Virtual environment
 -------------------
 
-Another method of installing Streamlink in a non-system-wide way is
-using `virtualenv`_, which creates a user owned Python environment instead.
+Another way of installing Streamlink in a non-system-wide way is using the `venv`_ or `virtualenv`_ Python packages,
+which both create a user-owned Python environment which is isolated from the system's main Python package environment.
 
-Install with ``virtualenv`` and ``pip`` commands
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+While `venv`_ is part of Python's standard library since ``3.3``, `virtualenv`_ is the project which `venv`_ was built from,
+but it first needs to be installed, either via `pip`_ or from the system's package manager. It also implements more features,
+so depending on your needs, you may want to use `virtualenv`_ instead of `venv`_.
+
+Install using ``venv`` and ``pip``
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. code-block:: bash
 
     # Create a new environment
-    virtualenv ~/myenv
+    python -m venv ~/myenv
 
     # Activate the environment
+    # note: non-POSIX compliant shells like FISH or PowerShell have different activation script file names
+    # note: on Windows, the `bin` subdirectory is called `Scripts`
     source ~/myenv/bin/activate
 
     # *Either* install the latest Streamlink release from PyPI in the virtual environment
@@ -372,10 +378,10 @@ Install with ``virtualenv`` and ``pip`` commands
     # Use Streamlink without activating the environment
     ~/myenv/bin/streamlink ...
 
-Install with ``pipx`` command
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Install using ``pipx``
+^^^^^^^^^^^^^^^^^^^^^^
 
-The `pipx`_ command combines the functionality of the ``virtualenv`` and ``pip`` commands. It may be necessary to
+The `pipx`_ project combines the functionality of both ``venv`` and ``pip``. It may be necessary to
 install it first, either with a system package manager, or using ``pip``, as detailed in the `documentation <pipx_>`_.
 
 .. code-block:: bash
@@ -389,7 +395,8 @@ install it first, either with a system package manager, or using ``pip``, as det
     # Use Streamlink
     streamlink ...
 
-.. _virtualenv: https://virtualenv.readthedocs.io/en/latest/
+.. _venv: https://docs.python.org/3/library/venv.html
+.. _virtualenv: https://virtualenv.pypa.io/en/stable/
 .. _pipx: https://pypa.github.io/pipx/
 
 
