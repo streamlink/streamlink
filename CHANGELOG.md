@@ -1,5 +1,33 @@
 # Changelog
 
+## streamlink 6.3.0 (2023-10-25)
+
+Release highlights:
+
+- Added: warning log message when skipping HLS segments between playlist reloads ([#5607](https://github.com/streamlink/streamlink/pull/5607))
+- Refactored: internals of segmented stream implementations (base classes, HLS, DASH)
+  - Added: base `Segment` dataclass and made segmented streams inherit from it ([#5594](https://github.com/streamlink/streamlink/pull/5594))
+  - Moved: modules into sub-packages (import paths of public APIs remain the same) ([#5593](https://github.com/streamlink/streamlink/pull/5593))
+  - Renamed: various non-public HLS class methods/attributes and functions ([#5526](https://github.com/streamlink/streamlink/pull/5526))
+  - Removed: `Sequence` segment wrapper from HLS implementation ([#5526](https://github.com/streamlink/streamlink/pull/5526))
+- Fixed: DASH manifest not respecting the `minBufferTime` ([#5610](https://github.com/streamlink/streamlink/pull/5610))
+- Fixed: URL matchers of HLS/DASH protocol plugins ([#5616](https://github.com/streamlink/streamlink/pull/5616), [#5617](https://github.com/streamlink/streamlink/pull/5617))
+- Fixed: bandwidth parsing issue in HLS multivariant playlists ([#5619](https://github.com/streamlink/streamlink/pull/5619))
+- Fixed plugins:
+  - dlive: fixed live streams and fixed VODs ([#5622](https://github.com/streamlink/streamlink/pull/5622), [#5623](https://github.com/streamlink/streamlink/pull/5623))
+  - goodgame: rewritten plugin using goodgame API v4 ([#5586](https://github.com/streamlink/streamlink/pull/5586), [#5597](https://github.com/streamlink/streamlink/pull/5597))
+  - mitele: updated gbx API calls from v2 to v3 ([#5624](https://github.com/streamlink/streamlink/pull/5624))
+  - twitch: fixed error handling of geo-restricted or inaccessible streams ([#5591](https://github.com/streamlink/streamlink/pull/5591))
+- Removed plugins:
+  - ntv: static stream URLs ([#5604](https://github.com/streamlink/streamlink/pull/5604))
+  - vlive: offline ([#5599](https://github.com/streamlink/streamlink/pull/5599))
+- Build: dropped `versioningit` build-requirement when building from sdist tarball (version string has always been built-in while `versioningit` performed a no-op) ([#5632](https://github.com/streamlink/streamlink/pull/5632))
+- Packaging: added missing shell completions build-script to sdist ([#5625](https://github.com/streamlink/streamlink/pull/5625))
+- Docs: clarified section about building from source (sdist/git vs. GitHub tarballs) ([#5633](https://github.com/streamlink/streamlink/pull/5633))
+
+[Full changelog](https://github.com/streamlink/streamlink/compare/6.2.1...6.3.0)
+
+
 ## streamlink 6.2.1 (2023-10-03)
 
 Patch release:
