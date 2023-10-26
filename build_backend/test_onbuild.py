@@ -44,7 +44,10 @@ def test_sdist(build: Path):
         re.MULTILINE,
     ), "versioningit is not a build-requirement"
     assert re.search(
-        r"^(\s*)(version=\"1\.2\.3\+fake\",).*$",
+        # Check for any version string, and not just the fake one,
+        # because tests can be run from the sdist where the version string was already set.
+        # The onbuild hook does only replace the template in `setup.py`.
+        r"^(\s*)(version=\"[^\"]+\",).*$",
         (build / "setup.py").read_text(encoding="utf-8"),
         re.MULTILINE,
     ), "setup() call defines a static version string"
