@@ -6,40 +6,9 @@ class TestPluginCanHandleUrlWelt(PluginCanHandleUrl):
     __plugin__ = Welt
 
     should_match = [
-        "http://welt.de",
-        "http://welt.de/",
-        "http://welt.de/tv-programm-live-stream/",
-        "http://www.welt.de",
-        "http://www.welt.de/",
-        "http://www.welt.de/tv-programm-live-stream/",
-        "https://welt.de",
-        "https://welt.de/",
         "https://welt.de/tv-programm-live-stream/",
-        "https://www.welt.de",
-        "https://www.welt.de/",
         "https://www.welt.de/tv-programm-live-stream/",
+        "https://www.welt.de/tv-programm-n24-doku/",
+        "https://www.welt.de/mediathek/dokumentation/space/strip-the-cosmos/sendung192055593/Strip-the-Cosmos-Die-Megastuerme-der-Planeten.html",
+        "https://www.welt.de/mediathek/magazin/gesellschaft/sendung247758214/Die-Welt-am-Wochenende-Auf-hoher-See-mit-der-Gorch-Fock.html",
     ]
-
-
-class TestPluginWelt:
-    def test_validate_live(self):
-        hls_url = Welt._schema.validate("""
-            <!DOCTYPE html><html><body>
-            <script type="application/json" data-content="VideoPlayer.Config">
-                {
-                    "title": "foo",
-                    "sources": [
-                        {
-                            "src": "https://foo.bar/baz.mp4?qux",
-                            "extension": "mp4"
-                        },
-                        {
-                            "src": "https://foo.bar/baz.m3u8?qux",
-                            "extension": "m3u8"
-                        }
-                    ]
-                }
-            </script>
-            </body></html>
-        """)
-        assert hls_url == "https://foo.bar/baz.m3u8?qux"
