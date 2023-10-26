@@ -1,5 +1,16 @@
 # Changelog
 
+## streamlink 6.3.1 (2023-10-26)
+
+Patch release:
+
+- Fixed plugins:
+  - welt: rewritten plugin ([#5637](https://github.com/streamlink/streamlink/pull/5637))
+- Build: fixed tests when running from sdist ([#5636](https://github.com/streamlink/streamlink/pull/5636))
+
+[Full changelog](https://github.com/streamlink/streamlink/compare/6.3.0...6.3.1)
+
+
 ## streamlink 6.3.0 (2023-10-25)
 
 Release highlights:
