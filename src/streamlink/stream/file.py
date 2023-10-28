@@ -29,4 +29,4 @@ class FileStream(Stream):
         return self.path
 
     def open(self):
-        return self.fileobj or open(self.path)
+        return self.fileobj or open(self.path, "rb")
