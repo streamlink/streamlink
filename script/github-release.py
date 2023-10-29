@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 
+from __future__ import annotations
+
 import argparse
 import logging
 import re
@@ -364,7 +366,7 @@ class Release:
 
     @staticmethod
     def _read_file(path: Path):
-        with open(path, "r") as fh:
+        with open(path, "r", encoding="utf-8") as fh:
             contents = fh.read()
 
         if not contents:

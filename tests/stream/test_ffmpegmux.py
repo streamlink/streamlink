@@ -47,7 +47,7 @@ class TestCommand:
     ])
     def test_no_cache(self, session: Streamlink, command: Optional[str], which: Dict, expected: Optional[str]):
         session.options.update({"ffmpeg-ffmpeg": command})
-        with patch("streamlink.stream.ffmpegmux.which", side_effect=lambda value: which.get(value)):
+        with patch("streamlink.stream.ffmpegmux.which", side_effect=which.get):
             assert FFMPEGMuxer.command(session) == expected
 
     @pytest.mark.parametrize(("resolved", "expected"), [

@@ -79,7 +79,7 @@ class PluginCanHandleUrl:
 
     @classmethod
     def urls_unnamed(cls) -> List[TUrl]:
-        return [item for item in cls.urls_all() if type(item) is str]  # noqa: E721
+        return [item for item in cls.urls_all() if type(item) is str]
 
     @classmethod
     def urls_named(cls) -> List[TUrlNamed]:
@@ -87,7 +87,7 @@ class PluginCanHandleUrl:
 
     @classmethod
     def urlgroups_unnamed(cls) -> List[Tuple[TUrl, TMatchGroup]]:
-        return [(item, groups) for item, groups in cls.should_match_groups if type(item) is str]  # noqa: E721
+        return [(item, groups) for item, groups in cls.should_match_groups if type(item) is str]
 
     @classmethod
     def urlgroups_named(cls) -> List[Tuple[TName, TUrl, TMatchGroup]]:
@@ -129,7 +129,7 @@ class PluginCanHandleUrl:
     def test_all_matchers_match(self, matcher: Matcher):
         assert any(  # pragma: no branch
             matcher.pattern.match(url)
-            for url in [(item if type(item) is str else item[1]) for item in self.urls_all()]  # noqa: E721
+            for url in [(item if type(item) is str else item[1]) for item in self.urls_all()]
         ), "Matcher matches at least one URL"
 
     def test_all_named_matchers_have_tests(self, matcher: Matcher):
