@@ -18,7 +18,7 @@ from streamlink.utils.random import (
 
 @pytest.fixture()
 def _iterated_choice(monkeypatch: pytest.MonkeyPatch):
-    choices: Dict[Sequence, Iterator[int]] = defaultdict(lambda: count())
+    choices: Dict[Sequence, Iterator[int]] = defaultdict(count)
 
     def fake_choice(seq):
         return seq[next(choices[seq]) % len(seq)]

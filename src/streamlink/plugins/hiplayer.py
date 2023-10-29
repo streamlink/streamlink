@@ -51,7 +51,7 @@ class HiPlayer(Plugin):
                 validate.none_or_all(
                     validate.get("data"),
                     validate.transform(lambda s: re.sub(r"['\", ]", "", s)),
-                    validate.transform(lambda s: base64.b64decode(s)),
+                    validate.transform(base64.b64decode),
                     validate.parse_json(),
                     validate.any(
                         None,

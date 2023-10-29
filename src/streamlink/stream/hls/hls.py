@@ -355,7 +355,7 @@ class HLSStreamWorker(SegmentedStreamWorker[HLSSegment, Response]):
             return playlist.segments[-1].duration
         if self.playlist_reload_time_override == "live-edge" and playlist.segments:
             return sum(s.duration for s in playlist.segments[-max(1, self.live_edge - 1):])
-        if type(self.playlist_reload_time_override) is float and self.playlist_reload_time_override > 0:  # noqa: E721
+        if type(self.playlist_reload_time_override) is float and self.playlist_reload_time_override > 0:
             return self.playlist_reload_time_override
         if playlist.targetduration:
             return playlist.targetduration
