@@ -1,7 +1,9 @@
 """
 $description Live TV channels and VODs from TVP, a Polish public, state-owned broadcaster.
+$url stream.tvp.pl
+$url vod.tvp.pl
+$url tvpstream.vod.tvp.pl
 $url tvp.info
-$url tvp.pl
 $type live, vod
 $metadata id
 $metadata title
@@ -23,21 +25,20 @@ from streamlink.stream.http import HTTPStream
 log = logging.getLogger(__name__)
 
 
-@pluginmatcher(re.compile(r"""https?://(?:www\.)?tvp\.info/"""), name="tvp_info")
-@pluginmatcher(re.compile(
-    r"""
-        https?://
-        (?:
-            (?:tvpstream\.vod|stream)\.tvp\.pl(?:/(?:\?channel_id=(?P<channel_id>\d+))?)?$
-            |
-            vod\.tvp\.pl/[^/]+/.+,(?P<vod_id>\d+)$
-        )
-    """,
-    re.VERBOSE,
+@pluginmatcher(name="default", pattern=re.compile(
+    r"https?://(?:stream|tvpstream\.vod)\.tvp\.pl(?:/(?:\?channel_id=(?P<channel_id>\d+))?)?$",
+))
+@pluginmatcher(name="vod", pattern=re.compile(
+    r"https?://vod\.tvp\.pl/[^/]+/.+,(?P<vod_id>\d+)$",
+))
+@pluginmatcher(name="tvp_info", pattern=re.compile(
+    r"https?://(?:www\.)?tvp\.info/",
 ))
 class TVP(Plugin):
     _URL_PLAYER = "https://stream.tvp.pl/sess/TVPlayer2/embed.php"
     _URL_VOD = "https://vod.tvp.pl/api/products/{vod_id}/videos/playlist"
+    _URL_INFO_API_TOKEN = "https://api.tvp.pl/tokenizer/token/{token}"
+    _URL_INFO_API_NEWS = "https://www.tvp.info/api/info/news?device=www&id={id}"
 
     def _get_video_id(self, channel_id: Optional[str]):
         items: List[Tuple[int, int]] = self.session.http.get(
@@ -179,27 +180,44 @@ class TVP(Plugin):
             self.url,
             schema=validate.Schema(
                 validate.parse_html(),
-                validate.xml_xpath_string(".//script[contains(text(), 'window.__videoData')][1]/text()"),
+                validate.xml_xpath_string(".//script[contains(text(), 'window.__pageSettings')][1]/text()"),
                 validate.none_or_all(
                     str,
-                    validate.regex(re.compile(r"window\.__videoData\s*=\s*(?P<json>{.*?})\s*;", re.DOTALL)),
+                    validate.regex(re.compile(r"window\.__pageSettings\s*=\s*(?P<json>{.*?})\s*;", re.DOTALL)),
                     validate.get("json"),
                     validate.parse_json(),
                     {
-                        "_id": int,
-                        "title": str,
+                        "type": validate.any("VIDEO", "NEWS"),
+                        "id": int,
                     },
+                    validate.union_get("type", "id"),
                 ),
             ),
         )
         if not data:
             return
 
-        self.id = data.get("_id")
-        self.title = data.get("title")
+        _type, self.id = data
+        if _type == "NEWS":
+            self.id, self.title = self.session.http.get(
+                self._URL_INFO_API_NEWS.format(id=self.id),
+                schema=validate.Schema(
+                    validate.parse_json(),
+                    {
+                        "data": {
+                            "video": {
+                                "title": str,
+                                "_id": int,
+                            },
+                        },
+                    },
+                    validate.get(("data", "video")),
+                    validate.union_get("_id", "title"),
+                ),
+            )
 
         data = self.session.http.get(
-            f"https://api.tvp.pl/tokenizer/token/{self.id}",
+            self._URL_INFO_API_TOKEN.format(token=self.id),
             schema=validate.Schema(
                 validate.parse_json(),
                 {
@@ -225,10 +243,9 @@ class TVP(Plugin):
     def _get_streams(self):
         if self.matches["tvp_info"]:
             return self._get_tvp_info_vod()
-        elif self.match["vod_id"]:
+        if self.matches["vod"]:
             return self._get_vod(self.match["vod_id"])
-        else:
-            return self._get_live(self.match["channel_id"])
+        return self._get_live(self.match["channel_id"])
 
 
 __plugin__ = TVP

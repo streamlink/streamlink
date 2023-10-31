@@ -7,31 +7,30 @@ class TestPluginCanHandleUrlTVP(PluginCanHandleUrl):
 
     should_match_groups = [
         # live
-        ("https://stream.tvp.pl", {}),
-        ("https://stream.tvp.pl/", {}),
-        ("https://stream.tvp.pl/?channel_id=63759349", {"channel_id": "63759349"}),
-        ("https://stream.tvp.pl/?channel_id=14812849", {"channel_id": "14812849"}),
+        (("default", "https://stream.tvp.pl"), {}),
+        (("default", "https://stream.tvp.pl/"), {}),
+        (("default", "https://stream.tvp.pl/?channel_id=63759349"), {"channel_id": "63759349"}),
+        (("default", "https://stream.tvp.pl/?channel_id=14812849"), {"channel_id": "14812849"}),
         # old live URLs
-        ("https://tvpstream.vod.tvp.pl", {}),
-        ("https://tvpstream.vod.tvp.pl/", {}),
-        ("https://tvpstream.vod.tvp.pl/?channel_id=63759349", {"channel_id": "63759349"}),
-        ("https://tvpstream.vod.tvp.pl/?channel_id=14812849", {"channel_id": "14812849"}),
+        (("default", "https://tvpstream.vod.tvp.pl"), {}),
+        (("default", "https://tvpstream.vod.tvp.pl/"), {}),
+        (("default", "https://tvpstream.vod.tvp.pl/?channel_id=63759349"), {"channel_id": "63759349"}),
+        (("default", "https://tvpstream.vod.tvp.pl/?channel_id=14812849"), {"channel_id": "14812849"}),
 
         # VOD
         (
-            "https://vod.tvp.pl/filmy-dokumentalne,163/krolowa-wladczyni-i-matka,284734",
+            ("vod", "https://vod.tvp.pl/filmy-dokumentalne,163/krolowa-wladczyni-i-matka,284734"),
             {"vod_id": "284734"},
         ),
         # VOD episode
         (
-            "https://vod.tvp.pl/programy,88/z-davidem-attenborough-dokola-swiata-odcinki,284703/odcinek-2,S01E02,319220",
+            ("vod", "https://vod.tvp.pl/programy,88/z-davidem-attenborough-dokola-swiata-odcinki,284703/odcinek-2,S01E02,319220"),
             {"vod_id": "319220"},
         ),
 
         # tvp.info
-        (("tvp_info", "https://tvp.info/"), {}),
-        (("tvp_info", "https://www.tvp.info/"), {}),
-        (("tvp_info", "https://www.tvp.info/65275202/13012023-0823"), {}),
+        (("tvp_info", "https://www.tvp.info/72577058/28092023-0823"), {}),
+        (("tvp_info", "https://www.tvp.info/73805503/przygotowania-do-uroczystosci-wszystkich-swietych"), {}),
     ]
 
     should_not_match = [
