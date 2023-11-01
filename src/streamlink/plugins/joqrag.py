@@ -1,10 +1,10 @@
 """
 $description Japanese Internet radio "Super! A&G+" operated by Nippon Cultural Broadcasting (JOQR).
-$url https://www.uniqueradio.jp/agplayer5/player.php
-$url https://www.uniqueradio.jp/agplayer5/inc-player-hls.php
-$url https://www.joqr.co.jp/ag/
-$url https://www.joqr.co.jp/qr/agdailyprogram/
-$url https://www.joqr.co.jp/qr/agregularprogram/
+$url www.uniqueradio.jp/agplayer5/player.php
+$url www.uniqueradio.jp/agplayer5/inc-player-hls.php
+$url www.joqr.co.jp/ag/
+$url www.joqr.co.jp/qr/agdailyprogram/
+$url www.joqr.co.jp/qr/agregularprogram/
 $type live
 $metadata author
 $metadata title
