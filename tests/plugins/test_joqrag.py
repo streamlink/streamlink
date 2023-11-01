@@ -2,7 +2,7 @@ from streamlink.plugins.joqrag import JoqrAg
 from tests.plugins import PluginCanHandleUrl
 
 
-class TestPluginCanHandleUrlKugou(PluginCanHandleUrl):
+class TestPluginCanHandleUrlJoqrAg(PluginCanHandleUrl):
     __plugin__ = JoqrAg
 
     should_match = [
