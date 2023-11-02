@@ -42,13 +42,15 @@ class JoqrAg(Plugin):
         m3u8_url = self.session.http.get(
             self._URL_PLAYER,
             schema=validate.Schema(
-                validate.regex(re.compile(r"""<source\s[^>]*\bsrc="([^"]+)"\s*""")),
+                validate.parse_html(),
+                validate.xml_xpath_string(".//video[@id='my-video']/source[@type='application/x-mpegURL']/@src"),
                 validate.none_or_all(
-                    validate.get(1),
                     validate.transform(lambda m3u8_path: urljoin(self._URL_HOST, m3u8_path)),
                 ),
             ),
         )
+        if not m3u8_url:
+            return None
 
         return HLSStream.parse_variant_playlist(self.session, m3u8_url)
 
