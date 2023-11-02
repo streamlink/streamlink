@@ -1,10 +1,7 @@
 """
-$description Japanese Internet radio "Super! A&G+" operated by Nippon Cultural Broadcasting (JOQR).
-$url www.uniqueradio.jp/agplayer5/player.php
-$url www.uniqueradio.jp/agplayer5/inc-player-hls.php
-$url www.joqr.co.jp/ag/
-$url www.joqr.co.jp/qr/agdailyprogram/
-$url www.joqr.co.jp/qr/agregularprogram/
+$description Japanese Internet visual radio "Super! A&G+" operated by Nippon Cultural Broadcasting (JOQR).
+$url www.uniqueradio.jp/agplayer5
+$url joqr.co.jp
 $type live
 $metadata author
 $metadata title
@@ -23,10 +20,8 @@ from streamlink.stream.hls import HLSStream
 log = logging.getLogger(__name__)
 
 
-@pluginmatcher(re.compile(r"https?://www\.uniqueradio\.jp/agplayer5/player\.php"))
-@pluginmatcher(re.compile(r"https?://www\.uniqueradio\.jp/agplayer5/inc-player-hls\.php"))
-@pluginmatcher(re.compile(r"https?://(?:www\.)?joqr\.co\.jp/ag/"))
-@pluginmatcher(re.compile(r"https?://(?:www\.)?joqr\.co\.jp/qr/(?:agdailyprogram|agregularprogram)/"))
+@pluginmatcher(re.compile(r"https?://www\.uniqueradio\.jp/agplayer5/(?:player\.php|inc-player-hls\.php)"))
+@pluginmatcher(re.compile(r"https?://(?:www\.)?joqr\.co\.jp/(?:ag|qr/(?:agdailyprogram|agregularprogram))"))
 class JoqrAg(Plugin):
     _URL_HOST = "https://www.uniqueradio.jp"
     _URL_METADATA = f"{_URL_HOST}/aandg"
