@@ -7,7 +7,6 @@ $metadata author
 $metadata title
 """
 
-import logging
 import re
 from urllib.parse import unquote_plus, urljoin
 
@@ -15,9 +14,6 @@ from streamlink.exceptions import NoStreamsError
 from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.api import validate
 from streamlink.stream.hls import HLSStream
-
-
-log = logging.getLogger(__name__)
 
 
 @pluginmatcher(re.compile(r"https?://www\.uniqueradio\.jp/agplayer5/(?:player\.php|inc-player-hls\.php)"))
