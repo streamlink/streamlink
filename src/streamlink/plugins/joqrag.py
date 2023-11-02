@@ -10,7 +10,6 @@ $metadata title
 import re
 from urllib.parse import unquote_plus, urljoin
 
-from streamlink.exceptions import NoStreamsError
 from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.api import validate
 from streamlink.stream.hls import HLSStream
@@ -38,7 +37,7 @@ class JoqrAg(Plugin):
             ),
         )
         if self.title == "放送休止":
-            raise NoStreamsError
+            return None
 
         m3u8_url = self.session.http.get(
             self._URL_PLAYER,
