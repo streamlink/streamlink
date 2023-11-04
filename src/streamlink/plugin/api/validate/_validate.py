@@ -72,9 +72,10 @@ def _validate_type(schema, value):
 def _validate_sequence(schema, value):
     cls = type(schema)
     validate(cls, value)
+    any_schemas = AnySchema(*schema)
 
     return cls(
-        validate(AnySchema(*schema), v) for v in value
+        validate(any_schemas, v) for v in value
     )
 
 
