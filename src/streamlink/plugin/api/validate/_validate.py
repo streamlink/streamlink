@@ -2,6 +2,7 @@ from collections import abc
 from copy import copy, deepcopy
 from functools import singledispatch
 from re import Pattern
+from typing import Any, Type, Union
 
 from lxml.etree import Element, iselement
 
@@ -25,10 +26,13 @@ from streamlink.plugin.api.validate._schemas import (
 
 class Schema(AllSchema):
     """
-    Wrapper class for :class:`AllSchema` with a validate method which raises :class:`PluginError` by default on error.
+    The base class for creating validation schemas.
+
+    A wrapper for :class:`AllSchema <_schemas.AllSchema>` with a wrapper method for :func:`validate`
+    which by default raises :class:`PluginError <streamlink.exceptions.PluginError>` on error.
     """
 
-    def validate(self, value, name="result", exception=PluginError):
+    def validate(self, value: Any, name: str = "result", exception: Type[Exception] = PluginError) -> Any:
         try:
             return validate(self, value)
         except ValidationError as err:
@@ -51,8 +55,8 @@ def validate(schema, value):
     return value
 
 
-@validate.register(type)
-def _validate_type(schema, value):
+@validate.register
+def _validate_type(schema: type, value):
     if not isinstance(value, schema):
         raise ValidationError(
             "Type of {value} should be {expected}, but is {actual}",
@@ -65,11 +69,12 @@ def _validate_type(schema, value):
     return value
 
 
+# singledispatch doesn't support typing.Union/types.UnionType on py<311, so keep each register() call for now
 @validate.register(list)
 @validate.register(tuple)
 @validate.register(set)
 @validate.register(frozenset)
-def _validate_sequence(schema, value):
+def _validate_sequence(schema: Union[list, tuple, set, frozenset], value):
     cls = type(schema)
     validate(cls, value)
     any_schemas = AnySchema(*schema)
@@ -79,8 +84,8 @@ def _validate_sequence(schema, value):
     )
 
 
-@validate.register(dict)
-def _validate_dict(schema, value):
+@validate.register
+def _validate_dict(schema: dict, value):
     cls = type(schema)
     validate(cls, value)
     new = cls()
@@ -372,8 +377,8 @@ def validate_union(schema, value):
     )
 
 
-@validate_union.register(dict)
-def _validate_union_dict(schema, value):
+@validate_union.register
+def _validate_union_dict(schema: dict, value):
     new = type(schema)()
     for key, subschema in schema.items():
         is_optional = isinstance(key, OptionalSchema)
@@ -395,11 +400,12 @@ def _validate_union_dict(schema, value):
     return new
 
 
+# singledispatch doesn't support typing.Union/types.UnionType on py<311, so keep each register() call for now
 @validate_union.register(list)
 @validate_union.register(tuple)
 @validate_union.register(set)
 @validate_union.register(frozenset)
-def _validate_union_sequence(schemas, value):
+def _validate_union_sequence(schemas: Union[list, tuple, set, frozenset], value):
     return type(schemas)(
         validate(schema, value) for schema in schemas
     )
