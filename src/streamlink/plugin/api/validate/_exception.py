@@ -3,6 +3,10 @@ from typing import Optional, Sequence, Union
 
 
 class ValidationError(ValueError):
+    """
+    Currently not exposed in the public API.
+    """
+
     MAX_LENGTH = 60
 
     errors: Union[str, Exception, Sequence[Union[str, Exception]]]
