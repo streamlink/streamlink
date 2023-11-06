@@ -239,9 +239,11 @@ Validation schemas
 .. automodule:: streamlink.plugin.api.validate
     :imported-members:
     :exclude-members: Schema, SchemaContainer, validate
+    :member-order: bysource
 
 .. automodule:: streamlink.plugin.api.validate._schemas
     :exclude-members: SchemaContainer
+    :member-order: bysource
     :no-show-inheritance:
 
 .. autoexception:: streamlink.plugin.api.validate._exception.ValidationError

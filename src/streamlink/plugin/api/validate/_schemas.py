@@ -91,6 +91,50 @@ class NoneOrAllSchema(_CollectionSchemaContainer):
     """
 
 
+class TransformSchema:
+    """
+    A transform function which receives the input value as the argument, with optional custom arguments and keywords.
+
+    Example:
+
+    .. code-block:: python
+
+        schema = validate.Schema(
+            validate.transform(lambda val: val + 1),
+            validate.transform(operator.lt, 3),
+        )
+        assert schema.validate(1) is True
+        assert schema.validate(2) is False
+
+    :param func: A transform function
+    :param \\*args: Additional arguments
+    :param \\*\\*kwargs: Additional keywords
+    :raise ValidationError: If the transform function is not callable
+    :return: The return value of the transform function
+    """
+
+    def __init__(
+        self,
+        func: Callable,
+        *args,
+        **kwargs,
+    ):
+        self.func = func
+        self.args = args
+        self.kwargs = kwargs
+
+
+class OptionalSchema:
+    """
+    An optional key set in a :class:`dict`.
+
+    See the :func:`dict <streamlink.plugin.api.validate.validate_dict>` validation and the :class:`UnionSchema`.
+    """
+
+    def __init__(self, key: Any):
+        self.key = key
+
+
 class ListSchema(_CollectionSchemaContainer):
     """
     A list of schemas where every item must be valid, as well as the input type and length.
@@ -114,6 +158,30 @@ class ListSchema(_CollectionSchemaContainer):
     :raise ValidationError: If the input is not a :class:`list`
     :raise ValidationError: If the input's length is not equal to the number of schemas
     :return: A new :class:`list <builtins.list>` with the validated input
+    """
+
+
+class AttrSchema(SchemaContainer):
+    """
+    Validate attributes of an input object according to a :class:`dict`'s key-value pairs.
+
+    Example:
+
+    .. code-block:: python
+
+        schema = validate.Schema(
+            validate.attr({
+                "a": str,
+                "b": int,
+            }),
+        )
+        assert schema.validate(obj) is not obj
+        schema.validate(obj_without_a)  # raises ValidationError
+        schema.validate(obj_b_is_str)  # raises ValidationError
+
+    :param dict[str, Any] schema: A :class:`dict` with attribute validations
+    :raise ValidationError: If the input doesn't have one of the schema's attributes
+    :return: A copy of the input object with validated attributes
     """
 
 
@@ -170,6 +238,69 @@ class GetItemSchema:
         self.strict = strict
 
 
+class UnionSchema(SchemaContainer):
+    """
+    Validate multiple schemas on the same input.
+
+    Example:
+
+    .. code-block:: python
+
+        schema = validate.Schema(
+            validate.union((
+                validate.transform(str.format, one="abc", two="def"),
+                validate.transform(str.format, one="123", two="456"),
+            )),
+        )
+        assert schema.validate("{one} {two}") == ("abc def", "123 456")
+
+    .. code-block:: python
+
+        schema = validate.Schema(
+            validate.union({
+                "one": lambda val: val < 3,
+                validate.optional("two"): lambda val: val > 1,
+            }),
+        )
+        assert schema.validate(1) == {"one": 1}
+        assert schema.validate(2) == {"one": 2, "two": 2}
+        schema.validate(3)  # raises ValidationError
+
+    :param Union[tuple, list, set, frozenset, dict] schema: A :class:`tuple`, :class:`list`, :class:`set`, :class:`frozenset`
+                                                            or :class:`dict` of schemas
+    :raises ValidationError: If a sequence item or the value of a non-optional key-value pair doesn't validate
+    :return: A new object of the same type, with each item or key-value pair being validated against the same input value
+    """
+
+
+class UnionGetSchema:
+    """
+    Validate multiple :class:`GetItemSchema` schemas on the same input.
+
+    Convenience wrapper for ``validate.union((validate.get(...), validate.get(...), ...))``.
+
+    Example:
+
+    .. code-block:: python
+
+        schema = validate.Schema(
+            validate.union_get("a", "b", ("c", "d")),
+        )
+        assert schema.validate({"a": 1, "b": 2, "c": {"d": 3}}) == (1, 2, 3)
+
+    :param \\*getters: Inputs for each :class:`GetItemSchema`
+    :return: A :class:`tuple` (default ``seq`` type) with items of the respective :class:`GetItemSchema` validations
+    """
+
+    def __init__(
+        self,
+        *getters,
+        seq: Type[Union[Tuple, List, Set, FrozenSet]] = tuple,
+    ):
+        self.getters: Sequence[GetItemSchema] = tuple(GetItemSchema(getter) for getter in getters)
+        self.seq = seq
+
+
 class RegexSchema:
     """
     A :class:`re.Pattern` that **must** match.
@@ -213,74 +344,6 @@ class RegexSchema:
     ):
         self.pattern = pattern
         self.method = method
-
-
-class TransformSchema:
-    """
-    A transform function which receives the input value as the argument, with optional custom arguments and keywords.
-
-    Example:
-
-    .. code-block:: python
-
-        schema = validate.Schema(
-            validate.transform(lambda val: val + 1),
-            validate.transform(operator.lt, 3),
-        )
-        assert schema.validate(1) is True
-        assert schema.validate(2) is False
-
-    :param func: A transform function
-    :param \\*args: Additional arguments
-    :param \\*\\*kwargs: Additional keywords
-    :raise ValidationError: If the transform function is not callable
-    :return: The return value of the transform function
-    """
-
-    def __init__(
-        self,
-        func: Callable,
-        *args,
-        **kwargs,
-    ):
-        self.func = func
-        self.args = args
-        self.kwargs = kwargs
-
-
-class OptionalSchema:
-    """
-    An optional key set in a :class:`dict`.
-
-    See the :func:`dict <streamlink.plugin.api.validate.validate_dict>` validation and the :class:`UnionSchema`.
-    """
-
-    def __init__(self, key: Any):
-        self.key = key
-
-
-class AttrSchema(SchemaContainer):
-    """
-    Validate attributes of an input object according to a :class:`dict`'s key-value pairs.
-
-    Example:
-
-    .. code-block:: python
-
-        schema = validate.Schema(
-            validate.attr({
-                "a": str,
-                "b": int,
-            }),
-        )
-        assert schema.validate(obj) is not obj
-        schema.validate(obj_without_a)  # raises ValidationError
-        schema.validate(obj_b_is_str)  # raises ValidationError
-
-    :param dict[str, Any] schema: A :class:`dict` with attribute validations
-    :raise ValidationError: If the input doesn't have one of the schema's attributes
-    :return: A copy of the input object with validated attributes
-    """
 
 
 class XmlElementSchema:
@@ -329,66 +392,3 @@ class XmlElementSchema:
         self.attrib = attrib
         self.text = text
         self.tail = tail
-
-
-class UnionGetSchema:
-    """
-    Validate multiple :class:`GetItemSchema` schemas on the same input.
-
-    Convenience wrapper for ``validate.union((validate.get(...), validate.get(...), ...))``.
-
-    Example:
-
-    .. code-block:: python
-
-        schema = validate.Schema(
-            validate.union_get("a", "b", ("c", "d")),
-        )
-        assert schema.validate({"a": 1, "b": 2, "c": {"d": 3}}) == (1, 2, 3)
-
-    :param \\*getters: Inputs for each :class:`GetItemSchema`
-    :return: A :class:`tuple` (default ``seq`` type) with items of the respective :class:`GetItemSchema` validations
-    """
-
-    def __init__(
-        self,
-        *getters,
-        seq: Type[Union[Tuple, List, Set, FrozenSet]] = tuple,
-    ):
-        self.getters: Sequence[GetItemSchema] = tuple(GetItemSchema(getter) for getter in getters)
-        self.seq = seq
-
-
-class UnionSchema(SchemaContainer):
-    """
-    Validate multiple schemas on the same input.
-
-    Example:
-
-    .. code-block:: python
-
-        schema = validate.Schema(
-            validate.union((
-                validate.transform(str.format, one="abc", two="def"),
-                validate.transform(str.format, one="123", two="456"),
-            )),
-        )
-        assert schema.validate("{one} {two}") == ("abc def", "123 456")
-
-    .. code-block:: python
-
-        schema = validate.Schema(
-            validate.union({
-                "one": lambda val: val < 3,
-                validate.optional("two"): lambda val: val > 1,
-            }),
-        )
-        assert schema.validate(1) == {"one": 1}
-        assert schema.validate(2) == {"one": 2, "two": 2}
-        schema.validate(3)  # raises ValidationError
-
-    :param Union[tuple, list, set, frozenset, dict] schema: A :class:`tuple`, :class:`list`, :class:`set`, :class:`frozenset`
-                                                            or :class:`dict` of schemas
-    :raises ValidationError: If a sequence item or the value of a non-optional key-value pair doesn't validate
-    :return: A new object of the same type, with each item or key-value pair being validated against the same input value
-    """
