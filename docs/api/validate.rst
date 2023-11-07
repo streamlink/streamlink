@@ -16,6 +16,9 @@ Validation schemas
     .
     Ideally, we'd just run autodoc on the main module and configure the order of items. :(
 
+Please see the :ref:`validation schema guides <api_guide/validate:Validation schemas>`
+for an introduction to this API and a list of examples.
+
 .. autoclass:: streamlink.plugin.api.validate.Schema
     :members:
     :undoc-members:
