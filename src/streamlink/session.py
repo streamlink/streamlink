@@ -194,6 +194,7 @@ class StreamlinkOptions(Options):
         "dash-timeout": _factory_set_deprecated("stream-timeout", float),
         "hls-timeout": _factory_set_deprecated("stream-timeout", float),
         "http-stream-timeout": _factory_set_deprecated("stream-timeout", float),
+        "hls-duration": _factory_set_deprecated("stream-segmented-duration", float),
     }
 
 
@@ -234,11 +235,11 @@ class Streamlink:
             "stream-segment-attempts": 3,
             "stream-segment-threads": 1,
             "stream-segment-timeout": 10.0,
+            "stream-segmented-duration": None,
             "stream-timeout": 60.0,
             "hls-live-edge": 3,
             "hls-live-restart": False,
             "hls-start-offset": 0.0,
-            "hls-duration": None,
             "hls-playlist-reload-attempts": 3,
             "hls-playlist-reload-time": "default",
             "hls-segment-queue-threshold": 3,
@@ -373,6 +374,10 @@ class Streamlink:
               - ``float``
               - ``10.0``
               - Segment connect and read timeout
+            * - stream-segmented-duration
+              - ``float | None``
+              - ``None``
+              - Limit the playback duration of segmented streams, rounded to the nearest segment
             * - stream-timeout
               - ``float``
               - ``60.0``
@@ -390,10 +395,10 @@ class Streamlink:
               - ``0.0``
               - Number of seconds to skip from the beginning of the HLS stream,
                 interpreted as a negative offset for livestreams
-            * - hls-duration
+            * - hls-duration *(deprecated)*
               - ``float | None``
               - ``None``
-              - Limit the HLS stream playback duration, rounded to the nearest HLS segment
+              - See ``stream-segmented-duration``
             * - hls-playlist-reload-attempts
               - ``int``
               - ``3``
