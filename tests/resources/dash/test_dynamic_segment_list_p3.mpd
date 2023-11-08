@@ -13,7 +13,7 @@
 <Period id="0" start="PT0S">
     <AdaptationSet id="0" group="1" mimeType="video/mp4" maxWidth="1920" maxHeight="1080" par="16:9" frameRate="25" segmentAlignment="true" startWithSAP="1" subsegmentAlignment="true" subsegmentStartsWithSAP="1">
         <Representation id="0" codecs="avc1.640028" width="1920" height="1080" sar="1:1" bandwidth="4332748">
-            <SegmentList presentationTimeOffset="0" timescale="90000" duration="900000" startNumber="12">
+            <SegmentList presentationTimeOffset="0" timescale="1000" duration="4000" startNumber="12">
                 <Initialization sourceURL="init.m4s"/>
                 <SegmentURL media="12.m4s"/>
                 <SegmentURL media="13.m4s"/>

@@ -283,14 +283,6 @@ class TestMPDParser:
         segments_iterator = mpd.periods[0].adaptationSets[0].representations[0].segments(init=True)
         assert [segment.uri for segment in segments_iterator] == [
             "http://test/init.m4s",
-            "http://test/5.m4s",
-            "http://test/6.m4s",
-            "http://test/7.m4s",
-            "http://test/8.m4s",
-            "http://test/9.m4s",
-            "http://test/10.m4s",
-            "http://test/11.m4s",
-            "http://test/12.m4s",
             "http://test/13.m4s",
             "http://test/14.m4s",
             "http://test/15.m4s",
