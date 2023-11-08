@@ -632,7 +632,10 @@ class Representation(_RepresentationBaseType):
                 **kwargs,
             )
         elif segmentList:
-            yield from segmentList.segments()
+            yield from segmentList.segments(
+                self.ident,
+                **kwargs,
+            )
         else:
             yield DASHSegment(
                 uri=self.base_url,
@@ -722,8 +725,13 @@ class SegmentList(_MultipleSegmentBaseType):
 
         self.segmentURLs = self.children(SegmentURL)
 
-    def segments(self) -> Iterator[DASHSegment]:
-        if self.initialization:  # pragma: no branch
+    def segments(
+        self,
+        ident: TTimelineIdent,
+        **kwargs,
+    ) -> Iterator[DASHSegment]:
+        init = kwargs.pop("init", True)
+        if init and self.initialization:  # pragma: no branch
             yield DASHSegment(
                 uri=self.make_url(self.initialization.source_url),
                 num=-1,
@@ -733,9 +741,23 @@ class SegmentList(_MultipleSegmentBaseType):
                 content=False,
                 byterange=self.initialization.range,
             )
+
+        if init:
+            # yield all segments initially and remember the segment number
+            start_number = self.startNumber
+            segment_urls = self.segmentURLs
+            self.root.timelines[ident] = start_number
+        else:
+            # skip segments with a lower number than the remembered segment number
+            start_number = self.root.timelines[ident]
+            segment_urls = self.segmentURLs[start_number - self.startNumber:]
+
+        # add the number of yielded segments to the remembered segment number
+        self.root.timelines[ident] += len(segment_urls)
+
         num: int
         segment_url: SegmentURL
-        for num, segment_url in enumerate(self.segmentURLs, self.startNumber):
+        for num, segment_url in enumerate(segment_urls, start_number):
             yield DASHSegment(
                 uri=self.make_url(segment_url.media),
                 num=num,
