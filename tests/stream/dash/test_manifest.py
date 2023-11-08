@@ -276,6 +276,46 @@ class TestMPDParser:
             ("http://test/chunk_ctvideo_ridp0va0br4332748_cn3_mpd.m4s", expected_availability),
         ]
 
+    def test_dynamic_segment_list_continued(self):
+        with xml("dash/test_dynamic_segment_list_p1.mpd") as mpd_xml:
+            mpd = MPD(mpd_xml, base_url="http://test/", url="http://test/manifest.mpd")
+
+        segments_iterator = mpd.periods[0].adaptationSets[0].representations[0].segments(init=True)
+        assert [segment.uri for segment in segments_iterator] == [
+            "http://test/init.m4s",
+            "http://test/5.m4s",
+            "http://test/6.m4s",
+            "http://test/7.m4s",
+            "http://test/8.m4s",
+            "http://test/9.m4s",
+            "http://test/10.m4s",
+            "http://test/11.m4s",
+            "http://test/12.m4s",
+            "http://test/13.m4s",
+            "http://test/14.m4s",
+            "http://test/15.m4s",
+        ]
+
+        with xml("dash/test_dynamic_segment_list_p2.mpd") as mpd_xml:
+            mpd = MPD(mpd_xml, base_url="http://test/", url="http://test/manifest.mpd", timelines=mpd.timelines)
+
+        segments_iterator = mpd.periods[0].adaptationSets[0].representations[0].segments(init=False)
+        assert [segment.uri for segment in segments_iterator] == [
+            "http://test/16.m4s",
+            "http://test/17.m4s",
+            "http://test/18.m4s",
+        ]
+
+        with xml("dash/test_dynamic_segment_list_p3.mpd") as mpd_xml:
+            mpd = MPD(mpd_xml, base_url="http://test/", url="http://test/manifest.mpd", timelines=mpd.timelines)
+
+        segments_iterator = mpd.periods[0].adaptationSets[0].representations[0].segments(init=False)
+        assert [segment.uri for segment in segments_iterator] == [
+            "http://test/19.m4s",
+            "http://test/20.m4s",
+            "http://test/21.m4s",
+        ]
+
     def test_dynamic_timeline_continued(self):
         with xml("dash/test_dynamic_timeline_continued_p1.mpd") as mpd_xml_p1:
             mpd_p1 = MPD(mpd_xml_p1, base_url="http://test/", url="http://test/manifest.mpd")
