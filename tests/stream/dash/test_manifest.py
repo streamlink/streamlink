@@ -283,14 +283,6 @@ class TestMPDParser:
         segments_iterator = mpd.periods[0].adaptationSets[0].representations[0].segments(init=True)
         assert [segment.uri for segment in segments_iterator] == [
             "http://test/init.m4s",
-            "http://test/5.m4s",
-            "http://test/6.m4s",
-            "http://test/7.m4s",
-            "http://test/8.m4s",
-            "http://test/9.m4s",
-            "http://test/10.m4s",
-            "http://test/11.m4s",
-            "http://test/12.m4s",
             "http://test/13.m4s",
             "http://test/14.m4s",
             "http://test/15.m4s",
@@ -314,6 +306,18 @@ class TestMPDParser:
             "http://test/19.m4s",
             "http://test/20.m4s",
             "http://test/21.m4s",
+        ]
+
+    def test_dynamic_segment_list_no_duration(self):
+        with xml("dash/test_dynamic_segment_list_no_duration.mpd") as mpd_xml:
+            mpd = MPD(mpd_xml, base_url="http://test/", url="http://test/manifest.mpd")
+
+        segments_iterator = mpd.periods[0].adaptationSets[0].representations[0].segments(init=True)
+        assert [segment.uri for segment in segments_iterator] == [
+            "http://test/init.m4s",
+            "http://test/13.m4s",
+            "http://test/14.m4s",
+            "http://test/15.m4s",
         ]
 
     def test_dynamic_timeline_continued(self):

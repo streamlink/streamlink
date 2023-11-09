@@ -293,6 +293,7 @@ class MPD(MPDNode):
     timelines: Dict[TTimelineIdent, int]
 
     DEFAULT_MINBUFFERTIME = 3.0
+    DEFAULT_LIVE_EDGE_SEGMENTS = 3
 
     def __init__(self, *args, url: Optional[str] = None, **kwargs) -> None:
         # top level has no parent
@@ -744,16 +745,19 @@ class SegmentList(_MultipleSegmentBaseType):
 
         if init:
             # yield all segments initially and remember the segment number
-            start_number = self.startNumber
-            segment_urls = self.segmentURLs
-            self.root.timelines[ident] = start_number
+            if self.root.type == "static":
+                start_number = self.startNumber
+                segment_urls = self.segmentURLs
+            else:
+                start_number = self.calculate_optimal_start()
+                segment_urls = self.segmentURLs[start_number - self.startNumber:]
         else:
             # skip segments with a lower number than the remembered segment number
             start_number = self.root.timelines[ident]
             segment_urls = self.segmentURLs[start_number - self.startNumber:]
 
-        # add the number of yielded segments to the remembered segment number
-        self.root.timelines[ident] += len(segment_urls)
+        # remember the next segment number
+        self.root.timelines[ident] = start_number + len(segment_urls)
 
         num: int
         segment_url: SegmentURL
@@ -767,6 +771,21 @@ class SegmentList(_MultipleSegmentBaseType):
                 content=True,
                 byterange=segment_url.media_range,
             )
+
+    def calculate_optimal_start(self) -> int:
+        """Calculate the optimal segment number to start based on the suggestedPresentationDelay"""
+        suggested_delay = self.root.suggestedPresentationDelay
+
+        if self.duration_seconds == 0.0:
+            log.info(f"Unknown segment duration. Falling back to an offset of {MPD.DEFAULT_LIVE_EDGE_SEGMENTS} segments.")
+            offset = MPD.DEFAULT_LIVE_EDGE_SEGMENTS
+        else:
+            offset = max(0, math.ceil(suggested_delay.total_seconds() / self.duration_seconds))
+
+        start = self.startNumber + len(self.segmentURLs) - offset
+        log.debug(f"Calculated optimal offset is {offset} segments. First segment is {start}.")
+
+        return start
 
     def make_url(self, url: Optional[str]) -> str:
         return BaseURL.join(self.base_url, url) if url else self.base_url
