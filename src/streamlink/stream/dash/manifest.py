@@ -742,26 +742,7 @@ class SegmentList(_MultipleSegmentBaseType):
                 content=False,
                 byterange=self.initialization.range,
             )
-
-        if init:
-            # yield all segments initially and remember the segment number
-            if self.root.type == "static":
-                start_number = self.startNumber
-                segment_urls = self.segmentURLs
-            else:
-                start_number = self.calculate_optimal_start()
-                segment_urls = self.segmentURLs[start_number - self.startNumber:]
-        else:
-            # skip segments with a lower number than the remembered segment number
-            start_number = self.root.timelines[ident]
-            segment_urls = self.segmentURLs[start_number - self.startNumber:]
-
-        # remember the next segment number
-        self.root.timelines[ident] = start_number + len(segment_urls)
-
-        num: int
-        segment_url: SegmentURL
-        for num, segment_url in enumerate(segment_urls, start_number):
+        for num, segment_url in self.segment_urls(ident, init):
             yield DASHSegment(
                 uri=self.make_url(segment_url.media),
                 num=num,
@@ -771,6 +752,44 @@ class SegmentList(_MultipleSegmentBaseType):
                 content=True,
                 byterange=segment_url.media_range,
             )
+
+    def segment_urls(self, ident: TTimelineIdent, init: bool) -> Iterator[Tuple[int, "SegmentURL"]]:
+        if init:
+            if self.root.type == "static":
+                # yield all segments in a static manifest
+                start_number = self.startNumber
+                segment_urls = self.segmentURLs
+            else:
+                # yield a specific number of segments from the live-edge of dynamic manifests
+                start_number = self.calculate_optimal_start()
+                segment_urls = self.segmentURLs[start_number - self.startNumber:]
+
+        else:
+            # skip segments with a lower number than the remembered segment number
+            # and check if we've skipped any segments after reloading the manifest
+            start_number = self.root.timelines[ident]
+            offset = start_number - self.startNumber
+
+            if offset >= 0:
+                # no segments were skipped: yield a slice of the segments
+                segment_urls = self.segmentURLs[offset:]
+            else:
+                # segments were skipped: yield all segments and set the correct segment number
+                log.warning(
+                    (
+                        f"Skipped segments {start_number}-{self.startNumber - 1} after manifest reload. "
+                        if offset < -1 else
+                        f"Skipped segment {start_number} after manifest reload. "
+                    )
+                    + "This is unsupported and will result in incoherent output data.",
+                )
+                start_number = self.startNumber
+                segment_urls = self.segmentURLs
+
+        # remember the next segment number
+        self.root.timelines[ident] = start_number + len(segment_urls)
+
+        yield from enumerate(segment_urls, start_number)
 
     def calculate_optimal_start(self) -> int:
         """Calculate the optimal segment number to start based on the suggestedPresentationDelay"""
