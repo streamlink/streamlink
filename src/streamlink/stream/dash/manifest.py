@@ -293,6 +293,7 @@ class MPD(MPDNode):
     timelines: Dict[TTimelineIdent, int]
 
     DEFAULT_MINBUFFERTIME = 3.0
+    DEFAULT_LIVE_EDGE_SEGMENTS = 3
 
     def __init__(self, *args, url: Optional[str] = None, **kwargs) -> None:
         # top level has no parent
@@ -775,7 +776,12 @@ class SegmentList(_MultipleSegmentBaseType):
         """Calculate the optimal segment number to start based on the suggestedPresentationDelay"""
         suggested_delay = self.root.suggestedPresentationDelay
 
-        offset = max(0, math.ceil(suggested_delay.total_seconds() / self.duration_seconds))
+        if self.duration_seconds == 0.0:
+            log.info(f"Unknown segment duration. Falling back to an offset of {MPD.DEFAULT_LIVE_EDGE_SEGMENTS} segments.")
+            offset = MPD.DEFAULT_LIVE_EDGE_SEGMENTS
+        else:
+            offset = max(0, math.ceil(suggested_delay.total_seconds() / self.duration_seconds))
+
         start = self.startNumber + len(self.segmentURLs) - offset
         log.debug(f"Calculated optimal offset is {offset} segments. First segment is {start}.")
 
