@@ -299,7 +299,7 @@ class TestMixinStreamHLS(unittest.TestCase):
         if start:
             self.start()
 
-        return self.thread, segments
+        return segments
 
     def start(self):
         self.thread.reader.open()
