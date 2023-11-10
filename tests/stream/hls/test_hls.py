@@ -153,14 +153,14 @@ class TestHLSStream(TestMixinStreamHLS, unittest.TestCase):
         return session
 
     def test_playlist_end(self):
-        _thread, segments = self.subject([
+        segments = self.subject([
             Playlist(0, [Segment(0)], end=True),
         ])
 
         assert self.await_read(read_all=True) == self.content(segments), "Stream ends and read-all handshake doesn't time out"
 
     def test_playlist_end_on_empty_reload(self):
-        _thread, segments = self.subject([
+        segments = self.subject([
             Playlist(0, [Segment(0)]),
             Playlist(0, [Segment(0)], end=True),
         ])
@@ -168,7 +168,7 @@ class TestHLSStream(TestMixinStreamHLS, unittest.TestCase):
         assert self.await_read(read_all=True) == self.content(segments), "Stream ends and read-all handshake doesn't time out"
 
     def test_offset_and_duration(self):
-        _thread, segments = self.subject([
+        segments = self.subject([
             Playlist(1234, [Segment(0), Segment(1, duration=0.5), Segment(2, duration=0.5), Segment(3)], end=True),
         ], streamoptions={"start_offset": 1, "duration": 1})
 
@@ -184,7 +184,7 @@ class TestHLSStream(TestMixinStreamHLS, unittest.TestCase):
         self.mock("GET", self.url(map1), content=map1.content)
         self.mock("GET", self.url(map2), content=map2.content)
 
-        _thread, segments = self.subject([
+        segments = self.subject([
             Playlist(0, [map1, Segment(0), Segment(1), Segment(2), Segment(3)]),
             Playlist(4, [map1, Segment(4), map2, Segment(5), Segment(6), discontinuity, Segment(7)], end=True),
         ])
@@ -203,7 +203,7 @@ class TestHLSStream(TestMixinStreamHLS, unittest.TestCase):
 class TestHLSStreamPlaylistReloadDiscontinuity(TestMixinStreamHLS, unittest.TestCase):
     @patch("streamlink.stream.hls.hls.log")
     def test_no_discontinuity(self, mock_log: Mock):
-        _thread, segments = self.subject([
+        segments = self.subject([
             Playlist(0, [Segment(0), Segment(1)]),
             Playlist(2, [Segment(2), Segment(3)]),
             Playlist(4, [Segment(4), Segment(5)], end=True),
@@ -216,7 +216,7 @@ class TestHLSStreamPlaylistReloadDiscontinuity(TestMixinStreamHLS, unittest.Test
 
     @patch("streamlink.stream.hls.hls.log")
     def test_discontinuity_single_segment(self, mock_log: Mock):
-        _thread, segments = self.subject([
+        segments = self.subject([
             Playlist(0, [Segment(0), Segment(1)]),
             Playlist(2, [Segment(2), Segment(3)]),
             Playlist(5, [Segment(5), Segment(6)]),
@@ -233,7 +233,7 @@ class TestHLSStreamPlaylistReloadDiscontinuity(TestMixinStreamHLS, unittest.Test
 
     @patch("streamlink.stream.hls.hls.log")
     def test_discontinuity_multiple_segments(self, mock_log: Mock):
-        _thread, segments = self.subject([
+        segments = self.subject([
             Playlist(0, [Segment(0), Segment(1)]),
             Playlist(2, [Segment(2), Segment(3)]),
             Playlist(6, [Segment(6), Segment(7)]),
@@ -327,7 +327,7 @@ class TestHLSStreamWorker(TestMixinStreamHLS, unittest.TestCase):
             assert mock_log.warning.call_args_list == [call("No new segments in playlist for more than 15.00s. Stopping...")]
 
     def test_segment_queue_timing_threshold_reached_ignored(self) -> None:
-        _thread, segments = self.subject(
+        segments = self.subject(
             start=False,
             options={"hls-segment-queue-threshold": 0},
             playlists=[
@@ -420,7 +420,7 @@ class TestHLSStreamWorker(TestMixinStreamHLS, unittest.TestCase):
             assert mock_log.warning.call_args_list == [call("No new segments in playlist for more than 5.00s. Stopping...")]
 
     def test_playlist_reload_offset(self) -> None:
-        _thread, segments = self.subject(
+        segments = self.subject(
             start=False,
             playlists=[
                 Playlist(0, targetduration=5, segments=[Segment(0)]),
@@ -694,7 +694,7 @@ class TestHLSStreamEncrypted(TestMixinStreamHLS, unittest.TestCase):
         long = b"Test cipher block chaining mode by using a long bytes string"
 
         # noinspection PyTypeChecker
-        _thread, segments = self.subject([
+        segments = self.subject([
             Playlist(0, [key] + [SegmentEnc(num, aesKey, aesIv) for num in range(4)]),
             Playlist(4, [key] + [SegmentEnc(num, aesKey, aesIv, content=long) for num in range(4, 8)], end=True),
         ])
@@ -719,7 +719,7 @@ class TestHLSStreamEncrypted(TestMixinStreamHLS, unittest.TestCase):
         self.mock("GET", self.url(map2), content=map2.content)
 
         # noinspection PyTypeChecker
-        _thread, segments = self.subject([
+        segments = self.subject([
             Playlist(0, [key, map1] + [SegmentEnc(num, aesKey, aesIv) for num in range(2)]),
             Playlist(2, [key, map2] + [SegmentEnc(num, aesKey, aesIv) for num in range(2, 4)], end=True),
         ])
@@ -738,7 +738,7 @@ class TestHLSStreamEncrypted(TestMixinStreamHLS, unittest.TestCase):
         _, __, key_invalid = self.gen_key(aesKeyInvalid, aesIv, uri="http://mocked/{namespace}/encryption.key?foo=bar")
 
         # noinspection PyTypeChecker
-        _thread, segments = self.subject([
+        segments = self.subject([
             Playlist(0, [key_invalid] + [SegmentEnc(num, aesKey, aesIv) for num in range(4)]),
             Playlist(4, [key_invalid] + [SegmentEnc(num, aesKey, aesIv) for num in range(4, 8)], end=True),
         ], options={"hls-segment-key-uri": "{scheme}://real-{netloc}{path}?{query}"})
@@ -757,7 +757,7 @@ class TestHLSStreamEncrypted(TestMixinStreamHLS, unittest.TestCase):
     def test_hls_encrypted_aes128_incorrect_block_length(self, mock_log: Mock):
         aesKey, aesIv, key = self.gen_key()
 
-        thread, segments = self.subject([
+        segments = self.subject([
             Playlist(0, [
                 key,
                 SegmentEnc(0, aesKey, aesIv, append=b"?"),
@@ -765,7 +765,7 @@ class TestHLSStreamEncrypted(TestMixinStreamHLS, unittest.TestCase):
             ], end=True),
         ])
         self.await_write()
-        assert thread.reader.writer.is_alive()
+        assert self.thread.reader.writer.is_alive()
 
         self.await_write()
         data = self.await_read(read_all=True)
@@ -781,7 +781,7 @@ class TestHLSStreamEncrypted(TestMixinStreamHLS, unittest.TestCase):
         aesKey, aesIv, key = self.gen_key()
 
         padding = b"\x00" * (AES.block_size - len(b"[0]"))
-        thread, segments = self.subject([
+        segments = self.subject([
             Playlist(0, [
                 key,
                 SegmentEnc(0, aesKey, aesIv, padding=padding),
@@ -789,7 +789,7 @@ class TestHLSStreamEncrypted(TestMixinStreamHLS, unittest.TestCase):
             ], end=True),
         ])
         self.await_write()
-        assert thread.reader.writer.is_alive()
+        assert self.thread.reader.writer.is_alive()
 
         self.await_write()
         data = self.await_read(read_all=True)
@@ -803,7 +803,7 @@ class TestHLSStreamEncrypted(TestMixinStreamHLS, unittest.TestCase):
         aesKey, aesIv, key = self.gen_key()
 
         padding = (b"\x00" * (AES.block_size - len(b"[0]") - 1)) + bytes([AES.block_size])
-        thread, segments = self.subject([
+        segments = self.subject([
             Playlist(0, [
                 key,
                 SegmentEnc(0, aesKey, aesIv, padding=padding),
@@ -811,7 +811,7 @@ class TestHLSStreamEncrypted(TestMixinStreamHLS, unittest.TestCase):
             ], end=True),
         ])
         self.await_write()
-        assert thread.reader.writer.is_alive()
+        assert self.thread.reader.writer.is_alive()
 
         self.await_write()
         data = self.await_read(read_all=True)
@@ -931,7 +931,7 @@ class TestHlsPlaylistParseErrors(TestMixinStreamHLS, unittest.TestCase):
         assert mock_log.error.mock_calls == [call("Missing #EXTM3U header")]
 
     def test_reload(self, mock_log):
-        _thread, segments = self.subject([
+        segments = self.subject([
             Playlist(1, [Segment(0)]),
             self.InvalidPlaylist(),
             self.InvalidPlaylist(),
