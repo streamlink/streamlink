@@ -554,8 +554,8 @@ class TwitchClientIntegrity:
         headers: Mapping[str, str],
         device_id: str,
     ) -> Optional[Tuple[str, int]]:
-        from streamlink.webbrowser.cdp import CDPClient, CDPClientSession, devtools
-        from streamlink.webbrowser.exceptions import WebbrowserError
+        from streamlink.webbrowser.cdp import CDPClient, CDPClientSession, devtools  # noqa: PLC0415
+        from streamlink.webbrowser.exceptions import WebbrowserError  # noqa: PLC0415
 
         url = f"https://www.twitch.tv/{channel}"
         js_get_integrity_token = cls.JS_INTEGRITY_TOKEN \

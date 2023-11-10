@@ -48,7 +48,7 @@ class TestFilteredHLSStream(TestMixinStreamHLS, unittest.TestCase):
 
     # don't patch should_filter_sequence here (it always returns False)
     def test_not_filtered(self):
-        thread, reader, writer, segments = self.subject([
+        _thread, reader, _writer, segments = self.subject([
             Playlist(0, [SegmentFiltered(0), SegmentFiltered(1)], end=True),
         ])
 
@@ -60,7 +60,7 @@ class TestFilteredHLSStream(TestMixinStreamHLS, unittest.TestCase):
     @patch("streamlink.stream.hls.HLSStreamWriter.should_filter_segment", new=filter_segment)
     @patch("streamlink.stream.hls.hls.log")
     def test_filtered_logging(self, mock_log):
-        thread, reader, writer, segments = self.subject([
+        _thread, reader, _writer, segments = self.subject([
             Playlist(0, [SegmentFiltered(0), SegmentFiltered(1)]),
             Playlist(2, [Segment(2), Segment(3)]),
             Playlist(4, [SegmentFiltered(4), SegmentFiltered(5)]),
@@ -115,7 +115,7 @@ class TestFilteredHLSStream(TestMixinStreamHLS, unittest.TestCase):
 
     @patch("streamlink.stream.hls.HLSStreamWriter.should_filter_segment", new=filter_segment)
     def test_filtered_timeout(self):
-        thread, reader, writer, segments = self.subject([
+        _thread, _reader, _writer, segments = self.subject([
             Playlist(0, [Segment(0), Segment(1)], end=True),
         ])
 
@@ -130,7 +130,7 @@ class TestFilteredHLSStream(TestMixinStreamHLS, unittest.TestCase):
 
     @patch("streamlink.stream.hls.HLSStreamWriter.should_filter_segment", new=filter_segment)
     def test_filtered_no_timeout(self):
-        thread, reader, writer, segments = self.subject([
+        thread, reader, _writer, segments = self.subject([
             Playlist(0, [SegmentFiltered(0), SegmentFiltered(1)]),
             Playlist(2, [Segment(2), Segment(3)], end=True),
         ])
@@ -158,7 +158,7 @@ class TestFilteredHLSStream(TestMixinStreamHLS, unittest.TestCase):
 
     @patch("streamlink.stream.hls.HLSStreamWriter.should_filter_segment", new=filter_segment)
     def test_filtered_closed(self):
-        thread, reader, writer, segments = self.subject(start=False, playlists=[
+        thread, reader, _writer, _segments = self.subject(start=False, playlists=[
             Playlist(0, [SegmentFiltered(0), SegmentFiltered(1)], end=True),
         ])
 
@@ -189,7 +189,7 @@ class TestFilteredHLSStream(TestMixinStreamHLS, unittest.TestCase):
             assert thread.data == [b""], "Stops reading on stream close"
 
     def test_hls_segment_ignore_names(self):
-        thread, reader, writer, segments = self.subject([
+        _thread, _reader, _writer, segments = self.subject([
             Playlist(0, [Segment(0), Segment(1), Segment(2), Segment(3)], end=True),
         ], {"hls-segment-ignore-names": [
             ".*",

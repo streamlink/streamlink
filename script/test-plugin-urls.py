@@ -148,7 +148,7 @@ class PluginUrlTester:
             session = Streamlink()
             # noinspection PyBroadException
             try:
-                pluginname, Pluginclass, resolved_url = session.resolve_url(url)
+                pluginname, Pluginclass, _resolved_url = session.resolve_url(url)
             except Exception:
                 self.logger.error("Error while finding plugin")
                 code = 1

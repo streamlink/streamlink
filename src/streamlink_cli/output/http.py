@@ -63,7 +63,7 @@ class HTTPOutput(Output):
         self.socket.settimeout(timeout)
 
         try:
-            conn, addr = self.socket.accept()
+            conn, _addr = self.socket.accept()
             conn.settimeout(None)
             self.conn = conn
         except socket.timeout as err:
