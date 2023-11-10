@@ -33,13 +33,13 @@ class TestFileOutput(unittest.TestCase):
 
     def test_early_close(self, mock_stdout: Mock):
         mock_path = Mock(spec=Path("foo", "bar"))
-        fo_main, fo_record = self.subject(mock_path, mock_stdout)
+        fo_main, _fo_record = self.subject(mock_path, mock_stdout)
 
         fo_main.close()  # doesn't raise
 
     def test_early_write(self, mock_stdout: Mock):
         mock_path = Mock(spec=Path("foo", "bar"))
-        fo_main, fo_record = self.subject(mock_path, mock_stdout)
+        fo_main, _fo_record = self.subject(mock_path, mock_stdout)
 
         with pytest.raises(OSError, match=r"^Output is not opened$"):
             fo_main.write(b"foo")
@@ -47,7 +47,7 @@ class TestFileOutput(unittest.TestCase):
     def _test_open(self, mock_open: Mock, mock_stdout: Mock):
         mock_path = Mock(spec=Path("foo", "bar"))
         mock_fd = mock_open(mock_path, "wb")
-        fo_main, fo_record = self.subject(mock_path, mock_stdout)
+        fo_main, _fo_record = self.subject(mock_path, mock_stdout)
 
         fo_main.open()
         assert fo_main.opened

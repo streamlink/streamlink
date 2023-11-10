@@ -127,7 +127,7 @@ class TestResolveURL:
 
     def test_resolve_url(self, recwarn: pytest.WarningsRecorder, session: Streamlink):
         plugins = session.get_plugins()
-        pluginname, pluginclass, resolved_url = session.resolve_url("http://test.se/channel")
+        _pluginname, pluginclass, resolved_url = session.resolve_url("http://test.se/channel")
 
         assert issubclass(pluginclass, Plugin)
         assert pluginclass is plugins["testplugin"]
@@ -150,14 +150,14 @@ class TestResolveURL:
         requests_mock.request("GET", "http://test.se/channel", content=b"")
 
         plugins = session.get_plugins()
-        pluginname, pluginclass, resolved_url = session.resolve_url("http://redirect1")
+        _pluginname, pluginclass, resolved_url = session.resolve_url("http://redirect1")
         assert issubclass(pluginclass, Plugin)
         assert pluginclass is plugins["testplugin"]
         assert resolved_url == "http://test.se/channel"
 
     def test_resolve_url_no_redirect(self, session: Streamlink):
         plugins = session.get_plugins()
-        pluginname, pluginclass, resolved_url = session.resolve_url_no_redirect("http://test.se/channel")
+        _pluginname, pluginclass, resolved_url = session.resolve_url_no_redirect("http://test.se/channel")
         assert issubclass(pluginclass, Plugin)
         assert pluginclass is plugins["testplugin"]
         assert resolved_url == "http://test.se/channel"

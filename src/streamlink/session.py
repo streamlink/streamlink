@@ -29,7 +29,7 @@ _original_allowed_gai_family = urllib3_util_connection.allowed_gai_family  # typ
 
 def _get_deprecation_stacklevel_offset():
     """Deal with stacklevels of both session.{g,s}et_option() and session.options.{g,s}et() calls"""
-    from inspect import currentframe
+    from inspect import currentframe  # noqa: PLC0415
 
     frame = currentframe().f_back.f_back
     offset = 0
@@ -619,7 +619,7 @@ class Streamlink:
         :return: A :class:`dict` of stream names and :class:`Stream <streamlink.stream.Stream>` instances
         """
 
-        pluginname, pluginclass, resolved_url = self.resolve_url(url)
+        _pluginname, pluginclass, resolved_url = self.resolve_url(url)
         plugin = pluginclass(self, resolved_url, options)
 
         return plugin.streams(**params)
