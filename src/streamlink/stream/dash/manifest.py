@@ -607,15 +607,21 @@ class Representation(_RepresentationBaseType):
     def bandwidth_rounded(self) -> float:
         return round(self.bandwidth, 1 - int(math.log10(self.bandwidth)))
 
-    def segments(self, timestamp: Optional[datetime] = None, **kwargs) -> Iterator[DASHSegment]:
+    def segments(
+        self,
+        init: bool = True,
+        timestamp: Optional[datetime] = None,
+        **kwargs,
+    ) -> Iterator[DASHSegment]:
         """
         Segments are yielded when they are available
 
         Segments appear on a timeline, for dynamic content they are only available at a certain time
         and sometimes for a limited time. For static content they are all available at the same time.
 
+        :param init: Yield the init segment and perform other initialization logic for dynamic manifests
         :param timestamp: Optional initial timestamp for syncing timelines of multiple substreams
-        :param kwargs: extra args to pass to the segment template
+        :param kwargs: extra args to pass to the segment template/list
         :return: yields Segments
         """
 
@@ -627,6 +633,7 @@ class Representation(_RepresentationBaseType):
             yield from segmentTemplate.segments(
                 self.ident,
                 self.base_url,
+                init=init,
                 timestamp=timestamp,
                 RepresentationID=self.id,
                 Bandwidth=int(self.bandwidth * 1000),
@@ -635,6 +642,7 @@ class Representation(_RepresentationBaseType):
         elif segmentList:
             yield from segmentList.segments(
                 self.ident,
+                init=init,
                 **kwargs,
             )
         else:
@@ -726,12 +734,13 @@ class SegmentList(_MultipleSegmentBaseType):
 
         self.segmentURLs = self.children(SegmentURL)
 
+    # noinspection PyUnusedLocal
     def segments(
         self,
         ident: TTimelineIdent,
+        init: bool = True,
         **kwargs,
     ) -> Iterator[DASHSegment]:
-        init = kwargs.pop("init", True)
         if init and self.initialization:  # pragma: no branch
             yield DASHSegment(
                 uri=self.make_url(self.initialization.source_url),
@@ -829,10 +838,11 @@ class SegmentTemplate(_MultipleSegmentBaseType):
         self,
         ident: TTimelineIdent,
         base_url: str,
+        init: bool = True,
         timestamp: Optional[datetime] = None,
         **kwargs,
     ) -> Iterator[DASHSegment]:
-        if kwargs.pop("init", True):  # pragma: no branch
+        if init:
             init_url = self.format_initialization(base_url, **kwargs)
             if init_url:  # pragma: no branch
                 yield DASHSegment(
