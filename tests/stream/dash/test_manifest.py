@@ -220,9 +220,10 @@ class TestMPDParser:
         with xml("dash/test_segments_dynamic_number.mpd") as mpd_xml, \
              frozen_time:
             mpd = MPD(mpd_xml, base_url="http://test/", url="http://test/manifest.mpd")
+            segments_iterator = mpd.periods[0].adaptationSets[0].representations[0].segments(timestamp=timestamp)
             stream_urls = [
                 (segment.uri, segment.available_at)
-                for segment in itertools.islice(mpd.periods[0].adaptationSets[0].representations[0].segments(timestamp), 4)
+                for segment in itertools.islice(segments_iterator, 4)
             ]
 
         assert stream_urls == [
