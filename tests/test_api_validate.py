@@ -867,22 +867,54 @@ class TestUnionSchema:
 
 class TestLengthValidator:
     @pytest.mark.parametrize(
-        ("minlength", "value"),
-        [(3, "foo"), (3, [1, 2, 3])],
+        ("args", "value"),
+        [
+            ((3,), "abc"),
+            ((3,), [1, 2, 3]),
+            ((3,), "abcd"),
+            ((3,), [1, 2, 3, 4]),
+            ((3, "lt"), "ab"),
+            ((3, "lt"), [1, 2]),
+            ((3, "le"), "ab"),
+            ((3, "le"), [1, 2]),
+            ((3, "le"), "abc"),
+            ((3, "le"), [1, 2, 3]),
+            ((3, "eq"), "abc"),
+            ((3, "eq"), [1, 2, 3]),
+            ((3, "ge"), "abc"),
+            ((3, "ge"), [1, 2, 3]),
+            ((3, "ge"), "abcd"),
+            ((3, "ge"), [1, 2, 3, 4]),
+            ((3, "gt"), "abcd"),
+            ((3, "gt"), [1, 2, 3, 4]),
+        ],
     )
-    def test_success(self, minlength, value):
-        assert validate.validate(validate.length(minlength), value)
+    def test_success(self, args, value):
+        assert validate.validate(validate.length(*args), value) == value
 
     @pytest.mark.parametrize(
-        ("minlength", "value"),
-        [(3, "foo"), (3, [1, 2, 3])],
+        ("args", "value", "error"),
+        [
+            ((3,), "ab", "Length must be >=3, but value is 2"),
+            ((3,), [1, 2], "Length must be >=3, but value is 2"),
+            ((3, "lt"), "abc", "Length must be <3, but value is 3"),
+            ((3, "lt"), [1, 2, 3], "Length must be <3, but value is 3"),
+            ((3, "le"), "abcd", "Length must be <=3, but value is 4"),
+            ((3, "le"), [1, 2, 3, 4], "Length must be <=3, but value is 4"),
+            ((3, "eq"), "ab", "Length must be ==3, but value is 2"),
+            ((3, "eq"), [1, 2], "Length must be ==3, but value is 2"),
+            ((3, "ge"), "ab", "Length must be >=3, but value is 2"),
+            ((3, "ge"), [1, 2], "Length must be >=3, but value is 2"),
+            ((3, "gt"), "abc", "Length must be >3, but value is 3"),
+            ((3, "gt"), [1, 2, 3], "Length must be >3, but value is 3"),
+        ],
     )
-    def test_failure(self, minlength, value):
+    def test_failure(self, args, value, error):
         with pytest.raises(ValidationError) as cm:
-            validate.validate(validate.length(minlength + 1), value)
-        assert_validationerror(cm.value, """
+            validate.validate(validate.length(*args), value)
+        assert_validationerror(cm.value, f"""
             ValidationError(length):
-              Minimum length is 4, but value is 3
+              {error}
         """)
 
 
