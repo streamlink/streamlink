@@ -1,4 +1,5 @@
-from typing import Any, Callable, Dict, Optional, Tuple
+import operator
+from typing import Any, Callable, Dict, Literal, Optional, Tuple
 from urllib.parse import urlparse
 
 from lxml.etree import XPathError, iselement
@@ -16,9 +17,22 @@ from streamlink.utils.parse import (
 
 # String related validators
 
-def validator_length(number: int) -> Callable[[str], bool]:
+_validator_length_ops: Dict[str, Tuple[Callable, str]] = {
+    "lt": (operator.lt, "Length must be <{number}, but value is {value}"),
+    "le": (operator.le, "Length must be <={number}, but value is {value}"),
+    "eq": (operator.eq, "Length must be =={number}, but value is {value}"),
+    "ge": (operator.ge, "Length must be >={number}, but value is {value}"),
+    "gt": (operator.gt, "Length must be >{number}, but value is {value}"),
+}
+
+
+def validator_length(
+    number: int,
+    op: Literal["lt", "le", "eq", "ge", "gt"] = "ge",
+) -> Callable[[str], bool]:
     """
-    Utility function for checking whether the input has a minimum length, by using :func:`len()`.
+    Utility function for checking whether the input has a certain length, by using :func:`len()`.
+    Checks the minimum length by default (``op="ge"``).
 
     Example:
 
@@ -28,15 +42,24 @@ def validator_length(number: int) -> Callable[[str], bool]:
             validate.length(3),
         )
         assert schema.validate("abc") == "abc"
-        assert schema.validate([1, 2, 3]) == [1, 2, 3]
+        assert schema.validate([1, 2, 3, 4]) == [1, 2, 3, 4]
         schema.validate("a")  # raises ValidationError
         schema.validate([1])  # raises ValidationError
+
+    .. code-block:: python
+
+        schema = validate.Schema(
+            validate.length(3, op="lt"),
+        )
+        assert schema.validate("ab") == "ab"
+        schema.validate([1, 2, 3])  # raises ValidationError
     """
 
-    def min_len(value):
-        if len(value) < number:
+    def length(value):
+        func, msg = _validator_length_ops.get(op, "ge")
+        if not func(len(value), number):
             raise ValidationError(
-                "Minimum length is {number}, but value is {value}",
+                msg,
                 number=repr(number),
                 value=len(value),
                 schema="length",
@@ -44,7 +67,7 @@ def validator_length(number: int) -> Callable[[str], bool]:
 
         return True
 
-    return min_len
+    return length
 
 
 def validator_startswith(string: str) -> Callable[[str], bool]:
