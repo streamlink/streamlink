@@ -78,7 +78,7 @@ class TestCreateConnection:
         monkeypatch.setattr("streamlink.webbrowser.cdp.connection.connect_websocket_url", fake_connect_websocket_url)
         with pytest.raises(ConnectionTimeout):
             async with CDPConnection.create("ws://localhost:1234/fake"):
-                pass
+                pass  # pragma: no cover
 
     @pytest.mark.trio()
     @pytest.mark.parametrize(("timeout", "expected"), [
