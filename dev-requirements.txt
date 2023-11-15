@@ -24,7 +24,3 @@ types-freezegun
 types-requests
 types-setuptools
 types-urllib3
-
-# scripts
-shtab  # required by script/build-shell-completions.sh
-inflection  # required by script/generate-cdp.py

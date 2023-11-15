@@ -28,8 +28,11 @@ jobs:
       - uses: actions/setup-python@v4
         with:
           python-version: "3.11"
-      - name: Install dependencies
-        run: ./script/install-dependencies.sh
+      - name: Install Python dependencies
+        run: >
+          python -m pip install -U
+          -e .
+          -r dev-requirements.txt
       - name: ruff
         run: >
           python -m ruff .
@@ -43,10 +46,12 @@ jobs:
       - uses: actions/setup-python@v4
         with:
           python-version: "3.11"
-      - name: Install dependencies
-        run: |
-          ./script/install-dependencies.sh
-          python -m pip install -r docs-requirements.txt
+      - name: Install Python dependencies
+        run: >
+          python -m pip install -U
+          -e .
+          -r dev-requirements.txt
+          -r docs-requirements.txt
       - name: mypy
         run: |
           python -m mypy --no-incremental
