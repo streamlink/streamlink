@@ -51,6 +51,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+      id-token: write
     steps:
       - uses: actions/checkout@v4
         with:
@@ -65,7 +66,6 @@ jobs:
           python -m pip install -U
           jinja2
           requests
-          twine
       - uses: actions/download-artifact@v3
         with:
           name: dist
@@ -74,8 +74,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: ./script/github-release.py dist/*.tar.gz{,.asc}
+      - name: Delete signatures before deploying to PyPI
+        run: rm dist/*.asc
       - name: PyPI release
-        env:
-          PYPI_USER: streamlink
-          PYPI_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
-        run: ./script/deploy-pypi.sh
+        uses: pypa/gh-action-pypi-publish@release/v1
