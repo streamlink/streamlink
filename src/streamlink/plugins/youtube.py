@@ -335,8 +335,10 @@ class YouTube(Plugin):
 
     @staticmethod
     def _data_video_id(data):
-        if data:
-            for videoRenderer in search_dict(data, "videoRenderer"):
+        if not data:
+            return None
+        for key in ("videoRenderer", "gridVideoRenderer"):
+            for videoRenderer in search_dict(data, key):
                 videoId = videoRenderer.get("videoId")
                 if videoId is not None:
                     return videoId
