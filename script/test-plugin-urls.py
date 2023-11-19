@@ -6,7 +6,7 @@ import logging
 import re
 import sys
 from pathlib import Path
-from typing import Iterator, List, Optional, Set, Type
+from typing import Iterator, List, Optional, Set, Tuple, Type
 
 from streamlink import Streamlink
 from streamlink.logger import basicConfig
@@ -55,6 +55,15 @@ def parse_arguments() -> argparse.Namespace:
         metavar="REGEX",
         help="A regex for ignoring specific URLs. Can be set multiple times",
     )
+    parser.add_argument(
+        "-r",
+        "--replace",
+        nargs=2,
+        action="append",
+        default=[],
+        metavar=("STRING", "REPLACEMENT"),
+        help="Replace specific URL parts, e.g. channel names or IDs. Can be set multiple times",
+    )
 
     return parser.parse_args()
 
@@ -92,6 +101,7 @@ class PluginUrlTester:
         self.logger: logging.Logger = self._get_logger()
 
         self.ignorelist: List[str] = args.ignore or []
+        self.replacelist: List[Tuple[str, str]] = args.replace or []
         self.urls: Set[str] = set()
 
     def _get_logger(self) -> logging.Logger:
@@ -116,6 +126,8 @@ class PluginUrlTester:
     def add_url(self, item: TUrlOrNamedUrl) -> None:
         url: str = item[1] if isinstance(item, tuple) else item
         if not any(re.search(ignore, url) for ignore in self.ignorelist):
+            for string, replacement in self.replacelist:
+                url = url.replace(string, replacement)
             self.urls.add(url)
 
     def iter_urls(self) -> Iterator[TUrlOrNamedUrl]:
