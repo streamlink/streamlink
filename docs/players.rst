@@ -19,6 +19,13 @@ There are three different modes of transporting the stream to the player.
       - Use the :option:`--player-http` or :option:`--player-continuous-http` options to enable.
 
 
+
+.. role:: yes
+   :class: yes
+
+.. role:: no
+   :class: no
+
 Player compatibility
 --------------------
 
@@ -33,33 +40,33 @@ modes.
       - named pipe
       - HTTP
     * - `Daum Pot Player`_
-      - Yes
-      - No
-      - Yes [1]_
+      - :yes:`Yes`
+      - :no:`No`
+      - :yes:`Yes` [1]_
     * - `MPC-HC`_
-      - Yes [2]_
-      - No
-      - Yes [1]_
+      - :yes:`Yes` [2]_
+      - :no:`No`
+      - :yes:`Yes` [1]_
     * - `MPlayer`_
-      - Yes
-      - Yes
-      - Yes
+      - :yes:`Yes`
+      - :yes:`Yes`
+      - :yes:`Yes`
     * - `mpv`_
-      - Yes
-      - Yes
-      - Yes
+      - :yes:`Yes`
+      - :yes:`Yes`
+      - :yes:`Yes`
     * - `OMXPlayer`_
-      - No
-      - Yes
-      - Yes [4]_
+      - :no:`No`
+      - :yes:`Yes`
+      - :yes:`Yes` [4]_
     * - `QuickTime`_
-      - No
-      - No
-      - No
+      - :no:`No`
+      - :no:`No`
+      - :no:`No`
     * - `VLC media player`_
-      - Yes [3]_
-      - Yes
-      - Yes
+      - :yes:`Yes` [3]_
+      - :yes:`Yes`
+      - :yes:`Yes`
 
 .. [1] :option:`--player-continuous-http` must be used.
        Using HTTP with players that rely on Windows' codecs to access HTTP
