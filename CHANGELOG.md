@@ -1,5 +1,22 @@
 # Changelog
 
+## streamlink 6.4.0 (2023-11-21)
+
+Release highlights:
+
+- Added: missing support for dynamic DASH manifests with `SegmentList`s ([#5654](https://github.com/streamlink/streamlink/pull/5654), [#5657](https://github.com/streamlink/streamlink/pull/5657))
+- Added: warning log message when skipping DASH segments between manifest reloads ([#5659](https://github.com/streamlink/streamlink/pull/5659))
+- Added plugins: nasaplus ([#5664](https://github.com/streamlink/streamlink/pull/5664))
+- Updated plugins:
+  - raiplay: added VOD support with authentication `--raiplay-email` / `--raiplay-password` / `--raiplay-purge-credentials` ([#5662](https://github.com/streamlink/streamlink/pull/5662))
+  - telemadrid: fixed XPath query ([#5653](https://github.com/streamlink/streamlink/pull/5653))
+  - tvp: fixed tvp.info ([#5645](https://github.com/streamlink/streamlink/pull/5645))
+  - youtube: fixed video ID retrieval ([#5673](https://github.com/streamlink/streamlink/pull/5673))
+- Docs: added validation schema API docs and API guide ([#5652](https://github.com/streamlink/streamlink/pull/5652), [#5655](https://github.com/streamlink/streamlink/pull/5655))
+
+[Full changelog](https://github.com/streamlink/streamlink/compare/6.3.1...6.4.0)
+
+
 ## streamlink 6.3.1 (2023-10-26)
 
 Patch release:
