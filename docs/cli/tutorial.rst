@@ -76,10 +76,9 @@ specify ``worst`` to get the lowest quality.
 Now that you have a basic grasp of how Streamlink works, you may want to look
 into customizing it to your own needs, such as:
 
-- Creating a :ref:`configuration file <cli/config:Configuration file>` of options you
-  want to use
-- Setting up your player to :ref:`cache some data <issues:Streams are buffering/lagging>`
-  before playing the stream to help avoiding buffering issues
+- Creating a :ref:`configuration file <cli/config:Configuration file>` of options you want to use.
+- Setting up your player to cache some data before playing the stream to help avoiding buffering issues
+  or reducing its default buffering values for being able to watch low-latency streams.
 
 
 .. _Command Prompt: https://docs.microsoft.com/en-us/windows-server/administration/windows-commands/windows-commands

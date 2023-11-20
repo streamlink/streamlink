@@ -82,7 +82,6 @@ Table of contents
     cli
     plugins
     players
-    issues
     deprecations
     migrations
     developing
