@@ -344,3 +344,14 @@ section#plugins dl.field-list li {
 .clearfix:after {
   clear: both;
 }
+
+/*
+  Tables
+*/
+.yes {
+    color: green;
+}
+
+.no {
+    color: red;
+}
