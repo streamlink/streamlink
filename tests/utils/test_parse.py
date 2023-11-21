@@ -74,31 +74,93 @@ class TestUtilsParse:
         assert actual.tag == expected.tag
         assert actual.attrib == expected.attrib
 
-    def test_parse_xml_encoding(self):
-        tree = parse_xml("""<?xml version="1.0" encoding="UTF-8"?><test>ä</test>""")
-        assert tree.xpath(".//text()") == ["ä"]
-        tree = parse_xml("""<test>ä</test>""")
-        assert tree.xpath(".//text()") == ["ä"]
-        tree = parse_xml(b"""<?xml version="1.0" encoding="UTF-8"?><test>\xC3\xA4</test>""")
-        assert tree.xpath(".//text()") == ["ä"]
-        tree = parse_xml(b"""<test>\xC3\xA4</test>""")
-        assert tree.xpath(".//text()") == ["ä"]
+    @pytest.mark.parametrize(("content", "expected"), [
+        pytest.param(
+            """<?xml version="1.0" encoding="UTF-8"?><test>ä</test>""",
+            "ä",
+            id="string-utf-8",
+        ),
+        pytest.param(
+            """<test>ä</test>""",
+            "ä",
+            id="string-unknown",
+        ),
+        pytest.param(
+            b"""<?xml version="1.0" encoding="UTF-8"?><test>\xC3\xA4</test>""",
+            "ä",
+            id="bytes-utf-8",
+        ),
+        pytest.param(
+            b"""<?xml version="1.0" encoding="ISO-8859-1"?><test>\xE4</test>""",
+            "ä",
+            id="bytes-iso-8859-1",
+        ),
+        pytest.param(
+            b"""<test>\xC3\xA4</test>""",
+            "ä",
+            id="bytes-unknown",
+        ),
+    ])
+    def test_parse_xml_encoding(self, content, expected):
+        tree = parse_xml(content)
+        assert tree.xpath(".//text()") == [expected]
 
-    def test_parse_html_encoding(self):
-        tree = parse_html("""<!DOCTYPE html><html><head><meta charset="utf-8"/></head><body>ä</body></html>""")
-        assert tree.xpath(".//body/text()") == ["ä"]
-        tree = parse_html("""<!DOCTYPE html><html><body>ä</body></html>""")
-        assert tree.xpath(".//body/text()") == ["ä"]
-        tree = parse_html(b"""<!DOCTYPE html><html><meta charset="utf-8"/><body>\xC3\xA4</body></html>""")
-        assert tree.xpath(".//body/text()") == ["ä"]
-        tree = parse_html(b"""<!DOCTYPE html><html><body>\xC3\xA4</body></html>""")
-        assert tree.xpath(".//body/text()") == ["Ã¤"]
+    @pytest.mark.parametrize(("content", "expected"), [
+        pytest.param(
+            """<!DOCTYPE html><html><head><meta charset="utf-8"/></head><body>ä</body></html>""",
+            "ä",
+            id="string-utf-8",
+        ),
+        pytest.param(
+            """<!DOCTYPE html><html><body>ä</body></html>""",
+            "ä",
+            id="string-unknown",
+        ),
+        pytest.param(
+            b"""<!DOCTYPE html><html><head><meta charset="utf-8"/></head><body>\xC3\xA4</body></html>""",
+            "ä",
+            id="bytes-utf-8",
+        ),
+        pytest.param(
+            b"""<!DOCTYPE html><html><head><meta charset="ISO-8859-1"/></head><body>\xE4</body></html>""",
+            "ä",
+            id="bytes-iso-8859-1",
+        ),
+        pytest.param(
+            b"""<!DOCTYPE html><html><body>\xC3\xA4</body></html>""",
+            "Ã¤",
+            id="bytes-unknown",
+        ),
+    ])
+    def test_parse_html_encoding(self, content, expected):
+        tree = parse_html(content)
+        assert tree.xpath(".//body/text()") == [expected]
 
-    def test_parse_html_xhtml5(self):
-        tree = parse_html("""<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html><html><body>ä?></body></html>""")
-        assert tree.xpath(".//body/text()") == ["ä?>"]
-        tree = parse_html(b"""<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html><html><body>\xC3\xA4?></body></html>""")
-        assert tree.xpath(".//body/text()") == ["ä?>"]
+    @pytest.mark.parametrize(("content", "expected"), [
+        pytest.param(
+            """<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html><html><body>ä?></body></html>""",
+            "ä?>",
+            id="string",
+        ),
+        pytest.param(
+            b"""<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html><html><body>\xC3\xA4?></body></html>""",
+            "ä?>",
+            id="bytes-utf-8",
+        ),
+        pytest.param(
+            b"""<?xml version="1.0" encoding="ISO-8859-1"?><!DOCTYPE html><html><body>\xE4?></body></html>""",
+            "ä?>",
+            id="bytes-iso-8859-1",
+        ),
+        pytest.param(
+            b"""<?xml version="1.0"?><!DOCTYPE html><html><body>\xC3\xA4?></body></html>""",
+            "ä?>",
+            id="bytes-unknown",
+        ),
+    ])
+    def test_parse_html_xhtml5(self, content, expected):
+        tree = parse_html(content)
+        assert tree.xpath(".//body/text()") == [expected]
 
     def test_parse_qsd(self):
         assert parse_qsd("test=1&foo=bar", schema=validate.Schema({"test": str, "foo": "bar"})) == {"test": "1", "foo": "bar"}
