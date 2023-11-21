@@ -4,6 +4,7 @@ from urllib.parse import parse_qsl
 
 from lxml.etree import HTML, XML
 
+from streamlink.compat import detect_encoding
 from streamlink.plugin import PluginError
 
 
@@ -51,7 +52,21 @@ def parse_html(
      - Removes XML declarations of invalid XHTML5 documents
      - Wraps errors in custom exception with a snippet of the data in the message
     """
-    if isinstance(data, str) and data.lstrip().startswith("<?xml"):
+    # strip XML text declarations from XHTML5 documents which were incorrectly defined as HTML5
+    is_bytes = isinstance(data, bytes)
+    if data and data.lstrip()[:5].lower() == (b"<?xml" if is_bytes else "<?xml"):
+        if is_bytes:
+            # get the document's encoding using the "encoding" attribute value of the XML text declaration
+            match = re.match(rb"^\s*<\?xml\s.*?encoding=(?P<q>[\'\"])(?P<encoding>.+?)(?P=q).*?\?>", data, re.IGNORECASE)
+            if match:
+                encoding_value = detect_encoding(match["encoding"])["encoding"]
+                encoding = match["encoding"].decode(encoding_value)
+            else:
+                # no "encoding" attribute: try to figure out encoding from the document's content
+                encoding = detect_encoding(data)["encoding"]
+
+            data = data.decode(encoding)
+
         data = re.sub(r"^\s*<\?xml.+?\?>", "", data)
 
     return _parse(HTML, data, name, exception, schema, *args, **kwargs)
