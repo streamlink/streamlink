@@ -1,5 +1,14 @@
 # Changelog
 
+## streamlink 6.4.1 (2023-11-22)
+
+Patch release:
+
+- Fixed: libxml2 2.12.0 compatibility ([#5682](https://github.com/streamlink/streamlink/pull/5682))
+
+[Full changelog](https://github.com/streamlink/streamlink/compare/6.4.0...6.4.1)
+
+
 ## streamlink 6.4.0 (2023-11-21)
 
 Release highlights:
