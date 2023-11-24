@@ -1,5 +1,5 @@
 """
-$description Global live streaming platform.
+$description Global live-streaming platform.
 $url ssh101.com
 $type live
 """
@@ -21,8 +21,8 @@ log = logging.getLogger(__name__)
 class SSH101(Plugin):
     def _get_streams(self):
         hls_url = self.session.http.get(self.url, schema=validate.Schema(
-            validate.parse_html(),
-            validate.xml_xpath_string(".//source[contains(@src,'.m3u8')]/@src"),
+            re.compile(r"src:\s*(?P<q>['\"])(?P<url>https://\S+\.m3u8)(?P=q)"),
+            validate.any(None, validate.get("url")),
         ))
         if not hls_url:
             return
@@ -32,7 +32,7 @@ class SSH101(Plugin):
             log.error("This stream is currently offline")
             return
 
-        return {"live": HLSStream(self.session, hls_url)}
+        return HLSStream.parse_variant_playlist(self.session, hls_url)
 
 
 __plugin__ = SSH101
