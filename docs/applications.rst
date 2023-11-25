@@ -1,6 +1,3 @@
-.. include:: _applications.rst
-
-
 Streamlink Applications
 =======================
 
@@ -13,7 +10,7 @@ Streamlink Twitch GUI
 
 :Description: A multi platform Twitch.tv browser for Streamlink
 :Type: Graphical User Interface
-:OS: |Windows| |MacOS| |Linux|
+:OS: :fab:`windows;fa-xl` :fab:`apple;fa-xl` :fab:`linux;fa-xl`
 :Author: `Sebastian Meyer <https://github.com/bastimeyer>`_
 :Website: https://streamlink.github.io/streamlink-twitch-gui
 :Source code: https://github.com/streamlink/streamlink-twitch-gui
