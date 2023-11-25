@@ -38,60 +38,56 @@ While working on any kind of python-based project, it is usually best to do this
 the Python environment of the host system. This ensures that development can be done in a clean space which is free of version
 conflicts and other unrelated packages.
 
-First, make sure that you have the latest stable versions of Python and pip installed.
+First, make sure that you have the latest stable versions of Python and `pip`_ installed:
 
 .. code-block:: bash
 
     python --version
     pip --version
 
-As the second preparation step, install the latest version of ``virtualenv``, either via your system's package manager or pip,
-and create a new virtual environment. These environments can be created separately for different Python versions. Please refer
-to the `virtualenv documentation`_ for all available parameters. There are also several wrappers around virtualenv available.
+Then set up a new virtual environment using `venv`_ of the Python standard library:
 
 .. code-block:: bash
 
-    pip install --upgrade --user virtualenv
-    virtualenv --version
-
     # replace ~/venvs/streamlink with your path of choice and give it a proper name
-    virtualenv --download --verbose ~/venvs/streamlink
+    python -m venv ~/venvs/streamlink
 
-Now activate the virtual environment by sourcing the activation shell script.
+Now activate the virtual environment by sourcing the activation shell script:
 
 .. code-block:: bash
 
     source ~/venvs/streamlink/bin/activate
 
-    # non-POSIX shells have their own activation script, eg. FISH
+    # non-POSIX shells have their own activation script, e.g. FISH
     source ~/venvs/streamlink/bin/activate.fish
 
-    # on Windows, activation scripts are located in the Scripts/ subdirectory instead of bin/
-    source ~/venvs/streamlink/Scripts/activate
+.. code-block:: pwsh
 
-.. _virtualenv documentation: https://virtualenv.pypa.io/en/latest/
+    # on Windows, activation scripts are located in the Scripts/ subdirectory instead of bin/
+    ~\venvs\streamlink\Scripts\Activate.ps1
+
+.. _pip: https://pip.pypa.io/en/stable/
+.. _venv: https://docs.python.org/3/library/venv.html
 
 
 Installing Streamlink
 ^^^^^^^^^^^^^^^^^^^^^
 
-After activating the new virtual environment, Streamlink's build dependencies and Streamlink itself need to be installed.
+After activating the new virtual environment, Streamlink's development dependencies and Streamlink itself need to be installed.
 Regular development dependencies and documentation related dependencies are listed in the text files shown below and need to
 be installed separately.
 
 .. code-block:: bash
 
     # install additional dependencies
-    pip install -r dev-requirements.txt
-    pip install -r docs-requirements.txt
+    pip install -U -r dev-requirements.txt
+    pip install -U -r docs-requirements.txt
 
-    # install Streamlink from source
-    # check setup.py for optional dependencies and install those manually if you need to
+    # install Streamlink in "editable" mode
     pip install -e .
 
     # validate that Streamlink is working
-    which streamlink
-    streamlink --version
+    streamlink --loglevel=debug
 
 
 Validating changes
@@ -104,16 +100,14 @@ performing these checks locally avoids unnecessary build failures.
 .. code-block:: bash
 
     # run automated tests
-    python -m pytest -ra
+    pytest
     # or just run a subset of all tests
-    python -m pytest -ra path/to/test-file.py::TestClassName::test_method_name ...
+    pytest path/to/test-file.py::TestClassName::test_method_name ...
 
     # check code for linting errors
     ruff .
     # check code for typing errors
     mypy
-    # optionally check for typing errors if changes were made to the docs extensions
-    mypy docs
 
     # build the documentation
     make --directory=docs clean html
@@ -196,11 +190,13 @@ Adding plugins
    Each plugin class requires at least one ``pluginmatcher`` decorator which defines the URL regex, matching priority
    and an optional name.
 
-   Plugins need to implement the ``_get_streams()`` method which either returns a list of ``Stream`` instances or which yields
-   ``Stream`` instances. ``Stream`` is the base class of ``HTTPStream``, ``HLSStream`` and ``DASHStream``.
+   Plugins need to implement the :meth:`_get_streams() <streamlink.plugin.Plugin._get_streams>` method which must return
+   ``Mapping[str,Stream] | Iterable[Tuple[str,Stream]] | Iterator[Tuple[str,Stream]] | None``.
+   ``Stream`` is the base class of :class:`HTTPStream <streamlink.stream.HTTPStream>`,
+   :class:`HLSStream <streamlink.stream.HLSStream>` and :class:`DASHStream <streamlink.stream.DASHStream>`.
 
    Plugins also require metadata which will be read when building the documentation. This metadata contains information about
-   the plugin, eg. which URLs it accepts, which kind of streams it returns, whether content is region-locked, or if any kind of
+   the plugin, e.g. which URLs it accepts, which kind of streams it returns, whether content is region-locked, or if any kind of
    account or subscription is needed for watching the content, etc. This metadata needs to be set as a header comment at
    the beginning of the plugin file, in the following format (order of items is important):
 
