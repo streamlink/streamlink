@@ -19,7 +19,7 @@ from streamlink.stream.hls import HLSStream
 ))
 class Piczel(Plugin):
     _URL_STREAMS = "https://piczel.tv/api/streams"
-    _URL_HLS = "https://piczel.tv/hls/{id}/index.m3u8"
+    _URL_HLS = "https://playback.piczel.tv/live/{id}/llhls.m3u8?_HLS_legacy=YES"
 
     def _get_streams(self):
         channel = self.match.group("channel")
@@ -57,7 +57,7 @@ class Piczel(Plugin):
         if not is_live:
             return
 
-        return {"live": HLSStream(self.session, self._URL_HLS.format(id=self.id))}
+        return HLSStream.parse_variant_playlist(self.session, self._URL_HLS.format(id=self.id))
 
 
 __plugin__ = Piczel
