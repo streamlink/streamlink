@@ -251,6 +251,9 @@ class Plugin:
     options: Options
     """Plugin options, initialized with the user-set values of the plugin's arguments"""
 
+    cache: Cache
+    """Plugin cache object, used to store plugin-specific data other than HTTP session cookies"""
+
     # plugin metadata attributes
     id: Optional[str] = None
     """Metadata 'id' attribute: unique stream ID, etc."""
