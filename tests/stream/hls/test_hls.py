@@ -186,13 +186,13 @@ class TestHLSStream(TestMixinStreamHLS, unittest.TestCase):
 
         segments = self.subject([
             Playlist(0, [map1, Segment(0), Segment(1), Segment(2), Segment(3)]),
-            Playlist(4, [map1, Segment(4), map2, Segment(5), Segment(6), discontinuity, Segment(7)], end=True),
-        ])
+            Playlist(4, [map1, Segment(4), map2, Segment(5), Segment(6), discontinuity, map1, Segment(7)], end=True),
+        ], options={"stream-segment-threads": 2})
 
         data = self.await_read(read_all=True, timeout=None)
         assert data == self.content([
-            map1, segments[1], map1, segments[2], map1, segments[3],
-            map1, segments[4], map2, segments[5], map2, segments[6], segments[7],
+            map1, segments[1], segments[2], segments[3],
+            segments[4], map2, segments[5], segments[6], map1, segments[7],
         ])
         assert self.called(map1, once=True), "Downloads first map only once"
         assert self.called(map2, once=True), "Downloads second map only once"
@@ -598,7 +598,7 @@ class TestHLSStreamByterange(TestMixinStreamHLS, unittest.TestCase):
             ], end=True),
         ])
 
-        self.await_write(5 * 2)
+        self.await_write(1 + 2 + 1 + 3)  # 1 map, 2 partial segments, 1 map, 3 partial segments
         self.await_read(read_all=True)
         assert self.mocks[self.url(map1)].last_request._request.headers["Range"] == "bytes=0-1233"
         assert self.mocks[self.url(map2)].last_request._request.headers["Range"] == "bytes=1337-1378"
@@ -724,12 +724,12 @@ class TestHLSStreamEncrypted(TestMixinStreamHLS, unittest.TestCase):
             Playlist(2, [key, map2] + [SegmentEnc(num, aesKey, aesIv) for num in range(2, 4)], end=True),
         ])
 
-        self.await_write(2 * 2 + 2 * 2)
+        self.await_write(1 + 2 + 1 + 2)  # 1 map, 2 segments, 1 map, 2 segments
         data = self.await_read(read_all=True)
         self.await_close()
 
         assert data == self.content([
-            map1, segments[0], map1, segments[1], map2, segments[2], map2, segments[3],
+            map1, segments[0], segments[1], map2, segments[2], segments[3],
         ], prop="content_plain")
 
     def test_hls_encrypted_aes128_key_uri_override(self):
