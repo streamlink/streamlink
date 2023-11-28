@@ -1,5 +1,19 @@
 # Changelog
 
+## streamlink 6.4.2 (2023-11-28)
+
+Patch release:
+
+- Fixed: HLS segment maps being written to the output multiple times ([#5689](https://github.com/streamlink/streamlink/pull/5689))
+- Fixed plugins:
+  - bilibili: rewritten plugin ([#5693](https://github.com/streamlink/streamlink/pull/5693))
+  - piczel: updated HLS URLs ([#5690](https://github.com/streamlink/streamlink/pull/5690))
+  - ssh101: fixed stream URL retrieval ([#5686](https://github.com/streamlink/streamlink/pull/5686))
+- Docs: added missing `Cache` API docs ([#5688](https://github.com/streamlink/streamlink/pull/5688))
+
+[Full changelog](https://github.com/streamlink/streamlink/compare/6.4.1...6.4.2)
+
+
 ## streamlink 6.4.1 (2023-11-22)
 
 Patch release:
