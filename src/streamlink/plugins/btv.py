@@ -61,7 +61,7 @@ class BTV(Plugin):
             log.error("The content is not available in your region")
             return
 
-        return {"live": HLSStream(self.session, stream_url)}
+        return HLSStream.parse_variant_playlist(self.session, stream_url)
 
 
 __plugin__ = BTV

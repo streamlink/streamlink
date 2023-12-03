@@ -6,7 +6,7 @@ class TestPluginCanHandleUrlBTV(PluginCanHandleUrl):
     __plugin__ = BTV
 
     should_match = [
-        "http://btvplus.bg/live",
-        "http://btvplus.bg/live/",
-        "http://www.btvplus.bg/live/",
+        "https://btvplus.bg/live",
+        "https://btvplus.bg/live/",
+        "https://www.btvplus.bg/live/",
     ]
