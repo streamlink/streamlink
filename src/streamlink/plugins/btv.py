@@ -11,6 +11,8 @@ import re
 from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.api import validate
 from streamlink.stream.hls import HLSStream
+from streamlink.plugin.plugin import LOW_PRIORITY, parse_params
+from streamlink.utils.url import update_scheme
 
 
 log = logging.getLogger(__name__)
@@ -60,8 +62,10 @@ class BTV(Plugin):
         if stream_url == "geo_blocked_stream":
             log.error("The content is not available in your region")
             return
-
-        return HLSStream.parse_variant_playlist(self.session, stream_url)
+        
+        hls_url = update_scheme("hls://https://", stream_url, force=False)
+        streams = HLSStream.parse_variant_playlist(self.session, hls_url)
+        return streams or {"live": HLSStream(self.session, hls_url)}
 
 
 __plugin__ = BTV
