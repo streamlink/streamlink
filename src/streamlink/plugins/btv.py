@@ -11,7 +11,6 @@ import re
 from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.api import validate
 from streamlink.stream.hls import HLSStream
-from streamlink.plugin.plugin import LOW_PRIORITY, parse_params
 from streamlink.utils.url import update_scheme
 
 
