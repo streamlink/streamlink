@@ -495,8 +495,16 @@ class TwitchAPI:
         )
 
         return self.call(query, schema=validate.Schema(
-            {"data": {"user": {"stream": {"type": str}}}},
-            validate.get(("data", "user", "stream")),
+            {
+                "data": {
+                    "user": validate.none_or_all({
+                        "stream": validate.none_or_all({
+                            "id": str,
+                        }),
+                    }),
+                },
+            },
+            validate.get(("data", "user")),
         ))
 
 
@@ -640,7 +648,7 @@ class TwitchClientIntegrity:
 @pluginargument(
     "disable-reruns",
     action="store_true",
-    help="Do not open the stream if the target channel is currently broadcasting a rerun.",
+    help=argparse.SUPPRESS,
 )
 @pluginargument(
     "low-latency",
@@ -808,22 +816,19 @@ class Twitch(Plugin):
 
         return sig, token, restricted_bitrates
 
-    def _check_for_rerun(self):
-        if not self.options.get("disable_reruns"):
+    def _check_is_live(self) -> bool:
+        data = self.api.stream_metadata(self.channel)
+        if data is None:
+            log.error("Unknown channel")
+            return False
+        if data["stream"] is None:
+            log.error("Channel is offline")
             return False
 
-        try:
-            stream = self.api.stream_metadata(self.channel)
-            if stream["type"] != "live":
-                log.info("Reruns were disabled by command line option")
-                return True
-        except (PluginError, TypeError):
-            pass
-
-        return False
+        return True
 
     def _get_hls_streams_live(self):
-        if self._check_for_rerun():
+        if not self._check_is_live():
             return
 
         # only get the token once the channel has been resolved
