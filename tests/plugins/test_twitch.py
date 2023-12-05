@@ -396,6 +396,53 @@ class TestTwitchHLSStream(TestMixinStreamHLS, unittest.TestCase):
         assert self.thread.reader.worker.playlist_reload_time == pytest.approx(23 / 3)
 
 
+class TestTwitchIsLive:
+    @pytest.fixture()
+    def plugin(self, request: pytest.FixtureRequest):
+        return Twitch(Streamlink(), "https://twitch.tv/channelname")
+
+    @pytest.fixture()
+    def mock(self, request: pytest.FixtureRequest, requests_mock: rm.Mocker):
+        mock = requests_mock.post("https://gql.twitch.tv/gql", **getattr(request, "param", {"json": {}}))
+        yield mock
+        assert mock.call_count > 0
+        payload = mock.last_request.json()  # type: ignore[union-attr]
+        assert tuple(sorted(payload.keys())) == ("extensions", "operationName", "variables")
+        assert payload.get("operationName") == "StreamMetadata"
+        assert payload.get("extensions") == {
+            "persistedQuery": {
+                "sha256Hash": "1c719a40e481453e5c48d9bb585d971b8b372f8ebb105b17076722264dfa5b3e",
+                "version": 1,
+            },
+        }
+        assert payload.get("variables") == {"channelLogin": "channelname"}
+
+    @pytest.mark.parametrize(("mock", "expected", "log"), [
+        pytest.param(
+            {"json": {"data": {"user": None}}},
+            False,
+            [("streamlink.plugins.twitch", "error", "Unknown channel")],
+            id="no-user",
+        ),
+        pytest.param(
+            {"json": {"data": {"user": {"stream": None}}}},
+            False,
+            [("streamlink.plugins.twitch", "error", "Channel is offline")],
+            id="no-stream",
+        ),
+        pytest.param(
+            {"json": {"data": {"user": {"stream": {"id": "1234567890"}}}}},
+            True,
+            [],
+            id="is-live",
+        ),
+    ], indirect=["mock"])
+    def test_is_live(self, plugin: Twitch, caplog: pytest.LogCaptureFixture, mock: rm.Mocker, expected: bool, log: list):
+        caplog.set_level(1, "streamlink")
+        assert plugin._check_is_live() is expected
+        assert [(record.name, record.levelname, record.message) for record in caplog.records] == log
+
+
 class TestTwitchAPIAccessToken:
     @pytest.fixture(autouse=True)
     def _client_integrity_token(self, monkeypatch: pytest.MonkeyPatch):
@@ -834,63 +881,3 @@ class TestTwitchMetadata:
         assert author is None
         assert category is None
         assert title is None
-
-
-@pytest.mark.parametrize(("stream_type", "offline", "disable", "expected", "logs"), [
-    pytest.param(
-        "live",
-        False,
-        True,
-        False,
-        [],
-        id="disable live",
-    ),
-    pytest.param(
-        "rerun",
-        False,
-        True,
-        True,
-        [("streamlink.plugins.twitch", "info", "Reruns were disabled by command line option")],
-        id="disable not live",
-    ),
-    pytest.param(
-        "live",
-        True,
-        True,
-        False,
-        [],
-        id="disable offline",
-    ),
-    pytest.param(
-        "rerun",
-        True,
-        False,
-        False,
-        [],
-        id="enable",
-    ),
-])
-def test_reruns(
-    monkeypatch: pytest.MonkeyPatch,
-    caplog: pytest.LogCaptureFixture,
-    session: Streamlink,
-    stream_type: str,
-    offline: bool,
-    disable: bool,
-    expected: bool,
-    logs: list,
-):
-    caplog.set_level(1, "streamlink")
-    mock_stream_metadata = Mock(return_value=None if offline else {"type": stream_type})
-    monkeypatch.setattr("streamlink.plugins.twitch.TwitchAPI.stream_metadata", mock_stream_metadata)
-
-    # noinspection PyTypeChecker
-    plugin: Twitch = Twitch(session, "https://www.twitch.tv/foo")
-    try:
-        plugin.options.set("disable-reruns", disable)
-        result = plugin._check_for_rerun()
-    finally:
-        plugin.options.clear()
-
-    assert result is expected
-    assert [(record.name, record.levelname, record.message) for record in caplog.records] == logs
