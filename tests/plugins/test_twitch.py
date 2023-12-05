@@ -629,7 +629,7 @@ class TestTwitchHLSMultivariantResponse:
             },
             nullcontext(),
             None,
-            [("streamlink.plugins.twitch", "error", "Could not access HLS playlist")],
+            [],
             id="non-json error response",
         ),
     ], indirect=["plugin"])

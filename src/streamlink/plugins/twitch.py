@@ -838,7 +838,6 @@ class Twitch(Plugin):
             # TODO: fix the "err" attribute set by HTTPSession.request()
             orig = getattr(err, "err", None)
             if isinstance(orig, HTTPError) and orig.response.status_code >= 400:
-                error = None
                 with suppress(PluginError):
                     error = validate.Schema(
                         validate.parse_json(),
@@ -848,7 +847,7 @@ class Twitch(Plugin):
                         }],
                         validate.get((0, "error")),
                     ).validate(orig.response.text)
-                log.error(error or "Could not access HLS playlist")
+                    log.error(error or "Could not access HLS playlist")
                 return
             raise PluginError(err) from err
 
