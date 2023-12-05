@@ -34,14 +34,22 @@ class TestWebsocketClient:
             yield WebsocketClient(session, "wss://localhost:0", **getattr(request, "param", {}))
 
     @pytest.mark.parametrize(("level", "expected"), [
-        pytest.param(DEBUG, False, id="debug"),
-        pytest.param(TRACE, True, id="trace"),
+        pytest.param(DEBUG, [], id="debug"),
+        pytest.param(TRACE, [call(True, handler=ANY)], id="trace"),
     ])
-    def test_log(self, session: Streamlink, level: int, expected: bool):
-        with patch("streamlink.plugin.api.websocket.enableTrace") as mock_enable_trace, \
-             patch("streamlink.plugin.api.websocket.rootlogger", Mock(level=level)):
-            WebsocketClient(session, "wss://localhost:0")
-        assert mock_enable_trace.called is expected
+    def test_log(
+        self,
+        monkeypatch: pytest.MonkeyPatch,
+        caplog: pytest.LogCaptureFixture,
+        session: Streamlink,
+        level: int,
+        expected: bool,
+    ):
+        caplog.set_level(level, "streamlink")
+        mock_enable_trace = Mock()
+        monkeypatch.setattr("streamlink.plugin.api.websocket.enableTrace", mock_enable_trace)
+        WebsocketClient(session, "wss://localhost:0")
+        assert mock_enable_trace.call_args_list == expected
 
     @pytest.mark.parametrize(("client", "expected"), [
         pytest.param({}, FIREFOX, id="default"),
