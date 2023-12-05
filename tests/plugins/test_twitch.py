@@ -396,53 +396,6 @@ class TestTwitchHLSStream(TestMixinStreamHLS, unittest.TestCase):
         assert self.thread.reader.worker.playlist_reload_time == pytest.approx(23 / 3)
 
 
-class TestTwitchIsLive:
-    @pytest.fixture()
-    def plugin(self, request: pytest.FixtureRequest):
-        return Twitch(Streamlink(), "https://twitch.tv/channelname")
-
-    @pytest.fixture()
-    def mock(self, request: pytest.FixtureRequest, requests_mock: rm.Mocker):
-        mock = requests_mock.post("https://gql.twitch.tv/gql", **getattr(request, "param", {"json": {}}))
-        yield mock
-        assert mock.call_count > 0
-        payload = mock.last_request.json()  # type: ignore[union-attr]
-        assert tuple(sorted(payload.keys())) == ("extensions", "operationName", "variables")
-        assert payload.get("operationName") == "StreamMetadata"
-        assert payload.get("extensions") == {
-            "persistedQuery": {
-                "sha256Hash": "1c719a40e481453e5c48d9bb585d971b8b372f8ebb105b17076722264dfa5b3e",
-                "version": 1,
-            },
-        }
-        assert payload.get("variables") == {"channelLogin": "channelname"}
-
-    @pytest.mark.parametrize(("mock", "expected", "log"), [
-        pytest.param(
-            {"json": {"data": {"user": None}}},
-            False,
-            [("streamlink.plugins.twitch", "error", "Unknown channel")],
-            id="no-user",
-        ),
-        pytest.param(
-            {"json": {"data": {"user": {"stream": None}}}},
-            False,
-            [("streamlink.plugins.twitch", "error", "Channel is offline")],
-            id="no-stream",
-        ),
-        pytest.param(
-            {"json": {"data": {"user": {"stream": {"id": "1234567890"}}}}},
-            True,
-            [],
-            id="is-live",
-        ),
-    ], indirect=["mock"])
-    def test_is_live(self, plugin: Twitch, caplog: pytest.LogCaptureFixture, mock: rm.Mocker, expected: bool, log: list):
-        caplog.set_level(1, "streamlink")
-        assert plugin._check_is_live() is expected
-        assert [(record.name, record.levelname, record.message) for record in caplog.records] == log
-
-
 class TestTwitchAPIAccessToken:
     @pytest.fixture(autouse=True)
     def _client_integrity_token(self, monkeypatch: pytest.MonkeyPatch):

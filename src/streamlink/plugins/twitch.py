@@ -487,26 +487,6 @@ class TwitchAPI:
             ),
         ))
 
-    def stream_metadata(self, channel):
-        query = self._gql_persisted_query(
-            "StreamMetadata",
-            "1c719a40e481453e5c48d9bb585d971b8b372f8ebb105b17076722264dfa5b3e",
-            channelLogin=channel,
-        )
-
-        return self.call(query, schema=validate.Schema(
-            {
-                "data": {
-                    "user": validate.none_or_all({
-                        "stream": validate.none_or_all({
-                            "id": str,
-                        }),
-                    }),
-                },
-            },
-            validate.get(("data", "user")),
-        ))
-
 
 class TwitchClientIntegrity:
     URL_P_SCRIPT = "https://k.twitchcdn.net/149e9513-01fa-4fb0-aad4-566afd725d1b/2d206a39-8ed7-437e-a3be-862e0f06eea3/p.js"
@@ -816,21 +796,7 @@ class Twitch(Plugin):
 
         return sig, token, restricted_bitrates
 
-    def _check_is_live(self) -> bool:
-        data = self.api.stream_metadata(self.channel)
-        if data is None:
-            log.error("Unknown channel")
-            return False
-        if data["stream"] is None:
-            log.error("Channel is offline")
-            return False
-
-        return True
-
     def _get_hls_streams_live(self):
-        if not self._check_is_live():
-            return
-
         # only get the token once the channel has been resolved
         log.debug(f"Getting live HLS streams for {self.channel}")
         self.session.http.headers.update({
@@ -863,6 +829,7 @@ class Twitch(Plugin):
                 self.session,
                 url,
                 start_offset=time_offset,
+                check_streams=True,
                 disable_ads=self.get_option("disable-ads"),
                 low_latency=self.get_option("low-latency"),
                 **extra_params,
