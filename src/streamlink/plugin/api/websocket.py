@@ -43,7 +43,7 @@ class WebsocketClient(Thread):
         ping_payload: str = "",
     ):
         if rootlogger.level <= TRACE:
-            enableTrace(True, log)
+            enableTrace(True, handler=next(iter(rootlogger.handlers), logging.StreamHandler()))  # type: ignore
 
         if not header:
             header = []
