@@ -829,6 +829,9 @@ class Twitch(Plugin):
                 self.session,
                 url,
                 start_offset=time_offset,
+                # Check if the media playlists are accessible:
+                # This is a workaround for checking the GQL API for the channel's live status,
+                # which can be delayed by up to a minute.
                 check_streams=True,
                 disable_ads=self.get_option("disable-ads"),
                 low_latency=self.get_option("low-latency"),
@@ -838,6 +841,7 @@ class Twitch(Plugin):
             # TODO: fix the "err" attribute set by HTTPSession.request()
             orig = getattr(err, "err", None)
             if isinstance(orig, HTTPError) and orig.response.status_code >= 400:
+                # The playlist's error response may include JSON data with an error message
                 with suppress(PluginError):
                     error = validate.Schema(
                         validate.parse_json(),
@@ -847,7 +851,10 @@ class Twitch(Plugin):
                         }],
                         validate.get((0, "error")),
                     ).validate(orig.response.text)
-                    log.error(error or "Could not access HLS playlist")
+                    # Only log error messages if the channel is actually live
+                    if self.get_id():
+                        log.error(error or "Could not access HLS playlist")
+                # Don't raise and simply return no streams on 4xx/5xx playlist responses
                 return
             raise PluginError(err) from err
 
