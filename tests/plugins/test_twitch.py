@@ -1,6 +1,7 @@
 import unittest
 from contextlib import nullcontext
 from datetime import datetime, timedelta, timezone
+from typing import Optional
 from unittest.mock import MagicMock, Mock, call, patch
 
 import pytest
@@ -592,9 +593,10 @@ class TestTwitchHLSMultivariantResponse:
         requests_mock.get("mock://multivariant", **getattr(request, "param", {}))
         return Twitch(session, "https://twitch.tv/channelname")
 
-    @pytest.mark.parametrize(("plugin", "raises", "streams", "log"), [
+    @pytest.mark.parametrize(("plugin", "streamid", "raises", "streams", "log"), [
         pytest.param(
             {"text": "#EXTM3U\n"},
+            "123",
             nullcontext(),
             {},
             [],
@@ -602,10 +604,27 @@ class TestTwitchHLSMultivariantResponse:
         ),
         pytest.param(
             {"text": "Not an HLS playlist"},
+            "123",
             pytest.raises(PluginError),
             {},
             [],
             id="invalid HLS playlist",
+        ),
+        pytest.param(
+            {
+                "status_code": 404,
+                "json": [{
+                    "url": "mock://multivariant",
+                    "error": "twirp error not_found: transcode does not exist",
+                    "error_code": "transcode_does_not_exist",
+                    "type": "error",
+                }],
+            },
+            None,
+            nullcontext(),
+            None,
+            [],
+            id="offline",
         ),
         pytest.param(
             {
@@ -617,6 +636,7 @@ class TestTwitchHLSMultivariantResponse:
                     "type": "error",
                 }],
             },
+            "123",
             nullcontext(),
             None,
             [("streamlink.plugins.twitch", "error", "Content Restricted In Region")],
@@ -627,14 +647,25 @@ class TestTwitchHLSMultivariantResponse:
                 "status_code": 404,
                 "text": "Not found",
             },
+            "123",
             nullcontext(),
             None,
             [],
             id="non-json error response",
         ),
     ], indirect=["plugin"])
-    def test_multivariant_response(self, caplog: pytest.LogCaptureFixture, plugin: Twitch, raises, streams, log):
+    def test_multivariant_response(
+        self,
+        monkeypatch: pytest.MonkeyPatch,
+        caplog: pytest.LogCaptureFixture,
+        plugin: Twitch,
+        streamid: Optional[str],
+        raises: nullcontext,
+        streams: Optional[dict],
+        log: list,
+    ):
         caplog.set_level("error", "streamlink.plugins.twitch")
+        monkeypatch.setattr(plugin, "get_id", Mock(return_value=streamid))
         with raises:
             assert plugin._get_hls_streams("mock://multivariant", []) == streams
         assert [(record.name, record.levelname, record.message) for record in caplog.records] == log
