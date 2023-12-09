@@ -1,3 +1,5 @@
+import argparse
+
 import pytest
 
 from streamlink.options import Argument, Arguments, Options
@@ -138,6 +140,44 @@ class TestArgument:
         with pytest.raises(AttributeError):
             # noinspection PyPropertyAccess
             arg.default = 456
+
+    def test_options(self):
+        arg = Argument(
+            "test",
+            action="append",
+            nargs=2,
+            default=(0, 0),
+            type=int,
+            choices=[1, 2, 3],
+            required=True,
+            help=argparse.SUPPRESS,
+            metavar=("ONE", "TWO"),
+            dest="dest",
+            requires=["other"],
+            prompt="Test!",
+            sensitive=False,
+            argument_name=None,
+        )
+        assert arg.options == {
+            "action": "append",
+            "nargs": 2,
+            "default": (0, 0),
+            "type": int,
+            "choices": [1, 2, 3],
+            "help": argparse.SUPPRESS,
+            "metavar": ("ONE", "TWO"),
+            "dest": "dest",
+        }
+
+        arg = Argument(
+            "test",
+            action="store_const",
+            const=123,
+        )
+        assert arg.options == {
+            "action": "store_const",
+            "const": 123,
+        }
 
 
 class TestArguments:
