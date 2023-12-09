@@ -1,4 +1,5 @@
 # setup
+setuptools >=64.0.0  # required for reading the version string when building from git
 versioningit >=2.0.0,<3  # required for reading the version string when building from git
 
 # build
