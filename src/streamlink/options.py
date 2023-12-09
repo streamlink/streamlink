@@ -1,4 +1,7 @@
-from typing import Any, Callable, ClassVar, Dict, Iterator, Mapping, Optional, Sequence, Union
+from typing import Any, Callable, ClassVar, Dict, Iterable, Iterator, Literal, Mapping, Optional, Sequence, TypeVar, Union
+
+
+_T = TypeVar("_T")
 
 
 class Options:
@@ -101,46 +104,73 @@ class Options:
 
 
 class Argument:
-    """
-    Accepts most of the parameters accepted by :meth:`ArgumentParser.add_argument()`,
-    except that ``requires`` is a special case which is only enforced if the plugin is in use.
-    In addition, the ``name`` parameter is the name relative to the plugin name, but can be overridden by ``argument_name``.
-
-    Should not be called directly, see the :func:`pluginargument <streamlink.plugin.pluginargument>` decorator.
-    """
-
+    # noinspection PyShadowingBuiltins
     def __init__(
         self,
         name: str,
+        # `ArgumentParser.add_argument()` keywords
+        action: Optional[str] = None,
+        nargs: Optional[Union[int, Literal["?", "*", "+"]]] = None,
+        const: Any = None,
+        default: Any = None,
+        type: Optional[Callable[[Any], _T]] = None,  # noqa: A002
+        choices: Optional[Iterable[_T]] = None,
         required: bool = False,
+        help: Optional[str] = None,  # noqa: A002
+        metavar: Optional[Union[str, Sequence[str]]] = None,
+        dest: Optional[str] = None,
+        # additional `Argument()` keywords
         requires: Optional[Union[str, Sequence[str]]] = None,
         prompt: Optional[str] = None,
         sensitive: bool = False,
         argument_name: Optional[str] = None,
-        dest: Optional[str] = None,
-        **options,
     ):
         """
+        Accepts most of the parameters accepted by :meth:`argparse.ArgumentParser.add_argument()`, except that
+
+        - ``name`` is the name relative to the plugin name (can be overridden by ``argument_name``)
+          and that only one argument name is supported
+        - ``action`` must be a string and can't be a custom :class:`Action <argparse.Action>`
+        - ``required`` is a special case which is only enforced if the plugin is in use
+
+        This class should not be instantiated directly.
+        See the :func:`pluginargument <streamlink.plugin.pluginargument>` decorator for adding custom plugin arguments.
+
         :param name: Argument name, without leading ``--`` or plugin name prefixes, e.g. ``"username"``, ``"password"``, etc.
-        :param required: Whether the argument is required for the plugin
-        :param requires: List of arguments which this argument requires, eg ``["password"]``
-        :param prompt: If the argument is required and not set, this prompt message will be shown instead
-        :param sensitive: Whether the argument is sensitive (passwords, etc.) and should be masked
-        :param argument_name: Custom CLI argument name without plugin name prefix
-        :param dest: Custom plugin option name
-        :param options: Arguments passed to :meth:`ArgumentParser.add_argument()`, excluding ``requires`` and ``dest``
+        :param action: See :meth:`ArgumentParser.add_argument()`
+        :param nargs: See :meth:`ArgumentParser.add_argument()`
+        :param const: See :meth:`ArgumentParser.add_argument()`
+        :param default: See :meth:`ArgumentParser.add_argument()`
+        :param type: See :meth:`ArgumentParser.add_argument()`
+        :param choices: See :meth:`ArgumentParser.add_argument()`
+        :param required: See :meth:`ArgumentParser.add_argument()`
+        :param help: See :meth:`ArgumentParser.add_argument()`
+        :param metavar: See :meth:`ArgumentParser.add_argument()`
+        :param dest: See :meth:`ArgumentParser.add_argument()`
+        :param requires: List of other arguments which this argument requires, e.g. ``["password"]``
+        :param prompt: If the argument is required and not set, then this prompt message will be shown instead
+        :param sensitive: Whether the argument is sensitive and should be masked (passwords, etc.)
+        :param argument_name: Custom CLI argument name without the automatically added plugin name prefix
         """
 
-        self.required = required
         self.name = name
-        self.options = options
-        self._argument_name = self._normalize_name(argument_name) if argument_name else None
+
+        self.action = action
+        self.nargs = nargs
+        self.const = const
+        self.type = type
+        self.choices = choices
+        self.required = required
+        self.help = help
+        self.metavar = metavar
+
+        self._default = default
         self._dest = self._normalize_dest(dest) if dest else None
-        requires = requires or []
-        self.requires = list(requires) if isinstance(requires, (list, tuple)) else [requires]
+
+        self.requires = list(requires or []) if not requires or isinstance(requires, (list, tuple)) else [requires]
         self.prompt = prompt
         self.sensitive = sensitive
-        self._default = options.get("default")
+        self._argument_name = self._normalize_name(argument_name) if argument_name else None
 
     @staticmethod
     def _normalize_name(name: str) -> str:
@@ -166,6 +196,28 @@ class Argument:
     @property
     def default(self):  # read-only
         return self._default
+
+    # `ArgumentParser.add_argument()` keywords, except `name_or_flags` and `required`
+    _ARGPARSE_ARGUMENT_KEYWORDS: ClassVar[Mapping[str, str]] = {
+        "action": "action",
+        "nargs": "nargs",
+        "const": "const",
+        "default": "default",
+        "type": "type",
+        "choices": "choices",
+        "help": "help",
+        "metavar": "metavar",
+        "dest": "_dest",
+    }
+
+    @property
+    def options(self) -> Mapping[str, Any]:
+        return {
+            name: getattr(self, attr)
+            for name, attr in self._ARGPARSE_ARGUMENT_KEYWORDS.items()
+            # don't pass keywords with ``None`` values to ``ArgumentParser.add_argument()``
+            if getattr(self, attr) is not None
+        }
 
 
 class Arguments:

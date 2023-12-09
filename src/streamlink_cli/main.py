@@ -744,7 +744,7 @@ def setup_plugin_options(pluginname: str, pluginclass: Type[Plugin]) -> Options:
     for parg in pluginclass.arguments:
         defaults[parg.dest] = parg.default
 
-        if parg.options.get("help") == argparse.SUPPRESS:
+        if parg.help == argparse.SUPPRESS:
             continue
 
         value = getattr(args, parg.namespace_dest(pluginname))

@@ -12,7 +12,9 @@ from typing import (
     Callable,
     ClassVar,
     Dict,
+    Iterable,
     List,
+    Literal,
     Match,
     NamedTuple,
     Optional,
@@ -34,6 +36,9 @@ from streamlink.user_input import UserInputRequester
 
 if TYPE_CHECKING:  # pragma: no cover
     from streamlink.session import Streamlink
+
+
+_T = TypeVar("_T")
 
 
 log = logging.getLogger(__name__)
@@ -649,15 +654,23 @@ def pluginmatcher(
     return decorator
 
 
+# noinspection GrazieInspection,PyShadowingBuiltins
 def pluginargument(
     name: str,
+    action: Optional[str] = None,
+    nargs: Optional[Union[int, Literal["?", "*", "+"]]] = None,
+    const: Any = None,
+    default: Any = None,
+    type: Optional[Callable[[Any], _T]] = None,  # noqa: A002
+    choices: Optional[Iterable[_T]] = None,
     required: bool = False,
+    help: Optional[str] = None,  # noqa: A002
+    metavar: Optional[Union[str, Sequence[str]]] = None,
+    dest: Optional[str] = None,
     requires: Optional[Union[str, Sequence[str]]] = None,
     prompt: Optional[str] = None,
     sensitive: bool = False,
     argument_name: Optional[str] = None,
-    dest: Optional[str] = None,
-    **options,
 ) -> Callable[[Type[Plugin]], Type[Plugin]]:
     """
     Decorator for plugin arguments. Takes the same arguments as :class:`Argument <streamlink.options.Argument>`.
@@ -687,14 +700,21 @@ def pluginargument(
     """
 
     arg = Argument(
-        name,
+        name=name,
+        action=action,
+        nargs=nargs,
+        const=const,
+        default=default,
+        type=type,
+        choices=choices,
         required=required,
+        help=help,
+        metavar=metavar,
+        dest=dest,
         requires=requires,
         prompt=prompt,
         sensitive=sensitive,
         argument_name=argument_name,
-        dest=dest,
-        **options,
     )
 
     def decorator(cls: Type[Plugin]) -> Type[Plugin]:
