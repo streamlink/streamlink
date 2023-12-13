@@ -16,7 +16,7 @@ from streamlink.logger import basicConfig
 sys.path.append(str(Path(__file__).parent.parent))
 
 
-from tests.plugins import PluginCanHandleUrl, TUrlOrNamedUrl  # noqa: E402
+from tests.plugins import PluginCanHandleUrl, TUrlOrNamedUrl
 
 
 def parse_arguments() -> argparse.Namespace:
