@@ -7,6 +7,15 @@ import pytest
 from build_backend.onbuild import onbuild
 
 
+try:
+    # noinspection PyProtectedMember
+    from versioningit.onbuild import SetuptoolsFileProvider  # type: ignore[attr-defined]
+except ImportError:  # pragma: no cover
+    _HAS_ONBUILD_FILE_PROVIDER = False
+else:
+    _HAS_ONBUILD_FILE_PROVIDER = True
+
+
 PROJECT_ROOT = Path(__file__).parents[1]
 
 
@@ -31,7 +40,17 @@ def build(request: pytest.FixtureRequest, tmp_path: Path, template_fields: dict)
     shutil.copy(PROJECT_ROOT / "setup.py", tmp_path / "setup.py")
     shutil.copy(PROJECT_ROOT / "src" / "streamlink" / "_version.py", pkg_dir / "streamlink" / "_version.py")
 
-    onbuild(tmp_path, is_source, template_fields, {})
+    options = dict(
+        is_source=is_source,
+        template_fields=template_fields,
+        params={},
+    )
+    if _HAS_ONBUILD_FILE_PROVIDER:
+        options["file_provider"] = SetuptoolsFileProvider(build_dir=tmp_path)
+    else:  # pragma: no cover
+        options["build_dir"] = tmp_path
+
+    onbuild(**options)
 
     return tmp_path
 

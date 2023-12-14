@@ -1,7 +1,7 @@
 # setup
 pip >=21.0.0
 setuptools >=64.0.0  # required for being able to run editable installs
-versioningit >=2.0.0,<3  # required for being able to run editable installs
+versioningit >=2.0.0,<4  # required for being able to run editable installs
 
 # tests
 pytest >=6.0.0
