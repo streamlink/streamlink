@@ -126,8 +126,6 @@ testpaths = [
 ]
 filterwarnings = [
   "always",
-  "ignore:::pkg_resources",
-  "ignore::DeprecationWarning:pycountry",
 ]
 
 
