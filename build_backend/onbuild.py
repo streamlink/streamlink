@@ -1,15 +1,28 @@
 import re
 from contextlib import contextmanager
+from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Dict, Generator, Generic, TypeVar, Union
+from typing import Any, Dict, Generator, Generic, Optional, TypeVar, Union
+
+
+try:
+    # noinspection PyProtectedMember
+    from versioningit.onbuild import SetuptoolsFileProvider  # type: ignore[attr-defined]
+except ImportError:  # pragma: no cover
+    @dataclass
+    class SetuptoolsFileProvider:  # type: ignore[no-redef]
+        build_dir: Path
 
 
 # noinspection PyUnusedLocal
 def onbuild(
-    build_dir: Union[str, Path],
+    *,
     is_source: bool,
     template_fields: Dict[str, Any],
     params: Dict[str, Any],
+    # backward compatibility for `versioningit <3.0.0`
+    build_dir: Optional[Union[str, Path]] = None,
+    file_provider: Optional[SetuptoolsFileProvider] = None,
 ):
     """
     Remove the ``versioningit`` build-requirement from Streamlink's source distribution.
@@ -23,7 +36,14 @@ def onbuild(
     since ``versioningit`` does only support modifying one file via its default onbuild hook configuration.
     """
 
-    base_dir: Path = Path(build_dir).resolve()
+    base_dir: Path
+    if file_provider:
+        base_dir = file_provider.build_dir.resolve()
+    elif build_dir:  # pragma: no cover
+        base_dir = Path(build_dir).resolve()
+    else:  # pragma: no cover
+        raise RuntimeError("Missing file_provider or build_dir")
+
     pkg_dir: Path = base_dir / "src" if is_source else base_dir
     version: str = template_fields["version"]
     cmproxy: Proxy[str]
