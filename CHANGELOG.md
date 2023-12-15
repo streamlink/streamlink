@@ -1,5 +1,23 @@
 # Changelog
 
+## streamlink 6.5.0 (2023-12-16)
+
+Release highlights:
+
+- Fixed: `UserWarning` being emitted by recent `pycountry` releases when parsing certain language codes ([#5722](https://github.com/streamlink/streamlink/pull/5722))
+- Fixed: trace logging setup in `WebsocketClient` implementation ([#5705](https://github.com/streamlink/streamlink/pull/5705))
+- Updated plugins:
+  - btv: switched to HLS multivariant playlists ([#5698](https://github.com/streamlink/streamlink/pull/5698))
+  - gulli: rewritten plugin ([#5725](https://github.com/streamlink/streamlink/pull/5725))
+  - twitch: removed/disabled `--twitch-disable-reruns` ([#5704](https://github.com/streamlink/streamlink/pull/5704))
+  - twitch: enabled `check_streams` HLS option, to ensure early stream availability without querying the delayed Twitch API ([#5708](https://github.com/streamlink/streamlink/pull/5708))
+  - twitch: removed unnecessary Twitch API error messages for offline channels ([#5709](https://github.com/streamlink/streamlink/pull/5709))
+  - wasd: removed plugin ([#5711](https://github.com/streamlink/streamlink/pull/5711))
+- Build: added support for `versioningit >=3.0.0`, with backward compatibility ([#5721](https://github.com/streamlink/streamlink/pull/5721))
+
+[Full changelog](https://github.com/streamlink/streamlink/compare/6.4.2...6.5.0)
+
+
 ## streamlink 6.4.2 (2023-11-28)
 
 Patch release:
