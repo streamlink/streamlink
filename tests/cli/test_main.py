@@ -21,7 +21,6 @@ from streamlink_cli.compat import stdout
 from streamlink_cli.main import (
     Formatter,
     NoPluginError,
-    check_file_output,
     create_output,
     format_valid_streams,
     handle_stream,
@@ -199,75 +198,6 @@ class TestCLIMainJsonAndStreamUrl(unittest.TestCase):
             assert console.msg_json.mock_calls == []
             assert console.exit.mock_calls == [call("The stream specified cannot be translated to a URL")]
             console.exit.mock_calls.clear()
-
-
-class TestCLIMainCheckFileOutput(unittest.TestCase):
-    @staticmethod
-    def mock_path(path, is_file=True, resolve=""):
-        return Mock(
-            spec=Path(path),
-            is_file=Mock(return_value=is_file),
-            resolve=Mock(return_value=resolve),
-            __str__=Mock(return_value=path),
-        )
-
-    @patch("streamlink_cli.main.log")
-    def test_check_file_output(self, mock_log: Mock):
-        path = self.mock_path("foo", is_file=False, resolve="/path/to/foo")
-        output = check_file_output(path, False)
-        assert isinstance(output, FileOutput)
-        assert output.filename is path
-        assert mock_log.info.call_args_list == [call("Writing output to\n/path/to/foo")]
-        assert mock_log.debug.call_args_list == [call("Checking file output")]
-
-    def test_check_file_output_exists_force(self):
-        path = self.mock_path("foo", is_file=True)
-        output = check_file_output(path, True)
-        assert isinstance(output, FileOutput)
-        assert output.filename is path
-
-    @patch("streamlink_cli.main.console")
-    @patch("streamlink_cli.main.sys")
-    def test_check_file_output_exists_ask_yes(self, mock_sys: Mock, mock_console: Mock):
-        mock_sys.stdin.isatty.return_value = True
-        mock_console.ask = Mock(return_value="y")
-        path = self.mock_path("foo", is_file=True)
-        output = check_file_output(path, False)
-        assert mock_console.ask.call_args_list == [call("File foo already exists! Overwrite it? [y/N] ")]
-        assert isinstance(output, FileOutput)
-        assert output.filename is path
-
-    @patch("streamlink_cli.main.console")
-    @patch("streamlink_cli.main.sys")
-    def test_check_file_output_exists_ask_no(self, mock_sys: Mock, mock_console: Mock):
-        mock_sys.stdin.isatty.return_value = True
-        mock_sys.exit.side_effect = SystemExit
-        mock_console.ask = Mock(return_value="N")
-        path = self.mock_path("foo", is_file=True)
-        with pytest.raises(SystemExit):
-            check_file_output(path, False)
-        assert mock_console.ask.call_args_list == [call("File foo already exists! Overwrite it? [y/N] ")]
-
-    @patch("streamlink_cli.main.console")
-    @patch("streamlink_cli.main.sys")
-    def test_check_file_output_exists_ask_error(self, mock_sys: Mock, mock_console: Mock):
-        mock_sys.stdin.isatty.return_value = True
-        mock_sys.exit.side_effect = SystemExit
-        mock_console.ask = Mock(return_value=None)
-        path = self.mock_path("foo", is_file=True)
-        with pytest.raises(SystemExit):
-            check_file_output(path, False)
-        assert mock_console.ask.call_args_list == [call("File foo already exists! Overwrite it? [y/N] ")]
-
-    @patch("streamlink_cli.main.console")
-    @patch("streamlink_cli.main.sys")
-    def test_check_file_output_exists_notty(self, mock_sys: Mock, mock_console: Mock):
-        mock_sys.stdin.isatty.return_value = False
-        mock_sys.exit.side_effect = SystemExit
-        path = self.mock_path("foo", is_file=True)
-        with pytest.raises(SystemExit):
-            check_file_output(path, False)
-        assert mock_console.ask.call_args_list == []
 
 
 # TODO: don't use Mock() for mocking args, use a custom argparse.Namespace instead
