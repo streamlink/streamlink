@@ -1,5 +1,5 @@
 """
-$description Japanese Internet visual radio "Super! A&G+" operated by Nippon Cultural Broadcasting (JOQR).
+$description Japanese Internet visual radio "Super! A&G+" (f.k.a. AGQR) operated by Nippon Cultural Broadcasting (JOQR).
 $url www.uniqueradio.jp/agplayer5
 $url joqr.co.jp
 $type live
