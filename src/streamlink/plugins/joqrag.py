@@ -29,9 +29,9 @@ class JoqrAg(Plugin):
         self.title = self.session.http.get(
             self._URL_METADATA,
             schema=validate.Schema(
-                validate.regex(re.compile(r"""var\s+Program_name\s*=\s*["\']([^"\']+)["\']""")),
+                re.compile(r"""var\s+Program_name\s*=\s*("|')(?P<name>(?:(?!\1).)+)\1"""),
                 validate.none_or_all(
-                    validate.get(1),
+                    validate.get("name"),
                     validate.transform(unquote_plus),
                 ),
             ),
