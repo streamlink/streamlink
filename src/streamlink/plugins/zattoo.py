@@ -257,7 +257,11 @@ class Zattoo(Plugin):
             log.debug(f"Found data for {stream_type}")
             if stream_type == "hls7":
                 for url in data["stream"]["watch_urls"]:
-                    yield from HLSStream.parse_variant_playlist(self.session, url["url"]).items()
+                    yield from HLSStream.parse_variant_playlist(
+                        self.session,
+                        url["url"],
+                        ffmpeg_options={"copyts": True},
+                    ).items()
             elif stream_type == "dash":
                 for url in data["stream"]["watch_urls"]:
                     yield from DASHStream.parse_manifest(self.session, url["url"]).items()
