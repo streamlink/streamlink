@@ -18,7 +18,7 @@ coverage[toml]
 ruff ==0.1.9
 
 # typing
-mypy ==1.7.0
+mypy ==1.8.0
 lxml-stubs
 trio-typing
 types-freezegun
