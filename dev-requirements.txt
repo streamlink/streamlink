@@ -15,7 +15,7 @@ pytest-cov
 coverage[toml]
 
 # code-linting
-ruff ==0.1.8
+ruff ==0.1.9
 
 # typing
 mypy ==1.7.0
