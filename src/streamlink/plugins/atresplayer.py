@@ -23,7 +23,7 @@ log = logging.getLogger(__name__)
 ))
 class AtresPlayer(Plugin):
     _channels_api_url = "https://api.atresplayer.com/client/v1/info/channels"
-    _player_api_url = "https://api.atresplayer.com/player/v1/live/{channel_id}"
+    _player_api_url = "https://api.atresplayer.com/player/v1/live/{channel_id}?NODRM=true"
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -54,7 +54,7 @@ class AtresPlayer(Plugin):
                     "error_description": str,
                 },
                 {
-                    "sources": [
+                    "sourcesLive": [
                         validate.all(
                             {
                                 "src": validate.url(),
@@ -70,7 +70,7 @@ class AtresPlayer(Plugin):
             log.error(f"Player API error: {sources['error']} - {sources['error_description']}")
             return
 
-        for streamtype, streamsrc in sources.get("sources"):
+        for streamtype, streamsrc in sources.get("sourcesLive"):
             log.debug(f"Stream source: {streamsrc} ({streamtype or 'n/a'})")
 
             if streamtype == "application/vnd.apple.mpegurl":
