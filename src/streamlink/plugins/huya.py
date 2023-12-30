@@ -98,9 +98,13 @@ class Huya(Plugin):
         self.id, self.author, self.title, streamdata = data
 
         for cdntype, priority, streamname, flvurl, suffix, anticode in streamdata:
+            url = update_scheme("https://", f"{flvurl}/{streamname}.{suffix}?{anticode}")
+            if self.session.http.head(url, raise_for_status=False).status_code >= 400:
+                continue
+
             name = f"source_{cdntype.lower()}"
             self.QUALITY_WEIGHTS[name] = priority
-            yield name, HTTPStream(self.session, update_scheme("https://", f"{flvurl}/{streamname}.{suffix}?{anticode}"))
+            yield name, HTTPStream(self.session, url)
 
         log.debug(f"QUALITY_WEIGHTS: {self.QUALITY_WEIGHTS!r}")
 
