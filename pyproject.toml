@@ -126,6 +126,7 @@ testpaths = [
 ]
 filterwarnings = [
   "always",
+  "ignore:datetime\\.datetime\\.utcfromtimestamp\\(\\):DeprecationWarning:dateutil",
 ]
 
 
