@@ -1,41 +1,68 @@
 """
-$description Global live streaming platform for live video game broadcasts and individual live streams.
-$url live.bigo.tv
-$url bigoweb.co
+$description Global live-streaming platform for live video game broadcasts and individual live streams.
+$url bigo.tv
 $type live
+$metadata id
+$metadata author
+$metadata category
+$metadata title
 """
 
+import logging
 import re
 
 from streamlink.plugin import Plugin, pluginmatcher
-from streamlink.plugin.api import useragents, validate
+from streamlink.plugin.api import validate
 from streamlink.stream.hls import HLSStream
 
 
+log = logging.getLogger(__name__)
+
+
 @pluginmatcher(re.compile(
-    r"https?://(?:www\.)?bigo\.tv/([^/]+)$",
+    r"https?://(?:www\.)?bigo\.tv/(?P<site_id>[^/]+)$",
 ))
 class Bigo(Plugin):
-    _api_url = "https://www.bigo.tv/OInterface/getVideoParam?bigoId={0}"
-
-    _video_info_schema = validate.Schema({
-        "code": 0,
-        "msg": "success",
-        "data": {
-            "videoSrc": validate.any(None, "", validate.url()),
-        },
-    })
+    _URL_API = "https://ta.bigo.tv/official_website/studio/getInternalStudioInfo"
 
     def _get_streams(self):
-        res = self.session.http.get(
-            self._api_url.format(self.match.group(1)),
-            allow_redirects=True,
-            headers={"User-Agent": useragents.IPHONE_6},
+        self.id, self.author, self.category, self.title, hls_url = self.session.http.post(
+            self._URL_API,
+            params={
+                "siteId": self.match["site_id"],
+                "verify": "",
+            },
+            schema=validate.Schema(
+                validate.parse_json(),
+                {
+                    "code": 0,
+                    "msg": "success",
+                    "data": {
+                        "roomId": validate.any(None, str),
+                        "clientBigoId": validate.any(None, str),
+                        "gameTitle": str,
+                        "roomTopic": str,
+                        "hls_src": validate.any(None, "", validate.url()),
+                    },
+                },
+                validate.union_get(
+                    ("data", "roomId"),
+                    ("data", "clientBigoId"),
+                    ("data", "gameTitle"),
+                    ("data", "roomTopic"),
+                    ("data", "hls_src"),
+                ),
+            ),
         )
-        data = self.session.http.json(res, schema=self._video_info_schema)
-        videourl = data["data"]["videoSrc"]
-        if videourl:
-            yield "live", HLSStream(self.session, videourl)
+
+        if not self.id:
+            return
+
+        if not hls_url:
+            log.info("Channel is offline")
+            return
+
+        yield "live", HLSStream(self.session, hls_url)
 
 
 __plugin__ = Bigo
