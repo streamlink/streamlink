@@ -235,8 +235,11 @@ class PlayerOutput(Output):
                 warnings.warn(
                     "\n".join([
                         "The --player argument has been changed and now only takes player path values:",
-                        "  Player paths with spaces don't have to be wrapped in quotation marks anymore.",
-                        "  Custom player arguments need to be set via --player-args.",
+                        "  Player paths must not be wrapped in additional quotation marks",
+                        "  and custom player arguments need to be set via --player-args.",
+                        "  This is most likely caused by using an old config file from an ealier Streamlink version.",
+                        "  Please see the migration guides in Streamlink's documentation:",
+                        "  https://streamlink.github.io/migrations.html#player-path-only-player-cli-argument",
                     ]),
                     StreamlinkWarning,
                     stacklevel=1,
