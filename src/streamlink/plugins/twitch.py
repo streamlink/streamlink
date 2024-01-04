@@ -565,7 +565,12 @@ class TwitchClientIntegrity:
                     return await client_session.evaluate(js_get_integrity_token, timeout=eval_timeout)
 
         try:
-            client_integrity: Optional[str] = CDPClient.launch(session, acquire_client_integrity_token)
+            client_integrity: Optional[str] = CDPClient.launch(
+                session,
+                acquire_client_integrity_token,
+                # headless mode gets detected by Twitch, so we have to disable it regardless the user config
+                headless=False,
+            )
         except WebbrowserError as err:
             log.error(f"{type(err).__name__}: {err}")
             return None
