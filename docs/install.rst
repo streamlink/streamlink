@@ -201,10 +201,6 @@ Linux and BSD
       - .. code-block:: bash
 
             sudo eopkg install streamlink
-    * - :octicon:`package-dependents` `Void`_
-      - .. code-block:: bash
-
-            sudo xbps-install streamlink
 
 .. _Alpine Linux (edge, testing): https://pkgs.alpinelinux.org/packages?name=streamlink
 .. _Arch Linux: https://archlinux.org/packages/extra/any/streamlink/
@@ -218,7 +214,6 @@ Linux and BSD
 .. _NixOS: https://github.com/NixOS/nixpkgs/tree/master/pkgs/applications/video/streamlink
 .. _openSUSE: https://build.opensuse.org/package/show/multimedia:apps/streamlink
 .. _Solus: https://github.com/getsolus/packages/tree/main/packages/s/streamlink
-.. _Void: https://github.com/void-linux/void-packages/tree/master/srcpkgs/streamlink
 
 .. _Enabling the edge/testing repository: https://wiki.alpinelinux.org/wiki/Repositories#Edge
 .. _Installing AUR packages: https://wiki.archlinux.org/index.php/Arch_User_Repository
@@ -257,8 +252,6 @@ Package maintainers
       - Simon Puchert <simonpuchert at alice.de>
     * - Solus
       - Joey Riches <josephriches at gmail.com>
-    * - Void
-      - Michal Vasilek <michal at vasilek.cz>
     * - Windows binaries
       - Sebastian Meyer <mail at bastimeyer.de>
     * - Linux AppImages
