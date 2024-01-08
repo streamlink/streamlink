@@ -6,6 +6,7 @@ $type live, vod
 import logging
 import re
 from urllib.parse import urlsplit, urlunsplit
+from uuid import uuid4
 
 from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.api import validate
@@ -17,7 +18,7 @@ log = logging.getLogger(__name__)
 
 
 @pluginmatcher(re.compile(
-    r"https?://(?:www\.)?vidio\.com/",
+    r"https?://(?:www\.)?vidio\.com/.+",
 ))
 class Vidio(Plugin):
     tokens_url = "https://www.vidio.com/live/{id}/tokens"
@@ -28,6 +29,10 @@ class Vidio(Plugin):
             self.tokens_url.format(id=stream_id),
             params={"type": stream_type},
             headers={"Referer": self.url},
+            cookies={
+                "ahoy_visit": str(uuid4()),
+                "ahoy_visitor": str(uuid4()),
+            },
             schema=validate.Schema(
                 validate.parse_json(),
                 {"token": str},
