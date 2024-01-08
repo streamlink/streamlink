@@ -12,6 +12,5 @@ class TestPluginCanHandleUrlVidio(PluginCanHandleUrl):
     ]
 
     should_not_match = [
-        "http://www.vidio.com",
-        "https://www.vidio.com",
+        "https://www.vidio.com/",
     ]
