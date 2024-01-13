@@ -51,7 +51,7 @@ class StreamIOThreadWrapper(io.IOBase):
 
     class Filler(Thread):
         def __init__(self, fd, buffer):
-            Thread.__init__(self)
+            super().__init__()
 
             self.error = None
             self.fd = fd
