@@ -84,7 +84,7 @@ class CrunchyrollAPIError(Exception):
     """Exception thrown by the Crunchyroll API when an error occurs"""
 
     def __init__(self, msg, code):
-        Exception.__init__(self, msg)
+        super().__init__(msg)
         self.msg = msg
         self.code = code
 
