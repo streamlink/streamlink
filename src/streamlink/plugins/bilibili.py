@@ -4,23 +4,31 @@ $url live.bilibili.com
 $type live
 """
 
+import logging
 import re
 
+from streamlink.exceptions import NoStreamsError
 from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.api import validate
 from streamlink.stream.hls import HLSStream
+
+
+log = logging.getLogger(__name__)
 
 
 @pluginmatcher(re.compile(
     r"https?://live\.bilibili\.com/(?P<channel>[^/]+)",
 ))
 class Bilibili(Plugin):
+    _URL_API_PLAYINFO = "https://api.live.bilibili.com/xlive/web-room/v2/index/getRoomPlayInfo"
+
     SHOW_STATUS_OFFLINE = 0
     SHOW_STATUS_ONLINE = 1
     SHOW_STATUS_ROUND = 2
 
-    def _get_streams(self):
-        schema_stream = validate.all(
+    @staticmethod
+    def _schema_streams():
+        return validate.all(
             [{
                 "protocol_name": str,
                 "format": validate.all(
@@ -44,6 +52,38 @@ class Bilibili(Plugin):
             validate.filter(lambda item: item["protocol_name"] == "http_hls"),
         )
 
+    def _get_api_playinfo(self, room_id):
+        return self.session.http.get(
+            self._URL_API_PLAYINFO,
+            params={
+                "room_id": room_id,
+                "no_playurl": 0,
+                "mask": 1,
+                "qn": 0,
+                "platform": "web",
+                "protocol": "0,1",
+                "format": "0,1,2",
+                "codec": "0,1,2",
+                "dolby": 5,
+                "panorama": 1,
+            },
+            schema=validate.Schema(
+                validate.parse_json(),
+                {
+                    "code": 0,
+                    "data": {
+                        "playurl_info": {
+                            "playurl": {
+                                "stream": self._schema_streams(),
+                            },
+                        },
+                    },
+                },
+                validate.get(("data", "playurl_info", "playurl", "stream")),
+            ),
+        )
+
+    def _get_page_playinfo(self):
         data = self.session.http.get(
             self.url,
             schema=validate.Schema(
@@ -58,7 +98,7 @@ class Bilibili(Plugin):
                                 "live_status": int,
                                 "playurl_info": {
                                     "playurl": {
-                                        "stream": schema_stream,
+                                        "stream": self._schema_streams(),
                                     },
                                 },
                             },
@@ -94,9 +134,18 @@ class Bilibili(Plugin):
 
         self.id, self.author, self.category, self.title, live_status, streams = data
         if live_status != self.SHOW_STATUS_ONLINE:
-            return
+            log.info("Channel is offline")
+            raise NoStreamsError
 
-        for stream in streams:
+        return streams
+
+    def _get_streams(self):
+        streams = self._get_page_playinfo()
+        if not streams:
+            log.debug("Falling back to _get_api_playinfo()")
+            streams = self._get_api_playinfo(self.match["channel"])
+
+        for stream in streams or []:
             for stream_format in stream["format"]:
                 for codec in stream_format["codec"]:
                     for url_info in codec["url_info"]:
