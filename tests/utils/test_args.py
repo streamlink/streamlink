@@ -86,10 +86,10 @@ def test_filesize(value: str, expected: int, raises: nullcontext):
         id="missing value",
     ),
     pytest.param(
-        "Referer  =  https://foo.bar",
-        ("Referer  ", "https://foo.bar"),
+        "  foo  =  bar  ",
+        ("foo", "bar  "),
         does_not_raise,
-        id="whitespace around separator",
+        id="whitespace",
     ),
     pytest.param(
         "User-Agent=Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101 Firefox/60.0",
