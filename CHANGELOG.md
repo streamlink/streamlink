@@ -1,5 +1,24 @@
 # Changelog
 
+## streamlink 6.5.1 (2024-01-16)
+
+Patch release:
+
+- Fixed: file output path log message on py38/py39 ([#5728](https://github.com/streamlink/streamlink/pull/5728))
+- Improved: warning message when using quoted player paths (in config files) ([#5757](https://github.com/streamlink/streamlink/pull/5757))
+- Updated plugins:
+  - artetv: updated API response validation schema ([#5774](https://github.com/streamlink/streamlink/pull/5774))
+  - atresplayer: updated API response validation schema ([#5742](https://github.com/streamlink/streamlink/pull/5742))
+  - bigo: reimplemented plugin ([#5754](https://github.com/streamlink/streamlink/pull/5754))
+  - bilibili: fixed stream resolving issues on channels with custom layouts ([#5771](https://github.com/streamlink/streamlink/pull/5771))
+  - huya: added stream CDN availability check ([#5745](https://github.com/streamlink/streamlink/pull/5745))
+  - twitch: disabled Chromium headless mode on client-integrity token acquirement ([#5758](https://github.com/streamlink/streamlink/pull/5758))
+  - vidio: fixed missing API request cookies ([#5762](https://github.com/streamlink/streamlink/pull/5762))
+  - zattoo: fixed audio/video sync issues ([#5739](https://github.com/streamlink/streamlink/pull/5739))
+
+[Full changelog](https://github.com/streamlink/streamlink/compare/6.5.0...6.5.1)
+
+
 ## streamlink 6.5.0 (2023-12-16)
 
 Release highlights:
