@@ -11,7 +11,7 @@ _FILESIZE_UNITS = {
     "m": 2**20,
 }
 
-_KEYVALUE_RE = re.compile(r"(?P<key>[^=]+)\s*=\s*(?P<value>.*)")
+_KEYVALUE_RE = re.compile(r"^(?P<key>[^=\s]+)\s*=\s*(?P<value>.*)$")
 
 
 def boolean(value: str) -> bool:
@@ -44,7 +44,7 @@ def filesize(value: str) -> int:
 
 
 def keyvalue(value: str) -> Tuple[str, str]:
-    match = _KEYVALUE_RE.match(value)
+    match = _KEYVALUE_RE.match(value.lstrip())
     if not match:
         raise ValueError("Invalid key=value format")
 
