@@ -57,6 +57,7 @@ def test_comma_list_filter(acceptable: List[str], value: str, expected: List[str
     ("123k", 123 * 2**10, does_not_raise),
     ("123M", 123 * 2**20, does_not_raise),
     ("123.45M", int(123.45 * 2**20), does_not_raise),
+    ("  123.45MB  ", int(123.45 * 2**20), does_not_raise),
     ("FOO", None, pytest.raises(ValueError, match=r"^Invalid file size format$")),
     ("0", None, pytest.raises(ValueError, match=r"^int value must be >=1, but is 0$")),
     ("0.00000", None, pytest.raises(ValueError, match=r"^int value must be >=1, but is 0$")),

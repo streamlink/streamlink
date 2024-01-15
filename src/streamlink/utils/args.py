@@ -5,7 +5,7 @@ from typing import Any, Callable, List, Optional, Tuple, Type, overload
 _BOOLEAN_TRUE = "yes", "1", "true", "on"
 _BOOLEAN_FALSE = "no", "0", "false", "off"
 
-_FILESIZE_RE = re.compile(r"(?P<size>\d+(\.\d+)?)(?P<modifier>[km])?b?", re.IGNORECASE)
+_FILESIZE_RE = re.compile(r"^(?P<size>\d+(\.\d+)?)(?P<modifier>[km])?b?$", re.IGNORECASE)
 _FILESIZE_UNITS = {
     "k": 2**10,
     "m": 2**20,
@@ -33,7 +33,7 @@ def comma_list_filter(acceptable: List[str]) -> Callable[[str], List[str]]:
 
 
 def filesize(value: str) -> int:
-    match = _FILESIZE_RE.match(value)
+    match = _FILESIZE_RE.match(value.strip())
     if not match:
         raise ValueError("Invalid file size format")
 
