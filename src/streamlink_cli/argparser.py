@@ -833,7 +833,9 @@ def build_parser():
         metavar="SIZE",
         type=filesize,
         help="""
-        The maximum size of the ringbuffer. Mega- or kilobytes can be specified via the M or K suffix respectively.
+        The maximum size of the ringbuffer.
+
+        Mebibytes or kibibytes (base 2) can be specified via the M or K suffix respectively.
 
         The ringbuffer is used as a temporary storage between the stream and the player.
         This allows Streamlink to download the stream faster than the player which reads the data from the ringbuffer.
@@ -846,9 +848,6 @@ def build_parser():
         background as long as the ringbuffer doesn't get full.
 
         Default is "16M".
-
-        Note: A smaller size is recommended on lower end systems (such as Raspberry Pi) when playing stream types that require
-        some extra processing to avoid unnecessary background processing.
         """,
     )
     transport.add_argument(
