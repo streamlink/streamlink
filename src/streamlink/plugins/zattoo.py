@@ -26,12 +26,9 @@ from streamlink.plugin import Plugin, pluginargument, pluginmatcher
 from streamlink.plugin.api import validate
 from streamlink.stream.dash import DASHStream
 from streamlink.stream.hls import HLSStream
-from streamlink.utils.args import comma_list_filter
 
 
 log = logging.getLogger(__name__)
-
-STREAMS_ZATTOO = ["dash", "hls7"]
 
 
 @pluginmatcher(re.compile(r"""
@@ -86,12 +83,13 @@ STREAMS_ZATTOO = ["dash", "hls7"]
 @pluginargument(
     "stream-types",
     metavar="TYPES",
-    type=comma_list_filter(STREAMS_ZATTOO),
+    type="comma_list_filter",
+    type_kwargs={"acceptable": ["dash", "hls7"]},
     default=["dash"],
-    help=f"""
+    help="""
         A comma-delimited list of stream types which should be used.
 
-        The following types are allowed: {','.join(STREAMS_ZATTOO)}
+        The following types are allowed: dash, hls7
 
         Default is "dash".
     """,

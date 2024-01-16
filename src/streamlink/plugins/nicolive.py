@@ -19,7 +19,6 @@ from streamlink.plugin.api import useragents, validate
 from streamlink.plugin.api.websocket import WebsocketClient
 from streamlink.stream.hls import HLSStream, HLSStreamReader
 from streamlink.utils.parse import parse_json
-from streamlink.utils.times import hours_minutes_seconds
 from streamlink.utils.url import update_qsd
 
 
@@ -153,7 +152,7 @@ class NicoLiveHLSStream(HLSStream):
 )
 @pluginargument(
     "timeshift-offset",
-    type=hours_minutes_seconds,
+    type="hours_minutes_seconds",
     argument_name="niconico-timeshift-offset",
     metavar="[[XX:]XX:]XX | [XXh][XXm][XXs]",
     help="""
