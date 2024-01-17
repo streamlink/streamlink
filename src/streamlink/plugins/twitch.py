@@ -236,7 +236,7 @@ class UsherService:
                 },
             ).validate(extra_params)
             log.debug(f"{extra_params_debug!r}")
-        except PluginError:
+        except PluginError:  # pragma: no cover
             pass
         return self._create_url(f"/api/channel/hls/{channel}.m3u8", **extra_params)
 
