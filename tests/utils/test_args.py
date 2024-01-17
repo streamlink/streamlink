@@ -38,12 +38,28 @@ def test_comma_list(value: str, expected: List[str]):
     assert comma_list(value) == expected
 
 
-@pytest.mark.parametrize(("acceptable", "value", "expected"), [
-    pytest.param(["foo", "bar"], "foo,bar,baz,qux", ["foo", "bar"], id="superset"),
-    pytest.param(["foo", "bar", "baz"], "foo,bar", ["foo", "bar"], id="subset"),
+@pytest.mark.parametrize(("options", "value", "expected"), [
+    pytest.param(
+        {"acceptable": ["foo", "bar"]},
+        "foo,bar,baz,qux",
+        ["foo", "bar"],
+        id="superset",
+    ),
+    pytest.param(
+        {"acceptable": ["foo", "bar", "baz"]},
+        "foo,bar",
+        ["foo", "bar"],
+        id="subset",
+    ),
+    pytest.param(
+        {"acceptable": ["foo", "bar"], "unique": True},
+        "foo,bar,baz,foo,bar,baz",
+        ["bar", "foo"],
+        id="unique",
+    ),
 ])
-def test_comma_list_filter(acceptable: List[str], value: str, expected: List[str]):
-    func = comma_list_filter(acceptable)
+def test_comma_list_filter(options: dict, value: str, expected: List[str]):
+    func = comma_list_filter(**options)
     assert func(value) == expected
 
 

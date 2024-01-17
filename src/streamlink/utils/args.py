@@ -25,9 +25,13 @@ def comma_list(values: str) -> List[str]:
     return [val.strip() for val in values.split(",")]
 
 
-def comma_list_filter(acceptable: List[str]) -> Callable[[str], List[str]]:
+def comma_list_filter(
+    acceptable: List[str],
+    unique: bool = False,
+) -> Callable[[str], List[str]]:
     def func(values: str) -> List[str]:
-        return [item for item in comma_list(values) if item in acceptable]
+        res = [item for item in comma_list(values) if item in acceptable]
+        return sorted(set(res)) if unique else res
 
     return func
 
