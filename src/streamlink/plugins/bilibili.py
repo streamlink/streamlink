@@ -10,6 +10,7 @@ import re
 from streamlink.exceptions import NoStreamsError
 from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.api import validate
+from streamlink.stream import HTTPStream
 from streamlink.stream.hls import HLSStream
 
 
@@ -17,17 +18,64 @@ log = logging.getLogger(__name__)
 
 
 @pluginmatcher(
-    re.compile(r"https?://live\.bilibili\.com/(?P<channel>[^/]+)"),
+    re.compile(r"https?://live\.bilibili\.com/(?P<channel>[^/?#]+)"),
 )
 class Bilibili(Plugin):
-    _URL_API_PLAYINFO = "https://api.live.bilibili.com/xlive/web-room/v2/index/getRoomPlayInfo"
+    _URL_API_V1_PLAYURL = "https://api.live.bilibili.com/room/v1/Room/playUrl"
+    _URL_API_V2_PLAYINFO = "https://api.live.bilibili.com/xlive/web-room/v2/index/getRoomPlayInfo"
 
     SHOW_STATUS_OFFLINE = 0
     SHOW_STATUS_ONLINE = 1
     SHOW_STATUS_ROUND = 2
 
-    @staticmethod
-    def _schema_streams():
+    @classmethod
+    def stream_weight(cls, stream):
+        offset = 1 if "_alt" in stream else 0
+        if stream.startswith("httpstream"):
+            return 4 - offset, stream
+        if stream.startswith("hls"):
+            return 2 - offset, stream
+        return super().stream_weight(stream)
+
+    def _get_api_v1_playurl(self, room_id):
+        return self.session.http.get(
+            self._URL_API_V1_PLAYURL,
+            params={
+                "cid": room_id,
+                "platform": "web",
+                "quality": "4",
+            },
+            schema=validate.Schema(
+                validate.parse_json(),
+                validate.any(
+                    validate.all(
+                        {
+                            "code": 0,
+                            "data": {
+                                "durl": [
+                                    validate.all(
+                                        {
+                                            "url": validate.url(),
+                                        },
+                                        validate.get("url"),
+                                    ),
+                                ],
+                            },
+                        },
+                        validate.get(("data", "durl")),
+                    ),
+                    validate.all(
+                        {
+                            "code": int,
+                        },
+                        validate.transform(lambda _: []),
+                    ),
+                ),
+            ),
+        )
+
+    @property
+    def _schema_v2_streams(self):
         return validate.all(
             [
                 {
@@ -60,9 +108,9 @@ class Bilibili(Plugin):
             validate.filter(lambda item: item["protocol_name"] == "http_hls"),
         )
 
-    def _get_api_playinfo(self, room_id):
+    def _get_api_v2_playinfo(self, room_id):
         return self.session.http.get(
-            self._URL_API_PLAYINFO,
+            self._URL_API_V2_PLAYINFO,
             params={
                 "room_id": room_id,
                 "no_playurl": 0,
@@ -83,7 +131,7 @@ class Bilibili(Plugin):
                         "playurl_info": validate.none_or_all(
                             {
                                 "playurl": {
-                                    "stream": self._schema_streams(),
+                                    "stream": self._schema_v2_streams,
                                 },
                             },
                             validate.get(("playurl", "stream")),
@@ -110,7 +158,7 @@ class Bilibili(Plugin):
                                 "playurl_info": validate.none_or_all(
                                     {
                                         "playurl": {
-                                            "stream": self._schema_streams(),
+                                            "stream": self._schema_v2_streams,
                                         },
                                     },
                                     validate.get(("playurl", "stream")),
@@ -154,17 +202,23 @@ class Bilibili(Plugin):
         return streams
 
     def _get_streams(self):
-        streams = self._get_page_playinfo()
-        if not streams:
-            log.debug("Falling back to _get_api_playinfo()")
-            streams = self._get_api_playinfo(self.match["channel"])
+        http_streams = self._get_api_v1_playurl(self.match["channel"])
+        for http_stream in http_streams:
+            if self.session.http.head(http_stream, raise_for_status=False).status_code >= 400:
+                continue
+            yield "httpstream", HTTPStream(self.session, http_stream)
 
-        for stream in streams or []:
-            for stream_format in stream["format"]:
+        hls_streams = self._get_page_playinfo()
+        if not hls_streams:
+            log.debug("Falling back to _get_api_v2_playinfo()")
+            hls_streams = self._get_api_v2_playinfo(self.match["channel"])
+
+        for hls_stream in hls_streams or []:
+            for stream_format in hls_stream["format"]:
                 for codec in stream_format["codec"]:
                     for url_info in codec["url_info"]:
                         url = f"{url_info['host']}{codec['base_url']}{url_info['extra']}"
-                        yield "live", HLSStream(self.session, url)
+                        yield "hls", HLSStream(self.session, url)
 
 
 __plugin__ = Bilibili
