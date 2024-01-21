@@ -42,7 +42,9 @@ if TYPE_CHECKING:  # pragma: no cover
 
 #: See the :func:`~.pluginargument` decorator
 _PLUGINARGUMENT_TYPE_REGISTRY: Dict[str, Callable[[Any], Any]] = {
-    "boolean": streamlink.utils.args.boolean,
+    "int": int,
+    "float": float,
+    "bool": streamlink.utils.args.boolean,
     "comma_list": streamlink.utils.args.comma_list,
     "comma_list_filter": streamlink.utils.args.comma_list_filter,
     "filesize": streamlink.utils.args.filesize,
