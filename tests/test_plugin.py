@@ -225,11 +225,25 @@ class TestPluginArguments:
 
     @pytest.mark.parametrize(("options", "args", "expected", "raises"), [
         pytest.param(
-            {"type": "boolean"},
+            {"type": "int"},
+            ["--myplugin-foo", "123"],
+            123,
+            nullcontext(),
+            id="int",
+        ),
+        pytest.param(
+            {"type": "float"},
+            ["--myplugin-foo", "123.456"],
+            123.456,
+            nullcontext(),
+            id="float",
+        ),
+        pytest.param(
+            {"type": "bool"},
             ["--myplugin-foo", "yes"],
             True,
             nullcontext(),
-            id="boolean",
+            id="bool",
         ),
         pytest.param(
             {"type": "keyvalue"},
