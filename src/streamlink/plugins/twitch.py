@@ -637,9 +637,9 @@ class TwitchClientIntegrity:
 @pluginargument(
     "low-latency",
     action="store_true",
-    help=f"""
+    help="""
         Enables low latency streaming by prefetching HLS segments.
-        Sets --hls-segment-stream-data to true and --hls-live-edge to `{LOW_LATENCY_MAX_LIVE_EDGE}`, if it is higher.
+        Sets --hls-segment-stream-data to true and --hls-live-edge to 2, if it is higher.
         Reducing --hls-live-edge to `1` will result in the lowest latency possible, but will most likely cause buffering.
 
         In order to achieve true low latency streaming during playback, the player's caching/buffering settings will
