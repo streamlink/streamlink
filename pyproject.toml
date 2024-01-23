@@ -91,6 +91,9 @@ namespaces = false
 streamlink = [
   "py.typed",
 ]
+"streamlink.plugins" = [
+  "_plugins.json",
+]
 
 
 # https://versioningit.readthedocs.io/en/stable/index.html
@@ -141,6 +144,7 @@ source = [
 
 [tool.coverage.report]
 omit = [
+  "build_backend/commands.py",
   "src/streamlink/packages/*",
   "src/streamlink/webbrowser/cdp/devtools/*",
   "src/streamlink_cli/packages/*",
