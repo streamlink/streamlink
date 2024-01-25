@@ -265,4 +265,8 @@ class Arguments:
                 yield r
 
 
-__all__ = ["Options", "Arguments", "Argument"]
+__all__ = [
+    "Argument",
+    "Arguments",
+    "Options",
+]

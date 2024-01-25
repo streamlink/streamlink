@@ -1,7 +1,8 @@
 from collections.abc import Callable, Iterable, Mapping, MutableMapping, Sequence
 from typing import Any, Union
 
-from _typeshed import SupportsItems, SupportsRead
+# noinspection PyUnresolvedReferences
+from _typeshed import SupportsItems, SupportsRead  # noqa: PLC2701
 from requests import PreparedRequest, Response, Session
 from requests.adapters import HTTPAdapter
 from requests.auth import AuthBase
