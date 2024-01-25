@@ -17,7 +17,7 @@ detect_encoding = charset_normalizer.detect
 
 
 __all__ = [
+    "detect_encoding",
     "is_darwin",
     "is_win32",
-    "detect_encoding",
 ]

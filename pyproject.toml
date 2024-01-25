@@ -215,6 +215,7 @@ extend-ignore = [
   "PLC2801",  # unnecessary-dunder-call
   "PLW2901",  # redefined-loop-name
   "RUF021",  # parenthesize-chained-operators
+  "RUF022",  # unsorted-dunder-all
 ]
 extend-exclude = [
   "docs/conf.py",

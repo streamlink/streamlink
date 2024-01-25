@@ -8,7 +8,7 @@ from streamlink.exceptions import PluginError
 from streamlink.plugin.api import validate
 
 # noinspection PyProtectedMember
-from streamlink.plugin.api.validate._exception import ValidationError
+from streamlink.plugin.api.validate._exception import ValidationError  # noqa: PLC2701
 
 
 def assert_validationerror(exception, expected):

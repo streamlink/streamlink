@@ -17,6 +17,6 @@ class DeprecatedPath(_BasePath):
 
 
 __all__ = [
-    "stdout",
     "DeprecatedPath",
+    "stdout",
 ]
