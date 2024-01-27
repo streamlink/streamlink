@@ -82,8 +82,7 @@ class TestPluginCanHandleUrlVK(PluginCanHandleUrl):
         pytest.raises(NoStreamsError),
     ),
 ])
-def test_url_redirect(url: str, newurl: str, raises: nullcontext, requests_mock: rm.Mocker):
-    session = Streamlink()
+def test_url_redirect(requests_mock: rm.Mocker, session: Streamlink, url: str, newurl: str, raises: nullcontext):
     # noinspection PyTypeChecker
     plugin: VK = VK(session, url)
     requests_mock.get(url, text=f"""<!DOCTYPE html><html><head><meta property="og:url" content="{newurl}"/></head></html>""")

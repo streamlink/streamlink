@@ -52,9 +52,7 @@ def plugin():
 
 
 @pytest.fixture(autouse=True)
-def session(monkeypatch: pytest.MonkeyPatch, parser: ArgumentParser, plugin: Type[Plugin]):
-    monkeypatch.setattr("streamlink.session.Streamlink.load_builtin_plugins", Mock())
-    session = Streamlink()
+def session(session: Streamlink, parser: ArgumentParser, plugin: Type[Plugin]):
     session.plugins["mock"] = plugin
 
     setup_plugin_args(session, parser)

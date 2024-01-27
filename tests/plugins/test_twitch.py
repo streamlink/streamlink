@@ -101,8 +101,7 @@ class _TwitchHLSStream(TwitchHLSStream):
     __reader__ = _TwitchHLSStreamReader
 
 
-def test_stream_weight(requests_mock: rm.Mocker):
-    session = Streamlink()
+def test_stream_weight(requests_mock: rm.Mocker, session: Streamlink):
     plugin = Twitch(session, "http://twitch.tv/foo")
 
     with text("hls/test_master_twitch_vod.m3u8") as fh:
@@ -404,8 +403,7 @@ class TestTwitchAPIAccessToken:
         monkeypatch.setattr(Twitch, "_client_integrity_token", mock_client_integrity_token)
 
     @pytest.fixture()
-    def plugin(self, request: pytest.FixtureRequest):
-        session = Streamlink()
+    def plugin(self, request: pytest.FixtureRequest, session: Streamlink):
         options = Options()
         for param in getattr(request, "param", {}):
             options.set(*param)
