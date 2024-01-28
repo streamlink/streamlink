@@ -4,7 +4,7 @@ setuptools >=64.0.0  # required for being able to run editable installs
 versioningit >=2.0.0,<4  # required for being able to run editable installs
 
 # tests
-pytest >=6.0.0
+pytest >=6.0.0,<8
 pytest-asyncio
 pytest-trio
 requests-mock
