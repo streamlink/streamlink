@@ -103,7 +103,7 @@ class TestLoadPlugins:
         logs: list,
     ):
         monkeypatch.setattr("streamlink.session.Streamlink.load_builtin_plugins", Mock())
-        monkeypatch.setattr("streamlink.session.load_module", Mock(side_effect=side_effect))
+        monkeypatch.setattr("streamlink.session.exec_module", Mock(side_effect=side_effect))
         session = Streamlink()
         with raises:
             session.load_plugins(str(PATH_TESTPLUGINS))
