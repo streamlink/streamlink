@@ -9,7 +9,7 @@ import pytest
 import streamlink.plugins
 import tests.plugins
 from streamlink.plugin.plugin import Matcher, Plugin
-from streamlink.utils.module import load_module
+from streamlink.utils.module import exec_module
 
 
 plugins_path = streamlink.plugins.__path__[0]
@@ -24,11 +24,12 @@ plugintests_ignore = [
     "test_stream",
 ]
 
-plugins = [
-    pname
-    for finder, pname, ispkg in pkgutil.iter_modules([plugins_path])
-    if not pname.startswith("common_")
+plugin_modules = [
+    module_info
+    for module_info in pkgutil.iter_modules([plugins_path])
+    if not module_info.name.startswith("common_")
 ]
+plugins = [module_info.name for module_info in plugin_modules]
 plugins_no_protocols = [pname for pname in plugins if pname not in protocol_plugins]
 plugintests = [
     re.sub(r"^test_", "", tname)
@@ -52,9 +53,9 @@ def unique(iterable):
 
 
 class TestPlugins:
-    @pytest.fixture(scope="class", params=plugins)
+    @pytest.fixture(scope="class", params=plugin_modules)
     def plugin(self, request):
-        return load_module(f"streamlink.plugins.{request.param}", plugins_path)
+        return exec_module(request.param.module_finder, f"streamlink.plugins.{request.param.name}")
 
     def test_exports_plugin(self, plugin):
         assert hasattr(plugin, "__plugin__"), "Plugin module exports __plugin__"
