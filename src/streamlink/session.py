@@ -15,7 +15,7 @@ from streamlink.options import Options
 from streamlink.plugin.api.http_session import HTTPSession, TLSNoDHAdapter
 from streamlink.plugin.plugin import NO_PRIORITY, Matcher, Plugin
 from streamlink.utils.l10n import Localization
-from streamlink.utils.module import load_module
+from streamlink.utils.module import exec_module
 from streamlink.utils.url import update_scheme
 
 
@@ -641,12 +641,13 @@ class Streamlink:
         """
 
         success = False
-        for _loader, name, _ispkg in pkgutil.iter_modules([path]):
+        for module_info in pkgutil.iter_modules([path]):
+            name = module_info.name
             # set the full plugin module name
             # use the "streamlink.plugins." prefix even for sideloaded plugins
             module_name = f"streamlink.plugins.{name}"
             try:
-                mod = load_module(module_name, path)
+                mod = exec_module(module_info.module_finder, module_name)  # type: ignore[arg-type]
             except ImportError as err:
                 log.exception(f"Failed to load plugin {name} from {path}", exc_info=err)
                 continue
