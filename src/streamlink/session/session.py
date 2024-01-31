@@ -42,10 +42,6 @@ def _get_deprecation_stacklevel_offset():
     return offset
 
 
-class PythonDeprecatedWarning(UserWarning):
-    pass
-
-
 class StreamlinkOptions(Options):
     def __init__(self, session: "Streamlink", *args, **kwargs):
         super().__init__(*args, **kwargs)
