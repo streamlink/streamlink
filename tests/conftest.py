@@ -18,6 +18,7 @@ _TEST_PRIORITIES = (
     "build_backend/",
     "tests/testutils/",
     "tests/utils/",
+    "tests/session/",
     None,
     "tests/stream/",
     "tests/test_plugins.py",
