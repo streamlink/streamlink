@@ -7,8 +7,8 @@ from streamlink import __version__, plugins
 from streamlink.exceptions import NoPluginError, PluginError
 from streamlink.logger import StreamlinkLogger
 from streamlink.options import Options
-from streamlink.plugin.api.http_session import HTTPSession
 from streamlink.plugin.plugin import NO_PRIORITY, Matcher, Plugin
+from streamlink.session.http import HTTPSession
 from streamlink.session.options import StreamlinkOptions
 from streamlink.utils.l10n import Localization
 from streamlink.utils.module import exec_module
@@ -25,12 +25,6 @@ class Streamlink:
     The Streamlink session is used to load and resolve plugins, and to store options used by plugins and stream implementations.
     """
 
-    http: HTTPSession
-    """
-    An instance of Streamlink's :class:`requests.Session` subclass.
-    Used for any kind of HTTP request made by plugin and stream implementations.
-    """
-
     def __init__(
         self,
         options: Optional[Dict[str, Any]] = None,
@@ -39,7 +33,9 @@ class Streamlink:
         :param options: Custom options
         """
 
-        self.http = HTTPSession()
+        #: An instance of Streamlink's :class:`requests.Session` subclass.
+        #: Used for any kind of HTTP request made by plugin and stream implementations.
+        self.http: HTTPSession = HTTPSession()
 
         #: Options of this session instance.
         #: :class:`StreamlinkOptions <streamlink.session.options.StreamlinkOptions>` is a subclass

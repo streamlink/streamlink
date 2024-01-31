@@ -201,7 +201,7 @@ class TestMixinStreamHLS(unittest.TestCase):
         super().__init__(*args, **kwargs)
         # FIXME: fix HTTPSession.request()
         # don't sleep on mocked HTTP request failures
-        self._patch_http_retry_sleep = patch("streamlink.plugin.api.http_session.time.sleep")
+        self._patch_http_retry_sleep = patch("streamlink.session.http.time.sleep")
         self.mocker = requests_mock.Mocker()
         self.mocks = {}
 
