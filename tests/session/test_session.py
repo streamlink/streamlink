@@ -102,8 +102,8 @@ class TestLoadPlugins:
         raises: nullcontext,
         logs: list,
     ):
-        monkeypatch.setattr("streamlink.session.Streamlink.load_builtin_plugins", Mock())
-        monkeypatch.setattr("streamlink.session.exec_module", Mock(side_effect=side_effect))
+        monkeypatch.setattr("streamlink.session.session.Streamlink.load_builtin_plugins", Mock())
+        monkeypatch.setattr("streamlink.session.session.exec_module", Mock(side_effect=side_effect))
         session = Streamlink()
         with raises:
             session.load_plugins(str(PATH_TESTPLUGINS))
@@ -349,7 +349,7 @@ class TestOptionsInterface:
             scheme: Mock(poolmanager=Mock(connection_pool_kw={}))
             for scheme in ("http://", "https://", "foo://")
         }
-        monkeypatch.setattr("streamlink.session.HTTPSession", Mock(return_value=Mock(adapters=adapters)))
+        monkeypatch.setattr("streamlink.session.session.HTTPSession", Mock(return_value=Mock(adapters=adapters)))
 
         return adapters
 
@@ -374,7 +374,7 @@ class TestOptionsInterface:
 
 def test_options_ipv4_ipv6(monkeypatch: pytest.MonkeyPatch, session: Streamlink):
     mock_urllib3_util_connection = Mock(allowed_gai_family=_original_allowed_gai_family)
-    monkeypatch.setattr("streamlink.session.urllib3_util_connection", mock_urllib3_util_connection)
+    monkeypatch.setattr("streamlink.session.session.urllib3_util_connection", mock_urllib3_util_connection)
 
     assert session.get_option("ipv4") is False
     assert session.get_option("ipv6") is False

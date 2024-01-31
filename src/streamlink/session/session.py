@@ -21,7 +21,7 @@ from streamlink.utils.url import update_scheme
 
 # Ensure that the Logger class returned is Streamslink's for using the API (for backwards compatibility)
 logging.setLoggerClass(StreamlinkLogger)
-log = logging.getLogger(__name__)
+log = logging.getLogger(".".join(__name__.split(".")[:-1]))
 
 
 _original_allowed_gai_family = urllib3_util_connection.allowed_gai_family  # type: ignore[attr-defined]
