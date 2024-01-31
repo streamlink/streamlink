@@ -8,8 +8,8 @@ import urllib3
 from requests.adapters import HTTPAdapter
 
 from streamlink.exceptions import StreamlinkDeprecationWarning
-from streamlink.plugin.api.http_session import TLSNoDHAdapter
 from streamlink.session import Streamlink
+from streamlink.session.http import TLSNoDHAdapter
 
 
 _original_allowed_gai_family = urllib3.util.connection.allowed_gai_family  # type: ignore[attr-defined]

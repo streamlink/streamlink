@@ -5,8 +5,8 @@ import pytest
 import requests
 
 from streamlink.exceptions import PluginError, StreamlinkDeprecationWarning
-from streamlink.plugin.api.http_session import HTTPSession
 from streamlink.plugin.api.useragents import FIREFOX
+from streamlink.session.http import HTTPSession
 
 
 class TestUrllib3Overrides:
@@ -43,8 +43,8 @@ class TestHTTPSession:
     def test_read_timeout(self, monkeypatch: pytest.MonkeyPatch):
         mock_sleep = Mock()
         mock_request = Mock(side_effect=requests.Timeout)
-        monkeypatch.setattr("streamlink.plugin.api.http_session.time.sleep", mock_sleep)
-        monkeypatch.setattr("streamlink.plugin.api.http_session.Session.request", mock_request)
+        monkeypatch.setattr("streamlink.session.http.time.sleep", mock_sleep)
+        monkeypatch.setattr("streamlink.session.http.Session.request", mock_request)
 
         session = HTTPSession()
         with pytest.raises(PluginError, match=r"^Unable to open URL: http://localhost/"):

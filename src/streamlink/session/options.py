@@ -8,7 +8,7 @@ from requests.adapters import HTTPAdapter
 
 from streamlink.exceptions import StreamlinkDeprecationWarning
 from streamlink.options import Options
-from streamlink.plugin.api.http_session import TLSNoDHAdapter
+from streamlink.session.http import TLSNoDHAdapter
 from streamlink.utils.url import update_scheme
 
 

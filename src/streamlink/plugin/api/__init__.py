@@ -1,4 +1,6 @@
-from streamlink.plugin.api.http_session import HTTPSession
+from streamlink.compat import deprecated
 
 
-__all__ = ["HTTPSession"]
+deprecated({
+    "HTTPSession": ("streamlink.session.http.HTTPSession", None, None),
+})
