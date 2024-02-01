@@ -5,7 +5,7 @@ from urllib.parse import parse_qsl
 from lxml.etree import HTML, XML
 
 from streamlink.compat import detect_encoding
-from streamlink.plugin import PluginError
+from streamlink.exceptions import PluginError
 
 
 def _parse(parser, data, name, exception, schema, *args, **kwargs):
