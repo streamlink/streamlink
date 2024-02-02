@@ -163,11 +163,17 @@ src = [
 ]
 target-version = "py38"
 fix = false
-ignore-init-module-imports = true
 line-length = 128
-show-source = true
-output-format = "grouped"
+output-format = "full"
 preview = true
+extend-exclude = [
+  "docs/conf.py",
+  "src/streamlink/packages/",
+  "src/streamlink_cli/packages/",
+]
+
+[tool.ruff.lint]
+ignore-init-module-imports = true
 select = [
   # pycodestyle
   "E",
@@ -207,7 +213,7 @@ select = [
   # Ruff-specific rules
   "RUF",
 ]
-extend-ignore = [
+ignore = [
   "A003",  # builtin-attribute-shadowing
   "C408",  # unnecessary-collection-call
   "ISC003",  # explicit-string-concatenation
@@ -217,13 +223,8 @@ extend-ignore = [
   "RUF021",  # parenthesize-chained-operators
   "RUF022",  # unsorted-dunder-all
 ]
-extend-exclude = [
-  "docs/conf.py",
-  "src/streamlink/packages/",
-  "src/streamlink_cli/packages/",
-]
 
-[tool.ruff.per-file-ignores]
+[tool.ruff.lint.per-file-ignores]
 "__init__.py" = ["F401"]
 "docs/**" = ["INP", "RUF012"]
 "script/**" = ["INP"]
@@ -235,18 +236,18 @@ extend-exclude = [
 "src/streamlink_cli/main.py" = ["PLW0603"]
 "tests/**" = ["RUF012"]
 
-[tool.ruff.isort]
+[tool.ruff.lint.isort]
 known-first-party = ["streamlink", "streamlink_cli"]
 lines-after-imports = 2
 combine-as-imports = true
 
-[tool.ruff.flake8-tidy-imports]
+[tool.ruff.lint.flake8-tidy-imports]
 ban-relative-imports = "all"
 
-[tool.ruff.flake8-quotes]
+[tool.ruff.lint.flake8-quotes]
 avoid-escape = false
 
-[tool.ruff.flake8-implicit-str-concat]
+[tool.ruff.lint.flake8-implicit-str-concat]
 allow-multiline = false
 
 
