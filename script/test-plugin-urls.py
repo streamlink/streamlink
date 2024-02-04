@@ -157,7 +157,7 @@ class PluginUrlTester:
         for url in sorted(self.urls):
             self.logger.info(f"Finding streams for URL: {url}")
 
-            session = Streamlink()
+            session = Streamlink(plugins_builtin=True)
             # noinspection PyBroadException
             try:
                 pluginname, Pluginclass, _resolved_url = session.resolve_url(url)

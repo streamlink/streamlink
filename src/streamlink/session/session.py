@@ -1,17 +1,17 @@
 import logging
-import pkgutil
+import warnings
 from functools import lru_cache
 from typing import Any, Dict, Optional, Tuple, Type
 
-from streamlink import __version__, plugins
-from streamlink.exceptions import NoPluginError, PluginError
+from streamlink import __version__
+from streamlink.exceptions import NoPluginError, PluginError, StreamlinkDeprecationWarning
 from streamlink.logger import StreamlinkLogger
 from streamlink.options import Options
-from streamlink.plugin.plugin import NO_PRIORITY, Matcher, Plugin
+from streamlink.plugin.plugin import Plugin
 from streamlink.session.http import HTTPSession
 from streamlink.session.options import StreamlinkOptions
+from streamlink.session.plugins import StreamlinkPlugins
 from streamlink.utils.l10n import Localization
-from streamlink.utils.module import exec_module
 from streamlink.utils.url import update_scheme
 
 
@@ -28,9 +28,12 @@ class Streamlink:
     def __init__(
         self,
         options: Optional[Dict[str, Any]] = None,
+        *,
+        plugins_builtin: bool = True,
     ):
         """
         :param options: Custom options
+        :param plugins_builtin: Whether to load built-in plugins or not
         """
 
         #: An instance of Streamlink's :class:`requests.Session` subclass.
@@ -43,8 +46,9 @@ class Streamlink:
         self.options: StreamlinkOptions = StreamlinkOptions(self)
         if options:
             self.options.update(options)
-        self.plugins: Dict[str, Type[Plugin]] = {}
-        self.load_builtin_plugins()
+
+        #: Plugins of this session instance.
+        self.plugins: StreamlinkPlugins = StreamlinkPlugins(builtin=plugins_builtin)
 
     def set_option(self, key: str, value: Any) -> None:
         """
@@ -92,19 +96,8 @@ class Streamlink:
         """
 
         url = update_scheme("https://", url, force=False)
-
-        matcher: Matcher
-        candidate: Optional[Tuple[str, Type[Plugin]]] = None
-        priority = NO_PRIORITY
-        for name, plugin in self.plugins.items():
-            if plugin.matchers:
-                for matcher in plugin.matchers:
-                    if matcher.priority > priority and matcher.pattern.match(url) is not None:
-                        candidate = name, plugin
-                        priority = matcher.priority
-
-        if candidate:
-            return candidate[0], candidate[1], url
+        if resolved := self.plugins.match_url(url):
+            return resolved[0], resolved[1], url
 
         if follow_redirect:
             # Attempt to handle a redirect URL
@@ -151,42 +144,31 @@ class Streamlink:
         return plugin.streams(**params)
 
     def get_plugins(self):
-        """Returns the loaded plugins for the session."""
-
-        return self.plugins
+        """Returns the loaded plugins of this session (deprecated)"""
+        warnings.warn(
+            "`Streamlink.get_plugins()` has been deprecated in favor of `Streamlink.plugins.get_loaded()`",
+            StreamlinkDeprecationWarning,
+            stacklevel=2,
+        )
+        return self.plugins.get_loaded()
 
     def load_builtin_plugins(self):
-        self.load_plugins(plugins.__path__[0])
+        """Loads Streamlink's built-in plugins (deprecated)"""
+        warnings.warn(
+            "`Streamlink.load_builtin_plugins()` has been deprecated in favor of the `plugins_builtin` keyword argument",
+            StreamlinkDeprecationWarning,
+            stacklevel=2,
+        )
+        self.plugins.load_builtin()
 
     def load_plugins(self, path: str) -> bool:
-        """
-        Attempt to load plugins from the path specified.
-
-        :param path: full path to a directory where to look for plugins
-        :return: success
-        """
-
-        success = False
-        for module_info in pkgutil.iter_modules([path]):
-            name = module_info.name
-            # set the full plugin module name
-            # use the "streamlink.plugins." prefix even for sideloaded plugins
-            module_name = f"streamlink.plugins.{name}"
-            try:
-                mod = exec_module(module_info.module_finder, module_name)  # type: ignore[arg-type]
-            except ImportError as err:
-                log.exception(f"Failed to load plugin {name} from {path}", exc_info=err)
-                continue
-
-            if not hasattr(mod, "__plugin__") or not issubclass(mod.__plugin__, Plugin):
-                continue
-            success = True
-            plugin = mod.__plugin__
-            if name in self.plugins:
-                log.debug(f"Plugin {name} is being overridden by {mod.__file__}")
-            self.plugins[name] = plugin
-
-        return success
+        """Loads plugins from a specific path (deprecated)"""
+        warnings.warn(
+            "`Streamlink.load_plugins()` has been deprecated in favor of `Streamlink.plugins.load_path()`",
+            StreamlinkDeprecationWarning,
+            stacklevel=2,
+        )
+        return self.plugins.load_path(path)
 
     @property
     def version(self):

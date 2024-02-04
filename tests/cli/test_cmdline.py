@@ -21,9 +21,8 @@ class CommandLineTestCase(unittest.TestCase):
 
             return fn
 
-        with patch("streamlink.session.Streamlink.load_builtin_plugins"):
-            session = Streamlink()
-        session.load_plugins(str(Path(tests.__path__[0]) / "plugin"))
+        session = Streamlink(plugins_builtin=False)
+        session.plugins.load_path(Path(tests.__path__[0]) / "plugin")
 
         actual_exit_code = 0
         with patch("sys.argv") as mock_argv, \

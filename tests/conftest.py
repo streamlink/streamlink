@@ -1,7 +1,6 @@
 import os
 import sys
-from typing import Dict, Iterator, List, Tuple
-from unittest.mock import patch
+from typing import Dict, List, Tuple
 
 import pytest
 import requests_mock as rm
@@ -68,14 +67,19 @@ def _check_test_condition(item: pytest.Item):  # pragma: no cover
 
 
 @pytest.fixture()
-def session(request: pytest.FixtureRequest) -> Iterator[Streamlink]:
-    with patch.object(Streamlink, "load_builtin_plugins"):
-        session = Streamlink()
-        for key, value in getattr(request, "param", {}).items():
-            session.set_option(key, value)
-        yield session
+def session(request: pytest.FixtureRequest, monkeypatch: pytest.MonkeyPatch):
+    options = getattr(request, "param", {})
+    plugins_builtin = options.pop("plugins-builtin", False)
 
-    Streamlink.resolve_url.cache_clear()
+    session = Streamlink(
+        options=options,
+        plugins_builtin=plugins_builtin,
+    )
+
+    try:
+        yield session
+    finally:
+        Streamlink.resolve_url.cache_clear()
 
 
 @pytest.fixture()

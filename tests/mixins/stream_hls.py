@@ -280,8 +280,7 @@ class TestMixinStreamHLS(unittest.TestCase):
         return data
 
     def get_session(self, options=None, *args, **kwargs):
-        with patch("streamlink.session.Streamlink.load_builtin_plugins"):
-            return Streamlink(options)
+        return Streamlink(options, plugins_builtin=False)
 
     # set up HLS responses, create the session and read thread and start it
     def subject(self, playlists, options=None, streamoptions=None, threadoptions=None, start=True, *args, **kwargs):

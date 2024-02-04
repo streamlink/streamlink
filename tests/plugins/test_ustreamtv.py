@@ -60,9 +60,7 @@ class TestPluginUStreamTV:
         plugins = parser.add_argument_group("Plugin Options")
         group = parser.add_argument_group("UStreamTV", parent=plugins)
 
-        session.plugins = {
-            "ustreamtv": UStreamTV,
-        }
+        session.plugins["ustreamtv"] = UStreamTV
 
         setup_plugin_args(session, parser)
 
