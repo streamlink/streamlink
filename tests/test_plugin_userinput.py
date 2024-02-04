@@ -10,7 +10,7 @@ from tests.plugin.testplugin import TestPlugin as _TestPlugin
 
 def test_session():
     console_input = ConsoleUserInputRequester(Mock())
-    session = Streamlink({"user-input-requester": console_input})
+    session = Streamlink({"user-input-requester": console_input}, plugins_builtin=False)
     assert session.get_option("user-input-requester") is console_input
 
 

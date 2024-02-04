@@ -9,7 +9,7 @@ class TestStreamlinkAPI:
     @pytest.fixture(autouse=True)
     def _session(self, monkeypatch: pytest.MonkeyPatch, session: Streamlink):
         monkeypatch.setattr("streamlink.api.Streamlink", lambda: session)
-        session.load_plugins(tests.plugin.__path__[0])
+        session.plugins.load_path(tests.plugin.__path__[0])
 
     def test_find_test_plugin(self):
         assert "hls" in streams("test.se")

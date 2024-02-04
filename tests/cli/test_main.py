@@ -494,9 +494,8 @@ class _TestCLIMainLogging(unittest.TestCase):
 
     @classmethod
     def subject(cls, argv, **kwargs):
-        with patch("streamlink.session.Streamlink.load_builtin_plugins"):
-            session = Streamlink()
-        session.load_plugins(str(Path(tests.__path__[0]) / "plugin"))
+        session = Streamlink(plugins_builtin=False)
+        session.plugins.load_path(Path(tests.__path__[0]) / "plugin")
 
         with patch("streamlink_cli.main.os.geteuid", create=True, new=Mock(return_value=kwargs.get("euid", 1000))), \
              patch("streamlink_cli.main.streamlink", session), \
@@ -835,11 +834,10 @@ class TestCLIMainLoggingLogfileWindows(_TestCLIMainLogging):
 
 class TestCLIMainPrint(unittest.TestCase):
     def subject(self):
-        with patch.object(Streamlink, "load_builtin_plugins"), \
-             patch.object(Streamlink, "resolve_url") as mock_resolve_url, \
+        with patch.object(Streamlink, "resolve_url") as mock_resolve_url, \
              patch.object(Streamlink, "resolve_url_no_redirect") as mock_resolve_url_no_redirect:
-            session = Streamlink()
-            session.load_plugins(str(Path(tests.__path__[0]) / "plugin"))
+            session = Streamlink(plugins_builtin=False)
+            session.plugins.load_path(Path(tests.__path__[0]) / "plugin")
             with patch("streamlink_cli.main.os.geteuid", create=True, new=Mock(return_value=1000)), \
                  patch("streamlink_cli.main.streamlink", session), \
                  patch("streamlink_cli.main.CONFIG_FILES", []), \
