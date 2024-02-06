@@ -3,6 +3,7 @@ import argparse
 import pytest
 
 from streamlink.options import Argument, Arguments, Options
+from streamlink.utils.args import comma_list_filter
 
 
 class TestOptions:
@@ -163,7 +164,7 @@ class TestArgument:
             "nargs": 2,
             "default": (0, 0),
             "type": int,
-            "choices": [1, 2, 3],
+            "choices": (1, 2, 3),
             "help": argparse.SUPPRESS,
             "metavar": ("ONE", "TWO"),
             "dest": "dest",
@@ -178,6 +179,42 @@ class TestArgument:
             "action": "store_const",
             "const": 123,
         }
+
+    def test_equality(self):
+        a1 = Argument(
+            "test",
+            action="append",
+            nargs=2,
+            default=("0", "0"),
+            type=comma_list_filter(["1", "2", "3"], unique=True),
+            choices=["1", "2", "3"],
+            required=True,
+            help=argparse.SUPPRESS,
+            metavar=("ONE", "TWO"),
+            dest="dest",
+            requires=["other"],
+            prompt="Test!",
+            sensitive=False,
+            argument_name="custom-name",
+        )
+        a2 = Argument(
+            "test",
+            action="append",
+            nargs=2,
+            default=("0", "0"),
+            type=comma_list_filter(["1", "2", "3"], unique=True),
+            choices=["1", "2", "3"],
+            required=True,
+            help=argparse.SUPPRESS,
+            metavar=("ONE", "TWO"),
+            dest="dest",
+            requires=["other"],
+            prompt="Test!",
+            sensitive=False,
+            argument_name="custom-name",
+        )
+        assert a1 is not a2
+        assert a1 == a2
 
 
 class TestArguments:
