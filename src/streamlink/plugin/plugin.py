@@ -55,9 +55,6 @@ _PLUGINARGUMENT_TYPE_REGISTRY: Dict[str, Callable[[Any], Any]] = {
 }
 
 
-_T = TypeVar("_T")
-
-
 log = logging.getLogger(__name__)
 
 # FIXME: This is a crude attempt at making a bitrate's
@@ -671,6 +668,9 @@ def pluginmatcher(
     return decorator
 
 
+_TChoices = TypeVar("_TChoices", bound=Iterable)
+
+
 # noinspection GrazieInspection,PyShadowingBuiltins
 def pluginargument(
     name: str,
@@ -678,10 +678,10 @@ def pluginargument(
     nargs: Optional[Union[int, Literal["?", "*", "+"]]] = None,
     const: Any = None,
     default: Any = None,
-    type: Optional[Union[str, Callable[[Any], _T]]] = None,  # noqa: A002
+    type: Optional[Union[str, Callable[[Any], Union[_TChoices, Any]]]] = None,  # noqa: A002
     type_args: Optional[Sequence[Any]] = None,
     type_kwargs: Optional[Dict[str, Any]] = None,
-    choices: Optional[Iterable[_T]] = None,
+    choices: Optional[_TChoices] = None,
     required: bool = False,
     help: Optional[str] = None,  # noqa: A002
     metavar: Optional[Union[str, Sequence[str]]] = None,
@@ -726,7 +726,7 @@ def pluginargument(
     assuming the plugin's module name is ``myplugin``.
     """
 
-    _type: Optional[Callable[[Any], _T]]
+    _type: Optional[Callable[[Any], _TChoices]]
     if not isinstance(type, str):
         _type = type
     else:
