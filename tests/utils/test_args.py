@@ -63,6 +63,12 @@ def test_comma_list_filter(options: dict, value: str, expected: List[str]):
     assert func(value) == expected
 
 
+def test_comma_list_filter_hashable():
+    assert hash(comma_list_filter(["1", "2"])) != hash(comma_list_filter(["1", "2", "3"]))
+    assert hash(comma_list_filter(["1", "2"], unique=True)) == hash(comma_list_filter(["1", "2"], unique=True))
+    assert hash(comma_list_filter(["1", "2"], unique=True)) != hash(comma_list_filter(["1", "2"], unique=False))
+
+
 @pytest.mark.parametrize(("value", "expected", "raises"), [
     ("12345", 12345, does_not_raise),
     ("123.45", int(123.45), does_not_raise),
@@ -175,3 +181,11 @@ class TestNum:
     def test_operator(self, operators: dict, value: float, raises: nullcontext):
         with raises:
             assert num(int, **operators)(value) == value
+
+    def test_hashable(self):
+        assert hash(num(int, ge=1)) == hash(num(int, ge=1))
+        assert hash(num(float, ge=1.0)) == hash(num(float, ge=1.0))
+        assert hash(num(int, ge=1)) != hash(num(int, gt=1))
+        assert hash(num(int, ge=1)) != hash(num(int, le=1))
+        assert hash(num(int, ge=1)) != hash(num(int, lt=1))
+        assert hash(num(int, ge=1)) != hash(num(float, ge=1.0))

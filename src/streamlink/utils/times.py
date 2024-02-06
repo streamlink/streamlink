@@ -1,6 +1,6 @@
 import re
 from datetime import datetime, timezone, tzinfo
-from typing import Callable, Literal, Union, overload
+from typing import Callable, Generic, Type, TypeVar
 
 from isodate import LOCAL, parse_datetime  # type: ignore[import]
 
@@ -24,64 +24,10 @@ def fromlocaltimestamp(timestamp: float) -> datetime:
     return datetime.fromtimestamp(timestamp, tz=LOCAL)
 
 
-_re_hms_float = re.compile(
-    r"^-?\d+(?:\.\d+)?$",
-)
-_re_hms_s = re.compile(
-    r"""
-        ^
-        -?
-        (?P<seconds>\d+(?:\.\d+)?)
-        s
-        $
-    """,
-    re.VERBOSE | re.IGNORECASE,
-)
-# noinspection RegExpSuspiciousBackref
-_re_hms_ms = re.compile(
-    r"""
-        ^
-        -?
-        (?P<minutes>\d+)
-        (?:(?P<sep>m)|:(?=.))
-        (?:
-            (?P<seconds>[0-5]?[0-9](?:\.\d+)?)
-            (?(sep)s|)
-        )?
-        $
-    """,
-    re.VERBOSE | re.IGNORECASE,
-)
-# noinspection RegExpSuspiciousBackref
-_re_hms_hms = re.compile(
-    r"""
-        ^
-        -?
-        (?P<hours>\d+)
-        (?:(?P<sep>h)|:(?=.))
-        (?:
-            (?P<minutes>[0-5]?[0-9])
-            (?(sep)m|:(?=.))
-        )?
-        (?:
-            (?P<seconds>[0-5]?[0-9](?:\.\d+)?)
-            (?(sep)s|)
-        )?
-        $
-    """,
-    re.VERBOSE | re.IGNORECASE,
-)
+_THMS = TypeVar("_THMS", int, float)
 
 
-@overload
-def _hours_minutes_seconds(as_float: Literal[False]) -> Callable[[str], int]: ...  # pragma: no cover
-
-
-@overload
-def _hours_minutes_seconds(as_float: Literal[True]) -> Callable[[str], float]: ...  # pragma: no cover
-
-
-def _hours_minutes_seconds(as_float: bool = True) -> Callable[[str], Union[float, int]]:
+class _HoursMinutesSeconds(Generic[_THMS]):
     """
     Convert an optionally negative HMS-timestamp string to seconds, as float or int
 
@@ -99,11 +45,64 @@ def _hours_minutes_seconds(as_float: bool = True) -> Callable[[str], Union[float
     - hours"h"minutes"m"seconds"s"
     """
 
-    def inner(value: str) -> Union[int, float]:
-        if _re_hms_float.match(value):
-            return float(value) if as_float else int(float(value))
+    __name__ = "hours_minutes_seconds"
 
-        match = _re_hms_s.match(value) or _re_hms_ms.match(value) or _re_hms_hms.match(value)
+    _re_float = re.compile(
+        r"^-?\d+(?:\.\d+)?$",
+    )
+    _re_s = re.compile(
+        r"""
+            ^
+            -?
+            (?P<seconds>\d+(?:\.\d+)?)
+            s
+            $
+        """,
+        re.VERBOSE | re.IGNORECASE,
+    )
+    # noinspection RegExpSuspiciousBackref
+    _re_ms = re.compile(
+        r"""
+            ^
+            -?
+            (?P<minutes>\d+)
+            (?:(?P<sep>m)|:(?=.))
+            (?:
+                (?P<seconds>[0-5]?[0-9](?:\.\d+)?)
+                (?(sep)s|)
+            )?
+            $
+        """,
+        re.VERBOSE | re.IGNORECASE,
+    )
+    # noinspection RegExpSuspiciousBackref
+    _re_hms = re.compile(
+        r"""
+            ^
+            -?
+            (?P<hours>\d+)
+            (?:(?P<sep>h)|:(?=.))
+            (?:
+                (?P<minutes>[0-5]?[0-9])
+                (?(sep)m|:(?=.))
+            )?
+            (?:
+                (?P<seconds>[0-5]?[0-9](?:\.\d+)?)
+                (?(sep)s|)
+            )?
+            $
+        """,
+        re.VERBOSE | re.IGNORECASE,
+    )
+
+    def __init__(self, return_type: Type[_THMS]):
+        self._return_type: Type[_THMS] = return_type
+
+    def __call__(self, value: str) -> _THMS:
+        if self._re_float.match(value):
+            return self._return_type(float(value))
+
+        match = self._re_s.match(value) or self._re_ms.match(value) or self._re_hms.match(value)
         if not match:
             raise ValueError
 
@@ -116,15 +115,11 @@ def _hours_minutes_seconds(as_float: bool = True) -> Callable[[str], Union[float
 
         res = -seconds if value[0] == "-" else seconds
 
-        return res if as_float else int(res)
-
-    inner.__name__ = "hours_minutes_seconds"
-
-    return inner
+        return self._return_type(res)
 
 
-hours_minutes_seconds = _hours_minutes_seconds(as_float=False)
-hours_minutes_seconds_float = _hours_minutes_seconds(as_float=True)
+hours_minutes_seconds: Callable[[str], int] = _HoursMinutesSeconds[int](int)
+hours_minutes_seconds_float: Callable[[str], float] = _HoursMinutesSeconds[float](float)
 
 
 def seconds_to_hhmmss(seconds):

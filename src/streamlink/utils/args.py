@@ -1,5 +1,5 @@
 import re
-from typing import Any, Callable, List, Optional, Tuple, Type, overload
+from typing import Any, Generic, List, Optional, Tuple, Type, TypeVar
 
 
 _BOOLEAN_TRUE = "yes", "1", "true", "on"
@@ -25,15 +25,18 @@ def comma_list(values: str) -> List[str]:
     return [val.strip() for val in values.split(",")]
 
 
-def comma_list_filter(
-    acceptable: List[str],
-    unique: bool = False,
-) -> Callable[[str], List[str]]:
-    def func(values: str) -> List[str]:
-        res = [item for item in comma_list(values) if item in acceptable]
-        return sorted(set(res)) if unique else res
+# noinspection PyPep8Naming
+class comma_list_filter:
+    def __init__(self, acceptable: List[str], unique: bool = False):
+        self.acceptable = tuple(acceptable)
+        self.unique = unique
 
-    return func
+    def __call__(self, values: str) -> List[str]:
+        res = [item for item in comma_list(values) if item in self.acceptable]
+        return sorted(set(res)) if self.unique else res
+
+    def __hash__(self):
+        return hash((self.acceptable, self.unique))
 
 
 def filesize(value: str) -> int:
@@ -55,50 +58,42 @@ def keyvalue(value: str) -> Tuple[str, str]:
     return match["key"], match["value"]
 
 
-@overload
-def num(
-    numtype: Type[int],
-    ge: Optional[int] = None,
-    gt: Optional[int] = None,
-    le: Optional[int] = None,
-    lt: Optional[int] = None,
-) -> Callable[[Any], int]: pass  # pragma: no cover
+_TNum = TypeVar("_TNum", int, float)
 
 
-@overload
-def num(
-    numtype: Type[float],
-    ge: Optional[float] = None,
-    gt: Optional[float] = None,
-    le: Optional[float] = None,
-    lt: Optional[float] = None,
-) -> Callable[[Any], float]: pass  # pragma: no cover
+# noinspection PyPep8Naming
+class num(Generic[_TNum]):
+    def __init__(
+        self,
+        numtype: Type[_TNum],
+        ge: Optional[_TNum] = None,
+        gt: Optional[_TNum] = None,
+        le: Optional[_TNum] = None,
+        lt: Optional[_TNum] = None,
+    ):
+        self.numtype: Type[_TNum] = numtype
+        self.ge: Optional[_TNum] = ge
+        self.gt: Optional[_TNum] = gt
+        self.le: Optional[_TNum] = le
+        self.lt: Optional[_TNum] = lt
+        self.__name__ = numtype.__name__
 
+    def __call__(self, value: Any) -> _TNum:
+        val: _TNum = self.numtype(value)
 
-def num(
-    numtype: Type[float],
-    ge: Optional[float] = None,
-    gt: Optional[float] = None,
-    le: Optional[float] = None,
-    lt: Optional[float] = None,
-) -> Callable[[Any], float]:
-    def func(value: Any) -> float:
-        value = numtype(value)
+        if self.ge is not None and val < self.ge:
+            raise ValueError(f"{self.__name__} value must be >={self.ge}, but is {val}")
+        if self.gt is not None and val <= self.gt:
+            raise ValueError(f"{self.__name__} value must be >{self.gt}, but is {val}")
+        if self.le is not None and val > self.le:
+            raise ValueError(f"{self.__name__} value must be <={self.le}, but is {val}")
+        if self.lt is not None and val >= self.lt:
+            raise ValueError(f"{self.__name__} value must be <{self.lt}, but is {val}")
 
-        if ge is not None and value < ge:
-            raise ValueError(f"{numtype.__name__} value must be >={ge}, but is {value}")
-        if gt is not None and value <= gt:
-            raise ValueError(f"{numtype.__name__} value must be >{gt}, but is {value}")
-        if le is not None and value > le:
-            raise ValueError(f"{numtype.__name__} value must be <={le}, but is {value}")
-        if lt is not None and value >= lt:
-            raise ValueError(f"{numtype.__name__} value must be <{lt}, but is {value}")
+        return val
 
-        return value
-
-    func.__name__ = numtype.__name__
-
-    return func
+    def __hash__(self) -> int:
+        return hash((self.numtype, self.ge, self.gt, self.le, self.lt))
 
 
 __all__ = [
