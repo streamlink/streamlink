@@ -38,7 +38,7 @@ jobs:
         env:
           SIGNING_KEY_ID: 1AEB6400EDA27DA9
           SIGNING_KEY_PASSPHRASE: ${{ secrets.SIGNING_KEY_PASSPHRASE }}
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: dist
           path: dist/
@@ -66,7 +66,7 @@ jobs:
           python -m pip install -U
           jinja2
           requests
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v4
         with:
           name: dist
           path: dist/
