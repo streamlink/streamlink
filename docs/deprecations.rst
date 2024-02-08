@@ -17,6 +17,22 @@ instance via the :attr:`Streamlink.http <streamlink.session.Streamlink.http>` at
 In addition, importing ``TLSNoDHAdapter`` or ``TLSSecLevel1Adapter`` from ``streamlink.plugin.api.http_session`` is now also
 deprecated. Import from the ``streamlink.session.http`` module instead, if actually necessary.
 
+Streamlink.{get,load}_plugins()
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+As a result of the code refactoring mentioned above, the following plugins-related methods
+on the :class:`Streamlink <streamlink.session.Streamlink>` session class have been deprecated:
+
+``Streamlink.get_plugins()`` has been deprecated in favor of
+:meth:`Streamlink.plugins.get_loaded() <streamlink.session.plugins.StreamlinkPlugins.get_loaded>`.
+
+``Streamlink.load_plugins(path)`` has been deprecated in favor of
+:meth:`Streamlink.plugins.load_path(path) <streamlink.session.plugins.StreamlinkPlugins.load_path>`.
+
+``Streamlink.load_builtin_plugins()`` has been deprecated in favor of using
+the :class:`plugins_builtin <streamlink.session.Streamlink>` Streamlink session keyword argument.
+The old method was never publicly documented and was only used internally upon initialization.
+
 
 streamlink 5.4.0
 ----------------
