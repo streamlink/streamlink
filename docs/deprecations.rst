@@ -1,6 +1,23 @@
 Deprecations
 ============
 
+streamlink 6.6.0
+----------------
+
+HTTPSession and HTTPAdapters
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The module structure of the :class:`Streamlink <streamlink.session.Streamlink>` session implementation and related classes
+like the ``HTTPSession`` has been re-organized.
+
+Importing ``HTTPSession`` from either ``streamlink.plugin.api`` or ``streamlink.plugin.api.http_session`` is now deprecated.
+It was never intended to import this class directly. Plugin implementors should always reference the session's ``HTTPSession``
+instance via the :attr:`Streamlink.http <streamlink.session.Streamlink.http>` attribute.
+
+In addition, importing ``TLSNoDHAdapter`` or ``TLSSecLevel1Adapter`` from ``streamlink.plugin.api.http_session`` is now also
+deprecated. Import from the ``streamlink.session.http`` module instead, if actually necessary.
+
+
 streamlink 5.4.0
 ----------------
 
