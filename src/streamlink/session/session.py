@@ -144,7 +144,11 @@ class Streamlink:
         return plugin.streams(**params)
 
     def get_plugins(self):
-        """Returns the loaded plugins of this session (deprecated)"""
+        """
+        Returns the loaded plugins of this session.
+
+        Deprecated in favor of :meth:`plugins.get_loaded() <streamlink.session.plugins.StreamlinkPlugins.get_loaded>`.
+        """
         warnings.warn(
             "`Streamlink.get_plugins()` has been deprecated in favor of `Streamlink.plugins.get_loaded()`",
             StreamlinkDeprecationWarning,
@@ -153,7 +157,11 @@ class Streamlink:
         return self.plugins.get_loaded()
 
     def load_builtin_plugins(self):
-        """Loads Streamlink's built-in plugins (deprecated)"""
+        """
+        Loads Streamlink's built-in plugins.
+
+        Deprecated in favor of using the :class:`plugins_builtin <streamlink.session.Streamlink>` keyword argument.
+        """
         warnings.warn(
             "`Streamlink.load_builtin_plugins()` has been deprecated in favor of the `plugins_builtin` keyword argument",
             StreamlinkDeprecationWarning,
@@ -162,7 +170,11 @@ class Streamlink:
         self.plugins.load_builtin()
 
     def load_plugins(self, path: str) -> bool:
-        """Loads plugins from a specific path (deprecated)"""
+        """
+        Loads plugins from a specific path.
+
+        Deprecated in favor of :meth:`plugins.load_path() <streamlink.session.plugins.StreamlinkPlugins.load_path>`.
+        """
         warnings.warn(
             "`Streamlink.load_plugins()` has been deprecated in favor of `Streamlink.plugins.load_path()`",
             StreamlinkDeprecationWarning,
