@@ -952,10 +952,3 @@ def main():
         )
 
     sys.exit(error_code)
-
-
-def parser_helper():
-    session = Streamlink(plugins_builtin=True)
-    parser = build_parser()
-    setup_plugin_args(session, parser)
-    return parser
