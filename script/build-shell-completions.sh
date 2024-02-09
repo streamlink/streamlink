@@ -23,7 +23,7 @@ for shell in "${!COMPLETIONS[@]}"; do
   python -m shtab \
     "--shell=${shell}" \
     --error-unimportable \
-    streamlink_cli.main.parser_helper \
+    streamlink_cli._parser.get_parser \
     > "${dist}"
   echo "Completions for ${shell} written to ${dist}"
 done

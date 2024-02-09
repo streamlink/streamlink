@@ -9,12 +9,14 @@ Inspired by sphinxcontrib.autoprogram but with a few differences:
 
 import argparse
 import re
+from importlib import import_module
 from textwrap import dedent
 
 from docutils import nodes
 from docutils.parsers.rst import Directive
 from docutils.parsers.rst.directives import unchanged
 from docutils.statemachine import ViewList
+from sphinx.errors import ExtensionError
 from sphinx.util.nodes import nested_parse_with_titles
 
 
@@ -27,12 +29,6 @@ _prog_re = re.compile(r"%\(prog\)s")
 _percent_re = re.compile(r"%%")
 _inline_code_block_re = re.compile(r"(?<!`)`([^`]+?)`")
 _example_inline_code_block_re = re.compile(r"(?<=^Example: )(.+)$", re.MULTILINE)
-
-
-def get_parser(module_name, attr):
-    module = __import__(module_name, globals(), locals(), [attr])
-    parser = getattr(module, attr)
-    return parser if not callable(parser) else parser()
 
 
 def indent(value, length=4):
@@ -48,6 +44,23 @@ class ArgparseDirective(Directive):
     }
 
     _headlines = ["^", "~"]
+
+    _DEFAULT_MODULE = "streamlink_cli._parser"
+    _DEFAULT_ATTR = "get_parser"
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._available_options = []
+
+    @staticmethod
+    def get_parser(module: str, attr: str) -> argparse.ArgumentParser:
+        try:
+            mod = import_module(module)
+            obj = getattr(mod, attr)
+        except Exception as err:
+            raise ExtensionError("Invalid ext_argparse module or attr value") from err
+
+        return obj() if callable(obj) else obj
 
     def process_help(self, helptext):
         # Dedent the help to make sure we are always dealing with
@@ -156,11 +169,10 @@ class ArgparseDirective(Directive):
                 yield from self.generate_parser_rst(parser, group, depth + 1)
 
     def run(self):
-        module = self.options.get("module")
-        attr = self.options.get("attr")
-        parser = get_parser(module, attr)
+        module = self.options.get("module", self._DEFAULT_MODULE)
+        attr = self.options.get("attr", self._DEFAULT_ATTR)
+        parser = self.get_parser(module, attr)
 
-        self._available_options = []
         for action in parser._actions:
             # positional parameters have an empty option_strings list
             self._available_options += action.option_strings or [action.dest]
