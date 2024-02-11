@@ -279,6 +279,12 @@ class Arguments:
         # iterate in reverse order due to add() being called by multiple pluginargument decorators in reverse order
         return reversed(self.arguments.values())
 
+    def __hash__(self):
+        return hash(tuple(self.arguments.items()))
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and hash(self) == hash(other)
+
     def add(self, argument: Argument) -> None:
         self.arguments[argument.name] = argument
 
