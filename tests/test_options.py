@@ -213,8 +213,11 @@ class TestArgument:
             sensitive=False,
             argument_name="custom-name",
         )
+        a3 = Argument("foo")
         assert a1 is not a2
         assert a1 == a2
+        assert a1 != a3
+        assert a2 != a3
 
 
 class TestArguments:
@@ -245,6 +248,16 @@ class TestArguments:
         assert list(iter(args)) == [test1, test2]
         args.add(test3)
         assert list(iter(args)) == [test3, test1, test2]
+
+    def test_equality(self):
+        test1 = Arguments()
+        test1.add(Argument("testA"))
+        test1.add(Argument("testB"))
+        test2 = Arguments(Argument("testB"), Argument("testA"))
+        test3 = Arguments(Argument("testA"), Argument("testB"))
+        assert test1 == test2
+        assert test1 != test3
+        assert test2 != test3
 
     def test_requires(self):
         test1 = Argument("test1", requires="test2")
