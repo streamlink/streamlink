@@ -109,6 +109,10 @@ a[href^="https://"]:not(.no-external-link-icon):not(.muted-link):not(.sd-badge):
   Sidebar/Menubar and related
 */
 
+.sidebar-scroll, .toc-scroll {
+  overflow: hidden auto;
+}
+
 .toc-scroll:not(:hover) {
   scrollbar-color: transparent !important;
 }
