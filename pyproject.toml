@@ -148,6 +148,7 @@ omit = [
   "src/streamlink/packages/*",
   "src/streamlink/webbrowser/cdp/devtools/*",
   "src/streamlink_cli/packages/*",
+  "src/streamlink_cli/_parser.py",
 ]
 exclude_lines = [
   "pragma: no cover",
