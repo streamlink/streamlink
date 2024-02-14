@@ -30,10 +30,13 @@ class Streamlink:
         options: Optional[Dict[str, Any]] = None,
         *,
         plugins_builtin: bool = True,
+        plugins_lazy: bool = True,
     ):
         """
         :param options: Custom options
         :param plugins_builtin: Whether to load built-in plugins or not
+        :param plugins_lazy: Load built-in plugins lazily. This option falls back to loading all built-in plugins
+                             if the pre-built plugin JSON metadata is not available (e.g. in editable installs) or is invalid.
         """
 
         #: An instance of Streamlink's :class:`requests.Session` subclass.
@@ -48,7 +51,7 @@ class Streamlink:
             self.options.update(options)
 
         #: Plugins of this session instance.
-        self.plugins: StreamlinkPlugins = StreamlinkPlugins(builtin=plugins_builtin)
+        self.plugins: StreamlinkPlugins = StreamlinkPlugins(builtin=plugins_builtin, lazy=plugins_lazy)
 
     def set_option(self, key: str, value: Any) -> None:
         """

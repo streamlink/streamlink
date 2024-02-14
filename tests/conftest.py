@@ -70,10 +70,12 @@ def _check_test_condition(item: pytest.Item):  # pragma: no cover
 def session(request: pytest.FixtureRequest, monkeypatch: pytest.MonkeyPatch):
     options = getattr(request, "param", {})
     plugins_builtin = options.pop("plugins-builtin", False)
+    plugins_lazy = options.pop("plugins-lazy", False)
 
     session = Streamlink(
         options=options,
         plugins_builtin=plugins_builtin,
+        plugins_lazy=plugins_lazy,
     )
 
     try:

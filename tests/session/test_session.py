@@ -8,7 +8,7 @@ import requests_mock as rm
 import tests.plugin
 from streamlink.exceptions import NoPluginError, StreamlinkDeprecationWarning
 from streamlink.options import Options
-from streamlink.plugin import HIGH_PRIORITY, LOW_PRIORITY, NO_PRIORITY, NORMAL_PRIORITY, Plugin, pluginmatcher
+from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.session import Streamlink
 from streamlink.stream.hls import HLSStream
 from streamlink.stream.http import HTTPStream
@@ -134,55 +134,6 @@ class TestResolveURL:
         with pytest.raises(NoPluginError):
             session.resolve_url("http://secure")
         assert session.resolve_url("https://secure")[1] is PluginHttps
-
-    def test_resolve_url_priority(self, session: Streamlink):
-        @pluginmatcher(priority=HIGH_PRIORITY, pattern=re.compile(
-            "https://(high|normal|low|no)$",
-        ))
-        class HighPriority(_EmptyPlugin):
-            pass
-
-        @pluginmatcher(priority=NORMAL_PRIORITY, pattern=re.compile(
-            "https://(normal|low|no)$",
-        ))
-        class NormalPriority(_EmptyPlugin):
-            pass
-
-        @pluginmatcher(priority=LOW_PRIORITY, pattern=re.compile(
-            "https://(low|no)$",
-        ))
-        class LowPriority(_EmptyPlugin):
-            pass
-
-        @pluginmatcher(priority=NO_PRIORITY, pattern=re.compile(
-            "https://(no)$",
-        ))
-        class NoPriority(_EmptyPlugin):
-            pass
-
-        session.plugins.update({
-            "high": HighPriority,
-            "normal": NormalPriority,
-            "low": LowPriority,
-            "no": NoPriority,
-        })
-        no = session.resolve_url_no_redirect("no")[1]
-        low = session.resolve_url_no_redirect("low")[1]
-        normal = session.resolve_url_no_redirect("normal")[1]
-        high = session.resolve_url_no_redirect("high")[1]
-
-        assert no is HighPriority
-        assert low is HighPriority
-        assert normal is HighPriority
-        assert high is HighPriority
-
-        session.resolve_url.cache_clear()
-        session.plugins.clear()
-        session.plugins.update({
-            "no": NoPriority,
-        })
-        with pytest.raises(NoPluginError):
-            session.resolve_url_no_redirect("no")
 
 
 class TestStreams:

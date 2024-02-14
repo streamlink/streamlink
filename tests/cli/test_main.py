@@ -889,7 +889,7 @@ class TestCLIMainPrint(unittest.TestCase):
     @patch("sys.argv", ["streamlink", "--plugins"])
     def test_print_plugins(self, mock_stdout):
         self.subject()
-        assert self.get_stdout(mock_stdout) == "Loaded plugins: testplugin\n"
+        assert self.get_stdout(mock_stdout) == "Available plugins: testplugin\n"
 
     @patch("sys.stdout")
     @patch("sys.argv", ["streamlink", "--plugins", "--json"])
