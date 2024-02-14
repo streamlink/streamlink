@@ -227,6 +227,7 @@ ignore = [
   "PLW2901",  # redefined-loop-name
   "RUF021",  # parenthesize-chained-operators
   "RUF022",  # unsorted-dunder-all
+  "RUF027",  # missing-f-string-syntax
 ]
 
 [tool.ruff.lint.per-file-ignores]
