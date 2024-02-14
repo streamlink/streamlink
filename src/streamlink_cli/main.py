@@ -607,7 +607,7 @@ def print_plugins():
     if args.json:
         console.msg_json(pluginlist)
     else:
-        console.msg(f"Loaded plugins: {', '.join(pluginlist)}")
+        console.msg(f"Available plugins: {', '.join(pluginlist)}")
 
 
 def load_plugins(dirs: List[Path], showwarning: bool = True):

@@ -9,7 +9,7 @@ from streamlink_cli.main import setup_plugin_args
 
 
 def get_parser():
-    session = Streamlink(plugins_builtin=True)
+    session = Streamlink(plugins_builtin=True, plugins_lazy=False)
     parser = build_parser()
     setup_plugin_args(session, parser)
 

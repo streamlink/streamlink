@@ -7,11 +7,17 @@ from types import ModuleType
 from typing import Union
 
 
-def load_module(name: str, path: Union[Path, str]) -> ModuleType:
+def get_finder(path: Union[Path, str]) -> PathEntryFinder:
     path = str(path)
     finder = get_importer(path)
     if not finder:
         raise ImportError(f"Not a package path: {path}", path=path)
+
+    return finder
+
+
+def load_module(name: str, path: Union[Path, str]) -> ModuleType:
+    finder = get_finder(path)
 
     return exec_module(finder, name)
 
