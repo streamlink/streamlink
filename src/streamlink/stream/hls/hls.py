@@ -552,7 +552,7 @@ class MuxedHLSStream(MuxedStream["HLSStream"]):
         multivariant: Optional[M3U8] = None,
         force_restart: bool = False,
         ffmpeg_options: Optional[Dict[str, Any]] = None,
-        cls: Optional["HLSStream"] = None,
+        hlsStreamCls: Optional["HLSStream"] = None,
         **kwargs,
     ):
         """
@@ -575,10 +575,10 @@ class MuxedHLSStream(MuxedStream["HLSStream"]):
                 tracks.append(audio)
         maps.extend(f"{i}:a" for i in range(1, len(tracks)))
 
-        if cls is None:
-            cls = HLSStream
+        if hlsStreamCls is None:
+            hlsStreamCls = HLSStream
 
-        substreams = [cls(session, url, force_restart=force_restart, **kwargs) for url in tracks]
+        substreams = [hlsStreamCls(session, url, force_restart=force_restart, **kwargs) for url in tracks]
         ffmpeg_options = ffmpeg_options or {}
 
         super().__init__(session, *substreams, format="mpegts", maps=maps, **ffmpeg_options)
@@ -834,7 +834,7 @@ class HLSStream(HTTPStream):
                     force_restart=force_restart,
                     start_offset=start_offset,
                     duration=duration,
-                    cls=cls,
+                    hlsStreamCls=cls,
                     **kwargs,
                 )
             else:
