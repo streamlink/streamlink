@@ -548,6 +548,7 @@ class MuxedHLSStream(MuxedStream["HLSStream"]):
         session: Streamlink,
         video: str,
         audio: Union[str, List[str]],
+        hlsstream: Optional[Type["HLSStream"]] = None,
         url_master: Optional[str] = None,
         multivariant: Optional[M3U8] = None,
         force_restart: bool = False,
@@ -558,6 +559,7 @@ class MuxedHLSStream(MuxedStream["HLSStream"]):
         :param session: Streamlink session instance
         :param video: Video stream URL
         :param audio: Audio stream URL or list of URLs
+        :param hlsstream: The :class:`HLSStream` class of each sub-stream
         :param url_master: The URL of the HLS playlist's multivariant playlist (deprecated)
         :param multivariant: The parsed multivariant playlist
         :param force_restart: Start from the beginning after reaching the playlist's end
@@ -573,7 +575,9 @@ class MuxedHLSStream(MuxedStream["HLSStream"]):
             else:
                 tracks.append(audio)
         maps.extend(f"{i}:a" for i in range(1, len(tracks)))
-        substreams = [HLSStream(session, url, force_restart=force_restart, **kwargs) for url in tracks]
+
+        hlsstream = hlsstream or HLSStream
+        substreams = [hlsstream(session, url, force_restart=force_restart, **kwargs) for url in tracks]
         ffmpeg_options = ffmpeg_options or {}
 
         super().__init__(session, *substreams, format="mpegts", maps=maps, **ffmpeg_options)
@@ -825,6 +829,7 @@ class HLSStream(HTTPStream):
                     session,
                     video=playlist.uri,
                     audio=[x.uri for x in external_audio if x.uri],
+                    hlsstream=cls,
                     multivariant=multivariant,
                     force_restart=force_restart,
                     start_offset=start_offset,
