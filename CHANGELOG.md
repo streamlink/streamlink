@@ -1,5 +1,31 @@
 # Changelog
 
+## streamlink 6.6.0 (2024-02-16)
+
+Release highlights:
+
+- Implemented: lazy plugins loading ([#5793](https://github.com/streamlink/streamlink/pull/5793), [#5822](https://github.com/streamlink/streamlink/pull/5822))  
+  Streamlink's built-in plugins will now be loaded on demand when resolving input URLs.  
+  This improves initial loading times and reduces total memory consumption.
+- Refactored: Streamlink session module (and related)
+  - Moved: `streamlink.session` into a sub-package ([#5807](https://github.com/streamlink/streamlink/pull/5807))
+  - Moved: `streamlink.plugin.api.http_session` to `streamlink.session.http` ([#5807](https://github.com/streamlink/streamlink/pull/5807))
+  - Refactored: `Streamlink` class internals ([#5807](https://github.com/streamlink/streamlink/pull/5807), [#5814](https://github.com/streamlink/streamlink/pull/5814))
+  - Deprecated: [`Streamlink.{get,load}_plugins()` methods](https://streamlink.github.io/deprecations.html#streamlink-get-load-plugins) ([#5818](https://github.com/streamlink/streamlink/pull/5818))
+  - Deprecated: [direct imports of `HTTPSession` and imports from `streamlink.plugin.api.http_session`](https://streamlink.github.io/deprecations.html#httpsession-and-httpadapters) ([#5818](https://github.com/streamlink/streamlink/pull/5818))
+- Refactored: `streamlink.utils.args` module ([#5778](https://github.com/streamlink/streamlink/pull/5778), [#5781](https://github.com/streamlink/streamlink/pull/5781), [#5815](https://github.com/streamlink/streamlink/pull/5815))
+- Updated plugins:
+  - aloula: fixed missing HTTP headers ([#5792](https://github.com/streamlink/streamlink/pull/5792))
+  - foxtr: removed plugin ([#5827](https://github.com/streamlink/streamlink/pull/5827))
+  - huya: fixed stream URLs ([#5785](https://github.com/streamlink/streamlink/pull/5785))
+  - nowtvtr: new plugin ([#5827](https://github.com/streamlink/streamlink/pull/5827))
+  - qq: removed plugin ([#5806](https://github.com/streamlink/streamlink/pull/5806))
+  - rtbf: removed plugin ([#5801](https://github.com/streamlink/streamlink/pull/5801))
+- Tests: improved overall test execution time ([#5799](https://github.com/streamlink/streamlink/pull/5799), [#5805](https://github.com/streamlink/streamlink/pull/5805))
+
+[Full changelog](https://github.com/streamlink/streamlink/compare/6.5.1...6.6.0)
+
+
 ## streamlink 6.5.1 (2024-01-16)
 
 Patch release:
