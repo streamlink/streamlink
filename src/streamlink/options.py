@@ -1,3 +1,4 @@
+import argparse
 from typing import (
     Any,
     Callable,
@@ -175,7 +176,8 @@ class Argument:
         self.type = type
         self.choices: Optional[Tuple[Any, ...]] = tuple(choices) if choices else None
         self.required = required
-        self.help = help
+        # argparse compares the object identity of argparse.SUPPRESS
+        self.help = argparse.SUPPRESS if help == argparse.SUPPRESS else help
         self.metavar: Optional[Union[str, Tuple[str, ...]]] = (
             tuple(metavar)
             if metavar is not None and not isinstance(metavar, str)
