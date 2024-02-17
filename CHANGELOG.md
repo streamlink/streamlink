@@ -1,5 +1,15 @@
 # Changelog
 
+## streamlink 6.6.1 (2024-02-17)
+
+Patch release:
+
+- Fixed: plugin arguments in `--help` output ([#5838](https://github.com/streamlink/streamlink/pull/5838))
+- Docs: removed empty plugin sections in docs and man page ([#5838](https://github.com/streamlink/streamlink/pull/5838))
+
+[Full changelog](https://github.com/streamlink/streamlink/compare/6.6.0...6.6.1)
+
+
 ## streamlink 6.6.0 (2024-02-16)
 
 Release highlights:
