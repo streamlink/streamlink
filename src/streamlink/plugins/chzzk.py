@@ -104,7 +104,12 @@ class ChzzkHLSStream(HLSStream):
         return self._url
 
     @classmethod
-    def parse_variant_playlist(cls,session: Streamlink,url: str,channel: str,**kwargs) -> Dict[str, HLSStream | MuxedHLSStream]:
+    def parse_variant_playlist(cls,
+                               session: Streamlink,
+                               url: str,
+                               channel: str,
+                               **kwargs) -> Dict[str,
+                                                 HLSStream | MuxedHLSStream]:
         stream_name: Optional[str]
         stream: Union["HLSStream", "MuxedHLSStream"]
         streams: Dict[str, Union["HLSStream", "MuxedHLSStream"]] = {}
@@ -257,13 +262,13 @@ class ChzzkAPI:
                     str,
                     validate.parse_json(),
                     {
-                        "media": 
+                        "media":
                             [
                                 {
                                     "mediaId": str,
                                     "protocol": str,
                                     "path": validate.url(),
-                                }],  
+                                }],
                     },
                     validate.get("media"),
                     validate.transform(lambda media: [(m["mediaId"], m["protocol"], m["path"]) for m in media]),
@@ -326,12 +331,11 @@ class Chzzk(Plugin):
         for media_id, media_protocol, media_path in media:
             if media_protocol == "HLS" and media_id == "HLS":
                 return ChzzkHLSStream.parse_variant_playlist(
-                            self.session,
-                            media_path,
-                            channel=channel_id,
-                            ffmpeg_options={"copyts": True},
-                        )
-
+                    self.session,
+                    media_path,
+                    channel=channel_id,
+                    ffmpeg_options={"copyts": True},
+                )
 
     def _get_video(self, video_id):
         datatype, data = self._api.get_videos(video_id)
