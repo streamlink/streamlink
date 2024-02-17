@@ -142,6 +142,14 @@ class TestArgument:
             # noinspection PyPropertyAccess
             arg.default = 456
 
+    def test_help_suppress(self):
+        argA = Argument("test", help="test")
+        argB = Argument("test", help=argparse.SUPPRESS)
+        argC = Argument("test", help=f"{argparse.SUPPRESS[:1]}{argparse.SUPPRESS[1:]}")
+        assert argA.help is not argparse.SUPPRESS
+        assert id(argB.help) == id(argparse.SUPPRESS)
+        assert id(argC.help) == id(argparse.SUPPRESS)
+
     def test_options(self):
         arg = Argument(
             "test",
