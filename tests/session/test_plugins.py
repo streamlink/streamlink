@@ -387,7 +387,13 @@ class TestLoadPluginsData:
         assert session.plugins.get_names() == ["empty", "testpluginA", "testpluginB"]
         assert [(record.name, record.levelname, record.message) for record in caplog.get_records(when="setup")] == []
 
+        # arguments are added in reverse order:
+        # `Arguments` does this because of the reverse order of the @pluginargument decorator
         arguments_a = Arguments()
+        arguments_a.add(Argument(
+            name="bar",
+            const="bar",
+        ))
         arguments_a.add(Argument(
             name="foo",
             action="store",
@@ -400,18 +406,14 @@ class TestLoadPluginsData:
             dest="oof",
             argument_name="oof",
         ))
-        arguments_a.add(Argument(
-            name="bar",
-            const="bar",
-        ))
         arguments_b = Arguments()
-        arguments_b.add(Argument(
-            name="bool",
-            type=boolean,
-        ))
         arguments_b.add(Argument(
             name="cmf",
             type=comma_list_filter(["1", "2", "3"], unique=True),
+        ))
+        arguments_b.add(Argument(
+            name="bool",
+            type=boolean,
         ))
         assert list(session.plugins.iter_arguments()) == [("testpluginA", arguments_a), ("testpluginB", arguments_b)]
 

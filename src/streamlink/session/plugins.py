@@ -317,7 +317,7 @@ class StreamlinkPluginsData:
             if not plugindata.get("arguments"):
                 continue
             arguments = Arguments()
-            for a in plugindata.get("arguments") or []:
+            for a in reversed(plugindata.get("arguments") or []):
                 if argument := cls._build_argument(a):
                     arguments.add(argument)
 
