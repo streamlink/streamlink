@@ -157,7 +157,7 @@ class ArgparseDirective(Directive):
         for group in parser.NESTED_ARGUMENT_GROUPS[parent]:
             is_parent = group in parser.NESTED_ARGUMENT_GROUPS
             # Exclude empty groups
-            if not group._group_actions and not is_parent:
+            if not is_parent and not any(action.help != argparse.SUPPRESS for action in group._group_actions or []):
                 continue
             title = group.title
             yield ""
