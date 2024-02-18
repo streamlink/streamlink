@@ -54,8 +54,8 @@ class ChzzkHLSStream(HLSStream):
         if datatype == "error":
             raise StreamError(data)
         media, status, *_ = data
-        if status != "OPEN":
-            raise StreamError("The stream is unavailable")
+        if status != "OPEN" or media is None:
+            raise StreamError("Error occurred while refreshing the stream URL.")
         for media_id, media_protocol, media_path in media:
             if media_protocol == "HLS" and media_id == "HLS":
                 media_uri = self._get_media_uri(media_path)
@@ -91,6 +91,7 @@ class ChzzkHLSStream(HLSStream):
         if self._should_refresh():
             self.refresh_playlist()
         return self._url
+
 
 class ChzzkAPI:
     _CHANNELS_LIVE_DETAIL_URL = "https://api.chzzk.naver.com/service/v2/channels/{channel_id}/live-detail"
@@ -134,24 +135,28 @@ class ChzzkAPI:
                 "liveId": int,
                 "liveTitle": validate.any(str, None),
                 "liveCategory": validate.any(str, None),
+                "adult": bool,
                 "channel": validate.all(
                     {"channelName": str},
                     validate.get("channelName"),
                 ),
-                "livePlaybackJson": validate.all(
-                    str,
-                    validate.parse_json(),
-                    {
-                        "media": [
-                            {
-                                "mediaId": str,
-                                "protocol": str,
-                                "path": validate.url(),
-                            },
-                        ],
-                    },
-                    validate.get("media"),
-                    validate.transform(lambda media: [(m["mediaId"], m["protocol"], m["path"]) for m in media]),
+                "livePlaybackJson": validate.any(
+                    None,
+                    validate.all(
+                        str,
+                        validate.parse_json(),
+                        {
+                            "media": [
+                                {
+                                    "mediaId": str,
+                                    "protocol": str,
+                                    "path": validate.url(),
+                                },
+                            ],
+                        },
+                        validate.get("media"),
+                        validate.transform(lambda media: [(m["mediaId"], m["protocol"], m["path"]) for m in media]),
+                    ),
                 ),
             },
             validate.union_get(
@@ -161,6 +166,7 @@ class ChzzkAPI:
                 "channel",
                 "liveCategory",
                 "liveTitle",
+                "adult",
             ),
         )
 
@@ -168,10 +174,11 @@ class ChzzkAPI:
         return self._query_api(
             self._VIDEOS_URL.format(video_id=video_id),
             {
-                "inKey": str,
-                "videoId": str,
+                "inKey": validate.any(str, None),
+                "videoId": validate.any(str, None),
                 "videoTitle": validate.any(str, None),
                 "videoCategory": validate.any(str, None),
+                "adult": bool,
                 "channel": validate.all(
                     {"channelName": str},
                     validate.get("channelName"),
@@ -183,6 +190,7 @@ class ChzzkAPI:
                 "channel",
                 "videoCategory",
                 "videoTitle",
+                "adult",
             ),
         )
 
@@ -202,10 +210,19 @@ class Chzzk(Plugin):
             log.error(data)
             return
 
-        media, status, self.id, self.author, self.category, self.title = data
+        media, status, self.id, self.author, self.category, self.title, adult = data
         if status != "OPEN":
             log.error("The stream is unavailable")
             return
+        if media is None:
+            if adult:
+                log.error(
+                    "This stream is for adults only.",
+                )
+            else:
+                log.error("This stream is unavailable")
+            return
+
         for media_id, media_protocol, media_path in media:
             if media_protocol == "HLS" and media_id == "HLS":
                 return ChzzkHLSStream.parse_variant_playlist(
@@ -222,7 +239,16 @@ class Chzzk(Plugin):
             return
 
         self.id = video_id
-        in_key, vod_id, self.author, self.category, self.title = data
+        in_key, vod_id, self.author, self.category, self.title, adult = data
+
+        if in_key is None or vod_id is None:
+            if adult:
+                log.error(
+                    "This video is for adults only.",
+                )
+            else:
+                log.error("This video is unavailable")
+            return
 
         for name, stream in DASHStream.parse_manifest(
             self.session,
