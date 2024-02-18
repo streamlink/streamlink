@@ -238,7 +238,7 @@ ignore = [
 "src/streamlink/_version.py" = ["I"]
 "src/streamlink/plugin/api/useragents.py" = ["E501"]
 "src/streamlink/plugins/*" = ["RUF012"]
-"src/streamlink/webbrowser/cdp/devtools/*" = ["E501", "F401"]
+"src/streamlink/webbrowser/cdp/devtools/*" = ["E303", "E501", "F401"]
 "src/streamlink_cli/main.py" = ["PLW0603"]
 "tests/**" = ["RUF012"]
 

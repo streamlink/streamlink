@@ -106,7 +106,6 @@ class TestPlayerArgs:
     def test_input(self):
         pass
 
-
     @pytest.mark.parametrize(("playerpath", "playerargsclass"), [
         pytest.param(
             "player",
