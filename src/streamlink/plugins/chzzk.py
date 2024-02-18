@@ -9,7 +9,8 @@ import re
 import time
 
 from streamlink.exceptions import StreamError
-from streamlink.plugin import Plugin, pluginmatcher, validate
+from streamlink.plugin import Plugin, pluginmatcher
+from streamlink.plugin.api import validate
 from streamlink.stream.dash import DASHStream
 from streamlink.stream.hls import HLSStream, HLSStreamReader, HLSStreamWorker, parse_m3u8
 
