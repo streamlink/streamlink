@@ -97,41 +97,6 @@ class ChzzkHLSStream(HLSStream):
             self.refresh_playlist()
         return self._url
 
-    @classmethod
-    def parse_chzzk_playlist(
-        cls, session: Streamlink, url: str, channel: str, **kwargs,
-    ) -> Dict[str, MuxedStream]:
-        stream_name: Optional[str]
-        streams: Dict[str, MuxedStream] = {}
-
-        request_args = session.http.valid_request_args(**kwargs)
-        res = cls._fetch_variant_playlist(session, url, **request_args)
-
-        try:
-            multivariant = parse_m3u8(res, parser=cls.__parser__)
-        except ValueError as err:
-            raise OSError(f"Failed to parse playlist: {err}") from err
-
-        for playlist in multivariant.playlists:
-            if playlist.is_iframe:
-                continue
-
-            if playlist.stream_info.resolution and playlist.stream_info.resolution.height:
-                stream_name = f"{playlist.stream_info.resolution.height}p"
-
-            if not stream_name:
-                continue
-            uris = [playlist.uri]
-            for media in playlist.media:
-                if media.uri:
-                    uris.append(media.uri)
-
-            substreams = [ChzzkHLSStream(session, uri, channel) for uri in uris]
-            streams[stream_name] = MuxedStream(session, *substreams, format="mpegts", copyts=True)
-
-        return streams
-
-
 class ChzzkAPI:
     _CHANNELS_LIVE_DETAIL_URL = "https://api.chzzk.naver.com/service/v2/channels/{channel_id}/live-detail"
     _VIDEOS_URL = "https://api.chzzk.naver.com/service/v2/videos/{video_id}"
@@ -248,10 +213,11 @@ class Chzzk(Plugin):
             return
         for media_id, media_protocol, media_path in media:
             if media_protocol == "HLS" and media_id == "HLS":
-                return ChzzkHLSStream.parse_chzzk_playlist(
+                return ChzzkHLSStream.parse_variant_playlist(
                     self.session,
                     media_path,
                     channel=channel_id,
+                    ffmpeg_options={"copyts": True}
                 )
 
     def _get_video(self, video_id):
