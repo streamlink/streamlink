@@ -7,17 +7,11 @@ $type live, vod
 import logging
 import re
 import time
-from typing import Dict, Optional
 
 from streamlink.exceptions import StreamError
-from streamlink.plugin import Plugin, pluginmatcher
-from streamlink.plugin.api import validate
-from streamlink.session import Streamlink
+from streamlink.plugin import Plugin, pluginmatcher, validate
 from streamlink.stream.dash import DASHStream
-from streamlink.stream.ffmpegmux import MuxedStream
-from streamlink.stream.hls import HLSStream
-from streamlink.stream.hls.hls import HLSStreamReader, HLSStreamWorker
-from streamlink.stream.hls.m3u8 import parse_m3u8
+from streamlink.stream.hls import HLSStream, HLSStreamReader, HLSStreamWorker, parse_m3u8
 
 
 log = logging.getLogger(__name__)
@@ -47,15 +41,15 @@ class ChzzkHLSStream(HLSStream):
     _EXPIRE = re.compile(r"exp=(\d+)")
     _REFRESH_BEFORE = 3 * 60 * 60  # 3 hours
 
-    def __init__(self, session, url, channel, *args, **kwargs):
+    def __init__(self, session, url, channel_id, *args, **kwargs):
         super().__init__(session, url, *args, **kwargs)
         self._url = url
-        self._channel = channel
+        self._channel_id = channel_id
         self._api = ChzzkAPI(session)
 
     def refresh_playlist(self):
         log.debug("Refreshing the stream URL to get a new token.")
-        datatype, data = self._api.get_live_detail(self._channel)
+        datatype, data = self._api.get_live_detail(self._channel_id)
         if datatype == "error":
             raise StreamError(data)
         media, status, *_ = data
@@ -216,8 +210,8 @@ class Chzzk(Plugin):
                 return ChzzkHLSStream.parse_variant_playlist(
                     self.session,
                     media_path,
-                    channel=channel_id,
-                    ffmpeg_options={"copyts": True}
+                    channel_id=channel_id,
+                    ffmpeg_options={"copyts": True},
                 )
 
     def _get_video(self, video_id):
