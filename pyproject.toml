@@ -1,6 +1,6 @@
 [build-system]
 requires = [
-  "setuptools >=64",
+  "setuptools >=65.6",
   "wheel",
   # The versioningit build-requirement gets removed from the source distribution,
   # as the version string is already built into it (see the onbuild versioningit hook):
