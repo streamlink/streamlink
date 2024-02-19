@@ -147,15 +147,21 @@ class ChzzkAPI:
                         validate.parse_json(),
                         {
                             "media": [
-                                {
-                                    "mediaId": str,
-                                    "protocol": str,
-                                    "path": validate.url(),
-                                },
+                                validate.all(
+                                    {
+                                        "mediaId": str,
+                                        "protocol": str,
+                                        "path": validate.url(),
+                                    },
+                                    validate.union_get(
+                                        "mediaId",
+                                        "protocol",
+                                        "path",
+                                    ),
+                                ),
                             ],
                         },
                         validate.get("media"),
-                        validate.transform(lambda media: [(m["mediaId"], m["protocol"], m["path"]) for m in media]),
                     ),
                 ),
             },
