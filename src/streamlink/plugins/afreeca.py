@@ -70,6 +70,9 @@ class AfreecaTV(Plugin):
                 validate.optional("RMD"): str,
                 validate.optional("AID"): str,
                 validate.optional("CDN"): str,
+                validate.optional("BJID"): str,
+                validate.optional("BJNICK"): str,
+                validate.optional("TITLE"): str,
             },
         },
         validate.get("CHANNEL"),
@@ -113,7 +116,13 @@ class AfreecaTV(Plugin):
             "type": "live",
         }
         res = self.session.http.post(self.CHANNEL_API_URL, data=data)
-        return self.session.http.json(res, schema=self._schema_channel)
+        json = self.session.http.json(res, schema=self._schema_channel)
+
+        self.id = json["BJID"]
+        self.title = json["TITLE"]
+        self.author = json["BJNICK"]
+
+        return json
 
     def _get_hls_key(self, broadcast, username, quality):
         data = {
