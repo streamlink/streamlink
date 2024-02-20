@@ -2,6 +2,9 @@
 $description TV and live video game broadcasts, artist performances and personal daily-life video blogs & shows.
 $url play.afreecatv.com
 $type live
+$metadata id
+$metadata author
+$metadata title
 """
 
 import logging
@@ -65,11 +68,13 @@ class AfreecaTV(Plugin):
         {
             "CHANNEL": {
                 "RESULT": validate.transform(int),
-                validate.optional("BPWD"): str,
-                validate.optional("BNO"): str,
-                validate.optional("RMD"): str,
-                validate.optional("AID"): str,
-                validate.optional("CDN"): str,
+                validate.optional("BPWD"): validate.any(str, None),
+                validate.optional("BNO"): validate.any(str, None),
+                validate.optional("RMD"): validate.any(str, None),
+                validate.optional("AID"): validate.any(str, None),
+                validate.optional("CDN"): validate.any(str, None),
+                validate.optional("BJNICK"): validate.any(str, None),
+                validate.optional("TITLE"): validate.any(str, None),
             },
         },
         validate.get("CHANNEL"),
@@ -141,14 +146,14 @@ class AfreecaTV(Plugin):
     def _get_hls_stream(self, broadcast, username, quality, rmd):
         keyjson = self._get_hls_key(broadcast, username, quality)
 
-        if keyjson["RESULT"] != self.CHANNEL_RESULT_OK:
+        if keyjson.get("RESULT") != self.CHANNEL_RESULT_OK:
             return
-        key = keyjson["AID"]
+        key = keyjson.get("AID")
 
         info = self._get_stream_info(broadcast, quality, rmd)
 
         if "view_url" in info:
-            return AfreecaHLSStream(self.session, info["view_url"], params={"aid": key})
+            return AfreecaHLSStream(self.session, info.get("view_url"), params={"aid": key})
 
     def _login(self, username, password):
         data = {
@@ -164,7 +169,7 @@ class AfreecaTV(Plugin):
         res = self.session.http.post("https://login.afreecatv.com/app/LoginAction.php", data=data)
         data = self.session.http.json(res)
         log.trace(f"{data!r}")
-        if data["RESULT"] != self.CHANNEL_RESULT_OK:
+        if data.get("RESULT") != self.CHANNEL_RESULT_OK:
             return False
         self.save_cookies()
         return True
@@ -173,7 +178,7 @@ class AfreecaTV(Plugin):
         login_username = self.get_option("username")
         login_password = self.get_option("password")
 
-        self.session.http.headers.update({"Referer": self.url, "Origin": "http://play.afreecatv.com"})
+        self.session.http.headers.update({"Referer": self.url, "Origin": "https://play.afreecatv.com"})
 
         if self.options.get("purge_credentials"):
             self.clear_cookies()
@@ -190,8 +195,8 @@ class AfreecaTV(Plugin):
                 log.error("Failed to login")
 
         m = self.match.groupdict()
-        username = m["username"]
-        bno = m["bno"]
+        username = m.get("username")
+        bno = m.get("bno")
         if bno is None:
             res = self.session.http.get(self.url)
             m = self._re_bno.search(res.text)
@@ -211,9 +216,13 @@ class AfreecaTV(Plugin):
         elif channel.get("RESULT") != self.CHANNEL_RESULT_OK:
             return
 
-        (broadcast, rmd) = (channel["BNO"], channel["RMD"])
+        (broadcast, rmd) = (channel.get("BNO"), channel.get("RMD"))
         if not (broadcast and rmd):
             return
+
+        self.id = channel.get("BNO")
+        self.author = channel.get("BJNICK")
+        self.title = channel.get("TITLE")
 
         for qkey in self.QUALITYS:
             hls_stream = self._get_hls_stream(broadcast, username, qkey, rmd)
