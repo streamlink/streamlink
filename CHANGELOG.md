@@ -1,5 +1,19 @@
 # Changelog
 
+## streamlink 6.6.2 (2024-02-20)
+
+Patch release:
+
+- Fixed: missing plugin override log message in non-editable installs ([#5844](https://github.com/streamlink/streamlink/pull/5844))
+- Fixed: incorrect `setuptools` min. version in build requirements ([#5842](https://github.com/streamlink/streamlink/pull/5842))
+- Updated plugins:
+  - afreeca: fixed broadcast number regex ([#5847](https://github.com/streamlink/streamlink/pull/5847))
+  - afreeca: added support for stream metadata ([#5849](https://github.com/streamlink/streamlink/pull/5849))
+  - hiplayer: removed media.gov.kw matcher ([#5848](https://github.com/streamlink/streamlink/pull/5848))
+
+[Full changelog](https://github.com/streamlink/streamlink/compare/6.6.1...6.6.2)
+
+
 ## streamlink 6.6.1 (2024-02-17)
 
 Patch release:
