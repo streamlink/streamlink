@@ -131,6 +131,11 @@ class TestLoad:
         assert session.plugins["testplugin"].__module__ == "streamlink.plugins.testplugin"
         assert caplog.record_tuples == []
 
+    def test_load_path_testplugins_override(self, caplog: pytest.LogCaptureFixture, session: Streamlink):
+        assert session.plugins.load_path(PATH_TESTPLUGINS)
+        assert "testplugin" in session.plugins
+        assert caplog.record_tuples == []
+
         assert session.plugins.load_path(PATH_TESTPLUGINS_OVERRIDE)
         assert "testplugin" in session.plugins
         assert session.plugins.get_names() == ["testplugin"]
@@ -141,6 +146,26 @@ class TestLoad:
                 "streamlink.session",
                 "info",
                 f"Plugin testplugin is being overridden by {PATH_TESTPLUGINS_OVERRIDE / 'testplugin.py'}",
+            ),
+        ]
+
+    def test_load_path_testplugins_override_matchers(self, caplog: pytest.LogCaptureFixture, session: Streamlink):
+        assert _TestPlugin.matchers
+        session.plugins._matchers.update({"testplugin": _TestPlugin.matchers})
+
+        assert "testplugin" not in session.plugins
+        assert session.plugins.get_names() == ["testplugin"]
+        assert caplog.record_tuples == []
+
+        assert session.plugins.load_path(PATH_TESTPLUGINS)
+        assert session.plugins.get_names() == ["testplugin"]
+        assert session.plugins["testplugin"].__name__ == "TestPlugin"
+        assert session.plugins["testplugin"].__module__ == "streamlink.plugins.testplugin"
+        assert [(record.name, record.levelname, record.message) for record in caplog.records] == [
+            (
+                "streamlink.session",
+                "info",
+                f"Plugin testplugin is being overridden by {PATH_TESTPLUGINS / 'testplugin.py'}",
             ),
         ]
 

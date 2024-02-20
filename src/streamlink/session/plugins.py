@@ -179,7 +179,7 @@ class StreamlinkPlugins:
             if lookup is None:
                 continue
             mod, plugin = lookup
-            if name in self._plugins:
+            if name in self._plugins or name in self._matchers:
                 log.info(f"Plugin {name} is being overridden by {mod.__file__}")
             plugins[name] = plugin
 
