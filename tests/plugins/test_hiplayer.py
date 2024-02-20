@@ -7,6 +7,4 @@ class TestPluginCanHandleUrlHiPlayer(PluginCanHandleUrl):
 
     should_match = [
         ("alwasatly", "https://alwasat.ly/live"),
-        ("mediagovkw", "https://www.media.gov.kw/LiveTV.aspx?PanChannel=KTV1"),
-        ("mediagovkw", "https://www.media.gov.kw/LiveTV.aspx?PanChannel=KTVSports"),
     ]
