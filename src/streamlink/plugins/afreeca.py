@@ -70,7 +70,6 @@ class AfreecaTV(Plugin):
                 validate.optional("RMD"): validate.any(str, None),
                 validate.optional("AID"): validate.any(str, None),
                 validate.optional("CDN"): validate.any(str, None),
-                validate.optional("BJID"): validate.any(str, None),
                 validate.optional("BJNICK"): validate.any(str, None),
                 validate.optional("TITLE"): validate.any(str, None),
             },
@@ -218,7 +217,7 @@ class AfreecaTV(Plugin):
         if not (broadcast and rmd):
             return
 
-        self.id = channel.get("BJID")
+        self.id = channel.get("BNO")
         self.author = channel.get("BJNICK")
         self.title = channel.get("TITLE")
 
