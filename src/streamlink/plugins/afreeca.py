@@ -217,7 +217,7 @@ class AfreecaTV(Plugin):
         (broadcast, rmd) = (channel.get("BNO"), channel.get("RMD"))
         if not (broadcast and rmd):
             return
-        
+
         self.id = channel.get("BJID")
         self.author = channel.get("BJNICK")
         self.title = channel.get("TITLE")
