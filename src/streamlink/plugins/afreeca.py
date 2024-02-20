@@ -50,7 +50,7 @@ class AfreecaHLSStream(HLSStream):
     help="Purge cached AfreecaTV credentials to initiate a new session and reauthenticate.",
 )
 class AfreecaTV(Plugin):
-    _re_bno = re.compile(r"var nBroadNo = (?P<bno>\d+);")
+    _re_bno = re.compile(r"window.nBroadNo = (?P<bno>\d+);")
 
     CHANNEL_API_URL = "http://live.afreecatv.com/afreeca/player_live_api.php"
     CHANNEL_RESULT_OK = 1
