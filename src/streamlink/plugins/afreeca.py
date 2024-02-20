@@ -52,7 +52,7 @@ class AfreecaHLSStream(HLSStream):
 class AfreecaTV(Plugin):
     _re_bno = re.compile(r"window\.nBroadNo\s*=\s*(?P<bno>\d+);")
 
-    CHANNEL_API_URL = "http://live.afreecatv.com/afreeca/player_live_api.php"
+    CHANNEL_API_URL = "https://live.afreecatv.com/afreeca/player_live_api.php"
     CHANNEL_RESULT_OK = 1
     QUALITYS = ["original", "hd", "sd"]
     QUALITY_WEIGHTS = {
@@ -77,7 +77,7 @@ class AfreecaTV(Plugin):
     _schema_stream = validate.Schema(
         {
             validate.optional("view_url"): validate.url(
-                scheme=validate.any("rtmp", "http"),
+                scheme=validate.any("rtmp", "https"),
             ),
             "stream_status": str,
         },
