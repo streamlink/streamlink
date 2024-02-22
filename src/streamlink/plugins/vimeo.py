@@ -171,10 +171,12 @@ class Vimeo(Plugin):
 
         streams = []
 
+        hls = hls or {}
         for url in hls.values():
             streams.extend(HLSStream.parse_variant_playlist(self.session, url).items())
             break
 
+        dash = dash or {}
         for url in dash.values():
             p = urlparse(url)
             if p.path.endswith("dash.mpd"):
