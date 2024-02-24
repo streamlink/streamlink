@@ -243,9 +243,12 @@ class HLSStreamWriter(SegmentedStreamWriter[HLSSegment, Response]):
                 self.reader.pause()
 
     def _write(self, segment: HLSSegment, result: Response, is_map: bool):
-        if segment.key and segment.key.method != "NONE":
+        # TODO: Rewrite HLSSegment, HLSStreamWriter and HLSStreamWorker based on independent initialization section segments,
+        #       similar to the DASH implementation
+        key = segment.map.key if is_map and segment.map else segment.key
+        if key and key.method != "NONE":
             try:
-                decryptor = self.create_decryptor(segment.key, segment.num)
+                decryptor = self.create_decryptor(key, segment.num)
             except (StreamError, ValueError) as err:
                 log.error(f"Failed to create decryptor: {err}")
                 self.close()
