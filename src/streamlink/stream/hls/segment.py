@@ -46,6 +46,7 @@ class Key(NamedTuple):
 # EXT-X-MAP
 class Map(NamedTuple):
     uri: str
+    key: Optional[Key]
     byterange: Optional[ByteRange]
 
 

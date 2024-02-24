@@ -353,6 +353,7 @@ class M3U8Parser(Generic[TM3U8_co, THLSSegment_co, THLSPlaylist_co], metaclass=M
         byterange = self.parse_byterange(attr.get("BYTERANGE", ""))
         self._map = Map(
             uri=self.uri(uri),
+            key=self._key,
             byterange=byterange,
         )
 

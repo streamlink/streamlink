@@ -1,3 +1,4 @@
+import itertools
 import os
 import typing
 import unittest
@@ -59,7 +60,7 @@ class TagMapEnc(EncryptedBase, TagMap):
 
 
 class TagKey(Tag):
-    path = "encryption.key"
+    _id = itertools.count()
 
     def __init__(self, method="NONE", uri=None, iv=None, keyformat=None, keyformatversions=None):
         attrs = {"METHOD": method}
@@ -73,6 +74,7 @@ class TagKey(Tag):
             attrs["KEYFORMATVERSIONS"] = self.val_quoted_string(keyformatversions)
         super().__init__("EXT-X-KEY", attrs)
         self.uri = uri
+        self.path = f"encryption{next(self._id)}.key"
 
     def url(self, namespace):
         return self.uri.format(namespace=namespace) if self.uri else super().url(namespace)
@@ -718,7 +720,6 @@ class TestHLSStreamEncrypted(TestMixinStreamHLS, unittest.TestCase):
         self.mock("GET", self.url(map1), content=map1.content)
         self.mock("GET", self.url(map2), content=map2.content)
 
-        # noinspection PyTypeChecker
         segments = self.subject([
             Playlist(0, [key, map1] + [SegmentEnc(num, aesKey, aesIv) for num in range(2)]),
             Playlist(2, [key, map2] + [SegmentEnc(num, aesKey, aesIv) for num in range(2, 4)], end=True),
@@ -731,6 +732,52 @@ class TestHLSStreamEncrypted(TestMixinStreamHLS, unittest.TestCase):
         assert data == self.content([
             map1, segments[0], segments[1], map2, segments[2], segments[3],
         ], prop="content_plain")
+
+    def test_hls_encrypted_aes128_with_differently_encrypted_map(self):
+        aesKey1, aesIv1, key1 = self.gen_key()  # init key
+        aesKey2, aesIv2, key2 = self.gen_key()  # media key
+        map1 = TagMapEnc(1, namespace=self.id(), key=aesKey1, iv=aesIv1)
+        map2 = TagMapEnc(2, namespace=self.id(), key=aesKey1, iv=aesIv1)
+        self.mock("GET", self.url(map1), content=map1.content)
+        self.mock("GET", self.url(map2), content=map2.content)
+
+        segments = self.subject([
+            Playlist(0, [key1, map1, key2] + [SegmentEnc(num, aesKey2, aesIv2) for num in range(2)]),
+            Playlist(2, [key1, map2, key2] + [SegmentEnc(num, aesKey2, aesIv2) for num in range(2, 4)], end=True),
+        ])
+
+        self.await_write(1 + 2 + 1 + 2)  # 1 map, 2 segments, 1 map, 2 segments
+        data = self.await_read(read_all=True)
+        self.await_close()
+
+        assert data == self.content([
+            map1, segments[0], segments[1], map2, segments[2], segments[3],
+        ], prop="content_plain")
+
+    def test_hls_encrypted_aes128_with_plaintext_map(self):
+        aesKey, aesIv, key = self.gen_key()
+        map1 = TagMap(1, namespace=self.id())
+        map2 = TagMap(2, namespace=self.id())
+        self.mock("GET", self.url(map1), content=map1.content)
+        self.mock("GET", self.url(map2), content=map2.content)
+
+        segments = self.subject([
+            Playlist(0, [map1, key] + [SegmentEnc(num, aesKey, aesIv) for num in range(2)]),
+            Playlist(2, [map2, key] + [SegmentEnc(num, aesKey, aesIv) for num in range(2, 4)], end=True),
+        ])
+
+        self.await_write(1 + 2 + 1 + 2)  # 1 map, 2 segments, 1 map, 2 segments
+        data = self.await_read(read_all=True)
+        self.await_close()
+
+        assert data == (
+            map1.content
+            + segments[0].content_plain
+            + segments[1].content_plain
+            + map2.content
+            + segments[2].content_plain
+            + segments[3].content_plain
+        )
 
     def test_hls_encrypted_aes128_key_uri_override(self):
         aesKey, aesIv, key = self.gen_key(uri="http://real-mocked/{namespace}/encryption.key?foo=bar")
