@@ -219,13 +219,23 @@ def build_parser():
         """,
     )
     general.add_argument(
+        "--plugin-dir",
+        dest="plugin_dirs",
+        metavar="DIRECTORY",
+        action="append",
+        help="""
+        Load plugins from this directory.
+
+        Can be set multiple times to load plugins from multiple directories.
+        """,
+    )
+    general.add_argument(
         "--plugin-dirs",
         metavar="DIRECTORY",
         type=comma_list,
+        action="extend",
         help="""
-        Attempts to load plugins from these directories.
-
-        Multiple directories can be used by separating them with a comma.
+        Load plugins from a list of comma-separated directories. (deprecated)
         """,
     )
     general.add_argument(
