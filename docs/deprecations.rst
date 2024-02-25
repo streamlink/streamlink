@@ -1,6 +1,17 @@
 Deprecations
 ============
 
+streamlink 6.7.0
+----------------
+
+--plugin-dirs
+^^^^^^^^^^^^^
+
+The ``--plugin-dirs`` CLI argument for sideloading plugins from one or more custom directories, separated by commas,
+has been deprecated in favor of the newly added :option:`--plugin-dir` CLI argument, which only takes a single path,
+but can be set multiple times for loading plugins from more than one path.
+
+
 streamlink 6.6.0
 ----------------
 
