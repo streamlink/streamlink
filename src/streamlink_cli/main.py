@@ -824,9 +824,11 @@ def log_current_arguments(session: Streamlink, parser: argparse.ArgumentParser):
                 sensitive.add(parg.argument_name(pname))
 
     log.debug("Arguments:")
+    seen = set()
     for action in parser._actions:
-        if not hasattr(args, action.dest):
+        if not hasattr(args, action.dest) or action.dest in seen:
             continue
+        seen.add(action.dest)
         value = getattr(args, action.dest)
         if action.default != value:
             name = next(  # pragma: no branch
