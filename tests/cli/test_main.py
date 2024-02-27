@@ -21,6 +21,7 @@ from streamlink_cli.compat import stdout
 from streamlink_cli.main import (
     Formatter,
     NoPluginError,
+    build_parser,
     create_output,
     format_valid_streams,
     handle_stream,
@@ -488,10 +489,6 @@ class TestCLIMainOutputStream:
 
 # TODO: rewrite using pytest (caplog+capsys fixtures) and move to separate test module
 class _TestCLIMainLogging(unittest.TestCase):
-    # stop test execution at the setup_signals() call, as we're not interested in what comes afterwards
-    class StopTest(Exception):
-        pass
-
     @classmethod
     def subject(cls, argv, **kwargs):
         session = Streamlink(plugins_builtin=False)
@@ -499,17 +496,15 @@ class _TestCLIMainLogging(unittest.TestCase):
 
         with patch("streamlink_cli.main.os.geteuid", create=True, new=Mock(return_value=kwargs.get("euid", 1000))), \
              patch("streamlink_cli.main.streamlink", session), \
-             patch("streamlink_cli.main.setup_signals", side_effect=cls.StopTest), \
+             patch("streamlink_cli.main.setup_signals"), \
              patch("streamlink_cli.main.CONFIG_FILES", []), \
              patch("streamlink_cli.main.setup_streamlink"), \
              patch("streamlink_cli.main.setup_plugins"), \
              patch("streamlink_cli.argparser.find_default_player"), \
              patch("sys.argv") as mock_argv:
             mock_argv.__getitem__.side_effect = lambda x: argv[x]
-            try:
-                streamlink_cli.main.main()
-            except cls.StopTest:
-                pass
+            parser = build_parser()
+            streamlink_cli.main.setup(parser)
 
     def tearDown(self):
         streamlink_cli.main.logger.root.handlers.clear()
@@ -622,7 +617,7 @@ class TestCLIMainLoggingInfos(_TestCLIMainLogging):
     @patch("streamlink_cli.main.log")
     @patch("streamlink_cli.main.streamlink_version", "streamlink")
     @patch("streamlink_cli.main.importlib.metadata")
-    @patch("streamlink_cli.main.log_current_arguments", Mock(side_effect=_TestCLIMainLogging.StopTest))
+    @patch("streamlink_cli.main.log_current_arguments", Mock())
     @patch("platform.python_version", Mock(return_value="python"))
     @patch("ssl.OPENSSL_VERSION", "OPENSSL_VERSION")
     def test_log_current_versions(self, mock_importlib_metadata: Mock, mock_log: Mock):
