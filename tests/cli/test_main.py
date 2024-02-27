@@ -3,15 +3,11 @@ import unittest
 from argparse import Namespace
 from io import BytesIO
 from pathlib import Path
-from textwrap import dedent
 from unittest.mock import Mock, call, patch
 
 import pytest
 
-import streamlink_cli.main
-import tests.resources
 from streamlink.exceptions import PluginError, StreamError, StreamlinkDeprecationWarning
-from streamlink.session import Streamlink
 from streamlink.stream.stream import Stream
 from streamlink_cli.compat import stdout
 from streamlink_cli.main import (
@@ -480,69 +476,3 @@ class TestCLIMainOutputStream:
             "The --force-progress option has been deprecated in favor of --progress=force",
         )] if deprecation else [])
         assert mock_streamrunner.call_args_list == [call(streamio, output, show_progress=expected)]
-
-
-class TestCLIMainPrint(unittest.TestCase):
-    def subject(self):
-        with patch.object(Streamlink, "resolve_url") as mock_resolve_url, \
-             patch.object(Streamlink, "resolve_url_no_redirect") as mock_resolve_url_no_redirect:
-            session = Streamlink(plugins_builtin=False)
-            session.plugins.load_path(Path(tests.__path__[0]) / "plugin")
-            with patch("streamlink_cli.main.os.geteuid", create=True, new=Mock(return_value=1000)), \
-                 patch("streamlink_cli.main.streamlink", session), \
-                 patch("streamlink_cli.main.CONFIG_FILES", []), \
-                 patch("streamlink_cli.main.setup_streamlink"), \
-                 patch("streamlink_cli.main.setup_plugins"), \
-                 patch("streamlink_cli.main.setup_signals"):
-                with pytest.raises(SystemExit) as cm:
-                    streamlink_cli.main.main()
-                assert cm.value.code == 0
-                mock_resolve_url.assert_not_called()
-                mock_resolve_url_no_redirect.assert_not_called()
-
-    def tearDown(self):
-        streamlink_cli.main.logger.root.handlers.clear()
-
-    @staticmethod
-    def get_stdout(mock_stdout):
-        return "".join([call_arg[0][0] for call_arg in mock_stdout.write.call_args_list])
-
-    @patch("sys.stdout")
-    @patch("sys.argv", ["streamlink"])
-    def test_print_usage(self, mock_stdout):
-        self.subject()
-        assert self.get_stdout(mock_stdout) == dedent("""
-            usage: streamlink [OPTIONS] <URL> [STREAM]
-
-            Use -h/--help to see the available options or read the manual at https://streamlink.github.io
-        """).lstrip()
-
-    @patch("sys.stdout")
-    @patch("sys.argv", ["streamlink", "--help"])
-    def test_print_help(self, mock_stdout):
-        self.subject()
-        output = self.get_stdout(mock_stdout)
-        assert "usage: streamlink [OPTIONS] <URL> [STREAM]" in output
-        assert dedent("""
-            Streamlink is a command-line utility that extracts streams from various
-            services and pipes them into a video player of choice.
-        """) in output
-        assert dedent("""
-            For more in-depth documentation see:
-              https://streamlink.github.io
-
-            Please report broken plugins or bugs to the issue tracker on Github:
-              https://github.com/streamlink/streamlink/issues
-        """) in output
-
-    @patch("sys.stdout")
-    @patch("sys.argv", ["streamlink", "--plugins"])
-    def test_print_plugins(self, mock_stdout):
-        self.subject()
-        assert self.get_stdout(mock_stdout) == "Available plugins: testplugin\n"
-
-    @patch("sys.stdout")
-    @patch("sys.argv", ["streamlink", "--plugins", "--json"])
-    def test_print_plugins_json(self, mock_stdout):
-        self.subject()
-        assert self.get_stdout(mock_stdout) == '[\n  "testplugin"\n]\n'
