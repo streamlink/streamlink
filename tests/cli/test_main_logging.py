@@ -2,6 +2,7 @@ import logging
 import sys
 from io import StringIO
 from pathlib import Path
+from textwrap import dedent
 from unittest.mock import Mock, call
 
 import pytest
@@ -371,3 +372,49 @@ class TestLogfile:
         assert streamobj.getvalue() == content
         assert out == ""
         assert err == ""
+
+
+class TestPrint:
+    @pytest.fixture(autouse=True)
+    def stdout(self, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture, session: Streamlink):
+        mock_resolve_url = Mock()
+        monkeypatch.setattr(session, "resolve_url", mock_resolve_url)
+
+        with pytest.raises(SystemExit) as cm:
+            streamlink_cli.main.main()
+        assert cm.value.code == 0
+        assert mock_resolve_url.call_args_list == []
+
+        out, err = capsys.readouterr()
+        assert err == ""
+
+        return out
+
+    def test_usage(self, stdout: str):
+        assert stdout == dedent("""
+            usage: streamlink [OPTIONS] <URL> [STREAM]
+
+            Use -h/--help to see the available options or read the manual at https://streamlink.github.io
+        """).lstrip()
+
+    @pytest.mark.parametrize("argv", [["--help"]], indirect=["argv"])
+    def test_help(self, argv: list, stdout: str):
+        assert "usage: streamlink [OPTIONS] <URL> [STREAM]" in stdout
+        assert dedent("""
+            Streamlink is a command-line utility that extracts streams from various
+            services and pipes them into a video player of choice.
+        """) in stdout
+        assert dedent("""
+            For more in-depth documentation see:
+              https://streamlink.github.io
+
+            Please report broken plugins or bugs to the issue tracker on Github:
+              https://github.com/streamlink/streamlink/issues
+        """) in stdout
+
+    @pytest.mark.parametrize(("argv", "expected"), [
+        pytest.param(["--plugins"], "Available plugins: testplugin\n", id="plugins-no-json"),
+        pytest.param(["--plugins", "--json"], """[\n  "testplugin"\n]\n""", id="plugins-json"),
+    ], indirect=["argv"])
+    def test_plugins(self, argv: list, expected: str, stdout: str):
+        assert stdout == expected
