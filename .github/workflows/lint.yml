@@ -35,7 +35,7 @@ jobs:
           -r dev-requirements.txt
       - name: ruff
         run: >
-          python -m ruff .
+          python -m ruff check .
 
   typing:
     name: Typing

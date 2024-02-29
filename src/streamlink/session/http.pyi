@@ -12,7 +12,6 @@ from typing_extensions import TypeAlias
 from streamlink.plugin.api.validate import Schema
 from streamlink.session import Streamlink
 
-
 # START: borrowed from typeshed / types-requests
 # https://github.com/python/typeshed/blob/b3db49abbd563a8543783fcd2b4d6765b32812b0/stubs/requests/requests/sessions.pyi
 
