@@ -36,6 +36,14 @@ class TestOptionsDocumentation:
             assert option in options or option in setters, f"Documented option '{option}' exists"
 
 
+def test_default_objects():
+    one = Streamlink(plugins_builtin=False)
+    two = Streamlink(plugins_builtin=False)
+    ids_one = {key: id(value) for key, value in one.options.defaults.items()}
+    ids_two = {key: id(value) for key, value in two.options.defaults.items()}
+    assert ids_one != ids_two
+
+
 def test_session_wrapper_methods(session: Streamlink):
     session.set_option("test_option", "option")
     assert session.get_option("test_option") == "option"

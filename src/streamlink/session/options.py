@@ -1,7 +1,7 @@
 import warnings
 from pathlib import Path
 from socket import AF_INET, AF_INET6
-from typing import TYPE_CHECKING, Any, Callable, ClassVar, Dict, Iterator, Mapping, Optional, Tuple
+from typing import TYPE_CHECKING, Any, Callable, ClassVar, Dict, Iterator, Mapping, Tuple
 
 import urllib3.util.connection as urllib3_util_connection
 from requests.adapters import HTTPAdapter
@@ -300,50 +300,48 @@ class StreamlinkOptions(Options):
           - Whether to launch the webbrowser in headless mode or not
     """
 
-    _DEFAULTS: ClassVar[Dict[str, Any]] = {
-        "user-input-requester": None,
-        "locale": None,
-        "interface": None,
-        "ipv4": False,
-        "ipv6": False,
-        "ringbuffer-size": 1024 * 1024 * 16,  # 16 MB
-        "mux-subtitles": False,
-        "stream-segment-attempts": 3,
-        "stream-segment-threads": 1,
-        "stream-segment-timeout": 10.0,
-        "stream-timeout": 60.0,
-        "hls-live-edge": 3,
-        "hls-live-restart": False,
-        "hls-start-offset": 0.0,
-        "hls-duration": None,
-        "hls-playlist-reload-attempts": 3,
-        "hls-playlist-reload-time": "default",
-        "hls-segment-queue-threshold": 3,
-        "hls-segment-stream-data": False,
-        "hls-segment-ignore-names": [],
-        "hls-segment-key-uri": None,
-        "hls-audio-select": [],
-        "dash-manifest-reload-attempts": 3,
-        "ffmpeg-ffmpeg": None,
-        "ffmpeg-no-validation": False,
-        "ffmpeg-verbose": False,
-        "ffmpeg-verbose-path": None,
-        "ffmpeg-fout": None,
-        "ffmpeg-video-transcode": None,
-        "ffmpeg-audio-transcode": None,
-        "ffmpeg-copyts": False,
-        "ffmpeg-start-at-zero": False,
-        "webbrowser": True,
-        "webbrowser-executable": None,
-        "webbrowser-timeout": 20.0,
-        "webbrowser-cdp-host": None,
-        "webbrowser-cdp-port": None,
-        "webbrowser-cdp-timeout": 2.0,
-        "webbrowser-headless": True,
-    }
-
-    def __init__(self, session: "Streamlink", defaults: Optional[Dict[str, Any]] = None) -> None:
-        super().__init__(defaults=defaults or self._DEFAULTS)
+    def __init__(self, session: "Streamlink") -> None:
+        super().__init__(defaults={
+            "user-input-requester": None,
+            "locale": None,
+            "interface": None,
+            "ipv4": False,
+            "ipv6": False,
+            "ringbuffer-size": 1024 * 1024 * 16,  # 16 MB
+            "mux-subtitles": False,
+            "stream-segment-attempts": 3,
+            "stream-segment-threads": 1,
+            "stream-segment-timeout": 10.0,
+            "stream-timeout": 60.0,
+            "hls-live-edge": 3,
+            "hls-live-restart": False,
+            "hls-start-offset": 0.0,
+            "hls-duration": None,
+            "hls-playlist-reload-attempts": 3,
+            "hls-playlist-reload-time": "default",
+            "hls-segment-queue-threshold": 3,
+            "hls-segment-stream-data": False,
+            "hls-segment-ignore-names": [],
+            "hls-segment-key-uri": None,
+            "hls-audio-select": [],
+            "dash-manifest-reload-attempts": 3,
+            "ffmpeg-ffmpeg": None,
+            "ffmpeg-no-validation": False,
+            "ffmpeg-verbose": False,
+            "ffmpeg-verbose-path": None,
+            "ffmpeg-fout": None,
+            "ffmpeg-video-transcode": None,
+            "ffmpeg-audio-transcode": None,
+            "ffmpeg-copyts": False,
+            "ffmpeg-start-at-zero": False,
+            "webbrowser": True,
+            "webbrowser-executable": None,
+            "webbrowser-timeout": 20.0,
+            "webbrowser-cdp-host": None,
+            "webbrowser-cdp-port": None,
+            "webbrowser-cdp-timeout": 2.0,
+            "webbrowser-headless": True,
+        })
         self.session = session
 
     # ---- utils
