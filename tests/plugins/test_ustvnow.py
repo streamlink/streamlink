@@ -6,7 +6,7 @@ class TestPluginCanHandleUrlUSTVNow(PluginCanHandleUrl):
     __plugin__ = USTVNow
 
     should_match = [
-        "http://www.ustvnow.com/live/foo/-65",
+        "https://www.ustvnow.com/channel/live/cbs",
     ]
 
 
