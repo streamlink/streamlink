@@ -63,21 +63,16 @@ _Verify: TypeAlias = bool | str
 
 # END: borrowed from typeshed / types-requests
 
-
 _AcceptableStatus: TypeAlias = Sequence[int]
 _Exception: TypeAlias = type[Exception]
 
-
 # ----
-
 
 class TLSNoDHAdapter(HTTPAdapter):
     ...
 
-
 class TLSSecLevel1Adapter(HTTPAdapter):
     ...
-
 
 class HTTPSession(Session):
     params: dict
