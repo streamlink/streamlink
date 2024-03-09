@@ -1,5 +1,23 @@
 # Changelog
 
+## streamlink 6.7.0 (2024-03-09)
+
+Release highlights:
+
+- Added: repeatable `--plugin-dir` CLI argument ([5866](https://github.com/streamlink/streamlink/pull/5866))
+- Deprecated: `--plugin-dirs` CLI argument with comma separated paths ([5866](https://github.com/streamlink/streamlink/pull/5866))
+- Fixed: independent encryption status of HLS initialization sections ([#5861](https://github.com/streamlink/streamlink/pull/5861))
+- Fixed: objects of default session options being shared between sessions ([#5875](https://github.com/streamlink/streamlink/pull/5875))
+- Updated plugins:
+  - bloomberg: fixed data regex ([#5869](https://github.com/streamlink/streamlink/pull/5869))
+  - ltv_lsm_lv: fixed player ID retrieval, removed custom HLS implementation ([#5858](https://github.com/streamlink/streamlink/pull/5858))
+  - mangomolo: new plugin ([#5852](https://github.com/streamlink/streamlink/pull/5852))
+  - ustvnow: updated matcher ([#5881](https://github.com/streamlink/streamlink/pull/5881))
+  - vimeo: fixed optional DASH streams of live events ([#5854](https://github.com/streamlink/streamlink/pull/5854))
+
+[Full changelog](https://github.com/streamlink/streamlink/compare/6.6.2...6.7.0)
+
+
 ## streamlink 6.6.2 (2024-02-20)
 
 Patch release:
