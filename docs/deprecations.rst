@@ -60,11 +60,11 @@ streamlink 5.3.0
 Global plugin arguments
 ^^^^^^^^^^^^^^^^^^^^^^^
 
+:bdg-ref-danger:`Removed in 6.0.0 <migrations:Global plugin arguments>`
+
 The ``is_global=True`` :py:class:`plugin argument <streamlink.options.Argument>` parameter has been deprecated.
 Instead of defining a global plugin argument to set a key-value pair on the plugin's options, use the respective option on
 the plugin's Streamlink session instance instead.
-
-:bdg-ref-danger:`Removed in 6.0.0 <migrations:Global plugin arguments>`
 
 
 streamlink 5.2.0
@@ -73,10 +73,10 @@ streamlink 5.2.0
 plugin.api.validate.text
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
+:bdg-ref-danger:`Removed in 6.0.0 <migrations:plugin.api.validate.text>`
+
 The ``plugin.api.validate.text`` alias for ``str`` has been marked as deprecated, as it is a remnant of the py2 implementation.
 Simply replace ``validate.text`` with ``str`` in each validation schema.
-
-:bdg-ref-danger:`Removed in 6.0.0 <migrations:plugin.api.validate.text>`
 
 
 streamlink 5.0.0
@@ -84,6 +84,8 @@ streamlink 5.0.0
 
 Plugin.__init__(self, url) compatibility wrapper
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+:bdg-ref-danger:`Removed in 6.0.0 <migrations:Plugin.__init__(self, url) compatibility wrapper>`
 
 With the removal of the ``Plugin.bind()`` class method which was used for setting up the
 :py:class:`Streamlink <streamlink.session.Streamlink>` session instance and module name in each plugin class,
@@ -94,8 +96,6 @@ arguments when subclassing and adding a custom constructor (``*args, **kwargs``)
 
 Compatibility wrappers were added for old custom plugin implementations, and a deprecation message will be shown until
 the compatibility wrappers will get removed in a future release.
-
-:bdg-ref-danger:`Removed in 6.0.0 <migrations:Plugin.__init__(self, url) compatibility wrapper>`
 
 
 streamlink 4.2.0
@@ -142,6 +142,8 @@ streamlink 2.3.0
 
 Plugin.can_handle_url() and Plugin.priority()
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+:bdg-ref-danger:`Removed in 6.0.0 <migrations:Plugin.can_handle_url() and Plugin.priority()>`
 
 A new plugin URL matching API was introduced in 2.3.0 which will help Streamlink with static code analysis and an improved
 plugin loading mechanism in the future. Plugins now define their matching URLs and priorities declaratively.
@@ -218,8 +220,6 @@ message will be written to the info log output for the first plugin that gets re
    Plugins which have more sophisticated logic in their ``can_handle_url()`` classmethod need to be rewritten with
    multiple ``@pluginmatcher`` decorators and/or an improved ``_get_streams()`` method which returns ``None`` or raises a
    ``NoStreamsError`` when there are no streams to be found on that particular URL.
-
-:bdg-ref-danger:`Removed in 6.0.0 <migrations:Plugin.can_handle_url() and Plugin.priority()>`
 
 
 streamlink 2.2.0
