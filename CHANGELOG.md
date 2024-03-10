@@ -4,8 +4,8 @@
 
 Release highlights:
 
-- Added: repeatable `--plugin-dir` CLI argument ([5866](https://github.com/streamlink/streamlink/pull/5866))
-- Deprecated: `--plugin-dirs` CLI argument with comma separated paths ([5866](https://github.com/streamlink/streamlink/pull/5866))
+- Added: repeatable `--plugin-dir` CLI argument ([#5866](https://github.com/streamlink/streamlink/pull/5866))
+- Deprecated: `--plugin-dirs` CLI argument with comma separated paths ([#5866](https://github.com/streamlink/streamlink/pull/5866))
 - Fixed: independent encryption status of HLS initialization sections ([#5861](https://github.com/streamlink/streamlink/pull/5861))
 - Fixed: objects of default session options being shared between sessions ([#5875](https://github.com/streamlink/streamlink/pull/5875))
 - Updated plugins:
