@@ -8,6 +8,7 @@ import freezegun
 import pytest
 
 from streamlink_cli.utils.progress import Progress, ProgressFormatter
+from tests.testutils.handshake import Handshake
 
 
 class TestProgressFormatter:
@@ -294,3 +295,43 @@ class TestProgress:
             progress.update()
             assert output_write.call_args_list[-1] \
                    == call("\r[download] Written 21.00 KiB (6s @ 6.00 KiB/s)              ")
+
+    def test_update(self):
+        handshake = Handshake()
+
+        class _Progress(Progress):
+            def update(self):
+                with handshake():
+                    return super().update()
+
+        stream = StringIO()
+        thread = _Progress(stream=stream, path=PurePath())
+        # override the thread's polling time after initializing the deque of the rolling average download speed:
+        # the interval constructor keyword is used to set the deque size
+        thread.interval = 0
+        thread.start()
+
+        # first tick
+        assert handshake.wait_ready(1)
+        thread.write(b"123")
+        assert handshake.step(1)
+        assert stream.getvalue().split("\r")[-1].startswith("[download] Written 3 bytes")
+
+        # second tick
+        assert handshake.wait_ready(1)
+        thread.write(b"465")
+        assert handshake.step(1)
+        assert stream.getvalue().split("\r")[-1].startswith("[download] Written 6 bytes")
+
+        # close progress thread
+        assert handshake.wait_ready(1)
+        thread.close()
+        assert handshake.step(1)
+        assert stream.getvalue().split("\r")[-1].startswith("[download] Written 6 bytes")
+
+        # write data right after closing the thread, but before it has halted
+        thread.write(b"789")
+        handshake.go()
+        thread.join(1)
+        assert not thread.is_alive()
+        assert stream.getvalue().split("\r")[-1].startswith("[download] Written 9 bytes")
