@@ -33,10 +33,13 @@ def _setup(monkeypatch: pytest.MonkeyPatch, session: Streamlink):
     monkeypatch.setattr("streamlink_cli.main.setup_signals", Mock())
     monkeypatch.setattr("streamlink_cli.argparser.find_default_player", Mock())
 
+    level = streamlink_cli.main.logger.root.level
+
     try:
         yield
     finally:
         streamlink_cli.main.logger.root.handlers.clear()
+        streamlink_cli.main.logger.root.setLevel(level)
         streamlink_cli.main.args = None  # type: ignore[assignment]
         streamlink_cli.main.console = None  # type: ignore[assignment]
 
