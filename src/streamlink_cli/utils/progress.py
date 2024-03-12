@@ -251,9 +251,10 @@ class Progress(Thread):
     def run(self):
         self.started = time()
         try:
-            while not self._wait.wait(self.interval):  # pragma: no cover
+            while not self._wait.wait(self.interval):
                 self.update()
         finally:
+            self.update()
             self.print_end()
 
     def update(self):
