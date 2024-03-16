@@ -12,6 +12,7 @@ import logging
 import re
 from urllib.parse import urljoin, urlparse
 
+from streamlink.exceptions import NoStreamsError
 from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.api import validate
 from streamlink.stream.dash import DASHStream
@@ -26,7 +27,11 @@ log = logging.getLogger(__name__)
 
 @pluginmatcher(
     name="default",
-    pattern=re.compile(r"https?://(?:www\.)?vimeo\.com/.+"),
+    pattern=re.compile(r"https?://(?:www\.)?vimeo\.com/(?!event/).+"),
+)
+@pluginmatcher(
+    name="event",
+    pattern=re.compile(r"https?://(?:www\.)?vimeo\.com/event/(?P<event_id>\d+)"),
 )
 @pluginmatcher(
     name="player",
@@ -35,6 +40,7 @@ log = logging.getLogger(__name__)
 class Vimeo(Plugin):
     VIEWER_URL = "https://vimeo.com/_next/viewer"
     OEMBED_URL = "https://vimeo.com/api/oembed.json"
+    EVENT_EMBED_URL = "https://vimeo.com/event/{id}/embed"
 
     @staticmethod
     def _schema_config(config):
@@ -110,15 +116,19 @@ class Vimeo(Plugin):
 
     def _query_player(self):
         return self.session.http.get(self.url, schema=validate.Schema(
-            re.compile(r"playerConfig\s*=\s*({.+?})\s*var"),
+            validate.parse_html(),
+            validate.xml_xpath_string(".//script[contains(text(),'window.playerConfig')][1]/text()"),
             validate.none_or_all(
-                validate.get(1),
-                validate.parse_json(),
-                validate.transform(self._schema_config),
+                re.compile(r"^\s*window\.playerConfig\s*=\s*(?P<json>{.+?})\s*$"),
+                validate.none_or_all(
+                    validate.get("json"),
+                    validate.parse_json(),
+                    validate.transform(self._schema_config),
+                ),
             ),
         ))
 
-    def _query_api(self):
+    def _get_config_url(self):
         jwt, api_url = self.session.http.get(
             self.VIEWER_URL,
             schema=validate.Schema(
@@ -135,10 +145,13 @@ class Vimeo(Plugin):
             params={"url": self.url},
             schema=validate.Schema(
                 validate.parse_json(),
-                {"uri": str},
+                {validate.optional("uri"): str},
                 validate.get("uri"),
             ),
         )
+        if not uri:
+            return
+
         player_config_url = urljoin(update_scheme("https://", api_url), uri)
         config_url = self.session.http.get(
             player_config_url,
@@ -150,6 +163,38 @@ class Vimeo(Plugin):
                 validate.get("config_url"),
             ),
         )
+
+        return config_url
+
+    def _get_config_url_event(self):
+        return self.session.http.get(
+            self.EVENT_EMBED_URL.format(id=self.match["event_id"]),
+            schema=validate.Schema(
+                validate.parse_html(),
+                validate.xml_xpath_string(".//script[contains(text(),'var htmlString')][1]/text()"),
+                validate.none_or_all(
+                    re.compile(r"var htmlString\s*=\s*`(?P<html>.+?)`;", re.DOTALL),
+                    validate.none_or_all(
+                        validate.get("html"),
+                        validate.parse_html(),
+                        validate.xml_xpath_string(".//*[@data-config-url][1]/@data-config-url"),
+                    ),
+                ),
+            ),
+        )
+
+    def _query_api(self):
+        config_url = ""
+        if self.matches["event"]:
+            log.debug("Getting event config_url")
+            config_url = self._get_config_url_event()
+        if not config_url:
+            log.debug("Getting config_url")
+            config_url = self._get_config_url()
+
+        if not config_url:
+            log.error("The content is not available")
+            raise NoStreamsError
 
         return self.session.http.get(config_url, schema=validate.Schema(
             validate.parse_json(),
