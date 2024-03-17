@@ -1,3 +1,4 @@
+import contextlib
 from contextlib import nullcontext
 from dataclasses import dataclass
 from functools import partial
@@ -6,6 +7,7 @@ from unittest.mock import AsyncMock
 
 import pytest
 import trio
+from exceptiongroup import ExceptionGroup
 from trio.testing import MockClock, wait_all_tasks_blocked
 from trio_websocket import CloseReason, ConnectionClosed, ConnectionTimeout  # type: ignore[import]
 
@@ -76,9 +78,10 @@ class TestCreateConnection:
     async def test_failure(self, monkeypatch: pytest.MonkeyPatch):
         fake_connect_websocket_url = AsyncMock(side_effect=ConnectionTimeout)
         monkeypatch.setattr("streamlink.webbrowser.cdp.connection.connect_websocket_url", fake_connect_websocket_url)
-        with pytest.raises(ConnectionTimeout):
+        with pytest.raises(ExceptionGroup) as excinfo:
             async with CDPConnection.create("ws://localhost:1234/fake"):
                 pass  # pragma: no cover
+        assert excinfo.group_contains(ConnectionTimeout)
 
     @pytest.mark.trio()
     @pytest.mark.parametrize(("timeout", "expected"), [
@@ -86,39 +89,53 @@ class TestCreateConnection:
         pytest.param(0, 2, id="No timeout uses default value"),
         pytest.param(3, 3, id="Custom timeout value"),
     ])
-    async def test_timeout(self, monkeypatch: pytest.MonkeyPatch, websocket_connection, timeout, expected):
-        async with CDPConnection.create("ws://localhost:1234/fake", timeout=timeout) as cdp_connection:
+    async def test_timeout(self, websocket_connection: FakeWebsocketConnection, timeout: Optional[int], expected: int):
+        async with CDPConnection.create("ws://localhost:1234/fake", timeout=timeout) as cdp_conn:
             pass
-        assert cdp_connection.cmd_timeout == expected
+        assert cdp_conn.cmd_timeout == expected
 
 
 class TestReaderError:
     @pytest.mark.trio()
     async def test_invalid_json(self, caplog: pytest.LogCaptureFixture, websocket_connection: FakeWebsocketConnection):
-        with pytest.raises(CDPError) as cm:  # noqa: PT012
+        with pytest.raises(ExceptionGroup) as excinfo:  # noqa: PT012
             async with CDPConnection.create("ws://localhost:1234/fake"):
                 assert not websocket_connection.closed
                 await websocket_connection.sender.send("INVALID JSON")
                 await wait_all_tasks_blocked()
 
-        assert str(cm.value) == "Received invalid CDP JSON data: Expecting value: line 1 column 1 (char 0)"
+        assert excinfo.group_contains(
+            CDPError,
+            match=r"^Received invalid CDP JSON data: Expecting value: line 1 column 1 \(char 0\)$",
+        )
         assert caplog.records == []
 
     @pytest.mark.trio()
     async def test_unknown_session_id(self, caplog: pytest.LogCaptureFixture, websocket_connection: FakeWebsocketConnection):
-        with pytest.raises(CDPError) as cm:  # noqa: PT012
+        with pytest.raises(ExceptionGroup) as excinfo:  # noqa: PT012
             async with CDPConnection.create("ws://localhost:1234/fake"):
                 assert not websocket_connection.closed
                 await websocket_connection.sender.send("""{"sessionId":"unknown"}""")
                 await wait_all_tasks_blocked()
 
-        assert str(cm.value) == "Unknown CDP session ID: SessionID('unknown')"
+        assert excinfo.group_contains(CDPError, match=r"^Unknown CDP session ID: SessionID\('unknown'\)$")
         assert [(record.name, record.levelname, record.message) for record in caplog.records] == [
             ("streamlink.webbrowser.cdp.connection", "all", """Received message: {"sessionId":"unknown"}"""),
         ]
 
 
+@contextlib.contextmanager
+def raises_group(*group_contains):
+    try:
+        with pytest.raises(ExceptionGroup) as excinfo:
+            yield
+    finally:
+        for args, kwargs, expected in group_contains:
+            assert excinfo.group_contains(*args, **kwargs) is expected
+
+
 class TestSend:
+    # noinspection PyUnusedLocal
     @pytest.mark.trio()
     @pytest.mark.parametrize(("timeout", "jump", "raises"), [
         pytest.param(
@@ -130,7 +147,9 @@ class TestSend:
         pytest.param(
             None,
             2,
-            pytest.raises(CDPError, match="^Sending CDP message and receiving its response timed out$"),
+            raises_group(
+                ((CDPError,), {"match": "^Sending CDP message and receiving its response timed out$"}, True),
+            ),
             id="Default timeout, response not in time",
         ),
         pytest.param(
@@ -142,7 +161,9 @@ class TestSend:
         pytest.param(
             3,
             3,
-            pytest.raises(CDPError, match="^Sending CDP message and receiving its response timed out$"),
+            raises_group(
+                ((CDPError,), {"match": "^Sending CDP message and receiving its response timed out$"}, True),
+            ),
             id="Custom timeout, response not in time",
         ),
     ])
@@ -210,12 +231,12 @@ class TestSend:
         assert cdp_connection.cmd_buffers == {}
         assert websocket_connection.sent == []
 
-        with pytest.raises(CDPError) as cm:  # noqa: PT012
+        with pytest.raises(ExceptionGroup) as excinfo:  # noqa: PT012
             async with trio.open_nursery() as nursery:
                 nursery.start_soon(cdp_connection.send, bad_command())
                 nursery.start_soon(websocket_connection.sender.send, """{"id":0,"result":{}}""")
 
-        assert str(cm.value) == "Generator of CDP command ID 0 did not exit when expected!"
+        assert excinfo.group_contains(CDPError, match="^Generator of CDP command ID 0 did not exit when expected!$")
         assert cdp_connection.cmd_buffers == {}
         assert websocket_connection.sent == ["""{"id":0,"method":"Fake.badCommand","params":{}}"""]
         assert [(record.name, record.levelname, record.message) for record in caplog.records] == [
@@ -241,12 +262,12 @@ class TestSend:
         assert cdp_connection.cmd_buffers == {}
         assert websocket_connection.sent == []
 
-        with pytest.raises(CDPError) as cm:  # noqa: PT012
+        with pytest.raises(ExceptionGroup) as excinfo:  # noqa: PT012
             async with trio.open_nursery() as nursery:
                 nursery.start_soon(cdp_connection.send, fake_command(FakeCommand("foo")))
                 nursery.start_soon(websocket_connection.sender.send, """{"id":0,"result":{}}""")
 
-        assert str(cm.value) == "Generator of CDP command ID 0 raised KeyError: 'value'"
+        assert excinfo.group_contains(CDPError, match="^Generator of CDP command ID 0 raised KeyError: 'value'$")
         assert cdp_connection.cmd_buffers == {}
         assert websocket_connection.sent == ["""{"id":0,"method":"Fake.fakeCommand","params":{"value":"foo"}}"""]
         assert [(record.name, record.levelname, record.message) for record in caplog.records] == [
@@ -364,12 +385,12 @@ class TestHandleCmdResponse:
         assert cdp_connection.cmd_buffers == {}
         assert websocket_connection.sent == []
 
-        with pytest.raises(CDPError) as cm:  # noqa: PT012
+        with pytest.raises(ExceptionGroup) as excinfo:  # noqa: PT012
             async with trio.open_nursery() as nursery:
                 nursery.start_soon(cdp_connection.send, fake_command(FakeCommand("foo")))
                 nursery.start_soon(websocket_connection.sender.send, """{"id":0,"error":"Some error message"}""")
 
-        assert str(cm.value) == "Error in CDP command response 0: Some error message"
+        assert excinfo.group_contains(CDPError, match="^Error in CDP command response 0: Some error message$")
         assert cdp_connection.cmd_buffers == {}
         assert websocket_connection.sent == ["""{"id":0,"method":"Fake.fakeCommand","params":{"value":"foo"}}"""]
         assert [(record.name, record.levelname, record.message) for record in caplog.records] == [
@@ -395,12 +416,12 @@ class TestHandleCmdResponse:
         assert cdp_connection.cmd_buffers == {}
         assert websocket_connection.sent == []
 
-        with pytest.raises(CDPError) as cm:  # noqa: PT012
+        with pytest.raises(ExceptionGroup) as excinfo:  # noqa: PT012
             async with trio.open_nursery() as nursery:
                 nursery.start_soon(cdp_connection.send, fake_command(FakeCommand("foo")))
                 nursery.start_soon(websocket_connection.sender.send, """{"id":0}""")
 
-        assert str(cm.value) == "No result in CDP command response 0"
+        assert excinfo.group_contains(CDPError, match="^No result in CDP command response 0$")
         assert cdp_connection.cmd_buffers == {}
         assert websocket_connection.sent == ["""{"id":0,"method":"Fake.fakeCommand","params":{"value":"foo"}}"""]
         assert [(record.name, record.levelname, record.message) for record in caplog.records] == [
