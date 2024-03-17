@@ -3,6 +3,7 @@ import warnings
 from functools import lru_cache
 from typing import Any, Dict, Optional, Tuple, Type
 
+import streamlink.compat  # noqa: F401
 from streamlink import __version__
 from streamlink.exceptions import NoPluginError, PluginError, StreamlinkDeprecationWarning
 from streamlink.logger import StreamlinkLogger
