@@ -4,6 +4,7 @@ from unittest.mock import ANY, AsyncMock, Mock, call
 
 import pytest
 import trio
+from exceptiongroup import ExceptionGroup
 from trio.testing import wait_all_tasks_blocked
 
 from streamlink.session import Streamlink
@@ -178,7 +179,7 @@ class TestEvaluate:
 
     @pytest.mark.trio()
     async def test_exception(self, cdp_client_session: CDPClientSession, websocket_connection: FakeWebsocketConnection):
-        with pytest.raises(CDPError, match="^SyntaxError: Invalid regular expression: missing /$"):  # noqa: PT012
+        with pytest.raises(ExceptionGroup) as excinfo:  # noqa: PT012
             async with trio.open_nursery() as nursery:
                 nursery.start_soon(cdp_client_session.evaluate, "/")
 
@@ -202,9 +203,11 @@ class TestEvaluate:
                     }}
                 """)
 
+        assert excinfo.group_contains(CDPError, match="^SyntaxError: Invalid regular expression: missing /$")
+
     @pytest.mark.trio()
     async def test_error(self, cdp_client_session: CDPClientSession, websocket_connection: FakeWebsocketConnection):
-        with pytest.raises(CDPError, match="^Error: foo\\n    at <anonymous>:1:1$"):  # noqa: PT012
+        with pytest.raises(ExceptionGroup) as excinfo:  # noqa: PT012
             async with trio.open_nursery() as nursery:
                 nursery.start_soon(cdp_client_session.evaluate, "new Error('foo')")
 
@@ -220,6 +223,8 @@ class TestEvaluate:
                         }
                     }}
                 """)
+
+        assert excinfo.group_contains(CDPError, match="^Error: foo\\n    at <anonymous>:1:1$")
 
 
 class TestRequestPausedHandler:
@@ -384,7 +389,7 @@ class TestNavigate:
             async with cdp_client_session.navigate("https://foo"):
                 pass  # pragma: no cover
 
-        with pytest.raises(CDPError, match="^Target has been detached$"):  # noqa: PT012
+        with pytest.raises(ExceptionGroup) as excinfo:  # noqa: PT012
             async with trio.open_nursery() as nursery:
                 nursery.start_soon(navigate)
 
@@ -397,13 +402,15 @@ class TestNavigate:
                     """{"method":"Target.detachedFromTarget","params":{"sessionId":"56789"}}""",
                 )
 
+        assert excinfo.group_contains(CDPError, match="^Target has been detached$")
+
     @pytest.mark.trio()
     async def test_error(self, cdp_client_session: CDPClientSession, websocket_connection: FakeWebsocketConnection):
         async def navigate():
             async with cdp_client_session.navigate("https://foo"):
                 pass  # pragma: no cover
 
-        with pytest.raises(CDPError, match="^Navigation error: failure$"):  # noqa: PT012
+        with pytest.raises(ExceptionGroup) as excinfo:  # noqa: PT012
             async with trio.open_nursery() as nursery:
                 nursery.start_soon(navigate)
 
@@ -434,6 +441,8 @@ class TestNavigate:
                 await websocket_connection.sender.send(
                     """{"id":2,"result":{},"sessionId":"56789"}""",
                 )
+
+        assert excinfo.group_contains(CDPError, match="^Navigation error: failure$")
 
     @pytest.mark.trio()
     async def test_loaded(

@@ -97,15 +97,13 @@ class TestLaunch:
         ]
 
     @pytest.mark.trio()
-    async def test_terminate_on_nursery_baseexception(self, caplog: pytest.LogCaptureFixture, webbrowser_launch):
-        class FakeBaseException(BaseException):
-            pass
-
+    @pytest.mark.parametrize("exception", [KeyboardInterrupt, SystemExit])
+    async def test_terminate_on_nursery_baseexception(self, caplog: pytest.LogCaptureFixture, webbrowser_launch, exception):
         process: trio.Process
-        with pytest.raises(FakeBaseException):  # noqa: PT012
+        with pytest.raises(exception):  # noqa: PT012
             async with webbrowser_launch() as (_nursery, process):
                 assert process.poll() is None, "process is still running"
-                raise FakeBaseException()
+                raise exception()
 
         assert process.poll() == (1 if is_win32 else -SIGTERM), "Process has been terminated"
         assert [(record.name, record.levelname, record.msg) for record in caplog.records] == [
