@@ -541,8 +541,8 @@ class TwitchClientIntegrity:
         headers: Mapping[str, str],
         device_id: str,
     ) -> Optional[Tuple[str, int]]:
+        from exceptiongroup import BaseExceptionGroup, catch  # noqa: PLC0415, I001
         from streamlink.webbrowser.cdp import CDPClient, CDPClientSession, devtools  # noqa: PLC0415
-        from streamlink.webbrowser.exceptions import WebbrowserError  # noqa: PLC0415
 
         url = f"https://www.twitch.tv/{channel}"
         js_get_integrity_token = cls.JS_INTEGRITY_TOKEN \
@@ -550,6 +550,8 @@ class TwitchClientIntegrity:
             .replace("HEADERS", json_dumps(headers)) \
             .replace("DEVICE_ID", device_id)
         eval_timeout = session.get_option("webbrowser-timeout")
+        # noinspection PyUnusedLocal
+        client_integrity: Optional[str] = None
 
         async def on_main(client_session: CDPClientSession, request: devtools.fetch.RequestPaused):
             async with client_session.alter_request(request) as cm:
@@ -563,16 +565,20 @@ class TwitchClientIntegrity:
                     await client_session.loaded(frame_id)
                     return await client_session.evaluate(js_get_integrity_token, timeout=eval_timeout)
 
-        try:
-            client_integrity: Optional[str] = CDPClient.launch(
+        def handle_error(exc_grp: BaseExceptionGroup) -> None:
+            for err in exc_grp.exceptions:
+                log.error(f"{type(err).__name__}: {err}")
+
+        with catch({  # type: ignore[dict-item]  # bug in exceptiongroup==1.2.0
+            Exception: handle_error,  # type: ignore[dict-item]  # bug in exceptiongroup==1.2.0
+        }):
+            client_integrity = CDPClient.launch(
                 session,
                 acquire_client_integrity_token,
                 # headless mode gets detected by Twitch, so we have to disable it regardless the user config
                 headless=False,
             )
-        except WebbrowserError as err:
-            log.error(f"{type(err).__name__}: {err}")
-            return None
+
         if not client_integrity:
             return None
 
