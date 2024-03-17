@@ -5,6 +5,9 @@ import sys
 import warnings
 from typing import Any, Callable, Dict, Optional, Tuple
 
+# import exceptiongroup, so it can monkeypatch ExceptionGroup logic on <=py311
+import exceptiongroup  # noqa: F401
+
 from streamlink.exceptions import StreamlinkDeprecationWarning
 
 
