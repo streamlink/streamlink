@@ -48,7 +48,7 @@ class Vimeo(Plugin):
             {
                 "cdns": {
                     str: validate.all(
-                        {"url": validate.url()},
+                        {validate.optional("url"): validate.url()},
                         validate.get("url"),
                     ),
                 },
@@ -64,7 +64,7 @@ class Vimeo(Plugin):
                         validate.optional("progressive"): [
                             validate.all(
                                 {
-                                    "url": validate.url(),
+                                    validate.optional("url"): validate.url(),
                                     "quality": str,
                                 },
                                 validate.union_get("quality", "url"),
@@ -74,7 +74,7 @@ class Vimeo(Plugin):
                     validate.optional("text_tracks"): [
                         validate.all(
                             {
-                                "url": str,
+                                validate.optional("url"): str,
                                 "lang": str,
                             },
                             validate.union_get("lang", "url"),
@@ -218,11 +218,15 @@ class Vimeo(Plugin):
 
         hls = hls or {}
         for url in hls.values():
+            if not url:
+                continue
             streams.extend(HLSStream.parse_variant_playlist(self.session, url).items())
             break
 
         dash = dash or {}
         for url in dash.values():
+            if not url:
+                continue
             p = urlparse(url)
             if p.path.endswith("dash.mpd"):
                 # LIVE
@@ -240,12 +244,14 @@ class Vimeo(Plugin):
         streams.extend(
             (quality, HTTPStream(self.session, url))
             for quality, url in progressive or []
+            if url
         )
 
         if text_tracks and self.session.get_option("mux-subtitles"):
             substreams = {
                 lang: HTTPStream(self.session, urljoin("https://vimeo.com/", url))
                 for lang, url in text_tracks
+                if url
             }
             for quality, stream in streams:
                 yield quality, MuxedStream(self.session, stream, subtitles=substreams)
