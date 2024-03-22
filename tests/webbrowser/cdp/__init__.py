@@ -1,3 +1,6 @@
+# TODO: trio>0.22 release: remove __future__ import (generic memorychannels)
+from __future__ import annotations
+
 from typing import List
 
 import trio

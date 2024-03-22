@@ -166,7 +166,7 @@ class CDPClient:
             ) as cdp_client:
                 return await runner(cdp_client)
 
-        return trio.run(run_wrapper)
+        return trio.run(run_wrapper, strict_exception_groups=True)
 
     @classmethod
     @asynccontextmanager
