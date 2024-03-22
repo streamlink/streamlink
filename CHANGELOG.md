@@ -1,5 +1,15 @@
 # Changelog
 
+## streamlink 6.7.2 (2024-03-23)
+
+Patch release:
+
+- Build: reverted `trio` version requirement bump ([#5902](https://github.com/streamlink/streamlink/pull/5902))
+- Build: fixed incorrect `pytest` version requirement ([#5901](https://github.com/streamlink/streamlink/pull/5901))
+
+[Full changelog](https://github.com/streamlink/streamlink/compare/6.7.1...6.7.2)
+
+
 ## streamlink 6.7.1 (2024-03-19)
 
 Patch release:
