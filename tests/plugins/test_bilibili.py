@@ -5,6 +5,6 @@ from tests.plugins import PluginCanHandleUrl
 class TestPluginCanHandleUrlBilibili(PluginCanHandleUrl):
     __plugin__ = Bilibili
 
-    should_match = [
-        "https://live.bilibili.com/123123123",
+    should_match_groups = [
+        ("https://live.bilibili.com/CHANNEL", {"channel": "CHANNEL"}),
     ]

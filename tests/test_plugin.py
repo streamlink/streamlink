@@ -1,8 +1,10 @@
+import argparse
 import logging
 import re
 import time
+from contextlib import nullcontext
 from operator import eq, gt, lt
-from typing import Type
+from typing import Any, Type
 from unittest.mock import Mock, call, patch
 
 import freezegun
@@ -21,7 +23,13 @@ from streamlink.plugin import (
 )
 
 # noinspection PyProtectedMember
-from streamlink.plugin.plugin import _COOKIE_KEYS, Matcher, parse_params, stream_weight
+from streamlink.plugin.plugin import (
+    _COOKIE_KEYS,  # noqa: PLC2701
+    _PLUGINARGUMENT_TYPE_REGISTRY,  # noqa: PLC2701
+    Matcher,
+    parse_params,
+    stream_weight,
+)
 from streamlink.session import Streamlink
 
 
@@ -203,6 +211,10 @@ class TestPluginArguments:
             PluginArgument("baz", dest="_baz", help="BAZ"),
         )
 
+    def test_pluginargument_type_registry(self):
+        assert _PLUGINARGUMENT_TYPE_REGISTRY
+        assert all(callable(value) for value in _PLUGINARGUMENT_TYPE_REGISTRY.values())
+
     @pytest.mark.parametrize("pluginclass", [DecoratedPlugin, ClassAttrPlugin])
     def test_arguments(self, pluginclass):
         assert pluginclass.arguments is not None
@@ -217,7 +229,80 @@ class TestPluginArguments:
 
         assert tuple(arg.name for arg in MixedPlugin.arguments) == ("qux", "foo", "bar", "baz")
 
-    def test_decorator_typerror(self):
+    @pytest.mark.parametrize(("options", "args", "expected", "raises"), [
+        pytest.param(
+            {"type": "int"},
+            ["--myplugin-foo", "123"],
+            123,
+            nullcontext(),
+            id="int",
+        ),
+        pytest.param(
+            {"type": "float"},
+            ["--myplugin-foo", "123.456"],
+            123.456,
+            nullcontext(),
+            id="float",
+        ),
+        pytest.param(
+            {"type": "bool"},
+            ["--myplugin-foo", "yes"],
+            True,
+            nullcontext(),
+            id="bool",
+        ),
+        pytest.param(
+            {"type": "keyvalue"},
+            ["--myplugin-foo", "key=value"],
+            ("key", "value"),
+            nullcontext(),
+            id="keyvalue",
+        ),
+        pytest.param(
+            {"type": "comma_list_filter", "type_args": (["one", "two", "four"], )},
+            ["--myplugin-foo", "one,two,three,four"],
+            ["one", "two", "four"],
+            nullcontext(),
+            id="comma_list_filter - args",
+        ),
+        pytest.param(
+            {"type": "comma_list_filter", "type_kwargs": {"acceptable": ["one", "two", "four"]}},
+            ["--myplugin-foo", "one,two,three,four"],
+            ["one", "two", "four"],
+            nullcontext(),
+            id="comma_list_filter - kwargs",
+        ),
+        pytest.param(
+            {"type": "hours_minutes_seconds"},
+            ["--myplugin-foo", "1h2m3s"],
+            3723,
+            nullcontext(),
+            id="hours_minutes_seconds",
+        ),
+        pytest.param(
+            {"type": "UNKNOWN"},
+            None,
+            None,
+            pytest.raises(TypeError),
+            id="UNKNOWN",
+        ),
+    ])
+    def test_type_argument_map(self, options: dict, args: list, expected: Any, raises: nullcontext):
+        class MyPlugin(FakePlugin):
+            pass
+
+        with raises:
+            pluginargument("foo", **options)(MyPlugin)
+            assert MyPlugin.arguments is not None
+            pluginarg = MyPlugin.arguments.get("foo")
+            assert pluginarg
+
+            parser = argparse.ArgumentParser()
+            parser.add_argument(pluginarg.argument_name("myplugin"), **pluginarg.options)
+            namespace = parser.parse_args(args)
+            assert namespace.myplugin_foo == expected
+
+    def test_decorator_typeerror(self):
         with patch("builtins.repr", Mock(side_effect=lambda obj: obj.__name__)):
             with pytest.raises(TypeError) as cm:
                 # noinspection PyUnusedLocal

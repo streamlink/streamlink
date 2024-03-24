@@ -1,0 +1,80 @@
+name: Release
+
+on:
+  push:
+    branches-ignore:
+      - "**"
+    tags:
+      - "**"
+
+jobs:
+  build:
+    name: Build
+    if: github.repository == 'streamlink/streamlink'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 300
+      - name: Fetch tags
+        run: git fetch --depth=300 origin +refs/tags/*:refs/tags/*
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install Python dependencies
+        run: >
+          python -m pip install -U
+          -e .
+          -r docs-requirements.txt
+          shtab
+          build
+          wheel
+      - name: Build man page
+        run: make --directory=docs man
+      - name: Build shell completions
+        run: ./script/build-shell-completions.sh
+      - name: Build sdist and wheels
+        run: ./script/build-and-sign.sh
+        env:
+          SIGNING_KEY_ID: 1AEB6400EDA27DA9
+          SIGNING_KEY_PASSPHRASE: ${{ secrets.SIGNING_KEY_PASSPHRASE }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
+  deploy:
+    name: Deploy
+    if: github.repository == 'streamlink/streamlink'
+    needs:
+      - build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 300
+      - name: Fetch tags
+        run: git fetch --depth=300 origin +refs/tags/*:refs/tags/*
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install Python dependencies
+        run: >
+          python -m pip install -U
+          jinja2
+          requests
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
+      - name: Github release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: ./script/github-release.py dist/*.tar.gz{,.asc}
+      - name: Delete signatures before deploying to PyPI
+        run: rm dist/*.asc
+      - name: PyPI release
+        uses: pypa/gh-action-pypi-publish@release/v1

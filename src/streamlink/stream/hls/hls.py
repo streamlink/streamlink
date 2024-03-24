@@ -155,17 +155,18 @@ class HLSStreamWriter(SegmentedStreamWriter[HLSSegment, Response]):
             self.queue(None, None)
             return
 
-        # always queue the segment's map first if it exists
+        # queue segment-map first
         if segment.map is not None:
-            cached_map_future = self.map_cache.get(segment.map.uri)
-            # use cached map request if not a stream discontinuity
-            # don't fetch multiple times when map request of previous segment is still pending
-            if cached_map_future is not None and not segment.discontinuity:
-                future = cached_map_future
-            else:
+            # get the cached segment-map, if available
+            future = self.map_cache.get(segment.map.uri)
+            if future and segment.discontinuity:
+                # special case: queue the cached segment map if it's set on a discontinuity segment
+                self.queue(segment, future, True)
+            elif not future:
+                # keep the segment-map in the cache, so we can check whether we've already queued it
                 future = self.executor.submit(self.fetch_map, segment)
                 self.map_cache.set(segment.map.uri, future)
-            self.queue(segment, future, True)
+                self.queue(segment, future, True)
 
         # regular segment request
         future = self.executor.submit(self.fetch, segment)
@@ -242,9 +243,12 @@ class HLSStreamWriter(SegmentedStreamWriter[HLSSegment, Response]):
                 self.reader.pause()
 
     def _write(self, segment: HLSSegment, result: Response, is_map: bool):
-        if segment.key and segment.key.method != "NONE":
+        # TODO: Rewrite HLSSegment, HLSStreamWriter and HLSStreamWorker based on independent initialization section segments,
+        #       similar to the DASH implementation
+        key = segment.map.key if is_map and segment.map else segment.key
+        if key and key.method != "NONE":
             try:
-                decryptor = self.create_decryptor(segment.key, segment.num)
+                decryptor = self.create_decryptor(key, segment.num)
             except (StreamError, ValueError) as err:
                 log.error(f"Failed to create decryptor: {err}")
                 self.close()
@@ -547,6 +551,7 @@ class MuxedHLSStream(MuxedStream["HLSStream"]):
         session: Streamlink,
         video: str,
         audio: Union[str, List[str]],
+        hlsstream: Optional[Type["HLSStream"]] = None,
         url_master: Optional[str] = None,
         multivariant: Optional[M3U8] = None,
         force_restart: bool = False,
@@ -557,6 +562,7 @@ class MuxedHLSStream(MuxedStream["HLSStream"]):
         :param session: Streamlink session instance
         :param video: Video stream URL
         :param audio: Audio stream URL or list of URLs
+        :param hlsstream: The :class:`HLSStream` class of each sub-stream
         :param url_master: The URL of the HLS playlist's multivariant playlist (deprecated)
         :param multivariant: The parsed multivariant playlist
         :param force_restart: Start from the beginning after reaching the playlist's end
@@ -572,7 +578,9 @@ class MuxedHLSStream(MuxedStream["HLSStream"]):
             else:
                 tracks.append(audio)
         maps.extend(f"{i}:a" for i in range(1, len(tracks)))
-        substreams = [HLSStream(session, url, force_restart=force_restart, **kwargs) for url in tracks]
+
+        hlsstream = hlsstream or HLSStream
+        substreams = [hlsstream(session, url, force_restart=force_restart, **kwargs) for url in tracks]
         ffmpeg_options = ffmpeg_options or {}
 
         super().__init__(session, *substreams, format="mpegts", maps=maps, **ffmpeg_options)
@@ -824,6 +832,7 @@ class HLSStream(HTTPStream):
                     session,
                     video=playlist.uri,
                     audio=[x.uri for x in external_audio if x.uri],
+                    hlsstream=cls,
                     multivariant=multivariant,
                     force_restart=force_restart,
                     start_offset=start_offset,

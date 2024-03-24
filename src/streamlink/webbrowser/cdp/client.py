@@ -166,7 +166,7 @@ class CDPClient:
             ) as cdp_client:
                 return await runner(cdp_client)
 
-        return trio.run(run_wrapper)
+        return trio.run(run_wrapper, strict_exception_groups=True)
 
     @classmethod
     @asynccontextmanager
@@ -275,7 +275,7 @@ class CDPClientSession:
             await self.cdp_session.send(page.enable())
 
             try:
-                frame_id, loader_id, error = await self.cdp_session.send(page.navigate(url=url, referrer=referrer))
+                frame_id, _loader_id, error = await self.cdp_session.send(page.navigate(url=url, referrer=referrer))
                 if error:
                     raise CDPError(f"Navigation error: {error}")
 

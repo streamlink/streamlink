@@ -181,6 +181,9 @@ class TestHoursMinutesSeconds:
         assert "error: argument hms: invalid hours_minutes_seconds value: 'invalid'\n" in stderr, \
             "has the correct method name, so argparse errors are useful"
 
+    def test_hours_minutes_seconds_hashable(self):
+        assert hash(hours_minutes_seconds) != hash(hours_minutes_seconds_float)
+
     def test_seconds_to_hhmmss(self):
         assert seconds_to_hhmmss(0) == "00:00:00"
         assert seconds_to_hhmmss(1) == "00:00:01"

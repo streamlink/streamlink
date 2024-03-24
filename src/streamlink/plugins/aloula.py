@@ -19,14 +19,14 @@ from streamlink.stream.hls import HLSStream
 log = logging.getLogger(__name__)
 
 
-@pluginmatcher(re.compile(r"""
-    https?://(?:www\.)?aloula\.sa/(?:\w{2}/)?
-    (?:
-        live/(?P<live_slug>[^/?&]+)
-    |
-        episode/(?P<vod_id>\d+)
-    )
-""", re.VERBOSE))
+@pluginmatcher(
+    name="live",
+    pattern=re.compile(r"https?://(?:www\.)?aloula\.sa/(?:\w{2}/)?live/(?P<live_slug>[^/?&]+)"),
+)
+@pluginmatcher(
+    name="vod",
+    pattern=re.compile(r"https?://(?:www\.)?aloula\.sa/(?:\w{2}/)?episode/(?P<vod_id>\d+)"),
+)
 class Aloula(Plugin):
     def get_live(self, live_slug):
         live_data = self.session.http.get(
@@ -106,13 +106,15 @@ class Aloula(Plugin):
         return HLSStream.parse_variant_playlist(self.session, hls_url)
 
     def _get_streams(self):
-        live_slug = self.match.group("live_slug")
-        vod_id = self.match.group("vod_id")
+        self.session.http.headers.update({
+            "Origin": "https://www.aloula.sa",
+            "Referer": "https://www.aloula.sa/",
+        })
 
-        if live_slug:
-            return self.get_live(live_slug)
-        elif vod_id:
-            return self.get_vod(vod_id)
+        if self.matches["live"]:
+            return self.get_live(self.match["live_slug"])
+        else:
+            return self.get_vod(self.match["vod_id"])
 
 
 __plugin__ = Aloula

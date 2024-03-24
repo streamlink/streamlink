@@ -42,7 +42,7 @@ class Radiko(Plugin):
 
     def _live(self, station_id):
         live_url = "http://f-radiko.smartstream.ne.jp/{}/_definst_/simul-stream.stream/playlist.m3u8".format(station_id)
-        token, area_id = self._authorize()
+        token, _area_id = self._authorize()
         lsid = hashlib.md5(str(random.random()).encode("utf-8")).hexdigest()
         live_params = {
             "station_id": station_id,
@@ -55,7 +55,7 @@ class Radiko(Plugin):
 
     def _timefree(self, station_id, start_at):
         m3u8_url = "https://tf-rpaa.smartstream.ne.jp/tf/playlist.m3u8"
-        token, area_id = self._authorize()
+        token, _area_id = self._authorize()
         lsid = hashlib.md5(str(random.random()).encode("utf-8")).hexdigest()
         end_at = self._get_xml(start_at, station_id)
         m3u8_params = {

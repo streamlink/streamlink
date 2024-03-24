@@ -40,7 +40,6 @@ class TestFindDefaultPlayer:
         assert find_default_player() == expected
         assert which.call_args_list == [call(path) for path in lookups]
 
-
     @pytest.mark.windows_only()
     @pytest.mark.parametrize("_environ", [{
         "PROGRAMFILES": "C:\\Program Files",

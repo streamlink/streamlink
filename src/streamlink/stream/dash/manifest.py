@@ -293,6 +293,7 @@ class MPD(MPDNode):
     timelines: Dict[TTimelineIdent, int]
 
     DEFAULT_MINBUFFERTIME = 3.0
+    DEFAULT_LIVE_EDGE_SEGMENTS = 3
 
     def __init__(self, *args, url: Optional[str] = None, **kwargs) -> None:
         # top level has no parent
@@ -606,15 +607,21 @@ class Representation(_RepresentationBaseType):
     def bandwidth_rounded(self) -> float:
         return round(self.bandwidth, 1 - int(math.log10(self.bandwidth)))
 
-    def segments(self, timestamp: Optional[datetime] = None, **kwargs) -> Iterator[DASHSegment]:
+    def segments(
+        self,
+        init: bool = True,
+        timestamp: Optional[datetime] = None,
+        **kwargs,
+    ) -> Iterator[DASHSegment]:
         """
         Segments are yielded when they are available
 
         Segments appear on a timeline, for dynamic content they are only available at a certain time
         and sometimes for a limited time. For static content they are all available at the same time.
 
+        :param init: Yield the init segment and perform other initialization logic for dynamic manifests
         :param timestamp: Optional initial timestamp for syncing timelines of multiple substreams
-        :param kwargs: extra args to pass to the segment template
+        :param kwargs: extra args to pass to the segment template/list
         :return: yields Segments
         """
 
@@ -626,13 +633,18 @@ class Representation(_RepresentationBaseType):
             yield from segmentTemplate.segments(
                 self.ident,
                 self.base_url,
+                init=init,
                 timestamp=timestamp,
                 RepresentationID=self.id,
                 Bandwidth=int(self.bandwidth * 1000),
                 **kwargs,
             )
         elif segmentList:
-            yield from segmentList.segments()
+            yield from segmentList.segments(
+                self.ident,
+                init=init,
+                **kwargs,
+            )
         else:
             yield DASHSegment(
                 uri=self.base_url,
@@ -722,8 +734,14 @@ class SegmentList(_MultipleSegmentBaseType):
 
         self.segmentURLs = self.children(SegmentURL)
 
-    def segments(self) -> Iterator[DASHSegment]:
-        if self.initialization:  # pragma: no branch
+    # noinspection PyUnusedLocal
+    def segments(
+        self,
+        ident: TTimelineIdent,
+        init: bool = True,
+        **kwargs,
+    ) -> Iterator[DASHSegment]:
+        if init and self.initialization:  # pragma: no branch
             yield DASHSegment(
                 uri=self.make_url(self.initialization.source_url),
                 num=-1,
@@ -733,9 +751,7 @@ class SegmentList(_MultipleSegmentBaseType):
                 content=False,
                 byterange=self.initialization.range,
             )
-        num: int
-        segment_url: SegmentURL
-        for num, segment_url in enumerate(self.segmentURLs, self.startNumber):
+        for num, segment_url in self.segment_urls(ident, init):
             yield DASHSegment(
                 uri=self.make_url(segment_url.media),
                 num=num,
@@ -745,6 +761,59 @@ class SegmentList(_MultipleSegmentBaseType):
                 content=True,
                 byterange=segment_url.media_range,
             )
+
+    def segment_urls(self, ident: TTimelineIdent, init: bool) -> Iterator[Tuple[int, "SegmentURL"]]:
+        if init:
+            if self.root.type == "static":
+                # yield all segments in a static manifest
+                start_number = self.startNumber
+                segment_urls = self.segmentURLs
+            else:
+                # yield a specific number of segments from the live-edge of dynamic manifests
+                start_number = self.calculate_optimal_start()
+                segment_urls = self.segmentURLs[start_number - self.startNumber:]
+
+        else:
+            # skip segments with a lower number than the remembered segment number
+            # and check if we've skipped any segments after reloading the manifest
+            start_number = self.root.timelines[ident]
+            offset = start_number - self.startNumber
+
+            if offset >= 0:
+                # no segments were skipped: yield a slice of the segments
+                segment_urls = self.segmentURLs[offset:]
+            else:
+                # segments were skipped: yield all segments and set the correct segment number
+                log.warning(
+                    (
+                        f"Skipped segments {start_number}-{self.startNumber - 1} after manifest reload. "
+                        if offset < -1 else
+                        f"Skipped segment {start_number} after manifest reload. "
+                    )
+                    + "This is unsupported and will result in incoherent output data.",
+                )
+                start_number = self.startNumber
+                segment_urls = self.segmentURLs
+
+        # remember the next segment number
+        self.root.timelines[ident] = start_number + len(segment_urls)
+
+        yield from enumerate(segment_urls, start_number)
+
+    def calculate_optimal_start(self) -> int:
+        """Calculate the optimal segment number to start based on the suggestedPresentationDelay"""
+        suggested_delay = self.root.suggestedPresentationDelay
+
+        if self.duration_seconds == 0.0:
+            log.info(f"Unknown segment duration. Falling back to an offset of {MPD.DEFAULT_LIVE_EDGE_SEGMENTS} segments.")
+            offset = MPD.DEFAULT_LIVE_EDGE_SEGMENTS
+        else:
+            offset = max(0, math.ceil(suggested_delay.total_seconds() / self.duration_seconds))
+
+        start = self.startNumber + len(self.segmentURLs) - offset
+        log.debug(f"Calculated optimal offset is {offset} segments. First segment is {start}.")
+
+        return start
 
     def make_url(self, url: Optional[str]) -> str:
         return BaseURL.join(self.base_url, url) if url else self.base_url
@@ -769,10 +838,11 @@ class SegmentTemplate(_MultipleSegmentBaseType):
         self,
         ident: TTimelineIdent,
         base_url: str,
+        init: bool = True,
         timestamp: Optional[datetime] = None,
         **kwargs,
     ) -> Iterator[DASHSegment]:
-        if kwargs.pop("init", True):  # pragma: no branch
+        if init:
             init_url = self.format_initialization(base_url, **kwargs)
             if init_url:  # pragma: no branch
                 yield DASHSegment(

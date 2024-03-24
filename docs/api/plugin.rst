@@ -13,3 +13,5 @@ Plugin decorators
 .. autodecorator:: pluginmatcher
 
 .. autodecorator:: pluginargument
+
+.. autodata:: streamlink.plugin.plugin._PLUGINARGUMENT_TYPE_REGISTRY

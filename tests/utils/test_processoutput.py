@@ -80,7 +80,8 @@ def processoutput(request, mock_process):
 
 
 @pytest_asyncio.fixture(autouse=True)
-async def assert_tasks_cleanup(event_loop: asyncio.BaseEventLoop):
+async def assert_tasks_cleanup():
+    event_loop = asyncio.get_running_loop()
     yield
     current_task = asyncio.current_task(event_loop)
     assert not [task for task in asyncio.all_tasks(event_loop) if task is not current_task]
@@ -89,7 +90,9 @@ async def assert_tasks_cleanup(event_loop: asyncio.BaseEventLoop):
 
 @pytest.mark.asyncio()
 @pytest.mark.parametrize("processoutput", [{"timeout": 1}], indirect=True)
-async def test_ontimeout(event_loop: asyncio.BaseEventLoop, processoutput: FakeProcessOutput, mock_process: Mock):
+async def test_ontimeout(processoutput: FakeProcessOutput, mock_process: Mock):
+    event_loop = asyncio.get_running_loop()
+
     with freezegun.freeze_time("2000-01-01T00:00:00.000Z") as frozen_time:
         fut_process_wait = event_loop.create_future()
         mock_process.wait = Mock(return_value=fut_process_wait)
@@ -118,7 +121,9 @@ async def test_ontimeout(event_loop: asyncio.BaseEventLoop, processoutput: FakeP
 
 @pytest.mark.asyncio()
 @pytest.mark.parametrize("processoutput", [{"timeout": 1}], indirect=True)
-async def test_ontimeout_onexit(event_loop: asyncio.BaseEventLoop, processoutput: FakeProcessOutput, mock_process: Mock):
+async def test_ontimeout_onexit(processoutput: FakeProcessOutput, mock_process: Mock):
+    event_loop = asyncio.get_running_loop()
+
     fut_process_wait = event_loop.create_future()
     mock_process.wait = Mock(return_value=fut_process_wait)
 
@@ -153,7 +158,7 @@ async def test_ontimeout_onexit(event_loop: asyncio.BaseEventLoop, processoutput
 
 @pytest.mark.asyncio()
 @pytest.mark.parametrize(("code", "expected"), [(0, True), (1, False)])
-async def test_onexit(event_loop: asyncio.BaseEventLoop, processoutput: FakeProcessOutput, mock_process: Mock, code, expected):
+async def test_onexit(processoutput: FakeProcessOutput, mock_process: Mock, code, expected):
     mock_process.wait = AsyncMock(return_value=code)
 
     result = await processoutput._run()
@@ -167,7 +172,9 @@ async def test_onexit(event_loop: asyncio.BaseEventLoop, processoutput: FakeProc
 
 @pytest.mark.asyncio()
 @pytest.mark.parametrize("returnvalue", [True, False])
-async def test_onoutput(event_loop: asyncio.BaseEventLoop, processoutput: FakeProcessOutput, mock_process: Mock, returnvalue):
+async def test_onoutput(processoutput: FakeProcessOutput, mock_process: Mock, returnvalue):
+    event_loop = asyncio.get_running_loop()
+
     mock_process.wait = Mock(return_value=event_loop.create_future())
     mock_process.stdout.extend([b"foo", b"bar", b"baz"])
 
@@ -202,7 +209,9 @@ async def test_onoutput(event_loop: asyncio.BaseEventLoop, processoutput: FakePr
 
 
 @pytest.mark.asyncio()
-async def test_onoutput_exception(event_loop: asyncio.BaseEventLoop, processoutput: FakeProcessOutput, mock_process: Mock):
+async def test_onoutput_exception(processoutput: FakeProcessOutput, mock_process: Mock):
+    event_loop = asyncio.get_running_loop()
+
     mock_process.wait = Mock(return_value=event_loop.create_future())
     mock_process.stdout.extend([b"foo", b"bar", b"baz"])
 
@@ -220,7 +229,7 @@ async def test_onoutput_exception(event_loop: asyncio.BaseEventLoop, processoutp
 
 
 @pytest.mark.asyncio()
-async def test_exit_before_onoutput(event_loop: asyncio.BaseEventLoop, processoutput: FakeProcessOutput, mock_process: Mock):
+async def test_exit_before_onoutput(processoutput: FakeProcessOutput, mock_process: Mock):
     # resolve process.wait() in the onexit task immediately
     mock_process.wait = AsyncMock(return_value=0)
 

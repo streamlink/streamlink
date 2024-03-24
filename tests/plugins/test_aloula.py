@@ -6,15 +6,10 @@ class TestPluginCanHandleUrlAloula(PluginCanHandleUrl):
     __plugin__ = Aloula
 
     should_match_groups = [
-        ("https://www.aloula.sa/live/slug", {"live_slug": "slug"}),
-        ("https://www.aloula.sa/en/live/slug", {"live_slug": "slug"}),
-        ("https://www.aloula.sa/de/live/slug/abc", {"live_slug": "slug"}),
-        ("https://www.aloula.sa/episode/123", {"vod_id": "123"}),
-        ("https://www.aloula.sa/en/episode/123", {"vod_id": "123"}),
-        ("https://www.aloula.sa/episode/123abc/456", {"vod_id": "123"}),
-        ("https://www.aloula.sa/de/episode/123abc/456", {"vod_id": "123"}),
-        ("https://www.aloula.sa/episode/123?continue=8", {"vod_id": "123"}),
-        ("https://www.aloula.sa/xx/episode/123?continue=8", {"vod_id": "123"}),
+        (("live", "https://www.aloula.sa/live/saudiatv"), {"live_slug": "saudiatv"}),
+        (("live", "https://www.aloula.sa/en/live/saudiatv"), {"live_slug": "saudiatv"}),
+        (("vod", "https://www.aloula.sa/episode/6676"), {"vod_id": "6676"}),
+        (("vod", "https://www.aloula.sa/en/episode/6676"), {"vod_id": "6676"}),
     ]
 
     should_not_match = [

@@ -1,7 +1,8 @@
 from collections.abc import Callable, Iterable, Mapping, MutableMapping, Sequence
 from typing import Any, Union
 
-from _typeshed import SupportsItems, SupportsRead
+# noinspection PyUnresolvedReferences
+from _typeshed import SupportsItems, SupportsRead  # noqa: PLC2701
 from requests import PreparedRequest, Response, Session
 from requests.adapters import HTTPAdapter
 from requests.auth import AuthBase
@@ -10,7 +11,6 @@ from typing_extensions import TypeAlias
 
 from streamlink.plugin.api.validate import Schema
 from streamlink.session import Streamlink
-
 
 # START: borrowed from typeshed / types-requests
 # https://github.com/python/typeshed/blob/b3db49abbd563a8543783fcd2b4d6765b32812b0/stubs/requests/requests/sessions.pyi
@@ -63,21 +63,16 @@ _Verify: TypeAlias = bool | str
 
 # END: borrowed from typeshed / types-requests
 
-
 _AcceptableStatus: TypeAlias = Sequence[int]
 _Exception: TypeAlias = type[Exception]
 
-
 # ----
-
 
 class TLSNoDHAdapter(HTTPAdapter):
     ...
 
-
 class TLSSecLevel1Adapter(HTTPAdapter):
     ...
-
 
 class HTTPSession(Session):
     params: dict

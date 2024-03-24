@@ -1,8 +1,8 @@
-import requests_mock
+import pytest
+from requests_mock import Mocker
 
 from streamlink import Streamlink
 from streamlink.plugins.rtpplay import RTPPlay
-from streamlink.stream.hls import HLSStream
 from tests.plugins import PluginCanHandleUrl
 from tests.resources import text
 
@@ -44,32 +44,44 @@ class TestRTPPlay:
         var f = {hls : atob( decodeURIComponent(["aHR0c", "HM6Ly", "92YWx", "pZA=="].join("") ) ), dash: foo() };
     """
 
-    @property
+    @pytest.fixture(scope="class")
     def playlist(self):
-        with text("hls/test_master.m3u8") as pl:
-            return pl.read()
+        with text("hls/test_master.m3u8") as fd:
+            return fd.read()
 
-    def subject(self, url, response):
-        with requests_mock.Mocker() as mock:
-            mock.get(url=url, text=response)
-            mock.get("https://valid", text=self.playlist)
-            mock.get("https://invalid", exc=AssertionError)
-            session = Streamlink()
-            plugin = RTPPlay(session, url)
-            return plugin._get_streams()
+    @pytest.fixture()
+    def streams(self, request: pytest.FixtureRequest, requests_mock: Mocker, session: Streamlink, playlist: str):
+        response = getattr(request, "param", "")
 
-    def test_empty(self):
-        streams = self.subject("https://www.rtp.pt/play/id/title", "")
-        assert streams is None
+        requests_mock.get("https://www.rtp.pt/play/id/title", text=response)
+        requests_mock.get("https://valid", text=playlist)
+        requests_mock.get("https://invalid", exc=AssertionError)
 
-    def test_invalid(self):
-        streams = self.subject("https://www.rtp.pt/play/id/title", self._content_pre + self._content_invalid)
-        assert streams is None
+        plugin = RTPPlay(session, "https://www.rtp.pt/play/id/title")
 
-    def test_valid(self):
-        streams = self.subject("https://www.rtp.pt/play/id/title", self._content_pre + self._content_valid)
-        assert isinstance(next(iter(streams.values())), HLSStream)
+        return plugin._get_streams()
 
-    def test_valid_b64(self):
-        streams = self.subject("https://www.rtp.pt/play/id/title", self._content_pre + self._content_valid_b64)
-        assert isinstance(next(iter(streams.values())), HLSStream)
+    @pytest.mark.parametrize(("streams", "expected"), [
+        pytest.param(
+            "",
+            False,
+            id="empty",
+        ),
+        pytest.param(
+            _content_pre + _content_invalid,
+            False,
+            id="invalid",
+        ),
+        pytest.param(
+            _content_pre + _content_valid,
+            True,
+            id="valid",
+        ),
+        pytest.param(
+            _content_pre + _content_valid_b64,
+            True,
+            id="valid-b64",
+        ),
+    ], indirect=["streams"])
+    def test_streams(self, streams, expected):
+        assert (streams is not None) is expected

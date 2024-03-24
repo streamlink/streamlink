@@ -21,9 +21,8 @@ class CommandLineTestCase(unittest.TestCase):
 
             return fn
 
-        with patch("streamlink.session.Streamlink.load_builtin_plugins"):
-            session = Streamlink()
-        session.load_plugins(str(Path(tests.__path__[0]) / "plugin"))
+        session = Streamlink(plugins_builtin=False)
+        session.plugins.load_path(Path(tests.__path__[0]) / "plugin")
 
         actual_exit_code = 0
         with patch("sys.argv") as mock_argv, \
@@ -38,10 +37,15 @@ class CommandLineTestCase(unittest.TestCase):
              patch("streamlink_cli.output.player.sleep"):
             mock_argv.__getitem__.side_effect = lambda x: args[x]
             mock_popen.return_value = Mock(poll=Mock(side_effect=poll_factory([None, 0])))
+
+            level = streamlink_cli.main.logger.root.level
+
             try:
                 streamlink_cli.main.main()
             except SystemExit as exc:
                 actual_exit_code = exc.code
+            finally:
+                streamlink_cli.main.logger.root.level = level
 
         assert exit_code == actual_exit_code
         assert mock_setup_streamlink.call_count == 1

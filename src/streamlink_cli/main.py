@@ -63,14 +63,19 @@ def get_formatter(plugin: Plugin):
     )
 
 
-def check_file_output(path: Path, force):
-    """Checks if file already exists and ask the user if it should
-    be overwritten if it does."""
+def check_file_output(path: Path, force: bool) -> FileOutput:
+    """
+    Checks if path already exists and asks the user if it should be overwritten if it does.
+    """
 
-    log.info(f"Writing output to\n{path.resolve()}")
+    # rewrap path and resolve using `os.path.realpath` instead of `path.resolve()`
+    # to avoid a pathlib issues on py39 and below
+    realpath = Path(os.path.realpath(path))
+
+    log.info(f"Writing output to\n{realpath}")
     log.debug("Checking file output")
 
-    if path.is_file() and not force:
+    if realpath.is_file() and not force:
         if sys.stdin.isatty():
             answer = console.ask(f"File {path} already exists! Overwrite it? [y/N] ")
             if not answer or answer.lower() != "y":
@@ -79,7 +84,7 @@ def check_file_output(path: Path, force):
             log.error(f"File {path} already exists, use --force to overwrite it.")
             sys.exit()
 
-    return FileOutput(path)
+    return FileOutput(filename=realpath)
 
 
 def create_output(formatter: Formatter) -> Union[FileOutput, PlayerOutput]:
@@ -597,20 +602,19 @@ def handle_url():
 def print_plugins():
     """Outputs a list of all plugins Streamlink has loaded."""
 
-    pluginlist = list(streamlink.get_plugins().keys())
-    pluginlist_formatted = ", ".join(sorted(pluginlist))
+    pluginlist = streamlink.plugins.get_names()
 
     if args.json:
         console.msg_json(pluginlist)
     else:
-        console.msg(f"Loaded plugins: {pluginlist_formatted}")
+        console.msg(f"Available plugins: {', '.join(pluginlist)}")
 
 
 def load_plugins(dirs: List[Path], showwarning: bool = True):
     """Attempts to load plugins from a list of directories."""
     for directory in dirs:
         if directory.is_dir():
-            success = streamlink.load_plugins(str(directory))
+            success = streamlink.plugins.load_path(directory)
             if success and type(directory) is DeprecatedPath:
                 warnings.warn(
                     f"Loaded plugins from deprecated path, see CLI docs for how to migrate: {directory}",
@@ -675,7 +679,7 @@ def setup_config_args(parser, ignore_unknown=False):
     if streamlink and args.url:
         # Only load first available plugin config
         with suppress(NoPluginError):
-            pluginname, pluginclass, resolved_url = streamlink.resolve_url(args.url)
+            pluginname, _pluginclass, _resolved_url = streamlink.resolve_url(args.url)
             for config_file in CONFIG_FILES:  # pragma: no branch
                 config_file = config_file.with_name(f"{config_file.name}.{pluginname}")
                 if not config_file.is_file():
@@ -719,10 +723,10 @@ def setup_plugin_args(session: Streamlink, parser: ArgumentParser):
     """Adds plugin argument data to the argument parser."""
 
     plugin_args = parser.add_argument_group("Plugin options")
-    for pname, plugin in session.plugins.items():
+    for pname, arguments in session.plugins.iter_arguments():
         group = parser.add_argument_group(pname.capitalize(), parent=plugin_args)
 
-        for parg in plugin.arguments or []:
+        for parg in arguments:
             group.add_argument(parg.argument_name(pname), **parg.options)
 
 
@@ -739,7 +743,7 @@ def setup_plugin_options(pluginname: str, pluginclass: Type[Plugin]) -> Options:
     for parg in pluginclass.arguments:
         defaults[parg.dest] = parg.default
 
-        if parg.options.get("help") == argparse.SUPPRESS:
+        if parg.help == argparse.SUPPRESS:
             continue
 
         value = getattr(args, parg.namespace_dest(pluginname))
@@ -814,15 +818,17 @@ def log_current_arguments(session: Streamlink, parser: argparse.ArgumentParser):
         return
 
     sensitive = set()
-    for pname, plugin in session.plugins.items():
-        for parg in plugin.arguments or []:
+    for pname, arguments in session.plugins.iter_arguments():
+        for parg in arguments:
             if parg.sensitive:
                 sensitive.add(parg.argument_name(pname))
 
     log.debug("Arguments:")
+    seen = set()
     for action in parser._actions:
-        if not hasattr(args, action.dest):
+        if not hasattr(args, action.dest) or action.dest in seen:
             continue
+        seen.add(action.dest)
         value = getattr(args, action.dest)
         if action.default != value:
             name = next(  # pragma: no branch
@@ -857,10 +863,7 @@ def setup_logger_and_console(stream=sys.stdout, filename=None, level="info", jso
     console = ConsoleOutput(streamhandler.stream, json)
 
 
-def main():
-    error_code = 0
-    parser = build_parser()
-
+def setup(parser: ArgumentParser) -> None:
     setup_args(parser, ignore_unknown=True)
     # call argument set up as early as possible to load args from config files
     setup_config_args(parser, ignore_unknown=True)
@@ -897,6 +900,10 @@ def main():
     setup_session_options(streamlink, args)
 
     setup_signals()
+
+
+def run(parser: ArgumentParser) -> int:
+    error_code = 0
 
     if args.version_check or args.auto_version_check:
         try:
@@ -947,11 +954,11 @@ def main():
             + "Use -h/--help to see the available options or read the manual at https://streamlink.github.io",
         )
 
-    sys.exit(error_code)
+    return error_code
 
 
-def parser_helper():
-    session = Streamlink()
+def main():
     parser = build_parser()
-    setup_plugin_args(session, parser)
-    return parser
+    setup(parser)
+    error_code = run(parser)
+    sys.exit(error_code)

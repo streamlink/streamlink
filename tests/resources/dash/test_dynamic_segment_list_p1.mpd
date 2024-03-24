@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<MPD
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xmlns="urn:mpeg:dash:schema:mpd:2011"
+  xsi:schemaLocation="urn:mpeg:dash:schema:mpd:2011 DASH-MPD.xsd"
+  profiles="urn:mpeg:dash:profile:isoff-live:2011,http://dashif.org/guidelines/dash-if-simple"
+  type="dynamic"
+  availabilityStartTime="1970-01-01T00:00:00Z"
+  publishTime="2000-01-01T00:00:00Z"
+  maxSegmentDuration="PT10S"
+  minBufferTime="PT10S"
+>
+<Period id="0" start="PT0S">
+    <AdaptationSet id="0" group="1" mimeType="video/mp4" maxWidth="1920" maxHeight="1080" par="16:9" frameRate="25" segmentAlignment="true" startWithSAP="1" subsegmentAlignment="true" subsegmentStartsWithSAP="1">
+        <Representation id="0" codecs="avc1.640028" width="1920" height="1080" sar="1:1" bandwidth="4332748">
+            <SegmentList presentationTimeOffset="0" timescale="1000" duration="4000" startNumber="5">
+                <Initialization sourceURL="init.m4s"/>
+                <SegmentURL media="5.m4s"/>
+                <SegmentURL media="6.m4s"/>
+                <SegmentURL media="7.m4s"/>
+                <SegmentURL media="8.m4s"/>
+                <SegmentURL media="9.m4s"/>
+                <SegmentURL media="10.m4s"/>
+                <SegmentURL media="11.m4s"/>
+                <SegmentURL media="12.m4s"/>
+                <SegmentURL media="13.m4s"/>
+                <SegmentURL media="14.m4s"/>
+                <SegmentURL media="15.m4s"/>
+            </SegmentList>
+        </Representation>
+    </AdaptationSet>
+</Period>
+</MPD>

@@ -130,14 +130,16 @@ First, make sure that you have set up [Git][Git] on your system, as well as a wo
 Then [create and activate a virtual environment][python-venv] where Streamlink can be installed into, without causing incompatibilities with other packages in your main Python environment.
 
 ```bash
-# install "virtualenv" package using pip (or use your system's package manager)
-python -m pip install virtualenv
-# create new virtual environment
-python -m virtualenv "PATH/TO/NEW/VENV"
-# activate virtual environment
-# non-Windows (no file extension on POSIX compliant shells, .fish for FISH, etc.)
+# 1. Create a new virtual environment.
+python -m venv "PATH/TO/NEW/VENV"
+
+# 2. Run the environment's "activate" shell-script.
+#    No file name extension for POSIX compliant shells,
+#    .fish for FISH, .ps1 for PowerShell, .bat for Windows Batch, etc.
+#
+# non-Windows: subdirectory is /bin
 source "PATH/TO/NEW/VENV/bin/activate"
-# Windows (.ps1 for PowerShell, .bat for Windows Batch)
+# Windows: subdirectory is \Script
 "PATH\TO\NEW\VENV\Script\activate.ps1"
 ```
 

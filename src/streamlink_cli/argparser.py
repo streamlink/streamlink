@@ -219,13 +219,23 @@ def build_parser():
         """,
     )
     general.add_argument(
+        "--plugin-dir",
+        dest="plugin_dirs",
+        metavar="DIRECTORY",
+        action="append",
+        help="""
+        Load plugins from this directory.
+
+        Can be set multiple times to load plugins from multiple directories.
+        """,
+    )
+    general.add_argument(
         "--plugin-dirs",
         metavar="DIRECTORY",
         type=comma_list,
+        action="extend",
         help="""
-        Attempts to load plugins from these directories.
-
-        Multiple directories can be used by separating them with a comma.
+        Load plugins from a list of comma-separated directories. (deprecated)
         """,
     )
     general.add_argument(
@@ -833,7 +843,9 @@ def build_parser():
         metavar="SIZE",
         type=filesize,
         help="""
-        The maximum size of the ringbuffer. Mega- or kilobytes can be specified via the M or K suffix respectively.
+        The maximum size of the ringbuffer.
+
+        Mebibytes or kibibytes (base 2) can be specified via the M or K suffix respectively.
 
         The ringbuffer is used as a temporary storage between the stream and the player.
         This allows Streamlink to download the stream faster than the player which reads the data from the ringbuffer.
@@ -846,9 +858,6 @@ def build_parser():
         background as long as the ringbuffer doesn't get full.
 
         Default is "16M".
-
-        Note: A smaller size is recommended on lower end systems (such as Raspberry Pi) when playing stream types that require
-        some extra processing to avoid unnecessary background processing.
         """,
     )
     transport.add_argument(

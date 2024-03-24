@@ -2,12 +2,13 @@ import sys
 from io import StringIO
 from pathlib import PurePath, PurePosixPath, PureWindowsPath
 from time import time
-from unittest.mock import Mock, call, patch
+from unittest.mock import Mock
 
 import freezegun
 import pytest
 
 from streamlink_cli.utils.progress import Progress, ProgressFormatter
+from tests.testutils.handshake import Handshake
 
 
 class TestProgressFormatter:
@@ -20,6 +21,11 @@ class TestProgressFormatter:
             path=lambda *_: "PATH",
         )
 
+    @pytest.fixture(autouse=True)
+    def term_width(self, request: pytest.FixtureRequest, monkeypatch: pytest.MonkeyPatch):  # noqa: PT004
+        width = getattr(request, "param", 99)
+        monkeypatch.setattr("streamlink_cli.utils.progress.ProgressFormatter.term_width", lambda: width)
+
     @pytest.mark.parametrize(("term_width", "expected"), [
         (99, "[download] Written WRITTEN to PATH (ELAPSED @ SPEED)"),
         (63, "[download] Written WRITTEN to PATH (ELAPSED @ SPEED)"),
@@ -31,10 +37,9 @@ class TestProgressFormatter:
         (28, "[download] WRITTEN (ELAPSED)"),
         (27, "[download] WRITTEN"),
         (1, "[download] WRITTEN"),
-    ])
+    ], indirect=["term_width"])
     def test_format(self, params, term_width, expected):
-        with patch("streamlink_cli.utils.progress.ProgressFormatter.term_width", lambda: term_width):
-            assert ProgressFormatter.format(ProgressFormatter.FORMATS, params) == expected
+        assert ProgressFormatter.format(ProgressFormatter.FORMATS, params) == expected
 
     @pytest.mark.parametrize(("term_width", "expected"), [
         (99, "[download] Written WRITTEN to PATH (ELAPSED)"),
@@ -45,20 +50,17 @@ class TestProgressFormatter:
         (28, "[download] WRITTEN (ELAPSED)"),
         (27, "[download] WRITTEN"),
         (1, "[download] WRITTEN"),
-    ])
+    ], indirect=["term_width"])
     def test_format_nospeed(self, params, term_width, expected):
-        with patch("streamlink_cli.utils.progress.ProgressFormatter.term_width", lambda: term_width):
-            assert ProgressFormatter.format(ProgressFormatter.FORMATS_NOSPEED, params) == expected
+        assert ProgressFormatter.format(ProgressFormatter.FORMATS_NOSPEED, params) == expected
 
     def test_format_missing(self, params):
-        with patch("streamlink_cli.utils.progress.ProgressFormatter.term_width", lambda: 99):
-            assert ProgressFormatter.format(ProgressFormatter.FORMATS, {"written": "0"}) == "[download] 0"
+        assert ProgressFormatter.format(ProgressFormatter.FORMATS, {"written": "0"}) == "[download] 0"
 
     def test_format_error(self, params):
-        with patch("streamlink_cli.utils.progress.ProgressFormatter.term_width", lambda: 99):
-            params = dict(**params)
-            params["path"] = Mock(side_effect=ValueError("fail"))
-            assert ProgressFormatter.format(ProgressFormatter.FORMATS, params) == "[download] Written WRITTEN (ELAPSED @ SPEED)"
+        params = dict(**params)
+        params["path"] = Mock(side_effect=ValueError("fail"))
+        assert ProgressFormatter.format(ProgressFormatter.FORMATS, params) == "[download] Written WRITTEN (ELAPSED @ SPEED)"
 
     @pytest.mark.parametrize(("size", "expected"), [
         (0, "0 bytes"),
@@ -110,9 +112,9 @@ _PATH_WIN_UNC = PureWindowsPath("\\\\?\\foobar\\baz\\some file name")
 
 class _TestFormatPath:
     # noinspection PyMethodMayBeStatic
-    def test_format_path(self, path: PurePath, max_width: int, expected: str):
-        with patch("os.path.sep", "\\" if type(path) is PureWindowsPath else "/"):
-            assert ProgressFormatter.format_path(path, max_width) == expected
+    def test_format_path(self, monkeypatch: pytest.MonkeyPatch, path: PurePath, max_width: int, expected: str):
+        monkeypatch.setattr("os.path.sep", "\\" if type(path) is PureWindowsPath else "/")
+        assert ProgressFormatter.format_path(path, max_width) == expected
 
 
 @pytest.mark.parametrize(("path", "max_width", "expected"), [
@@ -204,10 +206,9 @@ class TestWidth:
 
 class TestPrint:
     @pytest.fixture(autouse=True)
-    def _terminal_size(self):
-        with patch("streamlink_cli.utils.progress.get_terminal_size") as mock_get_terminal_size:
-            mock_get_terminal_size.return_value = Mock(columns=10)
-            yield
+    def _get_terminal_size(self, monkeypatch: pytest.MonkeyPatch):
+        mock_get_terminal_size = Mock(return_value=Mock(columns=10))
+        monkeypatch.setattr("streamlink_cli.utils.progress.get_terminal_size", mock_get_terminal_size)
 
     @pytest.fixture()
     def stream(self):
@@ -237,60 +238,105 @@ class TestPrint:
 
 
 class TestProgress:
-    def test_download_speed(self):
+    @pytest.fixture(autouse=True)
+    def _setup(self, monkeypatch: pytest.MonkeyPatch):
+        monkeypatch.setattr("os.path.sep", "/")
+
+    @pytest.fixture(autouse=True)
+    def mock_width(self, monkeypatch: pytest.MonkeyPatch):
+        mock = Mock(return_value=70)
+        monkeypatch.setattr("streamlink_cli.utils.progress.ProgressFormatter.term_width", mock)
+        return mock
+
+    @pytest.fixture()
+    def frozen_time(self):
+        with freezegun.freeze_time("2000-01-01T00:00:00Z") as frozen_time:
+            yield frozen_time
+
+    def test_download_speed(self, mock_width: Mock, frozen_time):
         kib = b"\x00" * 1024
-        output_write = Mock()
+        stream = StringIO()
         progress = Progress(
-            Mock(write=output_write),
-            PurePosixPath("../../the/path/where/we/write/to"),
+            stream=stream,
+            path=PurePosixPath("../../the/path/where/we/write/to"),
             interval=1,
             history=3,
             threshold=2,
         )
 
-        with freezegun.freeze_time("2000-01-01T00:00:00Z") as frozen_time, \
-             patch("os.path.sep", "/"), \
-             patch("streamlink_cli.utils.progress.ProgressFormatter.term_width", Mock(return_value=70)) as mock_width:
-            progress.started = time()
-            assert not output_write.call_args_list
+        progress.started = time()
+        assert stream.getvalue() == ""
 
-            progress.update()
-            assert output_write.call_args_list[-1] \
-                   == call("\r[download] Written 0 bytes to ../../the/path/where/we/write/to (0s)   ")
+        progress.update()
+        assert stream.getvalue().split("\r")[-1] == "[download] Written 0 bytes to ../../the/path/where/we/write/to (0s)   "
 
-            frozen_time.tick()
-            progress.write(kib * 1)
-            progress.update()
-            assert output_write.call_args_list[-1] \
-                   == call("\r[download] Written 1.00 KiB to …th/where/we/write/to (1s @ 1.00 KiB/s)")
+        frozen_time.tick()
+        progress.write(kib * 1)
+        progress.update()
+        assert stream.getvalue().split("\r")[-1] == "[download] Written 1.00 KiB to …th/where/we/write/to (1s @ 1.00 KiB/s)"
 
-            frozen_time.tick()
-            mock_width.return_value = 65
-            progress.write(kib * 3)
-            progress.update()
-            assert output_write.call_args_list[-1] \
-                   == call("\r[download] Written 4.00 KiB to …ere/we/write/to (2s @ 2.00 KiB/s)")
+        frozen_time.tick()
+        mock_width.return_value = 65
+        progress.write(kib * 3)
+        progress.update()
+        assert stream.getvalue().split("\r")[-1] == "[download] Written 4.00 KiB to …ere/we/write/to (2s @ 2.00 KiB/s)"
 
-            frozen_time.tick()
-            mock_width.return_value = 60
-            progress.write(kib * 5)
-            progress.update()
-            assert output_write.call_args_list[-1] \
-                   == call("\r[download] Written 9.00 KiB (3s @ 4.50 KiB/s)               ")
+        frozen_time.tick()
+        mock_width.return_value = 60
+        progress.write(kib * 5)
+        progress.update()
+        assert stream.getvalue().split("\r")[-1] == "[download] Written 9.00 KiB (3s @ 4.50 KiB/s)               "
 
-            frozen_time.tick()
-            progress.write(kib * 7)
-            progress.update()
-            assert output_write.call_args_list[-1] \
-                   == call("\r[download] Written 16.00 KiB (4s @ 7.50 KiB/s)              ")
+        frozen_time.tick()
+        progress.write(kib * 7)
+        progress.update()
+        assert stream.getvalue().split("\r")[-1] == "[download] Written 16.00 KiB (4s @ 7.50 KiB/s)              "
 
-            frozen_time.tick()
-            progress.write(kib * 5)
-            progress.update()
-            assert output_write.call_args_list[-1] \
-                   == call("\r[download] Written 21.00 KiB (5s @ 8.50 KiB/s)              ")
+        frozen_time.tick()
+        progress.write(kib * 5)
+        progress.update()
+        assert stream.getvalue().split("\r")[-1] == "[download] Written 21.00 KiB (5s @ 8.50 KiB/s)              "
 
-            frozen_time.tick()
-            progress.update()
-            assert output_write.call_args_list[-1] \
-                   == call("\r[download] Written 21.00 KiB (6s @ 6.00 KiB/s)              ")
+        frozen_time.tick()
+        progress.update()
+        assert stream.getvalue().split("\r")[-1] == "[download] Written 21.00 KiB (6s @ 6.00 KiB/s)              "
+
+    def test_update(self):
+        handshake = Handshake()
+
+        class _Progress(Progress):
+            def update(self):
+                with handshake():
+                    return super().update()
+
+        stream = StringIO()
+        thread = _Progress(stream=stream, path=PurePath())
+        # override the thread's polling time after initializing the deque of the rolling average download speed:
+        # the interval constructor keyword is used to set the deque size
+        thread.interval = 0
+        thread.start()
+
+        # first tick
+        assert handshake.wait_ready(1)
+        thread.write(b"123")
+        assert handshake.step(1)
+        assert stream.getvalue().split("\r")[-1].startswith("[download] Written 3 bytes")
+
+        # second tick
+        assert handshake.wait_ready(1)
+        thread.write(b"465")
+        assert handshake.step(1)
+        assert stream.getvalue().split("\r")[-1].startswith("[download] Written 6 bytes")
+
+        # close progress thread
+        assert handshake.wait_ready(1)
+        thread.close()
+        assert handshake.step(1)
+        assert stream.getvalue().split("\r")[-1].startswith("[download] Written 6 bytes")
+
+        # write data right after closing the thread, but before it has halted
+        thread.write(b"789")
+        handshake.go()
+        thread.join(1)
+        assert not thread.is_alive()
+        assert stream.getvalue().split("\r")[-1].startswith("[download] Written 9 bytes")

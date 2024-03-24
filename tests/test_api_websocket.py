@@ -22,6 +22,10 @@ def test_opcode_export(name, value):
     assert getattr(WebsocketClient, name) == value
 
 
+class FakeWebsocketClient(WebsocketClient):
+    ws: Mock
+
+
 class TestWebsocketClient:
     @pytest.fixture()
     def websocketapp(self):
@@ -34,21 +38,29 @@ class TestWebsocketClient:
             yield WebsocketClient(session, "wss://localhost:0", **getattr(request, "param", {}))
 
     @pytest.mark.parametrize(("level", "expected"), [
-        pytest.param(DEBUG, False, id="debug"),
-        pytest.param(TRACE, True, id="trace"),
+        pytest.param(DEBUG, [], id="debug"),
+        pytest.param(TRACE, [call(True, handler=ANY)], id="trace"),
     ])
-    def test_log(self, session: Streamlink, level: int, expected: bool):
-        with patch("streamlink.plugin.api.websocket.enableTrace") as mock_enable_trace, \
-             patch("streamlink.plugin.api.websocket.rootlogger", Mock(level=level)):
-            WebsocketClient(session, "wss://localhost:0")
-        assert mock_enable_trace.called is expected
+    def test_log(
+        self,
+        monkeypatch: pytest.MonkeyPatch,
+        caplog: pytest.LogCaptureFixture,
+        session: Streamlink,
+        level: int,
+        expected: bool,
+    ):
+        caplog.set_level(level, "streamlink")
+        mock_enable_trace = Mock()
+        monkeypatch.setattr("streamlink.plugin.api.websocket.enableTrace", mock_enable_trace)
+        WebsocketClient(session, "wss://localhost:0")
+        assert mock_enable_trace.call_args_list == expected
 
     @pytest.mark.parametrize(("client", "expected"), [
         pytest.param({}, FIREFOX, id="default"),
         pytest.param({"header": ["User-Agent: foo"]}, "foo", id="header list"),
         pytest.param({"header": {"User-Agent": "bar"}}, "bar", id="header dict"),
     ], indirect=["client"])
-    def test_user_agent(self, client: WebsocketClient, websocketapp: Mock, expected: str):
+    def test_user_agent(self, client: FakeWebsocketClient, websocketapp: Mock, expected: str):
         assert [arg[1].get("header", []) for arg in websocketapp.call_args_list] == [[f"User-Agent: {expected}"]]
 
     @pytest.mark.parametrize(("session", "client"), [
@@ -70,7 +82,7 @@ class TestWebsocketClient:
             },
         ),
     ], indirect=["session", "client"])
-    def test_args_and_proxy(self, session: Streamlink, client: WebsocketClient, websocketapp: Mock):
+    def test_args_and_proxy(self, session: Streamlink, client: FakeWebsocketClient, websocketapp: Mock):
         assert websocketapp.call_args_list == [
             call(
                 url="wss://localhost:0",
@@ -122,7 +134,7 @@ class TestWebsocketClient:
         assert client.ws.on_cont_message == client.on_cont_message
         assert client.ws.on_data == client.on_data
 
-    def test_send(self, client: WebsocketClient):
+    def test_send(self, client: FakeWebsocketClient):
         with patch.object(client, "ws") as mock_ws:
             client.send("foo")
             client.send(b"foo", ABNF.OPCODE_BINARY)
@@ -136,7 +148,7 @@ class TestWebsocketClient:
     def test_close(self, session: Streamlink):
         handshake = Handshake()
 
-        class WebsocketClientSubclass(WebsocketClient):
+        class WebsocketClientSubclass(FakeWebsocketClient):
             def run(self):
                 with handshake():
                     pass
@@ -153,7 +165,7 @@ class TestWebsocketClient:
     def test_close_self(self, session: Streamlink):
         handshake = Handshake()
 
-        class WebsocketClientSubclass(WebsocketClient):
+        class WebsocketClientSubclass(FakeWebsocketClient):
             def run(self):
                 with handshake(Exception):
                     self.close(reason=b"bar")
@@ -165,7 +177,7 @@ class TestWebsocketClient:
         assert not client.is_alive()
         assert handshake._context.error is None, "Doesn't join current thread"
 
-    def test_reconnect_disconnected(self, client: WebsocketClient, websocketapp: Mock):
+    def test_reconnect_disconnected(self, client: FakeWebsocketClient, websocketapp: Mock):
         handshake = Handshake()
 
         # noinspection PyUnusedLocal
@@ -185,7 +197,7 @@ class TestWebsocketClient:
         client.join(timeout=4)
         assert not client.is_alive()
 
-    def test_reconnect_once(self, client: WebsocketClient, websocketapp: Mock):
+    def test_reconnect_once(self, client: FakeWebsocketClient, websocketapp: Mock):
         handshake = Handshake()
 
         # noinspection PyUnusedLocal

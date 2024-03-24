@@ -12,6 +12,7 @@ RESOLVE_EXECUTABLE_LOOKUPS = {
     "/other/bar": "/other/bar",
 }
 
+
 @pytest.mark.parametrize(("custom", "names", "fallbacks", "expected"), [
     pytest.param(
         None,

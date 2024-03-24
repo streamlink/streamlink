@@ -16,14 +16,14 @@ from streamlink.stream.hls import HLSStream
 log = logging.getLogger(__name__)
 
 
-@pluginmatcher(re.compile(r"""
-    https?://(?:www\.)?bloomberg\.com/
-    (?:
-        (?P<live>live)(?:/(?P<channel>[^/]+))?
-        |
-        news/videos/[^/]+/[^/]+
-    )
-""", re.VERBOSE))
+@pluginmatcher(
+    name="live",
+    pattern=re.compile(r"https?://(?:www\.)?bloomberg\.com/live(?:/(?P<channel>[^/]+))?"),
+)
+@pluginmatcher(
+    name="vod",
+    pattern=re.compile(r"https?://(?:www\.)?bloomberg\.com/news/videos/[^/]+/[^/]+"),
+)
 class Bloomberg(Plugin):
     LIVE_API_URL = "https://cdn.gotraffic.net/projector/latest/assets/config/config.min.json?v=1"
     VOD_API_URL = "https://www.bloomberg.com/api/embed?id={0}"
@@ -106,21 +106,23 @@ class Bloomberg(Plugin):
     def _get_streams(self):
         del self.session.http.headers["Accept-Encoding"]
 
-        try:
-            data = self.session.http.get(self.url, schema=validate.Schema(
-                validate.parse_html(),
-                validate.xml_xpath_string(".//script[contains(text(),'window.__PRELOADED_STATE__')][1]/text()"),
-                str,
-                validate.regex(re.compile(r"^\s*window\.__PRELOADED_STATE__\s*=\s*({.+})\s*;?\s*$", re.DOTALL)),
-                validate.get(1),
-                validate.parse_json(),
-            ))
-        except PluginError:
+        data = self.session.http.get(self.url, schema=validate.Schema(
+            validate.parse_html(),
+            validate.xml_xpath_string(".//script[contains(text(),'window.__PRELOADED_STATE__')][1]/text()"),
+            validate.none_or_all(
+                re.compile(r"\bwindow\.__PRELOADED_STATE__\s*=\s*(?P<json>{.+?})\s*;(?:\s|$)"),
+                validate.none_or_all(
+                    validate.get("json"),
+                    validate.parse_json(),
+                ),
+            ),
+        ))
+        if not data:
             log.error("Could not find JSON data. Invalid URL or bot protection...")
             return
 
-        if self.match.group("live"):
-            streams = self._get_live_streams(data, self.match.group("channel") or self.DEFAULT_CHANNEL)
+        if self.matches["live"]:
+            streams = self._get_live_streams(data, self.match["channel"] or self.DEFAULT_CHANNEL)
         else:
             streams = self._get_vod_streams(data)
 

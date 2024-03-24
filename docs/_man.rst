@@ -31,8 +31,6 @@ Options
 -------
 
 .. argparse::
-    :module: streamlink_cli.main
-    :attr: parser_helper
 
 
 Bugs

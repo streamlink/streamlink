@@ -6,11 +6,22 @@ class TestPluginCanHandleUrlBloomberg(PluginCanHandleUrl):
     __plugin__ = Bloomberg
 
     should_match_groups = [
-        ("https://www.bloomberg.com/live", {"live": "live"}),
-        ("https://www.bloomberg.com/live/", {"live": "live"}),
-        ("https://www.bloomberg.com/live/europe", {"live": "live", "channel": "europe"}),
-        ("https://www.bloomberg.com/live/europe/", {"live": "live", "channel": "europe"}),
-        ("https://www.bloomberg.com/news/videos/2022-08-10/-bloomberg-surveillance-early-edition-full-08-10-22", {}),
+        (
+            ("live", "https://www.bloomberg.com/live"),
+            {},
+        ),
+        (
+            ("live", "https://www.bloomberg.com/live/europe"),
+            {"channel": "europe"},
+        ),
+        (
+            ("live", "https://www.bloomberg.com/live/us"),
+            {"channel": "us"},
+        ),
+        (
+            ("vod", "https://www.bloomberg.com/news/videos/2022-08-10/-bloomberg-surveillance-early-edition-full-08-10-22"),
+            {},
+        ),
     ]
 
     should_not_match = [

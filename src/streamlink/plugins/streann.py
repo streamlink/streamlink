@@ -45,7 +45,6 @@ log = logging.getLogger(__name__)
 @pluginargument(
     "url",
     metavar="URL",
-    type=str,
     help="Source URL where the iframe is located, only required for direct URLs of ott.streann.com",
 )
 class Streann(Plugin):

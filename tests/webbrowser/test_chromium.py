@@ -121,9 +121,8 @@ async def test_launch(monkeypatch: pytest.MonkeyPatch, mock_clock, webbrowser_la
 
     webbrowser = ChromiumWebbrowser(host=host, port=port)
 
-    nursery: trio.Nursery
     process: trio.Process
-    async with webbrowser_launch(webbrowser=webbrowser, timeout=999) as (nursery, process):
+    async with webbrowser_launch(webbrowser=webbrowser, timeout=999) as (_nursery, process):
         assert process.poll() is None, "process is still running"
         assert f"--remote-debugging-host={host}" in process.args
         assert "--remote-debugging-port=1234" in process.args

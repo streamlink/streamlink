@@ -6,92 +6,151 @@ $type live
 
 import logging
 import re
-from urllib.parse import urlparse
 
+from streamlink.exceptions import NoStreamsError
 from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.api import validate
-from streamlink.stream.http import HTTPStream
+from streamlink.stream.hls import HLSStream
 
 
 log = logging.getLogger(__name__)
-
-API_URL = "https://api.live.bilibili.com/room/v1/Room/playUrl"
-ROOM_API = "https://api.live.bilibili.com/room/v1/Room/room_init?id={}"
-SHOW_STATUS_OFFLINE = 0
-SHOW_STATUS_ONLINE = 1
-SHOW_STATUS_ROUND = 2
-STREAM_WEIGHTS = {
-    "source": 1080,
-}
-
-_room_id_schema = validate.Schema(
-    {
-        "data": validate.any(None, {
-            "room_id": int,
-            "live_status": int,
-        }),
-    },
-    validate.get("data"),
-)
-
-_room_stream_list_schema = validate.Schema(
-    {
-        "data": validate.any(None, {
-            "durl": [{"url": validate.url()}],
-        }),
-    },
-    validate.get("data"),
-)
 
 
 @pluginmatcher(re.compile(
     r"https?://live\.bilibili\.com/(?P<channel>[^/]+)",
 ))
 class Bilibili(Plugin):
-    @classmethod
-    def stream_weight(cls, stream):
-        if stream in STREAM_WEIGHTS:
-            return STREAM_WEIGHTS[stream], "Bilibili"
+    _URL_API_PLAYINFO = "https://api.live.bilibili.com/xlive/web-room/v2/index/getRoomPlayInfo"
 
-        return Plugin.stream_weight(stream)
+    SHOW_STATUS_OFFLINE = 0
+    SHOW_STATUS_ONLINE = 1
+    SHOW_STATUS_ROUND = 2
+
+    @staticmethod
+    def _schema_streams():
+        return validate.all(
+            [{
+                "protocol_name": str,
+                "format": validate.all(
+                    [{
+                        "format_name": str,
+                        "codec": validate.all(
+                            [{
+                                "codec_name": str,
+                                "base_url": str,
+                                "url_info": [{
+                                    "host": validate.url(),
+                                    "extra": str,
+                                }],
+                            }],
+                            validate.filter(lambda item: item["codec_name"] == "avc"),
+                        ),
+                    }],
+                    validate.filter(lambda item: item["format_name"] == "fmp4"),
+                ),
+            }],
+            validate.filter(lambda item: item["protocol_name"] == "http_hls"),
+        )
+
+    def _get_api_playinfo(self, room_id):
+        return self.session.http.get(
+            self._URL_API_PLAYINFO,
+            params={
+                "room_id": room_id,
+                "no_playurl": 0,
+                "mask": 1,
+                "qn": 0,
+                "platform": "web",
+                "protocol": "0,1",
+                "format": "0,1,2",
+                "codec": "0,1,2",
+                "dolby": 5,
+                "panorama": 1,
+            },
+            schema=validate.Schema(
+                validate.parse_json(),
+                {
+                    "code": 0,
+                    "data": {
+                        "playurl_info": {
+                            "playurl": {
+                                "stream": self._schema_streams(),
+                            },
+                        },
+                    },
+                },
+                validate.get(("data", "playurl_info", "playurl", "stream")),
+            ),
+        )
+
+    def _get_page_playinfo(self):
+        data = self.session.http.get(
+            self.url,
+            schema=validate.Schema(
+                validate.parse_html(),
+                validate.xml_xpath_string(".//script[contains(text(),'window.__NEPTUNE_IS_MY_WAIFU__={')][1]/text()"),
+                validate.none_or_all(
+                    validate.transform(str.replace, "window.__NEPTUNE_IS_MY_WAIFU__=", ""),
+                    validate.parse_json(),
+                    {
+                        "roomInitRes": {
+                            "data": {
+                                "live_status": int,
+                                "playurl_info": {
+                                    "playurl": {
+                                        "stream": self._schema_streams(),
+                                    },
+                                },
+                            },
+                        },
+                        "roomInfoRes": {
+                            "data": {
+                                "room_info": {
+                                    "live_id": int,
+                                    "title": str,
+                                    "area_name": str,
+                                },
+                                "anchor_info": {
+                                    "base_info": {
+                                        "uname": str,
+                                    },
+                                },
+                            },
+                        },
+                    },
+                    validate.union_get(
+                        ("roomInfoRes", "data", "room_info", "live_id"),
+                        ("roomInfoRes", "data", "anchor_info", "base_info", "uname"),
+                        ("roomInfoRes", "data", "room_info", "area_name"),
+                        ("roomInfoRes", "data", "room_info", "title"),
+                        ("roomInitRes", "data", "live_status"),
+                        ("roomInitRes", "data", "playurl_info", "playurl", "stream"),
+                    ),
+                ),
+            ),
+        )
+        if not data:
+            return
+
+        self.id, self.author, self.category, self.title, live_status, streams = data
+        if live_status != self.SHOW_STATUS_ONLINE:
+            log.info("Channel is offline")
+            raise NoStreamsError
+
+        return streams
 
     def _get_streams(self):
-        self.session.http.headers.update({"Referer": self.url})
-        channel = self.match.group("channel")
-        res_room_id = self.session.http.get(ROOM_API.format(channel))
-        room_id_json = self.session.http.json(res_room_id, schema=_room_id_schema)
-        room_id = room_id_json["room_id"]
-        if room_id_json["live_status"] != SHOW_STATUS_ONLINE:
-            return
+        streams = self._get_page_playinfo()
+        if not streams:
+            log.debug("Falling back to _get_api_playinfo()")
+            streams = self._get_api_playinfo(self.match["channel"])
 
-        params = {
-            "cid": room_id,
-            "quality": "4",
-            "platform": "web",
-        }
-        res = self.session.http.get(API_URL, params=params)
-        room = self.session.http.json(res, schema=_room_stream_list_schema)
-        if not room:
-            return
-
-        for stream_list in room["durl"]:
-            name = "source"
-            url = stream_list["url"]
-            # check if the URL is available
-            log.trace("URL={0}".format(url))
-            r = self.session.http.get(url,
-                                      retries=0,
-                                      timeout=3,
-                                      stream=True,
-                                      acceptable_status=(200, 403, 404, 405))
-            p = urlparse(url)
-            if r.status_code != 200:
-                log.error("Netloc: {0} with error {1}".format(p.netloc, r.status_code))
-                continue
-
-            log.debug("Netloc: {0}".format(p.netloc))
-            stream = HTTPStream(self.session, url)
-            yield name, stream
+        for stream in streams or []:
+            for stream_format in stream["format"]:
+                for codec in stream_format["codec"]:
+                    for url_info in codec["url_info"]:
+                        url = f"{url_info['host']}{codec['base_url']}{url_info['extra']}"
+                        yield "live", HLSStream(self.session, url)
 
 
 __plugin__ = Bilibili

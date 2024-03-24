@@ -1,6 +1,9 @@
+import argparse
+
 import pytest
 
 from streamlink.options import Argument, Arguments, Options
+from streamlink.utils.args import comma_list_filter
 
 
 class TestOptions:
@@ -139,6 +142,91 @@ class TestArgument:
             # noinspection PyPropertyAccess
             arg.default = 456
 
+    def test_help_suppress(self):
+        argA = Argument("test", help="test")
+        argB = Argument("test", help=argparse.SUPPRESS)
+        argC = Argument("test", help=f"{argparse.SUPPRESS[:1]}{argparse.SUPPRESS[1:]}")
+        assert argA.help is not argparse.SUPPRESS
+        assert id(argB.help) == id(argparse.SUPPRESS)
+        assert id(argC.help) == id(argparse.SUPPRESS)
+
+    def test_options(self):
+        arg = Argument(
+            "test",
+            action="append",
+            nargs=2,
+            default=(0, 0),
+            type=int,
+            choices=[1, 2, 3],
+            required=True,
+            help=argparse.SUPPRESS,
+            metavar=("ONE", "TWO"),
+            dest="dest",
+            requires=["other"],
+            prompt="Test!",
+            sensitive=False,
+            argument_name=None,
+        )
+        assert arg.options == {
+            "action": "append",
+            "nargs": 2,
+            "default": (0, 0),
+            "type": int,
+            "choices": (1, 2, 3),
+            "help": argparse.SUPPRESS,
+            "metavar": ("ONE", "TWO"),
+            "dest": "dest",
+        }
+
+        arg = Argument(
+            "test",
+            action="store_const",
+            const=123,
+        )
+        assert arg.options == {
+            "action": "store_const",
+            "const": 123,
+        }
+
+    def test_equality(self):
+        a1 = Argument(
+            "test",
+            action="append",
+            nargs=2,
+            default=("0", "0"),
+            type=comma_list_filter(["1", "2", "3"], unique=True),
+            choices=["1", "2", "3"],
+            required=True,
+            help=argparse.SUPPRESS,
+            metavar=("ONE", "TWO"),
+            dest="dest",
+            requires=["other"],
+            prompt="Test!",
+            sensitive=False,
+            argument_name="custom-name",
+        )
+        a2 = Argument(
+            "test",
+            action="append",
+            nargs=2,
+            default=("0", "0"),
+            type=comma_list_filter(["1", "2", "3"], unique=True),
+            choices=["1", "2", "3"],
+            required=True,
+            help=argparse.SUPPRESS,
+            metavar=("ONE", "TWO"),
+            dest="dest",
+            requires=["other"],
+            prompt="Test!",
+            sensitive=False,
+            argument_name="custom-name",
+        )
+        a3 = Argument("foo")
+        assert a1 is not a2
+        assert a1 == a2
+        assert a1 != a3
+        assert a2 != a3
+
 
 class TestArguments:
     def test_getter(self):
@@ -168,6 +256,16 @@ class TestArguments:
         assert list(iter(args)) == [test1, test2]
         args.add(test3)
         assert list(iter(args)) == [test3, test1, test2]
+
+    def test_equality(self):
+        test1 = Arguments()
+        test1.add(Argument("testA"))
+        test1.add(Argument("testB"))
+        test2 = Arguments(Argument("testB"), Argument("testA"))
+        test3 = Arguments(Argument("testA"), Argument("testB"))
+        assert test1 == test2
+        assert test1 != test3
+        assert test2 != test3
 
     def test_requires(self):
         test1 = Argument("test1", requires="test2")

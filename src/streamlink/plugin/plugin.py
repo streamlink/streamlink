@@ -12,12 +12,13 @@ from typing import (
     Callable,
     ClassVar,
     Dict,
+    Iterable,
     List,
+    Literal,
     Match,
     NamedTuple,
     Optional,
     Pattern,
-    Sequence,
     Tuple,
     Type,
     TypeVar,
@@ -26,6 +27,8 @@ from typing import (
 
 import requests.cookies
 
+import streamlink.utils.args
+import streamlink.utils.times
 from streamlink.cache import Cache
 from streamlink.exceptions import FatalPluginError, NoStreamsError, PluginError
 from streamlink.options import Argument, Arguments, Options
@@ -34,6 +37,21 @@ from streamlink.user_input import UserInputRequester
 
 if TYPE_CHECKING:  # pragma: no cover
     from streamlink.session import Streamlink
+
+
+#: See the :func:`~.pluginargument` decorator
+_PLUGINARGUMENT_TYPE_REGISTRY: Dict[str, Callable[[Any], Any]] = {
+    "int": int,
+    "float": float,
+    "bool": streamlink.utils.args.boolean,
+    "comma_list": streamlink.utils.args.comma_list,
+    "comma_list_filter": streamlink.utils.args.comma_list_filter,
+    "filesize": streamlink.utils.args.filesize,
+    "keyvalue": streamlink.utils.args.keyvalue,
+    "num": streamlink.utils.args.num,
+    "hours_minutes_seconds": streamlink.utils.times.hours_minutes_seconds,
+    "hours_minutes_seconds_float": streamlink.utils.times.hours_minutes_seconds_float,
+}
 
 
 log = logging.getLogger(__name__)
@@ -250,6 +268,9 @@ class Plugin:
 
     options: Options
     """Plugin options, initialized with the user-set values of the plugin's arguments"""
+
+    cache: Cache
+    """Plugin cache object, used to store plugin-specific data other than HTTP session cookies"""
 
     # plugin metadata attributes
     id: Optional[str] = None
@@ -646,18 +667,39 @@ def pluginmatcher(
     return decorator
 
 
+_TChoices = TypeVar("_TChoices", bound=Iterable)
+
+
+# noinspection GrazieInspection,PyShadowingBuiltins
 def pluginargument(
     name: str,
+    action: Optional[str] = None,
+    nargs: Optional[Union[int, Literal["?", "*", "+"]]] = None,
+    const: Any = None,
+    default: Any = None,
+    type: Optional[Union[str, Callable[[Any], Union[_TChoices, Any]]]] = None,  # noqa: A002
+    type_args: Optional[Union[list, tuple]] = None,
+    type_kwargs: Optional[Dict[str, Any]] = None,
+    choices: Optional[_TChoices] = None,
     required: bool = False,
-    requires: Optional[Union[str, Sequence[str]]] = None,
+    help: Optional[str] = None,  # noqa: A002
+    metavar: Optional[Union[str, List[str], Tuple[str, ...]]] = None,
+    dest: Optional[str] = None,
+    requires: Optional[Union[str, List[str], Tuple[str, ...]]] = None,
     prompt: Optional[str] = None,
     sensitive: bool = False,
     argument_name: Optional[str] = None,
-    dest: Optional[str] = None,
-    **options,
 ) -> Callable[[Type[Plugin]], Type[Plugin]]:
     """
     Decorator for plugin arguments. Takes the same arguments as :class:`Argument <streamlink.options.Argument>`.
+
+    One exception is the ``type`` argument, which also accepts a ``str`` value:
+
+    Plugins built into Streamlink **must** reference the used argument-type function by name, so the pluginargument data
+    can be JSON-serialized. ``type_args`` and ``type_kwargs`` can be used to parametrize the type-argument function,
+    but their values **must** only consist of literal objects.
+
+    The available functions are defined in the :data:`~._PLUGINARGUMENT_TYPE_REGISTRY`.
 
     .. code-block:: python
 
@@ -683,15 +725,32 @@ def pluginargument(
     assuming the plugin's module name is ``myplugin``.
     """
 
+    _type: Optional[Callable[[Any], _TChoices]]
+    if not isinstance(type, str):
+        _type = type
+    else:
+        if type not in _PLUGINARGUMENT_TYPE_REGISTRY:
+            raise TypeError(f"Invalid pluginargument type {type}")
+        _type = _PLUGINARGUMENT_TYPE_REGISTRY[type]
+        if type_args is not None or type_kwargs is not None:
+            _type = _type(*(type_args or ()), **(type_kwargs or {}))
+
     arg = Argument(
-        name,
+        name=name,
+        action=action,
+        nargs=nargs,
+        const=const,
+        default=default,
+        type=_type,
+        choices=choices,
         required=required,
+        help=help,
+        metavar=metavar,
+        dest=dest,
         requires=requires,
         prompt=prompt,
         sensitive=sensitive,
         argument_name=argument_name,
-        dest=dest,
-        **options,
     )
 
     def decorator(cls: Type[Plugin]) -> Type[Plugin]:

@@ -1,6 +1,7 @@
 import locale
 import logging
 from typing import Optional
+from warnings import catch_warnings
 
 from pycountry import countries, languages  # type: ignore[import]
 
@@ -24,12 +25,17 @@ class Country:
     def get(cls, country):
         try:
             c = countries.lookup(country)
+
+            # changed in pycountry 23.12.11: a UserWarning is emitted when the official_name is missing
+            with catch_warnings(record=True):
+                official_name = getattr(c, "official_name", c.name)
+
             return Country(
                 c.alpha_2,
                 c.alpha_3,
                 c.numeric,
                 c.name,
-                getattr(c, "official_name", c.name),
+                official_name=official_name,
             )
         except LookupError as err:
             raise LookupError(f"Invalid country code: {country}") from err

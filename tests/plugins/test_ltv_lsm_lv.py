@@ -6,20 +6,15 @@ class TestPluginCanHandleUrlLtvLsmLv(PluginCanHandleUrl):
     __plugin__ = LtvLsmLv
 
     should_match = [
-        "https://ltv.lsm.lv/lv/tiesraide/example/",
-        "https://ltv.lsm.lv/lv/tiesraide/example/",
-        "https://ltv.lsm.lv/lv/tiesraide/example/live.123/",
-        "https://ltv.lsm.lv/lv/tiesraide/example/live.123/",
-    ]
-
-    should_not_match = [
-        "https://ltv.lsm.lv",
-        "http://ltv.lsm.lv",
-        "https://ltv.lsm.lv/lv",
-        "http://ltv.lsm.lv/lv",
-        "https://ltv.lsm.lv/other-site/",
-        "http://ltv.lsm.lv/other-site/",
-        "https://ltv.lsm.lv/lv/other-site/",
-        "http://ltv.lsm.lv/lv/other-site/",
-        "https://ltv.lsm.lv/lv/tieshraide/example/",
+        "https://ltv.lsm.lv/lv/tiesraide/ltv1",
+        "https://ltv.lsm.lv/lv/tiesraide/ltv7",
+        "https://ltv.lsm.lv/lv/tiesraide/visiem",
+        "https://ltv.lsm.lv/lv/tiesraide/lr1",
+        "https://ltv.lsm.lv/lv/tiesraide/lr2",
+        "https://ltv.lsm.lv/lv/tiesraide/lr3",
+        "https://ltv.lsm.lv/lv/tiesraide/lr4",
+        "https://ltv.lsm.lv/lv/tiesraide/lr5",
+        "https://ltv.lsm.lv/lv/tiesraide/lr6",
+        "https://replay.lsm.lv/lv/tiesraide/ltv7/sporta-studija-aizkulises",
+        "https://replay.lsm.lv/ru/efir/ltv7/sporta-studija-aizkulises",
     ]

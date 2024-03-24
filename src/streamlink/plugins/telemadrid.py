@@ -20,7 +20,7 @@ class Telemadrid(Plugin):
     def _get_streams(self):
         data = self.session.http.get(self.url, schema=validate.Schema(
             validate.parse_html(),
-            validate.xml_find(".//video[@class='video-js'][@data-video-id][@data-account][@data-player][1]"),
+            validate.xml_find(".//video-js[@data-video-id][@data-account][@data-player][1]"),
             validate.union_get("data-video-id", "data-account", "data-player"),
         ))
         data_video_id, data_account, data_player = data

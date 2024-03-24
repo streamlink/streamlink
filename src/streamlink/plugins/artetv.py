@@ -2,6 +2,7 @@
 $description European public service channel promoting culture, including magazine shows, concerts and documentaries.
 $url arte.tv
 $type live, vod
+$metadata id
 $metadata title
 """
 
@@ -17,38 +18,41 @@ from streamlink.stream.hls import HLSStream
 log = logging.getLogger(__name__)
 
 
-@pluginmatcher(re.compile(r"""
-    https?://(?:\w+\.)?arte\.tv/(?:guide/)?
-    (?P<language>[a-z]{2})/
-    (?:
-        (?:videos/)?(?P<video_id>(?!RC-|videos)[^/]+?)/.+
-        |
-        (?:direct|live)
-    )
-""", re.VERBOSE))
+@pluginmatcher(
+    name="live",
+    pattern=re.compile(
+        r"https?://(?:\w+\.)?arte\.tv/(?P<language>[a-z]{2})/(?:direct|live)/?",
+    ),
+)
+@pluginmatcher(
+    name="vod",
+    pattern=re.compile(
+        r"https?://(?:\w+\.)?arte\.tv/(?:guide/)?(?P<language>[a-z]{2})/(?:videos/)?(?P<video_id>(?!RC-|videos)[^/]+?)/.+",
+    ),
+)
 class ArteTV(Plugin):
-    API_URL = "https://api.arte.tv/api/player/v2/config/{0}/{1}"
-    API_TOKEN = "MzYyZDYyYmM1Y2Q3ZWRlZWFjMmIyZjZjNTRiMGY4MzY4NzBhOWQ5YjE4MGQ1NGFiODJmOTFlZDQwN2FkOTZjMQ"
+    API_URL = "https://api.arte.tv/api/player/v2/config/{language}/{id}"
 
     def _get_streams(self):
-        language = self.match.group("language")
-        video_id = self.match.group("video_id")
+        self.id = self.match["video_id"] if self.matches["vod"] else "LIVE"
 
-        json_url = self.API_URL.format(language, video_id or "LIVE")
-        headers = {
-            "Authorization": f"Bearer {self.API_TOKEN}",
-        }
-        streams, metadata = self.session.http.get(json_url, headers=headers, schema=validate.Schema(
+        json_url = self.API_URL.format(
+            language=self.match["language"],
+            id=self.id,
+        )
+        streams, metadata = self.session.http.get(json_url, schema=validate.Schema(
             validate.parse_json(),
-            {"data": {"attributes": {
+            {"data": {"attributes": dict}},
+            validate.get(("data", "attributes")),
+            {
                 "streams": validate.any(
                     [],
                     [
                         validate.all(
                             {
-                                "url": validate.url(),
                                 "slot": int,
-                                "protocol": validate.any("HLS", "HLS_NG"),
+                                "protocol": str,
+                                "url": validate.url(),
                             },
                             validate.union_get("slot", "protocol", "url"),
                         ),
@@ -58,17 +62,15 @@ class ArteTV(Plugin):
                     "title": str,
                     "subtitle": validate.any(None, str),
                 },
-            }}},
-            validate.get(("data", "attributes")),
+            },
             validate.union_get("streams", "metadata"),
         ))
 
-        if not streams:
-            return
-
         self.title = f"{metadata['title']} - {metadata['subtitle']}" if metadata["subtitle"] else metadata["title"]
 
-        for _slot, _protocol, url in sorted(streams, key=itemgetter(0)):
+        for _slot, protocol, url in sorted(streams, key=itemgetter(0)):
+            if "HLS" not in protocol:
+                continue
             return HLSStream.parse_variant_playlist(self.session, url)
 
 

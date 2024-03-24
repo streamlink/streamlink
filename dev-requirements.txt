@@ -1,9 +1,10 @@
 # setup
 pip >=21.0.0
-versioningit >=2.0.0,<3  # required for being able to run editable installs
+setuptools >=64.0.0  # required for being able to run editable installs
+versioningit >=2.0.0,<4  # required for being able to run editable installs
 
 # tests
-pytest >=6.0.0
+pytest >=8.0.0
 pytest-asyncio
 pytest-trio
 requests-mock
@@ -14,17 +15,13 @@ pytest-cov
 coverage[toml]
 
 # code-linting
-ruff ==0.1.3
+ruff ==0.3.2
 
 # typing
-mypy
+mypy ==1.8.0
 lxml-stubs
 trio-typing
 types-freezegun
 types-requests
 types-setuptools
 types-urllib3
-
-# scripts
-shtab  # required by script/build-shell-completions.sh
-inflection  # required by script/generate-cdp.py

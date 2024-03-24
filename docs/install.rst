@@ -187,11 +187,6 @@ Linux and BSD
       - .. code-block:: bash
 
             sudo emerge net-misc/streamlink
-    * - :octicon:`package-dependents` `NetBSD (pkgsrc)`_
-      - .. code-block:: bash
-
-            cd /usr/pkgsrc/multimedia/streamlink
-            sudo make install clean
     * - :octicon:`package-dependents` `NixOS`_
       - .. code-block:: bash
 
@@ -206,10 +201,6 @@ Linux and BSD
       - .. code-block:: bash
 
             sudo eopkg install streamlink
-    * - :octicon:`package-dependents` `Void`_
-      - .. code-block:: bash
-
-            sudo xbps-install streamlink
 
 .. _Alpine Linux (edge, testing): https://pkgs.alpinelinux.org/packages?name=streamlink
 .. _Arch Linux: https://archlinux.org/packages/extra/any/streamlink/
@@ -220,11 +211,9 @@ Linux and BSD
 .. _FreeBSD (pkg): https://ports.freebsd.org/cgi/ports.cgi?query=streamlink&stype=name
 .. _FreeBSD (ports): https://www.freshports.org/multimedia/streamlink
 .. _Gentoo Linux: https://packages.gentoo.org/package/net-misc/streamlink
-.. _NetBSD (pkgsrc): https://pkgsrc.se/multimedia/streamlink
 .. _NixOS: https://github.com/NixOS/nixpkgs/tree/master/pkgs/applications/video/streamlink
 .. _openSUSE: https://build.opensuse.org/package/show/multimedia:apps/streamlink
 .. _Solus: https://github.com/getsolus/packages/tree/main/packages/s/streamlink
-.. _Void: https://github.com/void-linux/void-packages/tree/master/srcpkgs/streamlink
 
 .. _Enabling the edge/testing repository: https://wiki.alpinelinux.org/wiki/Repositories#Edge
 .. _Installing AUR packages: https://wiki.archlinux.org/index.php/Arch_User_Repository
@@ -257,16 +246,12 @@ Package maintainers
       - Takefu <takefu at airport.fm>
     * - Gentoo
       - soredake <fdsfgs at krutt.org>
-    * - NetBSD
-      - Maya Rashish <maya at netbsd.org>
     * - NixOS
       - Tuomas Tynkkynen <tuomas.tynkkynen at iki.fi>
     * - openSUSE
       - Simon Puchert <simonpuchert at alice.de>
     * - Solus
       - Joey Riches <josephriches at gmail.com>
-    * - Void
-      - Michal Vasilek <michal at vasilek.cz>
     * - Windows binaries
       - Sebastian Meyer <mail at bastimeyer.de>
     * - Linux AppImages
@@ -444,7 +429,7 @@ Streamlink defines a `build system <pyproject.toml_>`__ according to `PEP-517`_ 
       - At least version **3.8**
     * - build
       - `setuptools`_
-      - At least version **64.0.0** |br|
+      - At least version **65.6.0** |br|
         Used as build backend
     * - build
       - `wheel`_
@@ -457,6 +442,9 @@ Streamlink defines a `build system <pyproject.toml_>`__ according to `PEP-517`_ 
     * - runtime
       - `certifi`_
       - Used for loading the CA bundle extracted from the Mozilla Included CA Certificate List
+    * - runtime
+      - `exceptiongroup`_
+      - Used for ``ExceptionGroup`` handling, to allow writing compatible code on all supported Python versions
     * - runtime
       - `isodate`_
       - Used for parsing ISO8601 strings
@@ -507,6 +495,7 @@ Streamlink defines a `build system <pyproject.toml_>`__ according to `PEP-517`_ 
 .. _versioningit: https://versioningit.readthedocs.io/en/stable/
 
 .. _certifi: https://certifiio.readthedocs.io/en/latest/
+.. _exceptiongroup: https://github.com/agronholm/exceptiongroup
 .. _isodate: https://pypi.org/project/isodate/
 .. _lxml: https://lxml.de/
 .. _pycountry: https://pypi.org/project/pycountry/
