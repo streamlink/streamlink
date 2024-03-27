@@ -22,7 +22,7 @@ from dataclasses import dataclass, replace as dataclass_replace
 from datetime import datetime, timedelta
 from json import dumps as json_dumps
 from random import random
-from typing import ClassVar, Mapping, Optional, Tuple, Type
+from typing import ClassVar, List, Mapping, Optional, Tuple, Type
 from urllib.parse import urlparse
 
 from requests.exceptions import HTTPError
@@ -203,18 +203,22 @@ class TwitchHLSStream(HLSStream):
 
 
 class UsherService:
-    def __init__(self, session):
+    def __init__(self, session: Streamlink, supported_codecs: Optional[List[str]] = None):
         self.session = session
+        self.supported_codecs = supported_codecs or ["h264"]
 
     def _create_url(self, endpoint, **extra_params):
         url = f"https://usher.ttvnw.net{endpoint}"
         params = {
+            "platform": "web",
             "player": "twitchweb",
             "p": int(random() * 999999),
             "type": "any",
             "allow_source": "true",
             "allow_audio_only": "true",
             "allow_spectre": "false",
+            "playlist_include_framerate": "true",
+            "supported_codecs": ",".join(self.supported_codecs),
         }
         params.update(extra_params)
 
@@ -236,7 +240,7 @@ class UsherService:
                 },
             ).validate(extra_params)
             log.debug(f"{extra_params_debug!r}")
-        except PluginError:
+        except PluginError:  # pragma: no cover
             pass
         return self._create_url(f"/api/channel/hls/{channel}.m3u8", **extra_params)
 
@@ -658,6 +662,23 @@ class TwitchClientIntegrity:
     """,
 )
 @pluginargument(
+    "supported-codecs",
+    type="comma_list_filter",
+    type_kwargs={
+        "acceptable": ["h264", "h265", "av1"],
+        "unique": True,
+    },
+    default=["h264"],
+    help="""
+        A comma-separated list of codec names which signals Twitch the client's stream codec preference.
+        Which streams and which codecs are available depends on the specific channel and broadcast.
+
+        Default is "h264".
+
+        Supported codecs are "h264", "h265", "av1". Set to "h264,h265,av1" to enable all codecs.
+    """,
+)
+@pluginargument(
     "api-header",
     metavar="KEY=VALUE",
     type="keyvalue",
@@ -724,7 +745,10 @@ class Twitch(Plugin):
             api_header=self.get_option("api-header"),
             access_token_param=self.get_option("access-token-param"),
         )
-        self.usher = UsherService(session=self.session)
+        self.usher = UsherService(
+            session=self.session,
+            supported_codecs=self.get_option("supported-codecs"),
+        )
 
         def method_factory(parent_method):
             def inner():
