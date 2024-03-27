@@ -6,5 +6,5 @@ class TestPluginCanHandleUrlBilibili(PluginCanHandleUrl):
     __plugin__ = Bilibili
 
     should_match_groups = [
-        ("https://live.bilibili.com/CHANNEL", {"channel": "CHANNEL"}),
+        ("https://live.bilibili.com/CHANNEL?live_from=78001", {"channel": "CHANNEL"}),
     ]
