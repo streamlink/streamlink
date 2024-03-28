@@ -6,10 +6,12 @@ class TestPluginCanHandleUrlVKplay(PluginCanHandleUrl):
     __plugin__ = VKplay
 
     should_match = [
-        "https://vkplay.live/Channel_Name_123",
+        "https://live.vkplay.ru/CHANNEL",
+        "https://vkplay.live/CHANNEL",
     ]
 
     should_not_match = [
+        "https://live.vkplay.ru/",
         "https://vkplay.live/",
         "https://support.vkplay.ru/vkp_live",
         "https://vkplay.live/app/settings/edit",

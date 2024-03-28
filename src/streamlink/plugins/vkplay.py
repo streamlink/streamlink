@@ -1,6 +1,6 @@
 """
 $description Russian live-streaming platform for gaming and esports, owned by VKontakte.
-$url vkplay.live
+$url live.vkplay.ru
 $type live
 $metadata id
 $metadata author
@@ -20,13 +20,13 @@ log = logging.getLogger(__name__)
 
 
 @pluginmatcher(re.compile(
-    r"https?://vkplay\.live/(?P<channel_name>\w+)/?$",
+    r"https?://(?:live\.vkplay\.ru|vkplay\.live)/(?P<channel_name>\w+)/?$",
 ))
 class VKplay(Plugin):
-    API_URL = "https://api.vkplay.live/v1"
+    API_URL = "https://api.live.vkplay.ru/v1"
 
     def _get_streams(self):
-        self.author = self.match.group("channel_name")
+        self.author = self.match["channel_name"]
         log.debug(f"Channel name: {self.author}")
 
         data = self.session.http.get(
