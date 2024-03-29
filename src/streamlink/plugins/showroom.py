@@ -84,7 +84,7 @@ class Showroom(Plugin):
         )
 
         res = self.session.http.get(url, acceptable_status=(200, 403, 404))
-        if res.headers["Content-Type"] != "application/x-mpegURL":
+        if res.headers["Content-Type"] not in ("application/x-mpegURL", "application/vnd.apple.mpegurl"):
             log.error("This stream is restricted")
             return
 
