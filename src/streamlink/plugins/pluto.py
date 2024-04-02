@@ -13,8 +13,9 @@ import re
 from urllib.parse import parse_qsl, urljoin
 from uuid import uuid4
 
+from streamlink.exceptions import PluginError
 from streamlink.plugin import Plugin, pluginmatcher
-from streamlink.plugin.api import validate
+from streamlink.plugin.api import useragents, validate
 from streamlink.stream.hls import HLSStream, HLSStreamReader, HLSStreamWriter
 from streamlink.utils.url import update_qsd
 
@@ -23,7 +24,7 @@ log = logging.getLogger(__name__)
 
 
 class PlutoHLSStreamWriter(HLSStreamWriter):
-    ad_re = re.compile(r"_ad/creative/|dai\.google\.com|Pluto_TV_OandO/.*(Bumper|plutotv_filler)")
+    ad_re = re.compile(r"_ad/creative/|creative/\d+_ad/|dai\.google\.com|Pluto_TV_OandO/.*(Bumper|plutotv_filler)")
 
     def should_filter_segment(self, segment):
         return self.ad_re.search(segment.uri) is not None or super().should_filter_segment(segment)
@@ -38,152 +39,192 @@ class PlutoHLSStream(HLSStream):
     __reader__ = PlutoHLSStreamReader
 
 
-@pluginmatcher(re.compile(r"""
-    https?://(?:www\.)?pluto\.tv/(?:\w{2}/)?(?:
-        live-tv/(?P<slug_live>[^/]+)
-        |
-        on-demand/series/(?P<slug_series>[^/]+)(?:/season/\d+)?/episode/(?P<slug_episode>[^/]+)
-        |
-        on-demand/movies/(?P<slug_movies>[^/]+)
-    )/?$
-""", re.VERBOSE))
+@pluginmatcher(
+    name="live",
+    pattern=re.compile(
+        r"https?://(?:www\.)?pluto\.tv/(?:\w{2}/)?live-tv/(?P<id>[^/]+)/?$",
+    ),
+)
+@pluginmatcher(
+    name="series",
+    pattern=re.compile(
+        r"https?://(?:www\.)?pluto\.tv/(?:\w{2}/)?on-demand/series/(?P<id_s>[^/]+)(?:/season/\d+)?/episode/(?P<id_e>[^/]+)/?$",
+    ),
+)
+@pluginmatcher(
+    name="movies",
+    pattern=re.compile(
+        r"https?://(?:www\.)?pluto\.tv/(?:\w{2}/)?on-demand/movies/(?P<id>[^/]+)/?$",
+    ),
+)
 class Pluto(Plugin):
-    def _get_api_data(self, kind, slug, slugfilter=None):
-        log.debug(f"slug={slug}")
-        app_version = self.session.http.get(self.url, schema=validate.Schema(
-            validate.parse_html(),
-            validate.xml_xpath_string(".//head/meta[@name='appVersion']/@content"),
-            validate.any(None, str),
-        ))
-        if not app_version:
-            return
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.session.http.headers.update({"User-Agent": useragents.FIREFOX})
+        self._app_version = None
+        self._device_version = re.search(r"Firefox/(\d+(?:\.\d+)*)", useragents.FIREFOX)[1]
+        self._client_id = str(uuid4())
 
-        log.debug(f"app_version={app_version}")
+    @property
+    def app_version(self):
+        if self._app_version:
+            return self._app_version
+
+        self._app_version = self.session.http.get(
+            self.url,
+            schema=validate.Schema(
+                validate.parse_html(),
+                validate.xml_xpath_string(".//head/meta[@name='appVersion']/@content"),
+                validate.any(None, str),
+            ),
+        )
+        if not self._app_version:
+            raise PluginError("Could not find pluto app version")
+
+        log.debug(f"{self._app_version=}")
+
+        return self._app_version
+
+    def _get_api_data(self, request):
+        log.debug(f"_get_api_data: {request=}")
+
+        schema_paths = validate.any(
+            validate.all(
+                {
+                    "paths": [
+                        validate.all(
+                            {
+                                "type": str,
+                                "path": str,
+                            },
+                            validate.union_get("type", "path"),
+                        ),
+                    ],
+                },
+                validate.get("paths"),
+            ),
+            validate.all(
+                {
+                    "path": str,
+                },
+                validate.transform(lambda obj: [("hls", obj["path"])]),
+            ),
+        )
+        schema_live = [{
+            "name": str,
+            "id": str,
+            "slug": str,
+            "stitched": schema_paths,
+        }]
+        schema_vod = [{
+            "name": str,
+            "id": str,
+            "slug": str,
+            "genre": str,
+            "stitched": validate.any(schema_paths, {}),
+            validate.optional("seasons"): [{
+                "episodes": [{
+                    "name": str,
+                    "_id": str,
+                    "slug": str,
+                    "stitched": schema_paths,
+                }],
+            }],
+        }]
 
         return self.session.http.get(
             "https://boot.pluto.tv/v4/start",
             params={
                 "appName": "web",
-                "appVersion": app_version,
-                "deviceVersion": "94.0.0",
+                "appVersion": self.app_version,
+                "deviceVersion": self._device_version,
                 "deviceModel": "web",
                 "deviceMake": "firefox",
                 "deviceType": "web",
-                "clientID": str(uuid4()),
-                "clientModelNumber": "1.0",
-                kind: slug,
+                "clientID": self._client_id,
+                "clientModelNumber": "1.0.0",
+                **request,
             },
             schema=validate.Schema(
-                validate.parse_json(), {
+                validate.parse_json(),
+                {
                     "servers": {
                         "stitcher": validate.url(),
                     },
-                    validate.optional("EPG"): [{
-                        "name": str,
-                        "id": str,
-                        "slug": str,
-                        "stitched": {
-                            "path": str,
-                        },
-                    }],
-                    validate.optional("VOD"): [{
-                        "name": str,
-                        "id": str,
-                        "slug": str,
-                        "genre": str,
-                        "stitched": {
-                            "path": str,
-                        },
-                        validate.optional("seasons"): [{
-                            "episodes": validate.all(
-                                [{
-                                    "name": str,
-                                    "_id": str,
-                                    "slug": str,
-                                    "stitched": {
-                                        "path": str,
-                                    },
-                                }],
-                                validate.filter(lambda k: slugfilter and k["slug"] == slugfilter),
-                            ),
-                        }],
-                    }],
-                    "sessionToken": str,
                     "stitcherParams": str,
+                    "sessionToken": str,
+                    validate.optional("EPG"): schema_live,
+                    validate.optional("VOD"): schema_vod,
                 },
             ),
         )
 
-    def _get_playlist(self, host, path, params, token):
-        qsd = dict(parse_qsl(params))
-        qsd["jwt"] = token
-
-        url = urljoin(host, path)
-        url = update_qsd(url, qsd)
-
-        return PlutoHLSStream.parse_variant_playlist(self.session, url)
-
-    @staticmethod
-    def _get_media_data(data, key, slug):
-        media = data.get(key)
-        if media and media[0]["slug"] == slug:
-            return media[0]
-
-    def _get_streams(self):
-        m = self.match.groupdict()
-        if m["slug_live"]:
-            data = self._get_api_data("channelSlug", m["slug_live"])
-            media = self._get_media_data(data, "EPG", m["slug_live"])
-            if not media:
-                return
-
-            self.id = media["id"]
-            self.title = media["name"]
-            path = media["stitched"]["path"]
-
-        elif m["slug_series"] and m["slug_episode"]:
-            data = self._get_api_data("episodeSlugs", m["slug_series"], slugfilter=m["slug_episode"])
-            media = self._get_media_data(data, "VOD", m["slug_series"])
-            if not media or "seasons" not in media:
-                return
-
-            for season in media["seasons"]:
-                if season["episodes"]:
-                    episode = season["episodes"][0]
-                    if episode["slug"] == m["slug_episode"]:
-                        break
-            else:
-                return
-
-            self.author = media["name"]
-            self.category = media["genre"]
-            self.id = episode["_id"]
-            self.title = episode["name"]
-            path = episode["stitched"]["path"]
-
-        elif m["slug_movies"]:
-            data = self._get_api_data("episodeSlugs", m["slug_movies"])
-            media = self._get_media_data(data, "VOD", m["slug_movies"])
-            if not media:
-                return
-
-            self.category = media["genre"]
-            self.id = media["id"]
-            self.title = media["name"]
-            path = media["stitched"]["path"]
-
-        else:
+    def _get_streams_live(self):
+        data = self._get_api_data({"channelSlug": self.match["id"]})
+        epg = data.get("EPG", [])
+        media = next((e for e in epg if e["id"] == self.match["id"]), None)
+        if not media:
             return
 
-        log.trace(f"data={data!r}")
-        log.debug(f"path={path}")
+        self.id = media["id"]
+        self.title = media["name"]
 
-        return self._get_playlist(
-            data["servers"]["stitcher"],
-            path,
-            data["stitcherParams"],
-            data["sessionToken"],
-        )
+        return data, media["stitched"]
+
+    def _get_streams_series(self):
+        data = self._get_api_data({"seriesIDs": self.match["id_s"]})
+        vod = data.get("VOD", [])
+        media = next((v for v in vod if v["id"] == self.match["id_s"]), None)
+        if not media:
+            return
+        seasons = media.get("seasons", [])
+        episode = next((e for s in seasons for e in s["episodes"] if e["_id"] == self.match["id_e"]), None)
+        if not episode:
+            return
+
+        self.id = episode["_id"]
+        self.author = media["name"]
+        self.category = media["genre"]
+        self.title = episode["name"]
+
+        return data, episode["stitched"]
+
+    def _get_streams_movies(self):
+        data = self._get_api_data({"seriesIDs": self.match["id"]})
+        vod = data.get("VOD", [])
+        media = next((v for v in vod if v["id"] == self.match["id"]), None)
+        if not media:
+            return
+
+        self.id = media["id"]
+        self.category = media["genre"]
+        self.title = media["name"]
+
+        return data, media["stitched"]
+
+    def _get_streams(self):
+        res = None
+        if self.matches["live"]:
+            res = self._get_streams_live()
+        elif self.matches["series"]:
+            res = self._get_streams_series()
+        elif self.matches["movies"]:
+            res = self._get_streams_movies()
+
+        if not res:
+            return
+
+        data, paths = res
+        for mediatype, path in paths:
+            if mediatype != "hls":
+                continue
+
+            params = dict(parse_qsl(data["stitcherParams"]))
+            params["jwt"] = data["sessionToken"]
+            url = urljoin(data["servers"]["stitcher"], path)
+            url = update_qsd(url, params)
+
+            return PlutoHLSStream.parse_variant_playlist(self.session, url)
 
 
 __plugin__ = Pluto
