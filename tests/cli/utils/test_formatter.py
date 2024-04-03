@@ -1,6 +1,7 @@
 from datetime import datetime
 from os.path import sep
 from pathlib import Path
+from string import ascii_letters as alphabet
 from unittest.mock import Mock, call, patch
 
 import pytest
@@ -79,3 +80,19 @@ class TestCLIFormatter:
         path = formatter.path(f"{{current}}{sep}{{parent}}{sep}{{dots}}{sep}{{separator}}{sep}foo{sep}.{sep}..{sep}bar")
         assert path == Path("_", "_", "...", "_", "foo", ".", "..", "bar"), \
             "Formats the path's parts separately and ignores current and parent directories in substitutions only"
+
+    def test_path_truncation_ascii(self, formatter: Formatter):
+        formatter.mapping.update({
+            "dir": lambda: alphabet * 10,
+            "file": lambda: alphabet * 10,
+        })
+        path = formatter.path(f"{{dir}}.fakeext{sep}{{file}}.ext")
+        assert path == Path((alphabet * 10)[:255], f"{(alphabet * 10)[:251]}.ext")
+
+    def test_path_truncation_unicode(self, formatter: Formatter):
+        formatter.mapping.update({
+            "dir": lambda: "🐻" * 512,
+            "file": lambda: "🐻" * 512,
+        })
+        path = formatter.path(f"{{dir}}.fakeext{sep}{{file}}.ext")
+        assert path == Path("🐻" * 63, f"{'🐻' * 62}.ext")
