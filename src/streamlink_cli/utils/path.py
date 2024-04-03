@@ -57,9 +57,12 @@ def truncate_path(path: str, length: int = 255, keep_extension: bool = True) -> 
     return f"{decoded}.{parts[1]}"
 
 
-def replace_path(pathlike: Union[str, Path], mapper: Callable[[str], str]) -> Path:
-    def get_part(part):
-        newpart = mapper(part)
+def replace_path(pathlike: Union[str, Path], mapper: Callable[[str, bool], str]) -> Path:
+    def get_part(part: str, isfile: bool) -> str:
+        newpart = mapper(part, isfile)
         return REPLACEMENT if part != newpart and newpart in SPECIAL_PATH_PARTS else newpart
 
-    return Path(*(get_part(part) for part in Path(pathlike).expanduser().parts))
+    parts = Path(pathlike).expanduser().parts
+    last = len(parts) - 1
+
+    return Path(*(get_part(part, i == last) for i, part in enumerate(parts)))

@@ -59,7 +59,7 @@ def test_replace_chars_replacement():
 
 
 def test_replace_path():
-    def mapper(s):
+    def mapper(s, *_):
         return dict(foo=".", bar="..").get(s, s)
 
     path = Path("foo", ".", "bar", "..", "baz")
@@ -70,15 +70,15 @@ def test_replace_path():
 @pytest.mark.posix_only()
 @pytest.mark.parametrize("os_environ", [pytest.param({"HOME": "/home/foo"}, id="posix")], indirect=True)
 def test_replace_path_expanduser_posix(os_environ):
-    assert replace_path("~/bar", lambda s: s) == Path("/home/foo/bar")
-    assert replace_path("foo/bar", lambda s: dict(foo="~").get(s, s)) == Path("~/bar")
+    assert replace_path("~/bar", lambda s, *_: s) == Path("/home/foo/bar")
+    assert replace_path("foo/bar", lambda s, *_: dict(foo="~").get(s, s)) == Path("~/bar")
 
 
 @pytest.mark.windows_only()
 @pytest.mark.parametrize("os_environ", [pytest.param({"USERPROFILE": "C:\\Users\\foo"}, id="windows")], indirect=True)
 def test_replace_path_expanduser_windows(os_environ):
-    assert replace_path("~\\bar", lambda s: s) == Path("C:\\Users\\foo\\bar")
-    assert replace_path("foo\\bar", lambda s: dict(foo="~").get(s, s)) == Path("~\\bar")
+    assert replace_path("~\\bar", lambda s, *_: s) == Path("C:\\Users\\foo\\bar")
+    assert replace_path("foo\\bar", lambda s, *_: dict(foo="~").get(s, s)) == Path("~\\bar")
 
 
 text = alphabet * 10
