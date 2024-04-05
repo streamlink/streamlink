@@ -1,5 +1,6 @@
 """
 $description OTT video platform owned by Alpha Technology Group
+$url player.mangomolo.com
 $url media.gov.kw
 $type live
 """
@@ -38,10 +39,12 @@ class Mangomolo(Plugin):
         self.url = update_scheme("https://", player_url)
 
     def _get_streams(self):
+        headers = {}
         if not self.matches["mangomoloplayer"]:
+            headers["Referer"] = self.url
             self._get_player_url()
 
-        hls_url = self.session.http.get(self.url, schema=validate.Schema(
+        hls_url = self.session.http.get(self.url, headers=headers, schema=validate.Schema(
             re.compile(r"src\s*:\s*(?P<q>[\"'])(?P<url>https?://\S+?\.m3u8\S*?)(?P=q)"),
             validate.none_or_all(validate.get("url")),
         ))
