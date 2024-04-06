@@ -81,9 +81,7 @@ def test_replace_path_expanduser_windows(os_environ):
     assert replace_path("foo\\bar", lambda s, *_: dict(foo="~").get(s, s)) == Path("~\\bar")
 
 
-text = alphabet * 10
 bear = "🐻"  # Unicode character: "Bear Face" (U+1F43B)
-bears = bear * 512
 
 
 @pytest.mark.parametrize(("args", "expected"), [
@@ -93,13 +91,13 @@ bears = bear * 512
         id="text - no truncation",
     ),
     pytest.param(
-        (text, 255, True),
-        text[:255],
+        (alphabet * 10, 255, True),
+        (alphabet * 10)[:255],
         id="text - truncate",
     ),
     pytest.param(
-        (text, 50, True),
-        text[:50],
+        (alphabet * 10, 50, True),
+        (alphabet * 10)[:50],
         id="text - truncate at 50",
     ),
     pytest.param(
@@ -108,47 +106,47 @@ bears = bear * 512
         id="text+ext1 - no truncation",
     ),
     pytest.param(
-        (f"{text}.ext", 255, True),
-        f"{text[:251]}.ext",
+        (f"{alphabet * 10}.ext", 255, True),
+        f"{(alphabet * 10)[:251]}.ext",
         id="text+ext1 - truncate",
     ),
     pytest.param(
-        (f"{text}.ext", 50, True),
-        f"{text[:46]}.ext",
+        (f"{alphabet * 10}.ext", 50, True),
+        f"{(alphabet * 10)[:46]}.ext",
         id="text+ext1 - truncate at 50",
     ),
     pytest.param(
-        (f"{text}.ext", 255, False),
-        text[:255],
+        (f"{alphabet * 10}.ext", 255, False),
+        (alphabet * 10)[:255],
         id="text+ext1+nokeep - truncate",
     ),
     pytest.param(
-        (f"{text}.ext", 50, False),
-        text[:50],
+        (f"{alphabet * 10}.ext", 50, False),
+        (alphabet * 10)[:50],
         id="text+ext1+nokeep - truncate at 50",
     ),
     pytest.param(
-        (f"{text}.notafilenameextension", 255, True),
-        text[:255],
+        (f"{alphabet * 10}.notafilenameextension", 255, True),
+        (alphabet * 10)[:255],
         id="text+ext2 - truncate",
     ),
     pytest.param(
-        (f"{text}.notafilenameextension", 50, True),
-        text[:50],
+        (f"{alphabet * 10}.notafilenameextension", 50, True),
+        (alphabet * 10)[:50],
         id="text+ext2 - truncate at 50",
     ),
     pytest.param(
-        (bear, 255, True),
-        bear,
+        (bear * 63, 255, True),
+        bear * 63,
         id="bear - no truncation",
     ),
     pytest.param(
-        (bears, 255, True),
+        (bear * 64, 255, True),
         bear * 63,
         id="bear - truncate",
     ),
     pytest.param(
-        (bears, 50, True),
+        (bear * 64, 50, True),
         bear * 12,
         id="bear - truncate at 50",
     ),
@@ -158,32 +156,32 @@ bears = bear * 512
         id="bear+ext1 - no truncation",
     ),
     pytest.param(
-        (f"{bears}.ext", 255, True),
+        (f"{bear * 64}.ext", 255, True),
         f"{bear * 62}.ext",
         id="bear+ext1 - truncate",
     ),
     pytest.param(
-        (f"{bears}.ext", 50, True),
+        (f"{bear * 64}.ext", 50, True),
         f"{bear * 11}.ext",
         id="bear+ext1 - truncate at 50",
     ),
     pytest.param(
-        (f"{bears}.ext", 255, False),
+        (f"{bear * 64}.ext", 255, False),
         bear * 63,
         id="bear+ext1+nokeep - truncate",
     ),
     pytest.param(
-        (f"{bears}.ext", 50, False),
+        (f"{bear * 64}.ext", 50, False),
         bear * 12,
         id="bear+ext1+nokeep - truncate at 50",
     ),
     pytest.param(
-        (f"{bears}.notafilenameextension", 255, True),
+        (f"{bear * 64}.notafilenameextension", 255, True),
         bear * 63,
         id="bear+ext2 - truncate",
     ),
     pytest.param(
-        (f"{bears}.notafilenameextension", 50, True),
+        (f"{bear * 64}.notafilenameextension", 50, True),
         bear * 12,
         id="bear+ext2 - truncate at 50",
     ),

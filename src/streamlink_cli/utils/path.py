@@ -37,9 +37,6 @@ def replace_chars(path: str, charmap: Optional[str] = None, replacement: str = R
 
 # This method does not take care of unicode modifier characters when truncating
 def truncate_path(path: str, length: int = 255, keep_extension: bool = True) -> str:
-    if len(path) <= length:
-        return path
-
     parts = path.rsplit(".", 1)
 
     # no file name extension (no dot separator in path or file name extension too long):
