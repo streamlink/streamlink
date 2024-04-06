@@ -17,6 +17,14 @@ class TestPluginCanHandleUrlMangomolo(PluginCanHandleUrl):
         ),
         (
             "mediagovkw",
+            "https://www.media.gov.kw/LiveTV.aspx?PanChannel=KTV1",
+        ),
+        (
+            "mediagovkw",
             "https://media.gov.kw/LiveTV.aspx?PanChannel=KTVSports",
+        ),
+        (
+            "mediagovkw",
+            "https://www.media.gov.kw/LiveTV.aspx?PanChannel=KTVSports",
         ),
     ]
