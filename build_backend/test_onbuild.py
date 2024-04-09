@@ -38,7 +38,13 @@ def build(request: pytest.FixtureRequest, tmp_path: Path, template_fields: dict)
     (pkg_dir / "streamlink").mkdir(parents=True)
     shutil.copy(PROJECT_ROOT / "pyproject.toml", tmp_path / "pyproject.toml")
     shutil.copy(PROJECT_ROOT / "setup.py", tmp_path / "setup.py")
-    shutil.copy(PROJECT_ROOT / "src" / "streamlink" / "_version.py", pkg_dir / "streamlink" / "_version.py")
+
+    # Lookup for the path from the root source directory
+    if Path(PROJECT_ROOT / "src" / "streamlink" / "_version.py").exists():
+        shutil.copy(PROJECT_ROOT / "src" / "streamlink" / "_version.py", pkg_dir / "streamlink" / "_version.py")
+    else:  # pragma: no cover
+        # We didn't find it, use the build location
+        shutil.copy(PROJECT_ROOT / "streamlink" / "_version.py", pkg_dir / "streamlink" / "_version.py")
 
     options = dict(
         is_source=is_source,
