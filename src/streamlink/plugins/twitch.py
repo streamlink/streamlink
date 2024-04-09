@@ -541,7 +541,7 @@ class TwitchClientIntegrity:
         headers: Mapping[str, str],
         device_id: str,
     ) -> Optional[Tuple[str, int]]:
-        from exceptiongroup import BaseExceptionGroup, catch  # noqa: PLC0415, I001
+        from exceptiongroup import BaseExceptionGroup  # noqa: PLC0415, I001
         from streamlink.webbrowser.cdp import CDPClient, CDPClientSession, devtools  # noqa: PLC0415
 
         url = f"https://www.twitch.tv/{channel}"
@@ -565,19 +565,17 @@ class TwitchClientIntegrity:
                     await client_session.loaded(frame_id)
                     return await client_session.evaluate(js_get_integrity_token, timeout=eval_timeout)
 
-        def handle_error(exc_grp: BaseExceptionGroup) -> None:
-            for err in exc_grp.exceptions:
-                log.error(f"{type(err).__name__}: {err}")
-
-        with catch({  # type: ignore[dict-item]  # bug in exceptiongroup==1.2.0
-            Exception: handle_error,  # type: ignore[dict-item]  # bug in exceptiongroup==1.2.0
-        }):
+        try:
             client_integrity = CDPClient.launch(
                 session,
                 acquire_client_integrity_token,
                 # headless mode gets detected by Twitch, so we have to disable it regardless the user config
                 headless=False,
             )
+        except BaseExceptionGroup:
+            log.exception("Failed acquiring client integrity token")
+        except Exception as err:
+            log.error(err)
 
         if not client_integrity:
             return None

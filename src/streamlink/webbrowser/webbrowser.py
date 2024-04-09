@@ -8,7 +8,7 @@ from subprocess import DEVNULL
 from typing import AsyncContextManager, AsyncGenerator, Generator, List, Optional, Union
 
 import trio
-from exceptiongroup import BaseExceptionGroup, catch
+from exceptiongroup import BaseExceptionGroup
 
 from streamlink.utils.path import resolve_executable
 from streamlink.webbrowser.exceptions import WebbrowserError
@@ -80,12 +80,7 @@ class _WebbrowserLauncher:
 
     @asynccontextmanager
     async def launch(self) -> AsyncGenerator[trio.Nursery, None]:
-        def handle_baseexception(exc_grp: BaseExceptionGroup) -> None:
-            raise exc_grp.exceptions[0] from exc_grp.exceptions[0].__context__
-
-        with catch({  # type: ignore[dict-item]  # bug in exceptiongroup==1.2.0
-            (KeyboardInterrupt, SystemExit): handle_baseexception,  # type: ignore[dict-item]  # bug in exceptiongroup==1.2.0
-        }):
+        try:
             async with trio.open_nursery() as nursery:
                 log.info(f"Launching web browser: {self.executable}")
                 # the process is run in a separate task
@@ -113,6 +108,13 @@ class _WebbrowserLauncher:
                         log.debug("Waiting for web browser process to terminate")
                     # once the application logic is done, cancel the entire task group and terminate/kill the process
                     nursery.cancel_scope.cancel()
+        except BaseExceptionGroup as exc_grp:  # TODO: py310 support end: use except*
+            exc: Union[BaseException, BaseExceptionGroup, None] = exc_grp.subgroup((KeyboardInterrupt, SystemExit))
+            if not exc:  # not a KeyboardInterrupt or SystemExit
+                raise
+            while isinstance(exc, BaseExceptionGroup):  # get the first actual exception in the potentially nested groups
+                exc = exc.exceptions[0]
+            raise exc from exc.__context__
 
     async def _task_process_watcher(self, process: trio.Process, nursery: trio.Nursery) -> None:
         """Task for cancelling the launch task group if the user closes the browser or if it exits early on its own"""
