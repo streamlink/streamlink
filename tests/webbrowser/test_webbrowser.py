@@ -7,6 +7,7 @@ from typing import List, Optional
 
 import pytest
 import trio
+from exceptiongroup import BaseExceptionGroup
 
 from streamlink.compat import is_win32
 from streamlink.webbrowser.exceptions import WebbrowserError
@@ -98,13 +99,30 @@ class TestLaunch:
 
     @pytest.mark.trio()
     @pytest.mark.parametrize("exception", [KeyboardInterrupt, SystemExit])
-    async def test_terminate_on_nursery_baseexception(self, caplog: pytest.LogCaptureFixture, webbrowser_launch, exception):
+    async def test_propagate_keyboardinterrupt_systemexit(self, caplog: pytest.LogCaptureFixture, webbrowser_launch, exception):
         process: trio.Process
-        with pytest.raises(exception):  # noqa: PT012
+        with pytest.raises(exception) as excinfo:  # noqa: PT012
             async with webbrowser_launch() as (_nursery, process):
                 assert process.poll() is None, "process is still running"
-                raise exception()
+                async with trio.open_nursery():
+                    raise exception()
 
+        assert isinstance(excinfo.value.__context__, BaseExceptionGroup)
+        assert process.poll() == (1 if is_win32 else -SIGTERM), "Process has been terminated"
+        assert [(record.name, record.levelname, record.msg) for record in caplog.records] == [
+            ("streamlink.webbrowser.webbrowser", "debug", "Waiting for web browser process to terminate"),
+        ]
+
+    @pytest.mark.trio()
+    async def test_terminate_on_exception(self, caplog: pytest.LogCaptureFixture, webbrowser_launch):
+        process: trio.Process
+        with pytest.raises(BaseExceptionGroup) as excinfo:  # noqa: PT012
+            async with webbrowser_launch() as (_nursery, process):
+                assert process.poll() is None, "process is still running"
+                async with trio.open_nursery():
+                    raise ZeroDivisionError()
+
+        assert excinfo.group_contains(ZeroDivisionError)
         assert process.poll() == (1 if is_win32 else -SIGTERM), "Process has been terminated"
         assert [(record.name, record.levelname, record.msg) for record in caplog.records] == [
             ("streamlink.webbrowser.webbrowser", "debug", "Waiting for web browser process to terminate"),
