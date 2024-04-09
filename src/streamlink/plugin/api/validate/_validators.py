@@ -651,4 +651,8 @@ def validator_parse_qsd(*args, **kwargs) -> TransformSchema:
     :raise ValidationError: On parsing error
     """
 
-    return TransformSchema(_parse_qsd, *args, **kwargs, exception=ValidationError, schema=None)
+    def parser(*_args, **_kwargs):
+        validate(AnySchema(str, bytes), _args[0])
+        return _parse_qsd(*_args, **_kwargs, exception=ValidationError, schema=None)
+
+    return TransformSchema(parser, *args, **kwargs)
