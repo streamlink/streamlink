@@ -1343,13 +1343,20 @@ class TestParseQsdValidator:
             validate.parse_qsd(),
             "foo=bar&foo=baz&qux=quux",
         ) == {"foo": "baz", "qux": "quux"}
+        assert validate.validate(
+            validate.parse_qsd(),
+            b"foo=bar&foo=baz&qux=quux",
+        ) == {b"foo": b"baz", b"qux": b"quux"}
 
     def test_failure(self):
         with pytest.raises(ValidationError) as cm:
             validate.validate(validate.parse_qsd(), 123)
         assert_validationerror(cm.value, """
-            ValidationError:
-              Unable to parse query string: 'int' object has no attribute 'decode' (123)
+            ValidationError(AnySchema):
+              ValidationError(type):
+                Type of 123 should be str, but is int
+              ValidationError(type):
+                Type of 123 should be bytes, but is int
         """)
 
 
