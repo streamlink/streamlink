@@ -1,5 +1,23 @@
 # Changelog
 
+## streamlink 6.7.3 (2024-04-14)
+
+Patch release:
+
+- Fixed: file output paths being able to exceed max file/directory name length ([#5921](https://github.com/streamlink/streamlink/pull/5921), [#5925](https://github.com/streamlink/streamlink/pull/5925))
+- Fixed: propagation of `KeyboardInterrupt`/`SystemExit` in `streamlink.webbrowser` ([#5930](https://github.com/streamlink/streamlink/pull/5930))
+- Fixed: compatibility with `exceptiongroup<=1.1.1` ([#5930](https://github.com/streamlink/streamlink/pull/5930))
+- Fixed: `plugin.api.validate.parse_qsd` input type validation ([#5932](https://github.com/streamlink/streamlink/pull/5932))
+- Updated plugins:
+  - mangomolo: fixed missing referer header and updated URL matcher ([#5923](https://github.com/streamlink/streamlink/pull/5923), [#5926](https://github.com/streamlink/streamlink/pull/5926))
+  - pluto: rewritten plugin ([#5910](https://github.com/streamlink/streamlink/pull/5910))
+  - showroom: fixed geo-block check preventing stream access ([#5911](https://github.com/streamlink/streamlink/pull/5911))
+  - vkplay: updated URL matcher ([#5908](https://github.com/streamlink/streamlink/pull/5908))
+- Tests: fixed test failure when running tests from the `bdist` build directory ([#5933](https://github.com/streamlink/streamlink/pull/5933))
+
+[Full changelog](https://github.com/streamlink/streamlink/compare/6.7.2...6.7.3)
+
+
 ## streamlink 6.7.2 (2024-03-23)
 
 Patch release:
