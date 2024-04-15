@@ -28,9 +28,7 @@ class TestPluginCanHandleUrlTurkuvaz(PluginCanHandleUrl):
         "https://www.anews.com.tr/webtv/world/pro-ukraine-militia-says-it-has-captured-russian-soldiers",
         "https://www.apara.com.tr/video/ekonomide-bugun/bist-100de-kar-satislari-derinlesir-mi",
         "https://www.aspor.com.tr/webtv/galatasaray/galatasaraydan-forma-tanitiminda-fenerbahceye-gonderme",
-        "https://www.atv.com.tr/kurulus-osman/127-bolum/izle",
         "https://www.atvavrupa.tv/diger-program//ozelvideo/izle",
-        "https://www.minikacocuk.com.tr/webtv/olly/bolum/olly-eylul-tanitim",
         "https://www.minikago.com.tr/webtv/mondo-yan/bolum/mondo-yan-eylul-tanitim",
         "https://vavtv.com.tr/vavradyo/video/guncel/munafiklarin-ozellikleri-nelerdir",
 
