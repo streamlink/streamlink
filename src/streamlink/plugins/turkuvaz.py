@@ -36,8 +36,19 @@ log = logging.getLogger(__name__)
     )
 """, re.VERBOSE))
 class Turkuvaz(Plugin):
+    _VIDEOID_LIVE = "00000000-0000-0000-0000-000000000000"
+
+    # hardcoded in https://i.tmgrup.com.tr/videojs/js/tmdplayersetup.js?v=651
+    # (via https://www.minikacocuk.com.tr/webtv/canli-yayin)
+    _MAPPING_WEBSITEID_HLSURL = {
+        "9BBE055A-4CF6-4BC3-A675-D40E89B55B91": "https://trkvz.daioncdn.net/aspor/aspor.m3u8?ce=3&app=45f847c4-04e8-419a-a561-2ebf87084765",
+        "0C1BC8FF-C3B1-45BE-A95B-F7BB9C8B03ED": "https://trkvz.daioncdn.net/a2tv/a2tv.m3u8?ce=3&app=59363a60-be96-4f73-9eff-355d0ff2c758",
+        "AAE2E325-4EAE-45B7-B017-26FD7DDB6CE4": "https://trkvz.daioncdn.net/minikago/minikago.m3u8?app=web&ce=3",
+        "01ED59F2-4067-4945-8204-45F6C6DB4045": "https://trkvz.daioncdn.net/minikago_cocuk/minikago_cocuk.m3u8?app=web&ce=3",
+    }
+
     def _get_streams(self):
-        _find_and_get_attrs = validate.Schema(
+        _find_and_get_attrs = validate.all(
             validate.xml_find(".//div[@data-videoid][@data-websiteid]"),
             validate.union_get("data-videoid", "data-websiteid"),
         )
@@ -68,8 +79,8 @@ class Turkuvaz(Plugin):
             return
 
         video_id, website_id = id_data
-        log.debug(f"video_id={video_id}")
-        log.debug(f"website_id={website_id}")
+        log.debug(f"{video_id=}")
+        log.debug(f"{website_id=}")
 
         self.id, self.title, hls_url = self.session.http.get(
             f"https://videojs.tmgrup.com.tr/getvideo/{website_id}/{video_id}",
@@ -87,11 +98,14 @@ class Turkuvaz(Plugin):
                 validate.union_get("VideoId", "Title", "VideoSmilUrl"),
             ),
         )
-        log.debug(f"hls_url={hls_url}")
+
+        if video_id == self._VIDEOID_LIVE:
+            hls_url = self._MAPPING_WEBSITEID_HLSURL.get(website_id.upper(), hls_url)
+        log.debug(f"{hls_url=}")
 
         secure_hls_url = self.session.http.get(
             "https://securevideotoken.tmgrup.com.tr/webtv/secure",
-            params=f"url={hls_url}",
+            params={"url": hls_url},
             headers={"Referer": self.url},
             schema=validate.Schema(
                 validate.parse_json(),
@@ -102,7 +116,7 @@ class Turkuvaz(Plugin):
                 validate.get("Url"),
             ),
         )
-        log.debug(f"secure_hls_url={secure_hls_url}")
+        log.debug(f"{secure_hls_url=}")
 
         if secure_hls_url:
             return HLSStream.parse_variant_playlist(self.session, secure_hls_url)
