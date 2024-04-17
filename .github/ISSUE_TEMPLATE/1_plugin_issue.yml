@@ -53,6 +53,7 @@ body:
       description: |
         Explain the plugin issue as thoroughly as you can.
         Please also provide the exact steps for reproducing the issue, e.g. a list of input URLs.
+        To exclude issues on the streaming website/service itself, all input URLs must be working fine in your web browser.
 
         Remember that it is impossible for the developers and maintainers of this project to be aware of specific details of every site/plugin.
     validations:
