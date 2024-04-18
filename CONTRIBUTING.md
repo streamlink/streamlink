@@ -45,31 +45,64 @@ Feature requests are welcome, but take a moment to find out whether your idea fi
 
 ## Plugin requests
 
-Plugin submissions and requests are a great way to improve Streamlink. Requests should be as detailed as possible and dedicated to only a single streaming service. Information about the service as well as explicit URLs for live streams are required, as are details regarding the website, what it is, who runs it, how it adds to Streamlink, etc. This allows for easier plugin review and implementation. We reserve the right to refuse to implement, develop, or update any plugin. In addition we may remove existing plugins at our own discretion.
+Plugin submissions and requests are a great way to improve Streamlink. Requests should be as detailed as possible and dedicated to only a single streaming website/service.
 
-Plugins which fall under the following categories will not be implemented or considered and the request will be closed:
+Information about the website, as well as explicit URLs from your web browser's URL address bar are required, as are details regarding the website, what it is, who it is run by, and more. This allows for easier plugin review and implementation. We reserve the right to refuse to implement, develop, or update any plugin. In addition, we may remove existing plugins at our own discretion at any time without explanation.
 
-1. Any kind of streaming service that uses DRM protection
+Before you request a plugin, please be aware that this will merely be a suggestion for the project maintainers (or anyone else) to have a look at the website and implement a new plugin for it. In the vast majority of cases, no one except you will initially have an interest in such a plugin, so you should think about whether it will be useful for other users of Streamlink.
 
-2. Sites which are hosting stolen content as their main source of content
+Implementing new plugins can be a lot of effort, as well as keeping them maintained. Providing plugin code in a pull request written on your own after it has been discussed and approved in the request issue is therefore much appreciated, if the code quality is acceptable. Further assistance in plugin maintenance via plugin issues or bugfix pull requests will be greatly appreciated as well.
 
-3. Sites which are primarily rehosting content that is available from a legitimate source (TV shows, sports, news, etc.)
+Please remember that custom plugins can always be [sideloaded][plugin-sideloading], in case your request will be rejected or if plugins will be removed from Streamlink's `master` branch.
 
-4. Sites which require any sort of cable login or subscription
+**Plugins which fall under the following categories will not be implemented and any requests will be rejected.** Depending on the case, already existing plugins which don't meet these plugin criteria, may be kept.
 
-5. NSFW sites of a pornographic nature (cam sites, porn sites, etc.)
 
-6. Sites which don't provide any real live streaming content, eg. only VODs or VODs being rebroadcasted
+### Plugin rules
 
-7. Sites which don't provide any video streaming content, eg. radio stations
+1. **Any kind of streaming service that uses DRM protection**
 
-8. Sites where the maintainer has requested we not add their site to Streamlink
+    Streamlink won't implement or break any DRM schemes.
 
-9. Sites which are unmaintained, are in beta or are undergoing heavy amounts of development and may change rapidly
+2. **Sites which are hosting stolen content as their main source of content**
 
-10. Sites which have no way to determine viewership numbers
+    Plugins must only support websites with authentic content.
 
-11. Sites which are static cameras of a physical location
+3. **Sites which are primarily rehosting content**
+
+    Plugins must only implement the original/primary website where the content is hosted or shown.
+
+4. **Sites which require paid logins or subscriptions**
+
+    Plugin implementations and maintenance must be possible by everyone. Paid access prevents this.
+
+5. **NSFW sites of a pornographic nature**
+
+    This also includes borderline NSFW content, as it lowers the bar for follow-up plugin requests.
+
+6. **Sites which don't provide any real live-streaming content**
+
+    For example VOD-only content or VODs being re-broadcasted.
+
+7. **Sites which don't provide any video streaming content**
+
+    For example radio stations or streams where the primary focus is the audio content.
+
+8. **Sites where the maintainer has requested we don't add their site to Streamlink**
+
+    We respect legitimate requests by the owners of certain websites, depending on their size.
+
+9. **Sites which are unmaintained, are in beta or are undergoing heavy amounts of development and may change rapidly**
+
+    Stability of new plugin implementations must be guaranteed.
+
+10. **Sites which have no way to determine viewership numbers**
+
+    Plugins must not implement websites which are unused or which only have a handful of real/actual users.
+
+11. **Sites which are static cameras of a physical location**
+
+    We don't consider plugin implementations for this kind of content to be useful.
 
 
 ## Pull requests
