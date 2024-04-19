@@ -62,12 +62,7 @@ class AfreecaTV(Plugin):
 
     CHANNEL_API_URL = "https://live.afreecatv.com/afreeca/player_live_api.php"
     CHANNEL_RESULT_OK = 1
-    QUALITYS = ["original", "hd", "sd"]
-    QUALITY_WEIGHTS = {
-        "original": 1080,
-        "hd": 720,
-        "sd": 480,
-    }
+    CHANNEL_LOGIN_REQUIRED = -6
 
     _schema_channel = validate.Schema(
         {
@@ -80,6 +75,10 @@ class AfreecaTV(Plugin):
                 validate.optional("CDN"): validate.any(str, None),
                 validate.optional("BJNICK"): validate.any(str, None),
                 validate.optional("TITLE"): validate.any(str, None),
+                validate.optional("VIEWPRESET"): [{
+                    "label": str,
+                    "name": str,
+                }],
             },
         },
         validate.get("CHANNEL"),
@@ -102,14 +101,6 @@ class AfreecaTV(Plugin):
             and self.session.http.cookies.get("PdboxUser")
             and self.session.http.cookies.get("RDB")
         )
-
-    @classmethod
-    def stream_weight(cls, key):
-        weight = cls.QUALITY_WEIGHTS.get(key)
-        if weight:
-            return weight, "afreeca"
-
-        return Plugin.stream_weight(key)
 
     def _get_channel_info(self, broadcast, username):
         data = {
@@ -213,10 +204,10 @@ class AfreecaTV(Plugin):
 
         channel = self._get_channel_info(bno, username)
         log.trace(f"{channel!r}")
-        if channel.get("RESULT") == -6:
+        if channel.get("RESULT") == self.CHANNEL_LOGIN_REQUIRED:
             log.error("Login required")
             return
-        elif channel.get("RESULT") != self.CHANNEL_RESULT_OK:
+        if channel.get("RESULT") != self.CHANNEL_RESULT_OK:
             return
 
         (broadcast, rmd) = (channel.get("BNO"), channel.get("RMD"))
@@ -228,10 +219,11 @@ class AfreecaTV(Plugin):
         self.title = channel.get("TITLE")
 
         streams = {}
-
-        for qkey in self.QUALITYS:
-            if hls_stream := self._get_hls_stream(broadcast, username, qkey, rmd, stream_password):
-                streams[qkey] = hls_stream
+        for item in channel.get("VIEWPRESET"):
+            if item["name"] == "auto":
+                continue
+            if hls_stream := self._get_hls_stream(broadcast, username, item["name"], rmd, stream_password):
+                streams[item["label"]] = hls_stream
 
         if not streams and channel.get("BPWD") == "Y":
             log.error("Stream is password protected")
