@@ -12,7 +12,7 @@ from contextlib import closing, suppress
 from gettext import gettext
 from pathlib import Path
 from time import sleep
-from typing import Any, Dict, List, Optional, Type, Union
+from typing import Any, List, Mapping, Optional, Type, Union
 
 import streamlink.logger as logger
 from streamlink import NoPluginError, PluginError, StreamError, Streamlink, __version__ as streamlink_version
@@ -175,7 +175,7 @@ def create_http_server(host: Optional[str] = None, port: int = 0) -> HTTPOutput:
 
 def output_stream_http(
     plugin: Plugin,
-    initial_streams: Dict[str, Stream],
+    initial_streams: Mapping[str, Stream],
     formatter: Formatter,
     external: bool = False,
     continuous: bool = True,
@@ -386,7 +386,7 @@ def output_stream(stream, formatter: Formatter):
     return True
 
 
-def handle_stream(plugin: Plugin, streams: Dict[str, Stream], stream_name: str) -> None:
+def handle_stream(plugin: Plugin, streams: Mapping[str, Stream], stream_name: str) -> None:
     """Decides what to do with the selected stream.
 
     Depending on arguments it can be one of these:
@@ -448,14 +448,14 @@ def handle_stream(plugin: Plugin, streams: Dict[str, Stream], stream_name: str) 
                 break
 
 
-def fetch_streams(plugin: Plugin) -> Dict[str, Stream]:
+def fetch_streams(plugin: Plugin) -> Mapping[str, Stream]:
     """Fetches streams using correct parameters."""
 
     return plugin.streams(stream_types=args.stream_types,
                           sorting_excludes=args.stream_sorting_excludes)
 
 
-def fetch_streams_with_retry(plugin: Plugin, interval: float, count: int) -> Optional[Dict[str, Stream]]:
+def fetch_streams_with_retry(plugin: Plugin, interval: float, count: int) -> Optional[Mapping[str, Stream]]:
     """Attempts to fetch streams repeatedly
        until some are returned or limit hit."""
 
@@ -487,7 +487,7 @@ def fetch_streams_with_retry(plugin: Plugin, interval: float, count: int) -> Opt
     return streams
 
 
-def resolve_stream_name(streams: Dict[str, Stream], stream_name: str) -> str:
+def resolve_stream_name(streams: Mapping[str, Stream], stream_name: str) -> str:
     """Returns the real stream name of a synonym."""
 
     if stream_name in STREAM_SYNONYMS and stream_name in streams:
@@ -498,7 +498,7 @@ def resolve_stream_name(streams: Dict[str, Stream], stream_name: str) -> str:
     return stream_name
 
 
-def format_valid_streams(plugin: Plugin, streams: Dict[str, Stream]) -> str:
+def format_valid_streams(plugin: Plugin, streams: Mapping[str, Stream]) -> str:
     """Formats a dict of streams.
 
     Filters out synonyms and displays them next to
