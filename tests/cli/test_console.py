@@ -80,30 +80,6 @@ class TestConsoleOutput:
         """).lstrip()
         assert test_list1 == ["foo", "bar"]
 
-    def test_msg_json_error(self):
-        output = StringIO()
-        console = ConsoleOutput(output, json=True)
-        with pytest.raises(SystemExit) as cm:
-            console.msg_json({"error": "bad"})
-        assert cm.value.code == 1
-        assert output.getvalue() == '{\n  "error": "bad"\n}\n'
-
-    def test_exit(self):
-        output = StringIO()
-        console = ConsoleOutput(output)
-        with pytest.raises(SystemExit) as cm:
-            console.exit("error")
-        assert cm.value.code == 1
-        assert output.getvalue() == "error: error\n"
-
-    def test_exit_json(self):
-        output = StringIO()
-        console = ConsoleOutput(output, json=True)
-        with pytest.raises(SystemExit) as cm:
-            console.exit("error")
-        assert cm.value.code == 1
-        assert output.getvalue() == '{\n  "error": "error"\n}\n'
-
     def test_ask(self, monkeypatch: pytest.MonkeyPatch):
         monkeypatch.setattr("builtins.input", Mock(return_value="hello"))
 

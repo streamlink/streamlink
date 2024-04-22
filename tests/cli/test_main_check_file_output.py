@@ -5,6 +5,7 @@ from unittest.mock import Mock, call
 
 import pytest
 
+from streamlink_cli.exceptions import StreamlinkCLIError
 from streamlink_cli.main import check_file_output
 from streamlink_cli.output.file import FileOutput
 
@@ -83,7 +84,7 @@ def prompt(monkeypatch: pytest.MonkeyPatch, request: pytest.FixtureRequest):
         {"exists": True},
         False,
         {"isatty": False},
-        pytest.raises(SystemExit),
+        pytest.raises(StreamlinkCLIError),
         [
             ("streamlink.cli", "info", "Writing output to\n/path/to/file"),
             ("streamlink.cli", "debug", "Checking file output"),
@@ -118,12 +119,12 @@ def test_exists(
     ),
     pytest.param(
         {"ask": "n"},
-        pytest.raises(SystemExit),
+        pytest.raises(StreamlinkCLIError),
         id="no",
     ),
     pytest.param(
         {"ask": None},
-        pytest.raises(SystemExit),
+        pytest.raises(StreamlinkCLIError),
         id="error",
     ),
 ], indirect=["prompt"])

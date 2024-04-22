@@ -10,6 +10,7 @@ import pytest
 from streamlink.exceptions import PluginError, StreamError, StreamlinkDeprecationWarning
 from streamlink.stream.stream import Stream
 from streamlink_cli.compat import stdout
+from streamlink_cli.exceptions import StreamlinkCLIError
 from streamlink_cli.main import (
     Formatter,
     NoPluginError,
@@ -105,13 +106,13 @@ class TestCLIMainHandleUrl:
         (NoPluginError("foo"), "No plugin can handle URL: fakeurl"),
         (PluginError("bar"), "bar"),
     ])
-    def test_error(self, side_effect, expected):
-        with patch("streamlink_cli.main.args", Mock(url="fakeurl")), \
-             patch("streamlink_cli.main.streamlink", resolve_url=Mock(side_effect=side_effect)), \
-             patch("streamlink_cli.main.console", exit=Mock(side_effect=SystemExit)) as mock_console:
-            with pytest.raises(SystemExit):
-                handle_url()
-            assert mock_console.exit.mock_calls == [call(expected)]
+    def test_error(self, monkeypatch: pytest.MonkeyPatch, side_effect: Exception, expected: str):
+        monkeypatch.setattr("streamlink_cli.main.args", Namespace(url="fakeurl"))
+        monkeypatch.setattr("streamlink_cli.main.streamlink", Mock(resolve_url=Mock(side_effect=side_effect)))
+        with pytest.raises(StreamlinkCLIError) as excinfo:
+            handle_url()
+        assert str(excinfo.value) == expected
+        assert excinfo.value.code == 1
 
 
 class TestCLIMainJsonAndStreamUrl(unittest.TestCase):
@@ -135,21 +136,21 @@ class TestCLIMainJsonAndStreamUrl(unittest.TestCase):
                 title="Test Title",
             ),
         )]
-        assert console.error.mock_calls == []
         console.msg_json.mock_calls.clear()
 
         args.json = False
         handle_stream(plugin, streams, "best")
         assert console.msg.mock_calls == [call(stream.to_url())]
         assert console.msg_json.mock_calls == []
-        assert console.error.mock_calls == []
         console.msg.mock_calls.clear()
 
         stream.to_url.side_effect = TypeError()
-        handle_stream(plugin, streams, "best")
+        with pytest.raises(StreamlinkCLIError) as excinfo:
+            handle_stream(plugin, streams, "best")
         assert console.msg.mock_calls == []
         assert console.msg_json.mock_calls == []
-        assert console.exit.mock_calls == [call("The stream specified cannot be translated to a URL")]
+        assert str(excinfo.value) == "The stream specified cannot be translated to a URL"
+        assert excinfo.value.code == 1
 
     @patch("streamlink_cli.main.args", json=True, stream_url=True, stream=[], default_stream=[], retry_max=0, retry_streams=0)
     @patch("streamlink_cli.main.console")
@@ -181,15 +182,15 @@ class TestCLIMainJsonAndStreamUrl(unittest.TestCase):
             handle_url()
             assert console.msg.mock_calls == [call(stream.to_manifest_url())]
             assert console.msg_json.mock_calls == []
-            assert console.error.mock_calls == []
             console.msg.mock_calls.clear()
 
             stream.to_manifest_url.side_effect = TypeError()
-            handle_url()
+            with pytest.raises(StreamlinkCLIError) as excinfo:
+                handle_url()
             assert console.msg.mock_calls == []
             assert console.msg_json.mock_calls == []
-            assert console.exit.mock_calls == [call("The stream specified cannot be translated to a URL")]
-            console.exit.mock_calls.clear()
+            assert str(excinfo.value) == "The stream specified cannot be translated to a URL"
+            assert excinfo.value.code == 1
 
 
 # TODO: don't use Mock() for mocking args, use a custom argparse.Namespace instead
@@ -355,27 +356,27 @@ class TestCLIMainCreateOutput(unittest.TestCase):
         assert output.record.record is None
 
     @patch("streamlink_cli.main.args")
-    @patch("streamlink_cli.main.console")
-    def test_create_output_record_and_other_file_output(self, console: Mock, args: Mock):
+    def test_create_output_record_and_other_file_output(self, args: Mock):
         formatter = Formatter({})
         args.output = None
         args.stdout = True
         args.record_and_pipe = True
-        create_output(formatter)
-        console.exit.assert_called_with("Cannot use record options with other file output options.")
+        with pytest.raises(StreamlinkCLIError) as excinfo:
+            create_output(formatter)
+        assert str(excinfo.value) == "Cannot use record options with other file output options."
+        assert excinfo.value.code == 1
 
     @patch("streamlink_cli.main.args")
-    @patch("streamlink_cli.main.console")
-    def test_create_output_no_default_player(self, console: Mock, args: Mock):
+    def test_create_output_no_default_player(self, args: Mock):
         formatter = Formatter({})
         args.output = None
         args.stdout = False
         args.record_and_pipe = False
         args.player = None
-        console.exit.side_effect = SystemExit
-        with pytest.raises(SystemExit):
+        with pytest.raises(StreamlinkCLIError) as excinfo:
             create_output(formatter)
-        assert re.search(r"^The default player \(\w+\) does not seem to be installed\.", console.exit.call_args_list[0][0][0])
+        assert re.search(r"^The default player \(\w+\) does not seem to be installed\.", str(excinfo.value))
+        assert excinfo.value.code == 1
 
 
 class TestCLIMainHandleStream(unittest.TestCase):
@@ -405,7 +406,7 @@ class TestCLIMainHandleStream(unittest.TestCase):
 
 
 class TestCLIMainOutputStream:
-    def test_stream_failure_no_output_open(self, caplog: pytest.LogCaptureFixture):
+    def test_stream_failure_no_output_open(self, monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture):
         output = Mock()
         stream = Mock(
             __str__=lambda _: "fake-stream",
@@ -415,20 +416,20 @@ class TestCLIMainOutputStream:
 
         caplog.set_level(1, "streamlink.cli")
 
-        with patch("streamlink_cli.main.args", Namespace(retry_open=2)), \
-             patch("streamlink_cli.main.console") as mock_console, \
-             patch("streamlink_cli.main.output"), \
-             patch("streamlink_cli.main.create_output", return_value=output):
+        monkeypatch.setattr("streamlink_cli.main.args", Namespace(retry_open=2))
+        monkeypatch.setattr("streamlink_cli.main.output", output)
+        monkeypatch.setattr("streamlink_cli.main.create_output", Mock(return_value=output))
+
+        with pytest.raises(StreamlinkCLIError) as excinfo:
             output_stream(stream, formatter)
 
         assert [(record.levelname, record.module, record.message) for record in caplog.records] == [
             ("error", "main", "Try 1/2: Could not open stream fake-stream (Could not open stream: failure)"),
             ("error", "main", "Try 2/2: Could not open stream fake-stream (Could not open stream: failure)"),
         ]
-        assert mock_console.exit.call_args_list == [
-            call("Could not open stream fake-stream, tried 2 times, exiting"),
-        ]
         assert not output.open.called, "Does not open the output on stream error"
+        assert str(excinfo.value) == "Could not open stream fake-stream, tried 2 times, exiting"
+        assert excinfo.value.code == 1
 
     @pytest.mark.parametrize(
         ("args", "isatty", "deprecation", "expected"),

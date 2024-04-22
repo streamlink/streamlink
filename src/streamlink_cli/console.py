@@ -82,16 +82,5 @@ class ConsoleOutput:
         msg = dumps(out, cls=JSONEncoder, indent=2)
         self.output.write(f"{msg}\n")
 
-        if isinstance(out, dict) and out.get("error"):
-            sys.exit(1)
-
-    def exit(self, msg: str) -> None:
-        if self.json:
-            self.msg_json(error=msg)
-        else:
-            self.msg(f"error: {msg}")
-
-        sys.exit(1)
-
 
 __all__ = ["ConsoleOutput", "ConsoleUserInputRequester"]
