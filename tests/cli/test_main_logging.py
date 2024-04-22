@@ -11,6 +11,7 @@ import streamlink_cli.main
 import tests
 from streamlink.session import Streamlink
 from streamlink_cli.argparser import ArgumentParser
+from streamlink_cli.exceptions import StreamlinkCLIError
 from streamlink_cli.main import build_parser
 
 
@@ -90,14 +91,27 @@ class TestStdoutStderr:
         pytest.param(["--stdout"], "", "[cli][info] a\n[test_main_logging][error] b\nerror: c\n", id="pipe-no-json"),
         pytest.param(["--stdout", "--json"], "", "{\n  \"error\": \"c\"\n}\n", id="pipe-json"),
     ], indirect=["argv"])
-    def test_output(self, capsys: pytest.CaptureFixture, parser: ArgumentParser, argv: list, stdout: str, stderr: str):
-        streamlink_cli.main.setup(parser)
+    def test_output(
+        self,
+        monkeypatch: pytest.MonkeyPatch,
+        capsys: pytest.CaptureFixture,
+        parser: ArgumentParser,
+        argv: list,
+        stdout: str,
+        stderr: str,
+    ):
+        def run(_parser):
+            childlogger = logging.getLogger("streamlink.test_main_logging")
+            streamlink_cli.main.log.info("a")
+            childlogger.error("b")
+            raise StreamlinkCLIError("c")
 
-        childlogger = logging.getLogger("streamlink.test_main_logging")
-        streamlink_cli.main.log.info("a")
-        childlogger.error("b")
-        with pytest.raises(SystemExit):
-            streamlink_cli.main.console.exit("c")
+        monkeypatch.setattr("streamlink_cli.main.build_parser", lambda: parser)
+        monkeypatch.setattr("streamlink_cli.main.run", run)
+
+        with pytest.raises(SystemExit) as excinfo:
+            streamlink_cli.main.main()
+        assert excinfo.value.code == 1
 
         out, err = capsys.readouterr()
         assert out == stdout
