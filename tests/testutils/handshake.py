@@ -84,7 +84,7 @@ def _sync2async(obj, name, method):
 
     @wraps(meth)
     async def wrapper(*args, **kwargs):
-        async def task():
+        async def task():  # noqa: RUF029
             try:
                 value = meth(*args, **kwargs)
             except Exception as err:

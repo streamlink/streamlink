@@ -42,7 +42,7 @@ async def cdp_client(session: Streamlink, chromium_webbrowser: Mock, websocket_c
 
 
 @pytest.fixture()
-async def cdp_client_session(request: pytest.FixtureRequest, cdp_client: CDPClient):
+def cdp_client_session(request: pytest.FixtureRequest, cdp_client: CDPClient):
     target_id = TargetID("01234")
     session_id = SessionID("56789")
     session = cdp_client.cdp_connection.sessions[session_id] = CDPSession(
