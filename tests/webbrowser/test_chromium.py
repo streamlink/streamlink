@@ -114,6 +114,7 @@ class TestLaunchArgs:
 @pytest.mark.parametrize("port", [None, 1234])
 async def test_launch(monkeypatch: pytest.MonkeyPatch, mock_clock, webbrowser_launch, host, port):
     async def fake_find_free_port(_):
+        await trio.sleep(0)
         return 1234
 
     monkeypatch.setattr("streamlink.webbrowser.chromium.find_free_port_ipv4", fake_find_free_port)
