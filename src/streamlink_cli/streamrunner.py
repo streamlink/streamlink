@@ -131,11 +131,11 @@ class StreamRunner:
                 if max_size_bytes and total_size_bytes + len(data) > max_size_bytes:
                     log.warning(f"Max video size of {self.max_size_gb}GB exceeded, stopping download")
                     #print(f"Max video size of {self.max_size_gb}GB exceeded, stopping download")
-                    break  # 超过大小限制则停止下载
+                    break  # Stop the download if it exceeds the size limit
 
                 write(data)
                 progress(data)
-                total_size_bytes += len(data)  # 更新已下载的大小
+                total_size_bytes += len(data)  # Update the size of the downloaded file
 
         except _ReadError as err:
             raise OSError(f"Error when reading from stream: {err.__context__}, exiting") from err.__context__
