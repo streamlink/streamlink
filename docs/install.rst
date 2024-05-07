@@ -136,12 +136,6 @@ Linux and BSD
       - See the `Linux AppImages`_ section below
     * - :octicon:`verified` Python pip
       - See the `PyPI package and source code`_ section below
-    * - :octicon:`package-dependents` `Alpine Linux (edge, testing)`_
-      - .. code-block:: bash
-
-            sudo apk add streamlink
-
-        `Enabling the edge/testing repository`_
     * - :octicon:`package-dependents` `Arch Linux`_
       - .. code-block:: bash
 
@@ -202,7 +196,6 @@ Linux and BSD
 
             sudo eopkg install streamlink
 
-.. _Alpine Linux (edge, testing): https://pkgs.alpinelinux.org/packages?name=streamlink
 .. _Arch Linux: https://archlinux.org/packages/extra/any/streamlink/
 .. _Arch Linux (aur, git): https://aur.archlinux.org/packages/streamlink-git/
 .. _Debian (sid, testing): https://packages.debian.org/sid/streamlink
@@ -215,7 +208,6 @@ Linux and BSD
 .. _openSUSE: https://build.opensuse.org/package/show/multimedia:apps/streamlink
 .. _Solus: https://github.com/getsolus/packages/tree/main/packages/s/streamlink
 
-.. _Enabling the edge/testing repository: https://wiki.alpinelinux.org/wiki/Repositories#Edge
 .. _Installing AUR packages: https://wiki.archlinux.org/index.php/Arch_User_Repository
 .. _Installing Debian backported packages: https://wiki.debian.org/Backports
 .. _NixOS channel: https://search.nixos.org/packages?show=streamlink&query=streamlink
@@ -230,8 +222,6 @@ Package maintainers
 
     * - Distribution / Platform
       - Maintainer
-    * - Alpine Linux
-      - Robert Sacks <robert at sacks.email>
     * - Arch
       - Giancarlo Razzolini <grazzolini at archlinux.org>
     * - Arch (aur, git)
