@@ -285,6 +285,7 @@ class HLSStreamWriter(SegmentedStreamWriter[HLSSegment, Response]):
             log.debug(f"Segment initialization {segment.num} complete")
         else:
             log.debug(f"Segment {segment.num} complete")
+        self.session.completed_segments.append(str(segment.num))
 
 
 class HLSStreamWorker(SegmentedStreamWorker[HLSSegment, Response]):

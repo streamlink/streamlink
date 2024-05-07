@@ -65,7 +65,7 @@ class DASHStreamWriter(SegmentedStreamWriter[DASHSegment, Response]):
         except StreamError as err:
             log.error(f"{self.reader.mime_type} segment {name}: failed ({err})")
 
-    def write(self, segment, res, chunk_size=8192):
+    def write(self, segment: DASHSegment, res: Response, chunk_size=8192):
         for chunk in res.iter_content(chunk_size):
             if self.closed:
                 log.warning(f"{self.reader.mime_type} segment {segment.name}: aborted")
@@ -73,6 +73,7 @@ class DASHStreamWriter(SegmentedStreamWriter[DASHSegment, Response]):
             self.reader.buffer.write(chunk)
 
         log.debug(f"{self.reader.mime_type} segment {segment.name}: completed")
+        self.session.completed_segments.append(segment.name)
 
 
 class DASHStreamWorker(SegmentedStreamWorker[DASHSegment, Response]):

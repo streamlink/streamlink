@@ -49,6 +49,7 @@ class Streamlink:
 
         self.ip: str = ""
         self.proxy_ip: str = ""
+        self.completed_segments: list[str] = []
 
         #: Options of this session instance.
         #: :class:`StreamlinkOptions <streamlink.session.options.StreamlinkOptions>` is a subclass
