@@ -136,6 +136,10 @@ Linux and BSD
       - See the `Linux AppImages`_ section below
     * - :octicon:`verified` Python pip
       - See the `PyPI package and source code`_ section below
+    * - :octicon:`package-dependents` `ALT Linux (Sisyphus)`_
+      - .. code-block:: bash
+
+            sudo apt-get install streamlink
     * - :octicon:`package-dependents` `Arch Linux`_
       - .. code-block:: bash
 
@@ -196,6 +200,7 @@ Linux and BSD
 
             sudo eopkg install streamlink
 
+.. _ALT Linux (Sisyphus): https://packages.altlinux.org/en/sisyphus/srpms/streamlink/
 .. _Arch Linux: https://archlinux.org/packages/extra/any/streamlink/
 .. _Arch Linux (aur, git): https://aur.archlinux.org/packages/streamlink-git/
 .. _Debian (sid, testing): https://packages.debian.org/sid/streamlink
@@ -222,6 +227,8 @@ Package maintainers
 
     * - Distribution / Platform
       - Maintainer
+    * - ALT Linux
+      - Vitaly Lipatov <lav at altlinux.ru>
     * - Arch
       - Giancarlo Razzolini <grazzolini at archlinux.org>
     * - Arch (aur, git)
