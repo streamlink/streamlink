@@ -296,7 +296,13 @@ table.table-custom-layout.table-custom-layout-dependencies tbody td {
   font-size: 5em;
 }
 
-.grid-with-icons .fas {
+.grid-with-icons .sd-card-header .fas {
+  width: 1em;
+  margin-left: -1.25em;
+  margin-right: .25em;
+}
+
+.grid-with-icons .sd-card-body .fas {
   padding-right: 0.1em;
   font-size: 1.75em;
   vertical-align: middle;
