@@ -549,31 +549,83 @@ Windows binaries
 
 **Flavors**
 
-.. list-table::
-    :header-rows: 2
-    :stub-columns: 1
-    :width: 100%
+.. grid:: 2
+    :padding: 0
+    :class-container: grid-with-icons
 
-    * -
-      - Installer
-      -
-      - Portable
-      -
-    * -
-      - 64 bit
-      - 32 bit
-      - 64 bit
-      - 32 bit
-    * - Latest Python
-      - :bdg-link-success-line:`Windows 10+ <https://github.com/streamlink/windows-builds/releases>`
-      - :bdg-link-primary-line:`Windows 10+ <https://github.com/streamlink/windows-builds/releases>`
-      - :bdg-link-success-line:`Windows 10+ <https://github.com/streamlink/windows-builds/releases>`
-      - :bdg-link-primary-line:`Windows 10+ <https://github.com/streamlink/windows-builds/releases>`
-    * - Python 3.8
-      - :bdg-link-secondary-line:`Windows 7 <https://github.com/streamlink/windows-builds/releases>`
-      - :bdg-link-secondary-line:`Windows 7 <https://github.com/streamlink/windows-builds/releases>`
-      - :bdg-link-secondary-line:`Windows 7 <https://github.com/streamlink/windows-builds/releases>`
-      - :bdg-link-secondary-line:`Windows 7 <https://github.com/streamlink/windows-builds/releases>`
+    .. grid-item-card::
+        :padding: 3
+        :class-header: sd-text-center
+        :class-footer: sd-text-center sd-bg-transparent sd-border-0
+
+        :fas:`gears` **Installer**
+        ^^^
+
+        - Adds itself to the system's ``PATH`` env var
+        - Automatically creates a :ref:`config file <cli/config:Configuration file>`
+        - Sets :option:`--ffmpeg-ffmpeg` in config file
+
+        +++
+        .. grid:: 2
+            :gutter: 1
+            :padding: 0
+
+            .. grid-item::
+                :class: sd-text-right
+
+                Windows 10+
+
+            .. grid-item::
+
+                :bdg-link-success-line:`x86_64 <https://github.com/streamlink/windows-builds/releases>`
+                :bdg-link-primary-line:`x86 <https://github.com/streamlink/windows-builds/releases>`
+
+            .. grid-item::
+                :class: sd-text-right
+
+                Windows 7 (py38)
+
+            .. grid-item::
+
+                :bdg-link-secondary-line:`x86_64 <https://github.com/streamlink/windows-builds/releases>`
+                :bdg-link-secondary-line:`x86 <https://github.com/streamlink/windows-builds/releases>`
+
+    .. grid-item-card::
+        :padding: 3
+        :class-header: sd-text-center
+        :class-footer: sd-text-center sd-bg-transparent sd-border-0
+
+        :fas:`file-zipper` **Portable archive**
+        ^^^
+
+        - No :ref:`config file <cli/config:Configuration file>` created automatically
+        - :option:`--ffmpeg-ffmpeg` must be set manually
+        - No pre-compiled Python bytecode
+
+        +++
+        .. grid:: 2
+            :gutter: 1
+            :padding: 0
+
+            .. grid-item::
+                :class: sd-text-right
+
+                Windows 10+
+
+            .. grid-item::
+
+                :bdg-link-success-line:`x86_64 <https://github.com/streamlink/windows-builds/releases>`
+                :bdg-link-primary-line:`x86 <https://github.com/streamlink/windows-builds/releases>`
+
+            .. grid-item::
+                :class: sd-text-right
+
+                Windows 7 (py38)
+
+            .. grid-item::
+
+                :bdg-link-secondary-line:`x86_64 <https://github.com/streamlink/windows-builds/releases>`
+                :bdg-link-secondary-line:`x86 <https://github.com/streamlink/windows-builds/releases>`
 
 **Contents**
 
@@ -613,17 +665,6 @@ Windows binaries
             :alt: FFmpeg
 
         FFmpeg |br| :sub:`for muxing streams`
-
-.. note::
-
-   The installers automatically create a :ref:`config file <cli/config:Configuration file>` if it doesn't exist yet and set the
-   value of the :option:`--ffmpeg-ffmpeg` CLI parameter to the path of the included FFmpeg binary. The portable archives
-   can't do that, and users need to create or update the config file themselves.
-
-   :fas:`triangle-exclamation` Please see the README of the `streamlink/windows-builds`_ repository for more information
-   about the differences between the installers and portable archives.
-
-.. _streamlink/windows-builds: https://github.com/streamlink/windows-builds
 
 
 Linux AppImages
