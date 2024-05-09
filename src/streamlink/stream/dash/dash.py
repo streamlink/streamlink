@@ -73,8 +73,7 @@ class DASHStreamWriter(SegmentedStreamWriter[DASHSegment, Response]):
             self.reader.buffer.write(chunk)
 
         log.debug(f"{self.reader.mime_type} segment {segment.name}: completed")
-        if segment.name.isdigit():
-            self.session.completed_segments.append(int(segment.name))
+        self.session.completed_segments.append(segment.num)
 
 
 class DASHStreamWorker(SegmentedStreamWorker[DASHSegment, Response]):
@@ -86,7 +85,8 @@ class DASHStreamWorker(SegmentedStreamWorker[DASHSegment, Response]):
         super().__init__(*args, **kwargs)
         self.mpd = self.stream.mpd
 
-        self.manifest_reload_retries = self.session.options.get("dash-manifest-reload-attempts")
+        self.manifest_reload_retries: int = self.session.options.get("dash-manifest-reload-attempts")
+        self.next_segment_num: int = self.session.options.get("next-segment-num")
 
     @contextmanager
     def sleeper(self, duration):
@@ -149,6 +149,8 @@ class DASHStreamWorker(SegmentedStreamWorker[DASHSegment, Response]):
                 for segment in iter_segments:
                     if self.closed:
                         break
+                    if segment.num < self.next_segment_num and segment.num >= 0:
+                        continue
                     yield segment
 
                 # close worker if type is not dynamic (all segments were put into writer queue)
