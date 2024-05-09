@@ -105,7 +105,7 @@ performing these checks locally avoids unnecessary build failures.
     pytest path/to/test-file.py::TestClassName::test_method_name ...
 
     # check code for linting errors
-    ruff .
+    ruff check
     # check code for typing errors
     mypy
 
