@@ -285,7 +285,7 @@ class HLSStreamWriter(SegmentedStreamWriter[HLSSegment, Response]):
             log.debug(f"Segment initialization {segment.num} complete")
         else:
             log.debug(f"Segment {segment.num} complete")
-        self.session.completed_segments.append(str(segment.num))
+        self.session.completed_segments.append(segment.num)
 
 
 class HLSStreamWorker(SegmentedStreamWorker[HLSSegment, Response]):
@@ -316,6 +316,7 @@ class HLSStreamWorker(SegmentedStreamWorker[HLSSegment, Response]):
             int(self.session.options.get("hls-duration")) if self.session.options.get("hls-duration") else None
         )
         self.hls_live_restart = self.stream.force_restart or self.session.options.get("hls-live-restart")
+        self.next_segment_num: int = int(self.session.options.get("next-segment-num") or 0)
 
         if str(self.playlist_reload_time_override).isnumeric() and float(self.playlist_reload_time_override) >= 2:
             self.playlist_reload_time_override = float(self.playlist_reload_time_override)
@@ -402,7 +403,7 @@ class HLSStreamWorker(SegmentedStreamWorker[HLSSegment, Response]):
                 self.playlist_sequence = first_segment.num
 
     def valid_segment(self, segment: HLSSegment) -> bool:
-        return segment.num >= self.playlist_sequence
+        return segment.num >= self.playlist_sequence and segment.num >= self.next_segment_num
 
     def _segment_queue_timing_threshold_reached(self) -> bool:
         if self.segment_queue_timing_threshold_factor <= 0:

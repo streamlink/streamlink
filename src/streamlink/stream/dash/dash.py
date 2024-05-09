@@ -73,7 +73,8 @@ class DASHStreamWriter(SegmentedStreamWriter[DASHSegment, Response]):
             self.reader.buffer.write(chunk)
 
         log.debug(f"{self.reader.mime_type} segment {segment.name}: completed")
-        self.session.completed_segments.append(segment.name)
+        if segment.name.isdigit():
+            self.session.completed_segments.append(int(segment.name))
 
 
 class DASHStreamWorker(SegmentedStreamWorker[DASHSegment, Response]):

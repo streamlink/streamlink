@@ -356,7 +356,7 @@ def open_stream(stream):
     return stream_fd, prebuffer
 
 
-def output_stream(stream, formatter: Formatter):
+def output_stream(stream: Stream, formatter: Formatter):
     """Open stream, create output and finally write the stream to output."""
     global output
 
@@ -397,6 +397,7 @@ def output_stream(stream, formatter: Formatter):
             stream_runner = StreamRunner(stream_fd, output, show_progress=show_progress)
             # noinspection PyUnboundLocalVariable
             stream_runner.run(prebuffer)
+            log.info(f'Last completed segments: {stream.session.completed_segments[-1]}')
     except OSError as err:
         raise StreamlinkCLIError() from err
 

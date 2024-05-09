@@ -196,6 +196,10 @@ class StreamlinkOptions(Options):
           - ``[]``
           - Select a specific audio source or sources when multiple audio sources are available,
             by language code or name, or ``"*"`` (asterisk)
+        * - next-segment-num
+          - ``int``
+          - ``0``
+          - Minimum segment number to download as the first segment
         * - dash-manifest-reload-attempts
           - ``int``
           - ``3``
@@ -295,6 +299,7 @@ class StreamlinkOptions(Options):
             "hls-segment-ignore-names": [],
             "hls-segment-key-uri": None,
             "hls-audio-select": [],
+            "next-segment-num": 0,
             "dash-manifest-reload-attempts": 3,
             "ffmpeg-ffmpeg": None,
             "ffmpeg-no-validation": False,

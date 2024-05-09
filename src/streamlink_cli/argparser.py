@@ -958,6 +958,18 @@ def build_parser():
             Needs to be supported by the used plugin.
         """,
     )
+    transport.add_argument(
+        "--next-segment-num",
+        type=num(int, ge=0),
+        metavar="NUM",
+        help="""
+        Minimum segment number to download as the first segment.
+
+        This applies to all different kinds of segmented stream types, such as DASH, HLS, etc.
+
+        Default is 0.
+        """,
+    )
 
     transport_hls.add_argument(
         "--hls-live-edge",
@@ -1435,6 +1447,7 @@ _ARGUMENT_TO_SESSIONOPTION: list[tuple[str, str, Callable[[Any], Any] | None]] =
     ("stream_segment_threads", "stream-segment-threads", None),
     ("stream_segment_timeout", "stream-segment-timeout", None),
     ("stream_timeout", "stream-timeout", None),
+    ("next_segment_num", "next-segment-num", None),
     ("hls_live_edge", "hls-live-edge", None),
     ("hls_live_restart", "hls-live-restart", None),
     ("hls_start_offset", "hls-start-offset", None),
