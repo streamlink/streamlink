@@ -7,6 +7,7 @@ import re
 import time
 from collections.abc import Callable, Iterable, Mapping
 from contextlib import suppress
+from datetime import datetime
 from functools import partial
 from http.cookiejar import Cookie
 from typing import TYPE_CHECKING, Any, ClassVar, List, Literal, NamedTuple, Type, TypeVar, Union
@@ -281,6 +282,8 @@ class Plugin:
     """Metadata 'category' attribute: name of a game being played, a music genre, etc."""
     is_live: bool = False
     """Metadata 'is_live' attribute: whether the stream is live."""
+    broadcast_start_time: Optional[datetime] = None
+    """Metadata 'broadcast_start_time' attribute: Broadcast start time."""
 
     _url: str = ""
 

@@ -10,6 +10,8 @@ $metadata title
 import logging
 import re
 
+from datetime import datetime
+
 from streamlink.plugin import Plugin, pluginargument, pluginmatcher
 from streamlink.plugin.api import validate
 from streamlink.stream.hls import HLSStream, HLSStreamReader, HLSStreamWriter
@@ -59,6 +61,8 @@ class AfreecaHLSStream(HLSStream):
 )
 class AfreecaTV(Plugin):
     _re_bno = re.compile(r"window\.nBroadNo\s*=\s*(?P<bno>\d+);")
+    _re_bstart_time = re.compile(
+        r"<ul class=\"detail_view\".*\n.*<span>(?P<bstart_time>\d+-\d+-\d+ \d+:\d+:\d+)<\/span>")
 
     CHANNEL_API_URL = "https://live.afreecatv.com/afreeca/player_live_api.php"
     CHANNEL_RESULT_OK = 1
@@ -198,9 +202,15 @@ class AfreecaTV(Plugin):
             res = self.session.http.get(self.url)
             m = self._re_bno.search(res.text)
             if not m:
-                log.error("Could not find broadcast number.")
+                log.info("Could not find broadcast number.")
                 return
             bno = m.group("bno")
+
+            m = self._re_bstart_time.search(res.text)
+            if not m:
+                log.error("Could not find broadcast start time.")
+                return
+            self.broadcast_start_time = datetime.strptime(m.group("bstart_time")+"+0900", "%Y-%m-%d %H:%M:%S%z")
 
         channel = self._get_channel_info(bno, username)
         log.trace(f"{channel!r}")

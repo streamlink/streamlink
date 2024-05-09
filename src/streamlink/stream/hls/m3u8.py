@@ -154,9 +154,16 @@ class M3U8Parser(Generic[TM3U8_co, THLSSegment_co, THLSPlaylist_co], metaclass=M
         self._extinf: ExtInf | None = None
         self._byterange: ByteRange | None = None
         self._discontinuity: bool = False
+<<<<<<< HEAD
         self._map: Map | None = None
         self._key: Key | None = None
         self._date: datetime | None = None
+=======
+        self._map: Optional[Map] = None
+        self._key: Optional[Key] = None
+        self._date: Optional[datetime] = None
+        self._offset: Optional[timedelta] = None
+>>>>>>> 6ec5f59c (Delete: unnecessary plugins & Add: AfreecaTV broadcast start time tracking logic (Not precise way))
 
     @classmethod
     def create_stream_info(cls, streaminf: Mapping[str, str | None], streaminfoclass=None):
@@ -370,6 +377,15 @@ class M3U8Parser(Generic[TM3U8_co, THLSSegment_co, THLSPlaylist_co], metaclass=M
         https://datatracker.ietf.org/doc/html/rfc8216#section-4.3.2.6
         """
         self._date = self.parse_iso8601(value)
+
+    @parse_tag("EXT-X-FIRST-SEGMENT-TIMESTAMP")
+    def parse_tag_ext_x_first_segment_timestamp(self, value: str) -> None:
+        """
+        EXT-X-FIRST-SEGMENT-TIMESTAMP
+        AfreecaTV only.
+        """
+        value = value.strip()
+        self._offset = timedelta(seconds=int(value.strip()[:-7]), milliseconds=int(value.strip()[-7:-4]))
 
     @parse_tag("EXT-X-DATERANGE")
     def parse_tag_ext_x_daterange(self, value: str) -> None:
@@ -626,6 +642,9 @@ class M3U8Parser(Generic[TM3U8_co, THLSSegment_co, THLSPlaylist_co], metaclass=M
         date = self._date
         self._date = None
 
+        offset = self._offset
+        self._offset = None
+
         # noinspection PyArgumentList
         return self.__segment__(
             uri=uri,
@@ -636,6 +655,7 @@ class M3U8Parser(Generic[TM3U8_co, THLSSegment_co, THLSPlaylist_co], metaclass=M
             discontinuity=discontinuity,
             byterange=byterange,
             date=date,
+            offset=offset,
             map=self._map,
             **data,
         )

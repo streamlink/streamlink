@@ -27,7 +27,7 @@ class ChzzkHLSStreamWorker(HLSStreamWorker):
         except StreamError as err:
             if err.err.response.status_code >= 400:
                 self.stream.refresh_playlist()
-                log.debug(f"Force-reloading the channel playlist on error: {err}")
+                log.warning(f"Force-reloading the channel playlist on error: {err}")
             raise err
 
 

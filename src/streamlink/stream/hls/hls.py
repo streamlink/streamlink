@@ -456,7 +456,14 @@ class HLSStreamWorker(SegmentedStreamWorker[HLSSegment, Response]):
             self.playlist_sequence = self.duration_to_sequence(self.duration_offset_start, self.playlist_segments)
 
         if self.playlist_segments:
-            self.stream.first_segment_timestamp = int(self.playlist_segments[0].date.timestamp() * 1000)
+            if self.playlist_segments[0].date:
+                self.stream.first_segment_timestamp = int(self.playlist_segments[0].date.timestamp() * 1000)
+            elif self.session.broadcast_start_time and self.playlist_segments[0].duration:
+                self.stream.first_segment_timestamp = int(
+                    (self.session.broadcast_start_time + timedelta(seconds=self.playlist_segments[0].duration * self.playlist_sequence)).timestamp() * 1000)
+            else:
+                log.warning("First segment timestamp is not calculated!")
+
             log.debug("; ".join([
                 f"First Sequence: {self.playlist_segments[0].num}",
                 f"First Sequence Timestamp: {self.stream.first_segment_timestamp}",
