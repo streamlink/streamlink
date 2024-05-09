@@ -61,6 +61,8 @@ class AfreecaHLSStream(HLSStream):
 )
 class AfreecaTV(Plugin):
     _re_bno = re.compile(r"window\.nBroadNo\s*=\s*(?P<bno>\d+);")
+    _re_bjnick = re.compile(r"window\.szBjNick\s*=\s*[\'\"](?P<bjnick>.+)[\'\"];")
+    _re_title = re.compile(r"window\.szBroadTitle\s*=\s*[\'\"](?P<title>.+)[\'\"];")
     _re_bstart_time = re.compile(
         r"<ul class=\"detail_view\".*\n.*<span>(?P<bstart_time>\d+-\d+-\d+ \d+:\d+:\d+)<\/span>")
 
@@ -174,7 +176,7 @@ class AfreecaTV(Plugin):
         self.save_cookies()
         return True
 
-    def _get_streams(self):
+    def _get_streams(self, live_check_only=False):
         login_username = self.get_option("username")
         login_password = self.get_option("password")
         stream_password = self.get_option("stream-password")
@@ -202,15 +204,31 @@ class AfreecaTV(Plugin):
             res = self.session.http.get(self.url)
             m = self._re_bno.search(res.text)
             if not m:
-                log.info("Could not find broadcast number.")
                 return
-            bno = m.group("bno")
+            self.id = bno = m.group("bno")
+
+            m = self._re_bjnick.search(res.text)
+            if not m:
+                log.error("Could not find BJ nickname.")
+                return
+            self.author = m.group("bjnick")
+
+            m = self._re_title.search(res.text)
+            if not m:
+                log.error("Could not find broadcast title.")
+                return
+            self.title = m.group("title")
 
             m = self._re_bstart_time.search(res.text)
             if not m:
                 log.error("Could not find broadcast start time.")
                 return
             self.broadcast_start_time = datetime.strptime(m.group("bstart_time")+"+0900", "%Y-%m-%d %H:%M:%S%z")
+
+            self.is_live = True
+
+        if live_check_only:
+            return
 
         channel = self._get_channel_info(bno, username)
         log.trace(f"{channel!r}")
@@ -227,7 +245,6 @@ class AfreecaTV(Plugin):
         self.id = channel.get("BNO")
         self.author = channel.get("BJNICK")
         self.title = channel.get("TITLE")
-        self.is_live = True
 
         streams = {}
         for item in channel.get("VIEWPRESET"):

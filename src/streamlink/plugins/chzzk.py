@@ -210,7 +210,7 @@ class Chzzk(Plugin):
         super().__init__(*args, **kwargs)
         self._api = ChzzkAPI(self.session)
 
-    def _get_live(self, channel_id):
+    def _get_live(self, channel_id, live_check_only=False):
         datatype, data = self._api.get_live_detail(channel_id)
         if datatype == "error":
             log.error(data)
@@ -222,6 +222,7 @@ class Chzzk(Plugin):
             return
 
         self.is_live = True
+
         if media is None:
             if adult:
                 log.error(
@@ -229,6 +230,9 @@ class Chzzk(Plugin):
                 )
             else:
                 log.error("This stream is unavailable")
+            return
+
+        if live_check_only:
             return
 
         for media_id, media_protocol, media_path in media:
@@ -266,9 +270,9 @@ class Chzzk(Plugin):
             if stream.video_representation.mimeType == "video/mp2t":
                 yield name, stream
 
-    def _get_streams(self):
+    def _get_streams(self, live_check_only=False):
         if self.matches["live"]:
-            return self._get_live(self.match["channel_id"])
+            return self._get_live(self.match["channel_id"], live_check_only)
         elif self.matches["video"]:
             return self._get_video(self.match["video_id"])
 

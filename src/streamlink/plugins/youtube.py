@@ -20,7 +20,7 @@ from streamlink.plugin import Plugin, PluginError, pluginmatcher
 from streamlink.plugin.api import useragents, validate
 from streamlink.stream.ffmpegmux import MuxedStream
 from streamlink.stream.hls import HLSStream
-from streamlink.stream.dash import DASHStream
+# from streamlink.stream.dash import DASHStream
 from streamlink.stream.http import HTTPStream
 from streamlink.utils.data import search_dict
 from streamlink.utils.parse import parse_json
@@ -385,7 +385,7 @@ class YouTube(Plugin):
             return False
         return True
 
-    def _get_streams(self):
+    def _get_streams(self, live_check_only=False):
         res = self._get_res(self.url)
 
         if self.matches["channel"] and not self.match["live"]:
@@ -405,12 +405,10 @@ class YouTube(Plugin):
 
         self.id, self.author, self.category, self.title, self.is_live, self.latency_class = self._schema_videodetails(
             data)
-        log.debug(f"Using video ID: {self.id}")
-
-        if self.is_live:
-            log.debug("This video is live.")
 
         streams = {}
+        if live_check_only:
+            return streams
         hls_manifest, dash_manifest, formats, adaptive_formats = self._schema_streamingdata(data)
 
         protected = any(url is None for url, *_ in formats + adaptive_formats)

@@ -841,6 +841,8 @@ class Twitch(Plugin):
             else:  # pragma: no cover
                 return
             self.id, self.author, self.category, self.title = data
+            if self.id:
+                self.is_live = True
         except (PluginError, TypeError):
             pass
 
@@ -958,9 +960,6 @@ class Twitch(Plugin):
                 return
             raise PluginError(err) from err
 
-        if not extra_params.get('force_restart', False):
-            self.is_live = True
-
         for name in restricted_bitrates:
             if name not in streams:
                 log.warning(f"The quality '{name}' is not available since it requires a subscription.")
@@ -976,12 +975,15 @@ class Twitch(Plugin):
         for quality, stream in streams:
             yield quality, HTTPStream(self.session, update_qsd(stream, {"sig": sig, "token": token}))
 
-    def _get_streams(self):
+    def _get_streams(self, live_check_only=False):
         if self.video_id:
             return self._get_hls_streams_video()
         elif self.clip_id:
             return self._get_clips()
         elif self.channel:
+            if live_check_only and not self._checked_metadata:
+                self._checked_metadata = True
+                return self._get_metadata()
             return self._get_hls_streams_live()
 
 
