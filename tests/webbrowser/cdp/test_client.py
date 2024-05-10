@@ -4,9 +4,9 @@ from unittest.mock import ANY, AsyncMock, Mock, call
 
 import pytest
 import trio
-from exceptiongroup import ExceptionGroup
 from trio.testing import wait_all_tasks_blocked
 
+from streamlink.compat import ExceptionGroup
 from streamlink.session import Streamlink
 from streamlink.webbrowser.cdp.client import CDPClient, CDPClientSession, RequestPausedHandler
 from streamlink.webbrowser.cdp.connection import CDPConnection, CDPSession

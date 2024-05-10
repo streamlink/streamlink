@@ -448,7 +448,8 @@ Streamlink defines a `build system <pyproject.toml_>`__ according to `PEP-517`_ 
       - Used for loading the CA bundle extracted from the Mozilla Included CA Certificate List
     * - runtime
       - `exceptiongroup`_
-      - Used for ``ExceptionGroup`` handling, to allow writing compatible code on all supported Python versions
+      - Only required when ``python_version<"3.11"`` |br|
+        Used for ``ExceptionGroup`` handling
     * - runtime
       - `isodate`_
       - Used for parsing ISO8601 strings
