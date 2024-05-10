@@ -8,8 +8,8 @@ from subprocess import DEVNULL
 from typing import AsyncContextManager, AsyncGenerator, Generator, List, Optional, Union
 
 import trio
-from exceptiongroup import BaseExceptionGroup
 
+from streamlink.compat import BaseExceptionGroup
 from streamlink.utils.path import resolve_executable
 from streamlink.webbrowser.exceptions import WebbrowserError
 

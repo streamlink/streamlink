@@ -5,8 +5,12 @@ import sys
 import warnings
 from typing import Any, Callable, Dict, Optional, Tuple
 
-# import exceptiongroup, so it can monkeypatch ExceptionGroup logic on <=py311
-import exceptiongroup  # noqa: F401
+
+try:
+    from builtins import BaseExceptionGroup, ExceptionGroup  # type: ignore[attr-defined]
+except ImportError:  # pragma: no cover
+    from exceptiongroup import BaseExceptionGroup, ExceptionGroup  # type: ignore[import]
+
 
 from streamlink.exceptions import StreamlinkDeprecationWarning
 
@@ -72,6 +76,8 @@ def deprecated(items: Dict[str, Tuple[Optional[str], Any, Any]]) -> None:
 
 
 __all__ = [
+    "BaseExceptionGroup",
+    "ExceptionGroup",
     "deprecated",
     "detect_encoding",
     "is_darwin",
