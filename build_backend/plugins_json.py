@@ -443,7 +443,7 @@ def build(pluginsdir: Path = DEFAULT_PLUGINSPATH) -> Output:
     for file in pluginsdir.glob("*.py"):
         name = file.name
         plugin = re.sub(r"\.py$", "", name)
-        source = file.read_text()
+        source = file.read_text(encoding="utf-8")
 
         tree = ast.parse(source, str(file))
         visitor = PluginVisitor()
