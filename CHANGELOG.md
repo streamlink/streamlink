@@ -1,5 +1,23 @@
 # Changelog
 
+## streamlink 6.7.4 (2024-05-12)
+
+Patch release:
+
+- Refactored: CLI errors ([#5958](https://github.com/streamlink/streamlink/pull/5958))
+- Updated plugins:
+  - afreeca: updated stream qualities ([#5953](https://github.com/streamlink/streamlink/pull/5953))
+  - afreeca: added `--afreeca-stream-password` ([#5952](https://github.com/streamlink/streamlink/pull/5952))
+  - chzzk: new plugin ([#5731](https://github.com/streamlink/streamlink/pull/5731))
+  - nownews: removed plugin ([#5961](https://github.com/streamlink/streamlink/pull/5961))
+  - turkuvaz: fixed HLS streams ([#5946](https://github.com/streamlink/streamlink/pull/5946))
+- Docs: clarified plugin request rules ([#5949](https://github.com/streamlink/streamlink/pull/5949))
+- Build: fixed build issues on Windows ([#5990](https://github.com/streamlink/streamlink/pull/5990))
+- Build: removed `exceptiongroup` dependency on Python >= 3.11 ([#5987](https://github.com/streamlink/streamlink/pull/5987))
+
+[Full changelog](https://github.com/streamlink/streamlink/compare/6.7.3...6.7.4)
+
+
 ## streamlink 6.7.3 (2024-04-14)
 
 Patch release:
