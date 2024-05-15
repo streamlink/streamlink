@@ -188,15 +188,20 @@ class HTTPSession(Session):
                     proxies=proxies,
                     **kwargs,
                 )
-                if res.status_code != 200:
-                    log.warning(
-                        f'HTTP request failed - Response code: {res.status_code}.\n Response headers: {res.headers}.\n Request headers: {res.request.headers}.')
                 if raise_for_status and res.status_code not in acceptable_status:
                     res.raise_for_status()
                 break
             except KeyboardInterrupt:
                 raise
             except Exception as rerr:
+                if hasattr(rerr, 'response'):
+                    log.warning(
+                        f'HTTP request failed - Response code: {rerr.response.status_code}.\n Response headers: {rerr.response.headers}.\n Request headers: {rerr.response.request.headers}.')
+
+                    # If the status code is 429, do not retry!
+                    if rerr.response.status_code == 429:
+                        raise rerr
+
                 if retries >= total_retries:
                     err = exception(f"Unable to open URL: {url} ({rerr})")
                     err.err = rerr
