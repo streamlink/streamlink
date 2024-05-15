@@ -194,11 +194,12 @@ class HTTPSession(Session):
             except KeyboardInterrupt:
                 raise
             except Exception as rerr:
-                log.warning(
-                    f'HTTP request failed to URL({rerr.response.request.url}) -\n Response code: {rerr.response.status_code}.\n Response headers: {rerr.response.headers}.\n Request headers: {rerr.response.request.headers}.')
+                if hasattr(rerr, 'response'):
+                    log.warning(
+                        f'HTTP request failed to URL({rerr.response.request.url}) -\n Response code: {rerr.response.status_code}.\n Response headers: {rerr.response.headers}.\n Request headers: {rerr.response.request.headers}.')
 
                 # If the status code is 429, do not retry!
-                if retries >= total_retries or rerr.response.status_code == 429:
+                if retries >= total_retries or (hasattr(rerr, 'response') and rerr.response.status_code == 429):
                     err = exception(f"Unable to open URL: {url} ({rerr})")
                     err.err = rerr
                     raise err from None  # TODO: fix this
