@@ -486,7 +486,7 @@ class HLSStreamWorker(SegmentedStreamWorker[HLSSegment, Response]):
 
                 log.debug(f"Adding segment {segment.num} to queue")
                 offset = segment.num - self.playlist_sequence
-                if offset > 0:
+                if offset > 0 and self.next_segment_num == 0:
                     log.warning(
                         (
                             f"Skipped segments {self.playlist_sequence}-{segment.num - 1} after playlist reload. "
@@ -534,8 +534,11 @@ class HLSStreamWorker(SegmentedStreamWorker[HLSSegment, Response]):
 
                 try:
                     self.reload_playlist()
-                except StreamError as err:
-                    log.warning(f"Failed to reload playlist: {err}")
+                except StreamError as error:
+                    # Do not retry if the response code is 429!
+                    if hasattr(error, 'err') and hasattr(error.err, 'response') and error.err.response.status_code == 429:
+                        return
+                    log.warning(f"Failed to reload playlist: {error}")
 
 
 class HLSStreamReader(FilteredStream, SegmentedStreamReader[HLSSegment, Response]):
