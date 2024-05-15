@@ -54,3 +54,6 @@ pip-selfcheck.json
 .coverage
 coverage.xml
 htmlcov
+
+# test files
+__test__*
