@@ -194,7 +194,7 @@ class HTTPSession(Session):
             except KeyboardInterrupt:
                 raise
             except Exception as rerr:
-                if hasattr(rerr, 'response'):
+                if hasattr(rerr, 'response') and hasattr(rerr, 'request'):
                     log.warning(
                         f'HTTP request failed to URL({rerr.response.request.url}) -\n Response code: {rerr.response.status_code}.\n Response headers: {rerr.response.headers}.\n Request headers: {rerr.response.request.headers}.')
 
