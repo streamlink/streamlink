@@ -195,7 +195,7 @@ class HTTPSession(Session):
                 raise
             except Exception as rerr:
                 log.warning(
-                    f'HTTP request failed - Response code: {rerr.response.status_code}.\n Response headers: {rerr.response.headers}.\n Request headers: {rerr.response.request.headers}.')
+                    f'HTTP request failed to URL({rerr.response.request.url}) -\n Response code: {rerr.response.status_code}.\n Response headers: {rerr.response.headers}.\n Request headers: {rerr.response.request.headers}.')
 
                 # If the status code is 429, do not retry!
                 if retries >= total_retries or rerr.response.status_code == 429:

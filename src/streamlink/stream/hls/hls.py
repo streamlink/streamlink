@@ -537,6 +537,7 @@ class HLSStreamWorker(SegmentedStreamWorker[HLSSegment, Response]):
                 except StreamError as error:
                     # Do not retry if the response code is 429!
                     if hasattr(error, 'err') and hasattr(error.err, 'response') and error.err.response.status_code == 429:
+                        self.reader.close()
                         return
                     log.warning(f"Failed to reload playlist: {error}")
 
@@ -698,7 +699,7 @@ class HLSStream(HTTPStream):
         return reader
 
     @classmethod
-    def _fetch_variant_playlist(cls, session, url: str, **request_args) -> Response:
+    def _fetch_variant_playlist(cls, session: Streamlink, url: str, **request_args) -> Response:
         m3u8_proxy = session.http.proxies.get("m3u8-proxy")
         res = session.http.get(
             # url=url.replace(f"/ip/{session.ip}/", f"/ip/{session.proxy_ip}/") if proxy else url,
