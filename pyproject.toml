@@ -178,7 +178,6 @@ extend-exclude = [
 ]
 
 [tool.ruff.lint]
-ignore-init-module-imports = true
 select = [
   # pycodestyle
   "E",
