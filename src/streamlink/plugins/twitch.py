@@ -800,9 +800,6 @@ class Twitch(Plugin):
         self.clip_name = None
         self._checked_metadata = False
 
-        self.session.http.headers.pop('Referer')
-        self.session.http.headers.pop('Origin')
-
         if self.subdomain == "player":
             # pop-out player
             if self.params.get("video"):

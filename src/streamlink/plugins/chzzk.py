@@ -99,9 +99,6 @@ class ChzzkAPI:
 
     def __init__(self, session):
         self._session = session
-        self._session.http.headers.update({"User-Agent": useragents.CHROME})
-        self._session.http.headers.pop('Referer')
-        self._session.http.headers.pop('Origin')
 
     def _query_api(self, url, *schemas):
         return self._session.http.get(

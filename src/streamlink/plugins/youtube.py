@@ -106,8 +106,6 @@ class YouTube(Plugin):
             self.url = urlunparse(parsed._replace(scheme="https"))
 
         self.session.http.headers.update({"User-Agent": useragents.CHROME})
-        self.session.http.headers.pop('Referer')
-        self.session.http.headers.pop('Origin')
 
     @classmethod
     def stream_weight(cls, stream):
