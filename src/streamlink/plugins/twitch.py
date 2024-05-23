@@ -791,21 +791,30 @@ class Twitch(Plugin):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        match = self.match.groupdict()
+        parsed = urlparse(self.url)
+        self.params = parse_qsd(parsed.query)
+        self.subdomain = match.get("subdomain")
+        self.video_id = None
+        self.channel = None
+        self.clip_name = None
+        self._checked_metadata = False
 
-        params = parse_qsd(urlparse(self.url).query)
+        self.session.http.headers.pop('Referer')
+        self.session.http.headers.pop('Origin')
 
-        self.channel = self.match["channel"] if self.matches["live"] else None
-        self.video_id = self.match["video_id"] if self.matches["vod"] else None
-        self.clip_id = self.match["clip_id"] if self.matches["clip"] else None
-
-        if self.matches["player"]:
-            self.channel = params.get("channel")
-            self.video_id = params.get("video")
-
-        try:
-            self.time_offset = hours_minutes_seconds_float(params.get("t", "0"))
-        except ValueError:
-            self.time_offset = 0
+        if self.subdomain == "player":
+            # pop-out player
+            if self.params.get("video"):
+                self.video_id = self.params["video"]
+            self.channel = self.params.get("channel")
+        elif self.subdomain == "clips":
+            # clip share URL
+            self.clip_name = match.get("channel")
+        else:
+            self.channel = match.get("channel") and match.get("channel").lower()
+            self.video_id = match.get("video_id") or match.get("videos_id")
+            self.clip_name = match.get("clip_name")
 
         self.api = TwitchAPI(
             session=self.session,
