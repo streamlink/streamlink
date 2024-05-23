@@ -10,7 +10,7 @@ import time
 
 from streamlink.exceptions import StreamError
 from streamlink.plugin import Plugin, pluginmatcher
-from streamlink.plugin.api import validate
+from streamlink.plugin.api import useragents, validate
 from streamlink.stream.dash import DASHStream
 from streamlink.stream.hls import HLSStream, HLSStreamReader, HLSStreamWorker, parse_m3u8
 
@@ -99,6 +99,7 @@ class ChzzkAPI:
 
     def __init__(self, session):
         self._session = session
+        self._session.http.headers.update({"User-Agent": useragents.CHROME})
 
     def _query_api(self, url, *schemas):
         return self._session.http.get(
