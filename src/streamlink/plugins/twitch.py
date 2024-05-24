@@ -987,8 +987,7 @@ class Twitch(Plugin):
         elif self.clip_id:
             return self._get_clips()
         elif self.channel:
-            if live_check_only and not self._checked_metadata:
-                self._checked_metadata = True
+            if live_check_only:
                 return self._get_metadata()
             return self._get_hls_streams_live()
 
