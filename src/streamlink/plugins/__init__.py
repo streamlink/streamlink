@@ -1,11 +1,28 @@
-"""
-    New plugins should use streamlink.plugin.Plugin instead
-    of this module, but this is kept here for backwards
-    compatibility.
-"""
+from streamlink.compat import deprecated
 
-from streamlink.exceptions import NoPluginError, NoStreamsError, PluginError
-from streamlink.plugin.plugin import Plugin
+
+deprecated({
+    "NoPluginError": (
+        "streamlink.exceptions.NoPluginError",
+        None,
+        "Importing from streamlink.plugins.NoPluginError has been deprecated",
+    ),
+    "NoStreamsError": (
+        "streamlink.exceptions.NoStreamsError",
+        None,
+        "Importing from streamlink.plugins.NoStreamsError has been deprecated",
+    ),
+    "PluginError": (
+        "streamlink.exceptions.PluginError",
+        None,
+        "Importing from streamlink.plugins.PluginError has been deprecated",
+    ),
+    "Plugin": (
+        "streamlink.plugin.plugin.Plugin",
+        None,
+        "Importing from streamlink.plugins.Plugin has been deprecated",
+    ),
+})
 
 
 __all__ = ["Plugin", "PluginError", "NoStreamsError", "NoPluginError"]

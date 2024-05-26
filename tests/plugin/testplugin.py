@@ -2,8 +2,7 @@ import re
 from io import BytesIO
 
 from streamlink import NoStreamsError
-from streamlink.plugin import pluginargument, pluginmatcher
-from streamlink.plugins import Plugin
+from streamlink.plugin import Plugin, pluginargument, pluginmatcher
 from streamlink.stream.hls import HLSStream
 from streamlink.stream.http import HTTPStream
 from streamlink.stream.stream import Stream
