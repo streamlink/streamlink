@@ -1,6 +1,19 @@
 Deprecations
 ============
 
+streamlink 6.8.0
+----------------
+
+streamlink.plugins re-exports
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Importing :class:`NoPluginError <streamlink.exceptions.NoPluginError>`,
+:class:`NoStreamsError <streamlink.exceptions.NoStreamsError>`, :class:`PluginError <streamlink.exceptions.PluginError>`,
+or :class:`Plugin <streamlink.plugin.plugin.Plugin>` from ``streamlink.plugins`` now emits
+a :exc:`StreamlinkDeprecationWarning`. These re-exports have already been deprecated for more than ten years
+and will finally be removed in the next major version. Import from the correct paths instead.
+
+
 streamlink 6.7.0
 ----------------
 
