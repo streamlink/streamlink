@@ -10,6 +10,7 @@ from typing import Any
 import requests.adapters
 import urllib3
 from requests import PreparedRequest, Request, Session
+from requests.exceptions import HTTPError
 from requests.adapters import HTTPAdapter
 
 import streamlink.session.http_useragents as useragents
@@ -194,12 +195,12 @@ class HTTPSession(Session):
             except KeyboardInterrupt:
                 raise
             except Exception as rerr:
-                if hasattr(rerr, 'response') and hasattr(rerr.response, 'request') and hasattr(rerr.response.request, 'url') and hasattr(rerr.response.request, 'headers') and hasattr(rerr.response, 'status_code') and hasattr(rerr.response, 'headers'):
+                if isinstance(rerr, HTTPError) and rerr.response.status_code >= 400:
                     log.warning(
-                        f'HTTP request failed to URL({rerr.response.request.url}) -\n Response code: {rerr.response.status_code}.\n Response headers: {rerr.response.headers}.\n Request headers: {rerr.response.request.headers}.')
+                        f'HTTP request to URL({rerr.response.request.url}) failed -\n Response code: {rerr.response.status_code}.\n Response headers: {rerr.response.headers}.\n Request headers: {rerr.response.request.headers}.')
 
                 # If the status code is 429, do not retry!
-                if retries >= total_retries or (hasattr(rerr, 'response') and hasattr(rerr.response, 'status_code') and rerr.response.status_code == 429):
+                if retries >= total_retries or (isinstance(rerr, HTTPError) and rerr.response.status_code == 429):
                     err = exception(f"Unable to open URL: {url} ({rerr})")
                     err.err = rerr
                     raise err from None  # TODO: fix this

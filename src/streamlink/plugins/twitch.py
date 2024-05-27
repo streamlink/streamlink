@@ -833,11 +833,13 @@ class Twitch(Plugin):
                 data = self.api.metadata_channel(self.channel)
             else:  # pragma: no cover
                 return
+
             self.id, self.author, self.category, self.title = data
             if isinstance(self.category, dict):
                 self.category = self.category.get("name")
             if self.id:
                 self.is_live = True
+
         except (PluginError, TypeError):
             pass
 
@@ -976,9 +978,8 @@ class Twitch(Plugin):
         elif self.clip_id:
             return self._get_clips()
         elif self.channel:
-            if live_check_only:
-                return self._get_metadata()
-            return self._get_hls_streams_live()
+            self._get_metadata()
+            return self._get_hls_streams_live() if not live_check_only and self.is_live else {}
 
 
 __plugin__ = Twitch
