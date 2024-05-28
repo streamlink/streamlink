@@ -195,6 +195,12 @@ Linux and BSD
       - .. code-block:: bash
 
             sudo zypper install streamlink
+    * - :octicon:`package-dependents` `Ubuntu`_
+      - Not recommended.
+
+        Ubuntu inherits the ``streamlink`` package from Debian, but doesn't maintain or update it.
+
+        See `Package availability`_.
     * - :octicon:`package-dependents` `Solus`_
       - .. code-block:: bash
 
@@ -215,6 +221,7 @@ Linux and BSD
 .. _Gentoo Linux: https://packages.gentoo.org/package/net-misc/streamlink
 .. _NixOS: https://github.com/NixOS/nixpkgs/tree/master/pkgs/applications/video/streamlink
 .. _openSUSE: https://build.opensuse.org/package/show/multimedia:apps/streamlink
+.. _Ubuntu: https://packages.ubuntu.com/noble/streamlink
 .. _Solus: https://github.com/getsolus/packages/tree/main/packages/s/streamlink
 .. _Void: https://github.com/void-linux/void-packages/tree/master/srcpkgs/streamlink
 
