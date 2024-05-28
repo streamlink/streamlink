@@ -16,6 +16,7 @@ import requests.cookies
 
 import streamlink.utils.args
 import streamlink.utils.times
+from streamlink.session.http import HTTPSession
 from streamlink.cache import Cache
 from streamlink.exceptions import FatalPluginError, NoStreamsError, PluginError
 from streamlink.options import Argument, Arguments, Options
@@ -388,6 +389,12 @@ class Plugin:
 
         try:
             ostreams = self._get_streams(live_check_only)
+
+            # Reset the http connection for the re-use to other platforms if live check only.
+            if live_check_only:
+                self.session.http.close()
+                self.session.http = HTTPSession()
+
             if isinstance(ostreams, dict):
                 ostreams = ostreams.items()
 
