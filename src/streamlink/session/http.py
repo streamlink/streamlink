@@ -195,9 +195,9 @@ class HTTPSession(Session):
             except KeyboardInterrupt:
                 raise
             except Exception as rerr:
-                if isinstance(rerr, HTTPError) and rerr.response.status_code >= 400:
+                if isinstance(rerr, HTTPError) and rerr.response.status_code >= 400 and rerr.response.status_code != 404:
                     log.warning(
-                        f'HTTP request to URL({rerr.response.request.url}) failed -\n Response code: {rerr.response.status_code}.\n Response headers: {rerr.response.headers}.\n Request headers: {rerr.response.request.headers}.')
+                        f'HTTP request to URL({rerr.response.request.url}) failed.\nResponse code: {rerr.response.status_code}\nResponse headers: {rerr.response.headers}\nRequest headers: {rerr.response.request.headers}')
 
                 # If the status code is 429, do not retry!
                 if retries >= total_retries or (isinstance(rerr, HTTPError) and rerr.response.status_code == 429):
