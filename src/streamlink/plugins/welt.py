@@ -27,7 +27,7 @@ class Welt(Plugin):
             validate.xml_xpath_string("""
                 .//script
                 [@type='application/json']
-                [starts-with(@data-ref,'WeltVideoPlayer-') or @data-content='VideoPlayer.Config']
+                [starts-with(@data-internal-ref,'WeltVideoPlayer-') or @data-content='VideoPlayer.Config']
                 /text()
             """),
             validate.none_or_all(
