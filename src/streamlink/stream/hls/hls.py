@@ -465,6 +465,8 @@ class HLSStreamWorker(SegmentedStreamWorker[HLSSegment, Response]):
             else:
                 log.warning("First segment timestamp is not calculated!")
 
+            self.stream.segment_duration = self.playlist_segments[0].duration
+
             log.debug("; ".join([
                 f"First Sequence: {self.playlist_segments[0].num}",
                 f"First Sequence Timestamp: {self.stream.first_segment_timestamp}",
@@ -662,6 +664,7 @@ class HLSStream(HTTPStream):
         self.start_offset = start_offset
         self.duration = duration
         self.first_segment_timestamp: Optional[int] = None
+        self.segment_duration: Optional[float] = None
 
     def __json__(self):  # noqa: PLW3201
         json = super().__json__()
