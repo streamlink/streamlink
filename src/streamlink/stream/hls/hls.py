@@ -10,7 +10,7 @@ from typing import Any, ClassVar, Optional
 from urllib.parse import urlparse
 
 from requests import Response
-from requests.exceptions import ChunkedEncodingError, ConnectionError, ContentDecodingError, InvalidSchema  # noqa: A004
+from requests.exceptions import ChunkedEncodingError, ConnectionError, ContentDecodingError, InvalidSchema, HTTPError
 
 from streamlink.buffers import RingBuffer
 from streamlink.exceptions import StreamError
@@ -538,7 +538,7 @@ class HLSStreamWorker(SegmentedStreamWorker[HLSSegment, Response]):
                     self.reload_playlist()
                 except StreamError as error:
                     # Do not retry if the response code is 429!
-                    if hasattr(error, 'err') and hasattr(error.err, 'response') and hasattr(error.err.response, 'status_code') and error.err.response.status_code == 429:
+                    if hasattr(error, 'err') and isinstance(error.err, HTTPError) and error.err.response.status_code == 429:
                         self.reader.close()
                         return
                     log.warning(f"Failed to reload playlist: {error}")
