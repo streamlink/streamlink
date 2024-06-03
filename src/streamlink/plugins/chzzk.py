@@ -66,7 +66,7 @@ class ChzzkHLSStream(HLSStream):
     def _get_media_uri(self, media_path):
         res = self._fetch_variant_playlist(self.session, media_path)
         m3u8 = parse_m3u8(res)
-        return m3u8.media[0].uri
+        return m3u8.playlists[0].uri
 
     def _get_token_from(self, path):
         return path.split("/")[-2]
