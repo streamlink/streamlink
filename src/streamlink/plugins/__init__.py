@@ -25,4 +25,4 @@ deprecated({
 })
 
 
-__all__ = ["Plugin", "PluginError", "NoStreamsError", "NoPluginError"]
+__all__ = ["Plugin", "PluginError", "NoStreamsError", "NoPluginError"]  # noqa: F822
