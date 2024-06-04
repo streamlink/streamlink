@@ -33,18 +33,23 @@ class Kick(Plugin):
     _URL_API_VOD = "https://kick.com/api/v1/video/{vod}"
     _URL_API_CLIP = "https://kick.com/api/v2/clips/{clip}"
 
-    def _get_token(self):
-        res = self.session.http.get(self._URL_TOKEN, raise_for_status=False)
-        return res.cookies.get("XSRF-TOKEN", "")
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._token = ""
 
     def _get_api_headers(self):
-        token = self._get_token()
+        accept_language = self.session.localization.language_code.replace("_", "-")
+        self.session.http.headers.update({"Accept-Language": accept_language})
+
+        self._token = (
+            self._token
+            or self.session.http.get(self._URL_TOKEN, raise_for_status=False).cookies.get("XSRF-TOKEN", "")
+        )
 
         return {
             "Accept": "application/json",
-            "Accept-Language": "en-US",
             "Referer": self.url,
-            "Authorization": f"Bearer {token}",
+            "Authorization": f"Bearer {self._token}",
         }
 
     def _get_streams_live(self):
