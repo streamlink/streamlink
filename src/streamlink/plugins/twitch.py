@@ -71,15 +71,6 @@ class TwitchM3U8Parser(M3U8Parser[TwitchM3U8, TwitchHLSSegment, HLSPlaylist]):
     __m3u8__: ClassVar[Type[TwitchM3U8]] = TwitchM3U8
     __segment__: ClassVar[Type[TwitchHLSSegment]] = TwitchHLSSegment
 
-    def __init__(self, *args, **kwargs) -> None:
-        super().__init__(*args, **kwargs)
-        self._twitch_live_sequence: Optional[int] = None
-
-    # additional metadata available on prefetch segments, indicating live content
-    @parse_tag("EXT-X-TWITCH-LIVE-SEQUENCE")
-    def parse_ext_x_twitch_live_sequence(self, value):
-        self._twitch_live_sequence = int(value)
-
     @parse_tag("EXT-X-TWITCH-PREFETCH")
     def parse_tag_ext_x_twitch_prefetch(self, value):
         segments = self.m3u8.segments
@@ -93,22 +84,18 @@ class TwitchM3U8Parser(M3U8Parser[TwitchM3U8, TwitchHLSSegment, HLSPlaylist]):
         # Use the last duration for extrapolating the start time of the prefetch segment, which is needed for checking
         # whether it is an ad segment and matches the parsed date ranges or not
         date = last.date + timedelta(seconds=last.duration)
-        ad = self._is_segment_ad(date)
+        # Always treat prefetch segments after a discontinuity as ad segments
+        ad = self._discontinuity or self._is_segment_ad(date)
         segment = dataclass_replace(
             last,
             uri=self.uri(value),
             duration=duration,
             title=None,
-            discontinuity=self._discontinuity and self._twitch_live_sequence is None,
             date=date,
             ad=ad,
             prefetch=True,
         )
         segments.append(segment)
-
-        # Reset state
-        self._discontinuity = False
-        self._twitch_live_sequence = None
 
     @parse_tag("EXT-X-DATERANGE")
     def parse_tag_ext_x_daterange(self, value):
@@ -120,18 +107,6 @@ class TwitchM3U8Parser(M3U8Parser[TwitchM3U8, TwitchHLSSegment, HLSPlaylist]):
     def get_segment(self, uri: str, **data) -> TwitchHLSSegment:
         ad = self._is_segment_ad(self._date, self._extinf.title if self._extinf else None)
         segment: TwitchHLSSegment = super().get_segment(uri, ad=ad, prefetch=False)  # type: ignore[assignment]
-
-        # Special case where Twitch incorrectly inserts discontinuity tags between segments of the live content
-        if (
-            segment.discontinuity
-            and not segment.ad
-            and self.m3u8.segments
-            and not self.m3u8.segments[-1].ad
-        ):
-            segment.discontinuity = False
-
-        # Reset state
-        self._twitch_live_sequence = None
 
         return segment
 
