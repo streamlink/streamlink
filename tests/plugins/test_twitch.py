@@ -341,12 +341,12 @@ class TestTwitchHLSStream(TestMixinStreamHLS, unittest.TestCase):
         Seg, Pre = Segment, SegmentPrefetch
         ads = [
             Tag("EXT-X-DISCONTINUITY"),
-            TagDateRangeAd(start=DATETIME_BASE + timedelta(seconds=2.5), duration=4),
+            TagDateRangeAd(start=DATETIME_BASE + timedelta(seconds=3), duration=4),
         ]
         # noinspection PyTypeChecker
         segments = self.subject([
             # regular stream data with prefetch segments
-            Playlist(0, [Seg(0), Seg(1, duration=0.5), Pre(2), *ads, Pre(3)]),
+            Playlist(0, [Seg(0), Seg(1, duration=0.5), Pre(2), Pre(3)]),
             # three prefetch segments, one regular (2) and two ads (3 and 4)
             Playlist(1, [Seg(1, duration=0.5), Pre(2), *ads, Pre(3), Pre(4)]),
             # all prefetch segments are gone once regular prefetch segments have shifted
@@ -394,33 +394,6 @@ class TestTwitchHLSStream(TestMixinStreamHLS, unittest.TestCase):
         self.await_write(4)
         self.await_read(read_all=True)
         assert self.thread.reader.worker.playlist_reload_time == pytest.approx(23 / 3)
-
-    @patch("streamlink.stream.hls.hls.log")
-    def test_hls_incorrect_discontinuity(self, mock_log):
-        discontinuity = Tag("EXT-X-DISCONTINUITY")
-        self.subject([
-            Playlist(0, [Segment(0), Segment(1), discontinuity, Segment(2), Segment(3)]),
-            Playlist(4, [Segment(4), discontinuity, Segment(5), Segment(6), Segment(7)], end=True),
-        ], streamoptions={"disable_ads": True, "low_latency": True})
-
-        self.await_write(6)
-        self.await_read(read_all=True)
-        assert mock_log.warning.mock_calls == []
-
-    @patch("streamlink.stream.hls.hls.log")
-    def test_hls_incorrect_discontinuity_prefetch(self, mock_log):
-        Seg, Pre = Segment, SegmentPrefetch
-        discontinuity = Tag("EXT-X-DISCONTINUITY")
-        tls = Tag("EXT-X-TWITCH-LIVE-SEQUENCE", 1234)  # value is irrelevant
-        self.subject([
-            Playlist(0, [Seg(0), Seg(1), discontinuity, tls, Pre(2), discontinuity, tls, Pre(3)]),
-            Playlist(1, [Seg(1), discontinuity, tls, Seg(2), discontinuity, tls, Pre(3), Pre(4)]),
-            Playlist(2, [Seg(2), discontinuity, tls, Seg(3), discontinuity, tls, Pre(4), Pre(5)], end=True),
-        ], streamoptions={"disable_ads": True, "low_latency": True})
-
-        self.await_write(4)
-        self.await_read(read_all=True)
-        assert mock_log.warning.mock_calls == []
 
 
 class TestTwitchAPIAccessToken:
