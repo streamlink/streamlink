@@ -1,7 +1,7 @@
 import os
 import sys
 from functools import partial
-from typing import Dict, List, Tuple
+from typing import Any, Callable, Dict, List, Tuple, Union
 
 import pytest
 import requests_mock as rm
@@ -9,9 +9,13 @@ import requests_mock as rm
 from streamlink.session import Streamlink
 
 
-_TEST_CONDITION_MARKERS: Dict[str, Tuple[bool, str]] = {
+_TEST_CONDITION_MARKERS: Dict[str, Union[Tuple[bool, str], Callable[[Any], Tuple[bool, str]]]] = {
     "posix_only": (os.name == "posix", "only applicable on a POSIX OS"),
     "windows_only": (os.name == "nt", "only applicable on Windows"),
+    "python": lambda *ver, **_: (
+        sys.version_info >= ver,
+        f"only applicable on Python {'.'.join(str(v) for v in ver)} and above",
+    ),
 }
 
 _TEST_PRIORITIES = (
@@ -30,6 +34,7 @@ _TEST_PRIORITIES = (
 def pytest_configure(config: pytest.Config):
     config.addinivalue_line("markers", "posix_only: tests which are only applicable on a POSIX OS")
     config.addinivalue_line("markers", "windows_only: tests which are only applicable on Windows")
+    config.addinivalue_line("markers", "python(version): tests which are only applicable on specific Python versions")
     config.addinivalue_line("markers", "nomockedhttprequest: tests where no mocked HTTP request will be made")
 
 
@@ -57,9 +62,15 @@ def _check_test_condition(item: pytest.Item):  # pragma: no cover
     for m in item.iter_markers():
         if m.name not in _TEST_CONDITION_MARKERS:
             continue
-        cond, msg = _TEST_CONDITION_MARKERS[m.name]
+        data = _TEST_CONDITION_MARKERS[m.name]
+        kwargs = dict(m.kwargs)
+        reason = kwargs.pop("reason", None)
+        if callable(data):
+            cond, msg = data(*m.args, **kwargs)
+        else:
+            cond, msg = data
         if not cond:
-            pytest.skip(msg if not m.args and not m.kwargs else f"{msg} ({m.kwargs.get('reason') or m.args[0]})")
+            pytest.skip(msg if not reason else f"{msg} ({reason})")
 
 
 # ========================
