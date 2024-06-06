@@ -1,3 +1,4 @@
+from ssl import SSLContext
 from typing import Optional
 from unittest.mock import Mock, PropertyMock, call
 
@@ -6,7 +7,7 @@ import requests
 
 from streamlink.exceptions import PluginError, StreamlinkDeprecationWarning
 from streamlink.plugin.api.useragents import FIREFOX
-from streamlink.session.http import HTTPSession
+from streamlink.session.http import HTTPSession, SSLContextAdapter, TLSNoDHAdapter, TLSSecLevel1Adapter
 
 
 class TestUrllib3Overrides:
@@ -92,3 +93,35 @@ class TestHTTPSession:
         res.encoding = override
 
         assert HTTPSession.json(res) == {"test": "Α and Ω"}  # noqa: RUF001
+
+
+@pytest.mark.python(3, 10, reason="py<310 includes weak ciphers by default")
+class TestHTTPAdapters:
+    @staticmethod
+    def _has_dh_ciphers(ssl_context: SSLContext):
+        return any(cipher["kea"] == "kx-dhe" for cipher in ssl_context.get_ciphers())
+
+    @staticmethod
+    def _has_weak_digest_ciphers(ssl_context: SSLContext):
+        return any(cipher["digest"] == "sha1" for cipher in ssl_context.get_ciphers())
+
+    def test_sslcontextadapter(self):
+        adapter = SSLContextAdapter()
+        ssl_context = adapter.poolmanager.connection_pool_kw.get("ssl_context")
+        assert isinstance(ssl_context, SSLContext)
+        assert self._has_dh_ciphers(ssl_context)
+        assert not self._has_weak_digest_ciphers(ssl_context)
+
+    def test_tlsnodhadapter(self):
+        adapter = TLSNoDHAdapter()
+        ssl_context = adapter.poolmanager.connection_pool_kw.get("ssl_context")
+        assert isinstance(ssl_context, SSLContext)
+        assert not self._has_dh_ciphers(ssl_context)
+        assert not self._has_weak_digest_ciphers(ssl_context)
+
+    def test_tlsseclevel1adapter(self):
+        adapter = TLSSecLevel1Adapter()
+        ssl_context = adapter.poolmanager.connection_pool_kw.get("ssl_context")
+        assert isinstance(ssl_context, SSLContext)
+        assert self._has_dh_ciphers(ssl_context)
+        assert self._has_weak_digest_ciphers(ssl_context)
