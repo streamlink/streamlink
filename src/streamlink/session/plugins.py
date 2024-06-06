@@ -179,8 +179,10 @@ class StreamlinkPlugins:
             if lookup is None:
                 continue
             mod, plugin = lookup
-            if name in self._plugins or name in self._matchers:
-                log.info(f"Plugin {name} is being overridden by {mod.__file__}")
+            if (name in self._plugins or name in self._matchers) and mod.__file__:
+                with open(mod.__file__, "rb") as fh:
+                    sha256 = hashlib.sha256(fh.read())
+                log.info(f"Plugin {name} is being overridden by {mod.__file__} (sha256:{sha256.hexdigest()})")
             plugins[name] = plugin
 
         return plugins
