@@ -1,3 +1,4 @@
+import ssl
 from collections.abc import Callable, Iterable, Mapping, MutableMapping, Sequence
 from typing import Any, Union
 
@@ -68,10 +69,13 @@ _Exception: TypeAlias = type[Exception]
 
 # ----
 
-class TLSNoDHAdapter(HTTPAdapter):
+class SSLContextAdapter(HTTPAdapter):
+    def get_ssl_context(self) -> ssl.SSLContext: ...
+
+class TLSNoDHAdapter(SSLContextAdapter):
     ...
 
-class TLSSecLevel1Adapter(HTTPAdapter):
+class TLSSecLevel1Adapter(SSLContextAdapter):
     ...
 
 class HTTPSession(Session):

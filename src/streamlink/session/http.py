@@ -1,4 +1,5 @@
 import re
+import ssl
 import time
 import warnings
 from typing import Any, Dict, Pattern, Tuple
@@ -200,24 +201,35 @@ class HTTPSession(Session):
         return res
 
 
-class TLSNoDHAdapter(HTTPAdapter):
-    def init_poolmanager(self, *args, **kwargs):
+class SSLContextAdapter(HTTPAdapter):
+    # noinspection PyMethodMayBeStatic
+    def get_ssl_context(self) -> ssl.SSLContext:
         ctx = create_urllib3_context()
         ctx.load_default_certs()
-        ciphers = ":".join(cipher.get("name") for cipher in ctx.get_ciphers())
+
+        return ctx
+
+    def init_poolmanager(self, *args, **kwargs):
+        kwargs["ssl_context"] = self.get_ssl_context()
+        return super().init_poolmanager(*args, **kwargs)
+
+
+class TLSNoDHAdapter(SSLContextAdapter):
+    def get_ssl_context(self) -> ssl.SSLContext:
+        ctx = super().get_ssl_context()
+        ciphers = ":".join(cipher["name"] for cipher in ctx.get_ciphers())
         ciphers += ":!DH"
         ctx.set_ciphers(ciphers)
-        kwargs["ssl_context"] = ctx
-        return super().init_poolmanager(*args, **kwargs)
+
+        return ctx
 
 
-class TLSSecLevel1Adapter(HTTPAdapter):
-    def init_poolmanager(self, *args, **kwargs):
-        ctx = create_urllib3_context()
-        ctx.load_default_certs()
+class TLSSecLevel1Adapter(SSLContextAdapter):
+    def get_ssl_context(self) -> ssl.SSLContext:
+        ctx = super().get_ssl_context()
         ctx.set_ciphers("DEFAULT:@SECLEVEL=1")
-        kwargs["ssl_context"] = ctx
-        return super().init_poolmanager(*args, **kwargs)
+
+        return ctx
 
 
-__all__ = ["HTTPSession", "TLSNoDHAdapter", "TLSSecLevel1Adapter"]
+__all__ = ["HTTPSession", "SSLContextAdapter", "TLSNoDHAdapter", "TLSSecLevel1Adapter"]
