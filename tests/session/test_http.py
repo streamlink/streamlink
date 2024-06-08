@@ -125,3 +125,11 @@ class TestHTTPAdapters:
         assert isinstance(ssl_context, SSLContext)
         assert self._has_dh_ciphers(ssl_context)
         assert self._has_weak_digest_ciphers(ssl_context)
+
+    @pytest.mark.parametrize("proxy", ["http", "socks4", "socks5"])
+    def test_proxymanager_ssl_context(self, proxy: str):
+        adapter = SSLContextAdapter()
+        proxymanager = adapter.proxy_manager_for(f"{proxy}://")
+        ssl_context_poolmanager = adapter.poolmanager.connection_pool_kw.get("ssl_context")
+        ssl_context_proxymanager = proxymanager.connection_pool_kw.get("ssl_context")
+        assert ssl_context_poolmanager is ssl_context_proxymanager

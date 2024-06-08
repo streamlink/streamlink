@@ -213,6 +213,10 @@ class SSLContextAdapter(HTTPAdapter):
         kwargs["ssl_context"] = self.get_ssl_context()
         return super().init_poolmanager(*args, **kwargs)
 
+    def proxy_manager_for(self, *args, **kwargs):
+        kwargs["ssl_context"] = self.poolmanager.connection_pool_kw["ssl_context"]
+        return super().proxy_manager_for(*args, **kwargs)
+
 
 class TLSNoDHAdapter(SSLContextAdapter):
     def get_ssl_context(self) -> ssl.SSLContext:
