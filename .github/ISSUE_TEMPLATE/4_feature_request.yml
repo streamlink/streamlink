@@ -33,6 +33,14 @@ body:
           required: true
         - label: "[I have checked the list of open and recently closed feature requests](https://github.com/streamlink/streamlink/issues?q=is%3Aissue+label%3A%22feature+request%22)"
           required: true
+  - type: checkboxes
+    attributes:
+      label: Collaboration
+      options:
+        - label: My request is genuine and in the best interest of the project
+          required: true
+        - label: "[I will provide feedback should a pull request be opened with a new feature implementation](https://github.com/streamlink/streamlink/blob/master/CONTRIBUTING.md#pull-request-feedback)"
+          required: true
   - type: textarea
     attributes:
       label: Description
@@ -55,8 +63,6 @@ body:
         Make sure that you have
         - [ ] properly filled in the title of this feature request (at the very top of this page)
         - [ ] checked the rendered text previews to avoid unnecessary formatting errors
-
-        Please [don't forget to provide feedback](https://github.com/streamlink/streamlink/blob/master/CONTRIBUTING.md#pull-request-feedback) once a pull request gets submitted for adding the new feature.
 
         ----
 
