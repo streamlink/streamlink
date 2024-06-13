@@ -72,14 +72,17 @@ class Bilibili(Plugin):
                 {
                     "code": 0,
                     "data": {
-                        "playurl_info": {
-                            "playurl": {
-                                "stream": self._schema_streams(),
+                        "playurl_info": validate.none_or_all(
+                            {
+                                "playurl": {
+                                    "stream": self._schema_streams(),
+                                },
                             },
-                        },
+                            validate.get(("playurl", "stream")),
+                        ),
                     },
                 },
-                validate.get(("data", "playurl_info", "playurl", "stream")),
+                validate.get(("data", "playurl_info")),
             ),
         )
 
@@ -96,11 +99,14 @@ class Bilibili(Plugin):
                         "roomInitRes": {
                             "data": {
                                 "live_status": int,
-                                "playurl_info": {
-                                    "playurl": {
-                                        "stream": self._schema_streams(),
+                                "playurl_info": validate.none_or_all(
+                                    {
+                                        "playurl": {
+                                            "stream": self._schema_streams(),
+                                        },
                                     },
-                                },
+                                    validate.get(("playurl", "stream")),
+                                ),
                             },
                         },
                         "roomInfoRes": {
@@ -124,7 +130,7 @@ class Bilibili(Plugin):
                         ("roomInfoRes", "data", "room_info", "area_name"),
                         ("roomInfoRes", "data", "room_info", "title"),
                         ("roomInitRes", "data", "live_status"),
-                        ("roomInitRes", "data", "playurl_info", "playurl", "stream"),
+                        ("roomInitRes", "data", "playurl_info"),
                     ),
                 ),
             ),
