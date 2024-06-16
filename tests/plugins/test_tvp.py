@@ -9,13 +9,13 @@ class TestPluginCanHandleUrlTVP(PluginCanHandleUrl):
         # live
         (("default", "https://stream.tvp.pl"), {}),
         (("default", "https://stream.tvp.pl/"), {}),
-        (("default", "https://stream.tvp.pl/?channel_id=63759349"), {"channel_id": "63759349"}),
-        (("default", "https://stream.tvp.pl/?channel_id=14812849"), {"channel_id": "14812849"}),
+        (("default", "https://stream.tvp.pl/?channel_id=1455"), {"channel_id": "1455"}),  # TVP info
+        (("default", "https://stream.tvp.pl/?channel_id=51656487"), {"channel_id": "51656487"}),  # TVP world
         # old live URLs
         (("default", "https://tvpstream.vod.tvp.pl"), {}),
         (("default", "https://tvpstream.vod.tvp.pl/"), {}),
-        (("default", "https://tvpstream.vod.tvp.pl/?channel_id=63759349"), {"channel_id": "63759349"}),
-        (("default", "https://tvpstream.vod.tvp.pl/?channel_id=14812849"), {"channel_id": "14812849"}),
+        (("default", "https://tvpstream.vod.tvp.pl/?channel_id=1455"), {"channel_id": "1455"}),
+        (("default", "https://tvpstream.vod.tvp.pl/?channel_id=51656487"), {"channel_id": "51656487"}),
 
         # VOD
         (
@@ -24,13 +24,15 @@ class TestPluginCanHandleUrlTVP(PluginCanHandleUrl):
         ),
         # VOD episode
         (
-            ("vod", "https://vod.tvp.pl/programy,88/z-davidem-attenborough-dokola-swiata-odcinki,284703/odcinek-2,S01E02,319220"),
-            {"vod_id": "319220"},
+            ("vod", "https://vod.tvp.pl/programy,88/eurowizja-odcinki,276170/odcinek-4,S05E04,1302944"),
+            {"vod_id": "1302944"},
         ),
 
         # tvp.info
-        (("tvp_info", "https://www.tvp.info/72577058/28092023-0823"), {}),
-        (("tvp_info", "https://www.tvp.info/73805503/przygotowania-do-uroczystosci-wszystkich-swietych"), {}),
+        (
+            ("tvp_info", "https://www.tvp.info/78213165/euro-2024-polska-holandia-12-bartosz-salamon-czuje-sie-winny-za-te-porazke-wideo"),
+            {},
+        ),
     ]
 
     should_not_match = [

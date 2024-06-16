@@ -7,19 +7,19 @@ $url tvp.info
 $type live, vod
 $metadata id
 $metadata title
-$notes Some VODs may be geo-restricted. Authentication is not supported.
+$region Poland
+$notes Some live streams and VODs may be geo-restricted. Authentication is not supported.
 """
 
 import logging
 import re
 from typing import List, Optional, Tuple
-from urllib.parse import urlparse
 
+from streamlink.exceptions import NoStreamsError
 from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.api import validate
 from streamlink.stream.dash import DASHStream
 from streamlink.stream.hls import HLSStream
-from streamlink.stream.http import HTTPStream
 
 
 log = logging.getLogger(__name__)
@@ -35,10 +35,41 @@ log = logging.getLogger(__name__)
     r"https?://(?:www\.)?tvp\.info/",
 ))
 class TVP(Plugin):
-    _URL_PLAYER = "https://stream.tvp.pl/sess/TVPlayer2/embed.php"
     _URL_VOD = "https://vod.tvp.pl/api/products/{vod_id}/videos/playlist"
     _URL_INFO_API_TOKEN = "https://api.tvp.pl/tokenizer/token/{token}"
     _URL_INFO_API_NEWS = "https://www.tvp.info/api/info/news?device=www&id={id}"
+
+    def _get_formats_from_api(self, token):
+        is_geo_blocked, self.title, formats = self.session.http.get(
+            self._URL_INFO_API_TOKEN.format(token=token),
+            schema=validate.Schema(
+                validate.parse_json(),
+                {
+                    "status": "OK",
+                    "isGeoBlocked": bool,
+                    "title": str,
+                    "formats": [
+                        validate.all(
+                            {
+                                "mimeType": str,
+                                "url": validate.url(),
+                            },
+                            validate.union_get("mimeType", "url"),
+                        ),
+                    ],
+                },
+                validate.union_get("isGeoBlocked", "title", "formats"),
+            ),
+        )
+        if is_geo_blocked:
+            log.error("The content is not available in your region")
+            raise NoStreamsError
+
+        for mime_type, url in formats:
+            if mime_type == "application/x-mpegurl":
+                yield from HLSStream.parse_variant_playlist(self.session, url).items()
+            if mime_type == "application/dash+xml":
+                yield from DASHStream.parse_manifest(self.session, url).items()
 
     def _get_video_id(self, channel_id: Optional[str]):
         items: List[Tuple[int, int]] = self.session.http.get(
@@ -80,67 +111,13 @@ class TVP(Plugin):
         return items[0][1] if items else None
 
     def _get_live(self, channel_id: Optional[str]):
-        video_id = self._get_video_id(channel_id)
-        if not video_id:
+        self.id = self._get_video_id(channel_id)
+        if not self.id:
             log.error("Could not find video ID")
             return
 
-        log.debug(f"video ID: {video_id}")
-
-        streams: Optional[List[Tuple[str, str]]] = self.session.http.get(
-            self._URL_PLAYER,
-            params={
-                "ID": video_id,
-                "autoPlay": "without_audio",
-            },
-            headers={
-                "Referer": self.url,
-            },
-            schema=validate.Schema(
-                validate.regex(re.compile(r"window\.__api__\s*=\s*(?P<json>\{.+?})\s*;", re.DOTALL)),
-                validate.get("json"),
-                validate.parse_json(),
-                {
-                    "result": validate.none_or_all(
-                        {
-                            "content": {
-                                "files": [
-                                    validate.all(
-                                        {
-                                            "type": str,
-                                            "url": validate.url(),
-                                        },
-                                        validate.union_get("type", "url"),
-                                    ),
-                                ],
-                            },
-                        },
-                        validate.get(("content", "files")),
-                    ),
-                },
-                validate.get("result"),
-            ),
-        )
-        if not streams:
-            return
-
-        def get(items, condition):
-            return next((_url for _stype, _url in items if condition(_stype, urlparse(_url).path)), None)
-
-        # prioritize HLSStream and get the first available stream
-        url = get(streams, lambda t, _: t == "hls")
-        if url:
-            return HLSStream.parse_variant_playlist(self.session, url)
-
-        # fall back to DASHStream
-        url = get(streams, lambda t, p: t == "any_native" and p.endswith(".mpd"))
-        if url:
-            return DASHStream.parse_manifest(self.session, url)
-
-        # fall back to HTTPStream
-        url = get(streams, lambda t, p: t == "any_native" and p.endswith(".mp4"))
-        if url:
-            return {"vod": HTTPStream(self.session, url)}
+        log.debug(f"video ID: {self.id}")
+        yield from self._get_formats_from_api(self.id)
 
     def _get_vod(self, vod_id):
         data = self.session.http.get(
@@ -216,29 +193,7 @@ class TVP(Plugin):
                 ),
             )
 
-        data = self.session.http.get(
-            self._URL_INFO_API_TOKEN.format(token=self.id),
-            schema=validate.Schema(
-                validate.parse_json(),
-                {
-                    "status": "OK",
-                    "isGeoBlocked": bool,
-                    "formats": [{
-                        "mimeType": str,
-                        "url": validate.url(),
-                    }],
-                },
-            ),
-        )
-        log.debug(f"data={data}")
-
-        if data.get("isGeoBlocked"):
-            log.error("The content is not available in your region")
-            return
-
-        for formatitem in data.get("formats"):
-            if formatitem.get("mimeType") == "application/x-mpegurl":
-                return HLSStream.parse_variant_playlist(self.session, formatitem.get("url"))
+        yield from self._get_formats_from_api(self.id)
 
     def _get_streams(self):
         if self.matches["tvp_info"]:
