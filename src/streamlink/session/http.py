@@ -207,6 +207,11 @@ class SSLContextAdapter(HTTPAdapter):
         ctx = create_urllib3_context()
         ctx.load_default_certs()
 
+        # disable weak digest ciphers by default
+        ciphers = ":".join(cipher["name"] for cipher in ctx.get_ciphers())
+        ciphers += ":!SHA1"
+        ctx.set_ciphers(ciphers)
+
         return ctx
 
     def init_poolmanager(self, *args, **kwargs):
@@ -221,6 +226,8 @@ class SSLContextAdapter(HTTPAdapter):
 class TLSNoDHAdapter(SSLContextAdapter):
     def get_ssl_context(self) -> ssl.SSLContext:
         ctx = super().get_ssl_context()
+
+        # disable DH ciphers
         ciphers = ":".join(cipher["name"] for cipher in ctx.get_ciphers())
         ciphers += ":!DH"
         ctx.set_ciphers(ciphers)
@@ -231,6 +238,8 @@ class TLSNoDHAdapter(SSLContextAdapter):
 class TLSSecLevel1Adapter(SSLContextAdapter):
     def get_ssl_context(self) -> ssl.SSLContext:
         ctx = super().get_ssl_context()
+
+        # https://www.openssl.org/docs/manmaster/man3/SSL_CTX_set_security_level.html
         ctx.set_ciphers("DEFAULT:@SECLEVEL=1")
 
         return ctx
