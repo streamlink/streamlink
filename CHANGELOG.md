@@ -1,5 +1,24 @@
 # Changelog
 
+## streamlink 6.8.0 (2024-06-17)
+
+Release highlights:
+
+- Added: sha256 checksum to log message when side-loading plugins ([#6023](https://github.com/streamlink/streamlink/pull/6023))
+- Added: `SSLContextAdapter` to `streamlink.session.http` ([#6024](https://github.com/streamlink/streamlink/pull/6024))
+- Deprecated: [old re-exports in `streamlink.plugins` package](https://streamlink.github.io/deprecations.html#streamlink-plugins-re-exports) ([#6005](https://github.com/streamlink/streamlink/pull/6005))
+- Updated plugins:
+  - bilibili: fixed validation schema for offline channels ([#6032](https://github.com/streamlink/streamlink/pull/6032))
+  - chzzk: fixed channels without content ([#6002](https://github.com/streamlink/streamlink/pull/6002))
+  - cnbce: new plugin ([#6029](https://github.com/streamlink/streamlink/pull/6029))
+  - kick: new plugin ([#6012](https://github.com/streamlink/streamlink/pull/6012), [#6021](https://github.com/streamlink/streamlink/pull/6021), [#6024](https://github.com/streamlink/streamlink/pull/6024))
+  - tf1: added authentication via `--tf1-email` and `--tf1-password` ([#5983](https://github.com/streamlink/streamlink/pull/5983))
+  - tvp: fixed live streams ([#6037](https://github.com/streamlink/streamlink/pull/6037))
+  - welt: fixed live streams ([#6011](https://github.com/streamlink/streamlink/pull/6011))
+
+[Full changelog](https://github.com/streamlink/streamlink/compare/6.7.4...6.8.0)
+
+
 ## streamlink 6.7.4 (2024-05-12)
 
 Patch release:
