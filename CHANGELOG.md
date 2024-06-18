@@ -1,5 +1,14 @@
 # Changelog
 
+## streamlink 6.8.1 (2024-06-18)
+
+Patch release:
+
+- Fixed: failed HTTPAdapter tests on some OpenSSL configurations ([#6040](https://github.com/streamlink/streamlink/pull/6040), [#6042](https://github.com/streamlink/streamlink/pull/6042))
+
+[Full changelog](https://github.com/streamlink/streamlink/compare/6.8.0...6.8.1)
+
+
 ## streamlink 6.8.0 (2024-06-17)
 
 Release highlights:
