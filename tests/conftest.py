@@ -12,7 +12,7 @@ from streamlink.session import Streamlink
 _TEST_CONDITION_MARKERS: Dict[str, Union[Tuple[bool, str], Callable[[Any], Tuple[bool, str]]]] = {
     "posix_only": (os.name == "posix", "only applicable on a POSIX OS"),
     "windows_only": (os.name == "nt", "only applicable on Windows"),
-    "python": lambda *ver, **_: (
+    "python": lambda *ver, **_: (  # pragma: no cover
         sys.version_info >= ver,
         f"only applicable on Python {'.'.join(str(v) for v in ver)} and above",
     ),
