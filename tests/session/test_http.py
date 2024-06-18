@@ -95,7 +95,6 @@ class TestHTTPSession:
         assert HTTPSession.json(res) == {"test": "Α and Ω"}  # noqa: RUF001
 
 
-@pytest.mark.python(3, 10, reason="py<310 includes weak ciphers by default")
 class TestHTTPAdapters:
     @staticmethod
     def _has_dh_ciphers(ssl_context: SSLContext):
