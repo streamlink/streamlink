@@ -363,6 +363,7 @@ class TestTwitchHLSStream(TestMixinStreamHLS, unittest.TestCase):
             Tag("EXT-X-DISCONTINUITY"),
             TagDateRangeAd(start=DATETIME_BASE + timedelta(seconds=3), duration=4),
         ]
+        tls = Tag("EXT-X-TWITCH-LIVE-SEQUENCE", 7)
         # noinspection PyTypeChecker
         segments = self.subject([
             # regular stream data with prefetch segments
@@ -374,9 +375,9 @@ class TestTwitchHLSStream(TestMixinStreamHLS, unittest.TestCase):
             # still no prefetch segments while ads are playing
             Playlist(3, [*ads, Seg(3), Seg(4), Seg(5), Seg(6)]),
             # new prefetch segments on the first regular segment occurrence
-            Playlist(4, [*ads, Seg(4), Seg(5), Seg(6), Seg(7), Pre(8), Pre(9)]),
-            Playlist(5, [*ads, Seg(5), Seg(6), Seg(7), Seg(8), Pre(9), Pre(10)]),
-            Playlist(6, [*ads, Seg(6), Seg(7), Seg(8), Seg(9), Pre(10), Pre(11)]),
+            Playlist(4, [*ads, Seg(4), Seg(5), Seg(6), tls, Seg(7), Pre(8), Pre(9)]),
+            Playlist(5, [*ads, Seg(5), Seg(6), tls, Seg(7), Seg(8), Pre(9), Pre(10)]),
+            Playlist(6, [*ads, Seg(6), tls, Seg(7), Seg(8), Seg(9), Pre(10), Pre(11)]),
             Playlist(7, [Seg(7), Seg(8), Seg(9), Seg(10), Pre(11), Pre(12)], end=True),
         ], streamoptions={"disable_ads": True, "low_latency": True})
 
@@ -414,6 +415,36 @@ class TestTwitchHLSStream(TestMixinStreamHLS, unittest.TestCase):
         self.await_write(4)
         self.await_read(read_all=True)
         assert self.thread.reader.worker.playlist_reload_time == pytest.approx(23 / 3)
+
+    @patch("streamlink.stream.hls.hls.log")
+    def test_hls_prefetch_after_discontinuity(self, mock_log):
+        segments = self.subject([
+            Playlist(0, [Segment(0), Segment(1)]),
+            Playlist(2, [Segment(2), Segment(3), Tag("EXT-X-DISCONTINUITY"), SegmentPrefetch(4), SegmentPrefetch(5)]),
+            Playlist(6, [Segment(6), Segment(7)], end=True),
+        ], streamoptions={"disable_ads": True, "low_latency": True})
+
+        self.await_write(8)
+        assert self.await_read(read_all=True) == self.content(segments, cond=lambda seg: seg.num not in (4, 5))
+        assert mock_log.warning.mock_calls == [
+            call("Encountered a stream discontinuity. This is unsupported and will result in incoherent output data."),
+        ]
+
+    @patch("streamlink.stream.hls.hls.log")
+    def test_hls_ignored_discontinuity(self, mock_log):
+        Seg, Pre = Segment, SegmentPrefetch
+        discontinuity = Tag("EXT-X-DISCONTINUITY")
+        tls = Tag("EXT-X-TWITCH-LIVE-SEQUENCE", 1234)  # value is irrelevant
+        segments = self.subject([
+            Playlist(0, [Seg(0), discontinuity, Seg(1)]),
+            Playlist(2, [Seg(2), Seg(3), discontinuity, Seg(4), Seg(5)]),
+            Playlist(6, [Seg(6), Seg(7), discontinuity, tls, Pre(8), Pre(9)]),
+            Playlist(10, [Seg(10), Seg(11), discontinuity, tls, Pre(12), discontinuity, tls, Pre(13)], end=True),
+        ], streamoptions={"disable_ads": True, "low_latency": True})
+
+        self.await_write(14)
+        assert self.await_read(read_all=True) == self.content(segments)
+        assert mock_log.warning.mock_calls == []
 
 
 class TestTwitchAPIAccessToken:
