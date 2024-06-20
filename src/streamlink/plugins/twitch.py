@@ -607,19 +607,30 @@ class TwitchClientIntegrity:
         return parse_json(token, exception=PluginError, schema=schema)
 
 
-@pluginmatcher(re.compile(r"""
-    https?://(?:(?P<subdomain>[\w-]+)\.)?twitch\.tv/
-    (?:
-        videos/(?P<videos_id>\d+)
-        |
-        (?P<channel>[^/?]+)
-        (?:
-            /v(?:ideo)?/(?P<video_id>\d+)
-            |
-            /clip/(?P<clip_name>[^/?]+)
-        )?
-    )
-""", re.VERBOSE))
+@pluginmatcher(
+    name="player",
+    pattern=re.compile(
+        r"https?://player\.twitch\.tv/\?.+",
+    ),
+)
+@pluginmatcher(
+    name="clip",
+    pattern=re.compile(
+        r"https?://(?:clips\.twitch\.tv|(?:[\w-]+\.)?twitch\.tv/(?:[\w-]+/)?clip)/(?P<clip_id>[^/?]+)",
+    ),
+)
+@pluginmatcher(
+    name="vod",
+    pattern=re.compile(
+        r"https?://(?:[\w-]+\.)?twitch\.tv/(?:[\w-]+/)?v(?:ideos?)?/(?P<video_id>\d+)",
+    ),
+)
+@pluginmatcher(
+    name="live",
+    pattern=re.compile(
+        r"https?://(?:(?!clips\.)[\w-]+\.)?twitch\.tv/(?P<channel>(?!v(?:ideos?)?/|clip/)[^/?]+)/?(?:\?|$)",
+    ),
+)
 @pluginargument(
     "disable-ads",
     action="store_true",
@@ -695,27 +706,21 @@ class Twitch(Plugin):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        match = self.match.groupdict()
-        parsed = urlparse(self.url)
-        self.params = parse_qsd(parsed.query)
-        self.subdomain = match.get("subdomain")
-        self.video_id = None
-        self.channel = None
-        self.clip_name = None
-        self._checked_metadata = False
 
-        if self.subdomain == "player":
-            # pop-out player
-            if self.params.get("video"):
-                self.video_id = self.params["video"]
-            self.channel = self.params.get("channel")
-        elif self.subdomain == "clips":
-            # clip share URL
-            self.clip_name = match.get("channel")
-        else:
-            self.channel = match.get("channel") and match.get("channel").lower()
-            self.video_id = match.get("video_id") or match.get("videos_id")
-            self.clip_name = match.get("clip_name")
+        params = parse_qsd(urlparse(self.url).query)
+
+        self.channel = self.match["channel"] if self.matches["live"] else None
+        self.video_id = self.match["video_id"] if self.matches["vod"] else None
+        self.clip_id = self.match["clip_id"] if self.matches["clip"] else None
+
+        if self.matches["player"]:
+            self.channel = params.get("channel")
+            self.video_id = params.get("video")
+
+        try:
+            self.time_offset = hours_minutes_seconds_float(params.get("t", "0"))
+        except ValueError:
+            self.time_offset = 0
 
         self.api = TwitchAPI(
             session=self.session,
@@ -723,6 +728,8 @@ class Twitch(Plugin):
             access_token_param=self.get_option("access-token-param"),
         )
         self.usher = UsherService(session=self.session)
+
+        self._checked_metadata = False
 
         def method_factory(parent_method):
             def inner():
@@ -741,8 +748,8 @@ class Twitch(Plugin):
         try:
             if self.video_id:
                 data = self.api.metadata_video(self.video_id)
-            elif self.clip_name:
-                data = self.api.metadata_clips(self.clip_name)
+            elif self.clip_id:
+                data = self.api.metadata_clips(self.clip_id)
             elif self.channel:
                 data = self.api.metadata_channel(self.channel)
             else:  # pragma: no cover
@@ -825,18 +832,11 @@ class Twitch(Plugin):
         return self._get_hls_streams(url, restricted_bitrates, force_restart=True)
 
     def _get_hls_streams(self, url, restricted_bitrates, **extra_params):
-        time_offset = self.params.get("t", 0)
-        if time_offset:
-            try:
-                time_offset = hours_minutes_seconds_float(time_offset)
-            except ValueError:
-                time_offset = 0
-
         try:
             streams = TwitchHLSStream.parse_variant_playlist(
                 self.session,
                 url,
-                start_offset=time_offset,
+                start_offset=self.time_offset,
                 # Check if the media playlists are accessible:
                 # This is a workaround for checking the GQL API for the channel's live status,
                 # which can be delayed by up to a minute.
@@ -874,7 +874,7 @@ class Twitch(Plugin):
 
     def _get_clips(self):
         try:
-            sig, token, streams = self.api.clips(self.clip_name)
+            sig, token, streams = self.api.clips(self.clip_id)
         except (PluginError, TypeError):
             return
 
@@ -884,7 +884,7 @@ class Twitch(Plugin):
     def _get_streams(self):
         if self.video_id:
             return self._get_hls_streams_video()
-        elif self.clip_name:
+        elif self.clip_id:
             return self._get_clips()
         elif self.channel:
             return self._get_hls_streams_live()

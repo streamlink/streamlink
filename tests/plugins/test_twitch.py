@@ -20,38 +20,58 @@ class TestPluginCanHandleUrlTwitch(PluginCanHandleUrl):
     __plugin__ = Twitch
 
     should_match_groups = [
-        ("https://www.twitch.tv/twitch", {
-            "subdomain": "www",
-            "channel": "twitch",
+        (("live", "https://www.twitch.tv/CHANNELNAME"), {
+            "channel": "CHANNELNAME",
         }),
-        ("https://www.twitch.tv/videos/150942279", {
-            "subdomain": "www",
-            "videos_id": "150942279",
+        (("live", "https://www.twitch.tv/CHANNELNAME?"), {
+            "channel": "CHANNELNAME",
         }),
-        ("https://clips.twitch.tv/ObservantBenevolentCarabeefPhilosoraptor", {
-            "subdomain": "clips",
-            "channel": "ObservantBenevolentCarabeefPhilosoraptor",
+        (("live", "https://www.twitch.tv/CHANNELNAME/"), {
+            "channel": "CHANNELNAME",
         }),
-        ("https://www.twitch.tv/weplaydota/clip/FurryIntelligentDonutAMPEnergyCherry-akPRxv7Y3w58WmFq", {
-            "subdomain": "www",
-            "channel": "weplaydota",
-            "clip_name": "FurryIntelligentDonutAMPEnergyCherry-akPRxv7Y3w58WmFq",
+        (("live", "https://www.twitch.tv/CHANNELNAME/?"), {
+            "channel": "CHANNELNAME",
         }),
-        ("https://www.twitch.tv/twitch/video/292713971", {
-            "subdomain": "www",
-            "channel": "twitch",
-            "video_id": "292713971",
+
+        (("vod", "https://www.twitch.tv/videos/1963401646"), {
+            "video_id": "1963401646",
         }),
-        ("https://www.twitch.tv/twitch/v/292713971", {
-            "subdomain": "www",
-            "channel": "twitch",
-            "video_id": "292713971",
+        (("vod", "https://www.twitch.tv/dota2ti/v/1963401646"), {
+            "video_id": "1963401646",
         }),
+        (("vod", "https://www.twitch.tv/dota2ti/video/1963401646"), {
+            "video_id": "1963401646",
+        }),
+        (("vod", "https://www.twitch.tv/videos/1963401646?t=1h23m45s"), {
+            "video_id": "1963401646",
+        }),
+
+        (("clip", "https://clips.twitch.tv/GoodEndearingPassionfruitPMSTwin-QfRLYDPKlscgqt-4"), {
+            "clip_id": "GoodEndearingPassionfruitPMSTwin-QfRLYDPKlscgqt-4",
+        }),
+        (("clip", "https://www.twitch.tv/clip/GoodEndearingPassionfruitPMSTwin-QfRLYDPKlscgqt-4"), {
+            "clip_id": "GoodEndearingPassionfruitPMSTwin-QfRLYDPKlscgqt-4",
+        }),
+        (("clip", "https://www.twitch.tv/lirik/clip/GoodEndearingPassionfruitPMSTwin-QfRLYDPKlscgqt-4"), {
+            "clip_id": "GoodEndearingPassionfruitPMSTwin-QfRLYDPKlscgqt-4",
+        }),
+
+        (("player", "https://player.twitch.tv/?parent=twitch.tv&channel=CHANNELNAME"), {}),
+        (("player", "https://player.twitch.tv/?parent=twitch.tv&video=1963401646"), {}),
+        (("player", "https://player.twitch.tv/?parent=twitch.tv&video=1963401646&t=1h23m45s"), {}),
     ]
 
     should_not_match = [
         "https://www.twitch.tv",
         "https://www.twitch.tv/",
+        "https://www.twitch.tv/videos/",
+        "https://www.twitch.tv/dota2ti/v",
+        "https://www.twitch.tv/dota2ti/video/",
+        "https://clips.twitch.tv/",
+        "https://www.twitch.tv/clip/",
+        "https://www.twitch.tv/lirik/clip/",
+        "https://player.twitch.tv/",
+        "https://player.twitch.tv/?",
     ]
 
 
