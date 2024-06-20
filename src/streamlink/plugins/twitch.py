@@ -71,26 +71,45 @@ class TwitchM3U8Parser(M3U8Parser[TwitchM3U8, TwitchHLSSegment, HLSPlaylist]):
     __m3u8__: ClassVar[Type[TwitchM3U8]] = TwitchM3U8
     __segment__: ClassVar[Type[TwitchHLSSegment]] = TwitchHLSSegment
 
+    @parse_tag("EXT-X-TWITCH-LIVE-SEQUENCE")
+    def parse_ext_x_twitch_live_sequence(self, value):
+        # Unset discontinuity state if the previous segment was not an ad,
+        # as the following segment won't be an ad
+        if self.m3u8.segments and not self.m3u8.segments[-1].ad:
+            self._discontinuity = False
+
     @parse_tag("EXT-X-TWITCH-PREFETCH")
     def parse_tag_ext_x_twitch_prefetch(self, value):
         segments = self.m3u8.segments
         if not segments:  # pragma: no cover
             return
         last = segments[-1]
+
         # Use the average duration of all regular segments for the duration of prefetch segments.
         # This is better than using the duration of the last segment when regular segment durations vary a lot.
         # In low latency mode, the playlist reload time is the duration of the last segment.
         duration = last.duration if last.prefetch else sum(segment.duration for segment in segments) / float(len(segments))
+
         # Use the last duration for extrapolating the start time of the prefetch segment, which is needed for checking
         # whether it is an ad segment and matches the parsed date ranges or not
         date = last.date + timedelta(seconds=last.duration)
+
         # Always treat prefetch segments after a discontinuity as ad segments
+        # (discontinuity tag inserted after last regular segment)
+        # Don't reset discontinuity state: the date extrapolation might be inaccurate,
+        # so all following prefetch segments should be considered an ad after a discontinuity
         ad = self._discontinuity or self._is_segment_ad(date)
+
+        # Since we don't reset the discontinuity state in prefetch segments for the purpose of ad detection,
+        # set the prefetch segment's discontinuity attribute based on ad transitions
+        discontinuity = ad != last.ad
+
         segment = dataclass_replace(
             last,
             uri=self.uri(value),
             duration=duration,
             title=None,
+            discontinuity=discontinuity,
             date=date,
             ad=ad,
             prefetch=True,
@@ -107,6 +126,15 @@ class TwitchM3U8Parser(M3U8Parser[TwitchM3U8, TwitchHLSSegment, HLSPlaylist]):
     def get_segment(self, uri: str, **data) -> TwitchHLSSegment:
         ad = self._is_segment_ad(self._date, self._extinf.title if self._extinf else None)
         segment: TwitchHLSSegment = super().get_segment(uri, ad=ad, prefetch=False)  # type: ignore[assignment]
+
+        # Special case where Twitch incorrectly inserts discontinuity tags between segments of the live content
+        if (
+            segment.discontinuity
+            and not segment.ad
+            and self.m3u8.segments
+            and not self.m3u8.segments[-1].ad
+        ):
+            segment.discontinuity = False
 
         return segment
 
