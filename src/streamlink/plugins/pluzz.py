@@ -16,23 +16,23 @@ from streamlink.plugin.api import useragents, validate
 from streamlink.stream.dash import DASHStream
 from streamlink.stream.hls import HLSStream
 from streamlink.utils.times import localnow
-from streamlink.utils.url import update_qsd
 
 
 log = logging.getLogger(__name__)
 
 
-@pluginmatcher(re.compile(r"""
-    https?://(?:
-        (?:www\.)?france\.tv/
-        |
-        (?:.+\.)?francetvinfo\.fr/
-    )
-""", re.VERBOSE))
+@pluginmatcher(
+    name="francetv",
+    pattern=re.compile(r"https?://(?:[\w-]+\.)?france\.tv/"),
+)
+@pluginmatcher(
+    name="francetvinfofr",
+    pattern=re.compile(r"https?://(?:[\w-]+\.)?francetvinfo\.fr/"),
+)
 class Pluzz(Plugin):
     PLAYER_VERSION = "5.51.35"
     GEO_URL = "https://geoftv-a.akamaihd.net/ws/edgescape.json"
-    API_URL = "https://player.webservices.francetelevisions.fr/v1/videos/{video_id}"
+    API_URL = "https://k7.ftven.fr/videos/{video_id}"
 
     def _get_streams(self):
         self.session.http.headers.update({
@@ -56,6 +56,7 @@ class Pluzz(Plugin):
             video_id = self.session.http.get(self.url, schema=validate.Schema(
                 validate.parse_html(),
                 validate.any(
+                    # default francetv player
                     validate.all(
                         validate.xml_xpath_string(".//script[contains(text(),'window.FTVPlayerVideos')][1]/text()"),
                         str,
@@ -68,18 +69,19 @@ class Pluzz(Plugin):
                         [{"videoId": str}],
                         validate.get((0, "videoId")),
                     ),
+                    # francetvinfo.fr overseas live stream
                     validate.all(
-                        validate.xml_xpath_string(".//script[contains(text(),'new Magnetoscope')][1]/text()"),
+                        validate.xml_xpath_string(".//script[contains(text(),'magneto:{videoId:')][1]/text()"),
                         str,
-                        validate.regex(re.compile(
-                            r"""player\.load\s*\(\s*{\s*src\s*:\s*(?P<q>['"])(?P<video_id>.+?)(?P=q)\s*}\s*\)\s*;""",
-                        )),
+                        validate.regex(re.compile(r"""magneto:\{videoId:(?P<q>['"])(?P<video_id>.+?)(?P=q)""")),
                         validate.get("video_id"),
                     ),
+                    # francetvinfo.fr news article
                     validate.all(
                         validate.xml_xpath_string(".//*[@id][contains(@class,'francetv-player-wrapper')][1]/@id"),
                         str,
                     ),
+                    # francetvinfo.fr videos
                     validate.all(
                         validate.xml_xpath_string(".//*[@data-id][contains(@class,'magneto')][1]/@data-id"),
                         str,
@@ -92,47 +94,54 @@ class Pluzz(Plugin):
             return
         log.debug(f"Video ID: {video_id}")
 
-        api_url = update_qsd(self.API_URL.format(video_id=video_id), {
-            "country_code": country_code,
-            "w": 1920,
-            "h": 1080,
-            "player_version": self.PLAYER_VERSION,
-            "domain": urlparse(self.url).netloc,
-            "device_type": "mobile",
-            "browser": "chrome",
-            "browser_version": CHROME_VERSION,
-            "os": "ios",
-            "gmt": localnow().strftime("%z"),
-        })
-        video_format, token_url, url, self.title = self.session.http.get(api_url, schema=validate.Schema(
-            validate.parse_json(),
-            {
-                "video": {
-                    "workflow": validate.any("token-akamai", "dai"),
-                    "format": validate.any("dash", "hls"),
-                    "token": validate.url(),
-                    "url": validate.url(),
-                },
-                "meta": {
-                    "title": str,
-                },
+        video_format, token_url, url, self.title = self.session.http.get(
+            self.API_URL.format(video_id=video_id),
+            params={
+                "country_code": country_code,
+                "w": 1920,
+                "h": 1080,
+                "player_version": self.PLAYER_VERSION,
+                "domain": urlparse(self.url).netloc,
+                "device_type": "mobile",
+                "browser": "chrome",
+                "browser_version": CHROME_VERSION,
+                "os": "ios",
+                "gmt": localnow().strftime("%z"),
             },
-            validate.union_get(
-                ("video", "format"),
-                ("video", "token"),
-                ("video", "url"),
-                ("meta", "title"),
+            schema=validate.Schema(
+                validate.parse_json(),
+                {
+                    "video": {
+                        "format": validate.any("dash", "hls"),
+                        "token": {
+                            "akamai": validate.url(),
+                        },
+                        "url": validate.url(),
+                    },
+                    "meta": {
+                        "title": str,
+                    },
+                },
+                validate.union_get(
+                    ("video", "format"),
+                    ("video", "token", "akamai"),
+                    ("video", "url"),
+                    ("meta", "title"),
+                ),
             ),
-        ))
+        )
 
-        data_url = update_qsd(token_url, {
-            "url": url,
-        })
-        video_url = self.session.http.get(data_url, schema=validate.Schema(
-            validate.parse_json(),
-            {"url": validate.url()},
-            validate.get("url"),
-        ))
+        video_url = self.session.http.get(
+            token_url,
+            params={
+                "url": url,
+            },
+            schema=validate.Schema(
+                validate.parse_json(),
+                {"url": validate.url()},
+                validate.get("url"),
+            ),
+        )
 
         if video_format == "dash":
             yield from DASHStream.parse_manifest(self.session, video_url).items()
