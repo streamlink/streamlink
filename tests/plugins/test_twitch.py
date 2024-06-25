@@ -209,7 +209,7 @@ class TestTwitchHLSStream(TestMixinStreamHLS, unittest.TestCase):
             duration=1,
             attrid="foo",
             classname="/",
-            custom={"X-TV-TWITCH-AD-URL": "/"},
+            custom={"X-TV-TWITCH-AD-ROLL-TYPE": "PREROLL"},
         )
 
         segments = self.subject([
@@ -223,7 +223,10 @@ class TestTwitchHLSStream(TestMixinStreamHLS, unittest.TestCase):
 
     @patch("streamlink.plugins.twitch.log")
     def test_hls_disable_ads_has_preroll(self, mock_log):
-        daterange = TagDateRangeAd(duration=4)
+        daterange = TagDateRangeAd(
+            duration=4,
+            custom={"X-TV-TWITCH-AD-ROLL-TYPE": "PREROLL"},
+        )
         segments = self.subject([
             Playlist(0, [daterange, Segment(0), Segment(1)]),
             Playlist(2, [daterange, Segment(2), Segment(3)]),
@@ -237,11 +240,16 @@ class TestTwitchHLSStream(TestMixinStreamHLS, unittest.TestCase):
         assert mock_log.info.mock_calls == [
             call("Will skip ad segments"),
             call("Waiting for pre-roll ads to finish, be patient"),
+            call("Detected advertisement break of 4 seconds"),
         ]
 
     @patch("streamlink.plugins.twitch.log")
-    def test_hls_disable_ads_has_midstream(self, mock_log):
-        daterange = TagDateRangeAd(start=DATETIME_BASE + timedelta(seconds=2), duration=2)
+    def test_hls_disable_ads_has_midroll(self, mock_log):
+        daterange = TagDateRangeAd(
+            start=DATETIME_BASE + timedelta(seconds=2),
+            duration=2,
+            custom={"X-TV-TWITCH-AD-ROLL-TYPE": "MIDROLL", "X-TV-TWITCH-AD-COMMERCIAL-ID": "123"},
+        )
         segments = self.subject([
             Playlist(0, [Segment(0), Segment(1)]),
             Playlist(2, [daterange, Segment(2), Segment(3)]),
@@ -254,11 +262,64 @@ class TestTwitchHLSStream(TestMixinStreamHLS, unittest.TestCase):
         assert all(self.called(s) for s in segments.values()), "Downloads all segments"
         assert mock_log.info.mock_calls == [
             call("Will skip ad segments"),
+            call("Detected advertisement break of 2 seconds"),
+        ]
+
+    @patch("streamlink.plugins.twitch.log")
+    def test_hls_disable_ads_has_preroll_and_midstream(self, mock_log):
+        ads1a = TagDateRangeAd(
+            start=DATETIME_BASE,
+            duration=2,
+            custom={"X-TV-TWITCH-AD-ROLL-TYPE": "PREROLL"},
+        )
+        ads1b = TagDateRangeAd(
+            start=DATETIME_BASE,
+            duration=1,
+        )
+        ads2 = TagDateRangeAd(
+            start=DATETIME_BASE + timedelta(seconds=4),
+            duration=4,
+            custom={
+                "X-TV-TWITCH-AD-ROLL-TYPE": "MIDROLL",
+                "X-TV-TWITCH-AD-COMMERCIAL-ID": "123",
+            },
+        )
+        ads3 = TagDateRangeAd(
+            start=DATETIME_BASE + timedelta(seconds=8),
+            duration=1,
+            custom={
+                "X-TV-TWITCH-AD-ROLL-TYPE": "MIDROLL",
+                "X-TV-TWITCH-AD-COMMERCIAL-ID": "456",
+                "X-TV-TWITCH-AD-POD-FILLED-DURATION": ".9",
+            },
+        )
+        segments = self.subject([
+            Playlist(0, [ads1a, ads1b, Segment(0)]),
+            Playlist(1, [ads1a, ads1b, Segment(1)]),
+            Playlist(2, [Segment(2), Segment(3)]),
+            Playlist(4, [ads2, Segment(4), Segment(5)]),
+            Playlist(6, [ads2, Segment(6), Segment(7)]),
+            Playlist(8, [ads3, Segment(8), Segment(9)], end=True),
+        ], streamoptions={"disable_ads": True, "low_latency": False})
+
+        self.await_write(10)
+        data = self.await_read(read_all=True)
+        assert data == self.content(segments, cond=lambda s: s.num not in (0, 1, 4, 5, 6, 7, 8)), "Filters out all ad segments"
+        assert all(self.called(s) for s in segments.values()), "Downloads all segments"
+        assert mock_log.info.mock_calls == [
+            call("Will skip ad segments"),
+            call("Waiting for pre-roll ads to finish, be patient"),
+            call("Detected advertisement break of 2 seconds"),
+            call("Detected advertisement break of 4 seconds"),
+            call("Detected advertisement break of 1 second"),
         ]
 
     @patch("streamlink.plugins.twitch.log")
     def test_hls_no_disable_ads_has_preroll(self, mock_log):
-        daterange = TagDateRangeAd(duration=2)
+        daterange = TagDateRangeAd(
+            duration=2,
+            custom={"X-TV-TWITCH-AD-ROLL-TYPE": "PREROLL"},
+        )
         segments = self.subject([
             Playlist(0, [daterange, Segment(0), Segment(1)]),
             Playlist(2, [Segment(2), Segment(3)], end=True),
@@ -268,7 +329,9 @@ class TestTwitchHLSStream(TestMixinStreamHLS, unittest.TestCase):
         data = self.await_read(read_all=True)
         assert data == self.content(segments), "Doesn't filter out segments"
         assert all(self.called(s) for s in segments.values()), "Downloads all segments"
-        assert mock_log.info.mock_calls == [], "Doesn't log anything"
+        assert mock_log.info.mock_calls == [
+            call("Detected advertisement break of 2 seconds"),
+        ]
 
     @patch("streamlink.plugins.twitch.log")
     def test_hls_low_latency_has_prefetch(self, mock_log):
@@ -325,7 +388,10 @@ class TestTwitchHLSStream(TestMixinStreamHLS, unittest.TestCase):
 
     @patch("streamlink.plugins.twitch.log")
     def test_hls_low_latency_has_prefetch_has_preroll(self, mock_log):
-        daterange = TagDateRangeAd(duration=4)
+        daterange = TagDateRangeAd(
+            duration=4,
+            custom={"X-TV-TWITCH-AD-ROLL-TYPE": "PREROLL"},
+        )
         segments = self.subject([
             Playlist(0, [daterange, Segment(0), Segment(1), Segment(2), Segment(3)]),
             Playlist(4, [Segment(4), Segment(5), Segment(6), Segment(7), SegmentPrefetch(8), SegmentPrefetch(9)], end=True),
@@ -336,11 +402,17 @@ class TestTwitchHLSStream(TestMixinStreamHLS, unittest.TestCase):
         assert data == self.content(segments, cond=lambda s: s.num > 1), "Skips first two segments due to reduced live-edge"
         assert not any(self.called(s) for s in segments.values() if s.num < 2), "Skips first two preroll segments"
         assert all(self.called(s) for s in segments.values() if s.num >= 2), "Downloads all remaining segments"
-        assert mock_log.info.mock_calls == [call("Low latency streaming (HLS live edge: 2)")]
+        assert mock_log.info.mock_calls == [
+            call("Low latency streaming (HLS live edge: 2)"),
+            call("Detected advertisement break of 4 seconds"),
+        ]
 
     @patch("streamlink.plugins.twitch.log")
     def test_hls_low_latency_has_prefetch_disable_ads_has_preroll(self, mock_log):
-        daterange = TagDateRangeAd(duration=4)
+        daterange = TagDateRangeAd(
+            duration=4,
+            custom={"X-TV-TWITCH-AD-ROLL-TYPE": "PREROLL"},
+        )
         self.subject([
             Playlist(0, [daterange, Segment(0), Segment(1), Segment(2), Segment(3)]),
             Playlist(4, [Segment(4), Segment(5), Segment(6), Segment(7), SegmentPrefetch(8), SegmentPrefetch(9)], end=True),
@@ -352,6 +424,7 @@ class TestTwitchHLSStream(TestMixinStreamHLS, unittest.TestCase):
             call("Will skip ad segments"),
             call("Low latency streaming (HLS live edge: 2)"),
             call("Waiting for pre-roll ads to finish, be patient"),
+            call("Detected advertisement break of 4 seconds"),
         ]
 
     @patch("streamlink.plugins.twitch.log")
@@ -361,7 +434,11 @@ class TestTwitchHLSStream(TestMixinStreamHLS, unittest.TestCase):
         Seg, Pre = Segment, SegmentPrefetch
         ads = [
             Tag("EXT-X-DISCONTINUITY"),
-            TagDateRangeAd(start=DATETIME_BASE + timedelta(seconds=3), duration=4),
+            TagDateRangeAd(
+                start=DATETIME_BASE + timedelta(seconds=3),
+                duration=4,
+                custom={"X-TV-TWITCH-AD-ROLL-TYPE": "MIDROLL"},
+            ),
         ]
         tls = Tag("EXT-X-TWITCH-LIVE-SEQUENCE", 7)
         # noinspection PyTypeChecker
@@ -387,11 +464,15 @@ class TestTwitchHLSStream(TestMixinStreamHLS, unittest.TestCase):
         assert mock_log.info.mock_calls == [
             call("Will skip ad segments"),
             call("Low latency streaming (HLS live edge: 2)"),
+            call("Detected advertisement break of 4 seconds"),
         ]
 
     @patch("streamlink.plugins.twitch.log")
     def test_hls_low_latency_no_prefetch_disable_ads_has_preroll(self, mock_log):
-        daterange = TagDateRangeAd(duration=4)
+        daterange = TagDateRangeAd(
+            duration=4,
+            custom={"X-TV-TWITCH-AD-ROLL-TYPE": "PREROLL"},
+        )
         self.subject([
             Playlist(0, [daterange, Segment(0), Segment(1), Segment(2), Segment(3)]),
             Playlist(4, [Segment(4), Segment(5), Segment(6), Segment(7)], end=True),
@@ -403,6 +484,7 @@ class TestTwitchHLSStream(TestMixinStreamHLS, unittest.TestCase):
             call("Will skip ad segments"),
             call("Low latency streaming (HLS live edge: 2)"),
             call("Waiting for pre-roll ads to finish, be patient"),
+            call("Detected advertisement break of 4 seconds"),
             call("This is not a low latency stream"),
         ]
 
