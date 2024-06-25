@@ -15,14 +15,16 @@ $notes Acquires a :ref:`client-integrity token <cli/plugins/twitch:Client-integr
 import argparse
 import base64
 import logging
+import math
 import re
 import sys
+from collections import deque
 from contextlib import suppress
 from dataclasses import dataclass, replace as dataclass_replace
 from datetime import datetime, timedelta
 from json import dumps as json_dumps
 from random import random
-from typing import ClassVar, Mapping, Optional, Tuple, Type
+from typing import ClassVar, Deque, List, Mapping, Optional, Tuple, Type
 from urllib.parse import urlparse
 
 from requests.exceptions import HTTPError
@@ -62,9 +64,9 @@ class TwitchHLSSegment(HLSSegment):
 
 
 class TwitchM3U8(M3U8[TwitchHLSSegment, HLSPlaylist]):
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
-        self.dateranges_ads = []
+        self.dateranges_ads: List[DateRange] = []
 
 
 class TwitchM3U8Parser(M3U8Parser[TwitchM3U8, TwitchHLSSegment, HLSPlaylist]):
@@ -158,8 +160,9 @@ class TwitchHLSStreamWorker(HLSStreamWorker):
     writer: "TwitchHLSStreamWriter"
     stream: "TwitchHLSStream"
 
-    def __init__(self, reader, *args, **kwargs):
-        self.had_content = False
+    def __init__(self, reader, *args, **kwargs) -> None:
+        self.had_content: bool = False
+        self.logged_ads: Deque[str] = deque(maxlen=10)
         super().__init__(reader, *args, **kwargs)
 
     def _playlist_reload_time(self, playlist: TwitchM3U8):  # type: ignore[override]
@@ -189,6 +192,27 @@ class TwitchHLSStreamWorker(HLSStreamWorker):
         # show pre-roll ads message only on the first playlist containing ads
         if self.stream.disable_ads and self.playlist_sequence == -1 and not self.had_content:
             log.info("Waiting for pre-roll ads to finish, be patient")
+
+        # log the duration of whole advertisement breaks
+        for daterange_ads in playlist.dateranges_ads:
+            if not daterange_ads.duration:  # pragma: no cover
+                continue
+
+            ads_id: Optional[str] = (
+                daterange_ads.x.get("X-TV-TWITCH-AD-COMMERCIAL-ID")
+                or daterange_ads.x.get("X-TV-TWITCH-AD-ROLL-TYPE")
+            )
+            if not ads_id or ads_id in self.logged_ads:
+                continue
+            self.logged_ads.append(ads_id)
+
+            # use Twitch's own ads duration metadata if available
+            try:
+                duration = math.ceil(float(daterange_ads.x.get("X-TV-TWITCH-AD-POD-FILLED-DURATION", "")))
+            except ValueError:
+                duration = math.ceil(daterange_ads.duration.total_seconds())
+
+            log.info(f"Detected advertisement break of {duration} second{'s' if duration != 1 else ''}")
 
         return super().process_segments(playlist)
 
