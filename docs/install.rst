@@ -708,7 +708,7 @@ Linux AppImages
 
 **Architectures**
 
-.. grid:: 3
+.. grid:: 2
     :padding: 0
 
     .. grid-item-card::
@@ -722,12 +722,6 @@ Linux AppImages
         :text-align: center
 
         :bdg-link-success-line:`aarch64 <https://github.com/streamlink/streamlink-appimage/releases>`
-
-    .. grid-item-card::
-        :padding: 3
-        :text-align: center
-
-        :bdg-link-primary-line:`i686 <https://github.com/streamlink/streamlink-appimage/releases>`
 
 **Contents**
 
