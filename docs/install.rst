@@ -564,76 +564,36 @@ Windows binaries
     .. grid-item-card::
         :padding: 3
         :class-header: sd-text-center
-        :class-footer: sd-text-center sd-bg-transparent sd-border-0
+        :class-body: sd-py-0
+        :class-footer: sd-text-center sd-bg-transparent sd-border-0 sd-pt-0 sd-pb-3
 
         :fas:`gears` **Installer**
         ^^^
 
+        - Windows 10+
         - Adds itself to the system's ``PATH`` env var
         - Automatically creates a :ref:`config file <cli/config:Configuration file>`
         - Sets :option:`--ffmpeg-ffmpeg` in config file
 
         +++
-        .. grid:: 2
-            :gutter: 1
-            :padding: 0
-
-            .. grid-item::
-                :class: sd-text-right
-
-                Windows 10+
-
-            .. grid-item::
-
-                :bdg-link-success-line:`x86_64 <https://github.com/streamlink/windows-builds/releases>`
-                :bdg-link-primary-line:`x86 <https://github.com/streamlink/windows-builds/releases>`
-
-            .. grid-item::
-                :class: sd-text-right
-
-                Windows 7 (py38)
-
-            .. grid-item::
-
-                :bdg-link-secondary-line:`x86_64 <https://github.com/streamlink/windows-builds/releases>`
-                :bdg-link-secondary-line:`x86 <https://github.com/streamlink/windows-builds/releases>`
+        :bdg-link-success-line:`x86_64 <https://github.com/streamlink/windows-builds/releases>`
 
     .. grid-item-card::
         :padding: 3
         :class-header: sd-text-center
-        :class-footer: sd-text-center sd-bg-transparent sd-border-0
+        :class-body: sd-py-0
+        :class-footer: sd-text-center sd-bg-transparent sd-border-0 sd-pt-0 sd-pb-3
 
         :fas:`file-zipper` **Portable archive**
         ^^^
 
+        - Windows 10+
         - No :ref:`config file <cli/config:Configuration file>` created automatically
         - :option:`--ffmpeg-ffmpeg` must be set manually
         - No pre-compiled Python bytecode
 
         +++
-        .. grid:: 2
-            :gutter: 1
-            :padding: 0
-
-            .. grid-item::
-                :class: sd-text-right
-
-                Windows 10+
-
-            .. grid-item::
-
-                :bdg-link-success-line:`x86_64 <https://github.com/streamlink/windows-builds/releases>`
-                :bdg-link-primary-line:`x86 <https://github.com/streamlink/windows-builds/releases>`
-
-            .. grid-item::
-                :class: sd-text-right
-
-                Windows 7 (py38)
-
-            .. grid-item::
-
-                :bdg-link-secondary-line:`x86_64 <https://github.com/streamlink/windows-builds/releases>`
-                :bdg-link-secondary-line:`x86 <https://github.com/streamlink/windows-builds/releases>`
+        :bdg-link-success-line:`x86_64 <https://github.com/streamlink/windows-builds/releases>`
 
 **Contents**
 
@@ -708,7 +668,7 @@ Linux AppImages
 
 **Architectures**
 
-.. grid:: 3
+.. grid:: 2
     :padding: 0
 
     .. grid-item-card::
@@ -722,12 +682,6 @@ Linux AppImages
         :text-align: center
 
         :bdg-link-success-line:`aarch64 <https://github.com/streamlink/streamlink-appimage/releases>`
-
-    .. grid-item-card::
-        :padding: 3
-        :text-align: center
-
-        :bdg-link-primary-line:`i686 <https://github.com/streamlink/streamlink-appimage/releases>`
 
 **Contents**
 
