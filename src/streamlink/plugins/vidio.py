@@ -2,10 +2,12 @@
 $description Indonesian & international live TV channels and video on-demand service. OTT service from Vidio.
 $url vidio.com
 $type live, vod
+$metadata id
+$metadata title
 """
+
 import logging
 import re
-from urllib.parse import urlsplit, urlunsplit
 from uuid import uuid4
 
 from streamlink.plugin import Plugin, pluginmatcher
@@ -24,7 +26,6 @@ class Vidio(Plugin):
     tokens_url = "https://www.vidio.com/live/{id}/tokens"
 
     def _get_stream_token(self, stream_id, stream_type):
-        log.debug("Getting stream token")
         return self.session.http.post(
             self.tokens_url.format(id=stream_id),
             params={"type": stream_type},
@@ -35,19 +36,28 @@ class Vidio(Plugin):
             },
             schema=validate.Schema(
                 validate.parse_json(),
-                {"token": str},
-                validate.get("token"),
+                {
+                    "token": str,
+                    "hls_url": validate.any("", validate.url()),
+                    "dash_url": validate.any("", validate.url()),
+                },
+                validate.union_get(
+                    "token",
+                    "hls_url",
+                    "dash_url",
+                ),
             ),
         )
 
-    def _get_streams(self):
-        stream_id, has_token, hls_url, dash_url = self.session.http.get(
+    def _get_stream_data(self):
+        return self.session.http.get(
             self.url,
             schema=validate.Schema(
                 validate.parse_html(),
                 validate.xml_find(".//*[@data-video-id]"),
                 validate.union((
                     validate.get("data-video-id"),
+                    validate.get("data-video-title"),
                     validate.all(
                         validate.get("data-video-has-token"),
                         validate.transform(lambda val: val and val != "false"),
@@ -58,28 +68,25 @@ class Vidio(Plugin):
             ),
         )
 
-        if dash_url and has_token:
-            token = self._get_stream_token(stream_id, "dash")
-            parsed = urlsplit(dash_url)
-            dash_url = urlunsplit(parsed._replace(path=f"{token}{parsed.path}"))
-            return DASHStream.parse_manifest(
-                self.session,
-                dash_url,
-                headers={"Referer": "https://www.vidio.com/"},
-            )
+    def _get_streams(self):
+        self.session.http.headers.update({
+            "Origin": "https://www.vidio.com/",
+            "Referer": self.url,
+        })
 
-        if not hls_url:
-            return
+        self.id, self.title, has_token, hls_url, dash_url = self._get_stream_data()
+        log.debug(f"{self.id=} {has_token=}")
 
+        params = {}
         if has_token:
-            token = self._get_stream_token(stream_id, "hls")
-            hls_url = f"{hls_url}?{token}"
+            token, hls_url, dash_url = self._get_stream_token(self.id, "dash")
+            log.trace(f"{token=}")
+            params.update([param.split("=", 1) for param in (token.split("&") if token else [])])
 
-        return HLSStream.parse_variant_playlist(
-            self.session,
-            hls_url,
-            headers={"Referer": "https://www.vidio.com/"},
-        )
+        if hls_url:
+            return HLSStream.parse_variant_playlist(self.session, hls_url, params=params)
+        if dash_url:
+            return DASHStream.parse_manifest(self.session, dash_url, params=params)
 
 
 __plugin__ = Vidio

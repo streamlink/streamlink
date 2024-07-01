@@ -8,6 +8,7 @@ class TestPluginCanHandleUrlVidio(PluginCanHandleUrl):
     should_match = [
         "https://www.vidio.com/live/204-sctv-tv-stream",
         "https://www.vidio.com/live/5075-dw-tv-stream",
+        "https://www.vidio.com/live/777-metro-tv",
         "https://www.vidio.com/watch/766861-5-rekor-fantastis-zidane-bersama-real-madrid",
     ]
 
