@@ -12,6 +12,7 @@ import hashlib
 import logging
 import random
 import re
+import sys
 import time
 from html import unescape as html_unescape
 from typing import Dict
@@ -20,7 +21,7 @@ from urllib.parse import parse_qsl, unquote
 from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.api import validate
 from streamlink.stream.http import HTTPStream
-from streamlink.utils.url import update_qsd, update_scheme
+from streamlink.utils.url import update_scheme
 
 log = logging.getLogger(__name__)
 
@@ -31,10 +32,14 @@ log = logging.getLogger(__name__)
 class Huya(Plugin):
     QUALITY_WEIGHTS: Dict[str, int] = {}
 
-    _QUALITY_WEIGHTS_OVERRIDE = {
-        "source_hy": -1000,  # SSLCertVerificationError
+    _STREAM_URL_QUERYSTRING_PARAMS = "wsTime", "fm", "ctype", "fs"
+
+    _CONSTANTS = {
+        'platform_id': 100,
+        'ver': 1,
+        'sv': 2401090219,
+        'codec': 264,
     }
-    _STREAM_URL_QUERYSTRING_PARAMS = "wsSecret", "wsTime", "fm", "ctype", "fs"
 
     @classmethod
     def stream_weight(cls, key):
@@ -74,7 +79,6 @@ class Huya(Plugin):
                         "gameStreamInfoList": [validate.all(
                             {
                                 "sCdnType": str,
-                                "iPCPriorityRate": int,
                                 "sStreamName": str,
                                 "sFlvUrl": str,
                                 "sFlvUrlSuffix": str,
@@ -82,7 +86,6 @@ class Huya(Plugin):
                             },
                             validate.union_get(
                                 "sCdnType",
-                                "iPCPriorityRate",
                                 "sStreamName",
                                 "sFlvUrl",
                                 "sFlvUrlSuffix",
@@ -92,7 +95,6 @@ class Huya(Plugin):
                     }],
                     "vMultiStreamInfo": [
                         {
-                            'sDisplayName': str,
                             'iBitRate': int
                         }
                     ]
@@ -116,40 +118,40 @@ class Huya(Plugin):
             "Referer": "https://www.huya.com/",
         })
 
-        for cdntype, priority, streamname, flvurl, suffix, anticode in streamdata:
-            for q in vMultiStreamInfo:
-                iBitRate = q['iBitRate']
+        for cdntype, streamname, flvurl, suffix, anticode in streamdata:
+            for vStreamInfo in vMultiStreamInfo:
+                iBitRate = vStreamInfo['iBitRate']
                 qs = {k: v for k, v in dict(parse_qsl(anticode)).items() if k in self._STREAM_URL_QUERYSTRING_PARAMS}
-                fm = qs['fm']
-                ctype = qs['ctype']
-                platform_id = 100
-                uid = random.randint(12340000, 12349999)
-                convert_uid = (uid << 8 | uid >> (32 - 8)) & 0xFFFFFFFF
-                wsTime = qs['wsTime']
-                seqid = uid + int(time.time() * 1000)
-                ws_secret_prefix = base64.b64decode(unquote(fm).encode()).decode().split("_")[0]
-                ws_secret_hash = hashlib.md5(f'{seqid}|{ctype}|{platform_id}'.encode()).hexdigest()
-                wsSecret = hashlib.md5(
-                    f'{ws_secret_prefix}_{convert_uid}_{streamname}_{ws_secret_hash}_{wsTime}'.encode()).hexdigest()
-                qs['seqid'] = seqid
-                qs['ver'] = '1'
-                qs['u'] = convert_uid
-                qs['t'] = platform_id
-                qs['sv'] = '2401090219'
-                qs['sdk_sid'] = str(int(time.time() * 1000))
-                qs['codec'] = '264'
-                qs['wsSecret'] = wsSecret
-                qs['ratio'] = iBitRate
-                del qs['fm']
                 url = update_scheme("http://", f"{flvurl}/{streamname}.{suffix}")
-                url = update_qsd(url, qs)
-
-                name = f"{cdntype.lower()}_{iBitRate}"
-                priority = 20000 if iBitRate == 0 else iBitRate
-                self.QUALITY_WEIGHTS[name] = self._QUALITY_WEIGHTS_OVERRIDE.get(name, priority)
-                yield name, HTTPStream(self.session, url)
+                params = self._get_stream_params(qs['fm'], qs['fs'], qs['ctype'], qs['wsTime'], streamname, iBitRate)
+                name = f"{cdntype.lower()}_{'source' if iBitRate == 0 else str(iBitRate) + 'k'}"
+                weight = sys.maxsize if iBitRate == 0 else iBitRate
+                self.QUALITY_WEIGHTS[name] = weight
+                yield name, HTTPStream(self.session, url, params=params)
 
         log.debug(f"QUALITY_WEIGHTS: {self.QUALITY_WEIGHTS!r}")
+
+    def _get_stream_params(self, fm, fs, ctype, wsTime, streamname, iBitRate):
+        uid = random.randint(12340000, 12349999)
+        convert_uid = (uid << 8 | uid >> (32 - 8)) & 0xFFFFFFFF
+        timestamp = int(time.time() * 1000)
+        seqid = uid + timestamp
+        ws_secret_prefix = base64.b64decode(unquote(fm).encode()).decode().split("_")[0]
+        ws_secret_hash = hashlib.md5(f'{seqid}|{ctype}|{self._CONSTANTS["platform_id"]}'.encode()).hexdigest()
+        wsSecret = hashlib.md5(
+            f'{ws_secret_prefix}_{convert_uid}_{streamname}_{ws_secret_hash}_{wsTime}'.encode()).hexdigest()
+        params = {
+            'wsSecret': wsSecret,
+            'wsTime': wsTime,
+            'ctype': ctype,
+            'fs': fs,
+            'seqid': seqid,
+            'u': convert_uid,
+            'sdk_sid': timestamp,
+            'ratio': iBitRate
+        }
+        params.update(self._CONSTANTS)
+        return params
 
 
 __plugin__ = Huya
