@@ -8,17 +8,19 @@ $metadata title
 """
 
 import base64
+import hashlib
 import logging
+import random
 import re
+import time
 from html import unescape as html_unescape
 from typing import Dict
-from urllib.parse import parse_qsl
+from urllib.parse import parse_qsl, unquote
 
 from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.api import validate
 from streamlink.stream.http import HTTPStream
 from streamlink.utils.url import update_qsd, update_scheme
-
 
 log = logging.getLogger(__name__)
 
@@ -32,7 +34,7 @@ class Huya(Plugin):
     _QUALITY_WEIGHTS_OVERRIDE = {
         "source_hy": -1000,  # SSLCertVerificationError
     }
-    _STREAM_URL_QUERYSTRING_PARAMS = "wsSecret", "wsTime"
+    _STREAM_URL_QUERYSTRING_PARAMS = "wsSecret", "wsTime", "fm", "ctype", "fs"
 
     @classmethod
     def stream_weight(cls, key):
@@ -88,20 +90,26 @@ class Huya(Plugin):
                             )),
                         ],
                     }],
+                    "vMultiStreamInfo": [
+                        {
+                            'sDisplayName': str,
+                            'iBitRate': int
+                        }
+                    ]
                 },
-                validate.get(("data", 0)),
                 validate.union_get(
-                    ("gameLiveInfo", "liveId"),
-                    ("gameLiveInfo", "nick"),
-                    ("gameLiveInfo", "roomName"),
-                    "gameStreamInfoList",
+                    ('data', 0, "gameLiveInfo", "liveId"),
+                    ('data', 0, "gameLiveInfo", "nick"),
+                    ('data', 0, "gameLiveInfo", "roomName"),
+                    ('data', 0, "gameStreamInfoList"),
+                    'vMultiStreamInfo'
                 ),
             ),
         ))
         if not data:
             return
 
-        self.id, self.author, self.title, streamdata = data
+        self.id, self.author, self.title, streamdata, vMultiStreamInfo = data
 
         self.session.http.headers.update({
             "Origin": "https://www.huya.com",
@@ -109,13 +117,37 @@ class Huya(Plugin):
         })
 
         for cdntype, priority, streamname, flvurl, suffix, anticode in streamdata:
-            qs = {k: v for k, v in dict(parse_qsl(anticode)).items() if k in self._STREAM_URL_QUERYSTRING_PARAMS}
-            url = update_scheme("https://", f"{flvurl}/{streamname}.{suffix}")
-            url = update_qsd(url, qs)
+            for q in vMultiStreamInfo:
+                iBitRate = q['iBitRate']
+                qs = {k: v for k, v in dict(parse_qsl(anticode)).items() if k in self._STREAM_URL_QUERYSTRING_PARAMS}
+                fm = qs['fm']
+                ctype = qs['ctype']
+                platform_id = 100
+                uid = random.randint(12340000, 12349999)
+                convert_uid = (uid << 8 | uid >> (32 - 8)) & 0xFFFFFFFF
+                wsTime = qs['wsTime']
+                seqid = uid + int(time.time() * 1000)
+                ws_secret_prefix = base64.b64decode(unquote(fm).encode()).decode().split("_")[0]
+                ws_secret_hash = hashlib.md5(f'{seqid}|{ctype}|{platform_id}'.encode()).hexdigest()
+                wsSecret = hashlib.md5(
+                    f'{ws_secret_prefix}_{convert_uid}_{streamname}_{ws_secret_hash}_{wsTime}'.encode()).hexdigest()
+                qs['seqid'] = seqid
+                qs['ver'] = '1'
+                qs['u'] = convert_uid
+                qs['t'] = platform_id
+                qs['sv'] = '2401090219'
+                qs['sdk_sid'] = str(int(time.time() * 1000))
+                qs['codec'] = '264'
+                qs['wsSecret'] = wsSecret
+                qs['ratio'] = iBitRate
+                del qs['fm']
+                url = update_scheme("http://", f"{flvurl}/{streamname}.{suffix}")
+                url = update_qsd(url, qs)
 
-            name = f"source_{cdntype.lower()}"
-            self.QUALITY_WEIGHTS[name] = self._QUALITY_WEIGHTS_OVERRIDE.get(name, priority)
-            yield name, HTTPStream(self.session, url)
+                name = f"{cdntype.lower()}_{iBitRate}"
+                priority = 20000 if iBitRate == 0 else iBitRate
+                self.QUALITY_WEIGHTS[name] = self._QUALITY_WEIGHTS_OVERRIDE.get(name, priority)
+                yield name, HTTPStream(self.session, url)
 
         log.debug(f"QUALITY_WEIGHTS: {self.QUALITY_WEIGHTS!r}")
 
