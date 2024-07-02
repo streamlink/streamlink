@@ -188,6 +188,8 @@ class SegmentedStreamWorker(AwaitableMixin, Thread, Generic[TSegment, TResult]):
         self.stream = reader.stream
         self.session = reader.session
 
+        self.duration: Optional[float] = self.session.options.get("stream-segmented-duration")
+
     def close(self) -> None:
         """
         Shuts down the thread.
@@ -212,9 +214,16 @@ class SegmentedStreamWorker(AwaitableMixin, Thread, Generic[TSegment, TResult]):
         yield
 
     def run(self) -> None:
+        duration = 0.0
         for segment in self.iter_segments():
             if self.closed:  # pragma: no cover
                 break
+
+            duration += segment.duration
+            if self.duration is not None and duration > self.duration:
+                log.info(f"Stopping stream early after {self.duration:.2f}s")
+                break
+
             self.writer.put(segment)
 
         # End of stream, tells the writer to exit
