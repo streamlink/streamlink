@@ -23,13 +23,14 @@ from streamlink.plugin.api import validate
 from streamlink.stream.http import HTTPStream
 from streamlink.utils.url import update_scheme
 
+
 log = logging.getLogger(__name__)
 
 
 @pluginmatcher(
     re.compile(
         r"https?://(?:www\.)?huya\.com/(?P<channel>[^/?]+)",
-    )
+    ),
 )
 class Huya(Plugin):
     QUALITY_WEIGHTS: Dict[str, int] = {}
@@ -99,7 +100,7 @@ class Huya(Plugin):
                                         ),
                                     ),
                                 ],
-                            }
+                            },
                         ],
                         "vMultiStreamInfo": [{"iBitRate": int}],
                     },
@@ -151,7 +152,7 @@ class Huya(Plugin):
         ws_secret_prefix = base64.b64decode(unquote(fm).encode()).decode().split("_")[0]
         ws_secret_hash = hashlib.md5(f'{seqid}|{ctype}|{self._CONSTANTS["platform_id"]}'.encode()).hexdigest()
         ws_secret = hashlib.md5(
-            f"{ws_secret_prefix}_{convert_uid}_{stream_name}_{ws_secret_hash}_{ws_time}".encode()
+            f"{ws_secret_prefix}_{convert_uid}_{stream_name}_{ws_secret_hash}_{ws_time}".encode(),
         ).hexdigest()
         params = {
             "wsSecret": ws_secret,
