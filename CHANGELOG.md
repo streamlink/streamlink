@@ -1,5 +1,21 @@
 # Changelog
 
+## streamlink 6.8.2 (2024-07-04)
+
+Patch release:
+
+- Updated plugins:
+  - douyin: new plugin ([#6059](https://github.com/streamlink/streamlink/pull/6059))
+  - huya: fixed stream URLs ([#6058](https://github.com/streamlink/streamlink/pull/6058))
+  - pluzz: fixed API URL, stream tokens and validation schemas ([#6048](https://github.com/streamlink/streamlink/pull/6048))
+  - twitch: added info log messages about ad break durations ([#6051](https://github.com/streamlink/streamlink/pull/6051))
+  - twitch: fixed clip URLs ([#6045](https://github.com/streamlink/streamlink/pull/6045))
+  - twitch: fixed discontinuity warning spam in certain circumstances ([#6022](https://github.com/streamlink/streamlink/pull/6022))
+  - vidio: fixed stream tokens, added metadata ([#6057](https://github.com/streamlink/streamlink/pull/6057))
+
+[Full changelog](https://github.com/streamlink/streamlink/compare/6.8.1...6.8.2)
+
+
 ## streamlink 6.8.1 (2024-06-18)
 
 Patch release:
