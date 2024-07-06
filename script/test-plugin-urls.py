@@ -64,6 +64,12 @@ def parse_arguments() -> argparse.Namespace:
         metavar=("STRING", "REPLACEMENT"),
         help="Replace specific URL parts, e.g. channel names or IDs. Can be set multiple times",
     )
+    parser.add_argument(
+        "-m",
+        "--metadata",
+        action="store_true",
+        help="Show plugin metadata for each input URL",
+    )
 
     return parser.parse_args()
 
@@ -95,6 +101,7 @@ class PluginUrlTester:
         self.pluginname: str = args.plugin.lower()
 
         self.dry_run: bool = args.dry_run
+        self.log_metadata: bool = args.metadata
 
         self.loglevel: str = str(args.loglevel).upper()
         self.logcolor: str = args.color
@@ -186,6 +193,9 @@ class PluginUrlTester:
                 continue
 
             self.logger.info(f" {', '.join(streams.keys())}")
+
+            if self.log_metadata:
+                self.logger.info(f"  {plugininst.get_metadata()!r}")
 
         return code
 
