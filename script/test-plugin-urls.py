@@ -155,7 +155,7 @@ class PluginUrlTester:
     def run(self) -> int:
         code = 0
         for url in sorted(self.urls):
-            self.logger.info(f"Finding streams for URL: {url}")
+            self.logger.info(url)
 
             session = Streamlink(plugins_builtin=True)
             # noinspection PyBroadException
@@ -183,8 +183,9 @@ class PluginUrlTester:
             if not streams:
                 self.logger.error("No streams found")
                 code = 1
-            else:
-                self.logger.info(f"Found streams: {', '.join(streams.keys())}")
+                continue
+
+            self.logger.info(f" {', '.join(streams.keys())}")
 
         return code
 
