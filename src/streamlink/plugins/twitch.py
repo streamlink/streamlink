@@ -274,8 +274,8 @@ class UsherService:
 
         return req.url
 
-    def channel(self, channel, **extra_params):
-        try:
+    def channel(self, channel: str, **extra_params) -> str:
+        with suppress(PluginError):
             extra_params_debug = validate.Schema(
                 validate.get("token"),
                 validate.parse_json(),
@@ -288,11 +288,10 @@ class UsherService:
                 },
             ).validate(extra_params)
             log.debug(f"{extra_params_debug!r}")
-        except PluginError:
-            pass
-        return self._create_url(f"/api/channel/hls/{channel}.m3u8", **extra_params)
 
-    def video(self, video_id, **extra_params):
+        return self._create_url(f"/api/channel/hls/{channel.lower()}.m3u8", **extra_params)
+
+    def video(self, video_id: str, **extra_params) -> str:
         return self._create_url(f"/vod/{video_id}", **extra_params)
 
 
