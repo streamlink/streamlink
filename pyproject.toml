@@ -249,6 +249,10 @@ combine-as-imports = true
 [tool.ruff.lint.flake8-tidy-imports]
 ban-relative-imports = "all"
 
+[tool.ruff.lint.flake8-pytest-style]
+fixture-parentheses = true
+mark-parentheses = true
+
 [tool.ruff.lint.flake8-quotes]
 avoid-escape = false
 
