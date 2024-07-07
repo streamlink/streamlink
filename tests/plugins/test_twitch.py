@@ -1,8 +1,10 @@
+import json
 import unittest
 from contextlib import nullcontext
 from datetime import datetime, timedelta, timezone
 from typing import Optional
 from unittest.mock import MagicMock, Mock, call, patch
+from urllib.parse import parse_qsl, urlparse
 
 import pytest
 import requests_mock as rm
@@ -527,6 +529,70 @@ class TestTwitchHLSStream(TestMixinStreamHLS, unittest.TestCase):
         self.await_write(14)
         assert self.await_read(read_all=True) == self.content(segments)
         assert mock_log.warning.mock_calls == []
+
+
+class TestUsherService:
+    @pytest.fixture(autouse=True)
+    def caplog(self, caplog: pytest.LogCaptureFixture):
+        caplog.set_level(1, "streamlink.plugins.twitch")
+        return caplog
+
+    @pytest.fixture()
+    def plugin(self, request: pytest.FixtureRequest, session: Streamlink):
+        return Twitch(
+            session,
+            "https://twitch.tv/twitch",
+            options=Options(getattr(request, "param", {})),
+        )
+
+    @pytest.fixture()
+    def endpoint(self, request: pytest.FixtureRequest, caplog: pytest.LogCaptureFixture, plugin: Twitch):
+        param = getattr(request, "param", {})
+        service = param.get("service", "channel")
+        args = param.get("args", ("twitch", ))
+
+        token = {
+            "expires": 9876543210,
+            "channel": "twitch",
+            "channel_id": 123,
+            "user_id": 456,
+            "user_ip": "127.0.0.1",
+            "adblock": False,
+            "geoblock_reason": "",
+            "hide_ads": False,
+            "server_ads": True,
+            "show_ads": True,
+        }
+
+        return getattr(plugin.usher, service)(*args, token=json.dumps(token), sig="tokensignature")
+
+    @pytest.mark.parametrize(("endpoint", "expected_path", "logs"), [
+        pytest.param(
+            {"service": "channel", "args": ("TWITCH", )},
+            "/api/channel/hls/twitch.m3u8",
+            [(
+                "streamlink.plugins.twitch",
+                "debug",
+                "{'adblock': False, 'geoblock_reason': '', 'hide_ads': False, 'server_ads': True, 'show_ads': True}",
+            )],
+            id="channel",
+        ),
+        pytest.param(
+            {"service": "video", "args": ("1234567890", )},
+            "/vod/1234567890",
+            [],
+            id="video",
+        ),
+    ], indirect=["endpoint"])
+    def test_service(self, caplog: pytest.LogCaptureFixture, endpoint: str, expected_path: str, logs: list):
+        url = urlparse(endpoint)
+        assert url.path == expected_path
+
+        qs = dict(parse_qsl(url.query))
+        assert qs.get("token")
+        assert qs.get("sig")
+
+        assert [(r.name, r.levelname, r.message) for r in caplog.get_records(when="setup")] == logs
 
 
 class TestTwitchAPIAccessToken:
