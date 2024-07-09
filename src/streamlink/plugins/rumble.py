@@ -1,5 +1,5 @@
 """
-$description Rumble is an online video platform founded in October 2013 by Chris Pavlovski as an alternative to YouTube for independent vloggers and smaller content creators.
+$description Rumble is an online video platform founded in October 2013 by Chris Pavlovski as an alternative to YouTube.
 $url rumble.com
 $type live
 $metadata id
@@ -66,7 +66,8 @@ class Rumble(Plugin):
                 schema=validate.Schema(
                     validate.parse_html(),
                     validate.xml_xpath_string(
-                        "/html/body/main/section/ol/div[1]/div[2][@class='videostream__footer videostream__footer--live']/a/@href",
+                        "/html/body/main/section/ol/div[1]/div[2][@class='videostream__footer "
+                        + "videostream__footer--live']/a/@href",
                     ),
                 ),
                 timeout=5,
