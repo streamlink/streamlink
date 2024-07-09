@@ -9,7 +9,7 @@ import logging
 import re
 
 from streamlink.plugin import Plugin, PluginError, pluginmatcher
-from streamlink.plugin.api import validate
+from streamlink.plugin.api import useragents, validate
 from streamlink.stream.hls import HLSStream
 
 
@@ -104,7 +104,8 @@ class Bloomberg(Plugin):
         return secureStreams or streams
 
     def _get_streams(self):
-        del self.session.http.headers["Accept-Encoding"]
+        self.session.http.headers.clear()
+        self.session.http.headers["User-Agent"] = useragents.CHROME
 
         data = self.session.http.get(self.url, schema=validate.Schema(
             validate.parse_html(),
