@@ -1,5 +1,16 @@
 # Changelog
 
+## streamlink 6.8.3 (2024-07-11)
+
+Patch release:
+
+- Updated plugins:
+  - tiktok: new plugin ([#6073](https://github.com/streamlink/streamlink/pull/6073))
+  - twitch: fixed channel names with uppercase characters ([#6071](https://github.com/streamlink/streamlink/pull/6071))
+
+[Full changelog](https://github.com/streamlink/streamlink/compare/6.8.2...6.8.3)
+
+
 ## streamlink 6.8.2 (2024-07-04)
 
 Patch release:
