@@ -79,7 +79,10 @@ class ConsoleOutput:
                 out.update(**obj)
             out.update(**keywords)
 
-        msg = dumps(out, cls=JSONEncoder, indent=2)
+        # don't escape Unicode characters outside the ASCII range if the output encoding is UTF-8
+        ensure_ascii = self.output.encoding != "utf-8"
+
+        msg = dumps(out, cls=JSONEncoder, ensure_ascii=ensure_ascii, indent=2)
         self.output.write(f"{msg}\n")
 
 
