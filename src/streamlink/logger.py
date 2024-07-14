@@ -125,6 +125,23 @@ class StringFormatter(logging.Formatter):
         return super().format(record)
 
 
+class StreamHandler(logging.StreamHandler):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._stream_reconfigure()
+
+    def setStream(self, stream):
+        res = super().setStream(stream)
+        if res:  # pragma: no branch
+            self._stream_reconfigure()
+
+        return res
+
+    def _stream_reconfigure(self):
+        # make stream write calls escape unsupported characters (stdout/stderr encoding is not guaranteed to be utf-8)
+        self.stream.reconfigure(errors="backslashreplace")
+
+
 class WarningLogRecord(logging.LogRecord):
     msg: WarningMessage  # type: ignore[assignment]
 
@@ -195,7 +212,7 @@ def basicConfig(
         if filename is not None:
             handler = logging.FileHandler(filename, filemode, encoding="utf-8")
         else:
-            handler = logging.StreamHandler(stream)
+            handler = StreamHandler(stream)
 
         # noinspection PyTypeChecker
         formatter = StringFormatter(
