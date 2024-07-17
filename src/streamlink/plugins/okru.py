@@ -22,8 +22,14 @@ from streamlink.stream.http import HTTPStream
 log = logging.getLogger(__name__)
 
 
-@pluginmatcher(re.compile(r"https?://(?:www\.)?ok\.ru/"))
-@pluginmatcher(re.compile(r"https?://m(?:obile)?\.ok\.ru/"))
+@pluginmatcher(
+    name="default",
+    pattern=re.compile(r"https?://(?:www\.)?ok\.ru/"),
+)
+@pluginmatcher(
+    name="mobile",
+    pattern=re.compile(r"https?://m(?:obile)?\.ok\.ru/"),
+)
 class OKru(Plugin):
     QUALITY_WEIGHTS = {
         "full": 1080,
@@ -81,8 +87,14 @@ class OKru(Plugin):
         schema_metadata = validate.Schema(
             validate.parse_json(),
             {
-                validate.optional("author"): validate.all({"name": str}, validate.get("name")),
-                validate.optional("movie"): validate.all({"title": str}, validate.get("title")),
+                validate.optional("author"): validate.all({validate.optional("name"): str}, validate.get("name")),
+                validate.optional("movie"): validate.all(
+                    {
+                        validate.optional("id"): str,
+                        validate.optional("title"): str,
+                    },
+                    validate.union_get("id", "title"),
+                ),
                 validate.optional("hlsManifestUrl"): validate.url(),
                 validate.optional("hlsMasterPlaylistUrl"): validate.url(),
                 validate.optional("liveDashManifestUrl"): validate.url(),
@@ -122,7 +134,7 @@ class OKru(Plugin):
         data = schema_metadata.validate(metadata)
 
         self.author = data.get("author")
-        self.title = data.get("movie")
+        self.id, self.title = data.get("movie", (None, None))
 
         for hls_url in data.get("hlsManifestUrl"), data.get("hlsMasterPlaylistUrl"):
             if hls_url is not None:
@@ -137,7 +149,7 @@ class OKru(Plugin):
         }
 
     def _get_streams(self):
-        return self._get_streams_default() if self.matches[0] else self._get_streams_mobile()
+        return self._get_streams_default() if self.matches["default"] else self._get_streams_mobile()
 
 
 __plugin__ = OKru
