@@ -177,6 +177,16 @@ extend-exclude = [
   "src/streamlink_cli/packages/",
 ]
 
+[tool.ruff.format]
+preview = true
+line-ending = "lf"
+quote-style = "double"
+skip-magic-trailing-comma = false
+exclude = [
+  "src/streamlink/plugin/api/useragents.py",
+  "src/streamlink/webbrowser/cdp/devtools/*.py",
+]
+
 [tool.ruff.lint]
 select = [
   # pycodestyle
