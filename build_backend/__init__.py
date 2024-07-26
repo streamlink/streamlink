@@ -1,5 +1,5 @@
 import shlex
-from typing import List, Optional, Tuple
+from typing import Any, List, Optional, Tuple, Union
 
 from setuptools import build_meta as _build_meta
 
@@ -32,7 +32,13 @@ def get_requires_for_build_wheel(  # type: ignore[no-redef]
     #
     # As a consequence of this, we need to override the build-backend and the `get_requires_for_build_wheel()` hook, so that
     # we can filter out arguments which are not relevant to the `egg_info` command.
-    _filter_cmd_option_args(config_settings, "--build-option", _egg_info.user_options)
+    _filter_cmd_option_args(
+        config_settings,
+        "--build-option",
+        # types-setuptools-70.3.0.20240710 has the wrong type for
+        #   setuptools.command.egg_info.user_options (setuptools._distutils.cmd.Command.user_options)
+        _egg_info.user_options,  # type: ignore[arg-type]
+    )
 
     return _build_meta.get_requires_for_build_wheel(config_settings)
 
@@ -43,7 +49,9 @@ def get_requires_for_build_wheel(  # type: ignore[no-redef]
 def _filter_cmd_option_args(
     config_settings: Optional[dict],
     key: str,
-    options: List[Tuple[str, Optional[str], str]],
+    # https://github.com/pypa/setuptools/blob/v71.1.0/setuptools/_distutils/fancy_getopt.py#L47-L54
+    # https://github.com/pypa/setuptools/blob/v71.1.0/setuptools/_distutils/fancy_getopt.py#L152-L156
+    options: List[Union[Tuple[str, Optional[str], str], Tuple[str, Optional[str], str, Any]]],
 ) -> None:
     """Filter out args which are not recognized by a specific command and its options"""
 
@@ -59,6 +67,8 @@ def _filter_cmd_option_args(
             val_next = False
             result.append(item)
             continue
+        full: str
+        shorthand: Optional[str]
         for full, shorthand, *_ in options:
             is_boolean = full[-1] != "="
             is_shorthand = shorthand is not None and item == f"-{shorthand}"
