@@ -4,6 +4,7 @@ $url stream.tvp.pl
 $url vod.tvp.pl
 $url tvpstream.vod.tvp.pl
 $url tvp.info
+$url sport.tvp.pl
 $type live, vod
 $metadata id
 $metadata title
