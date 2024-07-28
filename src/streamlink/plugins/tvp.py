@@ -34,6 +34,9 @@ log = logging.getLogger(__name__)
 @pluginmatcher(name="tvp_info", pattern=re.compile(
     r"https?://(?:www\.)?tvp\.info/",
 ))
+@pluginmatcher(name="tvp_sport", pattern=re.compile(
+    r"https?://sport\.tvp\.pl/(?P<stream_id>\d+)/.+$",
+))
 class TVP(Plugin):
     _URL_VOD = "https://vod.tvp.pl/api/products/{vod_id}/videos/playlist"
     _URL_INFO_API_TOKEN = "https://api.tvp.pl/tokenizer/token/{token}"
@@ -200,6 +203,8 @@ class TVP(Plugin):
             return self._get_tvp_info_vod()
         if self.matches["vod"]:
             return self._get_vod(self.match["vod_id"])
+        if self.matches["tvp_sport"]:
+            return self._get_formats_from_api(self.match["stream_id"])
         return self._get_live(self.match["channel_id"])
 
 
