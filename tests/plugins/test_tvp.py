@@ -1,7 +1,6 @@
 from streamlink.plugins.tvp import TVP
 from tests.plugins import PluginCanHandleUrl
 
-
 class TestPluginCanHandleUrlTVP(PluginCanHandleUrl):
     __plugin__ = TVP
 
@@ -33,6 +32,11 @@ class TestPluginCanHandleUrlTVP(PluginCanHandleUrl):
             ("tvp_info", "https://www.tvp.info/78213165/euro-2024-polska-holandia-12-bartosz-salamon-czuje-sie-winny-za-te-porazke-wideo"),
             {},
         ),
+        # sport.tvp
+        (
+            ("tvp_sport", "https://sport.tvp.pl/79514191/paryz-2024-magda-linette-mirra-andriejewa-1-runda-na-zywo-transmisja-online-live-stream-igrzyska-olimpijskie-2872024"),
+            {},
+        )
     ]
 
     should_not_match = [

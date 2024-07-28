@@ -36,7 +36,7 @@ log = logging.getLogger(__name__)
     r"https?://(?:www\.)?tvp\.info/",
 ))
 @pluginmatcher(name="tvp_sport", pattern=re.compile(
-    r"https?://sport\.tvp\.pl/(?P<stream_id>\d+)/.+$",
+    r"https?://sport\.tvp\.pl/(?P<stream_id>\d+)/.+",
 ))
 class TVP(Plugin):
     _URL_VOD = "https://vod.tvp.pl/api/products/{vod_id}/videos/playlist"
