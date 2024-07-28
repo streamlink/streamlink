@@ -24,18 +24,18 @@ from streamlink.utils.url import update_qsd
 log = logging.getLogger(__name__)
 
 
-@pluginmatcher(re.compile(
-    r"https?://(?:\w+\.)?vk\.(?:com|ru)/videos?(?:\?z=video)?(?P<video_id>-?\d+_\d+)",
-))
-@pluginmatcher(re.compile(
-    r"https?://(\w+\.)?vk\.(?:com|ru)/.+",
-))
+@pluginmatcher(
+    re.compile(r"https?://(?:\w+\.)?vk\.(?:com|ru)/videos?(?:\?z=video)?(?P<video_id>-?\d+_\d+)"),
+)
+@pluginmatcher(
+    re.compile(r"https?://(\w+\.)?vk\.(?:com|ru)/.+"),
+)
 class VK(Plugin):
     API_URL = "https://vk.com/al_video.php"
     HASH_COOKIE = "hash429"
 
     def _get_cookies(self):
-        def on_response(res, **kwargs):
+        def on_response(res, **__):
             if res.headers.get("x-waf-redirect") == "1":
                 if not res.headers.get("X-WAF-Backend-Status"):
                     log.debug("Getting WAF cookie")
@@ -67,11 +67,14 @@ class VK(Plugin):
             pass
 
         try:
-            self.url = self.session.http.get(self.url, schema=validate.Schema(
-                validate.parse_html(),
-                validate.xml_xpath_string(".//head/meta[@property='og:url'][@content]/@content"),
-                str,
-            ))
+            self.url = self.session.http.get(
+                self.url,
+                schema=validate.Schema(
+                    validate.parse_html(),
+                    validate.xml_xpath_string(".//head/meta[@property='og:url'][@content]/@content"),
+                    str,
+                ),
+            )
         except PluginError:
             pass
         if self._has_video_id():
@@ -83,16 +86,20 @@ class VK(Plugin):
         self._get_cookies()
         self.follow_vk_redirect()
 
-        video_id = self.match.group("video_id")
-        if not video_id:
+        self.id = self.match.group("video_id")
+        if not self.id:
             return
 
-        log.debug(f"Video ID: {video_id}")
+        log.debug(f"Video ID: {self.id}")
         try:
             data = self.session.http.post(
                 self.API_URL,
                 params={"act": "show"},
-                data={"act": "show", "al": "1", "video": video_id},
+                data={
+                    "act": "show",
+                    "al": "1",
+                    "video": self.id,
+                },
                 headers={"Referer": self.url},
                 schema=validate.Schema(
                     validate.transform(lambda text: re.sub(r"^\s*<!--\s*", "", text)),
@@ -104,10 +111,11 @@ class VK(Plugin):
                     {"player": {"params": [dict]}},
                     validate.get(("player", "params", 0)),
                     {
-                        validate.optional("hls"): validate.url(),
-                        validate.optional("manifest"): validate.startswith("<?xml"),
-                        validate.optional("md_author"): validate.any(str, None),
-                        validate.optional("md_title"): validate.any(str, None),
+                        validate.optional("hls"): validate.any(None, validate.url()),
+                        validate.optional("hls_live"): validate.any(None, validate.url()),
+                        validate.optional("dash_live"): validate.any(None, validate.url()),
+                        validate.optional("md_author"): validate.any(None, str),
+                        validate.optional("md_title"): validate.any(None, str),
                     },
                 ),
             )
@@ -115,17 +123,14 @@ class VK(Plugin):
             log.error("Could not parse API response")
             return
 
-        self.id = video_id
         self.author = data.get("md_author")
         self.title = data.get("md_title")
 
-        hls = data.get("hls")
-        if hls:
+        if hls := data.get("hls_live") or data.get("hls"):
             return HLSStream.parse_variant_playlist(self.session, hls)
 
-        dash_manifest = data.get("manifest")
-        if dash_manifest:
-            return DASHStream.parse_manifest(self.session, dash_manifest)
+        if dash := data.get("dash_live"):
+            return DASHStream.parse_manifest(self.session, dash)
 
 
 __plugin__ = VK
