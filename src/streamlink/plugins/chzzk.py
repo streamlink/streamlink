@@ -239,11 +239,11 @@ class Chzzk(Plugin):
             log.debug("The stream is not live.")
             return
 
-        self.is_live = True
-
         if media is None:
             log.error(f"This stream is {'for adults only' if adult else 'unavailable'}")
             return
+
+        self.is_live = True
 
         if live_check_only:
             return
