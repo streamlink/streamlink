@@ -60,7 +60,8 @@ class CDPEventListener(Generic[TEvent]):
     _sender: trio.MemorySendChannel[TEvent]
     _receiver: trio.MemoryReceiveChannel[TEvent]
 
-    def __init__(self, event_channels: TEventChannels, event: Type[TEvent], max_buffer_size: int = MAX_BUFFER_SIZE):
+    def __init__(self, event_channels: TEventChannels, event: Type[TEvent], max_buffer_size: Optional[int] = None):
+        max_buffer_size = MAX_BUFFER_SIZE if max_buffer_size is None else max_buffer_size
         self._sender, self._receiver = trio.open_memory_channel(max_buffer_size)
         event_channels[event].add(self._sender)
 
@@ -204,7 +205,7 @@ class CDPBase:
 
         return response
 
-    def listen(self, event: Type[TEvent], max_buffer_size: int = MAX_BUFFER_SIZE) -> CDPEventListener[TEvent]:
+    def listen(self, event: Type[TEvent], max_buffer_size: Optional[int] = None) -> CDPEventListener[TEvent]:
         """
         Listen to a CDP event and return a new :class:`CDPEventListener` instance.
 
