@@ -202,6 +202,9 @@ class StreamlinkPlugins:
         return mod, mod.__plugin__
 
 
+_RE_STRIP_JSON_COMMENTS = re.compile(rb"^(?:\s*//[^\n]*\n+)+")
+
+
 _TListOfConstants: TypeAlias = List[Union[None, bool, int, float, str]]
 _TConstantOrListOfConstants: TypeAlias = Union[None, bool, int, float, str, _TListOfConstants]
 _TMappingOfConstantOrListOfConstants: TypeAlias = Dict[str, _TConstantOrListOfConstants]
@@ -275,6 +278,7 @@ class StreamlinkPluginsData:
 
     @classmethod
     def _parse(cls, content: bytes) -> Tuple[Dict[str, Matchers], Dict[str, Arguments]]:
+        content = _RE_STRIP_JSON_COMMENTS.sub(b"", content)
         data: Dict[str, _TPluginData] = json.loads(content)
 
         try:

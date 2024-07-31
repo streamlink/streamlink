@@ -93,8 +93,9 @@ jobs:
         run: |
           set -x
           unzip -p ./dist/streamlink-*-any.whl 'streamlink-*.dist-info/RECORD' | grep 'streamlink/plugins/_plugins.json'
-          unzip -p ./dist/streamlink-*-any.whl 'streamlink/plugins/_plugins.json' | jq -e 'keys > 0'
-          unzip -p ./dist/streamlink-*-any.whl 'streamlink/plugins/_plugins.json' | jq
+          unzip -p ./dist/streamlink-*-any.whl 'streamlink/plugins/_plugins.json' | grep -E '^\s*//'
+          unzip -p ./dist/streamlink-*-any.whl 'streamlink/plugins/_plugins.json' | grep -vE '^\s*//' | jq -e 'keys > 0'
+          unzip -p ./dist/streamlink-*-any.whl 'streamlink/plugins/_plugins.json' | grep -vE '^\s*//' | jq
 
   documentation:
     name: Test docs

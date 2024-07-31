@@ -3,11 +3,12 @@ import re
 from contextlib import nullcontext, suppress
 from pathlib import Path
 from textwrap import dedent
-from typing import Any, Type
+from typing import Any, List, Optional, Type
 
 import pytest
 
 from build_backend.plugins_json import (
+    PLUGINSJSON_COMMENTS,
     ParseConstantOrSequenceOfConstants,
     ParseMappingOfConstants,
     ParseSequenceOfConstants,
@@ -1082,11 +1083,37 @@ def test_plugin(test_plugin_code: str):
     ]
 
 
-def test_build(capsys: pytest.CaptureFixture, test_plugins_dir: Path):
+@pytest.mark.parametrize(
+    ("comments", "expected_comments"),
+    [
+        pytest.param(
+            None,
+            PLUGINSJSON_COMMENTS,
+            id="default",
+        ),
+        pytest.param(
+            ["foo", "bar"],
+            ["foo", "bar"],
+            id="custom",
+        ),
+        pytest.param(
+            [],
+            [],
+            id="empty",
+        ),
+    ],
+)
+def test_build(
+    capsys: pytest.CaptureFixture,
+    test_plugins_dir: Path,
+    comments: Optional[List[str]],
+    expected_comments: List[str],
+):
     data = build(test_plugins_dir)
-    to_json(data, pretty=True)
+    to_json(data, comments=comments, pretty=True)
     out, _err = capsys.readouterr()
-    assert out == dedent("""
+    assert out == "".join(f"// {comment}\n" for comment in expected_comments) + dedent(
+        """
         {
           "testplugin": {
             "matchers": [
@@ -1130,7 +1157,8 @@ def test_build(capsys: pytest.CaptureFixture, test_plugins_dir: Path):
             ]
           }
         }
-    """).strip()
+        """,
+    ).strip()
 
 
 @pytest.mark.parametrize("test_plugin_code", [{"faulty": True}], indirect=True)

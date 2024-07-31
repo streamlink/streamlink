@@ -11,6 +11,12 @@ from typing import Any, ClassVar, Dict, Generic, List, Optional, TextIO, Tuple, 
 
 DEFAULT_PLUGINSPATH = Path(__file__).parents[1] / "src" / "streamlink" / "plugins"
 
+PLUGINSJSON_COMMENTS = [
+    "DO NOT MODIFY!",
+    "This file was auto-generated and its checksum is validated before loading.",
+    "If you want to modify existing plugins, then please see the plugin-sideloading or developing docs:",
+    "https://streamlink.github.io/",
+]
 
 TListOfConstants = List[Union[None, bool, int, float, str]]
 TConstantOrListOfConstants = Union[None, bool, int, float, str, TListOfConstants]
@@ -469,25 +475,33 @@ def build(pluginsdir: Path = DEFAULT_PLUGINSPATH) -> Output:
     return dict(sorted(data.items()))
 
 
-def to_json(data: Output, fd: Optional[TextIO] = None, pretty: bool = False) -> None:
+def to_json(data: Output, fd: Optional[TextIO] = None, comments: Optional[List[str]] = None, pretty: bool = False) -> None:
     outputformat = {"separators": (",", ": "), "indent": 2} if pretty else {"separators": (",", ":")}
-    json.dump(data, fd or sys.stdout, cls=JSONEncoder, **outputformat)  # type: ignore[arg-type]
+    _fd: TextIO = fd or sys.stdout
+    for line in (PLUGINSJSON_COMMENTS if comments is None else comments):
+        _fd.write(f"// {line}\n")
+    json.dump(data, _fd, cls=JSONEncoder, **outputformat)  # type: ignore[arg-type]
 
 
 if __name__ == "__main__":  # pragma: no cover
     def main():
         parser = argparse.ArgumentParser()
         parser.add_argument("dir", nargs="?", type=Path, default=DEFAULT_PLUGINSPATH)
+        parser.add_argument("--no-comments", action="store_true")
         parser.add_argument("--pretty", action="store_true")
         parser.add_argument("-o", "--output", default="-", help="Output file")
 
         args = parser.parse_args()
         data = build(args.dir)
 
+        options = {"pretty": args.pretty}
+        if args.no_comments:
+            options["comments"] = []
+
         if args.output == "-":
-            to_json(data, pretty=args.pretty)
+            to_json(data, **options)
         else:
             with open(args.output, "w", encoding="utf-8") as fd:
-                to_json(data, fd, pretty=args.pretty)
+                to_json(data, fd, **options)
 
     main()

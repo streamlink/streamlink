@@ -289,6 +289,35 @@ class TestLoadPluginsData:
         assert session.plugins.get_names() == ["fake"]
         assert [(record.name, record.levelname, record.message) for record in caplog.get_records(when="setup")] == logs
 
+    # noinspection JsonStandardCompliance
+    @pytest.mark.parametrize(
+        "pluginsdata",
+        [
+            pytest.param(
+                # language=json
+                """
+                    // foo
+                    // bar
+                    {
+                        "testplugin": {
+                            "matchers": [
+                                {"pattern": "foo"}
+                            ],
+                            "arguments": []
+                        }
+                    }
+                """,
+                id="json-comments",
+            ),
+        ],
+        indirect=True,
+    )
+    def test_strip_json_comment(self, caplog: pytest.LogCaptureFixture, session: Streamlink, pluginsdata: str):
+        assert "fake" not in session.plugins
+        assert "testplugin" not in session.plugins
+        assert session.plugins.get_names() == ["testplugin"]
+        assert [(record.name, record.levelname, record.message) for record in caplog.get_records(when="setup")] == []
+
     @pytest.mark.parametrize("pluginsdata", [
         pytest.param(
             # language=json
