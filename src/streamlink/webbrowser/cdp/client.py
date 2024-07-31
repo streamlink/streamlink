@@ -189,14 +189,19 @@ class CDPClient:
                 yield cls(cdp_connection, nursery)
 
     @asynccontextmanager
-    async def session(self, fail_unhandled_requests: bool = False) -> AsyncGenerator["CDPClientSession", None]:
+    async def session(
+        self,
+        fail_unhandled_requests: bool = False,
+        max_buffer_size: Optional[int] = None,
+    ) -> AsyncGenerator["CDPClientSession", None]:
         """
         Create a new CDP session on an empty target (browser tab).
 
         :param fail_unhandled_requests: Whether network requests which are not matched by any request handlers should fail.
+        :param max_buffer_size: Optional size of the send/receive memory channel for paused HTTP requests/responses.
         """
         cdp_session = await self.cdp_connection.new_target()
-        yield CDPClientSession(self, cdp_session, fail_unhandled_requests)
+        yield CDPClientSession(self, cdp_session, fail_unhandled_requests, max_buffer_size)
 
 
 class CDPClientSession:
@@ -212,12 +217,14 @@ class CDPClientSession:
         cdp_client: CDPClient,
         cdp_session: CDPSession,
         fail_unhandled_requests: bool = False,
+        max_buffer_size: Optional[int] = None,
     ):
         self.cdp_client = cdp_client
         self.cdp_session = cdp_session
         self._fail_unhandled = fail_unhandled_requests
         self._request_handlers: List[RequestPausedHandler] = []
         self._requests_handled: Set[str] = set()
+        self._max_buffer_size = max_buffer_size
 
     def add_request_handler(
         self,
@@ -405,12 +412,14 @@ class CDPClientSession:
         ]
 
     async def _on_target_detached_from_target(self) -> None:
+        detached_from_target: target.DetachedFromTarget
         async for detached_from_target in self.cdp_client.cdp_connection.listen(target.DetachedFromTarget):
             if detached_from_target.session_id == self.cdp_session.session_id:
                 raise CDPError("Target has been detached")
 
     async def _on_fetch_request_paused(self) -> None:
-        async for request in self.cdp_session.listen(fetch.RequestPaused):
+        request: fetch.RequestPaused
+        async for request in self.cdp_session.listen(fetch.RequestPaused, max_buffer_size=self._max_buffer_size):
             for handler in self._request_handlers:
                 if not handler.matches(request):
                     continue

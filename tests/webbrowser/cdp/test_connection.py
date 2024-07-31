@@ -11,7 +11,7 @@ from trio.testing import MockClock, wait_all_tasks_blocked
 from trio_websocket import CloseReason, ConnectionClosed, ConnectionTimeout  # type: ignore[import]
 
 from streamlink.compat import ExceptionGroup
-from streamlink.webbrowser.cdp.connection import CDPConnection, CDPEventListener, CDPSession
+from streamlink.webbrowser.cdp.connection import MAX_BUFFER_SIZE, CDPConnection, CDPEventListener, CDPSession
 from streamlink.webbrowser.cdp.devtools.target import SessionID, TargetID
 from streamlink.webbrowser.cdp.devtools.util import T_JSON_DICT
 from streamlink.webbrowser.cdp.exceptions import CDPError
@@ -644,10 +644,14 @@ class TestHandleEvent:
         assert FakeEvent not in cdp_connection.event_channels
         listener1 = cdp_connection.listen(FakeEvent)
         listener2 = cdp_connection.listen(FakeEvent)
-        listener3 = cdp_connection.listen(FakeEvent)
+        listener3 = cdp_connection.listen(FakeEvent, max_buffer_size=MAX_BUFFER_SIZE * 2)
         listeners = listener1, listener2, listener3
         assert FakeEvent in cdp_connection.event_channels
         assert len(cdp_connection.event_channels[FakeEvent]) == 3
+
+        assert listener1._sender.statistics().max_buffer_size == MAX_BUFFER_SIZE
+        assert listener2._sender.statistics().max_buffer_size == MAX_BUFFER_SIZE
+        assert listener3._sender.statistics().max_buffer_size == MAX_BUFFER_SIZE * 2
 
         results = []
 
