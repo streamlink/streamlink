@@ -72,7 +72,7 @@ class Sportschau(Plugin):
             for mime_type, url in media:
                 if mime_type == "application/vnd.apple.mpegurl":
                     yield from HLSStream.parse_variant_playlist(self.session, url).items()
-                else:
+                elif mime_type.startswith("audio/"):
                     yield "audio", HTTPStream(self.session, url)
 
 
