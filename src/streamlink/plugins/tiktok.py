@@ -47,17 +47,38 @@ class TikTok(Plugin):
             allow_redirects=False,
             schema=validate.Schema(
                 validate.parse_html(),
-                validate.xml_xpath_string(
-                    ".//head/meta[@property='al:android:url'][contains(@content,'live?room_id=')]/@content",
-                ),
-                validate.none_or_all(
-                    str,
-                    re.compile(r"room_id=(\d+)"),
-                    validate.get(1),
+                validate.any(
+                    validate.all(
+                        validate.xml_xpath_string(
+                            ".//head/meta[@property='al:android:url'][contains(@content,'live?room_id=')]/@content",
+                        ),
+                        str,
+                        re.compile(r"room_id=(\d+)"),
+                        validate.get(1),
+                    ),
+                    validate.all(
+                        validate.xml_xpath_string(
+                            ".//script[@type='application/json'][@id='SIGI_STATE'][1]/text()",
+                        ),
+                        str,
+                        validate.parse_json(),
+                        {
+                            "LiveRoom": {
+                                "liveRoomUserInfo": {
+                                    "user": {
+                                        "roomId": str,
+                                    },
+                                },
+                            },
+                        },
+                        validate.get(("LiveRoom", "liveRoomUserInfo", "user", "roomId")),
+                    ),
+                    validate.transform(lambda *_: None),
                 ),
             ),
         )
         if not self.id:
+            log.error("Could not find room ID")
             return
 
         live_detail = self.session.http.get(
