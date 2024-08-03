@@ -27,13 +27,13 @@ jobs:
           - "3.10"
           - "3.11"
           - "3.12"
-#        include:
-#          - runs-on: ubuntu-latest
-#            python-version: "3.13-dev"
-#            continue: true
-#          - runs-on: windows-latest
-#            python-version: "3.13-dev"
-#            continue: true
+        include:
+          - runs-on: ubuntu-latest
+            python-version: "3.13-dev"
+            continue: true
+          - runs-on: windows-latest
+            python-version: "3.13-dev"
+            continue: true
     runs-on: ${{ matrix.runs-on }}
     timeout-minutes: 60
     steps:
@@ -45,6 +45,18 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
+      - name: Install compat wheels (ubuntu)
+        if: startsWith(matrix['python-version'], '3.13') && startsWith(matrix['runs-on'], 'ubuntu')
+        run: >
+          python -m pip install --upgrade --force-reinstall
+          https://github.com/streamlink/temp-dependency-builds-DO-NOT-USE/releases/download/lxml-20240430-1/lxml-5.2.1-cp313-cp313-linux_x86_64.whl
+      - name: Install compat wheels (windows)
+        if: startsWith(matrix['python-version'], '3.13') && startsWith(matrix['runs-on'], 'windows')
+        run: >
+          python -m pip install --upgrade --force-reinstall
+          https://github.com/streamlink/temp-dependency-builds-DO-NOT-USE/releases/download/lxml-20240430-1/lxml-5.2.1-cp313-cp313-win_amd64.whl
+          https://github.com/streamlink/temp-dependency-builds-DO-NOT-USE/releases/download/cffi-20240430-1/cffi-1.17.0.dev0-cp313-cp313-win_amd64.whl
+        continue-on-error: ${{ matrix.continue || false }}
       - name: Install Python dependencies
         run: >
           python -m pip install -U
