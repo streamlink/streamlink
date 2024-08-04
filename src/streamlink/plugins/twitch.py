@@ -742,6 +742,11 @@ class TwitchClientIntegrity:
     """,
 )
 @pluginargument(
+    "force-client-integrity",
+    action="store_true",
+    help="Don't attempt requesting the streaming access token without a client-integrity token.",
+)
+@pluginargument(
     "purge-client-integrity",
     action="store_true",
     help="Purge cached Twitch client-integrity token and acquire a new one.",
@@ -837,8 +842,12 @@ class Twitch(Plugin):
         return device_id, token
 
     def _access_token(self, is_live, channel_or_vod):
+        response = ""
+        data = (None, None)
+
         # try without a client-integrity token first (the web player did the same on 2023-05-31)
-        response, *data = self.api.access_token(is_live, channel_or_vod)
+        if not self.options.get("force-client-integrity"):
+            response, *data = self.api.access_token(is_live, channel_or_vod)
 
         # try again with a client-integrity token if the API response was erroneous
         if response != "token":
