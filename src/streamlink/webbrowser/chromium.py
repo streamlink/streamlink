@@ -8,6 +8,7 @@ import trio
 from streamlink.compat import is_darwin, is_win32
 from streamlink.plugin.api import validate
 from streamlink.session import Streamlink
+from streamlink.session.http_useragents import CHROME
 from streamlink.utils.socket import find_free_port_ipv4, find_free_port_ipv6
 from streamlink.webbrowser.webbrowser import Webbrowser
 
@@ -151,6 +152,8 @@ class ChromiumWebbrowser(Webbrowser):
         self.port = port
         if headless:
             self.arguments.append("--headless=new")
+            # When in headless mode, a headless hint is added to the User-Agent header, which we want to avoid
+            self.arguments.append(f"--user-agent={CHROME}")
 
     @asynccontextmanager
     async def launch(self, timeout: Optional[float] = None) -> AsyncGenerator[trio.Nursery, None]:
