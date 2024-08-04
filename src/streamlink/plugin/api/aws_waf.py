@@ -24,9 +24,8 @@ class AWSWAF:
     TOKEN = "aws-waf-token"
     EXPIRATION = 3600 * 24 * 4
 
-    def __init__(self, session: Streamlink, headless: bool = False):
+    def __init__(self, session: Streamlink):
         self.session = session
-        self.headless = headless
 
     def acquire(self, url: str) -> bool:
         send: trio.MemorySendChannel[Optional[str]]
@@ -63,11 +62,7 @@ class AWSWAF:
                         return await receive.receive()
 
         try:
-            data = CDPClient.launch(
-                self.session,
-                acquire_token,
-                headless=self.headless,
-            )
+            data = CDPClient.launch(self.session, acquire_token)
         except BaseExceptionGroup:
             log.exception("Failed acquiring AWS WAF token")
         except Exception as err:
