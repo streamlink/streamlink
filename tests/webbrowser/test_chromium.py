@@ -11,6 +11,7 @@ from requests import Timeout
 from streamlink.compat import is_win32
 from streamlink.exceptions import PluginError
 from streamlink.session import Streamlink
+from streamlink.session.http_useragents import CHROME
 from streamlink.webbrowser.chromium import ChromiumWebbrowser
 from streamlink.webbrowser.exceptions import WebbrowserError
 
@@ -107,6 +108,7 @@ class TestLaunchArgs:
     def test_headless(self, headless: bool):
         webbrowser = ChromiumWebbrowser(headless=headless)
         assert ("--headless=new" in webbrowser.arguments) is headless
+        assert (f"--user-agent={CHROME}" in webbrowser.arguments) is headless
 
 
 @pytest.mark.trio()
