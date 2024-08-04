@@ -37,9 +37,9 @@ def get_args() -> argparse.Namespace:
     parser.add_argument(
         "--file",
         metavar="FILE",
-        default=ROOT / "src" / "streamlink" / "plugin" / "api" / "useragents.py",
+        default=ROOT / "src" / "streamlink" / "session" / "http_useragents.py",
         type=Path,
-        help="The user agents module file\nDefault: $GITROOT/src/streamlink/plugin/api/useragents.py",
+        help="The user agents module file\nDefault: $GITROOT/src/streamlink/session/http_useragents.py",
     )
 
     return parser.parse_args()

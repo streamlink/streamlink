@@ -6,8 +6,8 @@ import pytest
 import requests
 
 from streamlink.exceptions import PluginError, StreamlinkDeprecationWarning
-from streamlink.plugin.api.useragents import FIREFOX
 from streamlink.session.http import HTTPSession, SSLContextAdapter, TLSNoDHAdapter, TLSSecLevel1Adapter
+from streamlink.session.http_useragents import FIREFOX
 
 
 class TestUrllib3Overrides:
