@@ -183,7 +183,7 @@ line-ending = "lf"
 quote-style = "double"
 skip-magic-trailing-comma = false
 exclude = [
-  "src/streamlink/plugin/api/useragents.py",
+  "src/streamlink/session/http_useragents.py",
   "src/streamlink/webbrowser/cdp/devtools/*.py",
 ]
 
@@ -245,8 +245,8 @@ ignore = [
 "script/**" = ["INP"]
 "src/streamlink/__init__.py" = ["I"]
 "src/streamlink/_version.py" = ["I"]
-"src/streamlink/plugin/api/useragents.py" = ["E501"]
 "src/streamlink/plugins/*" = ["RUF012"]
+"src/streamlink/session/http_useragents.py" = ["E501"]
 "src/streamlink/webbrowser/cdp/devtools/*" = ["E303", "E501", "F401"]
 "src/streamlink_cli/main.py" = ["PLW0603"]
 "tests/**" = ["RUF012"]

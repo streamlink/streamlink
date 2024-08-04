@@ -9,9 +9,9 @@ import urllib3
 from requests import PreparedRequest, Request, Session
 from requests.adapters import HTTPAdapter
 
+import streamlink.session.http_useragents as useragents
 from streamlink.exceptions import PluginError, StreamlinkDeprecationWarning
 from streamlink.packages.requests_file import FileAdapter
-from streamlink.plugin.api import useragents
 from streamlink.utils.parse import parse_json, parse_xml
 
 

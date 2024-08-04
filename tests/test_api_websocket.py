@@ -4,9 +4,9 @@ import pytest
 from websocket import ABNF, STATUS_NORMAL  # type: ignore[import]
 
 from streamlink.logger import DEBUG, TRACE
-from streamlink.plugin.api.useragents import FIREFOX
 from streamlink.plugin.api.websocket import WebsocketClient
 from streamlink.session import Streamlink
+from streamlink.session.http_useragents import FIREFOX
 from tests.testutils.handshake import Handshake
 
 
