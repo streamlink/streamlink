@@ -86,9 +86,10 @@ class CDPClient:
     ``streamlink.webbrowser.cdp.devtools`` package, but be aware that only a subset of the available domains is supported.
     """
 
-    def __init__(self, cdp_connection: CDPConnection, nursery: trio.Nursery):
+    def __init__(self, cdp_connection: CDPConnection, nursery: trio.Nursery, headless: bool):
         self.cdp_connection = cdp_connection
         self.nursery = nursery
+        self.headless = headless
 
     @classmethod
     def launch(
@@ -186,7 +187,7 @@ class CDPClient:
             websocket_url = webbrowser.get_websocket_url(session)
             cdp_connection: CDPConnection
             async with CDPConnection.create(websocket_url, timeout=cdp_timeout) as cdp_connection:
-                yield cls(cdp_connection, nursery)
+                yield cls(cdp_connection, nursery, headless)
 
     @asynccontextmanager
     async def session(
@@ -274,6 +275,9 @@ class CDPClientSession:
 
         async with trio.open_nursery() as nursery:
             nursery.start_soon(self._on_target_detached_from_target)
+
+            if self.cdp_client.headless:
+                await self._update_user_agent()
 
             if request_patterns:
                 nursery.start_soon(self._on_fetch_request_paused)
@@ -431,3 +435,10 @@ class CDPClientSession:
                     await self.fail_request(request)
                 else:
                     await self.continue_request(request)
+
+    async def _update_user_agent(self) -> None:
+        user_agent: str = await self.evaluate("navigator.userAgent", await_promise=False)
+        if not user_agent:  # pragma: no cover
+            raise CDPError("Could not read navigator.userAgent value")
+        user_agent = re.sub("Headless", "", user_agent, flags=re.IGNORECASE)
+        await self.cdp_session.send(network.set_user_agent_override(user_agent=user_agent))

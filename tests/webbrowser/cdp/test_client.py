@@ -36,8 +36,15 @@ def chromium_webbrowser(monkeypatch: pytest.MonkeyPatch):
 
 
 @pytest.fixture()
-async def cdp_client(session: Streamlink, chromium_webbrowser: Mock, websocket_connection: FakeWebsocketConnection):
-    async with CDPClient.run(session) as cdp_client:
+async def cdp_client(
+    request: pytest.FixtureRequest,
+    session: Streamlink,
+    chromium_webbrowser: Mock,
+    websocket_connection: FakeWebsocketConnection,
+):
+    params = getattr(request, "param", {})
+    headless = params.get("headless", False)
+    async with CDPClient.run(session, headless=headless) as cdp_client:
         yield cdp_client
 
 
@@ -445,6 +452,7 @@ class TestNavigate:
         assert excinfo.group_contains(CDPError, match="^Navigation error: failure$")
 
     @pytest.mark.trio()
+    @pytest.mark.parametrize("cdp_client", [pytest.param({"headless": True}, id="headless")], indirect=True)
     async def test_loaded(
         self,
         cdp_client_session: CDPClientSession,
@@ -462,20 +470,34 @@ class TestNavigate:
 
         nursery.start_soon(navigate)
 
-        await wait_all_tasks_blocked()
-        assert websocket_connection.sent == [
-            """{"id":0,"method":"Page.enable","sessionId":"56789"}""",
+        expected_commands_sent = [
+            """{"id":0,"method":"Runtime.evaluate","params":"""
+            + """{"awaitPromise":false,"expression":"navigator.userAgent"},"sessionId":"56789"}""",
+            """{"id":1,"method":"Network.setUserAgentOverride","params":{"userAgent":"A Chrome UA"},"sessionId":"56789"}""",
+            """{"id":2,"method":"Page.enable","sessionId":"56789"}""",
+            """{"id":3,"method":"Page.navigate","params":{"url":"https://foo"},"sessionId":"56789"}""",
+            """{"id":4,"method":"Page.disable","sessionId":"56789"}""",
         ]
+
+        await wait_all_tasks_blocked()
+        assert websocket_connection.sent == expected_commands_sent[0:1]
         await websocket_connection.sender.send(
-            """{"id":0,"result":{},"sessionId":"56789"}""",
+            """{"id":0,"result":{"result":{"type":"string","value":"A HeadlessChrome UA"}},"sessionId":"56789"}""",
         )
         await wait_all_tasks_blocked()
-        assert websocket_connection.sent == [
-            """{"id":0,"method":"Page.enable","sessionId":"56789"}""",
-            """{"id":1,"method":"Page.navigate","params":{"url":"https://foo"},"sessionId":"56789"}""",
-        ]
+        assert websocket_connection.sent == expected_commands_sent[0:2]
         await websocket_connection.sender.send(
-            """{"id":1,"result":{"frameId":"frame-id-1"},"sessionId":"56789"}""",
+            """{"id":1,"result":{},"sessionId":"56789"}""",
+        )
+        await wait_all_tasks_blocked()
+        assert websocket_connection.sent == expected_commands_sent[0:3]
+        await websocket_connection.sender.send(
+            """{"id":2,"result":{},"sessionId":"56789"}""",
+        )
+        await wait_all_tasks_blocked()
+        assert websocket_connection.sent == expected_commands_sent[0:4]
+        await websocket_connection.sender.send(
+            """{"id":3,"result":{"frameId":"frame-id-1"},"sessionId":"56789"}""",
         )
         await wait_all_tasks_blocked()
         await websocket_connection.sender.send(
@@ -486,13 +508,9 @@ class TestNavigate:
             """{"method":"Page.frameStoppedLoading","params":{"frameId":"frame-id-1"},"sessionId":"56789"}""",
         )
         await wait_all_tasks_blocked()
-        assert websocket_connection.sent == [
-            """{"id":0,"method":"Page.enable","sessionId":"56789"}""",
-            """{"id":1,"method":"Page.navigate","params":{"url":"https://foo"},"sessionId":"56789"}""",
-            """{"id":2,"method":"Page.disable","sessionId":"56789"}""",
-        ]
+        assert websocket_connection.sent == expected_commands_sent[0:5]
         await websocket_connection.sender.send(
-            """{"id":2,"result":{},"sessionId":"56789"}""",
+            """{"id":4,"result":{},"sessionId":"56789"}""",
         )
 
         assert loaded
