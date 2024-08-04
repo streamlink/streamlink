@@ -13,7 +13,6 @@ $notes Acquires a :ref:`client-integrity token <cli/plugins/twitch:Client-integr
 """
 
 import argparse
-import base64
 import logging
 import math
 import re
@@ -631,31 +630,14 @@ class TwitchClientIntegrity:
         if not client_integrity:
             return None
 
-        token, expiration = parse_json(client_integrity, schema=validate.Schema(
+        schema = validate.Schema(
+            validate.parse_json(),
             {"token": str, "expiration": int},
             validate.union_get("token", "expiration"),
-        ))
-        is_bad_bot = cls.decode_client_integrity_token(token, schema=validate.Schema(
-            {"is_bad_bot": str},
-            validate.get("is_bad_bot"),
-            validate.transform(lambda val: val.lower() != "false"),
-        ))
-        log.info(f"Is bad bot? {is_bad_bot}")
-        if is_bad_bot:
-            return None
+        )
+        token, expiration = schema.validate(client_integrity)
 
         return token, expiration / 1000
-
-    @staticmethod
-    def decode_client_integrity_token(data: str, schema: Optional[validate.Schema] = None):
-        if not data.startswith("v4.public."):
-            raise PluginError("Invalid client-integrity token format")
-        token = data[len("v4.public."):].replace("-", "+").replace("_", "/")
-        token += "=" * ((4 - (len(token) % 4)) % 4)
-        token = base64.b64decode(token.encode())[:-64].decode()
-        log.debug(f"Client-Integrity token: {token}")
-
-        return parse_json(token, exception=PluginError, schema=schema)
 
 
 @pluginmatcher(
