@@ -143,7 +143,7 @@ class ChromiumWebbrowser(Webbrowser):
         *args,
         host: Optional[str] = None,
         port: Optional[int] = None,
-        headless: bool = True,
+        headless: bool = False,
         **kwargs,
     ):
         super().__init__(*args, **kwargs)

@@ -1359,7 +1359,9 @@ def build_parser():
         Whether to launch the web browser in headless mode or not.
         When enabled, it stays completely hidden and doesn't require a desktop environment to run.
 
-        Default is true.
+        Please be aware that headless mode might be blocked by websites which implement bot detections.
+
+        Default is false.
         """,
     )
 

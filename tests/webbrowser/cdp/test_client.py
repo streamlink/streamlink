@@ -87,7 +87,7 @@ class TestLaunch:
     @pytest.mark.parametrize(("session", "options"), [
         pytest.param(
             {},
-            dict(executable=None, timeout=20.0, cdp_host=None, cdp_port=None, cdp_timeout=2.0, headless=True),
+            dict(executable=None, timeout=20.0, cdp_host=None, cdp_port=None, cdp_timeout=2.0, headless=False),
             id="Default options",
         ),
         pytest.param(
@@ -97,9 +97,9 @@ class TestLaunch:
                 "webbrowser-cdp-host": "::1",
                 "webbrowser-cdp-port": 1234,
                 "webbrowser-cdp-timeout": 12.34,
-                "webbrowser-headless": False,
+                "webbrowser-headless": True,
             },
-            dict(executable="foo", timeout=123.45, cdp_host="::1", cdp_port=1234, cdp_timeout=12.34, headless=False),
+            dict(executable="foo", timeout=123.45, cdp_host="::1", cdp_port=1234, cdp_timeout=12.34, headless=True),
             id="Custom options",
         ),
     ], indirect=["session"])
