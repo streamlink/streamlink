@@ -110,6 +110,7 @@ class TestPluginMetadata:
             "description",
             "url",
             "type",
+            "webbrowser",
             "metadata",
             "region",
             "account",

@@ -61,6 +61,17 @@ class MetadataList(IMetadataItem):
         yield self.value[idx]
 
 
+class MetadataWebbrowserItem(MetadataItem):
+    def __init__(self):
+        super().__init__("Web browser")
+
+    def generate(self) -> Iterator[str]:
+        if self.value is None:
+            return
+        yield from super().generate()
+        yield " [:ref:`? <cli:Web browser options>`]"
+
+
 class MetadataMetadataList(MetadataList):
     def __init__(self):
         super().__init__("Metadata")
@@ -158,6 +169,7 @@ class PluginMetadata:
             description=MetadataItem("Description"),
             url=MetadataList("URL(s)"),
             type=MetadataItem("Type"),
+            webbrowser=MetadataWebbrowserItem(),
             metadata=MetadataMetadataList(),
             region=MetadataItem("Region"),
             account=MetadataItem("Account"),
