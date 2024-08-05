@@ -98,7 +98,7 @@ class TestLaunchArgs:
         webbrowser = ChromiumWebbrowser()
         assert "--password-store=basic" in webbrowser.arguments
         assert "--use-mock-keychain" in webbrowser.arguments
-        assert "--headless=new" in webbrowser.arguments
+        assert "--headless=new" not in webbrowser.arguments
         assert not any(arg.startswith("--remote-debugging-host") for arg in webbrowser.arguments)
         assert not any(arg.startswith("--remote-debugging-port") for arg in webbrowser.arguments)
         assert not any(arg.startswith("--user-data-dir") for arg in webbrowser.arguments)

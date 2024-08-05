@@ -179,7 +179,7 @@ class CDPClient:
         cdp_host: Optional[str] = None,
         cdp_port: Optional[int] = None,
         cdp_timeout: Optional[float] = None,
-        headless: bool = True,
+        headless: bool = False,
     ) -> AsyncGenerator[Self, None]:
         webbrowser = ChromiumWebbrowser(executable=executable, host=cdp_host, port=cdp_port, headless=headless)
         nursery: trio.Nursery
