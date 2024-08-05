@@ -143,17 +143,14 @@ class ChromiumWebbrowser(Webbrowser):
         *args,
         host: Optional[str] = None,
         port: Optional[int] = None,
-        headless: bool = False,
         **kwargs,
     ):
         super().__init__(*args, **kwargs)
         self.host = host or "127.0.0.1"
         self.port = port
-        if headless:
-            self.arguments.append("--headless=new")
 
     @asynccontextmanager
-    async def launch(self, timeout: Optional[float] = None) -> AsyncGenerator[trio.Nursery, None]:
+    async def launch(self, headless: bool = False, timeout: Optional[float] = None) -> AsyncGenerator[trio.Nursery, None]:
         if self.port is None:
             if ":" in self.host:
                 self.port = await find_free_port_ipv6(self.host)
@@ -163,13 +160,15 @@ class ChromiumWebbrowser(Webbrowser):
         # no async rmtree
         with self._create_temp_dir() as user_data_dir:
             arguments = self.arguments.copy()
+            if headless:
+                arguments.append("--headless=new")
             arguments.extend([
                 f"--remote-debugging-host={self.host}",
                 f"--remote-debugging-port={self.port}",
                 f"--user-data-dir={user_data_dir}",
             ])
 
-            async with super()._launch(self.executable, arguments, timeout=timeout) as nursery:
+            async with super()._launch(self.executable, arguments, headless=headless, timeout=timeout) as nursery:
                 yield nursery
 
             # Even though we've awaited the process termination in the async generator above,

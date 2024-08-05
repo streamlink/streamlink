@@ -93,26 +93,28 @@ class TestFallbacks:
         assert ChromiumWebbrowser.fallback_paths() == []
 
 
-class TestLaunchArgs:
-    def test_launch_args(self):
-        webbrowser = ChromiumWebbrowser()
-        assert "--password-store=basic" in webbrowser.arguments
-        assert "--use-mock-keychain" in webbrowser.arguments
-        assert "--headless=new" not in webbrowser.arguments
-        assert not any(arg.startswith("--remote-debugging-host") for arg in webbrowser.arguments)
-        assert not any(arg.startswith("--remote-debugging-port") for arg in webbrowser.arguments)
-        assert not any(arg.startswith("--user-data-dir") for arg in webbrowser.arguments)
-
-    @pytest.mark.parametrize("headless", [True, False])
-    def test_headless(self, headless: bool):
-        webbrowser = ChromiumWebbrowser(headless=headless)
-        assert ("--headless=new" in webbrowser.arguments) is headless
+def test_default_args():
+    webbrowser = ChromiumWebbrowser()
+    assert "--password-store=basic" in webbrowser.arguments
+    assert "--use-mock-keychain" in webbrowser.arguments
+    assert "--headless=new" not in webbrowser.arguments
+    assert not any(arg.startswith("--remote-debugging-host") for arg in webbrowser.arguments)
+    assert not any(arg.startswith("--remote-debugging-port") for arg in webbrowser.arguments)
+    assert not any(arg.startswith("--user-data-dir") for arg in webbrowser.arguments)
 
 
 @pytest.mark.trio()
-@pytest.mark.parametrize("host", ["127.0.0.1", "::1"])
-@pytest.mark.parametrize("port", [None, 1234])
-async def test_launch(monkeypatch: pytest.MonkeyPatch, mock_clock, webbrowser_launch, host, port):
+@pytest.mark.parametrize("host", [pytest.param("127.0.0.1", id="ipv4"), pytest.param("::1", id="ipv6")])
+@pytest.mark.parametrize("port", [pytest.param(None, id="default-port"), pytest.param(1234, id="custom-port")])
+@pytest.mark.parametrize("headless", [pytest.param(True, id="headless"), pytest.param(False, id="not-headless")])
+async def test_launch(
+    monkeypatch: pytest.MonkeyPatch,
+    mock_clock,
+    webbrowser_launch,
+    host: str,
+    port: Optional[int],
+    headless: bool,
+):
     async def fake_find_free_port(_):
         await trio.sleep(0)
         return 1234
@@ -123,10 +125,11 @@ async def test_launch(monkeypatch: pytest.MonkeyPatch, mock_clock, webbrowser_la
     webbrowser = ChromiumWebbrowser(host=host, port=port)
 
     process: trio.Process
-    async with webbrowser_launch(webbrowser=webbrowser, timeout=999) as (_nursery, process):
+    async with webbrowser_launch(webbrowser=webbrowser, headless=headless, timeout=999) as (_nursery, process):
         assert process.poll() is None, "process is still running"
         assert f"--remote-debugging-host={host}" in process.args
         assert "--remote-debugging-port=1234" in process.args
+        assert ("--headless=new" in process.args) is headless
         param_user_data_dir = next(  # pragma: no branch
             (arg for arg in process.args if arg.startswith("--user-data-dir=")),
             None,

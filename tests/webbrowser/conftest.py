@@ -55,10 +55,16 @@ def webbrowser_launch(monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCapture
         webbrowser.executable = sys.executable
         webbrowser.arguments = ["-c", "import sys; sys.exit(int(sys.stdin.readline()))", *webbrowser.arguments]
 
+        headless = kwargs.get("headless", False)
+
         async with webbrowser.launch(*args, **kwargs) as nursery:
             assert isinstance(nursery, trio.Nursery)
             assert [(record.name, record.levelname, record.msg) for record in caplog.records] == [
-                ("streamlink.webbrowser.webbrowser", "info", f"Launching web browser: {sys.executable}"),
+                (
+                    "streamlink.webbrowser.webbrowser",
+                    "info",
+                    f"Launching web browser: {sys.executable} ({headless=})",
+                ),
             ]
             caplog.records.clear()
             # wait until the process has launched, so we can test it
