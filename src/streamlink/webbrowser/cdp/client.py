@@ -181,9 +181,9 @@ class CDPClient:
         cdp_timeout: Optional[float] = None,
         headless: bool = False,
     ) -> AsyncGenerator[Self, None]:
-        webbrowser = ChromiumWebbrowser(executable=executable, host=cdp_host, port=cdp_port, headless=headless)
+        webbrowser = ChromiumWebbrowser(executable=executable, host=cdp_host, port=cdp_port)
         nursery: trio.Nursery
-        async with webbrowser.launch(timeout=timeout) as nursery:
+        async with webbrowser.launch(headless=headless, timeout=timeout) as nursery:
             websocket_url = webbrowser.get_websocket_url(session)
             cdp_connection: CDPConnection
             async with CDPConnection.create(websocket_url, timeout=cdp_timeout) as cdp_connection:

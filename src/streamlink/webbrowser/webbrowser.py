@@ -46,19 +46,20 @@ class Webbrowser:
         self.executable: Union[str, Path] = resolved
         self.arguments: List[str] = self.launch_args().copy()
 
-    def launch(self, timeout: Optional[float] = None) -> AsyncContextManager[trio.Nursery]:
-        return self._launch(self.executable, self.arguments, timeout=timeout)
+    def launch(self, headless: bool = False, timeout: Optional[float] = None) -> AsyncContextManager[trio.Nursery]:
+        return self._launch(self.executable, self.arguments, headless=headless, timeout=timeout)
 
     def _launch(
         self,
         executable: Union[str, Path],
         arguments: List[str],
+        headless: bool = False,
         timeout: Optional[float] = None,
     ) -> AsyncContextManager[trio.Nursery]:
         if timeout is None:
             timeout = self.TIMEOUT
 
-        launcher = _WebbrowserLauncher(executable, arguments, timeout)
+        launcher = _WebbrowserLauncher(executable, arguments, headless, timeout)
 
         # noinspection PyArgumentList
         return launcher.launch()
@@ -72,17 +73,19 @@ class Webbrowser:
 
 
 class _WebbrowserLauncher:
-    def __init__(self, executable: Union[str, Path], arguments: List[str], timeout: float):
+    def __init__(self, executable: Union[str, Path], arguments: List[str], headless: bool, timeout: float):
         self.executable = executable
         self.arguments = arguments
+        self.headless = headless
         self.timeout = timeout
         self._process_ended_early = False
 
     @asynccontextmanager
     async def launch(self) -> AsyncGenerator[trio.Nursery, None]:
         try:
+            headless = self.headless
             async with trio.open_nursery() as nursery:
-                log.info(f"Launching web browser: {self.executable}")
+                log.info(f"Launching web browser: {self.executable} ({headless=})")
                 # the process is run in a separate task
                 run_process = partial(
                     trio.run_process,
