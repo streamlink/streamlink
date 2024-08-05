@@ -2,6 +2,7 @@
 $description Live TV channels from VTV, a Vietnamese public, state-owned broadcaster.
 $url vtvgo.vn
 $type live
+$webbrowser Required for circumventing the AWS Web Application Firewall bot-detection.
 """
 
 import logging
