@@ -617,12 +617,7 @@ class TwitchClientIntegrity:
                     return await client_session.evaluate(js_get_integrity_token, timeout=eval_timeout)
 
         try:
-            client_integrity = CDPClient.launch(
-                session,
-                acquire_client_integrity_token,
-                # headless mode gets detected by Twitch, so we have to disable it regardless the user config
-                headless=False,
-            )
+            client_integrity = CDPClient.launch(session, acquire_client_integrity_token)
         except BaseExceptionGroup:
             log.exception("Failed acquiring client integrity token")
         except Exception as err:
