@@ -10,7 +10,7 @@ import re
 
 from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.api import validate
-from streamlink.plugin.api.aws_waf import AWSWAF
+from streamlink.plugin.api.webbrowser.aws_waf import AWSWAF
 from streamlink.stream.hls import HLSStream
 
 
