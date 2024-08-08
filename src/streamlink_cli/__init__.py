@@ -1,5 +1,5 @@
 from signal import SIGINT, SIGTERM, signal
-from sys import exit
+from sys import exit  # noqa: A004
 
 
 def _exit(*_):

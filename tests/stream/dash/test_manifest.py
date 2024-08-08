@@ -291,7 +291,7 @@ class TestMPDParser:
             ("http://test/14.m4s", 14),
             ("http://test/15.m4s", 15),
         ], "Queues the init segment and the correct number of segments from the live-edge"
-        assert mpd.timelines[("0", "0", "0")] == 16, "Remembers the next segment number"
+        assert mpd.timelines["0", "0", "0"] == 16, "Remembers the next segment number"
         assert [(record.name, record.levelname, record.message) for record in caplog.records] == []
 
         # regular continuation
@@ -304,7 +304,7 @@ class TestMPDParser:
             ("http://test/17.m4s", 17),
             ("http://test/18.m4s", 18),
         ], "All segments from the remembered segment number were queued"
-        assert mpd.timelines[("0", "0", "0")] == 19, "Remembers the next segment number"
+        assert mpd.timelines["0", "0", "0"] == 19, "Remembers the next segment number"
         assert [(record.name, record.levelname, record.message) for record in caplog.records] == []
 
         # regular continuation with a different offset
@@ -320,7 +320,7 @@ class TestMPDParser:
             ("http://test/23.m4s", 23),
             ("http://test/24.m4s", 24),
         ], "All segments from the remembered segment number were queued"
-        assert mpd.timelines[("0", "0", "0")] == 25, "Remembers the next segment number"
+        assert mpd.timelines["0", "0", "0"] == 25, "Remembers the next segment number"
         assert [(record.name, record.levelname, record.message) for record in caplog.records] == []
 
         # skipped multiple segments
@@ -340,7 +340,7 @@ class TestMPDParser:
             ("http://test/38.m4s", 38),
             ("http://test/39.m4s", 39),
         ], "All segments from the remembered segment number were queued"
-        assert mpd.timelines[("0", "0", "0")] == 40, "Remembers the next segment number"
+        assert mpd.timelines["0", "0", "0"] == 40, "Remembers the next segment number"
         assert [(record.name, record.levelname, record.message) for record in caplog.records] == [
             (
                 "streamlink.stream.dash.manifest",
@@ -368,7 +368,7 @@ class TestMPDParser:
             ("http://test/49.m4s", 49),
             ("http://test/50.m4s", 50),
         ], "All segments from the remembered segment number were queued"
-        assert mpd.timelines[("0", "0", "0")] == 51, "Remembers the next segment number"
+        assert mpd.timelines["0", "0", "0"] == 51, "Remembers the next segment number"
         assert [(record.name, record.levelname, record.message) for record in caplog.records] == [
             (
                 "streamlink.stream.dash.manifest",
