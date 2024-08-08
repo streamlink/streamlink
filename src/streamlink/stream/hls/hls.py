@@ -7,7 +7,7 @@ from typing import Any, ClassVar, Dict, List, Optional, Tuple, Type, Union
 from urllib.parse import urlparse
 
 from requests import Response
-from requests.exceptions import ChunkedEncodingError, ConnectionError, ContentDecodingError, InvalidSchema
+from requests.exceptions import ChunkedEncodingError, ConnectionError, ContentDecodingError, InvalidSchema  # noqa: A004
 
 from streamlink.buffers import RingBuffer
 from streamlink.exceptions import StreamError

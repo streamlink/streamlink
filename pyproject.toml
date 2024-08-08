@@ -229,6 +229,7 @@ select = [
 ]
 ignore = [
   "A003",  # builtin-attribute-shadowing
+  "A005",  # builtin-module-shadowing
   "C408",  # unnecessary-collection-call
   "ISC003",  # explicit-string-concatenation
   "PLC1901",  # compare-to-empty-string
@@ -255,6 +256,12 @@ ignore = [
 known-first-party = ["streamlink", "streamlink_cli"]
 lines-after-imports = 2
 combine-as-imports = true
+
+[tool.ruff.lint.flake8-builtins]
+builtins-ignorelist = [
+  "BaseExceptionGroup", # compat import from exceptiongroup pkg
+  "ExceptionGroup", # compat import from exceptiongroup pkg
+]
 
 [tool.ruff.lint.flake8-tidy-imports]
 ban-relative-imports = "all"
