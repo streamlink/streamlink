@@ -1,0 +1,19 @@
+version: 2
+
+build:
+  os: ubuntu-lts-latest
+  tools:
+    python: "3.12"
+  jobs:
+    post_checkout:
+      - "[ ${READTHEDOCS_VERSION_TYPE} = external ] || exit 183"
+      - "git fetch --depth=300 origin +refs/tags/*:refs/tags/*"
+    post_install:
+      - "python -m pip install --upgrade --upgrade-strategy=eager -e ."
+
+python:
+  install:
+    - requirements: docs-requirements.txt
+
+sphinx:
+  configuration: docs/conf.py
