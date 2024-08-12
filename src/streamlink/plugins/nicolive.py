@@ -116,9 +116,9 @@ class NicoLiveHLSStream(HLSStream):
         self.wsclient = wsclient
 
 
-@pluginmatcher(re.compile(
-    r"https?://(?P<domain>live\d*\.nicovideo\.jp)/watch/(lv|co)\d+",
-))
+@pluginmatcher(
+    re.compile(r"https?://(?P<domain>live\d*\.nicovideo\.jp)/watch/(lv|co|user/)\d+"),
+)
 @pluginargument(
     "email",
     sensitive=True,
