@@ -108,25 +108,31 @@ class Vimeo(Plugin):
         return schema_config.validate(config)
 
     def _get_dash_url(self, url):
-        return self.session.http.get(url, schema=validate.Schema(
-            validate.parse_json(),
-            {"url": validate.url()},
-            validate.get("url"),
-        ))
+        return self.session.http.get(
+            url,
+            schema=validate.Schema(
+                validate.parse_json(),
+                {"url": validate.url()},
+                validate.get("url"),
+            ),
+        )
 
     def _query_player(self):
-        return self.session.http.get(self.url, schema=validate.Schema(
-            validate.parse_html(),
-            validate.xml_xpath_string(".//script[contains(text(),'window.playerConfig')][1]/text()"),
-            validate.none_or_all(
-                re.compile(r"^\s*window\.playerConfig\s*=\s*(?P<json>{.+?})\s*$"),
+        return self.session.http.get(
+            self.url,
+            schema=validate.Schema(
+                validate.parse_html(),
+                validate.xml_xpath_string(".//script[contains(text(),'window.playerConfig')][1]/text()"),
                 validate.none_or_all(
-                    validate.get("json"),
-                    validate.parse_json(),
-                    validate.transform(self._schema_config),
+                    re.compile(r"^\s*window\.playerConfig\s*=\s*(?P<json>{.+?})\s*$"),
+                    validate.none_or_all(
+                        validate.get("json"),
+                        validate.parse_json(),
+                        validate.transform(self._schema_config),
+                    ),
                 ),
             ),
-        ))
+        )
 
     def _get_config_url(self):
         jwt, api_url = self.session.http.get(
@@ -196,10 +202,13 @@ class Vimeo(Plugin):
             log.error("The content is not available")
             raise NoStreamsError
 
-        return self.session.http.get(config_url, schema=validate.Schema(
-            validate.parse_json(),
-            validate.transform(self._schema_config),
-        ))
+        return self.session.http.get(
+            config_url,
+            schema=validate.Schema(
+                validate.parse_json(),
+                validate.transform(self._schema_config),
+            ),
+        )
 
     def _get_streams(self):
         if self.matches["player"]:
@@ -227,16 +236,13 @@ class Vimeo(Plugin):
         for url in dash.values():
             if not url:
                 continue
+            # DASH manifests (sometimes?) are in the JSON format, which is unsupported.
+            # Previously, it was possible to change the URL's path component and replace the manifest's file name extension,
+            # but now, URLs are signed and can't be updated anymore, so simply discard those kinds of DASH manifest URLs.
             p = urlparse(url)
-            if p.path.endswith("dash.mpd"):
-                # LIVE
-                url = self._get_dash_url(url)
-            elif p.path.endswith("master.json"):
-                # VOD
-                url = url.replace("master.json", "master.mpd")
-            else:
-                log.error(f"Unsupported DASH path: {p.path}")
+            if not p.path.endswith("dash.mpd"):
                 continue
+            url = self._get_dash_url(url)
 
             streams.extend(DASHStream.parse_manifest(self.session, url).items())
             break
@@ -244,7 +250,7 @@ class Vimeo(Plugin):
         streams.extend(
             (quality, HTTPStream(self.session, url))
             for quality, url in progressive or []
-            if url
+            if url and quality not in streams
         )
 
         if text_tracks and self.session.get_option("mux-subtitles"):
