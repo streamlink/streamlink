@@ -6,7 +6,7 @@ versioningit >=2.0.0,<4  # required for reading the version string when building
 sphinx >=6.0.0,<9
 
 # themes and extensions
-furo ==2024.04.27
+furo ==2024.08.06
 myst-parser >=1.0.0,<5
 sphinx-design ==0.5.0
 
