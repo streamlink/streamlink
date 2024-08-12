@@ -185,6 +185,9 @@ class ChromiumWebbrowser(Webbrowser):
             retry_backoff=0.25,
             retry_max_backoff=0.25,
             timeout=0.1,
+            proxies={
+                "http": "",
+            },
             schema=validate.Schema(
                 validate.parse_json(),
                 {"webSocketDebuggerUrl": validate.url(scheme="ws")},

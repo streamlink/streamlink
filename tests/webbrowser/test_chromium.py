@@ -147,39 +147,57 @@ async def test_launch(
     assert not user_data_dir.exists()
 
 
-@pytest.mark.parametrize(("host", "port"), [
-    pytest.param("127.0.0.1", 1234, id="IPv4"),
-    pytest.param("::1", 1234, id="IPv6"),
-])
-@pytest.mark.parametrize(("num", "raises"), [
-    pytest.param(10, nullcontext(), id="Success"),
-    pytest.param(11, pytest.raises(PluginError), id="Timeout/Failure"),
-])
+@pytest.mark.parametrize(
+    ("host", "port", "address"),
+    [
+        pytest.param("127.0.0.1", 1234, "http://127.0.0.1:1234/json/version", id="IPv4"),
+        pytest.param("::1", 1234, "http://[::1]:1234/json/version", id="IPv6"),
+    ],
+)
+@pytest.mark.parametrize(
+    "session",
+    [
+        pytest.param({"http-proxy": "http://localhost:4321/"}, id="with-proxy"),
+        pytest.param({}, id="without-proxy"),
+    ],
+    indirect=True,
+)
+@pytest.mark.parametrize(
+    ("num", "raises"),
+    [
+        pytest.param(10, nullcontext(), id="Success"),
+        pytest.param(11, pytest.raises(PluginError), id="Timeout/Failure"),
+    ],
+)
 def test_get_websocket_address(
     monkeypatch: pytest.MonkeyPatch,
     requests_mock: rm.Mocker,
     session: Streamlink,
     host: str,
     port: int,
+    address: str,
     num: int,
     raises: nullcontext,
 ):
     monkeypatch.setattr("time.sleep", lambda _: None)
+    _host = f"[{host}]" if ":" in host else host
 
     payload = {
-      "Browser": "Chrome/114.0.5735.133",
-      "Protocol-Version": "1.3",
-      "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36",
-      "V8-Version": "11.4.183.23",
-      "WebKit-Version": "537.36 (@fbfa2ce68d01b2201d8c667c2e73f648a61c4f4a)",
-      "webSocketDebuggerUrl": f"ws://{host}:{port}/devtools/browser/some-uuid4",
+        "Browser": "Chrome/114.0.5735.133",
+        "Protocol-Version": "1.3",
+        "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36",
+        "V8-Version": "11.4.183.23",
+        "WebKit-Version": "537.36 (@fbfa2ce68d01b2201d8c667c2e73f648a61c4f4a)",
+        "webSocketDebuggerUrl": f"ws://{_host}:{port}/devtools/browser/some-uuid4",
     }
 
-    for address in ("http://127.0.0.1:1234/json/version", "http://[::1]:1234/json/version"):
-        responses: List[Dict[str, Any]] = [{"exc": Timeout()} for _ in range(num)]
-        responses.append({"json": payload})
-        requests_mock.register_uri("GET", address, responses)
+    responses: List[Dict[str, Any]] = [{"exc": Timeout()} for _ in range(num)]
+    responses.append({"json": payload})
+    mock = requests_mock.register_uri("GET", address, responses)
 
     webbrowser = ChromiumWebbrowser(host=host, port=port)
     with raises:
-        assert webbrowser.get_websocket_url(session) == f"ws://{host}:{port}/devtools/browser/some-uuid4"
+        assert webbrowser.get_websocket_url(session) == f"ws://{_host}:{port}/devtools/browser/some-uuid4"
+        assert mock.called
+        assert mock.last_request
+        assert not mock.last_request.proxies.get("http")
