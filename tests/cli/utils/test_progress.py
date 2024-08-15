@@ -22,7 +22,7 @@ class TestProgressFormatter:
         )
 
     @pytest.fixture(autouse=True)
-    def term_width(self, request: pytest.FixtureRequest, monkeypatch: pytest.MonkeyPatch):  # noqa: PT004
+    def term_width(self, request: pytest.FixtureRequest, monkeypatch: pytest.MonkeyPatch):
         width = getattr(request, "param", 99)
         monkeypatch.setattr("streamlink_cli.utils.progress.ProgressFormatter.term_width", lambda: width)
 
