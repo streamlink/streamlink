@@ -50,7 +50,6 @@ jobs:
           python -m pip install -U
           -e .
           -r dev-requirements.txt
-          shtab
         continue-on-error: ${{ matrix.continue || false }}
       - name: Install optional Python dependencies
         if: ${{ ! startsWith(matrix['python-version'], '3.13') }}
@@ -60,9 +59,6 @@ jobs:
       - name: Test
         continue-on-error: ${{ matrix.continue || false }}
         run: pytest -r a --cov --cov-branch --cov-report=xml --durations 10
-      - name: Build shell completions
-        continue-on-error: ${{ matrix.continue || false }}
-        run: bash ./script/build-shell-completions.sh
       - name: Upload coverage data
         if: github.event_name != 'schedule'
         continue-on-error: ${{ matrix.continue || false }}
@@ -89,8 +85,14 @@ jobs:
       - name: Install Python dependencies
         run: >
           python -m pip install -U
+          -e .
           -r dev-requirements.txt
-          build wheel
+          build
+          wheel
+          shtab
+      - name: Build shell completions
+        continue-on-error: ${{ matrix.continue || false }}
+        run: bash ./script/build-shell-completions.sh
       - name: Build sdist and wheels
         run: ./script/build-and-sign.sh
       - name: Plugins JSON
