@@ -2,12 +2,12 @@
 $description Global live-streaming and video hosting social platform owned by Google.
 $url youtube.com
 $url youtu.be
-$type live, vod
+$type live
 $metadata id
 $metadata author
 $metadata category
 $metadata title
-$notes Protected videos are not supported
+$notes VOD content and protected videos are not supported
 """
 
 import json
@@ -246,6 +246,12 @@ class YouTube(Plugin):
                 if best_audio_itag is None or audio_bitrate > self.adp_audio[best_audio_itag]:
                     best_audio_itag = itag
 
+        if (
+            not best_audio_itag
+            or self.session.http.head(adaptive_streams[best_audio_itag], raise_for_status=False).status_code >= 400
+        ):
+            return {}
+
         streams.update({
             f"audio_{stream_codec}": HTTPStream(self.session, adaptive_streams[itag])
             for stream_codec, itag in audio_streams.items()
@@ -381,13 +387,15 @@ class YouTube(Plugin):
         streams = {}
         hls_manifest, formats, adaptive_formats = self._schema_streamingdata(data)
 
-        protected = next((True for url, *_ in formats + adaptive_formats if url is None), False)
+        protected = any(url is None for url, *_ in formats + adaptive_formats)
         if protected:
             log.debug("This video may be protected.")
 
         for url, label in formats:
             if url is None:
                 continue
+            if self.session.http.head(url, raise_for_status=False).status_code >= 400:
+                break
             streams[label] = HTTPStream(self.session, url)
 
         if not is_live:
@@ -396,8 +404,11 @@ class YouTube(Plugin):
         if hls_manifest:
             streams.update(HLSStream.parse_variant_playlist(self.session, hls_manifest, name_key="pixels"))
 
-        if not streams and protected:
-            raise PluginError("This plugin does not support protected videos, try youtube-dl instead")
+        if not streams:
+            if protected:
+                raise PluginError("This plugin does not support protected videos, try yt-dlp instead")
+            if formats or adaptive_formats:
+                raise PluginError("This plugin does not support VOD content, try yt-dlp instead")
 
         return streams
 
