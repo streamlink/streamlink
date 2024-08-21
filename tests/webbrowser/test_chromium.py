@@ -116,7 +116,7 @@ async def test_launch(
     headless: bool,
 ):
     async def fake_find_free_port(_):
-        await trio.sleep(0)
+        await trio.lowlevel.checkpoint()
         return 1234
 
     monkeypatch.setattr("streamlink.webbrowser.chromium.find_free_port_ipv4", fake_find_free_port)
