@@ -216,6 +216,8 @@ select = [
   "ISC",
   # flake8-no-pep420
   "INP",
+  # flake8-logging
+  "LOG",
   # flake8-pie
   "PIE",
   # flake8-print
