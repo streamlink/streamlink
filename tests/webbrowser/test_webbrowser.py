@@ -88,7 +88,7 @@ class TestLaunch:
         async with webbrowser_launch(timeout=10) as (_nursery, process):
             assert process.poll() is None, "process is still running"
             mock_clock.jump(20)
-            await trio.sleep(0)
+            await trio.lowlevel.checkpoint()
 
         assert process.poll() == (1 if is_win32 else -SIGTERM), "Process has been terminated"
         assert [(record.name, record.levelname, record.msg) for record in caplog.records] == [

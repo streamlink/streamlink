@@ -200,6 +200,8 @@ select = [
   "PLW",
   # isort
   "I",
+  # flake8-async
+  "ASYNC",
   # flake8-builtins
   "A",
   # flake8-bugbear
@@ -230,6 +232,7 @@ select = [
 ignore = [
   "A003",  # builtin-attribute-shadowing
   "A005",  # builtin-module-shadowing
+  "ASYNC109",  # async-function-with-timeout
   "C408",  # unnecessary-collection-call
   "ISC003",  # explicit-string-concatenation
   "PLC1901",  # compare-to-empty-string
