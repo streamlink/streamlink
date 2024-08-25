@@ -829,25 +829,45 @@ def log_current_arguments(session: Streamlink, parser: argparse.ArgumentParser):
             log.debug(f" {name}={value if name not in sensitive else '*' * 8}")
 
 
-def setup_logger_and_console(stream=sys.stdout, filename=None, level="info", json=False):
+def setup_logger_and_console(
+    stream=sys.stdout,
+    level: str = "info",
+    fmt: Optional[str] = None,
+    datefmt: Optional[str] = None,
+    file: Optional[str] = None,
+    json=False,
+):
     global console
 
-    if filename == "-":
+    verbose = level in ("trace", "all")
+    if not fmt:
+        if verbose:
+            fmt = "[{asctime}][{name}][{levelname}] {message}"
+        else:
+            fmt = "[{name}][{levelname}] {message}"
+    if not datefmt:
+        if verbose:
+            datefmt = "%H:%M:%S.%f"
+        else:
+            datefmt = "%H:%M:%S"
+
+    if file == "-":
         filename = LOG_DIR / f"{datetime.now(tz=LOCALTIMEZONE)}.log"
-    elif filename:
-        filename = Path(filename).expanduser().resolve()
+    elif file:
+        filename = Path(file).expanduser().resolve()
+    else:
+        filename = None
 
     if filename:
         filename.parent.mkdir(parents=True, exist_ok=True)
 
-    verbose = level in ("trace", "all")
     streamhandler = logger.basicConfig(
         stream=stream,
         filename=filename,
         level=level,
         style="{",
-        format=f"{'[{asctime}]' if verbose else ''}[{{name}}][{{levelname}}] {{message}}",
-        datefmt=f"%H:%M:%S{'.%f' if verbose else ''}",
+        format=fmt,
+        datefmt=datefmt,
         capture_warnings=True,
     )
 
@@ -870,7 +890,14 @@ def setup(parser: ArgumentParser) -> None:
     silent_log = any(getattr(args, attr) for attr in QUIET_OPTIONS)
     log_level = args.loglevel if not silent_log else "none"
     log_file = args.logfile if log_level != "none" else None
-    setup_logger_and_console(console_out, log_file, log_level, args.json)
+    setup_logger_and_console(
+        stream=console_out,
+        level=log_level,
+        fmt=args.logformat,
+        datefmt=args.logdateformat,
+        file=log_file,
+        json=args.json,
+    )
 
     setup_streamlink()
     # load additional plugins
