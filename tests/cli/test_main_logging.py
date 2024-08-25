@@ -9,6 +9,7 @@ import pytest
 
 import streamlink_cli.main
 import tests
+from streamlink.logger import ALL, TRACE, StringFormatter, capturewarnings
 from streamlink.session import Streamlink
 from streamlink_cli.argparser import ArgumentParser
 from streamlink_cli.exceptions import StreamlinkCLIError
@@ -39,6 +40,7 @@ def _setup(monkeypatch: pytest.MonkeyPatch, session: Streamlink):
     try:
         yield
     finally:
+        capturewarnings(False)
         streamlink_cli.main.logger.root.handlers.clear()
         streamlink_cli.main.logger.root.setLevel(level)
         streamlink_cli.main.args = None  # type: ignore[assignment]
@@ -271,6 +273,60 @@ class TestInfos:
 
         streamlink_cli.main.setup(parser)
         assert [(record.name, record.levelname, record.message) for record in caplog.records] == logs
+
+
+@pytest.mark.parametrize(
+    ("argv", "level", "fmt", "datefmt"),
+    [
+        pytest.param(
+            [],
+            logging.INFO,
+            "[{name}][{levelname}] {message}",
+            "%H:%M:%S",
+            id="default",
+        ),
+        pytest.param(
+            ["--loglevel", "trace"],
+            TRACE,
+            "[{asctime}][{name}][{levelname}] {message}",
+            "%H:%M:%S.%f",
+            id="loglevel=trace",
+        ),
+        pytest.param(
+            ["--loglevel", "all"],
+            ALL,
+            "[{asctime}][{name}][{levelname}] {message}",
+            "%H:%M:%S.%f",
+            id="loglevel=all",
+        ),
+        pytest.param(
+            ["--loglevel", "all", "--logformat", "{asctime} - {message}"],
+            ALL,
+            "{asctime} - {message}",
+            "%H:%M:%S.%f",
+            id="logformat",
+        ),
+        pytest.param(
+            ["--loglevel", "all", "--logdateformat", "%Y-%m-%dT%H:%M:%S.%f"],
+            ALL,
+            "[{asctime}][{name}][{levelname}] {message}",
+            "%Y-%m-%dT%H:%M:%S.%f",
+            id="logdateformat",
+        ),
+    ],
+    indirect=["argv"],
+)
+def test_logformat(argv: list, parser: ArgumentParser, level: int, fmt: str, datefmt: str):
+    streamlink_cli.main.setup(parser)
+
+    rootlogger = logging.getLogger("streamlink")
+    assert rootlogger.level == level
+    assert rootlogger.handlers
+    formatter = rootlogger.handlers[0].formatter
+    assert isinstance(formatter, StringFormatter)
+    assert formatter.style == "{"
+    assert formatter.fmt == fmt
+    assert formatter.datefmt == datefmt
 
 
 class TestLogfile:

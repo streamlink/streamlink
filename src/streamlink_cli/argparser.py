@@ -291,6 +291,33 @@ def build_parser():
         """,
     )
     general.add_argument(
+        "--logformat",
+        metavar="FORMAT",
+        help="""
+        Set a custom logging format.
+
+        See the Python standard library's `logging.Formatter` docs for more information about the logging format
+        and the available `LogRecord` attributes. Streamlink's formatter uses the curly brace style.
+
+        The default format depends on the chosen log level (may include the `asctime` attribute).
+
+        Default is "[{name}][{levelname}] {message}".
+        """,
+    )
+    general.add_argument(
+        "--logdateformat",
+        metavar="DATEFORMAT",
+        help="""
+        Set a custom logging date format.
+
+        This formats the `LogRecord`'s `asctime` attribute via `strftime()`.
+
+        The default date format depends on the chosen log level (may include fractions).
+
+        Default is "%%H:%%M:%%S".
+        """,
+    )
+    general.add_argument(
         "--logfile",
         metavar="FILE",
         help="""
