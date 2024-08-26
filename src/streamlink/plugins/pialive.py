@@ -67,8 +67,8 @@ class PiaLive(Plugin):
             ),
         )["data"]["movie_one_tag"]
         player_url = validate.Schema(
-                validate.regex(re.compile(r"\s+src=([\"'])(?P<player_url>.*?)\1")),
-            ).validate(player_script_tag)["player_url"]
+            validate.regex(re.compile(r"\s+src=([\"'])(?P<player_url>.*?)\1")),
+        ).validate(player_script_tag)["player_url"]
 
         if not player_url:
             log.error("Player URL not found")
@@ -81,9 +81,7 @@ class PiaLive(Plugin):
         if player_url.startswith(self._ULIZA_URL_PLAYER_DATA):
             m3u8_url = self.session.http.get(
                 player_url,
-                headers={
-                    "Referer": self._URL_BASE,
-                },
+                headers={"Referer": self._URL_BASE},
                 schema=validate.Schema(
                     re.compile(rf"""{re.escape(self._ULIZA_URL_PLAYLIST)}[^"']+"""),
                     validate.none_or_all(
