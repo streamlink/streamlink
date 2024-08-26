@@ -33,7 +33,7 @@ class PiaLive(Plugin):
         return validate.all(
             validate.xml_xpath_string(xml_xpath),
             str,
-            validate.regex(re.compile(rf'(?:var|const)\s+{variable}\s*=\s*(["\'])(?P<value>(?:(?!\1).)+)\1')),
+            validate.regex(re.compile(rf"(?:var|const)\s+{variable}\s*=\s*([\"'])(?P<value>(?:(?!\1).)+)\1")),
             validate.get("value"),
         )
 
@@ -67,7 +67,7 @@ class PiaLive(Plugin):
             ),
         )["data"]["movie_one_tag"]
         player_url = validate.Schema(
-                validate.regex(re.compile(r'\s+src=(["\'])(?P<player_url>.*?)\1')),
+                validate.regex(re.compile(r"\s+src=([\"'])(?P<player_url>.*?)\1")),
             ).validate(player_script_tag)["player_url"]
 
         if not player_url:
