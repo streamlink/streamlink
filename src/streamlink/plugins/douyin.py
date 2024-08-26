@@ -107,11 +107,15 @@ class Douyin(Plugin):
                 "__ac_nonce": uuid.uuid4().hex[:21],
             },
             schema=validate.Schema(
-                re.compile(r"self\.__pace_f\.push\(\[\d,(?P<json_string>\"[a-z]:.+?\")]\)</script>"),
+                validate.regex(
+                    pattern=re.compile(r"self\.__pace_f\.push\(\[\d+,(\"\w+:.+?\")]\)</script>"),
+                    method="findall",
+                ),
+                validate.filter(lambda item: "state" in item and "streamStore" in item),
+                validate.get(-1),
                 validate.none_or_all(
-                    validate.get("json_string"),
                     validate.parse_json(),
-                    validate.transform(lambda s: re.sub(r"^[a-z]:", "", s)),
+                    validate.transform(lambda s: re.sub(r"^\w+:", "", s)),
                     validate.parse_json(),
                     list,
                     validate.filter(lambda item: isinstance(item, dict) and "state" in item),
