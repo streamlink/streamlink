@@ -324,8 +324,8 @@ def test_logformat(argv: list, parser: ArgumentParser, level: int, fmt: str, dat
     assert rootlogger.handlers
     formatter = rootlogger.handlers[0].formatter
     assert isinstance(formatter, StringFormatter)
-    assert formatter.style == "{"
-    assert formatter.fmt == fmt
+    assert isinstance(formatter._style, logging.StrFormatStyle)
+    assert formatter._fmt == fmt
     assert formatter.datefmt == datefmt
 
 
