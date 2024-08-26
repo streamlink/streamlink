@@ -1,5 +1,6 @@
 import logging
 import sys
+from contextlib import nullcontext
 from io import StringIO
 from pathlib import Path
 from textwrap import dedent
@@ -327,6 +328,27 @@ def test_logformat(argv: list, parser: ArgumentParser, level: int, fmt: str, dat
     assert isinstance(formatter._style, logging.StrFormatStyle)
     assert formatter._fmt == fmt
     assert formatter.datefmt == datefmt
+
+
+@pytest.mark.parametrize(
+    ("argv", "raises"),
+    [
+        pytest.param(
+            ["--logformat", "%(message)s"],
+            pytest.raises(ValueError, match=r"^invalid format: no fields$"),
+            id="no-fields",
+        ),
+        pytest.param(
+            ["--logformat", "{doesnotexist}"],
+            pytest.raises(ValueError, match=r"^Formatting field not found in record: 'doesnotexist'$"),
+            id="field-not-found",
+        ),
+    ],
+    indirect=["argv"],
+)
+def test_logformat_error(argv: list, parser: ArgumentParser, raises: nullcontext):
+    with raises:
+        streamlink_cli.main.setup(parser)
 
 
 class TestLogfile:

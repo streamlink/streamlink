@@ -99,6 +99,10 @@ class StringFormatter(logging.Formatter):
         self._remove_base = remove_base or []
         self._usesTime = super().usesTime()
 
+        # Validate the format's fields
+        rec = logging.LogRecord("", 1, "", 1, "", None, None)
+        super().format(rec)
+
     def usesTime(self):
         return self._usesTime
 
