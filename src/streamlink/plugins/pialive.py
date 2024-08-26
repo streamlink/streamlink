@@ -10,8 +10,7 @@ $notes Tickets purchased at "PIA LIVE STREAM" are used for this platform.
 
 import logging
 import re
-import time
-from urllib.parse import parse_qsl, urlparse, urlencode
+from urllib.parse import urlencode
 
 from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.api import validate
@@ -47,30 +46,30 @@ class PiaLive(Plugin):
                 validate.union((
                     validate.xml_xpath_string(".//head/title[1]/text()"),
                     self._extract_vars_validate_pattern(".//script[contains(text(),'programCode')][1]/text()", "programCode"),
-                    validate.xml_xpath_string(".//script[@type='text/javascript'][contains(@src,'/statics/js/s_prod')][1]/@src")
-            ))
+                    validate.xml_xpath_string(".//script[@type='text/javascript'][contains(@src,'/statics/js/s_prod')][1]/@src"),
+            )),
         ))
         apiKey = self.session.http.get(
             self._URL_BASE + prod_configure_path,
             schema=validate.Schema(
                 validate.parse_html(),
-                self._extract_vars_validate_pattern("", "APIKEY")
+                self._extract_vars_validate_pattern("", "APIKEY"),
             ),
-            headers={"Referer": self._URL_BASE}
+            headers={"Referer": self._URL_BASE},
         )
 
         player_script_tag = self.session.http.post(
-            f'{self._URL_API}/perf/player-tag-list/{programCode}',
+            f"{self._URL_API}/perf/player-tag-list/{programCode}",
             headers={"Content-Type": "application/x-www-form-urlencoded", "Referer": self._URL_BASE},
             data=urlencode({"play_url": self.video_key, "api_key": apiKey}),
             schema=validate.Schema(
-                validate.parse_json()
-            )
-        )['data']['movie_one_tag']
+                validate.parse_json(),
+            ),
+        )["data"]["movie_one_tag"]
         player_url = validate.Schema(
-                validate.regex(re.compile(r'\s+src=(["\'])(?P<player_url>.*?)\1'))
+                validate.regex(re.compile(r'\s+src=(["\'])(?P<player_url>.*?)\1')),
             ).validate(player_script_tag)["player_url"]
-        
+
         if not player_url:
             log.error("Player URL not found")
             return None
@@ -96,7 +95,8 @@ class PiaLive(Plugin):
         if not m3u8_url:
             log.error("Platform not supported yet.")
             return None
-        
+
         return HLSStream.parse_variant_playlist(self.session, m3u8_url)
+
 
 __plugin__ = PiaLive
