@@ -94,14 +94,10 @@ _config_lock = Lock()
 
 
 class StringFormatter(logging.Formatter):
-    def __init__(self, fmt, datefmt=None, style="%", remove_base=None):
-        if style not in ("{", "%"):
-            raise ValueError("Only {} and % formatting styles are supported")
-        super().__init__(fmt, datefmt=datefmt, style=style)
-        self.style = style
-        self.fmt = fmt
-        self.remove_base = remove_base or []
-        self._usesTime = (style == "%" and "%(asctime)" in fmt) or (style == "{" and "{asctime}" in fmt)
+    def __init__(self, *args, remove_base: Optional[List[str]] = None, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._remove_base = remove_base or []
+        self._usesTime = super().usesTime()
 
     def usesTime(self):
         return self._usesTime
@@ -111,14 +107,8 @@ class StringFormatter(logging.Formatter):
 
         return tdt.strftime(datefmt or self.default_time_format)
 
-    def formatMessage(self, record):
-        if self.style == "{":
-            return self.fmt.format(**record.__dict__)
-        else:
-            return self.fmt % record.__dict__
-
     def format(self, record):
-        for rbase in self.remove_base:
+        for rbase in self._remove_base:
             record.name = record.name.replace(f"{rbase}.", "")
         record.levelname = record.levelname.lower()
 
@@ -214,10 +204,9 @@ def basicConfig(
         else:
             handler = StreamHandler(stream)
 
-        # noinspection PyTypeChecker
         formatter = StringFormatter(
-            format,
-            datefmt,
+            fmt=format,
+            datefmt=datefmt,
             style=style,
             remove_base=remove_base or REMOVE_BASE,
         )

@@ -177,7 +177,7 @@ class TestLogging:
     @pytest.mark.parametrize("log_failure", [{"style": "invalid"}], indirect=True)
     def test_style_invalid(self, log_failure):
         assert type(log_failure) is ValueError
-        assert str(log_failure) == "Only {} and % formatting styles are supported"
+        assert str(log_failure) == "Style must be one of: %,{,$"
 
     @freezegun.freeze_time("2000-01-02T03:04:05.123456Z")
     @pytest.mark.parametrize("log", [
