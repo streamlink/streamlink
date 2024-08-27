@@ -124,6 +124,13 @@ class StreamHandler(logging.StreamHandler):
         super().__init__(*args, **kwargs)
         self._stream_reconfigure()
 
+    def flush(self):
+        try:
+            super().flush()
+        except OSError:
+            # Python doesn't raise BrokenPipeError on Windows
+            pass
+
     def setStream(self, stream):
         res = super().setStream(stream)
         if res:  # pragma: no branch

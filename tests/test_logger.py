@@ -1,6 +1,7 @@
 import logging
 import warnings
 from datetime import timezone
+from errno import EINVAL, EPIPE
 from inspect import currentframe, getframeinfo
 from io import BytesIO, TextIOWrapper
 from pathlib import Path
@@ -239,6 +240,37 @@ class TestLogging:
         log.info("Bär: 🐻")
         assert getvalue(output) == "[test][info] Bär: 🐻\n"
         assert getvalue(output_ascii) == "[test][info] B\\xe4r: \\U0001f43b\n"
+
+    @pytest.mark.parametrize(
+        "errno",
+        [
+            pytest.param(EPIPE, id="EPIPE", marks=pytest.mark.posix_only),
+            pytest.param(EINVAL, id="EINVAL", marks=pytest.mark.windows_only),
+        ],
+    )
+    def test_brokenpipeerror(
+        self,
+        monkeypatch: pytest.MonkeyPatch,
+        capsys: pytest.CaptureFixture[str],
+        log: logging.Logger,
+        errno: int,
+    ):
+        def flush(*_, **__):
+            exception = OSError()
+            exception.errno = errno
+            raise exception
+
+        streamhandler = log.handlers[0]
+        assert isinstance(streamhandler, logging.StreamHandler)
+        monkeypatch.setattr(streamhandler.stream, "flush", flush)
+
+        log.setLevel("info")
+        log.info("foo")
+
+        # logging.StreamHandler will write emit()/flush() errors to stderr via handleError()
+        out, err = capsys.readouterr()
+        assert not out
+        assert not err
 
     def test_logfile(self, logfile: str, log: logging.Logger, output: TextIOWrapper):
         log.setLevel("info")
