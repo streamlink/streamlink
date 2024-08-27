@@ -988,4 +988,10 @@ def main():
             else:
                 console.msg(f"error: {msg}")
 
+    # https://docs.python.org/3/library/signal.html#note-on-sigpipe
+    try:
+        sys.stdout.flush()
+    except OSError:
+        del sys.stdout
+
     sys.exit(exit_code)
