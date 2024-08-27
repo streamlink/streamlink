@@ -21,7 +21,7 @@ log = logging.getLogger(__name__)
 
 
 @pluginmatcher(re.compile(
-    r"https://player\.pia-live\.jp/stream/(?P<video_key>[\w-]+)",
+    r"https?://player\.pia-live\.jp/stream/(?P<video_key>[\w-]+)",
 ))
 class PiaLive(Plugin):
     _URL_BASE = "https://player.pia-live.jp/"
