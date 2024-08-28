@@ -5,7 +5,7 @@ versioningit >=2.0.0,<4  # required for being able to run editable installs
 
 # tests
 pytest >=8.0.0
-pytest-asyncio
+pytest-asyncio >=0.23.5
 pytest-trio
 requests-mock
 freezegun >=1.0.0
