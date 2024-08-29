@@ -1,6 +1,5 @@
 import logging
 import sys
-from contextlib import nullcontext
 from errno import EINVAL, EPIPE
 from io import StringIO
 from pathlib import Path
@@ -152,6 +151,57 @@ class TestStdoutStderr:
         with pytest.raises(SystemExit) as excinfo:
             streamlink_cli.main.main()
         assert excinfo.value.code == code
+
+    def test_setup_uncaught_exceptions(self, monkeypatch: pytest.MonkeyPatch, parser: ArgumentParser):
+        exception = Exception()
+        monkeypatch.setattr("streamlink_cli.main.build_parser", lambda: parser)
+        monkeypatch.setattr("streamlink_cli.main.setup", Mock(side_effect=exception))
+
+        with pytest.raises(Exception) as excinfo:  # noqa: PT011
+            streamlink_cli.main.main()
+        assert excinfo.value is exception, "Does not catch non-StreamlinkCLIError exceptions"
+
+    @pytest.mark.parametrize(
+        ("argv", "msg"),
+        [
+            pytest.param(
+                ["--logformat", "message"],
+                "Logging setup error: invalid format: no fields\n",
+                id="no-fields",
+            ),
+            pytest.param(
+                ["--logformat", "%(message)s"],
+                "Logging setup error: invalid format: no fields\n",
+                id="wrong-style",
+            ),
+            pytest.param(
+                ["--logformat", "{doesnotexist}"],
+                "Logging setup error: Formatting field not found in record: 'doesnotexist'\n",
+                id="field-not-found",
+            ),
+        ],
+        indirect=["argv"],
+    )
+    def test_logging_setup_error(
+        self,
+        monkeypatch: pytest.MonkeyPatch,
+        capsys: pytest.CaptureFixture[str],
+        argv: list,
+        parser: ArgumentParser,
+        msg: str,
+    ):
+        mock_run = Mock()
+        monkeypatch.setattr("streamlink_cli.main.build_parser", lambda: parser)
+        monkeypatch.setattr("streamlink_cli.main.run", mock_run)
+
+        with pytest.raises(SystemExit) as excinfo:
+            streamlink_cli.main.main()
+        assert excinfo.value.code == 1
+        assert not mock_run.called
+
+        out, err = capsys.readouterr()
+        assert out == ""
+        assert err == msg
 
 
 class TestInfos:
@@ -361,27 +411,6 @@ def test_logformat(argv: list, parser: ArgumentParser, level: int, fmt: str, dat
     assert isinstance(formatter._style, logging.StrFormatStyle)
     assert formatter._fmt == fmt
     assert formatter.datefmt == datefmt
-
-
-@pytest.mark.parametrize(
-    ("argv", "raises"),
-    [
-        pytest.param(
-            ["--logformat", "%(message)s"],
-            pytest.raises(ValueError, match=r"^invalid format: no fields$"),
-            id="no-fields",
-        ),
-        pytest.param(
-            ["--logformat", "{doesnotexist}"],
-            pytest.raises(ValueError, match=r"^Formatting field not found in record: 'doesnotexist'$"),
-            id="field-not-found",
-        ),
-    ],
-    indirect=["argv"],
-)
-def test_logformat_error(argv: list, parser: ArgumentParser, raises: nullcontext):
-    with raises:
-        streamlink_cli.main.setup(parser)
 
 
 class TestLogfile:
