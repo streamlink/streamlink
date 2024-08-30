@@ -6,6 +6,5 @@ class TestPluginCanHandleUrlPandalive(PluginCanHandleUrl):
     __plugin__ = Pandalive
 
     should_match = [
-        "https://www.pandalive.co.kr/live/play/pocet00",
-        "https://www.pandalive.co.kr/live/play/rladbfl1208",
+        "https://www.pandalive.co.kr/live/play/CHANNEL",
     ]
