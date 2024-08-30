@@ -17,15 +17,18 @@ from streamlink.stream.hls import HLSStream
 log = logging.getLogger(__name__)
 
 
-@pluginmatcher(re.compile(
-    r"https?://(?:www\.)?pandalive\.co\.kr/live/play/[^/]+",
-))
+@pluginmatcher(
+    re.compile(r"https?://(?:www\.)?pandalive\.co\.kr/live/play/[^/]+"),
+)
 class Pandalive(Plugin):
     def _get_streams(self):
-        media_code = self.session.http.get(self.url, schema=validate.Schema(
-            re.compile(r"""routePath:\s*(?P<q>["'])(\\u002F|/)live(\\u002F|/)play(\\u002F|/)(?P<id>.+?)(?P=q)"""),
-            validate.any(None, validate.get("id")),
-        ))
+        media_code = self.session.http.get(
+            self.url,
+            schema=validate.Schema(
+                re.compile(r"""routePath:\s*(?P<q>["'])(\\u002F|/)live(\\u002F|/)play(\\u002F|/)(?P<id>.+?)(?P=q)"""),
+                validate.any(None, validate.get("id")),
+            ),
+        )
 
         if not media_code:
             return
@@ -96,9 +99,17 @@ class Pandalive(Plugin):
         playlist = json["PlayList"]
         for key in ("hls", "hls2", "hls3"):
             # use the first available HLS stream
-            if playlist.get(key):
-                # all stream qualities share the same URL, so just use the first one
-                return HLSStream.parse_variant_playlist(self.session, playlist[key][0]["url"])
+            if not playlist.get(key):
+                continue
+            # all stream qualities share the same URL, so just use the first one
+            return HLSStream.parse_variant_playlist(
+                self.session,
+                playlist[key][0]["url"],
+                headers={
+                    "Origin": "https://www.pandalive.co.kr",
+                    "Referer": self.url,
+                },
+            )
 
 
 __plugin__ = Pandalive
