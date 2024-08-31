@@ -24,7 +24,6 @@ if is_win32:
     APPDATA = Path(os.environ.get("APPDATA") or Path.home() / "AppData")
     CONFIG_FILES = [
         APPDATA / "streamlink" / "config",
-        DeprecatedPath(APPDATA / "streamlink" / "streamlinkrc"),
     ]
     PLUGIN_DIRS = [
         APPDATA / "streamlink" / "plugins",
@@ -34,8 +33,6 @@ elif is_darwin:
     XDG_CONFIG_HOME = Path(os.environ.get("XDG_CONFIG_HOME", "~/.config")).expanduser()
     CONFIG_FILES = [
         Path.home() / "Library" / "Application Support" / "streamlink" / "config",
-        DeprecatedPath(XDG_CONFIG_HOME / "streamlink" / "config"),
-        DeprecatedPath(Path.home() / ".streamlinkrc"),
     ]
     PLUGIN_DIRS = [
         Path.home() / "Library" / "Application Support" / "streamlink" / "plugins",
@@ -48,7 +45,6 @@ else:
     XDG_STATE_HOME = Path(os.environ.get("XDG_STATE_HOME", "~/.local/state")).expanduser()
     CONFIG_FILES = [
         XDG_CONFIG_HOME / "streamlink" / "config",
-        DeprecatedPath(Path.home() / ".streamlinkrc"),
     ]
     PLUGIN_DIRS = [
         XDG_DATA_HOME / "streamlink" / "plugins",
