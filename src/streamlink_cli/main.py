@@ -709,12 +709,6 @@ def setup_config_args(parser, ignore_unknown=False):
     else:
         # Only load first available default config
         for config_file in filter(lambda path: path.is_file(), CONFIG_FILES):  # pragma: no branch
-            if type(config_file) is DeprecatedPath:
-                warnings.warn(
-                    f"Loaded config from deprecated path, see CLI docs for how to migrate: {config_file}",
-                    StreamlinkDeprecationWarning,
-                    stacklevel=1,
-                )
             config_files.append(config_file)
             break
 
@@ -726,12 +720,6 @@ def setup_config_args(parser, ignore_unknown=False):
                 config_file = config_file.with_name(f"{config_file.name}.{pluginname}")
                 if not config_file.is_file():
                     continue
-                if type(config_file) is DeprecatedPath:
-                    warnings.warn(
-                        f"Loaded plugin config from deprecated path, see CLI docs for how to migrate: {config_file}",
-                        StreamlinkDeprecationWarning,
-                        stacklevel=1,
-                    )
                 config_files.append(config_file)
                 break
 

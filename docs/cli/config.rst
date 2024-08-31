@@ -26,10 +26,6 @@ your platform:
         :bdg-info-line:`Example`
 
         - ``/home/USERNAME/.config/streamlink/config``
-
-        :bdg-danger-line:`Deprecated`
-
-        - ``${HOME}/.streamlinkrc``
     * - macOS
       - :bdg-primary:`Path`
 
@@ -38,11 +34,6 @@ your platform:
         :bdg-info-line:`Example`
 
         - ``/Users/USERNAME/Library/Application Support/streamlink/config``
-
-        :bdg-danger-line:`Deprecated`
-
-        - ``${XDG_CONFIG_HOME:-${HOME}/.config}/streamlink/config``
-        - ``${HOME}/.streamlinkrc``
     * - Windows
       - :bdg-primary:`Path`
 
@@ -51,10 +42,6 @@ your platform:
         :bdg-info-line:`Example`
 
         - ``C:\Users\USERNAME\AppData\Roaming\streamlink\config``
-
-        :bdg-danger-line:`Deprecated`
-
-        - ``%APPDATA%\streamlink\streamlinkrc``
 
 You can also specify the location yourself using the :option:`--config` option.
 
@@ -129,10 +116,6 @@ Streamlink expects these configs to be named like the main config but with ``.<p
         :bdg-info-line:`Example`
 
         - ``/home/USERNAME/.config/streamlink/config.twitch``
-
-        :bdg-danger-line:`Deprecated`
-
-        - ``${HOME}/.streamlinkrc.pluginname``
     * - macOS
       - :bdg-primary:`Path`
 
@@ -141,11 +124,6 @@ Streamlink expects these configs to be named like the main config but with ``.<p
         :bdg-info-line:`Example`
 
         - ``/Users/USERNAME/Library/Application Support/streamlink/config.twitch``
-
-        :bdg-danger-line:`Deprecated`
-
-        - ``${XDG_CONFIG_HOME:-${HOME}/.config}/streamlink/config.pluginname``
-        - ``${HOME}/.streamlinkrc.pluginname``
     * - Windows
       - :bdg-primary:`Path`
 
@@ -154,10 +132,6 @@ Streamlink expects these configs to be named like the main config but with ``.<p
         :bdg-info-line:`Example`
 
         - ``C:\Users\USERNAME\AppData\Roaming\streamlink\config.twitch``
-
-        :bdg-danger-line:`Deprecated`
-
-        - ``%APPDATA%\streamlink\streamlinkrc.pluginname``
 
 Have a look at the :ref:`list of plugins <plugins:Plugins>`, or
 check the :option:`--plugins` option to see the name of each built-in plugin.
