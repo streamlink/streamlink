@@ -36,7 +36,6 @@ elif is_darwin:
     ]
     PLUGIN_DIRS = [
         Path.home() / "Library" / "Application Support" / "streamlink" / "plugins",
-        DeprecatedPath(XDG_CONFIG_HOME / "streamlink" / "plugins"),
     ]
     LOG_DIR = DeprecatedPath(Path.home() / "Library" / "Logs" / "streamlink")
 else:
@@ -48,7 +47,6 @@ else:
     ]
     PLUGIN_DIRS = [
         XDG_DATA_HOME / "streamlink" / "plugins",
-        DeprecatedPath(XDG_CONFIG_HOME / "streamlink" / "plugins"),
     ]
     LOG_DIR = XDG_STATE_HOME / "streamlink" / "logs"
 
