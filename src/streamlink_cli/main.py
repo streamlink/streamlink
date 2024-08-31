@@ -656,13 +656,7 @@ def load_plugins(dirs: List[Path], showwarning: bool = True):
     """Attempts to load plugins from a list of directories."""
     for directory in dirs:
         if directory.is_dir():
-            success = streamlink.plugins.load_path(directory)
-            if success and type(directory) is DeprecatedPath:
-                warnings.warn(
-                    f"Loaded plugins from deprecated path, see CLI docs for how to migrate: {directory}",
-                    StreamlinkDeprecationWarning,
-                    stacklevel=1,
-                )
+            streamlink.plugins.load_path(directory)
         elif showwarning:
             log.warning(f"Plugin path {directory} does not exist or is not a directory!")
 
