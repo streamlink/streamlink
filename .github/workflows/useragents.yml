@@ -3,6 +3,7 @@ name: Update user agents
 on:
   schedule:
     - cron: '0 0 1 * *'
+  workflow_dispatch:
 
 jobs:
   update-user-agents:
@@ -17,16 +18,16 @@ jobs:
       - run: python ./script/update-user-agents.py
         env:
           WHATISMYBROWSER_API_KEY: ${{ secrets.WHATISMYBROWSER_API_KEY }}
-      - uses: peter-evans/create-pull-request@6d9c0cdf5825c01278b6e63a0788434e6b3c5e27
+      - uses: peter-evans/create-pull-request@0c2a66fe4af462aa0761939bd32efbdd46592737
         with:
           token: ${{ secrets.STREAMLINKBOT_USERAGENTS_PR }}
           add-paths: |
-            src/streamlink/plugin/api/useragents.py
-          commit-message: "plugin.api: update useragents"
+            src/streamlink/session/http_useragents.py
+          commit-message: "session.http_useragents: update useragents"
           committer: "streamlinkbot <streamlinkbot@users.noreply.github.com>"
           author: "streamlinkbot <streamlinkbot@users.noreply.github.com>"
-          branch: "automated/plugin/api/useragents"
+          branch: "automated/session/http_useragents/update"
           branch-suffix: timestamp
           delete-branch: true
-          title: "plugin.api: update useragents"
+          title: "session.http_useragents: update useragents"
           body: "Automated pull request"
