@@ -81,6 +81,8 @@ class TikTok(Plugin):
             log.error("Could not find room ID")
             return
 
+        log.debug(f"room_id={self.id}")
+
         live_detail = self.session.http.get(
             self._URL_API_LIVE_DETAIL.format(room_id=self.id),
             schema=validate.Schema(
@@ -110,33 +112,40 @@ class TikTok(Plugin):
             self._URL_WEBCAST_ROOM_INFO.format(room_id=self.id),
             schema=validate.Schema(
                 validate.parse_json(),
-                {"data": {"stream_url": {"live_core_sdk_data": {"pull_data": {"stream_data": str}}}}},
-                validate.get(("data", "stream_url", "live_core_sdk_data", "pull_data", "stream_data")),
-                validate.parse_json(),
-                {
-                    "data": {
-                        str: validate.all(
-                            {
-                                "main": {
-                                    "flv": validate.url(),
-                                    "sdk_params": validate.all(
-                                        validate.parse_json(),
-                                        {
-                                            "vbitrate": int,
-                                        },
-                                    ),
+                {"data": {validate.optional("stream_url"): {"live_core_sdk_data": {"pull_data": {"stream_data": str}}}}},
+                validate.get(("data", "stream_url")),
+                validate.none_or_all(
+                    validate.get(("live_core_sdk_data", "pull_data", "stream_data")),
+                    validate.parse_json(),
+                    {
+                        "data": {
+                            str: validate.all(
+                                {
+                                    "main": {
+                                        "flv": validate.url(),
+                                        "sdk_params": validate.all(
+                                            validate.parse_json(),
+                                            {
+                                                "vbitrate": int,
+                                            },
+                                        ),
+                                    },
                                 },
-                            },
-                            validate.union_get(
-                                ("main", "flv"),
-                                ("main", "sdk_params", "vbitrate"),
+                                validate.union_get(
+                                    ("main", "flv"),
+                                    ("main", "sdk_params", "vbitrate"),
+                                ),
                             ),
-                        ),
+                        },
                     },
-                },
-                validate.get("data"),
+                    validate.get("data"),
+                ),
             ),
         )
+        if not streams:
+            log.error("The stream is inaccessible")
+            return
+
         for name, (url, vbitrate) in streams.items():
             self.QUALITY_WEIGHTS[name] = vbitrate
             yield name, HTTPStream(self.session, url)
