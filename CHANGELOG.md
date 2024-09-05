@@ -1,5 +1,27 @@
 # Changelog
 
+## streamlink 6.10.0 (2024-09-06)
+
+- Added: official support for Python 3.13 ([#6133](https://github.com/streamlink/streamlink/pull/6133))
+- Added: `--logformat` and `--logdateformat` ([#6138](https://github.com/streamlink/streamlink/pull/6138), [#6144](https://github.com/streamlink/streamlink/pull/6144))
+- Added: `--ffmpeg-loglevel` ([#6161](https://github.com/streamlink/streamlink/pull/6161))
+- Fixed: continuous logging errors when stdout stream was closed on the reading end ([#6142](https://github.com/streamlink/streamlink/pull/6142))
+- Fixed: HTTP proxy config being used when getting webbrowser API's websocket IPC address ([#6130](https://github.com/streamlink/streamlink/pull/6130))
+- Updated plugins:
+  - booyah: removed plugin ([#6162](https://github.com/streamlink/streamlink/pull/6162))
+  - douyin: fixed validation schema ([#6140](https://github.com/streamlink/streamlink/pull/6140))
+  - galatasaraytv: removed plugin ([#6163](https://github.com/streamlink/streamlink/pull/6163))
+  - idf1: removed plugin ([#6164](https://github.com/streamlink/streamlink/pull/6164))
+  - linelive: removed plugin ([#6165](https://github.com/streamlink/streamlink/pull/6165))
+  - pandalive: fixed missing HTTP headers ([#6148](https://github.com/streamlink/streamlink/pull/6148))
+  - tiktok: fixed schema of inaccessible streams ([#6160](https://github.com/streamlink/streamlink/pull/6160))
+  - youtube: disabled VODs, as they are currently non-functional ([#6135](https://github.com/streamlink/streamlink/pull/6135))
+- Docs: bumped `sphinx-design >=0.5.0,<=0.6.1`, enabling `sphinx >=8.0.0` ([#6137](https://github.com/streamlink/streamlink/pull/6137))
+- Tests: fixed `pytest-asyncio` warnings ([#6143](https://github.com/streamlink/streamlink/pull/6143))
+
+[Full changelog](https://github.com/streamlink/streamlink/compare/6.9.0...6.10.0)
+
+
 ## streamlink 6.9.0 (2024-08-12)
 
 - Added: `streamlink.plugin.api.webbrowser` subpackage with the `aws_waf` module ([#6102](https://github.com/streamlink/streamlink/pull/6102), [#6118](https://github.com/streamlink/streamlink/pull/6118))
