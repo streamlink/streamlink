@@ -167,7 +167,8 @@ class TestFFmpegVersionOutput:
 
 
 class TestOpen:
-    FFMPEG_ARGS_DEFAULT_BASE = ["-nostats", "-y"]
+    FFMPEG_ARGS_DEFAULT_BASE = ["-y", "-nostats"]
+    FFMPEG_ARGS_DEFAULT_LOGLEVEL = ["-loglevel", "info"]
     FFMPEG_ARGS_DEFAULT_CODECS = ["-c:v", FFMPEGMuxer.DEFAULT_VIDEO_CODEC, "-c:a", FFMPEGMuxer.DEFAULT_AUDIO_CODEC]
     FFMPEG_ARGS_DEFAULT_FORMAT = ["-f", FFMPEGMuxer.DEFAULT_OUTPUT_FORMAT]
     FFMPEG_ARGS_DEFAULT_OUTPUT = ["pipe:1"]
@@ -188,6 +189,7 @@ class TestOpen:
             {},
             [
                 *FFMPEG_ARGS_DEFAULT_BASE,
+                *FFMPEG_ARGS_DEFAULT_LOGLEVEL,
                 *FFMPEG_ARGS_DEFAULT_CODECS,
                 *FFMPEG_ARGS_DEFAULT_FORMAT,
                 *FFMPEG_ARGS_DEFAULT_OUTPUT,
@@ -196,9 +198,34 @@ class TestOpen:
         ),
         pytest.param(
             {},
+            {"loglevel": "verbose"},
+            [
+                *FFMPEG_ARGS_DEFAULT_BASE,
+                "-loglevel", "verbose",
+                *FFMPEG_ARGS_DEFAULT_CODECS,
+                *FFMPEG_ARGS_DEFAULT_FORMAT,
+                *FFMPEG_ARGS_DEFAULT_OUTPUT,
+            ],
+            id="loglevel",
+        ),
+        pytest.param(
+            {"ffmpeg-loglevel": "error"},
+            {"loglevel": "verbose"},
+            [
+                *FFMPEG_ARGS_DEFAULT_BASE,
+                "-loglevel", "error",
+                *FFMPEG_ARGS_DEFAULT_CODECS,
+                *FFMPEG_ARGS_DEFAULT_FORMAT,
+                *FFMPEG_ARGS_DEFAULT_OUTPUT,
+            ],
+            id="loglevel-user-override",
+        ),
+        pytest.param(
+            {},
             {"format": "mpegts"},
             [
                 *FFMPEG_ARGS_DEFAULT_BASE,
+                *FFMPEG_ARGS_DEFAULT_LOGLEVEL,
                 *FFMPEG_ARGS_DEFAULT_CODECS,
                 "-f", "mpegts",
                 *FFMPEG_ARGS_DEFAULT_OUTPUT,
@@ -210,6 +237,7 @@ class TestOpen:
             {"format": "mpegts"},
             [
                 *FFMPEG_ARGS_DEFAULT_BASE,
+                *FFMPEG_ARGS_DEFAULT_LOGLEVEL,
                 *FFMPEG_ARGS_DEFAULT_CODECS,
                 "-f", "avi",
                 *FFMPEG_ARGS_DEFAULT_OUTPUT,
@@ -221,6 +249,7 @@ class TestOpen:
             {"copyts": True},
             [
                 *FFMPEG_ARGS_DEFAULT_BASE,
+                *FFMPEG_ARGS_DEFAULT_LOGLEVEL,
                 *FFMPEG_ARGS_DEFAULT_CODECS,
                 "-copyts",
                 *FFMPEG_ARGS_DEFAULT_FORMAT,
@@ -233,6 +262,7 @@ class TestOpen:
             {"copyts": False},
             [
                 *FFMPEG_ARGS_DEFAULT_BASE,
+                *FFMPEG_ARGS_DEFAULT_LOGLEVEL,
                 *FFMPEG_ARGS_DEFAULT_CODECS,
                 "-copyts",
                 *FFMPEG_ARGS_DEFAULT_FORMAT,
@@ -245,6 +275,7 @@ class TestOpen:
             {"copyts": True},
             [
                 *FFMPEG_ARGS_DEFAULT_BASE,
+                *FFMPEG_ARGS_DEFAULT_LOGLEVEL,
                 *FFMPEG_ARGS_DEFAULT_CODECS,
                 "-copyts",
                 *FFMPEG_ARGS_DEFAULT_FORMAT,
@@ -257,6 +288,7 @@ class TestOpen:
             {"copyts": False},
             [
                 *FFMPEG_ARGS_DEFAULT_BASE,
+                *FFMPEG_ARGS_DEFAULT_LOGLEVEL,
                 *FFMPEG_ARGS_DEFAULT_CODECS,
                 "-copyts",
                 *FFMPEG_ARGS_DEFAULT_FORMAT,
@@ -269,6 +301,7 @@ class TestOpen:
             {"copyts": True},
             [
                 *FFMPEG_ARGS_DEFAULT_BASE,
+                *FFMPEG_ARGS_DEFAULT_LOGLEVEL,
                 *FFMPEG_ARGS_DEFAULT_CODECS,
                 "-copyts", "-start_at_zero",
                 *FFMPEG_ARGS_DEFAULT_FORMAT,
@@ -281,6 +314,7 @@ class TestOpen:
             {"copyts": False},
             [
                 *FFMPEG_ARGS_DEFAULT_BASE,
+                *FFMPEG_ARGS_DEFAULT_LOGLEVEL,
                 *FFMPEG_ARGS_DEFAULT_CODECS,
                 "-copyts", "-start_at_zero",
                 *FFMPEG_ARGS_DEFAULT_FORMAT,
@@ -293,6 +327,7 @@ class TestOpen:
             {"copyts": True, "start_at_zero": False},
             [
                 *FFMPEG_ARGS_DEFAULT_BASE,
+                *FFMPEG_ARGS_DEFAULT_LOGLEVEL,
                 *FFMPEG_ARGS_DEFAULT_CODECS,
                 "-copyts",
                 *FFMPEG_ARGS_DEFAULT_FORMAT,
@@ -305,6 +340,7 @@ class TestOpen:
             {"copyts": False, "start_at_zero": False},
             [
                 *FFMPEG_ARGS_DEFAULT_BASE,
+                *FFMPEG_ARGS_DEFAULT_LOGLEVEL,
                 *FFMPEG_ARGS_DEFAULT_CODECS,
                 "-copyts",
                 *FFMPEG_ARGS_DEFAULT_FORMAT,
@@ -317,6 +353,7 @@ class TestOpen:
             {"copyts": True, "start_at_zero": True},
             [
                 *FFMPEG_ARGS_DEFAULT_BASE,
+                *FFMPEG_ARGS_DEFAULT_LOGLEVEL,
                 *FFMPEG_ARGS_DEFAULT_CODECS,
                 "-copyts", "-start_at_zero",
                 *FFMPEG_ARGS_DEFAULT_FORMAT,
@@ -329,6 +366,7 @@ class TestOpen:
             {"copyts": False, "start_at_zero": True},
             [
                 *FFMPEG_ARGS_DEFAULT_BASE,
+                *FFMPEG_ARGS_DEFAULT_LOGLEVEL,
                 *FFMPEG_ARGS_DEFAULT_CODECS,
                 "-copyts", "-start_at_zero",
                 *FFMPEG_ARGS_DEFAULT_FORMAT,
@@ -341,6 +379,7 @@ class TestOpen:
             {"vcodec": "avc"},
             [
                 *FFMPEG_ARGS_DEFAULT_BASE,
+                *FFMPEG_ARGS_DEFAULT_LOGLEVEL,
                 "-c:v", "avc",
                 "-c:a", FFMPEGMuxer.DEFAULT_AUDIO_CODEC,
                 *FFMPEG_ARGS_DEFAULT_FORMAT,
@@ -353,6 +392,7 @@ class TestOpen:
             {"vcodec": "avc"},
             [
                 *FFMPEG_ARGS_DEFAULT_BASE,
+                *FFMPEG_ARGS_DEFAULT_LOGLEVEL,
                 "-c:v", "divx",
                 "-c:a", FFMPEGMuxer.DEFAULT_AUDIO_CODEC,
                 *FFMPEG_ARGS_DEFAULT_FORMAT,
@@ -365,6 +405,7 @@ class TestOpen:
             {"acodec": "mp3"},
             [
                 *FFMPEG_ARGS_DEFAULT_BASE,
+                *FFMPEG_ARGS_DEFAULT_LOGLEVEL,
                 "-c:v", FFMPEGMuxer.DEFAULT_VIDEO_CODEC,
                 "-c:a", "mp3",
                 *FFMPEG_ARGS_DEFAULT_FORMAT,
@@ -377,6 +418,7 @@ class TestOpen:
             {"acodec": "mp3"},
             [
                 *FFMPEG_ARGS_DEFAULT_BASE,
+                *FFMPEG_ARGS_DEFAULT_LOGLEVEL,
                 "-c:v", FFMPEGMuxer.DEFAULT_VIDEO_CODEC,
                 "-c:a", "ogg",
                 *FFMPEG_ARGS_DEFAULT_FORMAT,
@@ -389,6 +431,7 @@ class TestOpen:
             {"vcodec": "avc", "acodec": "mp3"},
             [
                 *FFMPEG_ARGS_DEFAULT_BASE,
+                *FFMPEG_ARGS_DEFAULT_LOGLEVEL,
                 "-c:v", "avc",
                 "-c:a", "mp3",
                 *FFMPEG_ARGS_DEFAULT_FORMAT,
@@ -401,6 +444,7 @@ class TestOpen:
             {"vcodec": "avc", "acodec": "mp3"},
             [
                 *FFMPEG_ARGS_DEFAULT_BASE,
+                *FFMPEG_ARGS_DEFAULT_LOGLEVEL,
                 "-c:v", "divx",
                 "-c:a", "ogg",
                 *FFMPEG_ARGS_DEFAULT_FORMAT,
@@ -413,6 +457,7 @@ class TestOpen:
             {"maps": ["test", "test2"]},
             [
                 *FFMPEG_ARGS_DEFAULT_BASE,
+                *FFMPEG_ARGS_DEFAULT_LOGLEVEL,
                 *FFMPEG_ARGS_DEFAULT_CODECS,
                 "-map", "test",
                 "-map", "test2",
@@ -426,6 +471,7 @@ class TestOpen:
             {"metadata": {"s:a:0": ["language=eng"]}},
             [
                 *FFMPEG_ARGS_DEFAULT_BASE,
+                *FFMPEG_ARGS_DEFAULT_LOGLEVEL,
                 *FFMPEG_ARGS_DEFAULT_CODECS,
                 "-metadata:s:a:0", "language=eng",
                 *FFMPEG_ARGS_DEFAULT_FORMAT,
@@ -438,6 +484,7 @@ class TestOpen:
             {"metadata": {None: ["title=test"]}},
             [
                 *FFMPEG_ARGS_DEFAULT_BASE,
+                *FFMPEG_ARGS_DEFAULT_LOGLEVEL,
                 *FFMPEG_ARGS_DEFAULT_CODECS,
                 "-metadata", "title=test",
                 *FFMPEG_ARGS_DEFAULT_FORMAT,

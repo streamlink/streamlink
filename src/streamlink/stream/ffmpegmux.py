@@ -82,6 +82,7 @@ class MuxedStream(Stream, Generic[TSubstreams]):
 class FFMPEGMuxer(StreamIO):
     __commands__: ClassVar[List[str]] = ["ffmpeg"]
 
+    DEFAULT_LOGLEVEL = "info"
     DEFAULT_OUTPUT_FORMAT = "matroska"
     DEFAULT_VIDEO_CODEC = "copy"
     DEFAULT_AUDIO_CODEC = "copy"
@@ -172,6 +173,7 @@ class FFMPEGMuxer(StreamIO):
                              for stream, np in
                              zip(self.streams, self.pipes)]
 
+        loglevel = session.options.get("ffmpeg-loglevel") or options.pop("loglevel", self.DEFAULT_LOGLEVEL)
         ofmt = session.options.get("ffmpeg-fout") or options.pop("format", self.DEFAULT_OUTPUT_FORMAT)
         outpath = options.pop("outpath", "pipe:1")
         videocodec = session.options.get("ffmpeg-video-transcode") or options.pop("vcodec", self.DEFAULT_VIDEO_CODEC)
@@ -181,7 +183,14 @@ class FFMPEGMuxer(StreamIO):
         copyts = session.options.get("ffmpeg-copyts") or options.pop("copyts", False)
         start_at_zero = session.options.get("ffmpeg-start-at-zero") or options.pop("start_at_zero", False)
 
-        self._cmd = [self.command(session), "-nostats", "-y"]
+        self._cmd = [
+            self.command(session),
+            "-y",
+            "-nostats",
+            "-loglevel",
+            loglevel,
+        ]
+
         for np in self.pipes:
             self._cmd.extend(["-i", str(np.path)])
 

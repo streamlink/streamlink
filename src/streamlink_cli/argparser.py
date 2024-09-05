@@ -1156,6 +1156,18 @@ def build_parser():
         """,
     )
     transport_ffmpeg.add_argument(
+        "--ffmpeg-loglevel",
+        type=str,
+        metavar="LOGLEVEL",
+        help="""
+        Change FFmpeg's `-loglevel` value to `LOGLEVEL`.
+
+        Unless --ffmpeg-verbose or --ffmpeg-verbose-path is set, changing the log level won't have any effect.
+
+        Default is "info".
+        """,
+    )
+    transport_ffmpeg.add_argument(
         "--ffmpeg-fout",
         type=str,
         metavar="OUTFORMAT",
@@ -1449,6 +1461,7 @@ _ARGUMENT_TO_SESSIONOPTION: List[Tuple[str, str, Optional[Callable[[Any], Any]]]
     ("ffmpeg_no_validation", "ffmpeg-no-validation", None),
     ("ffmpeg_verbose", "ffmpeg-verbose", None),
     ("ffmpeg_verbose_path", "ffmpeg-verbose-path", None),
+    ("ffmpeg_loglevel", "ffmpeg-loglevel", None),
     ("ffmpeg_fout", "ffmpeg-fout", None),
     ("ffmpeg_video_transcode", "ffmpeg-video-transcode", None),
     ("ffmpeg_audio_transcode", "ffmpeg-audio-transcode", None),
