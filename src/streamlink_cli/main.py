@@ -518,6 +518,27 @@ def format_valid_streams(plugin: Plugin, streams: Mapping[str, Stream]) -> str:
     return delimiter.join(validstreams)
 
 
+def handle_url_wrapper() -> int:
+    exit_code = 0
+    try:
+        handle_url()
+    except KeyboardInterrupt:
+        # Close output
+        if output:
+            output.close()
+        console.msg("Interrupted! Exiting...")
+        exit_code = 128 + signal.SIGINT
+    finally:
+        if stream_fd:
+            try:
+                log.info("Closing currently open stream...")
+                stream_fd.close()
+            except KeyboardInterrupt:
+                exit_code = 128 + signal.SIGINT
+
+    return exit_code
+
+
 def handle_url():
     """The URL handler.
 
@@ -954,21 +975,7 @@ def run(parser: ArgumentParser) -> int:
     elif args.can_handle_url or args.can_handle_url_no_redirect:
         error_code = can_handle_url()
     elif args.url:
-        try:
-            handle_url()
-        except KeyboardInterrupt:
-            # Close output
-            if output:
-                output.close()
-            console.msg("Interrupted! Exiting...")
-            error_code = 130
-        finally:
-            if stream_fd:
-                try:
-                    log.info("Closing currently open stream...")
-                    stream_fd.close()
-                except KeyboardInterrupt:
-                    error_code = 130
+        error_code = handle_url_wrapper()
     else:
         usage = parser.format_usage()
         console.msg(
