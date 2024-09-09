@@ -972,10 +972,10 @@ def setup(parser: ArgumentParser) -> None:
 
 
 def run(parser: ArgumentParser) -> int:
-    error_code = 0
+    exit_code = 0
 
     if args.version_check or args.auto_version_check:
-        error_code = check_version_wrapper()
+        exit_code = check_version_wrapper()
 
     if args.version_check:
         pass
@@ -984,9 +984,9 @@ def run(parser: ArgumentParser) -> int:
     elif args.plugins:
         print_plugins()
     elif args.can_handle_url or args.can_handle_url_no_redirect:
-        error_code = can_handle_url()
+        exit_code = can_handle_url()
     elif args.url:
-        error_code = handle_url_wrapper()
+        exit_code = handle_url_wrapper()
     else:
         usage = parser.format_usage()
         console.msg(
@@ -994,7 +994,7 @@ def run(parser: ArgumentParser) -> int:
             + "Use -h/--help to see the available options or read the manual at https://streamlink.github.io",
         )
 
-    return error_code
+    return exit_code
 
 
 def main():
