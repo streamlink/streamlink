@@ -611,6 +611,20 @@ def handle_url():
         console.msg(f"Available streams: {validstreams}")
 
 
+def check_version_wrapper() -> int:
+    force = args.version_check
+
+    try:
+        latest = check_version(force=force)
+        if not force:
+            return 0
+        if latest:
+            return 0
+        return 1
+    except KeyboardInterrupt:
+        return 128 + signal.SIGINT
+
+
 def print_plugins():
     """Outputs a list of all plugins Streamlink has loaded."""
 
@@ -961,10 +975,7 @@ def run(parser: ArgumentParser) -> int:
     error_code = 0
 
     if args.version_check or args.auto_version_check:
-        try:
-            check_version(force=args.version_check)
-        except KeyboardInterrupt:
-            error_code = 130
+        error_code = check_version_wrapper()
 
     if args.version_check:
         pass
