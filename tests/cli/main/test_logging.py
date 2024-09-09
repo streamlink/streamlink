@@ -10,7 +10,7 @@ import pytest
 
 import streamlink_cli.main
 import tests
-from streamlink.logger import ALL, TRACE, StringFormatter, capturewarnings
+from streamlink.logger import ALL, TRACE, StringFormatter
 from streamlink.session import Streamlink
 from streamlink_cli.argparser import ArgumentParser
 from streamlink_cli.exceptions import StreamlinkCLIError
@@ -18,40 +18,10 @@ from streamlink_cli.main import build_parser
 
 
 @pytest.fixture(autouse=True)
-def argv(request: pytest.FixtureRequest, monkeypatch: pytest.MonkeyPatch):
-    argv = getattr(request, "param", [])
-    monkeypatch.setattr("sys.argv", ["streamlink", *argv])
-
-    return argv
-
-
-@pytest.fixture(autouse=True)
-def _setup(monkeypatch: pytest.MonkeyPatch, session: Streamlink):
+def session(session: Streamlink):
     session.plugins.load_path(Path(tests.__path__[0]) / "plugin")
 
-    monkeypatch.setattr("streamlink_cli.main.CONFIG_FILES", [])
-    monkeypatch.setattr("streamlink_cli.main.streamlink", session)
-    monkeypatch.setattr("streamlink_cli.main.setup_streamlink", Mock())
-    monkeypatch.setattr("streamlink_cli.main.setup_plugins", Mock())
-    monkeypatch.setattr("streamlink_cli.main.setup_signals", Mock())
-    monkeypatch.setattr("streamlink_cli.argparser.find_default_player", Mock())
-
-    level = streamlink_cli.main.logger.root.level
-
-    try:
-        yield
-    finally:
-        capturewarnings(False)
-        streamlink_cli.main.logger.root.handlers.clear()
-        streamlink_cli.main.logger.root.setLevel(level)
-        streamlink_cli.main.args = None  # type: ignore[assignment]
-        streamlink_cli.main.console = None  # type: ignore[assignment]
-
-
-@pytest.fixture(autouse=True)
-def _euid(request: pytest.FixtureRequest, monkeypatch: pytest.MonkeyPatch):
-    euid = getattr(request, "param", 1000)
-    monkeypatch.setattr("os.geteuid", Mock(return_value=euid), raising=False)
+    return session
 
 
 @pytest.fixture()
@@ -98,7 +68,6 @@ class TestStdoutStderr:
         self,
         monkeypatch: pytest.MonkeyPatch,
         capsys: pytest.CaptureFixture,
-        parser: ArgumentParser,
         argv: list,
         stdout: str,
         stderr: str,
@@ -109,7 +78,6 @@ class TestStdoutStderr:
             childlogger.error("b")
             raise StreamlinkCLIError("c")
 
-        monkeypatch.setattr("streamlink_cli.main.build_parser", lambda: parser)
         monkeypatch.setattr("streamlink_cli.main.run", run)
 
         with pytest.raises(SystemExit) as excinfo:
@@ -131,7 +99,7 @@ class TestStdoutStderr:
         "code",
         [0, 1],
     )
-    def test_brokenpipeerror(self, monkeypatch: pytest.MonkeyPatch, parser: ArgumentParser, errno: int, code: int):
+    def test_brokenpipeerror(self, monkeypatch: pytest.MonkeyPatch, errno: int, code: int):
         def run(*_, **__):
             def flush(*_, **__):
                 try:
@@ -145,16 +113,14 @@ class TestStdoutStderr:
 
             return code
 
-        monkeypatch.setattr("streamlink_cli.main.build_parser", lambda: parser)
         monkeypatch.setattr("streamlink_cli.main.run", run)
 
         with pytest.raises(SystemExit) as excinfo:
             streamlink_cli.main.main()
         assert excinfo.value.code == code
 
-    def test_setup_uncaught_exceptions(self, monkeypatch: pytest.MonkeyPatch, parser: ArgumentParser):
+    def test_setup_uncaught_exceptions(self, monkeypatch: pytest.MonkeyPatch):
         exception = Exception()
-        monkeypatch.setattr("streamlink_cli.main.build_parser", lambda: parser)
         monkeypatch.setattr("streamlink_cli.main.setup", Mock(side_effect=exception))
 
         with pytest.raises(Exception) as excinfo:  # noqa: PT011
@@ -187,11 +153,9 @@ class TestStdoutStderr:
         monkeypatch: pytest.MonkeyPatch,
         capsys: pytest.CaptureFixture[str],
         argv: list,
-        parser: ArgumentParser,
         msg: str,
     ):
         mock_run = Mock()
-        monkeypatch.setattr("streamlink_cli.main.build_parser", lambda: parser)
         monkeypatch.setattr("streamlink_cli.main.run", mock_run)
 
         with pytest.raises(SystemExit) as excinfo:
