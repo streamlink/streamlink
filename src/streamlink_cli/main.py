@@ -601,6 +601,19 @@ def print_plugins():
         console.msg(f"Available plugins: {', '.join(pluginlist)}")
 
 
+def can_handle_url() -> int:
+    url = args.can_handle_url or args.can_handle_url_no_redirect or ""
+    follow_redirect = bool(args.can_handle_url)
+
+    try:
+        streamlink.resolve_url(url, follow_redirect=follow_redirect)
+        return 0
+    except NoPluginError:
+        return 1
+    except KeyboardInterrupt:
+        return 128 + signal.SIGINT
+
+
 def load_plugins(dirs: List[Path], showwarning: bool = True):
     """Attempts to load plugins from a list of directories."""
     for directory in dirs:
@@ -938,20 +951,8 @@ def run(parser: ArgumentParser) -> int:
         parser.print_help()
     elif args.plugins:
         print_plugins()
-    elif args.can_handle_url:
-        try:
-            streamlink.resolve_url(args.can_handle_url)
-        except NoPluginError:
-            error_code = 1
-        except KeyboardInterrupt:
-            error_code = 130
-    elif args.can_handle_url_no_redirect:
-        try:
-            streamlink.resolve_url_no_redirect(args.can_handle_url_no_redirect)
-        except NoPluginError:
-            error_code = 1
-        except KeyboardInterrupt:
-            error_code = 130
+    elif args.can_handle_url or args.can_handle_url_no_redirect:
+        error_code = can_handle_url()
     elif args.url:
         try:
             handle_url()
