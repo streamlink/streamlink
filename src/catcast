@@ -1,0 +1,21 @@
+import re
+from streamlink.plugin import Plugin, pluginmatcher
+from streamlink.stream import HLSStream
+from streamlink.plugin.api import useragents
+
+@pluginmatcher(re.compile(r'https?://catcast.tv/player/(?P<id>\d+)'))
+
+class Catcast(Plugin):
+    api_url = "https://api.catcast.tv/api/channels/{id}/getcurrentprogram"      
+    def _get_streams(self):
+        channel_id = self.match.group("id")
+        headers = {"User-Agent": useragents.CHROME}
+        body = self.session.http.get(self.api_url.format(id=channel_id), headers=headers).text
+        mrl = None
+        match = re.search(r'full_mobile_url":"(.*?)\"', body)
+        if match:
+            mrl = match.group(1).replace('\/','/')
+        if mrl:
+            yield "live", HLSStream(self.session, mrl)
+
+__plugin__ = Catcast
