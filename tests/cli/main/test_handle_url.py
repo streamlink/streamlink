@@ -380,6 +380,14 @@ class TestHandleUrlKeyboardInterruptAndCleanup:
             ),
             pytest.param(
                 True,
+                {"initialized": True, "close_raises": True},
+                {"initialized": True},
+                130,
+                "Interrupted! Exiting...\n[cli][info] Closing currently open stream...\n",
+                id="output-streamfd-outputclose-interrupted",
+            ),
+            pytest.param(
+                True,
                 {"initialized": True},
                 {"initialized": True, "close_raises": True},
                 130,
