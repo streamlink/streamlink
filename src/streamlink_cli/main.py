@@ -525,7 +525,10 @@ def handle_url_wrapper() -> int:
     except KeyboardInterrupt:
         # Close output
         if output:
-            output.close()
+            try:
+                output.close()
+            except KeyboardInterrupt:
+                pass
         console.msg("Interrupted! Exiting...")
         exit_code = 128 + signal.SIGINT
     finally:
