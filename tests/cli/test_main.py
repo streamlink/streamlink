@@ -7,36 +7,19 @@ from unittest.mock import Mock, call, patch
 
 import pytest
 
-from streamlink.exceptions import PluginError, StreamError, StreamlinkDeprecationWarning
-from streamlink.stream.stream import Stream
+from streamlink.exceptions import StreamError, StreamlinkDeprecationWarning
 from streamlink_cli.compat import stdout
 from streamlink_cli.exceptions import StreamlinkCLIError
 from streamlink_cli.main import (
     Formatter,
-    NoPluginError,
     create_output,
-    format_valid_streams,
-    handle_stream,
-    handle_url,
     output_stream,
     resolve_stream_name,
 )
 from streamlink_cli.output import FileOutput, PlayerOutput
-from tests.plugin.testplugin import TestPlugin as _TestPlugin
 
 
 # TODO: rewrite the entire mess
-
-
-class FakePlugin(_TestPlugin):
-    __module__ = "fake"
-    _streams = {}  # type: ignore
-
-    def streams(self, *args, **kwargs):
-        return self._streams
-
-    def _get_streams(self):  # pragma: no cover
-        pass
 
 
 class TestCLIMain(unittest.TestCase):
@@ -68,129 +51,6 @@ class TestCLIMain(unittest.TestCase):
         assert resolve_stream_name(streams, "best") == "720p"
         assert resolve_stream_name(streams, "worst-unfiltered") == "160p"
         assert resolve_stream_name(streams, "best-unfiltered") == "1080p"
-
-    def test_format_valid_streams(self):
-        a = Mock()
-        b = Mock()
-        c = Mock()
-
-        streams = {
-            "audio": a,
-            "720p": b,
-            "1080p": c,
-            "worst": b,
-            "best": c,
-        }
-        assert format_valid_streams(_TestPlugin, streams) == ", ".join([
-            "audio",
-            "720p (worst)",
-            "1080p (best)",
-        ])
-
-        streams = {
-            "audio": a,
-            "720p": b,
-            "1080p": c,
-            "worst-unfiltered": b,
-            "best-unfiltered": c,
-        }
-        assert format_valid_streams(_TestPlugin, streams) == ", ".join([
-            "audio",
-            "720p (worst-unfiltered)",
-            "1080p (best-unfiltered)",
-        ])
-
-
-class TestCLIMainHandleUrl:
-    @pytest.mark.parametrize(("side_effect", "expected"), [
-        (NoPluginError("foo"), "No plugin can handle URL: fakeurl"),
-        (PluginError("bar"), "bar"),
-    ])
-    def test_error(self, monkeypatch: pytest.MonkeyPatch, side_effect: Exception, expected: str):
-        monkeypatch.setattr("streamlink_cli.main.args", Namespace(url="fakeurl"))
-        monkeypatch.setattr("streamlink_cli.main.streamlink", Mock(resolve_url=Mock(side_effect=side_effect)))
-        with pytest.raises(StreamlinkCLIError) as excinfo:
-            handle_url()
-        assert str(excinfo.value) == expected
-        assert excinfo.value.code == 1
-
-
-class TestCLIMainJsonAndStreamUrl(unittest.TestCase):
-    @patch("streamlink_cli.main.args", json=True, stream_url=True, subprocess_cmdline=False)
-    @patch("streamlink_cli.main.console")
-    def test_handle_stream_with_json_and_stream_url(self, console, args):
-        stream = Mock()
-        streams = dict(best=stream)
-
-        plugin = FakePlugin(Mock(), "")
-        plugin._streams = streams
-
-        handle_stream(plugin, streams, "best")
-        assert console.msg.mock_calls == []
-        assert console.msg_json.mock_calls == [call(
-            stream,
-            metadata=dict(
-                id="test-id-1234-5678",
-                author="Tѥst Āuƭhǿr",
-                category=None,
-                title="Test Title",
-            ),
-        )]
-        console.msg_json.mock_calls.clear()
-
-        args.json = False
-        handle_stream(plugin, streams, "best")
-        assert console.msg.mock_calls == [call(stream.to_url())]
-        assert console.msg_json.mock_calls == []
-        console.msg.mock_calls.clear()
-
-        stream.to_url.side_effect = TypeError()
-        with pytest.raises(StreamlinkCLIError) as excinfo:
-            handle_stream(plugin, streams, "best")
-        assert console.msg.mock_calls == []
-        assert console.msg_json.mock_calls == []
-        assert str(excinfo.value) == "The stream specified cannot be translated to a URL"
-        assert excinfo.value.code == 1
-
-    @patch("streamlink_cli.main.args", json=True, stream_url=True, stream=[], default_stream=[], retry_max=0, retry_streams=0)
-    @patch("streamlink_cli.main.console")
-    def test_handle_url_with_json_and_stream_url(self, console, args):
-        stream = Mock()
-        streams = dict(worst=Mock(), best=stream)
-
-        class _FakePlugin(FakePlugin):
-            __module__ = FakePlugin.__module__
-            _streams = streams
-
-        with patch("streamlink_cli.main.streamlink", resolve_url=Mock(return_value=("fake", _FakePlugin, ""))):
-            handle_url()
-            assert console.msg.mock_calls == []
-            assert console.msg_json.mock_calls == [call(
-                plugin="fake",
-                metadata=dict(
-                    id="test-id-1234-5678",
-                    author="Tѥst Āuƭhǿr",
-                    category=None,
-                    title="Test Title",
-                ),
-                streams=streams,
-            )]
-            assert console.error.mock_calls == []
-            console.msg_json.mock_calls.clear()
-
-            args.json = False
-            handle_url()
-            assert console.msg.mock_calls == [call(stream.to_manifest_url())]
-            assert console.msg_json.mock_calls == []
-            console.msg.mock_calls.clear()
-
-            stream.to_manifest_url.side_effect = TypeError()
-            with pytest.raises(StreamlinkCLIError) as excinfo:
-                handle_url()
-            assert console.msg.mock_calls == []
-            assert console.msg_json.mock_calls == []
-            assert str(excinfo.value) == "The stream specified cannot be translated to a URL"
-            assert excinfo.value.code == 1
 
 
 # TODO: don't use Mock() for mocking args, use a custom argparse.Namespace instead
@@ -377,32 +237,6 @@ class TestCLIMainCreateOutput(unittest.TestCase):
             create_output(formatter)
         assert re.search(r"^The default player \(\w+\) does not seem to be installed\.", str(excinfo.value))
         assert excinfo.value.code == 1
-
-
-class TestCLIMainHandleStream(unittest.TestCase):
-    @patch("streamlink_cli.main.output_stream")
-    @patch("streamlink_cli.main.args")
-    def test_handle_stream_output_stream(self, args: Mock, mock_output_stream: Mock):
-        args.json = False
-        args.subprocess_cmdline = False
-        args.stream_url = False
-        args.output = False
-        args.stdout = False
-        args.player_passthrough = []
-        args.player_external_http = False
-        args.player_continuous_http = False
-        mock_output_stream.return_value = True
-
-        session = Mock()
-        plugin = FakePlugin(session, "")
-        stream = Stream(session)
-        streams = {"best": stream}
-
-        handle_stream(plugin, streams, "best")
-        assert mock_output_stream.call_count == 1
-        paramStream, paramFormatter = mock_output_stream.call_args[0]
-        assert paramStream is stream
-        assert isinstance(paramFormatter, Formatter)
 
 
 class TestCLIMainOutputStream:
