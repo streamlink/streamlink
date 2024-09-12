@@ -130,10 +130,11 @@ class TestNamedPipePosix:
         assert pipe.write(b"bar") == 3
         pipe.close()
         assert not pipe.path.is_fifo()
-        reader.done.wait(4000)
+        reader.done.wait(4)
+        reader.join(1)
+        assert not reader.is_alive()
         assert reader.error is None
         assert reader.data == b"foobar"
-        assert not reader.is_alive()
 
 
 @pytest.mark.windows_only()
@@ -196,8 +197,9 @@ class TestNamedPipeWindows:
         assert pipe.write(b"foo") == 3
         assert pipe.write(b"bar") == 3
         assert pipe.write(b"\x00") == 1
-        reader.done.wait(4000)
+        reader.done.wait(4)
+        reader.join(1)
+        assert not reader.is_alive()
         assert reader.error is None
         assert reader.data == b"foobar"
-        assert not reader.is_alive()
         pipe.close()
