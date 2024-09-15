@@ -22,7 +22,7 @@ def _setup(monkeypatch: pytest.MonkeyPatch, requests_mock: Mock, session: Stream
     monkeypatch.setattr("streamlink_cli.main.setup_streamlink", Mock())
     monkeypatch.setattr("streamlink_cli.main.setup_plugins", Mock())
     monkeypatch.setattr("streamlink_cli.main.setup_signals", Mock())
-    monkeypatch.setattr("streamlink_cli.argparser.find_default_player", Mock())
+    monkeypatch.setattr("streamlink_cli.argparser.find_default_player", Mock(return_value=None))
 
     level = streamlink_cli.main.logger.root.level
 
