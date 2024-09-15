@@ -1,4 +1,5 @@
-from unittest.mock import Mock, patch
+from argparse import Namespace
+from unittest.mock import Mock
 
 import pytest
 
@@ -24,21 +25,25 @@ def plugin():
     return plugin
 
 
-@pytest.mark.parametrize(("formatterinput", "expected"), [
-    ("{url}", "https://foo/bar"),
-    ("{plugin}", "FAKE"),
-    ("{id}", "ID"),
-    ("{author}", "AUTHOR"),
-    ("{category}", "CATEGORY"),
-    ("{game}", "CATEGORY"),
-    ("{title}", "TITLE"),
-    ("{time}", "2000-01-01_00-00-00"),
-    ("{time:%Y}", "2000"),
-])
-# workaround for freezegun not being able to patch the subclassed datetime class in streamlink_cli.utils
-# which defines the default datetime->str conversion format (needed for path outputs)
-@patch("streamlink_cli.utils.datetime.now", Mock(return_value=datetime(2000, 1, 1, 0, 0, 0, 0)))
-@patch("streamlink_cli.main.args", Mock(url="https://foo/bar"))
-def test_get_formatter(plugin, formatterinput, expected):
+@pytest.mark.parametrize(
+    ("formatterinput", "expected"),
+    [
+        pytest.param("{url}", "https://foo/bar", id="url"),
+        pytest.param("{plugin}", "FAKE", id="plugin-name"),
+        pytest.param("{id}", "ID", id="id"),
+        pytest.param("{author}", "AUTHOR", id="author"),
+        pytest.param("{category}", "CATEGORY", id="category"),
+        pytest.param("{game}", "CATEGORY", id="category-fallback-game"),
+        pytest.param("{title}", "TITLE", id="title"),
+        pytest.param("{time}", "2000-01-01_00-00-00", id="time"),
+        pytest.param("{time:%Y}", "2000", id="time-formatted"),
+    ],
+)
+def test_get_formatter(monkeypatch: pytest.MonkeyPatch, plugin: Plugin, formatterinput: str, expected: str):
+    # workaround for freezegun not being able to patch the subclassed datetime class in streamlink_cli.utils
+    # which defines the default datetime->str conversion format (needed for path outputs)
+    monkeypatch.setattr("streamlink_cli.utils.datetime.now", Mock(return_value=datetime(2000, 1, 1, 0, 0, 0, 0)))
+    monkeypatch.setattr("streamlink_cli.main.args", Namespace(url="https://foo/bar"))
+
     formatter = get_formatter(plugin)
     assert formatter.title(formatterinput) == expected
