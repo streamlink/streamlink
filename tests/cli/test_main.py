@@ -10,43 +10,11 @@ from streamlink_cli.exceptions import StreamlinkCLIError
 from streamlink_cli.main import (
     Formatter,
     create_output,
-    resolve_stream_name,
 )
 from streamlink_cli.output import FileOutput, PlayerOutput
 
 
 # TODO: rewrite the entire mess
-
-
-class TestCLIMain(unittest.TestCase):
-    def test_resolve_stream_name(self):
-        a = Mock()
-        b = Mock()
-        c = Mock()
-        d = Mock()
-        e = Mock()
-        streams = {
-            "160p": a,
-            "360p": b,
-            "480p": c,
-            "720p": d,
-            "1080p": e,
-            "worst": b,
-            "best": d,
-            "worst-unfiltered": a,
-            "best-unfiltered": e,
-        }
-
-        assert resolve_stream_name(streams, "unknown") == "unknown"
-        assert resolve_stream_name(streams, "160p") == "160p"
-        assert resolve_stream_name(streams, "360p") == "360p"
-        assert resolve_stream_name(streams, "480p") == "480p"
-        assert resolve_stream_name(streams, "720p") == "720p"
-        assert resolve_stream_name(streams, "1080p") == "1080p"
-        assert resolve_stream_name(streams, "worst") == "360p"
-        assert resolve_stream_name(streams, "best") == "720p"
-        assert resolve_stream_name(streams, "worst-unfiltered") == "160p"
-        assert resolve_stream_name(streams, "best-unfiltered") == "1080p"
 
 
 # TODO: don't use Mock() for mocking args, use a custom argparse.Namespace instead
