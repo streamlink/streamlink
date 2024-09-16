@@ -177,6 +177,17 @@ class AfreecaTV(Plugin):
 
         self.session.http.headers.update({"Referer": self.url, "Origin": "https://play.afreecatv.com"})
 
+        m = self.match.groupdict()
+        username = m.get("username")
+        bno = m.get("bno")
+        if bno is None:
+            res = self.session.http.get(self.url)
+            m = self._re_bno.search(res.text)
+            if not m:
+                log.error("Could not find broadcast number.")
+                return
+            bno = m.group("bno")
+
         if self.options.get("purge_credentials"):
             self.clear_cookies()
             self._authed = False
@@ -190,17 +201,6 @@ class AfreecaTV(Plugin):
                 log.info("Login was successful")
             else:
                 log.error("Failed to login")
-
-        m = self.match.groupdict()
-        username = m.get("username")
-        bno = m.get("bno")
-        if bno is None:
-            res = self.session.http.get(self.url)
-            m = self._re_bno.search(res.text)
-            if not m:
-                log.error("Could not find broadcast number.")
-                return
-            bno = m.group("bno")
 
         channel = self._get_channel_info(bno, username)
         log.trace(f"{channel!r}")
