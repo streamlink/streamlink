@@ -1,3 +1,4 @@
+import gettext
 from argparse import Namespace
 from pathlib import Path
 from typing import Any, List
@@ -79,6 +80,71 @@ class TestConfigFileArguments:
     ], indirect=True)
     def test_keyequalsvalue(self, parsed: Namespace):
         assert parsed.http_header == [("foo", "bar=baz"), ("FOO", "BAR=BAZ")]
+
+
+class TestMatchArgumentOverride:
+    @pytest.fixture(autouse=True)
+    def _null_translations(self, monkeypatch: pytest.MonkeyPatch):
+        null_translations = gettext.NullTranslations()
+        monkeypatch.setattr("argparse._", null_translations.gettext)
+        monkeypatch.setattr("argparse.ngettext", null_translations.ngettext)
+
+    @pytest.fixture(scope="module")
+    def parser(self):
+        # TODO: py38 support end: set exit_on_error=False and capture argparse.ArgumentError
+        parser = ArgumentParser()
+        parser.add_argument("-a", "--one", dest="arg")
+        parser.add_argument("-b", "--two", nargs=2)
+        parser.add_argument("--one-or-more", nargs="+")
+
+        return parser
+
+    @pytest.mark.parametrize(
+        "argv",
+        [
+            pytest.param(
+                ["-a", "-v"],
+                id="value-with-leading-dash-shorthand",
+            ),
+            pytest.param(
+                ["--one", "-v"],
+                id="value-with-leading-dash-full",
+            ),
+            pytest.param(
+                ["--one=-v"],
+                id="value-with-leading-dash-full-single-arg",
+            ),
+        ],
+    )
+    def test_match_argument(self, parser: ArgumentParser, argv: list):
+        args, _ = parser.parse_known_args(argv)
+        assert args.arg == "-v"
+
+    @pytest.mark.parametrize(
+        ("argv", "errormsg"),
+        [
+            pytest.param(
+                ["--one"],
+                "argument -a/--one: expected one argument\n",
+                id="missing-value",
+            ),
+            pytest.param(
+                ["--two"],
+                "argument -b/--two: expected 2 arguments\n",
+                id="missing-values",
+            ),
+            pytest.param(
+                ["--one-or-more"],
+                "argument --one-or-more: expected at least one argument\n",
+                id="one-or-more",
+            ),
+        ],
+    )
+    def test_match_argument_error(self, capsys: pytest.CaptureFixture[str], parser: ArgumentParser, argv: list, errormsg: str):
+        with pytest.raises(SystemExit) as exc_info:
+            parser.parse_known_args(argv)
+        assert exc_info.value.code == 2
+        assert capsys.readouterr().err.endswith(errormsg)
 
 
 @pytest.mark.filterwarnings("ignore")

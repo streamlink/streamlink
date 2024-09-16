@@ -60,13 +60,15 @@ class ArgumentParser(argparse.ArgumentParser):
         else:
             yield f"{prefix}{name}"
 
+    # noinspection PyProtectedMember,PyUnresolvedReferences,PyTypeChecker
     def _match_argument(self, action, arg_strings_pattern):
         # - https://github.com/streamlink/streamlink/issues/971
         # - https://bugs.python.org/issue9334
+        # - https://github.com/python/cpython/blame/v3.13.0rc2/Lib/argparse.py#L2227-L2247
 
         # match the pattern for this action to the arg strings
         nargs_pattern = self._get_nargs_pattern(action)
-        match = argparse._re.match(nargs_pattern, arg_strings_pattern)
+        match = re.match(nargs_pattern, arg_strings_pattern)
 
         # if no match, see if we can emulate optparse and return the
         # required number of arguments regardless of their values
@@ -82,10 +84,9 @@ class ArgumentParser(argparse.ArgumentParser):
                 argparse.OPTIONAL: argparse._("expected at most one argument"),
                 argparse.ONE_OR_MORE: argparse._("expected at least one argument"),
             }
-            default = argparse.ngettext("expected %s argument",
-                                        "expected %s arguments",
-                                        action.nargs) % action.nargs
-            msg = nargs_errors.get(action.nargs, default)
+            msg = nargs_errors.get(action.nargs)
+            if msg is None:
+                msg = argparse.ngettext("expected %s argument", "expected %s arguments", action.nargs) % action.nargs
             raise argparse.ArgumentError(action, msg)
 
         # return the number of arguments matched
