@@ -100,6 +100,8 @@ def create_output(formatter: Formatter) -> Union[FileOutput, PlayerOutput]:
     """
 
     if args.output:
+        if args.stdout:
+            raise StreamlinkCLIError("The -o/--output argument is incompatible with -O/--stdout")
         if args.record or args.record_and_pipe:
             raise StreamlinkCLIError("The -o/--output argument is incompatible with -r/--record and -R/--record-and-pipe")
 
