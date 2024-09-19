@@ -215,6 +215,11 @@ def test_stdout_record(
     ("argv", "errormsg"),
     [
         pytest.param(
+            ["--output=foo", "--stdout"],
+            "The -o/--output argument is incompatible with -O/--stdout",
+            id="output-stdout",
+        ),
+        pytest.param(
             ["--output=foo", "--record=bar"],
             "The -o/--output argument is incompatible with -r/--record and -R/--record-and-pipe",
             id="output-record",
