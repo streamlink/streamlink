@@ -99,19 +99,31 @@ def create_output(formatter: Formatter) -> Union[FileOutput, PlayerOutput]:
 
     """
 
-    if (args.output or args.stdout) and (args.record or args.record_and_pipe):
-        raise StreamlinkCLIError("Cannot use record options with other file output options.")
-
     if args.output:
+        if args.record or args.record_and_pipe:
+            raise StreamlinkCLIError("The -o/--output argument is incompatible with -r/--record and -R/--record-and-pipe")
+
         if args.output == "-":
             return FileOutput(fd=stdout)
         else:
             return check_file_output(formatter.path(args.output, args.fs_safe_rules), args.force)
 
     elif args.stdout:
-        return FileOutput(fd=stdout)
+        if args.record_and_pipe:
+            raise StreamlinkCLIError("The -O/--stdout argument is incompatible with -R/--record-and-pipe")
+
+        if not args.record or args.record == "-":
+            return FileOutput(fd=stdout)
+        else:
+            record = check_file_output(formatter.path(args.record, args.fs_safe_rules), args.force)
+            return FileOutput(fd=stdout, record=record)
 
     elif args.record_and_pipe:
+        warnings.warn(
+            "-R/--record-and-pipe=... has been deprecated in favor of --stdout --record=...",
+            StreamlinkDeprecationWarning,
+            stacklevel=1,
+        )
         record = check_file_output(formatter.path(args.record_and_pipe, args.fs_safe_rules), args.force)
         return FileOutput(fd=stdout, record=record)
 
