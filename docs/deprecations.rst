@@ -1,6 +1,16 @@
 Deprecations
 ============
 
+streamlink 6.11.0
+-----------------
+
+-R/--record-and-pipe
+^^^^^^^^^^^^^^^^^^^^
+
+The ``-R``/``--record-and-pipe`` CLI argument has been deprecated in favor of using both
+:option:`--stdout` and :option:`--record` arguments at the same time.
+
+
 streamlink 6.8.0
 ----------------
 
