@@ -7,7 +7,6 @@ import pytest
 
 from streamlink_cli.exceptions import StreamlinkCLIError
 from streamlink_cli.main import check_file_output
-from streamlink_cli.output.file import FileOutput
 
 
 if TYPE_CHECKING:  # pragma: no cover
@@ -103,8 +102,8 @@ def test_exists(
 ):
     with exits:
         output = check_file_output(path, force)
-        assert isinstance(output, FileOutput)
-        assert output.filename == PurePosixPath("/path/to/file")
+        assert isinstance(output, _FakePath)
+        assert output == PurePosixPath("/path/to/file")
 
     assert [(record.name, record.levelname, record.message) for record in caplog.records] == log
     assert prompt.call_args_list == []
@@ -136,8 +135,8 @@ def test_prompt(
 ):
     with exits:
         output = check_file_output(path, False)
-        assert isinstance(output, FileOutput)
-        assert output.filename == PurePosixPath("/path/to/file")
+        assert isinstance(output, _FakePath)
+        assert output == PurePosixPath("/path/to/file")
 
     assert [(record.name, record.levelname, record.message) for record in caplog.records] == [
         ("streamlink.cli", "info", "Writing output to\n/path/to/file"),

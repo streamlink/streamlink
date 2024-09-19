@@ -43,7 +43,7 @@ def formatter():
 
 @pytest.fixture()
 def check_file_output(monkeypatch: pytest.MonkeyPatch):
-    mock_check_file_output = Mock(side_effect=lambda path, force: FileOutput(path))
+    mock_check_file_output = Mock(side_effect=lambda path, force: path)
     monkeypatch.setattr("streamlink_cli.main.check_file_output", mock_check_file_output)
 
     return mock_check_file_output
