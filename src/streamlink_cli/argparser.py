@@ -626,15 +626,22 @@ def build_parser():
 
     output = parser.add_argument_group("File output options")
     output.add_argument(
+        "-O", "--stdout",
+        action="store_true",
+        help="""
+        Write stream data to `stdout` instead of playing it in the --player.
+        """,
+    )
+    output.add_argument(
         "-o", "--output",
         metavar="FILENAME",
         help="""
-        Write stream data to `FILENAME` instead of playing it. If `FILENAME` is set to `-` (dash), then the stream data will be
-        written to stdout, similar to the --stdout argument.
+        Write stream data to `FILENAME` instead of playing it in the --player.
+        If `FILENAME` is set to `-` (dash), then the stream data will be written to `stdout`, similar to the --stdout argument.
 
         Non-existent directories and subdirectories will be created if they do not exist, if filesystem permissions allow.
 
-        You will be prompted if the file already exists.
+        Unless --force is set, Streamlink will ask for confirmation before writing if `FILENAME` already exists.
 
         Please see the "Metadata variables" section of Streamlink's CLI documentation for all available metadata variables,
         as well as the "Plugins" section for the list of metadata variables defined in each plugin.
@@ -647,22 +654,16 @@ def build_parser():
         """,
     )
     output.add_argument(
-        "-O", "--stdout",
-        action="store_true",
-        help="""
-        Write stream data to stdout instead of playing it.
-        """,
-    )
-    output.add_argument(
         "-r", "--record",
         metavar="FILENAME",
         help="""
-        Open the stream in the player, while at the same time writing it to `FILENAME`. If `FILENAME` is set to `-` (dash),
-        then the stream data will be written to stdout, similar to the --stdout argument, while still opening the player.
+        Write stream data to `FILENAME` while at the same time allowing playback in the --player or writing it to --stdout.
+        If `FILENAME` is set to `-` (dash), then the stream data will be written to `stdout`, similar to the --stdout argument,
+        while still opening the player.
 
         Non-existent directories and subdirectories will be created if they do not exist, if filesystem permissions allow.
 
-        You will be prompted if the file already exists.
+        Unless --force is set, Streamlink will ask for confirmation before writing if `FILENAME` already exists.
 
         Please see the "Metadata variables" section of Streamlink's CLI documentation for all available metadata variables,
         as well as the "Plugins" section for the list of metadata variables defined in each plugin.
@@ -678,20 +679,7 @@ def build_parser():
         "-R", "--record-and-pipe",
         metavar="FILENAME",
         help="""
-        Write stream data to stdout, while at the same time writing it to `FILENAME`.
-
-        Non-existent directories and subdirectories will be created if they do not exist, if filesystem permissions allow.
-
-        You will be prompted if the file already exists.
-
-        Please see the "Metadata variables" section of Streamlink's CLI documentation for all available metadata variables,
-        as well as the "Plugins" section for the list of metadata variables defined in each plugin.
-
-        Unsupported characters in substituted variables will be replaced with an underscore.
-
-        Example:
-
-            %(prog)s --record-and-pipe "~/recordings/{author}/{category}/{id}-{time:%%Y%%m%%d%%H%%M%%S}.ts" <URL> [STREAM]
+        Deprecated in favor of --stdout --record=FILENAME.
         """,
     )
     output.add_argument(
