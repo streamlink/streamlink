@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import base64
 import hashlib
 import importlib.metadata
@@ -6,10 +8,9 @@ import logging
 import pkgutil
 import re
 from contextlib import suppress
-from importlib.abc import PathEntryFinder
 from pathlib import Path
 from types import ModuleType
-from typing import Dict, Iterator, List, Literal, Optional, Tuple, Type, Union
+from typing import TYPE_CHECKING, Dict, Iterator, List, Literal, Optional, Tuple, Type, Union
 
 import streamlink.plugins
 from streamlink.options import Argument, Arguments
@@ -23,6 +24,10 @@ try:
     from typing import TypeAlias, TypedDict  # type: ignore[attr-defined]
 except ImportError:  # pragma: no cover
     from typing_extensions import TypeAlias, TypedDict
+
+
+if TYPE_CHECKING:  # pragma: no cover
+    from _typeshed.importlib import PathEntryFinderProtocol
 
 
 log = logging.getLogger(".".join(__name__.split(".")[:-1]))
@@ -188,7 +193,7 @@ class StreamlinkPlugins:
         return plugins
 
     @staticmethod
-    def _load_plugin_from_finder(name: str, finder: PathEntryFinder) -> Optional[Tuple[ModuleType, Type[Plugin]]]:
+    def _load_plugin_from_finder(name: str, finder: PathEntryFinderProtocol) -> Optional[Tuple[ModuleType, Type[Plugin]]]:
         try:
             # set the full plugin module name, even for sideloaded plugins
             mod = exec_module(finder, f"streamlink.plugins.{name}")

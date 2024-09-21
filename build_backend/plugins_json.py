@@ -438,7 +438,8 @@ class JSONEncoder(json.JSONEncoder):  # pragma: no cover
         return {key: val for key, val in items if val is not None}
 
     def default(self, o: Any) -> Any:
-        if is_dataclass(o):
+        # https://github.com/python/mypy/issues/17550
+        if is_dataclass(o) and not isinstance(o, type):
             return asdict(o, dict_factory=self._filter_dataclass_none_value)
 
         return super().default(o)
