@@ -1,13 +1,18 @@
-from importlib.abc import PathEntryFinder
+from __future__ import annotations
+
 from importlib.machinery import FileFinder
 from importlib.util import module_from_spec
 from pathlib import Path
 from pkgutil import get_importer
 from types import ModuleType
-from typing import Union
+from typing import TYPE_CHECKING, Union
 
 
-def get_finder(path: Union[Path, str]) -> PathEntryFinder:
+if TYPE_CHECKING:  # pragma: no cover
+    from _typeshed.importlib import PathEntryFinderProtocol
+
+
+def get_finder(path: Union[Path, str]) -> PathEntryFinderProtocol:
     path = str(path)
     finder = get_importer(path)
     if not finder:
@@ -22,7 +27,7 @@ def load_module(name: str, path: Union[Path, str]) -> ModuleType:
     return exec_module(finder, name)
 
 
-def exec_module(finder: PathEntryFinder, name: str) -> ModuleType:
+def exec_module(finder: PathEntryFinderProtocol, name: str) -> ModuleType:
     spec = finder.find_spec(name)
     if not spec or not spec.loader:
         raise ImportError(
