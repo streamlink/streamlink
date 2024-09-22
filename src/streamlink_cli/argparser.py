@@ -739,13 +739,6 @@ def build_parser():
         Default is yes.
         """,
     )
-    output.add_argument(
-        "--force-progress",
-        action="store_true",
-        help="""
-        Deprecated in favor of --progress=force.
-        """,
-    )
 
     stream = parser.add_argument_group("Stream options")
     stream.add_argument(
