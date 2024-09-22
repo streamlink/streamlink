@@ -4,7 +4,7 @@ from unittest.mock import Mock, call
 import pytest
 
 import streamlink_cli.main
-from streamlink.exceptions import StreamError, StreamlinkDeprecationWarning
+from streamlink.exceptions import StreamError
 from streamlink.stream.stream import Stream
 from streamlink_cli.exceptions import StreamlinkCLIError
 from streamlink_cli.main import build_parser, setup_args
@@ -67,27 +67,23 @@ def test_stream_failure_no_output_open(
 
 
 @pytest.mark.parametrize(
-    ("argv", "isatty", "deprecation", "expected"),
+    ("argv", "isatty", "expected"),
     [
-        pytest.param(["--retry-open=1", "--progress=yes"], True, False, True, id="progress-tty"),
-        pytest.param(["--retry-open=1", "--progress=no"], True, False, False, id="no-progress-tty"),
-        pytest.param(["--retry-open=1", "--progress=yes"], False, False, False, id="progress-no-tty"),
-        pytest.param(["--retry-open=1", "--progress=no"], False, False, False, id="no-progress-no-tty"),
-        pytest.param(["--retry-open=1", "--progress=force"], False, False, True, id="force-progress-no-tty"),
-        pytest.param(["--retry-open=1", "--progress=yes", "--force-progress"], False, True, True, id="force-progress-yes"),
-        pytest.param(["--retry-open=1", "--progress=no", "--force-progress"], False, True, True, id="force-progress-no"),
+        pytest.param(["--retry-open=1", "--progress=yes"], True, True, id="progress-tty"),
+        pytest.param(["--retry-open=1", "--progress=no"], True, False, id="no-progress-tty"),
+        pytest.param(["--retry-open=1", "--progress=yes"], False, False, id="progress-no-tty"),
+        pytest.param(["--retry-open=1", "--progress=no"], False, False, id="no-progress-no-tty"),
+        pytest.param(["--retry-open=1", "--progress=force"], False, True, id="force-progress-no-tty"),
     ],
     indirect=["argv"],
 )
 def test_show_progress(
     monkeypatch: pytest.MonkeyPatch,
     caplog: pytest.LogCaptureFixture,
-    recwarn: pytest.WarningsRecorder,
     argv: list,
     output: Mock,
     stream: Stream,
     isatty: bool,
-    deprecation: bool,
     expected: bool,
 ):
     streamio = BytesIO(b"0" * 8192 * 2)
@@ -103,8 +99,4 @@ def test_show_progress(
         ("debug", "main", "Pre-buffering 8192 bytes"),
         ("debug", "main", "Writing stream to output"),
     ]
-    assert [(record.category, str(record.message)) for record in recwarn.list] == ([(
-        StreamlinkDeprecationWarning,
-        "The --force-progress option has been deprecated in favor of --progress=force",
-    )] if deprecation else [])
     assert mock_streamrunner.call_args_list == [call(streamio, output, show_progress=expected)]
