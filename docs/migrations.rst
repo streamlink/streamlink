@@ -1,6 +1,18 @@
 Migrations
 ==========
 
+streamlink 7.0.0
+----------------
+
+--force-progress
+^^^^^^^^^^^^^^^^
+
+The ``--force-progress`` CLI argument has been removed in favor of :option:`--progress=force`.
+
+| :octicon:`x-circle` #5268
+| :octicon:`git-pull-request` #6196
+
+
 streamlink 6.0.0
 ----------------
 
