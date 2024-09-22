@@ -88,6 +88,8 @@ streamlink 5.4.0
 --force-progress
 ^^^^^^^^^^^^^^^^
 
+:bdg-ref-danger:`Removed in 7.0.0 <migrations:--force-progress>`
+
 The ``--force-progress`` CLI argument has been deprecated in favor of :option:`--progress=force`.
 
 
