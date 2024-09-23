@@ -558,26 +558,38 @@ class TestHTTPServer:
 
 class TestHasProgress:
     @pytest.mark.parametrize(
-        "output",
+        ("output", "stderr"),
         [
             pytest.param(
                 FakePlayerOutput(Path("mocked")),
+                True,
                 id="Player output without record",
             ),
             pytest.param(
                 FakeFileOutput(fd=Mock()),
+                True,
                 id="FileOutput with file descriptor",
             ),
             pytest.param(
                 FakeHTTPOutput(),
+                True,
                 id="HTTPServer",
+            ),
+            pytest.param(
+                FakeFileOutput(filename=Path("mocked")),
+                False,
+                id="no-stderr",
             ),
         ],
     )
     def test_no_progress(
         self,
+        monkeypatch: pytest.MonkeyPatch,
         output: Union[FakePlayerOutput, FakeFileOutput, FakeHTTPOutput],
+        stderr: bool,
     ):
+        if not stderr:
+            monkeypatch.setattr("sys.stderr", None)
         stream_runner = FakeStreamRunner(StreamIO(), output, show_progress=True)
         assert not stream_runner.progress
 
