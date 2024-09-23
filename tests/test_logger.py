@@ -1,11 +1,13 @@
 import logging
+import os
+import sys
 import warnings
 from datetime import timezone
 from errno import EINVAL, EPIPE
 from inspect import currentframe, getframeinfo
 from io import BytesIO, TextIOWrapper
 from pathlib import Path
-from typing import Iterable, Tuple, Type
+from typing import Iterable, Optional, Tuple, Type
 
 import freezegun
 import pytest
@@ -43,13 +45,19 @@ def log(request: pytest.FixtureRequest, monkeypatch: pytest.MonkeyPatch, output:
     if "logfile" in request.fixturenames:
         params["filename"] = request.getfixturevalue("logfile")
 
+    stream: Optional[TextIOWrapper] = output
+    if not params.pop("stdout", True):
+        stream = None
+    if not params.pop("stderr", True):
+        monkeypatch.setattr("sys.stderr", None)
+
     fakeroot = logging.getLogger("streamlink.test")
 
     monkeypatch.setattr("streamlink.logger.root", fakeroot)
     monkeypatch.setattr("streamlink.utils.times.LOCAL", timezone.utc)
 
-    handler = logger.basicConfig(stream=output, **params)
-    assert isinstance(handler, logging.Handler)
+    handler = logger.basicConfig(stream=stream, **params)
+    assert isinstance(handler, logging.StreamHandler)
 
     yield fakeroot
 
@@ -240,6 +248,28 @@ class TestLogging:
         log.info("Bär: 🐻")
         assert getvalue(output) == "[test][info] Bär: 🐻\n"
         assert getvalue(output_ascii) == "[test][info] B\\xe4r: \\U0001f43b\n"
+
+    @pytest.mark.parametrize(
+        "log",
+        [pytest.param({"stdout": False}, id="no-stdout")],
+        indirect=["log"],
+    )
+    def test_no_stdout(self, log: logging.Logger):
+        assert log.handlers
+        handler = log.handlers[0]
+        assert isinstance(handler, logging.StreamHandler)
+        assert handler.stream is sys.stderr
+
+    @pytest.mark.parametrize(
+        "log",
+        [pytest.param({"stdout": False, "stderr": False}, id="no-stdout-no-stderr")],
+        indirect=["log"],
+    )
+    def test_no_stdout_no_stderr(self, log: logging.Logger):
+        assert log.handlers
+        handler = log.handlers[0]
+        assert isinstance(handler, logging.FileHandler)
+        assert handler.stream.name.endswith(os.devnull)
 
     @pytest.mark.parametrize(
         "errno",

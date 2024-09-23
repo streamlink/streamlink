@@ -2,6 +2,7 @@ import logging
 import sys
 import warnings
 from logging import CRITICAL, DEBUG, ERROR, INFO, WARNING
+from os import devnull
 from pathlib import Path
 from sys import version_info
 from threading import Lock
@@ -139,6 +140,8 @@ class StreamHandler(logging.StreamHandler):
         return res
 
     def _stream_reconfigure(self):
+        if not self.stream:
+            return
         # make stream write calls escape unsupported characters (stdout/stderr encoding is not guaranteed to be utf-8)
         self.stream.reconfigure(errors="backslashreplace")
 
@@ -214,6 +217,10 @@ def basicConfig(
             handler = logging.FileHandler(filename, filemode, encoding="utf-8")
         else:
             handler = StreamHandler(stream)
+            # logging.StreamHandler internally falls back to sys.stderr if stream is None
+            # sys.stderr however can also be None if fd2 doesn't exist, so use a devnull FileHandler in this case instead
+            if not handler.stream:
+                handler = logging.FileHandler(devnull)
 
         formatter = StringFormatter(
             fmt=format,
