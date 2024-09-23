@@ -88,6 +88,13 @@ class TestStdoutStderr:
         assert out == stdout
         assert err == stderr
 
+    def test_no_stdout(self, monkeypatch: pytest.MonkeyPatch):
+        monkeypatch.setattr("sys.stdout", None)
+
+        with pytest.raises(SystemExit) as excinfo:
+            streamlink_cli.main.main()
+        assert excinfo.value.code == 0
+
     @pytest.mark.parametrize(
         "errno",
         [

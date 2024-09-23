@@ -1037,7 +1037,7 @@ def main():
     # https://docs.python.org/3/library/signal.html#note-on-sigpipe
     try:
         sys.stdout.flush()
-    except OSError:
+    except (AttributeError, OSError):
         del sys.stdout
 
     sys.exit(exit_code)
