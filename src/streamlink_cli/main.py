@@ -374,7 +374,10 @@ def output_stream(stream, formatter: Formatter):
     try:
         with closing(output):
             log.debug("Writing stream to output")
-            show_progress = args.progress == "force" or args.progress == "yes" and sys.stderr.isatty()
+            show_progress = (
+                args.progress == "force"
+                or args.progress == "yes" and (sys.stderr.isatty() if sys.stderr else False)
+            )
             if args.force_progress:
                 show_progress = True
                 warnings.warn(

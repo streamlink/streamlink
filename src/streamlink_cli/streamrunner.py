@@ -97,7 +97,7 @@ class StreamRunner:
             elif output.record:
                 filename = output.record.filename
 
-        if filename and show_progress:
+        if filename and show_progress and sys.stderr:
             self.progress = Progress(sys.stderr, filename)
 
     def run(
