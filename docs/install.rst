@@ -136,6 +136,10 @@ Linux and BSD
       - See the `Linux AppImages`_ section below
     * - :octicon:`verified` Python pip
       - See the `PyPI package and source code`_ section below
+    * - :octicon:`package-dependents` `Alpine Linux (edge)`_
+      - .. code-block:: bash
+
+            sudo apk add streamlink
     * - :octicon:`package-dependents` `ALT Linux (Sisyphus)`_
       - .. code-block:: bash
 
@@ -210,6 +214,7 @@ Linux and BSD
 
             sudo xbps-install streamlink
 
+.. _Alpine Linux (edge): https://pkgs.alpinelinux.org/packages?name=streamlink
 .. _ALT Linux (Sisyphus): https://packages.altlinux.org/en/sisyphus/srpms/streamlink/
 .. _Arch Linux: https://archlinux.org/packages/extra/any/streamlink/
 .. _Arch Linux (aur, git): https://aur.archlinux.org/packages/streamlink-git/
@@ -239,6 +244,8 @@ Package maintainers
 
     * - Distribution / Platform
       - Maintainer
+    * - Alpine Linux
+      - Hoang Nguyen <folliekazetani at protonmail.com>
     * - ALT Linux
       - Vitaly Lipatov <lav at altlinux.ru>
     * - Arch
