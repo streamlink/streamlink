@@ -292,6 +292,12 @@ def output_stream_passthrough(stream, formatter: Formatter):
     except TypeError:
         raise StreamlinkCLIError("The stream specified cannot be translated to a URL") from None
 
+    if not args.player:
+        raise StreamlinkCLIError(
+            "The default player (VLC) does not seem to be installed."
+            + " You must specify the path to a player executable with --player.",
+        )
+
     output = PlayerOutput(
         path=args.player,
         args=args.player_args,
