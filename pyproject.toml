@@ -132,9 +132,6 @@ testpaths = [
 filterwarnings = [
   "always",
 ]
-# https://pytest-asyncio.readthedocs.io/en/v0.24.0/reference/configuration.html
-asyncio_mode = "strict"
-asyncio_default_fixture_loop_scope = "function"
 
 
 # https://coverage.readthedocs.io/en/latest/config.html
