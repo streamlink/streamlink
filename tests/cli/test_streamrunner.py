@@ -1,4 +1,3 @@
-import asyncio
 import errno
 import sys
 from collections import deque
@@ -20,12 +19,14 @@ TIMEOUT_AWAIT_HANDSHAKE = 1
 TIMEOUT_AWAIT_THREADJOIN = 1
 
 
-class EventedPlayerPollThread(PlayerPollThread):
-    POLLING_INTERVAL = 0
-
+class _TestableWithHandshake:
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.handshake = Handshake()
+
+
+class EventedPlayerPollThread(_TestableWithHandshake, PlayerPollThread):
+    POLLING_INTERVAL = 0
 
     def poll(self):
         with self.handshake():
@@ -37,12 +38,11 @@ class EventedPlayerPollThread(PlayerPollThread):
         self.handshake.go()
 
 
-class FakeStream(StreamIO):
+class FakeStream(_TestableWithHandshake, StreamIO):
     """Fake stream implementation, for feeding sample data to the stream runner and simulating read pauses and read errors"""
 
     def __init__(self) -> None:
         super().__init__()
-        self.handshake = Handshake()
         self.data: Deque[Union[bytes, Callable]] = deque()
 
     # noinspection PyUnusedLocal
@@ -54,12 +54,11 @@ class FakeStream(StreamIO):
             return data() if callable(data) else data
 
 
-class FakeOutput:
+class FakeOutput(_TestableWithHandshake):
     """Common output/http-server/progress interface, for caching all write() calls and simulating write errors"""
 
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
-        self.handshake = Handshake()
         self.data: List[bytes] = []
 
     def write(self, data):
@@ -135,16 +134,9 @@ def runnerthread(request: pytest.FixtureRequest, stream_runner: StreamRunner):
     assert str(thread.exception) == str(exception)
 
 
-async def assert_handshake_steps(*items):
-    """
-    Run handshake steps concurrently, to not be dependent too much on implementation details and the order of handshakes.
-    For example, concurrently await one read(), one write() and one progress() call.
-    """
-    steps = asyncio.gather(
-        *(item.handshake.asyncstep(TIMEOUT_AWAIT_HANDSHAKE) for item in items),
-        return_exceptions=True,
-    )
-    assert await steps == [True for _ in items]
+async def assert_handshake_steps(*items: _TestableWithHandshake) -> None:
+    for item in items:
+        assert await item.handshake.asyncstep(TIMEOUT_AWAIT_HANDSHAKE) is True
 
 
 def assert_thread_termination(thread: Thread, assertion: str):
@@ -181,7 +173,7 @@ class TestPlayerOutput:
             yield stream_runner
             assert not stream_runner.playerpoller.is_alive()
 
-    @pytest.mark.asyncio()
+    @pytest.mark.trio()
     async def test_read_write(
         self,
         caplog: pytest.LogCaptureFixture,
@@ -223,7 +215,7 @@ class TestPlayerOutput:
             ("streamrunner", "info", "Stream ended"),
         ]
 
-    @pytest.mark.asyncio()
+    @pytest.mark.trio()
     async def test_paused(
         self,
         caplog: pytest.LogCaptureFixture,
@@ -277,7 +269,7 @@ class TestPlayerOutput:
             ("streamrunner", "info", "Stream ended"),
         ]
 
-    @pytest.mark.asyncio()
+    @pytest.mark.trio()
     @pytest.mark.parametrize(
         ("writeerror", "runnerthread"),
         [
@@ -353,7 +345,7 @@ class TestPlayerOutput:
             ("streamrunner", "info", "Stream ended"),
         ]
 
-    @pytest.mark.asyncio()
+    @pytest.mark.trio()
     async def test_player_close_paused(
         self,
         caplog: pytest.LogCaptureFixture,
@@ -408,7 +400,7 @@ class TestPlayerOutput:
             ("streamrunner", "info", "Stream ended"),
         ]
 
-    @pytest.mark.asyncio()
+    @pytest.mark.trio()
     @pytest.mark.parametrize(
         "runnerthread",
         [{"exception": OSError("Error when reading from stream: Read timeout, exiting")}],
@@ -463,7 +455,7 @@ class TestHTTPServer:
         assert stream_runner.is_http
         return stream_runner
 
-    @pytest.mark.asyncio()
+    @pytest.mark.trio()
     async def test_read_write(
         self,
         caplog: pytest.LogCaptureFixture,
@@ -647,7 +639,7 @@ class TestProgress:
             yield stream_runner
             assert not stream_runner.progress.is_alive()
 
-    @pytest.mark.asyncio()
+    @pytest.mark.trio()
     async def test_read_write(
         self,
         caplog: pytest.LogCaptureFixture,

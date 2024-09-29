@@ -1,4 +1,3 @@
-from asyncio import Future, get_event_loop
 from contextlib import contextmanager
 from dataclasses import dataclass
 from functools import wraps
@@ -83,19 +82,8 @@ def _sync2async(obj, name, method):
     meth = getattr(obj, method)
 
     @wraps(meth)
-    async def wrapper(*args, **kwargs):
-        async def task():  # noqa: RUF029
-            try:
-                value = meth(*args, **kwargs)
-            except Exception as err:
-                future.set_exception(err)
-            else:
-                future.set_result(value)
-
-        future = Future()
-        get_event_loop().create_task(task())
-
-        return await future
+    async def wrapper(*args, **kwargs):  # noqa: RUF029
+        return meth(*args, **kwargs)
 
     setattr(obj, name, wrapper)
 
