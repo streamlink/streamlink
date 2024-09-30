@@ -3,7 +3,7 @@
 # This file is generated from the CDP specification. If you need to make
 # changes, edit the generator and regenerate all modules.
 #
-# CDP version: v0.0.1156692
+# CDP version: v0.0.1359167
 # CDP domain: Security
 
 from __future__ import annotations
@@ -96,7 +96,7 @@ class CertificateSecurityState:
     #: Certificate valid to (expiration) date
     valid_to: network.TimeSinceEpoch
 
-    #: True if the certificate uses a weak signature aglorithm.
+    #: True if the certificate uses a weak signature algorithm.
     certificate_has_weak_signature: bool
 
     #: True if the certificate has a SHA1 signature in the chain.
@@ -389,8 +389,6 @@ def set_ignore_certificate_errors(
 ) -> typing.Generator[T_JSON_DICT, T_JSON_DICT, None]:
     """
     Enable/disable whether all certificate errors should be ignored.
-
-    **EXPERIMENTAL**
 
     :param ignore: If true, all certificate errors will be ignored.
     """
