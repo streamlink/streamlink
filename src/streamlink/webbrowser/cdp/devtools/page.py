@@ -1115,6 +1115,7 @@ class ClientNavigationReason(enum.Enum):
     PAGE_BLOCK_INTERSTITIAL = "pageBlockInterstitial"
     RELOAD = "reload"
     ANCHOR_CLICK = "anchorClick"
+    INITIAL_FRAME_NAVIGATION = "initialFrameNavigation"
 
     def to_json(self) -> str:
         return self.value
