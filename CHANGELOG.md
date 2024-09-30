@@ -1,5 +1,29 @@
 # Changelog
 
+## streamlink 6.11.0 (2024-10-01)
+
+- Deprecated: [`--record-and-pipe=...` in favor of `--stdout --record=...`](https://streamlink.github.io/deprecations.html#r-record-and-pipe) (and explicitly disallowed `--stdout --output=...`) ([#6194](https://github.com/streamlink/streamlink/pull/6194))
+- Fixed: error when setting both `--http-no-ssl-verify` and `--http-disable-dh` ([#6205](https://github.com/streamlink/streamlink/pull/6205))
+- Fixed: `--player-passthrough` without a resolved default `--player` ([#6207](https://github.com/streamlink/streamlink/pull/6207))
+- Fixed: error when stdout/stderr file descriptors are missing ([#6197](https://github.com/streamlink/streamlink/pull/6197))
+- Updated: webbrowser API's Chrome devtools protocol to latest version ([#6211](https://github.com/streamlink/streamlink/pull/6211))
+- Updated plugins:
+  - crunchyroll: removed plugin ([#6179](https://github.com/streamlink/streamlink/pull/6179))
+  - dlive: fixed missing stream URL signature ([#6171](https://github.com/streamlink/streamlink/pull/6171))
+  - facebook: removed plugin ([#6199](https://github.com/streamlink/streamlink/pull/6199))
+  - mildom: removed plugin ([#6198](https://github.com/streamlink/streamlink/pull/6198))
+  - tvrby: removed plugin ([#6202](https://github.com/streamlink/streamlink/pull/6202))
+  - tvrplus: removed plugin ([#6203](https://github.com/streamlink/streamlink/pull/6203))
+  - twitch: fixed client-integrity token acquirement ([#6211](https://github.com/streamlink/streamlink/pull/6211))
+  - vk: fixed API params and validation schema ([#6178](https://github.com/streamlink/streamlink/pull/6178))
+  - webtv: removed plugin ([#6172](https://github.com/streamlink/streamlink/pull/6172))
+  - zengatv: removed plugin ([#6174](https://github.com/streamlink/streamlink/pull/6174))
+  - zhanqi: removed plugin ([#6173](https://github.com/streamlink/streamlink/pull/6173))
+- Tests: removed `pytest-asyncio` dependency ([#6208](https://github.com/streamlink/streamlink/pull/6208))
+
+[Full changelog](https://github.com/streamlink/streamlink/compare/6.10.0...6.11.0)
+
+
 ## streamlink 6.10.0 (2024-09-06)
 
 - Added: official support for Python 3.13 ([#6133](https://github.com/streamlink/streamlink/pull/6133))
