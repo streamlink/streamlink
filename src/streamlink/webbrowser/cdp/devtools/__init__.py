@@ -3,7 +3,7 @@
 # This file is generated from the CDP specification. If you need to make
 # changes, edit the generator and regenerate all modules.
 #
-# CDP version: v0.0.1156692
+# CDP version: v0.0.1359167
 
 import streamlink.webbrowser.cdp.devtools.browser as browser
 import streamlink.webbrowser.cdp.devtools.debugger as debugger

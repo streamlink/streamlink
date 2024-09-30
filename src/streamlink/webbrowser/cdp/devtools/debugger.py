@@ -3,7 +3,7 @@
 # This file is generated from the CDP specification. If you need to make
 # changes, edit the generator and regenerate all modules.
 #
-# CDP version: v0.0.1156692
+# CDP version: v0.0.1359167
 # CDP domain: Debugger
 
 from __future__ import annotations
@@ -1310,8 +1310,8 @@ class ScriptParsed:
     code_offset: typing.Optional[int]
     #: The language of the script.
     script_language: typing.Optional[ScriptLanguage]
-    #: If the scriptLanguage is WebASsembly, the source of debug symbols for the module.
-    debug_symbols: typing.Optional[DebugSymbols]
+    #: If the scriptLanguage is WebAssembly, the source of debug symbols for the module.
+    debug_symbols: typing.Optional[typing.List[DebugSymbols]]
     #: The name the embedder supplied for this script.
     embedder_name: typing.Optional[str]
 
@@ -1335,6 +1335,6 @@ class ScriptParsed:
             stack_trace=runtime.StackTrace.from_json(json["stackTrace"]) if "stackTrace" in json else None,
             code_offset=int(json["codeOffset"]) if "codeOffset" in json else None,
             script_language=ScriptLanguage.from_json(json["scriptLanguage"]) if "scriptLanguage" in json else None,
-            debug_symbols=DebugSymbols.from_json(json["debugSymbols"]) if "debugSymbols" in json else None,
+            debug_symbols=[DebugSymbols.from_json(i) for i in json["debugSymbols"]] if "debugSymbols" in json else None,
             embedder_name=str(json["embedderName"]) if "embedderName" in json else None,
         )

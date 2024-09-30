@@ -3,7 +3,7 @@
 # This file is generated from the CDP specification. If you need to make
 # changes, edit the generator and regenerate all modules.
 #
-# CDP version: v0.0.1156692
+# CDP version: v0.0.1359167
 # CDP domain: Input
 
 from __future__ import annotations
@@ -40,10 +40,10 @@ class TouchPoint:
     tangential_pressure: typing.Optional[float] = None
 
     #: The plane angle between the Y-Z plane and the plane containing both the stylus axis and the Y axis, in degrees of the range [-90,90], a positive tiltX is to the right (default: 0)
-    tilt_x: typing.Optional[int] = None
+    tilt_x: typing.Optional[float] = None
 
     #: The plane angle between the X-Z plane and the plane containing both the stylus axis and the X axis, in degrees of the range [-90,90], a positive tiltY is towards the user (default: 0).
-    tilt_y: typing.Optional[int] = None
+    tilt_y: typing.Optional[float] = None
 
     #: The clockwise rotation of a pen stylus around its own major axis, in degrees in the range [0,359] (default: 0).
     twist: typing.Optional[int] = None
@@ -85,8 +85,8 @@ class TouchPoint:
             rotation_angle=float(json["rotationAngle"]) if "rotationAngle" in json else None,
             force=float(json["force"]) if "force" in json else None,
             tangential_pressure=float(json["tangentialPressure"]) if "tangentialPressure" in json else None,
-            tilt_x=int(json["tiltX"]) if "tiltX" in json else None,
-            tilt_y=int(json["tiltY"]) if "tiltY" in json else None,
+            tilt_x=float(json["tiltX"]) if "tiltX" in json else None,
+            tilt_y=float(json["tiltY"]) if "tiltY" in json else None,
             twist=int(json["twist"]) if "twist" in json else None,
             id_=float(json["id"]) if "id" in json else None,
         )
@@ -332,7 +332,7 @@ def ime_set_composition(
     replacement_end: typing.Optional[int] = None,
 ) -> typing.Generator[T_JSON_DICT, T_JSON_DICT, None]:
     """
-    This method sets the current candidate text for ime.
+    This method sets the current candidate text for IME.
     Use imeCommitComposition to commit the final text.
     Use imeSetComposition with empty string as text to cancel composition.
 
@@ -370,8 +370,8 @@ def dispatch_mouse_event(
     click_count: typing.Optional[int] = None,
     force: typing.Optional[float] = None,
     tangential_pressure: typing.Optional[float] = None,
-    tilt_x: typing.Optional[int] = None,
-    tilt_y: typing.Optional[int] = None,
+    tilt_x: typing.Optional[float] = None,
+    tilt_y: typing.Optional[float] = None,
     twist: typing.Optional[int] = None,
     delta_x: typing.Optional[float] = None,
     delta_y: typing.Optional[float] = None,
@@ -390,8 +390,8 @@ def dispatch_mouse_event(
     :param click_count: *(Optional)* Number of times the mouse button was clicked (default: 0).
     :param force: **(EXPERIMENTAL)** *(Optional)* The normalized pressure, which has a range of [0,1] (default: 0).
     :param tangential_pressure: **(EXPERIMENTAL)** *(Optional)* The normalized tangential pressure, which has a range of [-1,1] (default: 0).
-    :param tilt_x: **(EXPERIMENTAL)** *(Optional)* The plane angle between the Y-Z plane and the plane containing both the stylus axis and the Y axis, in degrees of the range [-90,90], a positive tiltX is to the right (default: 0).
-    :param tilt_y: **(EXPERIMENTAL)** *(Optional)* The plane angle between the X-Z plane and the plane containing both the stylus axis and the X axis, in degrees of the range [-90,90], a positive tiltY is towards the user (default: 0).
+    :param tilt_x: *(Optional)* The plane angle between the Y-Z plane and the plane containing both the stylus axis and the Y axis, in degrees of the range [-90,90], a positive tiltX is to the right (default: 0).
+    :param tilt_y: *(Optional)* The plane angle between the X-Z plane and the plane containing both the stylus axis and the X axis, in degrees of the range [-90,90], a positive tiltY is towards the user (default: 0).
     :param twist: **(EXPERIMENTAL)** *(Optional)* The clockwise rotation of a pen stylus around its own major axis, in degrees in the range [0,359] (default: 0).
     :param delta_x: *(Optional)* X delta in CSS pixels for mouse wheel event (default: 0).
     :param delta_y: *(Optional)* Y delta in CSS pixels for mouse wheel event (default: 0).
@@ -458,6 +458,16 @@ def dispatch_touch_event(
     cmd_dict: T_JSON_DICT = {
         "method": "Input.dispatchTouchEvent",
         "params": params,
+    }
+    yield cmd_dict
+
+
+def cancel_dragging() -> typing.Generator[T_JSON_DICT, T_JSON_DICT, None]:
+    """
+    Cancels any active dragging in the page.
+    """
+    cmd_dict: T_JSON_DICT = {
+        "method": "Input.cancelDragging",
     }
     yield cmd_dict
 
