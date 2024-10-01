@@ -307,9 +307,10 @@ class HLSStreamWorker(SegmentedStreamWorker[HLSSegment, Response]):
         self.playlist_reload_retries = self.session.options.get("hls-playlist-reload-attempts")
         self.segment_queue_timing_threshold_factor = self.session.options.get("hls-segment-queue-threshold")
         self.live_edge = self.session.options.get("hls-live-edge")
+
         self.duration_offset_start = int(self.stream.start_offset + (self.session.options.get("hls-start-offset") or 0))
-        self.duration_limit = self.stream.duration or (
-            int(self.session.options.get("hls-duration")) if self.session.options.get("hls-duration") else None)
+        self.duration = self.stream.duration or self.duration or self.session.options.get("hls-duration")
+
         self.hls_live_restart = self.stream.force_restart or self.session.options.get("hls-live-restart")
 
         if str(self.playlist_reload_time_override).isnumeric() and float(self.playlist_reload_time_override) >= 2:
@@ -453,12 +454,11 @@ class HLSStreamWorker(SegmentedStreamWorker[HLSSegment, Response]):
             ]))
             log.debug("; ".join([
                 f"Start offset: {self.duration_offset_start}",
-                f"Duration: {self.duration_limit}",
+                f"Duration: {self.duration}",
                 f"Start Sequence: {self.playlist_sequence}",
                 f"End Sequence: {self.playlist_end}",
             ]))
 
-        total_duration = 0
         while not self.closed:
             queued = False
             for segment in self.playlist_segments:
@@ -479,11 +479,6 @@ class HLSStreamWorker(SegmentedStreamWorker[HLSSegment, Response]):
 
                 yield segment
                 queued = True
-
-                total_duration += segment.duration
-                if self.duration_limit and total_duration >= self.duration_limit:
-                    log.info(f"Stopping stream early after {self.duration_limit}")
-                    return
 
                 if self.closed:  # pragma: no cover
                     return
