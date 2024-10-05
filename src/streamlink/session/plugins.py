@@ -196,7 +196,7 @@ class StreamlinkPlugins:
     def _load_plugin_from_finder(name: str, finder: PathEntryFinderProtocol) -> Optional[Tuple[ModuleType, Type[Plugin]]]:
         try:
             # set the full plugin module name, even for sideloaded plugins
-            mod = exec_module(finder, f"streamlink.plugins.{name}")
+            mod = exec_module(finder, f"streamlink.plugins.{name}", override=True)
         except ImportError as err:
             log.exception(f"Failed to load plugin {name} from {err.path}\n")
             return None
