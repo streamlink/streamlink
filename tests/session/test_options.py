@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import re
+from operator import itemgetter
 from socket import AF_INET, AF_INET6
 from unittest.mock import Mock
 
@@ -76,30 +77,31 @@ def test_options_locale(monkeypatch: pytest.MonkeyPatch, session: Streamlink):
 
 
 class TestOptionsInterface:
-    @pytest.fixture()
-    def adapters(self, monkeypatch: pytest.MonkeyPatch):
-        adapters = {
-            scheme: Mock(poolmanager=Mock(connection_pool_kw={}))
-            for scheme in ("http://", "https://", "foo://")
-        }
-        monkeypatch.setattr("streamlink.session.session.HTTPSession", Mock(return_value=Mock(adapters=adapters)))
+    def test_options_interface(self, session: Streamlink):
+        session.http.mount("custom://", TLSNoDHAdapter())
 
-        return adapters
+        a_http, a_https, a_custom, a_file = itemgetter("http://", "https://", "custom://", "file://")(session.http.adapters)
+        assert isinstance(a_http, HTTPAdapter)
+        assert isinstance(a_https, HTTPAdapter)
+        assert isinstance(a_custom, HTTPAdapter)
+        assert not isinstance(a_file, HTTPAdapter)
 
-    def test_options_interface(self, adapters: dict[str, Mock], session: Streamlink):
         assert session.get_option("interface") is None
+        assert a_http.poolmanager.connection_pool_kw.get("source_address") is None
+        assert a_https.poolmanager.connection_pool_kw.get("source_address") is None
+        assert a_custom.poolmanager.connection_pool_kw.get("source_address") is None
 
         session.set_option("interface", "my-interface")
-        assert adapters["http://"].poolmanager.connection_pool_kw == {"source_address": ("my-interface", 0)}
-        assert adapters["https://"].poolmanager.connection_pool_kw == {"source_address": ("my-interface", 0)}
-        assert adapters["foo://"].poolmanager.connection_pool_kw == {}
         assert session.get_option("interface") == "my-interface"
+        assert a_http.poolmanager.connection_pool_kw.get("source_address") == ("my-interface", 0)
+        assert a_https.poolmanager.connection_pool_kw.get("source_address") == ("my-interface", 0)
+        assert a_custom.poolmanager.connection_pool_kw.get("source_address") == ("my-interface", 0)
 
         session.set_option("interface", None)
-        assert adapters["http://"].poolmanager.connection_pool_kw == {}
-        assert adapters["https://"].poolmanager.connection_pool_kw == {}
-        assert adapters["foo://"].poolmanager.connection_pool_kw == {}
         assert session.get_option("interface") is None
+        assert a_http.poolmanager.connection_pool_kw.get("source_address") is None
+        assert a_https.poolmanager.connection_pool_kw.get("source_address") is None
+        assert a_custom.poolmanager.connection_pool_kw.get("source_address") is None
 
         # doesn't raise
         session.set_option("interface", None)
