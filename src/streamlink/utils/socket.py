@@ -1,4 +1,6 @@
-from typing import Callable, Coroutine
+from __future__ import annotations
+
+from collections.abc import Callable, Coroutine
 
 import trio
 

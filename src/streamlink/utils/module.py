@@ -6,14 +6,14 @@ from importlib.util import module_from_spec
 from pathlib import Path
 from pkgutil import get_importer
 from types import ModuleType
-from typing import TYPE_CHECKING, Union
+from typing import TYPE_CHECKING
 
 
 if TYPE_CHECKING:  # pragma: no cover
     from _typeshed.importlib import PathEntryFinderProtocol
 
 
-def get_finder(path: Union[Path, str]) -> PathEntryFinderProtocol:
+def get_finder(path: str | Path) -> PathEntryFinderProtocol:
     path = str(path)
     finder = get_importer(path)
     if not finder:
@@ -22,7 +22,7 @@ def get_finder(path: Union[Path, str]) -> PathEntryFinderProtocol:
     return finder
 
 
-def load_module(name: str, path: Union[Path, str], override: bool = False) -> ModuleType:
+def load_module(name: str, path: str | Path, override: bool = False) -> ModuleType:
     finder = get_finder(path)
 
     return exec_module(finder, name, override)

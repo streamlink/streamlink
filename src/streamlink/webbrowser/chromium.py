@@ -1,7 +1,9 @@
+from __future__ import annotations
+
 import os
+from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from pathlib import Path
-from typing import AsyncGenerator, List, Optional, Union
 
 import trio
 
@@ -16,7 +18,7 @@ class ChromiumWebbrowser(Webbrowser):
     ERROR_RESOLVE = "Could not find Chromium-based web browser executable"
 
     @classmethod
-    def names(cls) -> List[str]:
+    def names(cls) -> list[str]:
         return [
             "chromium",
             "chromium-browser",
@@ -26,9 +28,9 @@ class ChromiumWebbrowser(Webbrowser):
         ]
 
     @classmethod
-    def fallback_paths(cls) -> List[Union[str, Path]]:
+    def fallback_paths(cls) -> list[str | Path]:
         if is_win32:
-            ms_edge: List[Union[str, Path]] = [
+            ms_edge: list[str | Path] = [
                 str(Path(base) / sub / "msedge.exe")
                 for sub in (
                     "Microsoft\\Edge\\Application",
@@ -41,7 +43,7 @@ class ChromiumWebbrowser(Webbrowser):
                 )]
                 if base is not None
             ]
-            google_chrome: List[Union[str, Path]] = [
+            google_chrome: list[str | Path] = [
                 str(Path(base) / sub / "chrome.exe")
                 for sub in (
                     "Google\\Chrome\\Application",
@@ -68,7 +70,7 @@ class ChromiumWebbrowser(Webbrowser):
         return []
 
     @classmethod
-    def launch_args(cls) -> List[str]:
+    def launch_args(cls) -> list[str]:
         # https://docs.google.com/spreadsheets/d/1n-vw_PCPS45jX3Jt9jQaAhFqBY6Ge1vWF_Pa0k7dCk4
         # https://peter.sh/experiments/chromium-command-line-switches/
         return [
@@ -141,8 +143,8 @@ class ChromiumWebbrowser(Webbrowser):
     def __init__(
         self,
         *args,
-        host: Optional[str] = None,
-        port: Optional[int] = None,
+        host: str | None = None,
+        port: int | None = None,
         **kwargs,
     ):
         super().__init__(*args, **kwargs)
@@ -150,7 +152,7 @@ class ChromiumWebbrowser(Webbrowser):
         self.port = port
 
     @asynccontextmanager
-    async def launch(self, headless: bool = False, timeout: Optional[float] = None) -> AsyncGenerator[trio.Nursery, None]:
+    async def launch(self, headless: bool = False, timeout: float | None = None) -> AsyncGenerator[trio.Nursery, None]:
         if self.port is None:
             if ":" in self.host:
                 self.port = await find_free_port_ipv6(self.host)

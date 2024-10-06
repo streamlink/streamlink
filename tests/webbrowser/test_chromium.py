@@ -1,7 +1,9 @@
+from __future__ import annotations
+
 from contextlib import nullcontext
 from pathlib import Path, PurePosixPath, PureWindowsPath
 from signal import SIGTERM
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 import pytest
 import requests_mock as rm
@@ -42,7 +44,7 @@ class TestInit:
             id="Success with custom path",
         ),
     ], indirect=["resolve_executable"])
-    def test_resolve_executable(self, resolve_executable, executable: Optional[str], raises: nullcontext):
+    def test_resolve_executable(self, resolve_executable, executable: str | None, raises: nullcontext):
         with raises:
             ChromiumWebbrowser(executable=executable)
 
@@ -112,7 +114,7 @@ async def test_launch(
     mock_clock,
     webbrowser_launch,
     host: str,
-    port: Optional[int],
+    port: int | None,
     headless: bool,
 ):
     async def fake_find_free_port(_):
@@ -191,7 +193,7 @@ def test_get_websocket_address(
         "webSocketDebuggerUrl": f"ws://{_host}:{port}/devtools/browser/some-uuid4",
     }
 
-    responses: List[Dict[str, Any]] = [{"exc": Timeout()} for _ in range(num)]
+    responses: list[dict[str, Any]] = [{"exc": Timeout()} for _ in range(num)]
     responses.append({"json": payload})
     mock = requests_mock.register_uri("GET", address, responses)
 

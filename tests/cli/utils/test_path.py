@@ -1,6 +1,7 @@
+from __future__ import annotations
+
 from pathlib import Path
 from string import ascii_lowercase as alphabet
-from typing import Tuple
 
 import pytest
 
@@ -186,7 +187,7 @@ bear = "🐻"  # Unicode character: "Bear Face" (U+1F43B)
         id="bear+ext2 - truncate at 50",
     ),
 ])
-def test_truncate_path(args: Tuple[str, int, bool], expected: str):
+def test_truncate_path(args: tuple[str, int, bool], expected: str):
     path, length, keep_extension = args
     result = truncate_path(path, length, keep_extension)
     assert len(result.encode("utf-8")) <= length

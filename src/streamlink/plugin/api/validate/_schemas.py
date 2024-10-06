@@ -1,4 +1,8 @@
-from typing import Any, Callable, FrozenSet, List, Literal, Optional, Pattern, Sequence, Set, Tuple, Type, Union
+from __future__ import annotations
+
+from collections.abc import Callable, Sequence
+from re import Pattern
+from typing import Any, Literal
 
 
 class SchemaContainer:
@@ -229,7 +233,7 @@ class GetItemSchema:
 
     def __init__(
         self,
-        item: Union[Any, Tuple[Any]],
+        item: Any | tuple,
         default: Any = None,
         strict: bool = False,
     ):
@@ -295,7 +299,7 @@ class UnionGetSchema:
     def __init__(
         self,
         *getters,
-        seq: Type[Union[Tuple, List, Set, FrozenSet]] = tuple,
+        seq: type[tuple | list | set | frozenset] = tuple,
     ):
         self.getters: Sequence[GetItemSchema] = tuple(GetItemSchema(getter) for getter in getters)
         self.seq = seq
@@ -383,10 +387,10 @@ class XmlElementSchema:
     # signature is weird because of backwards compatiblity
     def __init__(
         self,
-        tag: Optional[Any] = None,
-        text: Optional[Any] = None,
-        attrib: Optional[Any] = None,
-        tail: Optional[Any] = None,
+        tag: Any = None,
+        text: Any = None,
+        attrib: Any = None,
+        tail: Any = None,
     ):
         self.tag = tag
         self.attrib = attrib

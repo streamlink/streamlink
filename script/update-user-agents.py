@@ -1,18 +1,21 @@
 #!/usr/bin/env python
 
+from __future__ import annotations
+
 import argparse
 import re
 import sys
+from collections.abc import Mapping, Sequence
 from os import getenv
 from pathlib import Path
-from typing import Any, Mapping, Sequence, Union
+from typing import Any
 
 import requests
 
 
 ROOT = Path(__file__).parents[1].resolve()
 
-MAPPING: Mapping[str, Sequence[Union[str, int]]] = {
+MAPPING: Mapping[str, Sequence[str | int]] = {
     "ANDROID": ("android", "standard", "sample_user_agents", "chrome", 0),
     "CHROME": ("chrome", "windows", "sample_user_agents", "standard", 0),
     "CHROME_OS": ("chrome-os", "standard", "sample_user_agents", "x86_64", 0),

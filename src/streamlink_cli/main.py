@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import argparse
 import importlib.metadata
 import logging
@@ -8,11 +10,12 @@ import signal
 import ssl
 import sys
 import warnings
+from collections.abc import Mapping
 from contextlib import closing, suppress
 from gettext import gettext
 from pathlib import Path
 from time import sleep
-from typing import Any, List, Mapping, Optional, Type, Union
+from typing import Any
 
 import streamlink.logger as logger
 from streamlink import NoPluginError, PluginError, StreamError, Streamlink, __version__ as streamlink_version
@@ -38,7 +41,7 @@ QUIET_OPTIONS = ("json", "stream_url", "quiet")
 
 args: Any = None  # type: ignore[assignment]
 console: ConsoleOutput = None  # type: ignore[assignment]
-output: Union[FileOutput, PlayerOutput] = None  # type: ignore[assignment]
+output: FileOutput | PlayerOutput = None  # type: ignore[assignment]
 stream_fd: StreamIO = None  # type: ignore[assignment]
 streamlink: Streamlink = None  # type: ignore[assignment]
 
@@ -88,7 +91,7 @@ def check_file_output(path: Path, force: bool) -> Path:
     return realpath
 
 
-def create_output(formatter: Formatter) -> Union[FileOutput, PlayerOutput]:
+def create_output(formatter: Formatter) -> FileOutput | PlayerOutput:
     """Decides where to write the stream.
 
     Depending on arguments it can be one of these:
@@ -170,7 +173,7 @@ def create_output(formatter: Formatter) -> Union[FileOutput, PlayerOutput]:
     )
 
 
-def create_http_server(host: Optional[str] = None, port: int = 0) -> HTTPOutput:
+def create_http_server(host: str | None = None, port: int = 0) -> HTTPOutput:
     """
     Create an HTTP server listening on a given host and port.
     If host is None, listen on all available interfaces.
@@ -471,7 +474,7 @@ def fetch_streams(plugin: Plugin) -> Mapping[str, Stream]:
                           sorting_excludes=args.stream_sorting_excludes)
 
 
-def fetch_streams_with_retry(plugin: Plugin, interval: float, count: int) -> Optional[Mapping[str, Stream]]:
+def fetch_streams_with_retry(plugin: Plugin, interval: float, count: int) -> Mapping[str, Stream] | None:
     """Attempts to fetch streams repeatedly
        until some are returned or limit hit."""
 
@@ -677,7 +680,7 @@ def can_handle_url() -> int:
         return 128 + signal.SIGINT
 
 
-def load_plugins(dirs: List[Path], showwarning: bool = True):
+def load_plugins(dirs: list[Path], showwarning: bool = True):
     """Attempts to load plugins from a list of directories."""
     for directory in dirs:
         if directory.is_dir():
@@ -694,7 +697,7 @@ def load_plugins(dirs: List[Path], showwarning: bool = True):
 
 def setup_args(
     parser: argparse.ArgumentParser,
-    config_files: Optional[List[Path]] = None,
+    config_files: list[Path] | None = None,
     ignore_unknown: bool = False,
 ):
     """Parses arguments."""
@@ -797,7 +800,7 @@ def setup_plugin_args(session: Streamlink, parser: ArgumentParser):
             group.add_argument(parg.argument_name(pname), **parg.options)
 
 
-def setup_plugin_options(pluginname: str, pluginclass: Type[Plugin]) -> Options:
+def setup_plugin_options(pluginname: str, pluginclass: type[Plugin]) -> Options:
     """Initializes plugin options from argument values."""
 
     if not pluginclass.arguments:
@@ -908,9 +911,9 @@ def log_current_arguments(session: Streamlink, parser: argparse.ArgumentParser):
 def setup_logger_and_console(
     stream=sys.stdout,
     level: str = "info",
-    fmt: Optional[str] = None,
-    datefmt: Optional[str] = None,
-    file: Optional[str] = None,
+    fmt: str | None = None,
+    datefmt: str | None = None,
+    file: str | None = None,
     json=False,
 ):
     global console

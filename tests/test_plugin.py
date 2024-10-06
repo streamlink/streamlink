@@ -1,10 +1,12 @@
+from __future__ import annotations
+
 import argparse
 import logging
 import re
 import time
 from contextlib import nullcontext
 from operator import eq, gt, lt
-from typing import Any, Type
+from typing import Any
 from unittest.mock import Mock, call, patch
 
 import freezegun
@@ -60,7 +62,7 @@ class TestPlugin:
         (CustomConstructorOnePlugin, "test_plugin", "tests.test_plugin"),
         (CustomConstructorTwoPlugin, "test_plugin", "tests.test_plugin"),
     ])
-    def test_constructor(self, caplog: pytest.LogCaptureFixture, pluginclass: Type[Plugin], module: str, logger: str):
+    def test_constructor(self, caplog: pytest.LogCaptureFixture, pluginclass: type[Plugin], module: str, logger: str):
         session = Mock()
         with patch("streamlink.plugin.plugin.Cache") as mock_cache, \
              patch.object(pluginclass, "load_cookies") as mock_load_cookies:
@@ -372,12 +374,12 @@ class TestCookies:
             yield cache
 
     @pytest.fixture()
-    def logger(self, pluginclass: Type[Plugin]):
+    def logger(self, pluginclass: type[Plugin]):
         with patch("streamlink.plugin.plugin.logging") as mock_logging:
             yield mock_logging.getLogger(pluginclass.__module__)
 
     @pytest.fixture()
-    def plugin(self, pluginclass: Type[Plugin], session: Streamlink, plugincache: Mock, logger: Mock):
+    def plugin(self, pluginclass: type[Plugin], session: Streamlink, plugincache: Mock, logger: Mock):
         plugin = pluginclass(session, "http://test.se")
         assert plugin.cache is plugincache
         assert plugin.logger is logger

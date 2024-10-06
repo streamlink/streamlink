@@ -1,5 +1,6 @@
+from __future__ import annotations
+
 from datetime import datetime, timezone
-from typing import List
 from unittest.mock import ANY, Mock, call
 
 import freezegun
@@ -117,7 +118,7 @@ class TestDASHStreamParseManifest:
         mpd: Mock,
         with_video_only: bool,
         with_audio_only: bool,
-        expected: List[str],
+        expected: list[str],
     ):
         adaptationset = Mock(
             contentProtections=None,
@@ -370,7 +371,7 @@ class TestDASHStreamWorker:
         return mock
 
     @pytest.fixture()
-    def segments(self) -> List[Mock]:
+    def segments(self) -> list[Mock]:
         return [
             Mock(url="init_segment"),
             Mock(url="first_segment"),
@@ -427,7 +428,7 @@ class TestDASHStreamWorker:
         timestamp: datetime,
         worker: DASHStreamWorker,
         representation: Mock,
-        segments: List[Mock],
+        segments: list[Mock],
         mpd: Mock,
     ):
         mpd.dynamic = True
@@ -452,7 +453,7 @@ class TestDASHStreamWorker:
         worker: DASHStreamWorker,
         timestamp: datetime,
         representation: Mock,
-        segments: List[Mock],
+        segments: list[Mock],
         mpd: Mock,
     ):
         mpd.dynamic = False
@@ -475,7 +476,7 @@ class TestDASHStreamWorker:
         mock_time: Mock,
         worker: DASHStreamWorker,
         representation: Mock,
-        segments: List[Mock],
+        segments: list[Mock],
         mpd: Mock,
         duration: float,
     ):

@@ -1,6 +1,6 @@
 import ssl
 from collections.abc import Callable, Iterable, Mapping, MutableMapping, Sequence
-from typing import Any, Union
+from typing import Any
 
 # noinspection PyUnresolvedReferences
 from _typeshed import SupportsItems, SupportsRead  # noqa: PLC2701
@@ -35,8 +35,8 @@ _Data: TypeAlias = (
     | tuple[tuple[Any, Any], ...]
     | Mapping[Any, Any]
 )
-_Auth: TypeAlias = Union[tuple[str, str], AuthBase, Callable[[PreparedRequest], PreparedRequest]]
-_Cert: TypeAlias = Union[str, tuple[str, str]]
+_Auth: TypeAlias = tuple[str, str] | AuthBase | Callable[[PreparedRequest], PreparedRequest]
+_Cert: TypeAlias = str | tuple[str, str]
 _FileName: TypeAlias = str | None
 _FileContent: TypeAlias = SupportsRead[str | bytes] | str | bytes
 _FileContentType: TypeAlias = str
@@ -51,15 +51,16 @@ _HooksInput: TypeAlias = Mapping[str, Iterable[_Hook] | _Hook]
 
 _ParamsMappingKeyType: TypeAlias = str | bytes | float
 _ParamsMappingValueType: TypeAlias = str | bytes | float | Iterable[str | bytes | float] | None
-_Params: TypeAlias = Union[
-    SupportsItems[_ParamsMappingKeyType, _ParamsMappingValueType],
-    tuple[_ParamsMappingKeyType, _ParamsMappingValueType],
-    Iterable[tuple[_ParamsMappingKeyType, _ParamsMappingValueType]],
-    str | bytes,
-]
+_Params: TypeAlias = (
+    SupportsItems[_ParamsMappingKeyType, _ParamsMappingValueType]
+    | tuple[_ParamsMappingKeyType, _ParamsMappingValueType]
+    | Iterable[tuple[_ParamsMappingKeyType, _ParamsMappingValueType]]
+    | str
+    | bytes
+)
 _TextMapping: TypeAlias = MutableMapping[str, str]
 _HeadersUpdateMapping: TypeAlias = Mapping[str, str | bytes | None]
-_Timeout: TypeAlias = Union[float, tuple[float, float], tuple[float, None]]
+_Timeout: TypeAlias = float | tuple[float, float] | tuple[float, None]
 _Verify: TypeAlias = bool | str
 
 # END: borrowed from typeshed / types-requests

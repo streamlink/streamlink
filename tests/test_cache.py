@@ -1,7 +1,8 @@
+from __future__ import annotations
+
 from datetime import datetime, timedelta, timezone
 from json import JSONDecodeError
 from pathlib import Path
-from typing import Type, Union
 from unittest.mock import Mock, patch
 
 import freezegun
@@ -35,7 +36,7 @@ class TestPathlibAndStr:
         pytest.param("foo", id="str"),
         pytest.param(Path("foo"), id="Path"),
     ])
-    def test_constructor(self, cache_dir: Path, filename: Union[str, Path]):
+    def test_constructor(self, cache_dir: Path, filename: str | Path):
         cache = Cache(filename)
         assert cache.filename == cache_dir / Path(filename)
 
@@ -116,7 +117,7 @@ class TestIO:
         ("pathlib.Path.open", OSError),
         ("json.load", JSONDecodeError),
     ])
-    def test_load_fail(self, cache: Cache, mockpath: str, side_effect: Type[Exception]):
+    def test_load_fail(self, cache: Cache, mockpath: str, side_effect: type[Exception]):
         with patch("pathlib.Path.exists", return_value=True):
             with patch(mockpath, side_effect=side_effect):
                 cache._load()
@@ -127,7 +128,7 @@ class TestIO:
         TypeError,
         ValueError,
     ])
-    def test_save_fail_jsondump(self, cache: Cache, side_effect: Type[Exception]):
+    def test_save_fail_jsondump(self, cache: Cache, side_effect: type[Exception]):
         with patch("json.dump", side_effect=side_effect):
             with pytest.raises(side_effect):
                 cache.set("key", "value")

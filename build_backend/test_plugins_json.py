@@ -1,9 +1,11 @@
+from __future__ import annotations
+
 import ast
 import re
 from contextlib import nullcontext, suppress
 from pathlib import Path
 from textwrap import dedent
-from typing import Any, List, Optional, Type
+from typing import Any
 
 import pytest
 
@@ -131,7 +133,7 @@ class MappingOfConstants(ParseMappingOfConstants):
         id="moc-no-nested-mappings",
     ),
 ])
-def test_parse_sequence_or_mapping(parser: Type[ast.NodeVisitor], code: str, expected: Any, raises: nullcontext):
+def test_parse_sequence_or_mapping(parser: type[ast.NodeVisitor], code: str, expected: Any, raises: nullcontext):
     tree = ast.parse(code)
     item: ast.AST = tree.body[0].value  # type: ignore
     with raises:
@@ -1106,8 +1108,8 @@ def test_plugin(test_plugin_code: str):
 def test_build(
     capsys: pytest.CaptureFixture,
     test_plugins_dir: Path,
-    comments: Optional[List[str]],
-    expected_comments: List[str],
+    comments: list[str] | None,
+    expected_comments: list[str],
 ):
     data = build(test_plugins_dir)
     to_json(data, comments=comments, pretty=True)

@@ -1,5 +1,6 @@
+from __future__ import annotations
+
 from pathlib import Path
-from typing import List, Optional, Union
 
 import pytest
 
@@ -94,9 +95,9 @@ RESOLVE_EXECUTABLE_LOOKUPS = {
 ])
 def test_resolve_executable(
     monkeypatch: pytest.MonkeyPatch,
-    custom: Optional[str],
-    names: Optional[List[str]],
-    fallbacks: Optional[List[Union[str, Path]]],
+    custom: str | None,
+    names: list[str] | None,
+    fallbacks: list[str | Path] | None,
     expected: str,
 ):
     monkeypatch.setattr("streamlink.utils.path.which", RESOLVE_EXECUTABLE_LOOKUPS.get)

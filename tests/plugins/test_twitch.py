@@ -1,8 +1,9 @@
+from __future__ import annotations
+
 import json
 import unittest
 from contextlib import nullcontext
 from datetime import datetime, timedelta, timezone
-from typing import Optional
 from unittest.mock import MagicMock, Mock, call, patch
 from urllib.parse import parse_qsl, urlparse
 
@@ -856,9 +857,9 @@ class TestTwitchHLSMultivariantResponse:
         monkeypatch: pytest.MonkeyPatch,
         caplog: pytest.LogCaptureFixture,
         plugin: Twitch,
-        streamid: Optional[str],
+        streamid: str | None,
         raises: nullcontext,
-        streams: Optional[dict],
+        streams: dict | None,
         log: list,
     ):
         caplog.set_level("error", "streamlink.plugins.twitch")

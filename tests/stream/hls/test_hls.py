@@ -1,10 +1,11 @@
+from __future__ import annotations
+
 import itertools
 import os
-import typing
 import unittest
 from datetime import datetime, timedelta, timezone
 from threading import Event
-from typing import Dict
+from typing import NamedTuple
 from unittest.mock import Mock, call, patch
 
 import freezegun
@@ -109,7 +110,7 @@ class TestHLSVariantPlaylist:
         return HLSStream.parse_variant_playlist(session, url)
 
     @pytest.mark.parametrize("streams", ["hls/test_master.m3u8"], indirect=True)
-    def test_variant_playlist(self, request: pytest.FixtureRequest, streams: Dict[str, HLSStream]):
+    def test_variant_playlist(self, request: pytest.FixtureRequest, streams: dict[str, HLSStream]):
         assert list(streams.keys()) == ["720p", "720p_alt", "480p", "360p", "160p", "1080p (source)", "90k"]
         assert all(isinstance(stream, HLSStream) for stream in streams.values())
         assert all(stream.multivariant is not None and stream.multivariant.is_master for stream in streams.values())
@@ -961,7 +962,7 @@ class TestHlsPlaylistReloadTime(TestMixinStreamHLS, unittest.TestCase):
 class TestHlsPlaylistParseErrors(TestMixinStreamHLS, unittest.TestCase):
     __stream__ = EventedWriterHLSStream
 
-    class FakePlaylist(typing.NamedTuple):
+    class FakePlaylist(NamedTuple):
         is_master: bool = False
         iframes_only: bool = False
 

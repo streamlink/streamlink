@@ -1,7 +1,10 @@
+from __future__ import annotations
+
 import warnings
+from collections.abc import Callable, Iterator, Mapping
 from pathlib import Path
 from socket import AF_INET, AF_INET6
-from typing import TYPE_CHECKING, Any, Callable, ClassVar, Dict, Iterator, Mapping, Tuple
+from typing import TYPE_CHECKING, Any, ClassVar
 
 import urllib3.util.connection as urllib3_util_connection
 from requests.adapters import HTTPAdapter
@@ -304,7 +307,7 @@ class StreamlinkOptions(Options):
           - Whether to launch the webbrowser in headless mode or not
     """
 
-    def __init__(self, session: "Streamlink") -> None:
+    def __init__(self, session: Streamlink) -> None:
         super().__init__(defaults={
             "user-input-requester": None,
             "locale": None,
@@ -352,7 +355,7 @@ class StreamlinkOptions(Options):
     # ---- utils
 
     @staticmethod
-    def _parse_key_equals_value_string(delimiter: str, value: str) -> Iterator[Tuple[str, str]]:
+    def _parse_key_equals_value_string(delimiter: str, value: str) -> Iterator[tuple[str, str]]:
         for keyval in value.split(delimiter):
             try:
                 key, val = keyval.split("=", 1)
@@ -421,7 +424,7 @@ class StreamlinkOptions(Options):
         self.session.http.mount("https://", adapter)
 
     @staticmethod
-    def _factory_set_http_attr_key_equals_value(delimiter: str) -> Callable[["StreamlinkOptions", str, Any], None]:
+    def _factory_set_http_attr_key_equals_value(delimiter: str) -> Callable[[StreamlinkOptions, str, Any], None]:
         def inner(self: "StreamlinkOptions", key: str, value: Any) -> None:
             getattr(self.session.http, self._OPTIONS_HTTP_ATTRS[key]).update(
                 value if isinstance(value, dict) else dict(self._parse_key_equals_value_string(delimiter, value)),
@@ -430,8 +433,8 @@ class StreamlinkOptions(Options):
         return inner
 
     @staticmethod
-    def _factory_set_deprecated(name: str, mapper: Callable[[Any], Any]) -> Callable[["StreamlinkOptions", str, Any], None]:
-        def inner(self: "StreamlinkOptions", key: str, value: Any) -> None:
+    def _factory_set_deprecated(name: str, mapper: Callable[[Any], Any]) -> Callable[[StreamlinkOptions, str, Any], None]:
+        def inner(self: StreamlinkOptions, key: str, value: Any) -> None:
             self.set_explicit(name, mapper(value))
             warnings.warn(
                 f"`{key}` has been deprecated in favor of the `{name}` option",
@@ -447,7 +450,7 @@ class StreamlinkOptions(Options):
 
     # ----
 
-    _OPTIONS_HTTP_ATTRS: ClassVar[Dict[str, str]] = {
+    _OPTIONS_HTTP_ATTRS: ClassVar[Mapping[str, str]] = {
         "http-cookies": "cookies",
         "http-headers": "headers",
         "http-query-params": "params",
@@ -457,7 +460,7 @@ class StreamlinkOptions(Options):
         "http-timeout": "timeout",
     }
 
-    _MAP_GETTERS: ClassVar[Mapping[str, Callable[["StreamlinkOptions", str], Any]]] = {
+    _MAP_GETTERS: ClassVar[Mapping[str, Callable[[StreamlinkOptions, str], Any]]] = {
         "http-proxy": _get_http_proxy,
         "https-proxy": _get_http_proxy,
         "http-cookies": _get_http_attr,
@@ -469,7 +472,7 @@ class StreamlinkOptions(Options):
         "http-timeout": _get_http_attr,
     }
 
-    _MAP_SETTERS: ClassVar[Mapping[str, Callable[["StreamlinkOptions", str, Any], None]]] = {
+    _MAP_SETTERS: ClassVar[Mapping[str, Callable[[StreamlinkOptions, str, Any], None]]] = {
         "interface": _set_interface,
         "ipv4": _set_ipv4_ipv6,
         "ipv6": _set_ipv4_ipv6,

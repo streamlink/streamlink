@@ -1,10 +1,13 @@
+from __future__ import annotations
+
 import argparse
 import numbers
 import re
+from collections.abc import Callable
 from pathlib import Path
 from string import printable
 from textwrap import dedent
-from typing import Any, Callable, Dict, List, Optional, Tuple
+from typing import Any
 
 from streamlink import __version__ as streamlink_version, logger
 from streamlink.session import Streamlink
@@ -17,7 +20,7 @@ from streamlink_cli.utils import find_default_player
 
 class ArgumentParser(argparse.ArgumentParser):
     # noinspection PyUnresolvedReferences,PyProtectedMember
-    NESTED_ARGUMENT_GROUPS: Dict[Optional[argparse._ArgumentGroup], List[argparse._ArgumentGroup]]
+    NESTED_ARGUMENT_GROUPS: dict[argparse._ArgumentGroup | None, list[argparse._ArgumentGroup]]
 
     _RE_PRINTABLE = re.compile(fr"[{re.escape(printable)}]")
     _RE_OPTION = re.compile(r"^(?P<name>[A-Za-z0-9-]+)(?:(?P<op>\s*=\s*|\s+)(?P<value>.*))?$")
@@ -30,7 +33,7 @@ class ArgumentParser(argparse.ArgumentParser):
     def add_argument_group(
         self,
         *args,
-        parent: Optional[argparse._ArgumentGroup] = None,
+        parent: argparse._ArgumentGroup | None = None,
         **kwargs,
     ) -> argparse._ArgumentGroup:
         group = super().add_argument_group(*args, **kwargs)
@@ -1398,7 +1401,7 @@ def build_parser():
 
 # The order of arguments determines if options get overridden by `Streamlink.set_option()`
 # NOTE: arguments with `action=store_{true,false}` must set `default=None`
-_ARGUMENT_TO_SESSIONOPTION: List[Tuple[str, str, Optional[Callable[[Any], Any]]]] = [
+_ARGUMENT_TO_SESSIONOPTION: list[tuple[str, str, Callable[[Any], Any] | None]] = [
     # generic arguments
     ("locale", "locale", None),
 

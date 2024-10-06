@@ -1,6 +1,7 @@
+from __future__ import annotations
+
 import ssl
 from ssl import SSLContext
-from typing import Optional
 from unittest.mock import Mock, PropertyMock, call
 
 import pytest
@@ -89,7 +90,7 @@ class TestHTTPSession:
         ("utf-8", "utf-8"),
         ("cp949", "cp949"),
     ])
-    def test_json(self, monkeypatch: pytest.MonkeyPatch, encoding: str, override: Optional[str]):
+    def test_json(self, monkeypatch: pytest.MonkeyPatch, encoding: str, override: str | None):
         mock_content = PropertyMock(return_value="{\"test\": \"Α and Ω\"}".encode(encoding))  # noqa: RUF001
         monkeypatch.setattr("requests.Response.content", mock_content)
 

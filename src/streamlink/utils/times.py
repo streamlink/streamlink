@@ -1,6 +1,9 @@
+from __future__ import annotations
+
 import re
+from collections.abc import Callable
 from datetime import datetime, timezone, tzinfo
-from typing import Callable, Generic, Type, TypeVar
+from typing import Generic, TypeVar
 
 from isodate import LOCAL, parse_datetime  # type: ignore[import]
 
@@ -95,8 +98,8 @@ class _HoursMinutesSeconds(Generic[_THMS]):
         re.VERBOSE | re.IGNORECASE,
     )
 
-    def __init__(self, return_type: Type[_THMS]):
-        self._return_type: Type[_THMS] = return_type
+    def __init__(self, return_type: type[_THMS]):
+        self._return_type: type[_THMS] = return_type
 
     def __call__(self, value: str) -> _THMS:
         if self._re_float.match(value):
