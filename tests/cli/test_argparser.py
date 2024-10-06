@@ -1,7 +1,9 @@
+from __future__ import annotations
+
 import gettext
 from argparse import Namespace
 from pathlib import Path
-from typing import Any, List
+from typing import Any
 from unittest.mock import Mock
 
 import pytest
@@ -192,7 +194,7 @@ class TestMatchArgumentOverride:
         id="Deprecated argument with override",
     ),
 ])
-def test_setup_session_options(parser: ArgumentParser, session: Streamlink, argv: List, option: str, expected: Any):
+def test_setup_session_options(parser: ArgumentParser, session: Streamlink, argv: list, option: str, expected: Any):
     args = parser.parse_args(argv)
     setup_session_options(session, args)
     assert session.get_option(option) == expected

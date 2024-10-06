@@ -1,5 +1,6 @@
+from __future__ import annotations
+
 import argparse
-from typing import Type
 from unittest.mock import Mock, call
 
 import pytest
@@ -52,7 +53,7 @@ def plugin():
 
 
 @pytest.fixture(autouse=True)
-def session(session: Streamlink, parser: ArgumentParser, plugin: Type[Plugin]):
+def session(session: Streamlink, parser: ArgumentParser, plugin: type[Plugin]):
     session.plugins["mock"] = plugin
 
     setup_plugin_args(session, parser)
@@ -68,7 +69,7 @@ def console(monkeypatch: pytest.MonkeyPatch):
 
 
 class TestPluginArgs:
-    def test_arguments(self, parser: ArgumentParser, plugin: Type[Plugin]):
+    def test_arguments(self, parser: ArgumentParser, plugin: type[Plugin]):
         group_plugins = next((grp for grp in parser._action_groups if grp.title == "Plugin options"), None)  # pragma: no branch
         assert group_plugins is not None, "Adds the 'Plugin options' arguments group"
         assert group_plugins in parser.NESTED_ARGUMENT_GROUPS[None], "Adds the 'Plugin options' arguments group"
@@ -100,7 +101,7 @@ class TestPluginOptions:
         assert not console.ask.called
         assert not console.askpass.called
 
-    def test_options(self, plugin: Type[Plugin], console: Mock):
+    def test_options(self, plugin: type[Plugin], console: Mock):
         options = setup_plugin_options("mock", plugin)
 
         assert console.ask.call_args_list == [call("CAPTCHA code: ")]

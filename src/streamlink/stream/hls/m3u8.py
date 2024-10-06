@@ -1,9 +1,12 @@
+from __future__ import annotations
+
 import logging
 import math
 import re
 from binascii import Error as BinasciiError, unhexlify
+from collections.abc import Callable, Iterator, Mapping
 from datetime import datetime, timedelta
-from typing import Callable, ClassVar, Dict, Generic, Iterator, List, Mapping, Optional, Tuple, Type, TypeVar, Union
+from typing import ClassVar, Generic, TypeVar
 from urllib.parse import urljoin, urlparse
 
 from isodate import ISO8601Error, parse_datetime  # type: ignore[import]
@@ -40,29 +43,29 @@ THLSPlaylist_co = TypeVar("THLSPlaylist_co", bound=HLSPlaylist, covariant=True)
 
 
 class M3U8(Generic[THLSSegment_co, THLSPlaylist_co]):
-    def __init__(self, uri: Optional[str] = None):
+    def __init__(self, uri: str | None = None):
         self.uri = uri
 
         self.is_endlist: bool = False
         self.is_master: bool = False
 
-        self.allow_cache: Optional[bool] = None  # version < 7
-        self.discontinuity_sequence: Optional[int] = None
-        self.iframes_only: Optional[bool] = None  # version >= 4
-        self.media_sequence: Optional[int] = None
-        self.playlist_type: Optional[str] = None
-        self.targetduration: Optional[float] = None
-        self.start: Optional[Start] = None
-        self.version: Optional[int] = None
+        self.allow_cache: bool | None = None  # version < 7
+        self.discontinuity_sequence: int | None = None
+        self.iframes_only: bool | None = None  # version >= 4
+        self.media_sequence: int | None = None
+        self.playlist_type: str | None = None
+        self.targetduration: float | None = None
+        self.start: Start | None = None
+        self.version: int | None = None
 
-        self.media: List[Media] = []
-        self.dateranges: List[DateRange] = []
+        self.media: list[Media] = []
+        self.dateranges: list[DateRange] = []
 
-        self.playlists: List[THLSPlaylist_co] = []
-        self.segments: List[THLSSegment_co] = []
+        self.playlists: list[THLSPlaylist_co] = []
+        self.segments: list[THLSSegment_co] = []
 
     @classmethod
-    def is_date_in_daterange(cls, date: Optional[datetime], daterange: DateRange):
+    def is_date_in_daterange(cls, date: datetime | None, daterange: DateRange):
         if date is None or daterange.start_date is None:
             return None
 
@@ -107,9 +110,9 @@ class M3U8ParserMeta(type):
 
 class M3U8Parser(Generic[TM3U8_co, THLSSegment_co, THLSPlaylist_co], metaclass=M3U8ParserMeta):
     # Can't set type vars as classvars yet (PEP 526 issue)
-    __m3u8__: ClassVar[Type[M3U8[HLSSegment, HLSPlaylist]]] = M3U8
-    __segment__: ClassVar[Type[HLSSegment]] = HLSSegment
-    __playlist__: ClassVar[Type[HLSPlaylist]] = HLSPlaylist
+    __m3u8__: ClassVar[type[M3U8[HLSSegment, HLSPlaylist]]] = M3U8
+    __segment__: ClassVar[type[HLSSegment]] = HLSSegment
+    __playlist__: ClassVar[type[HLSPlaylist]] = HLSPlaylist
 
     _TAGS: ClassVar[Mapping[str, Callable[[Self, str], None]]]
 
@@ -138,22 +141,22 @@ class M3U8Parser(Generic[TM3U8_co, THLSSegment_co, THLSPlaylist_co], metaclass=M
     _tag_re = re.compile(r"#(?P<tag>[\w-]+)(:(?P<value>.+))?")
     _res_re = re.compile(r"(\d+)x(\d+)")
 
-    def __init__(self, base_uri: Optional[str] = None):
+    def __init__(self, base_uri: str | None = None):
         self.m3u8: TM3U8_co = self.__m3u8__(base_uri)  # type: ignore[assignment]  # PEP 696 might solve this
 
         self._expect_playlist: bool = False
-        self._streaminf: Optional[Dict[str, str]] = None
+        self._streaminf: dict[str, str] | None = None
 
         self._expect_segment: bool = False
-        self._extinf: Optional[ExtInf] = None
-        self._byterange: Optional[ByteRange] = None
+        self._extinf: ExtInf | None = None
+        self._byterange: ByteRange | None = None
         self._discontinuity: bool = False
-        self._map: Optional[Map] = None
-        self._key: Optional[Key] = None
-        self._date: Optional[datetime] = None
+        self._map: Map | None = None
+        self._key: Key | None = None
+        self._date: datetime | None = None
 
     @classmethod
-    def create_stream_info(cls, streaminf: Mapping[str, Optional[str]], streaminfoclass=None):
+    def create_stream_info(cls, streaminf: Mapping[str, str | None], streaminfoclass=None):
         program_id = streaminf.get("PROGRAM-ID")
 
         try:
@@ -187,7 +190,7 @@ class M3U8Parser(Generic[TM3U8_co, THLSSegment_co, THLSPlaylist_co], metaclass=M
             )
 
     @classmethod
-    def split_tag(cls, line: str) -> Union[Tuple[str, str], Tuple[None, None]]:
+    def split_tag(cls, line: str) -> tuple[str, str] | tuple[None, None]:
         match = cls._tag_re.match(line)
 
         if match:
@@ -196,10 +199,10 @@ class M3U8Parser(Generic[TM3U8_co, THLSSegment_co, THLSPlaylist_co], metaclass=M
         return None, None
 
     @classmethod
-    def parse_attributes(cls, value: str) -> Dict[str, str]:
+    def parse_attributes(cls, value: str) -> dict[str, str]:
         pos = 0
         length = len(value)
-        res: Dict[str, str] = {}
+        res: dict[str, str] = {}
         while pos < length:
             match = cls._attr_re.match(value, pos)
             if match is None:
@@ -216,7 +219,7 @@ class M3U8Parser(Generic[TM3U8_co, THLSSegment_co, THLSPlaylist_co], metaclass=M
         return value == "YES"
 
     @classmethod
-    def parse_byterange(cls, value: str) -> Optional[ByteRange]:
+    def parse_byterange(cls, value: str) -> ByteRange | None:
         match = cls._range_re.match(value)
         if match is None:
             return None
@@ -239,7 +242,7 @@ class M3U8Parser(Generic[TM3U8_co, THLSSegment_co, THLSPlaylist_co], metaclass=M
         )
 
     @staticmethod
-    def parse_hex(value: Optional[str]) -> Optional[bytes]:
+    def parse_hex(value: str | None) -> bytes | None:
         if value is None:
             return None
 
@@ -253,7 +256,7 @@ class M3U8Parser(Generic[TM3U8_co, THLSSegment_co, THLSPlaylist_co], metaclass=M
         return None
 
     @staticmethod
-    def parse_iso8601(value: Optional[str]) -> Optional[datetime]:
+    def parse_iso8601(value: str | None) -> datetime | None:
         try:
             return None if value is None else parse_datetime(value)
         except (ISO8601Error, ValueError):
@@ -261,7 +264,7 @@ class M3U8Parser(Generic[TM3U8_co, THLSSegment_co, THLSPlaylist_co], metaclass=M
             return None
 
     @staticmethod
-    def parse_timedelta(value: Optional[str]) -> Optional[timedelta]:
+    def parse_timedelta(value: str | None) -> timedelta | None:
         return None if value is None else timedelta(seconds=float(value))
 
     @classmethod
@@ -560,7 +563,7 @@ class M3U8Parser(Generic[TM3U8_co, THLSSegment_co, THLSPlaylist_co], metaclass=M
             playlist = self.get_playlist(self.uri(line))
             self.m3u8.playlists.append(playlist)
 
-    def parse(self, data: Union[str, Response]) -> TM3U8_co:
+    def parse(self, data: str | Response) -> TM3U8_co:
         lines: Iterator[str]
         if isinstance(data, str):
             lines = iter(filter(bool, data.splitlines()))
@@ -651,9 +654,9 @@ class M3U8Parser(Generic[TM3U8_co, THLSSegment_co, THLSPlaylist_co], metaclass=M
 
 
 def parse_m3u8(
-    data: Union[str, Response],
-    base_uri: Optional[str] = None,
-    parser: Type[M3U8Parser[TM3U8_co, THLSSegment_co, THLSPlaylist_co]] = M3U8Parser,
+    data: str | Response,
+    base_uri: str | None = None,
+    parser: type[M3U8Parser[TM3U8_co, THLSSegment_co, THLSPlaylist_co]] = M3U8Parser,
 ) -> TM3U8_co:
     """
     Parse an M3U8 playlist from a string of data or an HTTP response.

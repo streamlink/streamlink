@@ -1,10 +1,13 @@
+from __future__ import annotations
+
 import abc
 import ast
 import pkgutil
 import re
 import tokenize
+from collections.abc import Iterator
 from pathlib import Path
-from typing import Any, Dict, Iterator, List, Optional
+from typing import Any
 
 from docutils import nodes
 from docutils.parsers.rst import Directive
@@ -30,7 +33,7 @@ class IMetadataItem(IDatalistItem):
 class MetadataItem(IMetadataItem):
     def __init__(self, title: str):
         self.title = title
-        self.value: Optional[str] = None
+        self.value: str | None = None
 
     def set(self, value: str) -> None:
         self.value = value
@@ -44,7 +47,7 @@ class MetadataItem(IMetadataItem):
 class MetadataList(IMetadataItem):
     def __init__(self, title: str):
         self.title = title
-        self.value: List[str] = []
+        self.value: list[str] = []
 
     def set(self, value: str) -> None:
         self.value.append(value)
@@ -165,7 +168,7 @@ class PluginArguments(ast.NodeVisitor, IDatalistItem):
 class PluginMetadata:
     def __init__(self, name: str, pluginast):
         self.name: str = name
-        self.items: Dict[str, IMetadataItem] = dict(
+        self.items: dict[str, IMetadataItem] = dict(
             description=MetadataItem("Description"),
             url=MetadataList("URL(s)"),
             type=MetadataItem("Type"),
@@ -175,7 +178,7 @@ class PluginMetadata:
             account=MetadataItem("Account"),
             notes=MetadataList("Notes"),
         )
-        self.additional: List[IDatalistItem] = [
+        self.additional: list[IDatalistItem] = [
             PluginArguments(name, pluginast),
             PluginOnGithub(name),
         ]
@@ -220,7 +223,7 @@ class PluginFinder:
             if pluginmetadata:
                 yield pluginmetadata
 
-    def _parse_plugin(self, pluginname: str, pluginfile: Path) -> Optional[PluginMetadata]:
+    def _parse_plugin(self, pluginname: str, pluginfile: Path) -> PluginMetadata | None:
         with pluginfile.open() as handle:
             # read until the first token has been parsed
             for tokeninfo in tokenize.generate_tokens(handle.readline):

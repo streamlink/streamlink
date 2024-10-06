@@ -1,6 +1,7 @@
+from __future__ import annotations
+
 import json
 import re
-from typing import Dict, Optional, Union
 from unittest.mock import Mock
 
 import pytest
@@ -25,7 +26,7 @@ STREAMS_MULTIVARIANT = "mock://stream"
 class FakeStream(Stream):
     __shortname__ = "fake"
 
-    def __init__(self, session: Streamlink, url: Optional[str], manifest_url: Optional[str]):
+    def __init__(self, session: Streamlink, url: str | None, manifest_url: str | None):
         super().__init__(session)
         self.url = url
         self.manifest_url = manifest_url
@@ -76,7 +77,7 @@ def streams(request: pytest.FixtureRequest, session: Streamlink):
 
 
 @pytest.fixture(autouse=True)
-def plugin(session: Streamlink, streams: Union[BaseException, Dict[str, FakeStream]]):
+def plugin(session: Streamlink, streams: BaseException | dict[str, FakeStream]):
     @pluginmatcher(re.compile("https?://plugin"))
     class FakePlugin(Plugin):
         __module__ = "plugin"

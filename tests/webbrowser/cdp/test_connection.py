@@ -1,8 +1,10 @@
+from __future__ import annotations
+
 import contextlib
+from collections.abc import Generator
 from contextlib import nullcontext
 from dataclasses import dataclass
 from functools import partial
-from typing import Dict, Generator, Optional, Type
 from unittest.mock import AsyncMock
 
 import pytest
@@ -89,7 +91,7 @@ class TestCreateConnection:
         pytest.param(0, 2, id="No timeout uses default value"),
         pytest.param(3, 3, id="Custom timeout value"),
     ])
-    async def test_timeout(self, websocket_connection: FakeWebsocketConnection, timeout: Optional[int], expected: int):
+    async def test_timeout(self, websocket_connection: FakeWebsocketConnection, timeout: int | None, expected: int):
         async with CDPConnection.create("ws://localhost:1234/fake", timeout=timeout) as cdp_conn:
             pass
         assert cdp_conn.cmd_timeout == expected
@@ -172,7 +174,7 @@ class TestSend:
         cdp_connection: CDPConnection,
         websocket_connection: FakeWebsocketConnection,
         autojump_clock: MockClock,
-        timeout: Optional[float],
+        timeout: float | None,
         jump: float,
         raises: nullcontext,
     ):
@@ -578,7 +580,7 @@ class TestSession:
 class TestHandleEvent:
     @pytest.fixture(autouse=True)
     def event_parsers(self, monkeypatch: pytest.MonkeyPatch):
-        event_parsers: Dict[str, Type] = {
+        event_parsers: dict[str, type] = {
             "Fake.fakeEvent": FakeEvent,
         }
         monkeypatch.setattr("streamlink.webbrowser.cdp.devtools.util._event_parsers", event_parsers)

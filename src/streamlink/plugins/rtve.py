@@ -6,11 +6,13 @@ $metadata id
 $region Spain
 """
 
+from __future__ import annotations
+
 import logging
 import re
 from base64 import b64decode
+from collections.abc import Iterator, Sequence
 from io import BytesIO
-from typing import Iterator, Sequence, Tuple
 from urllib.parse import urlparse
 
 from streamlink.plugin import Plugin, PluginError, pluginmatcher
@@ -56,7 +58,7 @@ class Base64Reader:
         a, b, c, d = self.read(4)
         return a << 24 | b << 16 | c << 8 | d
 
-    def read_chunk(self) -> Tuple[str, Sequence[int]]:
+    def read_chunk(self) -> tuple[str, Sequence[int]]:
         size = self.read_int()
         chunktype = self.read_chars(4)
         chunkdata = self.read(size)
@@ -114,7 +116,7 @@ class ZTNR:
         return cls._get_url(data, cls._get_alphabet(alphabet))
 
     @classmethod
-    def translate(cls, data: str) -> Iterator[Tuple[str, str]]:
+    def translate(cls, data: str) -> Iterator[tuple[str, str]]:
         reader = Base64Reader(data.replace("\n", ""))
         for chunk_type, chunk_data in reader:
             if chunk_type == "IEND":

@@ -1,4 +1,4 @@
-from typing import Dict
+from __future__ import annotations
 
 from streamlink.exceptions import StreamError
 from streamlink.session import Streamlink
@@ -13,7 +13,7 @@ class HTTPStream(Stream):
 
     __shortname__ = "http"
 
-    args: Dict
+    args: dict
     """A dict of keyword arguments passed to :meth:`requests.Session.request`, such as method, headers, cookies, etc."""
 
     def __init__(

@@ -1,8 +1,10 @@
+from __future__ import annotations
+
 from collections import abc
 from copy import copy, deepcopy
 from functools import singledispatch
 from re import Pattern
-from typing import Any, Type, Union
+from typing import Any
 
 from lxml.etree import Element, iselement
 
@@ -32,7 +34,7 @@ class Schema(AllSchema):
     which by default raises :class:`PluginError <streamlink.exceptions.PluginError>` on error.
     """
 
-    def validate(self, value: Any, name: str = "result", exception: Type[Exception] = PluginError) -> Any:
+    def validate(self, value: Any, name: str = "result", exception: type[Exception] = PluginError) -> Any:
         try:
             return validate(self, value)
         except ValidationError as err:
@@ -74,7 +76,7 @@ def _validate_type(schema: type, value):
 @validate.register(tuple)
 @validate.register(set)
 @validate.register(frozenset)
-def _validate_sequence(schema: Union[list, tuple, set, frozenset], value):
+def _validate_sequence(schema: list | tuple | set | frozenset, value):
     cls = type(schema)
     validate(cls, value)
     any_schemas = AnySchema(*schema)
@@ -405,7 +407,7 @@ def _validate_union_dict(schema: dict, value):
 @validate_union.register(tuple)
 @validate_union.register(set)
 @validate_union.register(frozenset)
-def _validate_union_sequence(schemas: Union[list, tuple, set, frozenset], value):
+def _validate_union_sequence(schemas: list | tuple | set | frozenset, value):
     return type(schemas)(
         validate(schema, value) for schema in schemas
     )

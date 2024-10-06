@@ -1,7 +1,9 @@
+from __future__ import annotations
+
 import subprocess
-from contextlib import nullcontext
+from collections.abc import Mapping, Sequence
+from contextlib import AbstractContextManager, nullcontext
 from pathlib import Path
-from typing import ContextManager, Dict, Mapping, Sequence, Type
 from unittest.mock import Mock, call, patch
 
 import pytest
@@ -171,7 +173,7 @@ class TestPlayerArgs:
             id="Potplayer (potplayermini64)",
         ),
     ])
-    def test_knownplayer(self, playerpath: str, playerargsclass: Type[PlayerArgs]):
+    def test_knownplayer(self, playerpath: str, playerargsclass: type[PlayerArgs]):
         assert isinstance(PlayerOutput.playerargsfactory(path=Path(playerpath)), playerargsclass)
 
     # noinspection PyTestParametrized
@@ -251,7 +253,7 @@ class TestPlayerArgs:
 # TODO: refactor PlayerOutput and write proper tests
 class TestPlayerOutput:
     @pytest.fixture(autouse=True)
-    def _os_environ(self, os_environ: Dict[str, str]):
+    def _os_environ(self, os_environ: dict[str, str]):
         os_environ["FAKE"] = "ENVIRONMENT"
         yield
         assert sorted(os_environ.keys()) == ["FAKE"], "Doesn't pollute the os.environ dict with custom env vars"
@@ -354,7 +356,7 @@ class TestPlayerOutput:
         playeroutput: PlayerOutput,
         mock_which: Mock,
         mock_popen: Mock,
-        expected: ContextManager,
+        expected: AbstractContextManager,
         warns: bool,
     ):
         with expected:

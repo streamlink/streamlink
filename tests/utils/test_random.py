@@ -1,6 +1,8 @@
+from __future__ import annotations
+
 from collections import defaultdict
+from collections.abc import Iterator, Sequence
 from itertools import count
-from typing import Dict, Iterator, Sequence
 
 import pytest
 
@@ -18,7 +20,7 @@ from streamlink.utils.random import (
 
 @pytest.fixture()
 def _iterated_choice(monkeypatch: pytest.MonkeyPatch):
-    choices: Dict[Sequence, Iterator[int]] = defaultdict(count)
+    choices: dict[Sequence, Iterator[int]] = defaultdict(count)
 
     def fake_choice(seq):
         return seq[next(choices[seq]) % len(seq)]

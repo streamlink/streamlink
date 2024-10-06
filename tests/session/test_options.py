@@ -1,6 +1,7 @@
+from __future__ import annotations
+
 import re
 from socket import AF_INET, AF_INET6
-from typing import Dict
 from unittest.mock import Mock
 
 import pytest
@@ -85,7 +86,7 @@ class TestOptionsInterface:
 
         return adapters
 
-    def test_options_interface(self, adapters: Dict[str, Mock], session: Streamlink):
+    def test_options_interface(self, adapters: dict[str, Mock], session: Streamlink):
         assert session.get_option("interface") is None
 
         session.set_option("interface", "my-interface")

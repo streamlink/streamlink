@@ -7,9 +7,10 @@ $metadata author
 $metadata title
 """
 
+from __future__ import annotations
+
 import logging
 import re
-from typing import Dict
 
 from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.api import validate
@@ -25,7 +26,7 @@ log = logging.getLogger(__name__)
     ),
 )
 class TikTok(Plugin):
-    QUALITY_WEIGHTS: Dict[str, int] = {}
+    QUALITY_WEIGHTS: dict[str, int] = {}
 
     _URL_WEB_LIVE = "https://www.tiktok.com/@{channel}/live"
     _URL_API_LIVE_DETAIL = "https://www.tiktok.com/api/live/detail/?aid=1988&roomID={room_id}"

@@ -1,11 +1,14 @@
+from __future__ import annotations
+
 import copy
 import itertools
 import logging
 from collections import defaultdict
+from collections.abc import Mapping
 from contextlib import contextmanager, suppress
 from datetime import datetime
 from time import time
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any
 from urllib.parse import urlparse, urlunparse
 
 from requests import Response
@@ -26,8 +29,8 @@ log = logging.getLogger(".".join(__name__.split(".")[:-1]))
 
 
 class DASHStreamWriter(SegmentedStreamWriter[DASHSegment, Response]):
-    reader: "DASHStreamReader"
-    stream: "DASHStream"
+    reader: DASHStreamReader
+    stream: DASHStream
 
     def fetch(self, segment: DASHSegment):
         if self.closed:
@@ -73,9 +76,9 @@ class DASHStreamWriter(SegmentedStreamWriter[DASHSegment, Response]):
 
 
 class DASHStreamWorker(SegmentedStreamWorker[DASHSegment, Response]):
-    reader: "DASHStreamReader"
-    writer: "DASHStreamWriter"
-    stream: "DASHStream"
+    reader: DASHStreamReader
+    writer: DASHStreamWriter
+    stream: DASHStream
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -169,13 +172,13 @@ class DASHStreamReader(SegmentedStreamReader[DASHSegment, Response]):
     __worker__ = DASHStreamWorker
     __writer__ = DASHStreamWriter
 
-    worker: "DASHStreamWorker"
-    writer: "DASHStreamWriter"
-    stream: "DASHStream"
+    worker: DASHStreamWorker
+    writer: DASHStreamWriter
+    stream: DASHStream
 
     def __init__(
         self,
-        stream: "DASHStream",
+        stream: DASHStream,
         representation: Representation,
         timestamp: datetime,
     ):
@@ -196,8 +199,8 @@ class DASHStream(Stream):
         self,
         session: Streamlink,
         mpd: MPD,
-        video_representation: Optional[Representation] = None,
-        audio_representation: Optional[Representation] = None,
+        video_representation: Representation | None = None,
+        audio_representation: Representation | None = None,
         **kwargs,
     ):
         """
@@ -237,7 +240,7 @@ class DASHStream(Stream):
         return self.mpd.url
 
     @staticmethod
-    def fetch_manifest(session: Streamlink, url_or_manifest: str, **request_args) -> Tuple[str, Dict[str, Any]]:
+    def fetch_manifest(session: Streamlink, url_or_manifest: str, **request_args) -> tuple[str, dict[str, Any]]:
         if url_or_manifest.startswith("<?xml"):
             return url_or_manifest, {}
 
@@ -254,7 +257,7 @@ class DASHStream(Stream):
         return manifest, dict(url=url, base_url=base_url)
 
     @staticmethod
-    def parse_mpd(manifest: str, mpd_params: Dict[str, Any]) -> MPD:
+    def parse_mpd(manifest: str, mpd_params: Mapping[str, Any]) -> MPD:
         node = parse_xml(manifest, ignore_ns=True)
 
         return MPD(node, **mpd_params)
@@ -268,7 +271,7 @@ class DASHStream(Stream):
         with_video_only: bool = False,
         with_audio_only: bool = False,
         **kwargs,
-    ) -> Dict[str, "DASHStream"]:
+    ) -> dict[str, DASHStream]:
         """
         Parse a DASH manifest file and return its streams.
 
@@ -288,8 +291,8 @@ class DASHStream(Stream):
             raise PluginError(f"Failed to parse MPD manifest: {err}") from err
 
         source = mpd_params.get("url", "MPD manifest")
-        video: List[Optional[Representation]] = [None] if with_audio_only else []
-        audio: List[Optional[Representation]] = [None] if with_video_only else []
+        video: list[Representation | None] = [None] if with_audio_only else []
+        audio: list[Representation | None] = [None] if with_video_only else []
 
         # Search for suitable video and audio representations
         for aset in mpd.periods[period].adaptationSets:

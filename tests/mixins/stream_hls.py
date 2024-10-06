@@ -1,8 +1,9 @@
+from __future__ import annotations
+
 import unittest
 from binascii import hexlify
 from functools import partial
 from threading import Event, Thread
-from typing import List
 from unittest.mock import patch
 
 import requests_mock
@@ -144,7 +145,7 @@ class HLSStreamReadThread(Thread):
         self.read_once = Event()
         self.handshake = Handshake()
         self.read_all = False
-        self.data: List[bytes] = []
+        self.data: list[bytes] = []
 
         self.session = session
         self.stream = stream

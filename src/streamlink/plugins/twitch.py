@@ -13,18 +13,21 @@ $notes :ref:`Low latency streaming <cli/plugins/twitch:Low latency streaming>` i
 $notes Acquires a :ref:`client-integrity token <cli/plugins/twitch:Client-integrity token>` on streaming access token failure.
 """
 
+from __future__ import annotations
+
 import argparse
 import logging
 import math
 import re
 import sys
 from collections import deque
+from collections.abc import Mapping
 from contextlib import suppress
 from dataclasses import dataclass, replace as dataclass_replace
 from datetime import datetime, timedelta
 from json import dumps as json_dumps
 from random import random
-from typing import ClassVar, Deque, List, Mapping, Optional, Tuple, Type
+from typing import ClassVar
 from urllib.parse import urlparse
 
 from requests.exceptions import HTTPError
@@ -66,12 +69,12 @@ class TwitchHLSSegment(HLSSegment):
 class TwitchM3U8(M3U8[TwitchHLSSegment, HLSPlaylist]):
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
-        self.dateranges_ads: List[DateRange] = []
+        self.dateranges_ads: list[DateRange] = []
 
 
 class TwitchM3U8Parser(M3U8Parser[TwitchM3U8, TwitchHLSSegment, HLSPlaylist]):
-    __m3u8__: ClassVar[Type[TwitchM3U8]] = TwitchM3U8
-    __segment__: ClassVar[Type[TwitchHLSSegment]] = TwitchHLSSegment
+    __m3u8__: ClassVar[type[TwitchM3U8]] = TwitchM3U8
+    __segment__: ClassVar[type[TwitchHLSSegment]] = TwitchHLSSegment
 
     @parse_tag("EXT-X-TWITCH-LIVE-SEQUENCE")
     def parse_ext_x_twitch_live_sequence(self, value):
@@ -140,7 +143,7 @@ class TwitchM3U8Parser(M3U8Parser[TwitchM3U8, TwitchHLSSegment, HLSPlaylist]):
 
         return segment
 
-    def _is_segment_ad(self, date: Optional[datetime], title: Optional[str] = None) -> bool:
+    def _is_segment_ad(self, date: datetime | None, title: str | None = None) -> bool:
         return (
             title is not None and "Amazon" in title
             or any(self.m3u8.is_date_in_daterange(date, daterange) for daterange in self.m3u8.dateranges_ads)
@@ -156,13 +159,13 @@ class TwitchM3U8Parser(M3U8Parser[TwitchM3U8, TwitchHLSSegment, HLSPlaylist]):
 
 
 class TwitchHLSStreamWorker(HLSStreamWorker):
-    reader: "TwitchHLSStreamReader"
-    writer: "TwitchHLSStreamWriter"
-    stream: "TwitchHLSStream"
+    reader: TwitchHLSStreamReader
+    writer: TwitchHLSStreamWriter
+    stream: TwitchHLSStream
 
     def __init__(self, reader, *args, **kwargs) -> None:
         self.had_content: bool = False
-        self.logged_ads: Deque[str] = deque(maxlen=10)
+        self.logged_ads: deque[str] = deque(maxlen=10)
         super().__init__(reader, *args, **kwargs)
 
     def _playlist_reload_time(self, playlist: TwitchM3U8):  # type: ignore[override]
@@ -198,7 +201,7 @@ class TwitchHLSStreamWorker(HLSStreamWorker):
             if not daterange_ads.duration:  # pragma: no cover
                 continue
 
-            ads_id: Optional[str] = (
+            ads_id: str | None = (
                 daterange_ads.x.get("X-TV-TWITCH-AD-COMMERCIAL-ID")
                 or daterange_ads.x.get("X-TV-TWITCH-AD-ROLL-TYPE")
             )
@@ -218,8 +221,8 @@ class TwitchHLSStreamWorker(HLSStreamWorker):
 
 
 class TwitchHLSStreamWriter(HLSStreamWriter):
-    reader: "TwitchHLSStreamReader"
-    stream: "TwitchHLSStream"
+    reader: TwitchHLSStreamReader
+    stream: TwitchHLSStream
 
     def should_filter_segment(self, segment: TwitchHLSSegment) -> bool:  # type: ignore[override]
         return self.stream.disable_ads and segment.ad
@@ -229,11 +232,11 @@ class TwitchHLSStreamReader(HLSStreamReader):
     __worker__ = TwitchHLSStreamWorker
     __writer__ = TwitchHLSStreamWriter
 
-    worker: "TwitchHLSStreamWorker"
-    writer: "TwitchHLSStreamWriter"
-    stream: "TwitchHLSStream"
+    worker: TwitchHLSStreamWorker
+    writer: TwitchHLSStreamWriter
+    stream: TwitchHLSStream
 
-    def __init__(self, stream: "TwitchHLSStream"):
+    def __init__(self, stream: TwitchHLSStream):
         if stream.disable_ads:
             log.info("Will skip ad segments")
         if stream.low_latency:
@@ -451,7 +454,7 @@ class TwitchAPI:
             ),
         ))
 
-    def access_token(self, is_live, channel_or_vod, client_integrity: Optional[Tuple[str, str]] = None):
+    def access_token(self, is_live, channel_or_vod, client_integrity: tuple[str, str] | None = None):
         query = self._gql_persisted_query(
             "PlaybackAccessToken",
             "0828119ded1c13477966434e15800ff57ddacf13ba1911c129dc2200705b0712",
@@ -591,7 +594,7 @@ class TwitchClientIntegrity:
         channel: str,
         headers: Mapping[str, str],
         device_id: str,
-    ) -> Optional[Tuple[str, int]]:
+    ) -> tuple[str, int] | None:
         from streamlink.compat import BaseExceptionGroup  # noqa: PLC0415
         from streamlink.webbrowser.cdp import CDPClient, CDPClientSession, devtools  # noqa: PLC0415
 
@@ -602,7 +605,7 @@ class TwitchClientIntegrity:
             .replace("DEVICE_ID", device_id)
         eval_timeout = session.get_option("webbrowser-timeout")
         # noinspection PyUnusedLocal
-        client_integrity: Optional[str] = None
+        client_integrity: str | None = None
 
         async def on_main(client_session: CDPClientSession, request: devtools.fetch.RequestPaused):
             async with client_session.alter_request(request) as cm:
@@ -792,7 +795,7 @@ class Twitch(Plugin):
         except (PluginError, TypeError):
             pass
 
-    def _client_integrity_token(self, channel: str) -> Optional[Tuple[str, str]]:
+    def _client_integrity_token(self, channel: str) -> tuple[str, str] | None:
         if self.options.get("purge-client-integrity"):
             log.info("Removing cached client-integrity token...")
             self.cache.set(self._CACHE_KEY_CLIENT_INTEGRITY, None, 0)

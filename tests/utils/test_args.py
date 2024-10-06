@@ -1,5 +1,7 @@
+from __future__ import annotations
+
+from collections.abc import Sequence
 from contextlib import nullcontext
-from typing import List, Sequence, Type
 
 import pytest
 
@@ -34,7 +36,7 @@ def test_boolean(value: str, expected: bool, raises: nullcontext):
     pytest.param("/var/run/foo,/var/run/bar", ["/var/run/foo", "/var/run/bar"], id="paths"),
     pytest.param("foo bar,baz", ["foo bar", "baz"], id="whitespace"),
 ])
-def test_comma_list(value: str, expected: List[str]):
+def test_comma_list(value: str, expected: list[str]):
     assert comma_list(value) == expected
 
 
@@ -58,7 +60,7 @@ def test_comma_list(value: str, expected: List[str]):
         id="unique",
     ),
 ])
-def test_comma_list_filter(options: dict, value: str, expected: List[str]):
+def test_comma_list_filter(options: dict, value: str, expected: list[str]):
     func = comma_list_filter(**options)
     assert func(value) == expected
 
@@ -156,7 +158,7 @@ class TestNum:
         (float, "-", None, pytest.raises(ValueError, match=r"^could not convert string to float:")),
         (float, "foo", None, pytest.raises(ValueError, match=r"^could not convert string to float:")),
     ])
-    def test_numtype(self, numtype: Type[float], value: float, expected: float, raises: nullcontext):
+    def test_numtype(self, numtype: type[float], value: float, expected: float, raises: nullcontext):
         func = num(numtype)
         assert func.__name__ == numtype.__name__
         with raises:

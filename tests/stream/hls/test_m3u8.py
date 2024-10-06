@@ -1,5 +1,6 @@
+from __future__ import annotations
+
 from datetime import datetime, timedelta, timezone
-from typing import Optional, Tuple, Union
 
 import pytest
 
@@ -62,7 +63,7 @@ def test_parse_tag_mapping():
     ("#TAG:ATTRIBUTES", ("TAG", "ATTRIBUTES")),
     ("#TAG:    ATTRIBUTES    ", ("TAG", "ATTRIBUTES")),
 ])
-def test_split_tag(string: str, expected: Union[Tuple[str, str], Tuple[None, None]]):
+def test_split_tag(string: str, expected: tuple[str, str] | tuple[None, None]):
     assert M3U8Parser.split_tag(string) == expected
 
 
@@ -149,7 +150,7 @@ def test_parse_bool(string: str, expected: bool):
     ("1234", ByteRange(1234, None)),
     ("1234@5678", ByteRange(1234, 5678)),
 ])
-def test_parse_byterange(string: str, expected: Optional[ByteRange]):
+def test_parse_byterange(string: str, expected: ByteRange | None):
     assert M3U8Parser.parse_byterange(string) == expected
 
 
@@ -173,7 +174,7 @@ def test_parse_extinf(string: str, expected: ExtInf):
     ("0XDEADBEEF", False, b"\xde\xad\xbe\xef"),
     ("0xdeadbee", False, b"\x0d\xea\xdb\xee"),
 ])
-def test_parse_hex(caplog: pytest.LogCaptureFixture, string: Optional[str], log: bool, expected: Optional[bytes]):
+def test_parse_hex(caplog: pytest.LogCaptureFixture, string: str | None, log: bool, expected: bytes | None):
     assert M3U8Parser.parse_hex(string) == expected
     assert [(record.name, record.levelname, record.message) for record in caplog.records] == ([
         ("streamlink.stream.hls.m3u8", "warning", "Discarded invalid hexadecimal-sequence attribute value"),
@@ -187,7 +188,7 @@ def test_parse_hex(caplog: pytest.LogCaptureFixture, string: Optional[str], log:
     ("2000-99-99T99:99:99.999Z", True, None),
     ("2000-01-01T00:00:00.000Z", False, datetime(2000, 1, 1, 0, 0, 0, 0, tzinfo=UTC)),
 ])
-def test_parse_iso8601(caplog: pytest.LogCaptureFixture, string: Optional[str], log: bool, expected: Optional[datetime]):
+def test_parse_iso8601(caplog: pytest.LogCaptureFixture, string: str | None, log: bool, expected: datetime | None):
     assert M3U8Parser.parse_iso8601(string) == expected
     assert [(record.name, record.levelname, record.message) for record in caplog.records] == ([
         ("streamlink.stream.hls.m3u8", "warning", "Discarded invalid ISO8601 attribute value"),
@@ -200,7 +201,7 @@ def test_parse_iso8601(caplog: pytest.LogCaptureFixture, string: Optional[str], 
     ("123.456", timedelta(seconds=123.456)),
     ("-123.456", timedelta(seconds=-123.456)),
 ])
-def test_parse_timedelta(string: Optional[str], expected: Optional[timedelta]):
+def test_parse_timedelta(string: str | None, expected: timedelta | None):
     assert M3U8Parser.parse_timedelta(string) == expected
 
 

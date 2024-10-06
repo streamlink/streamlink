@@ -1,7 +1,8 @@
+from __future__ import annotations
+
 import os
 import tempfile
 from pathlib import Path
-from typing import List
 
 from streamlink.compat import is_darwin, is_win32
 from streamlink_cli.compat import DeprecatedPath
@@ -15,8 +16,8 @@ DEFAULT_STREAM_METADATA = {
     "game": "No Game/Category",
 }
 
-CONFIG_FILES: List[Path]
-PLUGIN_DIRS: List[Path]
+CONFIG_FILES: list[Path]
+PLUGIN_DIRS: list[Path]
 LOG_DIR: Path
 
 if is_win32:

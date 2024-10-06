@@ -1,8 +1,11 @@
+from __future__ import annotations
+
 import base64
 import re
+from collections.abc import AsyncGenerator, Awaitable, Callable, Coroutine, Mapping
 from contextlib import asynccontextmanager
 from dataclasses import dataclass
-from typing import Any, AsyncGenerator, Awaitable, Callable, Coroutine, List, Mapping, Optional, Set
+from typing import Any
 
 import trio
 
@@ -19,7 +22,7 @@ except ImportError:  # pragma: no cover
     from typing_extensions import Self, TypeAlias
 
 
-TRequestHandlerCallable: TypeAlias = Callable[["CDPClientSession", fetch.RequestPaused], Awaitable]
+TRequestHandlerCallable: TypeAlias = "Callable[[CDPClientSession, fetch.RequestPaused], Awaitable]"
 
 
 _re_url_pattern_wildcard = re.compile(r"(.+?)?(\\+)?([*?])")
@@ -65,7 +68,7 @@ class RequestPausedHandler:
 class CMRequestProxy:
     body: str
     response_code: int
-    response_headers: Optional[Mapping[str, str]]
+    response_headers: Mapping[str, str] | None
 
 
 class CDPClient:
@@ -96,12 +99,12 @@ class CDPClient:
         cls,
         session: Streamlink,
         runner: Callable[[Self], Coroutine],
-        executable: Optional[str] = None,
-        timeout: Optional[float] = None,
-        cdp_host: Optional[str] = None,
-        cdp_port: Optional[int] = None,
-        cdp_timeout: Optional[float] = None,
-        headless: Optional[bool] = None,
+        executable: str | None = None,
+        timeout: float | None = None,
+        cdp_host: str | None = None,
+        cdp_port: int | None = None,
+        cdp_timeout: float | None = None,
+        headless: bool | None = None,
     ) -> Any:
         """
         Start a new :mod:`trio` runloop and do the following things:
@@ -174,11 +177,11 @@ class CDPClient:
     async def run(
         cls,
         session: Streamlink,
-        executable: Optional[str] = None,
-        timeout: Optional[float] = None,
-        cdp_host: Optional[str] = None,
-        cdp_port: Optional[int] = None,
-        cdp_timeout: Optional[float] = None,
+        executable: str | None = None,
+        timeout: float | None = None,
+        cdp_host: str | None = None,
+        cdp_port: int | None = None,
+        cdp_timeout: float | None = None,
         headless: bool = False,
     ) -> AsyncGenerator[Self, None]:
         webbrowser = ChromiumWebbrowser(executable=executable, host=cdp_host, port=cdp_port)
@@ -193,8 +196,8 @@ class CDPClient:
     async def session(
         self,
         fail_unhandled_requests: bool = False,
-        max_buffer_size: Optional[int] = None,
-    ) -> AsyncGenerator["CDPClientSession", None]:
+        max_buffer_size: int | None = None,
+    ) -> AsyncGenerator[CDPClientSession, None]:
         """
         Create a new CDP session on an empty target (browser tab).
 
@@ -218,13 +221,13 @@ class CDPClientSession:
         cdp_client: CDPClient,
         cdp_session: CDPSession,
         fail_unhandled_requests: bool = False,
-        max_buffer_size: Optional[int] = None,
+        max_buffer_size: int | None = None,
     ):
         self.cdp_client = cdp_client
         self.cdp_session = cdp_session
         self._fail_unhandled = fail_unhandled_requests
-        self._request_handlers: List[RequestPausedHandler] = []
-        self._requests_handled: Set[str] = set()
+        self._request_handlers: list[RequestPausedHandler] = []
+        self._requests_handled: set[str] = set()
         self._max_buffer_size = max_buffer_size
 
     def add_request_handler(
@@ -250,7 +253,7 @@ class CDPClientSession:
         )
 
     @asynccontextmanager
-    async def navigate(self, url: str, referrer: Optional[str] = None) -> AsyncGenerator[page.FrameId, None]:
+    async def navigate(self, url: str, referrer: str | None = None) -> AsyncGenerator[page.FrameId, None]:
         """
         Async context manager for opening the URL with an optional referrer and starting the optional interception
         of network requests and responses.
@@ -306,7 +309,7 @@ class CDPClientSession:
             if frame_stopped_loading.frame_id == frame_id:
                 return
 
-    async def evaluate(self, expression: str, await_promise: bool = True, timeout: Optional[float] = None) -> Any:
+    async def evaluate(self, expression: str, await_promise: bool = True, timeout: float | None = None) -> Any:
         """
         Evaluate an optionally async JavaScript expression and return its result.
 
@@ -332,10 +335,10 @@ class CDPClientSession:
     async def continue_request(
         self,
         request: fetch.RequestPaused,
-        url: Optional[str] = None,
-        method: Optional[str] = None,
-        post_data: Optional[str] = None,
-        headers: Optional[Mapping[str, str]] = None,
+        url: str | None = None,
+        method: str | None = None,
+        post_data: str | None = None,
+        headers: Mapping[str, str] | None = None,
     ):
         """
         Continue a request and optionally override the request method, URL, POST data or request headers.
@@ -352,7 +355,7 @@ class CDPClientSession:
     async def fail_request(
         self,
         request: fetch.RequestPaused,
-        error_reason: Optional[str] = None,
+        error_reason: str | None = None,
     ):
         """
         Let a request fail, with an optional error reason which defaults to ``BlockedByClient``.
@@ -367,8 +370,8 @@ class CDPClientSession:
         self,
         request: fetch.RequestPaused,
         response_code: int = 200,
-        response_headers: Optional[Mapping[str, str]] = None,
-        body: Optional[str] = None,
+        response_headers: Mapping[str, str] | None = None,
+        body: str | None = None,
     ) -> None:
         """
         Fulfill a response and override its status code, headers and body.
@@ -386,7 +389,7 @@ class CDPClientSession:
         self,
         request: fetch.RequestPaused,
         response_code: int = 200,
-        response_headers: Optional[Mapping[str, str]] = None,
+        response_headers: Mapping[str, str] | None = None,
     ) -> AsyncGenerator[CMRequestProxy, None]:
         """
         Async context manager wrapper around :meth:`fulfill_request()` which retrieves the response body,
@@ -409,7 +412,7 @@ class CDPClientSession:
         )
 
     @staticmethod
-    def _headers_entries_from_mapping(headers: Optional[Mapping[str, str]]):
+    def _headers_entries_from_mapping(headers: Mapping[str, str] | None):
         return None if headers is None else [
             fetch.HeaderEntry(name=name, value=value)
             for name, value in headers.items()

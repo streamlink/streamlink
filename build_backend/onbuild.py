@@ -1,8 +1,11 @@
+from __future__ import annotations
+
 import re
+from collections.abc import Generator
 from contextlib import contextmanager
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Dict, Generator, Generic, Optional, TypeVar, Union
+from typing import Any, Generic, TypeVar
 
 
 try:
@@ -18,11 +21,11 @@ except ImportError:  # pragma: no cover
 def onbuild(
     *,
     is_source: bool,
-    template_fields: Dict[str, Any],
-    params: Dict[str, Any],
+    template_fields: dict[str, Any],
+    params: dict[str, Any],
     # backward compatibility for `versioningit <3.0.0`
-    build_dir: Optional[Union[str, Path]] = None,
-    file_provider: Optional[SetuptoolsFileProvider] = None,
+    build_dir: str | Path | None = None,
+    file_provider: SetuptoolsFileProvider | None = None,
 ):
     """
     Remove the ``versioningit`` build-requirement from Streamlink's source distribution.

@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import base64
 import hashlib
 import re
@@ -5,7 +7,7 @@ import re
 # noinspection PyProtectedMember
 from importlib.metadata import FileHash, PackagePath
 from pathlib import Path
-from typing import Optional, Type, cast
+from typing import cast
 from unittest.mock import Mock, call
 
 import pytest
@@ -64,7 +66,7 @@ def test_empty(caplog: pytest.LogCaptureFixture, session: Streamlink):
     assert caplog.record_tuples == []
 
 
-def test_set_get_del(session: Streamlink, fake_plugin: Type[Plugin]):
+def test_set_get_del(session: Streamlink, fake_plugin: type[Plugin]):
     assert "fake" not in session.plugins
 
     session.plugins["fake"] = fake_plugin
@@ -80,7 +82,7 @@ def test_set_get_del(session: Streamlink, fake_plugin: Type[Plugin]):
     assert session.plugins.get_loaded() == {}
 
 
-def test_update_clear(session: Streamlink, fake_plugin: Type[Plugin]):
+def test_update_clear(session: Streamlink, fake_plugin: type[Plugin]):
     assert "fake" not in session.plugins
 
     session.plugins.update({"fake": fake_plugin})
@@ -95,7 +97,7 @@ def test_update_clear(session: Streamlink, fake_plugin: Type[Plugin]):
     assert session.plugins.get_loaded() == {}
 
 
-def test_iter_arguments(session: Streamlink, fake_plugin: Type[Plugin]):
+def test_iter_arguments(session: Streamlink, fake_plugin: type[Plugin]):
     session.plugins.update({"fake": fake_plugin})
     assert [(name, [arg.argument_name(name) for arg in args]) for name, args in session.plugins.iter_arguments()] == [
         ("fake", ["--fake-foo", "--fake-bar"]),
@@ -103,7 +105,7 @@ def test_iter_arguments(session: Streamlink, fake_plugin: Type[Plugin]):
 
 
 class TestLoad:
-    def test_load_builtin(self, monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture, fake_plugin: Type[Plugin]):
+    def test_load_builtin(self, monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture, fake_plugin: type[Plugin]):
         mock = Mock(return_value={"fake": fake_plugin})
         monkeypatch.setattr(StreamlinkPlugins, "_load_plugins_from_path", mock)
         session = Streamlink(plugins_builtin=True, plugins_lazy=False)
@@ -207,7 +209,7 @@ class TestLoad:
 
 class TestLoadPluginsData:
     @pytest.fixture()
-    def session(self, monkeypatch: pytest.MonkeyPatch, fake_plugin: Type[Plugin], metadata_files: Mock):
+    def session(self, monkeypatch: pytest.MonkeyPatch, fake_plugin: type[Plugin], metadata_files: Mock):
         class MockStreamlinkPlugins(StreamlinkPlugins):
             def load_builtin(self):
                 self._plugins.update({"fake": fake_plugin})
@@ -218,7 +220,7 @@ class TestLoadPluginsData:
         return Streamlink(plugins_builtin=True, plugins_lazy=True)
 
     @pytest.fixture(autouse=True)
-    def metadata_files(self, request: pytest.FixtureRequest, monkeypatch: pytest.MonkeyPatch, pluginsdata: Optional[str]):
+    def metadata_files(self, request: pytest.FixtureRequest, monkeypatch: pytest.MonkeyPatch, pluginsdata: str | None):
         options = getattr(request, "param", {})
         package_record = options.get("package-record", True)
         mode = options.get("package-record-hash-mode", "sha256")

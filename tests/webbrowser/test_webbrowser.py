@@ -3,7 +3,6 @@ from __future__ import annotations
 from contextlib import AbstractContextManager, nullcontext
 from pathlib import Path
 from signal import SIGTERM
-from typing import List, Optional
 
 import pytest
 import trio
@@ -15,7 +14,7 @@ from streamlink.webbrowser.webbrowser import Webbrowser
 
 class _FakeWebbrowser(Webbrowser):
     @classmethod
-    def launch_args(cls) -> List[str]:
+    def launch_args(cls) -> list[str]:
         return ["foo", "bar"]
 
 
@@ -46,7 +45,7 @@ class TestInit:
             id="Success with custom path",
         ),
     ], indirect=["resolve_executable"])
-    def test_resolve_executable(self, resolve_executable, executable: Optional[str], raises: nullcontext):
+    def test_resolve_executable(self, resolve_executable, executable: str | None, raises: nullcontext):
         with raises:
             Webbrowser(executable=executable)
 

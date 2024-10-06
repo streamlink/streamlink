@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 import re
-from typing import Any, Generic, List, Optional, Tuple, Type, TypeVar
+from typing import Any, Generic, TypeVar
 
 
 _BOOLEAN_TRUE = "yes", "1", "true", "on"
@@ -21,17 +23,17 @@ def boolean(value: str) -> bool:
     return value.lower() in _BOOLEAN_TRUE
 
 
-def comma_list(values: str) -> List[str]:
+def comma_list(values: str) -> list[str]:
     return [val.strip() for val in values.split(",")]
 
 
 # noinspection PyPep8Naming
 class comma_list_filter:
-    def __init__(self, acceptable: List[str], unique: bool = False):
+    def __init__(self, acceptable: list[str], unique: bool = False):
         self.acceptable = tuple(acceptable)
         self.unique = unique
 
-    def __call__(self, values: str) -> List[str]:
+    def __call__(self, values: str) -> list[str]:
         res = [item for item in comma_list(values) if item in self.acceptable]
         return sorted(set(res)) if self.unique else res
 
@@ -50,7 +52,7 @@ def filesize(value: str) -> int:
     return num(int, ge=1)(size)
 
 
-def keyvalue(value: str) -> Tuple[str, str]:
+def keyvalue(value: str) -> tuple[str, str]:
     match = _KEYVALUE_RE.match(value.lstrip())
     if not match:
         raise ValueError("Invalid key=value format")
@@ -65,17 +67,17 @@ _TNum = TypeVar("_TNum", int, float)
 class num(Generic[_TNum]):
     def __init__(
         self,
-        numtype: Type[_TNum],
-        ge: Optional[_TNum] = None,
-        gt: Optional[_TNum] = None,
-        le: Optional[_TNum] = None,
-        lt: Optional[_TNum] = None,
+        numtype: type[_TNum],
+        ge: _TNum | None = None,
+        gt: _TNum | None = None,
+        le: _TNum | None = None,
+        lt: _TNum | None = None,
     ):
-        self.numtype: Type[_TNum] = numtype
-        self.ge: Optional[_TNum] = ge
-        self.gt: Optional[_TNum] = gt
-        self.le: Optional[_TNum] = le
-        self.lt: Optional[_TNum] = lt
+        self.numtype: type[_TNum] = numtype
+        self.ge: _TNum | None = ge
+        self.gt: _TNum | None = gt
+        self.le: _TNum | None = le
+        self.lt: _TNum | None = lt
         self.__name__ = numtype.__name__
 
     def __call__(self, value: Any) -> _TNum:

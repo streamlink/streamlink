@@ -1,7 +1,9 @@
+from __future__ import annotations
+
+from collections.abc import Iterator
 from contextlib import contextmanager
 from io import BufferedRandom, BufferedWriter
 from pathlib import Path
-from typing import Iterator
 
 import pytest
 

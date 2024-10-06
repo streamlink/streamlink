@@ -1,5 +1,7 @@
+from __future__ import annotations
+
+from collections.abc import Sequence
 from textwrap import indent
-from typing import Optional, Sequence, Union
 
 
 class ValidationError(ValueError):
@@ -9,12 +11,12 @@ class ValidationError(ValueError):
 
     MAX_LENGTH = 60
 
-    errors: Union[str, Exception, Sequence[Union[str, Exception]]]
+    errors: str | Exception | Sequence[str | Exception]
 
     def __init__(
         self,
         *errors,
-        schema: Optional[Union[str, object]] = None,
+        schema: str | object | None = None,
         **errkeywords,
     ):
         self.schema = schema

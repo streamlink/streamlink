@@ -1,5 +1,8 @@
+from __future__ import annotations
+
 import operator
-from typing import Any, Callable, Dict, Literal, Optional, Tuple
+from collections.abc import Callable, Mapping
+from typing import Any, Literal
 from urllib.parse import urlparse
 
 from lxml.etree import XPathError, iselement
@@ -17,7 +20,7 @@ from streamlink.utils.parse import (
 
 # String related validators
 
-_validator_length_ops: Dict[str, Tuple[Callable, str]] = {
+_validator_length_ops: Mapping[str, tuple[Callable, str]] = {
     "lt": (operator.lt, "Length must be <{number}, but value is {value}"),
     "le": (operator.le, "Length must be <={number}, but value is {value}"),
     "eq": (operator.eq, "Length must be =={number}, but value is {value}"),
@@ -372,7 +375,7 @@ def validator_map(func: Callable[..., Any]) -> TransformSchema:
 
 def validator_xml_find(
     path: str,
-    namespaces: Optional[Dict[str, str]] = None,
+    namespaces: Mapping[str, str] | None = None,
 ) -> TransformSchema:
     """
     Utility function for finding an XML element using :meth:`Element.find()`.
@@ -421,7 +424,7 @@ def validator_xml_find(
 
 def validator_xml_findall(
     path: str,
-    namespaces: Optional[Dict[str, str]] = None,
+    namespaces: Mapping[str, str] | None = None,
 ) -> TransformSchema:
     """
     Utility function for finding XML elements using :meth:`Element.findall()`.
@@ -453,7 +456,7 @@ def validator_xml_findall(
 
 def validator_xml_findtext(
     path: str,
-    namespaces: Optional[Dict[str, str]] = None,
+    namespaces: Mapping[str, str] | None = None,
 ) -> AllSchema:
     """
     Utility function for finding an XML element using :meth:`Element.find()` and returning its ``text`` attribute.
@@ -484,8 +487,8 @@ def validator_xml_findtext(
 
 def validator_xml_xpath(
     xpath: str,
-    namespaces: Optional[Dict[str, str]] = None,
-    extensions: Optional[Dict[Tuple[Optional[str], str], Callable[..., Any]]] = None,
+    namespaces: Mapping[str, str] | None = None,
+    extensions: Mapping[tuple[str | None, str], Callable[..., Any]] | None = None,
     smart_strings: bool = True,
     **variables,
 ) -> TransformSchema:
@@ -535,8 +538,8 @@ def validator_xml_xpath(
 
 def validator_xml_xpath_string(
     xpath: str,
-    namespaces: Optional[Dict[str, str]] = None,
-    extensions: Optional[Dict[Tuple[Optional[str], str], Callable[..., Any]]] = None,
+    namespaces: Mapping[str, str] | None = None,
+    extensions: Mapping[tuple[str | None, str], Callable[..., Any]] | None = None,
     **variables,
 ) -> TransformSchema:
     """

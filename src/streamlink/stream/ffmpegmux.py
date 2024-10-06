@@ -1,14 +1,17 @@
+from __future__ import annotations
+
 import concurrent.futures
 import logging
 import re
 import subprocess
 import sys
 import threading
+from collections.abc import Sequence
 from contextlib import suppress
 from functools import lru_cache
 from pathlib import Path
 from shutil import which
-from typing import Any, ClassVar, Dict, Generic, List, Optional, Sequence, TextIO, TypeVar, Union
+from typing import Any, ClassVar, Generic, TextIO, TypeVar
 
 from streamlink import StreamError
 from streamlink.stream.stream import Stream, StreamIO
@@ -46,8 +49,8 @@ class MuxedStream(Stream, Generic[TSubstreams]):
 
         super().__init__(session)
         self.substreams: Sequence[TSubstreams] = substreams
-        self.subtitles: Dict[str, Stream] = options.pop("subtitles", {})
-        self.options: Dict[str, Any] = options
+        self.subtitles: dict[str, Stream] = options.pop("subtitles", {})
+        self.options: dict[str, Any] = options
 
     def open(self):
         fds = []
@@ -80,17 +83,17 @@ class MuxedStream(Stream, Generic[TSubstreams]):
 
 
 class FFMPEGMuxer(StreamIO):
-    __commands__: ClassVar[List[str]] = ["ffmpeg"]
+    __commands__: ClassVar[list[str]] = ["ffmpeg"]
 
     DEFAULT_LOGLEVEL = "info"
     DEFAULT_OUTPUT_FORMAT = "matroska"
     DEFAULT_VIDEO_CODEC = "copy"
     DEFAULT_AUDIO_CODEC = "copy"
 
-    FFMPEG_VERSION: Optional[str] = None
+    FFMPEG_VERSION: str | None = None
     FFMPEG_VERSION_TIMEOUT = 4.0
 
-    errorlog: Union[int, TextIO]
+    errorlog: int | TextIO
 
     @classmethod
     def is_usable(cls, session):
@@ -106,7 +109,7 @@ class FFMPEGMuxer(StreamIO):
 
     @classmethod
     @lru_cache(maxsize=128)
-    def _resolve_command(cls, command: Optional[str] = None, validate: bool = True) -> Optional[str]:
+    def _resolve_command(cls, command: str | None = None, validate: bool = True) -> str | None:
         if command:
             resolved = which(command)
         else:
@@ -277,13 +280,13 @@ class FFmpegVersionOutput(ProcessOutput):
 
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
-        self.version: Optional[str] = None
-        self.output: List[str] = []
+        self.version: str | None = None
+        self.output: list[str] = []
 
     def onexit(self, code: int) -> bool:
         return code == 0 and self.version is not None
 
-    def onstdout(self, idx: int, line: str) -> Optional[bool]:
+    def onstdout(self, idx: int, line: str) -> bool | None:
         # only validate the very first line of the stdout stream
         if idx == 0:
             match = self._re_version.match(line)

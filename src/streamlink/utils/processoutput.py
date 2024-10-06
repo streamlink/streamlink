@@ -1,8 +1,11 @@
+from __future__ import annotations
+
 import math
+from collections.abc import Callable
 from contextlib import suppress
 from functools import partial
 from subprocess import PIPE
-from typing import BinaryIO, Callable, List, Optional, Union
+from typing import BinaryIO
 
 import trio
 
@@ -13,10 +16,10 @@ class ProcessOutput:
 
     def __init__(
         self,
-        command: List[str],
+        command: list[str],
         timeout: float = math.inf,
         wait_terminate: float = 2.0,
-        stdin: Optional[Union[int, bytes, BinaryIO]] = PIPE,
+        stdin: int | bytes | BinaryIO | None = PIPE,
     ):
         self.command = command
         self.timeout = timeout
@@ -65,7 +68,7 @@ class ProcessOutput:
         result = self.onexit(code)
         await self._send_channel.send(result)
 
-    async def _onoutput(self, callback: Callable[[int, str], Optional[bool]], stream: trio.abc.ReceiveChannel[bytes]):
+    async def _onoutput(self, callback: Callable[[int, str], bool | None], stream: trio.abc.ReceiveChannel[bytes]):
         idx = 0
         async for line in stream:
             try:
@@ -81,8 +84,8 @@ class ProcessOutput:
     def onexit(self, code: int) -> bool:
         return code == 0
 
-    def onstdout(self, idx: int, line: str) -> Optional[bool]:
+    def onstdout(self, idx: int, line: str) -> bool | None:
         pass
 
-    def onstderr(self, idx: int, line: str) -> Optional[bool]:
+    def onstderr(self, idx: int, line: str) -> bool | None:
         pass

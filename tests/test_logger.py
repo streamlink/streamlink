@@ -1,13 +1,15 @@
+from __future__ import annotations
+
 import logging
 import os
 import sys
 import warnings
+from collections.abc import Iterable
 from datetime import timezone
 from errno import EINVAL, EPIPE
 from inspect import currentframe, getframeinfo
 from io import BytesIO, TextIOWrapper
 from pathlib import Path
-from typing import Iterable, Optional, Tuple, Type
 
 import freezegun
 import pytest
@@ -45,7 +47,7 @@ def log(request: pytest.FixtureRequest, monkeypatch: pytest.MonkeyPatch, output:
     if "logfile" in request.fixturenames:
         params["filename"] = request.getfixturevalue("logfile")
 
-    stream: Optional[TextIOWrapper] = output
+    stream: TextIOWrapper | None = output
     if not params.pop("stdout", True):
         stream = None
     if not params.pop("stderr", True):
@@ -312,7 +314,7 @@ class TestLogging:
 
 class TestCaptureWarnings:
     @staticmethod
-    def _warn(messages: Iterable[Tuple[str, Type[Warning]]], filterwarnings=None):
+    def _warn(messages: Iterable[tuple[str, type[Warning]]], filterwarnings=None):
         frame = currentframe()
         assert frame
         assert frame.f_back
@@ -343,7 +345,7 @@ class TestCaptureWarnings:
         recwarn: pytest.WarningsRecorder,
         log: logging.Logger,
         output: TextIOWrapper,
-        warning: Tuple[str, Type[Warning]],
+        warning: tuple[str, type[Warning]],
         expected: str,
         origin: bool,
     ):
@@ -402,7 +404,7 @@ class TestCaptureWarnings:
         recwarn: pytest.WarningsRecorder,
         log: logging.Logger,
         output: TextIOWrapper,
-        warning: Tuple[str, Type[Warning]],
+        warning: tuple[str, type[Warning]],
     ):
         self._warn([warning], filterwarnings="ignore")
         assert recwarn.list == []

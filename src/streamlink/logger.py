@@ -1,12 +1,15 @@
+from __future__ import annotations
+
 import logging
 import sys
 import warnings
+from collections.abc import Iterator
 from logging import CRITICAL, DEBUG, ERROR, INFO, WARNING
 from os import devnull
 from pathlib import Path
 from sys import version_info
 from threading import Lock
-from typing import IO, TYPE_CHECKING, Iterator, List, Literal, Optional, Union
+from typing import IO, TYPE_CHECKING, Literal
 
 # noinspection PyProtectedMember
 from warnings import WarningMessage
@@ -95,7 +98,7 @@ _config_lock = Lock()
 
 
 class StringFormatter(logging.Formatter):
-    def __init__(self, *args, remove_base: Optional[List[str]] = None, **kwargs):
+    def __init__(self, *args, remove_base: list[str] | None = None, **kwargs):
         super().__init__(*args, **kwargs)
         self._remove_base = remove_base or []
         self._usesTime = super().usesTime()
@@ -201,14 +204,14 @@ def capturewarnings(capture=False):
 
 # noinspection PyShadowingBuiltins,PyPep8Naming
 def basicConfig(
-    filename: Optional[Union[str, Path]] = None,
+    filename: str | Path | None = None,
     filemode: str = "a",
-    stream: Optional[IO] = None,
-    level: Optional[str] = None,
+    stream: IO | None = None,
+    level: str | None = None,
     format: str = FORMAT_BASE,  # noqa: A002  # TODO: rename to "fmt" (breaking)
     style: Literal["%", "{", "$"] = FORMAT_STYLE,
     datefmt: str = FORMAT_DATE,
-    remove_base: Optional[List[str]] = None,
+    remove_base: list[str] | None = None,
     capture_warnings: bool = False,
 ) -> logging.StreamHandler:
     with _config_lock:

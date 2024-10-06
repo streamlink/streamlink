@@ -1,12 +1,14 @@
 #!/usr/bin/env python
 
+from __future__ import annotations
+
 import argparse
 import importlib
 import logging
 import re
 import sys
+from collections.abc import Iterator
 from pathlib import Path
-from typing import Iterator, List, Optional, Set, Tuple, Type
 
 from streamlink import Streamlink
 from streamlink.logger import basicConfig
@@ -107,9 +109,9 @@ class PluginUrlTester:
         self.logcolor: str = args.color
         self.logger: logging.Logger = self._get_logger()
 
-        self.ignorelist: List[str] = args.ignore or []
-        self.replacelist: List[Tuple[str, str]] = args.replace or []
-        self.urls: Set[str] = set()
+        self.ignorelist: list[str] = args.ignore or []
+        self.replacelist: list[tuple[str, str]] = args.replace or []
+        self.urls: set[str] = set()
 
     def _get_logger(self) -> logging.Logger:
         logger = logging.getLogger(__name__)
@@ -146,7 +148,7 @@ class PluginUrlTester:
         except Exception as err:
             raise ImportError(f"Could not load test module of plugin {self.pluginname}: {err}") from err
 
-        PluginCanHandleUrlSubclass: Optional[Type[PluginCanHandleUrl]] = next(
+        PluginCanHandleUrlSubclass: type[PluginCanHandleUrl] | None = next(
             (
                 item
                 for item in module.__dict__.values()

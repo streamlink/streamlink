@@ -1,5 +1,6 @@
+from __future__ import annotations
+
 import subprocess
-from typing import Dict, List, Optional, Type
 from unittest.mock import Mock, call, patch
 
 import pytest
@@ -45,7 +46,7 @@ class TestCommand:
         pytest.param("custom", {"ffmpeg": "ffmpeg"}, None, id="custom-negative"),
         pytest.param("custom", {"ffmpeg": "ffmpeg", "custom": "custom"}, "custom", id="custom-positive"),
     ])
-    def test_no_cache(self, session: Streamlink, command: Optional[str], which: Dict, expected: Optional[str]):
+    def test_no_cache(self, session: Streamlink, command: str | None, which: dict, expected: str | None):
         session.options.update({"ffmpeg-ffmpeg": command})
         with patch("streamlink.stream.ffmpegmux.which", side_effect=which.get):
             assert FFMPEGMuxer.command(session) == expected
@@ -54,7 +55,7 @@ class TestCommand:
         pytest.param(None, False, id="negative"),
         pytest.param("ffmpeg", True, id="positive"),
     ])
-    def test_is_usable(self, session: Streamlink, resolved: Optional[str], expected: bool):
+    def test_is_usable(self, session: Streamlink, resolved: str | None, expected: bool):
         with patch("streamlink.stream.ffmpegmux.which", return_value=resolved):
             assert FFMPEGMuxer.is_usable(session) is expected
 
@@ -497,9 +498,9 @@ class TestOpen:
         self,
         session: Streamlink,
         popen: Mock,
-        options: Dict,
-        muxer_args: Dict,
-        expected: List,
+        options: dict,
+        muxer_args: dict,
+        expected: list,
     ):
         session.options.update(options)
         streamio = FFMPEGMuxer(session, **muxer_args)
@@ -530,7 +531,7 @@ class TestOpen:
         pytest.param({"ffmpeg-verbose-path": "foo", "ffmpeg-verbose": True}, None, id="verbose-path priority"),
         pytest.param({"ffmpeg-verbose-path": "foo"}, OSError, id="OSError on close"),
     ])
-    def test_stderr_path(self, session: Streamlink, popen: Mock, options: dict, side_effect: Optional[Type[Exception]]):
+    def test_stderr_path(self, session: Streamlink, popen: Mock, options: dict, side_effect: type[Exception] | None):
         session.options.update(options)
         with patch("streamlink.stream.ffmpegmux.Path") as mock_path:
             file: Mock = mock_path("foo").expanduser().open("w")

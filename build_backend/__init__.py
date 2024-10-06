@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 import shlex
-from typing import Any, List, Optional, Tuple, Union
+from typing import Any
 
 from setuptools import build_meta as _build_meta
 
@@ -15,8 +17,8 @@ from setuptools.command.egg_info import egg_info as _egg_info
 
 
 def get_requires_for_build_wheel(  # type: ignore[no-redef]
-    config_settings: Optional[dict] = None,
-) -> List[str]:  # pragma: no cover
+    config_settings: dict | None = None,
+) -> list[str]:  # pragma: no cover
     # Streamlink publishes three wheels on PyPI: the generic "any" wheel, the "win32" wheel and the "win-amd64" wheel:
     # The Windows-wheels are special, because they include a "gui_scripts" entry point, which is used by the `pip` frontend
     # to generate the "streamlinkw" launcher, which doesn't open a terminal window when launching it from a GUI application.
@@ -47,11 +49,11 @@ def get_requires_for_build_wheel(  # type: ignore[no-redef]
 
 
 def _filter_cmd_option_args(
-    config_settings: Optional[dict],
+    config_settings: dict | None,
     key: str,
     # https://github.com/pypa/setuptools/blob/v71.1.0/setuptools/_distutils/fancy_getopt.py#L47-L54
     # https://github.com/pypa/setuptools/blob/v71.1.0/setuptools/_distutils/fancy_getopt.py#L152-L156
-    options: List[Union[Tuple[str, Optional[str], str], Tuple[str, Optional[str], str, Any]]],
+    options: list[tuple[str, str | None, str] | tuple[str, str | None, str, Any]],
 ) -> None:
     """Filter out args which are not recognized by a specific command and its options"""
 
@@ -68,7 +70,7 @@ def _filter_cmd_option_args(
             result.append(item)
             continue
         full: str
-        shorthand: Optional[str]
+        shorthand: str | None
         for full, shorthand, *_ in options:
             is_boolean = full[-1] != "="
             is_shorthand = shorthand is not None and item == f"-{shorthand}"

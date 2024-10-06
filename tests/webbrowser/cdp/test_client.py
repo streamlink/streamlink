@@ -1,5 +1,8 @@
+from __future__ import annotations
+
+from collections.abc import Awaitable, Callable
 from contextlib import nullcontext
-from typing import Awaitable, Callable, Union, cast
+from typing import TYPE_CHECKING, cast
 from unittest.mock import ANY, AsyncMock, Mock, call
 
 import pytest
@@ -16,8 +19,15 @@ from streamlink.webbrowser.cdp.exceptions import CDPError
 from tests.webbrowser.cdp import FakeWebsocketConnection
 
 
+if TYPE_CHECKING:
+    from typing_extensions import TypeAlias
+
+
+TAsyncHandler: TypeAlias = "AsyncMock | Callable[[CDPClientSession, RequestPaused], Awaitable]"
+
+
 def async_handler(*args, **kwargs):
-    return cast(Union[AsyncMock, Callable[[CDPClientSession, RequestPaused], Awaitable]], AsyncMock(*args, **kwargs))
+    return cast(TAsyncHandler, AsyncMock(*args, **kwargs))
 
 
 @pytest.fixture()

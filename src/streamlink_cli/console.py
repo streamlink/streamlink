@@ -1,7 +1,9 @@
+from __future__ import annotations
+
 import sys
 from getpass import getpass
 from json import dumps
-from typing import Any, Dict, List, Optional, TextIO, Union
+from typing import Any, TextIO
 
 from streamlink.user_input import UserInputRequester
 from streamlink_cli.utils import JSONEncoder
@@ -30,7 +32,7 @@ class ConsoleOutput:
         self.json = json
         self.output = output
 
-    def ask(self, prompt: str) -> Optional[str]:
+    def ask(self, prompt: str) -> str | None:
         if not sys.stdin.isatty():
             return None
 
@@ -42,7 +44,7 @@ class ConsoleOutput:
         except Exception:
             return None
 
-    def askpass(self, prompt: str) -> Optional[str]:
+    def askpass(self, prompt: str) -> str | None:
         if not sys.stdin.isatty():
             return None
 
@@ -57,7 +59,7 @@ class ConsoleOutput:
         if not self.json:
             return
 
-        out: Union[List, Dict]
+        out: list | dict
         if objs and isinstance(objs[0], list):
             out = []
             for obj in objs:

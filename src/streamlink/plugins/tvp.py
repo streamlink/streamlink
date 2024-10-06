@@ -12,9 +12,10 @@ $region Poland
 $notes Some live streams and VODs may be geo-restricted. Authentication is not supported.
 """
 
+from __future__ import annotations
+
 import logging
 import re
-from typing import List, Optional, Tuple
 
 from streamlink.exceptions import NoStreamsError
 from streamlink.plugin import Plugin, pluginmatcher
@@ -75,8 +76,8 @@ class TVP(Plugin):
             if mime_type == "application/dash+xml":
                 yield from DASHStream.parse_manifest(self.session, url).items()
 
-    def _get_video_id(self, channel_id: Optional[str]):
-        items: List[Tuple[int, int]] = self.session.http.get(
+    def _get_video_id(self, channel_id: str | None):
+        items: list[tuple[int, int]] = self.session.http.get(
             self.url,
             headers={
                 # required, otherwise the next request for retrieving the HLS URL will be aborted by the server
@@ -114,7 +115,7 @@ class TVP(Plugin):
 
         return items[0][1] if items else None
 
-    def _get_live(self, channel_id: Optional[str]):
+    def _get_live(self, channel_id: str | None):
         self.id = self._get_video_id(channel_id)
         if not self.id:
             log.error("Could not find video ID")

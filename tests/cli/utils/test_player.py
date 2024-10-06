@@ -1,5 +1,6 @@
+from __future__ import annotations
+
 from pathlib import Path
-from typing import List, Optional
 from unittest.mock import Mock, call, patch
 
 import pytest
@@ -31,8 +32,8 @@ class TestFindDefaultPlayer:
         request: pytest.FixtureRequest,
         monkeypatch: pytest.MonkeyPatch,
         which: Mock,
-        lookups: List[str],
-        expected: Optional[str],
+        lookups: list[str],
+        expected: str | None,
     ):
         monkeypatch.setattr("streamlink_cli.utils.player.is_win32", "win32" in request.function.__name__)
         monkeypatch.setattr("streamlink_cli.utils.player.is_darwin", "darwin" in request.function.__name__)
