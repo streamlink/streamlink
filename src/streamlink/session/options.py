@@ -384,8 +384,8 @@ class StreamlinkOptions(Options):
     # ---- setters
 
     def _set_interface(self, key, value):
-        for scheme, adapter in self.session.http.adapters.items():
-            if scheme not in ("http://", "https://"):
+        for adapter in self.session.http.adapters.values():
+            if not isinstance(adapter, HTTPAdapter):
                 continue
             if not value:
                 adapter.poolmanager.connection_pool_kw.pop("source_address", None)
