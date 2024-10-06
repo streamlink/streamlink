@@ -292,6 +292,7 @@ show_column_numbers = true
 warn_no_return = false
 files = [
   "build_backend",
+  "script/",
   "src/streamlink/",
   "src/streamlink_cli/",
   "tests/",

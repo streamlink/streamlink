@@ -26,6 +26,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
+from __future__ import annotations
 
 import argparse
 import builtins
@@ -34,13 +35,14 @@ import logging
 import operator
 import re
 import sys
-import typing
+from collections.abc import Iterator
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
 from textwrap import dedent, indent as tw_indent
+from typing import cast
 
-import inflection
+import inflection  # type: ignore[import]
 import requests
 
 
@@ -83,8 +85,9 @@ MODULE_HEADER = f"""{SHARED_HEADER}
 from __future__ import annotations
 
 import enum
-import typing
+from collections.abc import Generator
 from dataclasses import dataclass
+from typing import Any
 
 {{imports}}
 
@@ -93,22 +96,30 @@ from dataclasses import dataclass
 
 UTIL = f"""{SHARED_HEADER}
 
-import typing
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, Any
 
 
-T_JSON_DICT = typing.Dict[str, typing.Any]
+if TYPE_CHECKING:
+    from typing_extensions import TypeAlias
+
+
+T_JSON_DICT: TypeAlias = "dict[str, Any]"
 _event_parsers = {{{{}}}}
 
 
 def event_class(method):
     \"\"\"A decorator that registers a class as an event class.\"\"\"
+
     def decorate(cls):
         _event_parsers[method] = cls
         return cls
+
     return decorate
 
 
-def parse_json_event(json: T_JSON_DICT) -> typing.Any:
+def parse_json_event(json: T_JSON_DICT) -> Any:
     \"\"\"Parse a JSON dictionary into a CDP event.\"\"\"
     return _event_parsers[json["method"]].from_json(json["params"])
 """
@@ -160,7 +171,7 @@ def inline_doc(description) -> str:
     return "\n".join(lines)
 
 
-def docstring(description: typing.Optional[str]) -> str:
+def docstring(description: str | None) -> str:
     """Generate a docstring from a description."""
     if not description:
         return ""
@@ -217,7 +228,7 @@ class CdpPrimitiveType(Enum):
     def get_annotation(cls, cdp_type):
         """Return a type annotation for the CDP type."""
         if cdp_type == "any":
-            return "typing.Any"
+            return "Any"
         else:
             return cls[cdp_type].value
 
@@ -247,11 +258,11 @@ class CdpItems:
 class CdpProperty:
     """A property belonging to a non-primitive CDP type."""
     name: str
-    description: typing.Optional[str]
-    type: typing.Optional[str]
-    ref: typing.Optional[str]
-    enum: typing.List[str]
-    items: typing.Optional[CdpItems]
+    description: str | None
+    type: str | None
+    ref: str | None
+    enum: list[str]
+    items: CdpItems | None
     optional: bool
     experimental: bool
     deprecated: bool
@@ -268,17 +279,17 @@ class CdpProperty:
         if self.items:
             if self.items.ref:
                 py_ref = ref_to_python(self.items.ref, self.domain)
-                ann = f"typing.List[{py_ref}]"
+                ann = f"list[{py_ref}]"
             else:
-                ann = f"typing.List[{CdpPrimitiveType.get_annotation(self.items.type)}]"
+                ann = f"list[{CdpPrimitiveType.get_annotation(self.items.type)}]"
         else:
             if self.ref:
                 py_ref = ref_to_python(self.ref, self.domain)
                 ann = py_ref
             else:
-                ann = CdpPrimitiveType.get_annotation(typing.cast(str, self.type))
+                ann = CdpPrimitiveType.get_annotation(cast(str, self.type))
         if self.optional:
-            ann = f"typing.Optional[{ann}]"
+            ann = f"{ann} | None"
         return ann
 
     @classmethod
@@ -356,11 +367,11 @@ class CdpProperty:
 class CdpType:
     """A top-level CDP type."""
     id: str
-    description: typing.Optional[str]
+    description: str | None
     type: str
-    items: typing.Optional[CdpItems]
-    enum: typing.List[str]
-    properties: typing.List[CdpProperty]
+    items: CdpItems | None
+    enum: list[str]
+    properties: list[CdpProperty]
     domain: str
 
     @classmethod
@@ -393,7 +404,7 @@ class CdpType:
                 nested_type = ref_to_python(self.items.ref, self.domain)
             else:
                 nested_type = CdpPrimitiveType.get_annotation(self.items.type)
-            py_type = f"typing.List[{nested_type}]"
+            py_type = f"list[{nested_type}]"
             superclass = "list"
         else:
             # A primitive type cannot have a ref, so there is no branch here.
@@ -535,17 +546,17 @@ class CdpParameter(CdpProperty):
         if self.items:
             if self.items.ref:
                 nested_type = ref_to_python(self.items.ref, self.domain)
-                py_type = f"typing.List[{nested_type}]"
+                py_type = f"list[{nested_type}]"
             else:
                 nested_type = CdpPrimitiveType.get_annotation(self.items.type)
-                py_type = f"typing.List[{nested_type}]"
+                py_type = f"list[{nested_type}]"
         else:
             if self.ref:
                 py_type = f"{ref_to_python(self.ref, self.domain)}"
             else:
-                py_type = CdpPrimitiveType.get_annotation(typing.cast(str, self.type))
+                py_type = CdpPrimitiveType.get_annotation(cast(str, self.type))
         if self.optional:
-            py_type = f"typing.Optional[{py_type}]"
+            py_type = f"{py_type} | None"
         code = f"{self.py_name}: {py_type}"
         if self.optional:
             code += " = None"
@@ -590,10 +601,10 @@ class CdpReturn(CdpProperty):
         if self.items:
             if self.items.ref:
                 py_ref = ref_to_python(self.items.ref, self.domain)
-                ann = f"typing.List[{py_ref}]"
+                ann = f"list[{py_ref}]"
             else:
                 py_type = CdpPrimitiveType.get_annotation(self.items.type)
-                ann = f"typing.List[{py_type}]"
+                ann = f"list[{py_type}]"
         else:
             if self.ref:
                 py_ref = ref_to_python(self.ref, self.domain)
@@ -601,7 +612,7 @@ class CdpReturn(CdpProperty):
             else:
                 ann = CdpPrimitiveType.get_annotation(self.type)
         if self.optional:
-            ann = f"typing.Optional[{ann}]"
+            ann = f"{ann} | None"
         return ann
 
     def generate_doc(self):
@@ -626,8 +637,8 @@ class CdpCommand:
     description: str
     experimental: bool
     deprecated: bool
-    parameters: typing.List[CdpParameter]
-    returns: typing.List[CdpReturn]
+    parameters: list[CdpParameter]
+    returns: list[CdpReturn]
     domain: str
 
     @property
@@ -646,8 +657,8 @@ class CdpCommand:
             command.get("description"),
             command.get("experimental", False),
             command.get("deprecated", False),
-            [typing.cast(CdpParameter, CdpParameter.from_json(p, domain)) for p in parameters],
-            [typing.cast(CdpReturn, CdpReturn.from_json(r, domain)) for r in returns],
+            [cast(CdpParameter, CdpParameter.from_json(p, domain)) for p in parameters],
+            [cast(CdpReturn, CdpReturn.from_json(r, domain)) for r in returns],
             domain,
         )
 
@@ -660,8 +671,8 @@ class CdpCommand:
             ret_type = self.returns[0].py_annotation
         else:
             nested_types = ", ".join(r.py_annotation for r in self.returns)
-            ret_type = f"typing.Tuple[{nested_types}]"
-        ret_type = f"typing.Generator[T_JSON_DICT, T_JSON_DICT, {ret_type}]"
+            ret_type = f"tuple[{nested_types}]"
+        ret_type = f"Generator[T_JSON_DICT, T_JSON_DICT, {ret_type}]"
 
         code = ""
 
@@ -745,10 +756,10 @@ class CdpCommand:
 class CdpEvent:
     """A CDP event object."""
     name: str
-    description: typing.Optional[str]
+    description: str | None
     deprecated: bool
     experimental: bool
-    parameters: typing.List[CdpParameter]
+    parameters: list[CdpParameter]
     domain: str
 
     @property
@@ -764,7 +775,7 @@ class CdpEvent:
             json_.get("description"),
             json_.get("deprecated", False),
             json_.get("experimental", False),
-            [typing.cast(CdpParameter, CdpParameter.from_json(p, domain)) for p in json_.get("parameters", [])],
+            [cast(CdpParameter, CdpParameter.from_json(p, domain)) for p in json_.get("parameters", [])],
             domain,
         )
 
@@ -815,12 +826,12 @@ class CdpEvent:
 class CdpDomain:
     """A CDP domain contains metadata, types, commands, and events."""
     domain: str
-    description: typing.Optional[str]
+    description: str | None
     experimental: bool
-    dependencies: typing.List[str]
-    types: typing.List[CdpType]
-    commands: typing.List[CdpCommand]
-    events: typing.List[CdpEvent]
+    dependencies: list[str]
+    types: list[CdpType]
+    commands: list[CdpCommand]
+    events: list[CdpEvent]
 
     @property
     def module(self):
@@ -855,8 +866,7 @@ class CdpDomain:
             experimental=exp,
             imports=imports,
         )
-        item_iter_t = typing.Union[CdpEvent, CdpCommand, CdpType]
-        item_iter: typing.Iterator[item_iter_t] = itertools.chain(
+        item_iter: Iterator[CdpEvent | CdpCommand | CdpType] = itertools.chain(
             iter(self.types),
             iter(self.commands),
             iter(self.events),
@@ -901,7 +911,7 @@ class CdpDomain:
         return "".join(imports)
 
 
-def parse(schema: dict) -> typing.List[CdpDomain]:
+def parse(schema: dict) -> list[CdpDomain]:
     """Parse JSON protocol description and return domain objects."""
     version = schema["version"]
     assert (version["major"], version["minor"]) == ("1", "3")
@@ -911,7 +921,7 @@ def parse(schema: dict) -> typing.List[CdpDomain]:
     return domains
 
 
-def generate_init(init_path: Path, ref: str, package: str, domains: typing.List[CdpDomain]):
+def generate_init(init_path: Path, ref: str, package: str, domains: list[CdpDomain]):
     """Generate an ``__init__.py`` that exports the specified modules."""
     with init_path.open("w") as init_file:
         init_file.write(INIT_HEADER.format(ref=ref))

@@ -7,12 +7,13 @@ import logging
 import re
 import subprocess
 import sys
+from collections.abc import Callable, Generator, Mapping
 from contextlib import contextmanager
 from dataclasses import dataclass
 from os import getenv
 from pathlib import Path
 from pprint import pformat
-from typing import IO, Any, Literal, NewType, Optional
+from typing import IO, Any, Literal, NewType
 
 # noinspection PyPackageRequirements
 import jinja2
@@ -186,11 +187,15 @@ class GitHubAPI:
         host: str = "api.github.com",
         method: Literal["GET", "POST", "PATCH"] = "GET",
         endpoint: str = "/",
-        headers: Optional[dict[str, Any]] = None,
+        headers: dict[str, Any] | None = None,
         raise_failure: bool = True,
         **kwargs,
     ) -> requests.Response:
-        func = requests.post if method == "POST" else requests.patch if method == "PATCH" else requests.get
+        func: Callable = (
+            requests.post if method == "POST"  # type: ignore[assignment]
+            else requests.patch if method == "PATCH"
+            else requests.get
+        )
 
         response: requests.Response = func(
             f"https://{host}{endpoint}",
@@ -214,7 +219,7 @@ class GitHubAPI:
     def get_id(self, response: requests.Response) -> int:
         return self.get_response_json_key(response, "id")
 
-    def get_release_id(self) -> Optional[int]:
+    def get_release_id(self) -> int | None:
         log.debug(f"Checking for existing release in {self.repo} tagged by {self.tag}")
         response = self.call(
             endpoint=f"/repos/{self.repo}/releases/tags/{self.tag}",
@@ -223,10 +228,10 @@ class GitHubAPI:
 
         return None if response.status_code >= 400 else self.get_id(response)
 
-    def create_release(self, payload: dict) -> Optional[int]:
+    def create_release(self, payload: dict) -> int:
         if not self.authenticated:
             log.info(f"dry-run: Would have created GitHub release {self.repo}#{self.tag} with:\n{pformat(payload)}")
-            return
+            return 0
 
         log.info(f"Creating new GitHub release {self.repo}#{self.tag}")
         res = self.call(
@@ -320,7 +325,7 @@ class GitHubAPI:
                     continue
 
                 # GitHub identifies its users by checking the commit-author's email address
-                commit_author_email = Email((commit.get("author") or {}).get("email"))
+                commit_author_email = Email((commit.get("author") or {}).get("email", ""))
                 # The commit-author's name can differ from the GitHub user account name -> use the provided author login
                 author_name = (commitdata.get("author") or {}).get("login")
                 if not commit_author_email or not author_name:
@@ -400,7 +405,7 @@ class Release:
 
     @staticmethod
     @contextmanager
-    def get_file_handles(assets: list[Path]) -> dict[str, IO]:
+    def get_file_handles(assets: list[Path]) -> Generator[Mapping[str, IO], None, None]:
         handles = {}
         try:
             for asset in assets:
@@ -459,6 +464,7 @@ def main(args: argparse.Namespace):
     release = Release(tag, args.template, args.changelog)
 
     # get file handles of release assets first, to prevent unnecessary API requests if input files can't be found
+    filehandles: Mapping[str, IO]
     with release.get_file_handles(args.assets) as filehandles:
         # initialize GitHub API
         api = GitHubAPI(args.repo, tag)
