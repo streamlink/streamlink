@@ -9,8 +9,9 @@
 from __future__ import annotations
 
 import enum
-import typing
+from collections.abc import Generator
 from dataclasses import dataclass
+from typing import Any
 
 import streamlink.webbrowser.cdp.devtools.runtime as runtime
 from streamlink.webbrowser.cdp.devtools.util import T_JSON_DICT, event_class
@@ -34,7 +35,7 @@ class StreamHandle(str):
 
 def close(
     handle: StreamHandle,
-) -> typing.Generator[T_JSON_DICT, T_JSON_DICT, None]:
+) -> Generator[T_JSON_DICT, T_JSON_DICT, None]:
     """
     Close the stream, discard any temporary backing storage.
 
@@ -51,9 +52,9 @@ def close(
 
 def read(
     handle: StreamHandle,
-    offset: typing.Optional[int] = None,
-    size: typing.Optional[int] = None,
-) -> typing.Generator[T_JSON_DICT, T_JSON_DICT, typing.Tuple[typing.Optional[bool], str, bool]]:
+    offset: int | None = None,
+    size: int | None = None,
+) -> Generator[T_JSON_DICT, T_JSON_DICT, tuple[bool | None, str, bool]]:
     """
     Read a chunk of the stream
 
@@ -86,7 +87,7 @@ def read(
 
 def resolve_blob(
     object_id: runtime.RemoteObjectId,
-) -> typing.Generator[T_JSON_DICT, T_JSON_DICT, str]:
+) -> Generator[T_JSON_DICT, T_JSON_DICT, str]:
     """
     Return UUID of Blob object specified by a remote object id.
 
