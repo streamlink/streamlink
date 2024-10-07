@@ -642,7 +642,7 @@ def build_parser():
         Write stream data to `FILENAME` instead of playing it in the --player.
         If `FILENAME` is set to `-` (dash), then the stream data will be written to `stdout`, similar to the --stdout argument.
 
-        Non-existent directories and subdirectories will be created if they do not exist, if filesystem permissions allow.
+        Directories and subdirectories will be created if they do not exist, if filesystem permissions allow.
 
         Unless --force is set, Streamlink will ask for confirmation before writing if `FILENAME` already exists.
 
@@ -664,7 +664,7 @@ def build_parser():
         If `FILENAME` is set to `-` (dash), then the stream data will be written to `stdout`, similar to the --stdout argument,
         while still opening the player.
 
-        Non-existent directories and subdirectories will be created if they do not exist, if filesystem permissions allow.
+        Directories and subdirectories will be created if they do not exist, if filesystem permissions allow.
 
         Unless --force is set, Streamlink will ask for confirmation before writing if `FILENAME` already exists.
 
