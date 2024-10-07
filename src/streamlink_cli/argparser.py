@@ -483,18 +483,33 @@ def build_parser():
         """,
     )
     player.add_argument(
-        "-v", "--verbose-player",
+        "-v", "--player-verbose",
         action="store_true",
         help="""
         Allow the player to display its console output.
         """,
     )
     player.add_argument(
-        "-n", "--player-fifo", "--fifo",
+        "--verbose-player",
+        dest="player_verbose",
         action="store_true",
         help="""
-        Make the player read the stream through a named pipe instead of the
-        stdin pipe.
+        Deprecated in favor of --player-verbose.
+        """,
+    )
+    player.add_argument(
+        "-n", "--player-fifo",
+        action="store_true",
+        help="""
+        Make the player read the stream through a named pipe instead of the stdin pipe.
+        """,
+    )
+    player.add_argument(
+        "--fifo",
+        dest="player_fifo",
+        action="store_true",
+        help="""
+        Deprecated in favor of --player-fifo.
         """,
     )
     player.add_argument(

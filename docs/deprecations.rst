@@ -1,6 +1,20 @@
 Deprecations
 ============
 
+streamlink 7.0.0
+----------------
+
+--verbose-player
+^^^^^^^^^^^^^^^^
+
+The ``--verbose-player`` CLI argument has been deprecated in favor of :option:`--player-verbose`.
+
+--fifo
+^^^^^^
+
+The ``--fifo`` CLI argument has been deprecated in favor of :option:`--player-fifo`.
+
+
 streamlink 6.11.0
 -----------------
 
