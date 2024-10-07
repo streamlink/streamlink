@@ -216,6 +216,24 @@ def build_parser():
         """,
     )
     general.add_argument(
+        "--version-check",
+        action="store_true",
+        help="""
+        Runs a version check and exits.
+        """,
+    )
+    general.add_argument(
+        "--auto-version-check",
+        type=boolean,
+        metavar="{yes,true,1,on,no,false,0,off}",
+        default=False,
+        help="""
+        Enable or disable the automatic check for a new version of Streamlink.
+
+        Default is "no".
+        """,
+    )
+    general.add_argument(
         "--plugins",
         action="store_true",
         help="""
@@ -280,6 +298,20 @@ def build_parser():
         """,
     )
     general.add_argument(
+        "--locale",
+        type=str,
+        metavar="LOCALE",
+        help="""
+        The preferred locale setting, for selecting the preferred subtitle and audio language.
+
+        The locale is formatted as `[language_code]_[country_code]`, e.g. `en_US` or `es_ES`.
+
+        Default is system locale.
+        """,
+    )
+
+    logging = parser.add_argument_group("Logging arguments")
+    logging.add_argument(
         "-l", "--loglevel",
         metavar="LEVEL",
         choices=logger.levels,
@@ -294,7 +326,7 @@ def build_parser():
         Default is "info".
         """,
     )
-    general.add_argument(
+    logging.add_argument(
         "--logformat",
         metavar="FORMAT",
         help="""
@@ -308,7 +340,7 @@ def build_parser():
         Default is "[{name}][{levelname}] {message}".
         """,
     )
-    general.add_argument(
+    logging.add_argument(
         "--logdateformat",
         metavar="DATEFORMAT",
         help="""
@@ -321,7 +353,7 @@ def build_parser():
         Default is "%%H:%%M:%%S".
         """,
     )
-    general.add_argument(
+    logging.add_argument(
         "--logfile",
         metavar="FILE",
         help="""
@@ -345,7 +377,7 @@ def build_parser():
           ${XDG_STATE_HOME:-${HOME}/.local/state}/streamlink/logs
         """,
     )
-    general.add_argument(
+    logging.add_argument(
         "-Q", "--quiet",
         action="store_true",
         help="""
@@ -354,7 +386,7 @@ def build_parser():
         Alias for `--loglevel none`.
         """,
     )
-    general.add_argument(
+    logging.add_argument(
         "-j", "--json",
         action="store_true",
         help="""
@@ -363,39 +395,9 @@ def build_parser():
         Useful for external scripting.
         """,
     )
-    general.add_argument(
-        "--auto-version-check",
-        type=boolean,
-        metavar="{yes,true,1,on,no,false,0,off}",
-        default=False,
-        help="""
-        Enable or disable the automatic check for a new version of Streamlink.
 
-        Default is "no".
-        """,
-    )
-    general.add_argument(
-        "--version-check",
-        action="store_true",
-        help="""
-        Runs a version check and exits.
-        """,
-    )
-    general.add_argument(
-        "--locale",
-        type=str,
-        metavar="LOCALE",
-        help="""
-        The preferred locale setting, for selecting the preferred subtitle and
-        audio language.
-
-        The locale is formatted as `[language_code]_[country_code]`, eg. `en_US` or
-        `es_ES`.
-
-        Default is system locale.
-        """,
-    )
-    general.add_argument(
+    network = parser.add_argument_group("Network arguments")
+    network.add_argument(
         "--interface",
         type=str,
         metavar="INTERFACE",
@@ -403,7 +405,7 @@ def build_parser():
         Set the network interface.
         """,
     )
-    general.add_argument(
+    network.add_argument(
         "-4", "--ipv4",
         action="store_true",
         default=None,
@@ -411,7 +413,7 @@ def build_parser():
         Resolve address names to IPv4 only. This option overrides --ipv6.
         """,
     )
-    general.add_argument(
+    network.add_argument(
         "-6", "--ipv6",
         action="store_true",
         default=None,
