@@ -166,7 +166,7 @@ src = [
   "src",
   "tests",
 ]
-target-version = "py38"
+target-version = "py39"
 fix = false
 line-length = 128
 output-format = "full"
@@ -284,7 +284,7 @@ allow-multiline = false
 
 # https://mypy.readthedocs.io/en/stable/config_file.html
 [tool.mypy]
-python_version = 3.8
+python_version = 3.9
 show_error_codes = true
 show_error_context = true
 show_column_numbers = true
