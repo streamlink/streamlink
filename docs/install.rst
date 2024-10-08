@@ -444,7 +444,7 @@ Streamlink defines a `build system <pyproject.toml_>`__ according to `PEP-517`_ 
       - Notes
     * - python
       - `Python`_
-      - At least version **3.8**
+      - At least version **3.9**
     * - build
       - `setuptools`_
       - At least version **65.6.0** |br|
