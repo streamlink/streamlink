@@ -715,7 +715,7 @@ Linux AppImages
 
 **Architectures**
 
-.. grid:: 3
+.. grid:: 2
     :padding: 0
 
     .. grid-item-card::
@@ -729,12 +729,6 @@ Linux AppImages
         :text-align: center
 
         :bdg-link-success-line:`aarch64 <https://github.com/streamlink/streamlink-appimage/releases>`
-
-    .. grid-item-card::
-        :padding: 3
-        :text-align: center
-
-        :bdg-link-primary-line:`i686 <https://github.com/streamlink/streamlink-appimage/releases>`
 
 **Contents**
 
@@ -766,20 +760,27 @@ Linux AppImages
 
 **How-To**
 
-1. Download the AppImage file matching your CPU architecture (run :command:`uname -m` to check)
+1. Verify that the system is running on at least
+   `glibc <glibc-wikipedia_>`_ `2.28 (Aug 2018) <glibc-release-distro-mapping_>`_ (see :command:`ld.so --version`)
 
-2. Set the executable flag via a file browser or :command:`chmod +x filename` from a command-line shell
+2. Download the AppImage file matching the system's CPU architecture (see :command:`uname --machine`)
 
-   .. code-block:: bash
-
-      # AppImage file names include the release version, Python version, platform name and CPU architecture
-      chmod +x streamlink-5.3.0-1-cp311-cp311-manylinux2014_x86_64.AppImage
-
-3. Run the AppImage with any command-line parameters supported by Streamlink
+3. Set the executable flag via a file browser or :command:`chmod +x filename` from a command-line shell
 
    .. code-block:: bash
 
-      ./streamlink-5.3.0-1-cp311-cp311-manylinux2014_x86_64.AppImage --loglevel=debug
+      # AppImage file names include the release version,
+      # the Python version, platform name and CPU architecture
+      chmod +x streamlink-7.0.0-1-cp312-cp312-manylinux_2_28_x86_64.AppImage
+
+4. Run the AppImage with any command-line parameters supported by Streamlink
+
+   .. code-block:: bash
+
+      ./streamlink-7.0.0-1-cp312-cp312-manylinux_2_28_x86_64.AppImage --loglevel=debug
+
+.. _glibc-wikipedia: https://en.wikipedia.org/wiki/Glibc
+.. _glibc-release-distro-mapping: https://sourceware.org/glibc/wiki/Release#Distribution_Branch_Mapping
 
 
 What are AppImages?
