@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import re
+from inspect import currentframe, getframeinfo
 from operator import itemgetter
 from socket import AF_INET, AF_INET6
 from unittest.mock import Mock
@@ -12,6 +13,7 @@ from requests.adapters import HTTPAdapter
 from streamlink.exceptions import StreamlinkDeprecationWarning
 from streamlink.session import Streamlink
 from streamlink.session.http import TLSNoDHAdapter
+from streamlink.session.options import StreamlinkOptions
 
 
 _original_allowed_gai_family = urllib3.util.connection.allowed_gai_family  # type: ignore[attr-defined]
@@ -50,6 +52,31 @@ def test_session_wrapper_methods(session: Streamlink):
     session.set_option("test_option", "option")
     assert session.get_option("test_option") == "option"
     assert session.get_option("non_existing") is None
+
+
+def test_session_option_set_deprecated(recwarn: pytest.WarningsRecorder, session: Streamlink):
+    def get_lineno():
+        frame = currentframe()
+        assert frame
+        assert frame.f_back
+        return getframeinfo(frame.f_back).lineno
+
+    class FakeStreamlinkOptions(StreamlinkOptions):
+        _MAP_SETTERS = {
+            "deprecated": StreamlinkOptions._factory_set_deprecated("new", int),
+        }
+
+    session.options = FakeStreamlinkOptions(session)
+    assert session.get_option("new") is None
+    assert recwarn.list == []
+
+    session.set_option("deprecated", 123)
+    lineno = get_lineno() - 1
+
+    assert session.get_option("new") == 123
+    assert [(item.filename, item.lineno, item.category, str(item.message)) for item in recwarn.list] == [
+        (__file__, lineno, StreamlinkDeprecationWarning, "`deprecated` has been deprecated in favor of the `new` option"),
+    ]
 
 
 def test_options_locale(monkeypatch: pytest.MonkeyPatch, session: Streamlink):

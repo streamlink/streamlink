@@ -213,6 +213,26 @@ def test_setup_session_options_override(monkeypatch: pytest.MonkeyPatch, session
     assert session.get_option(key) == expected
 
 
+@pytest.mark.parametrize(
+    ("namespace", "expected"),
+    [
+        pytest.param(Namespace(deprecated=None, new=123), 123, id="new-only"),
+        pytest.param(Namespace(deprecated=123, new=None), 123, id="deprecated-only"),
+        pytest.param(Namespace(deprecated=123, new=456), 456, id="new-overrides-deprecated"),
+    ],
+)
+def test_setup_session_options_deprecation_override(
+    monkeypatch: pytest.MonkeyPatch,
+    session: Streamlink,
+    namespace: Namespace,
+    expected: int,
+):
+    arg_to_sessopt = [("deprecated", "option", None), ("new", "option", None)]
+    monkeypatch.setattr("streamlink_cli.argparser._ARGUMENT_TO_SESSIONOPTION", arg_to_sessopt)
+    setup_session_options(session, namespace)
+    assert session.options.get_explicit("option") == expected
+
+
 def test_cli_main_setup_session_options(monkeypatch: pytest.MonkeyPatch, parser: ArgumentParser, session: Streamlink):
     class StopTest(Exception):
         pass
