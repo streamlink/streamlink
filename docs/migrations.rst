@@ -14,6 +14,16 @@ section of the CLI docs, or use the :option:`--config` CLI argument to set custo
 | :octicon:`x-circle` #3766
 | :octicon:`git-pull-request` #6149
 
+Custom plugins sideloading paths
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Support for the old and deprecated custom plugins sideloading paths has been removed.
+Please see the plugins directory paths listed in the :ref:`Plugin sideloading <cli/plugin-sideloading:Plugin sideloading>`
+section of the CLI docs, or use the :option:`--plugin-dir` CLI argument to set the path to another location.
+
+| :octicon:`x-circle` #3766
+| :octicon:`git-pull-request` #6150
+
 Stream-type related CLI arguments
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 

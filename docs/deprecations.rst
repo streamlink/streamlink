@@ -328,6 +328,8 @@ To resolve this, move the config file(s) to the correct location or copy the con
 Custom plugins sideloading paths
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+:bdg-ref-danger:`Removed in 7.0.0 <migrations:Custom plugins sideloading paths>`
+
 Streamlink's default custom plugins directory path got updated and corrected on Linux/BSD and macOS.
 Old and deprecated paths will be dropped in the future.
 
