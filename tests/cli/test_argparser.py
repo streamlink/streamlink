@@ -149,7 +149,6 @@ class TestMatchArgumentOverride:
         assert capsys.readouterr().err.endswith(errormsg)
 
 
-@pytest.mark.filterwarnings("ignore")
 @pytest.mark.parametrize(("argv", "option", "expected"), [
     pytest.param(
         ["--locale", "xx_XX"],
@@ -180,18 +179,6 @@ class TestMatchArgumentOverride:
         "http-ssl-cert",
         ("foo.crt", "bar.key"),
         id="Arg+value with tuple mapper",
-    ),
-    pytest.param(
-        ["--hls-timeout", "123"],
-        "stream-timeout",
-        123.0,
-        id="Deprecated argument",
-    ),
-    pytest.param(
-        ["--hls-timeout", "123", "--stream-timeout", "456"],
-        "stream-timeout",
-        456.0,
-        id="Deprecated argument with override",
     ),
 ])
 def test_setup_session_options(parser: ArgumentParser, session: Streamlink, argv: list, option: str, expected: Any):
