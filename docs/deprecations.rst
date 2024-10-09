@@ -269,6 +269,8 @@ streamlink 2.2.0
 Config file paths
 ^^^^^^^^^^^^^^^^^
 
+:bdg-ref-danger:`Removed in 7.0.0 <migrations:Config file paths>`
+
 Streamlink's default config file paths got updated and corrected on Linux/BSD, macOS and Windows.
 Old and deprecated paths will be dropped in the future.
 

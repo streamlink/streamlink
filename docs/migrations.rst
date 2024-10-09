@@ -4,6 +4,16 @@ Migrations
 streamlink 7.0.0
 ----------------
 
+Config file paths
+^^^^^^^^^^^^^^^^^
+
+Support for the old and deprecated config file paths, including plugin-specific config file paths, has been removed.
+Please switch to the config file paths listed in the :ref:`Configuration file <cli/config:Configuration file>`
+section of the CLI docs, or use the :option:`--config` CLI argument to set custom config file paths.
+
+| :octicon:`x-circle` #3766
+| :octicon:`git-pull-request` #6149
+
 Stream-type related CLI arguments
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
