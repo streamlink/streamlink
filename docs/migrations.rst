@@ -4,6 +4,20 @@ Migrations
 streamlink 7.0.0
 ----------------
 
+Stream-type related CLI arguments
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The deprecated :ref:`stream-type related CLI arguments <cli:Stream transport options>` and their respective
+:ref:`Session options <api/session:Session>` have been removed.
+
+- use :option:`--stream-segment-attempts` instead of ``--{dash,hls}-segment-attempts``
+- use :option:`--stream-segment-threads` instead of ``--{dash,hls}-segment-threads``
+- use :option:`--stream-segment-timeout` instead of ``--{dash,hls}-segment-timeout``
+- use :option:`--stream-timeout` instead of ``--{dash,hls,http-stream}-timeout``
+
+| :octicon:`x-circle` #3893
+| :octicon:`git-pull-request` #6232
+
 --force-progress
 ^^^^^^^^^^^^^^^^
 
