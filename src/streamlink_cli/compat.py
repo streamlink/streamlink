@@ -1,7 +1,6 @@
 import sys
 from os import devnull
-from pathlib import Path
-from typing import TYPE_CHECKING, BinaryIO
+from typing import BinaryIO
 
 
 try:
@@ -14,17 +13,6 @@ except AttributeError:  # pragma: no cover
     del _atexit_register
 
 
-if TYPE_CHECKING:  # pragma: no cover
-    _BasePath = Path
-else:
-    _BasePath = type(Path())
-
-
-class DeprecatedPath(_BasePath):
-    pass
-
-
 __all__ = [
-    "DeprecatedPath",
     "stdout",
 ]

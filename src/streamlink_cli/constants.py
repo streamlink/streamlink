@@ -5,7 +5,6 @@ import tempfile
 from pathlib import Path
 
 from streamlink.compat import is_darwin, is_win32
-from streamlink_cli.compat import DeprecatedPath
 
 
 DEFAULT_STREAM_METADATA = {
@@ -37,7 +36,7 @@ elif is_darwin:
     PLUGIN_DIRS = [
         Path.home() / "Library" / "Application Support" / "streamlink" / "plugins",
     ]
-    LOG_DIR = DeprecatedPath(Path.home() / "Library" / "Logs" / "streamlink")
+    LOG_DIR = Path.home() / "Library" / "Logs" / "streamlink"
 else:
     XDG_CONFIG_HOME = Path(os.environ.get("XDG_CONFIG_HOME", "~/.config")).expanduser()
     XDG_DATA_HOME = Path(os.environ.get("XDG_DATA_HOME", "~/.local/share")).expanduser()
