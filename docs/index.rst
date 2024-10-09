@@ -82,6 +82,6 @@ Table of contents
     api_guide
     api
     changelog
-    donate
+    support
     applications
     thirdparty
