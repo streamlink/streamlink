@@ -32,6 +32,10 @@ Streamlink will attempt to load standalone plugins from these directories:
 
         - ``%APPDATA%\streamlink\plugins``
 
+        :bdg-info-line:`Example`
+
+        - ``C:\Users\USERNAME\AppData\Roaming\streamlink\plugins``
+
 .. note::
 
     If a plugin is added with the same name as a built-in plugin, then
