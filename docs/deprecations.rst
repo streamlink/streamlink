@@ -166,6 +166,8 @@ streamlink 2.4.0
 Stream-type related CLI arguments
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+:bdg-ref-danger:`Removed in 7.0.0 <migrations:Stream-type related CLI arguments>`
+
 :ref:`Stream-type related CLI arguments <cli:Stream transport options>` and the respective
 :ref:`Session options <api/session:Session>` have been deprecated in favor of existing generic arguments/options,
 to avoid redundancy and potential confusion.
