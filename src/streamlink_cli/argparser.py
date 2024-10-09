@@ -1123,12 +1123,6 @@ def build_parser():
         """,
     )
 
-    transport_hls.add_argument("--hls-segment-attempts", help=argparse.SUPPRESS)
-    transport_hls.add_argument("--hls-segment-threads", help=argparse.SUPPRESS)
-    transport_hls.add_argument("--hls-segment-timeout", help=argparse.SUPPRESS)
-    transport_hls.add_argument("--hls-timeout", help=argparse.SUPPRESS)
-    transport.add_argument("--http-stream-timeout", help=argparse.SUPPRESS)
-
     transport_ffmpeg.add_argument(
         "--ffmpeg-ffmpeg",
         metavar="FILENAME",
@@ -1439,13 +1433,6 @@ _ARGUMENT_TO_SESSIONOPTION: list[tuple[str, str, Callable[[Any], Any] | None]] =
     ("http_ssl_cert", "http-ssl-cert", None),
     ("http_ssl_cert_crt_key", "http-ssl-cert", tuple),
     ("http_timeout", "http-timeout", None),
-
-    # deprecated stream transport arguments (need to be defined first, so following ones can override values)
-    ("hls_segment_attempts", "hls-segment-attempts", None),
-    ("hls_segment_threads", "hls-segment-threads", None),
-    ("hls_segment_timeout", "hls-segment-timeout", None),
-    ("hls_timeout", "hls-timeout", None),
-    ("http_stream_timeout", "http-stream-timeout", None),
 
     # stream transport arguments
     ("ringbuffer_size", "ringbuffer-size", None),

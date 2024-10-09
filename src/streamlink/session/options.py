@@ -200,42 +200,6 @@ class StreamlinkOptions(Options):
           - ``int``
           - ``3``
           - Max number of DASH manifest reload attempts before giving up
-        * - hls-segment-attempts *(deprecated)*
-          - ``int``
-          - ``3``
-          - See ``stream-segment-attempts``
-        * - hls-segment-threads *(deprecated)*
-          - ``int``
-          - ``3``
-          - See ``stream-segment-threads``
-        * - hls-segment-timeout *(deprecated)*
-          - ``float``
-          - ``10.00``
-          - See ``stream-segment-timeout``
-        * - hls-timeout *(deprecated)*
-          - ``float``
-          - ``60.00``
-          - See ``stream-timeout``
-        * - dash-segment-attempts *(deprecated)*
-          - ``int``
-          - ``3``
-          - See ``stream-segment-attempts``
-        * - dash-segment-threads *(deprecated)*
-          - ``int``
-          - ``3``
-          - See ``stream-segment-threads``
-        * - dash-segment-timeout *(deprecated)*
-          - ``float``
-          - ``10.00``
-          - See ``stream-segment-timeout``
-        * - dash-timeout *(deprecated)*
-          - ``float``
-          - ``60.00``
-          - See ``stream-timeout``
-        * - http-stream-timeout *(deprecated)*
-          - ``float``
-          - ``60.00``
-          - See ``stream-timeout``
         * - ffmpeg-ffmpeg
           - ``str | None``
           - ``None``
@@ -486,13 +450,4 @@ class StreamlinkOptions(Options):
         "http-ssl-verify": _set_http_attr,
         "http-trust-env": _set_http_attr,
         "http-timeout": _set_http_attr,
-        "dash-segment-attempts": _factory_set_deprecated("stream-segment-attempts", int),
-        "hls-segment-attempts": _factory_set_deprecated("stream-segment-attempts", int),
-        "dash-segment-threads": _factory_set_deprecated("stream-segment-threads", int),
-        "hls-segment-threads": _factory_set_deprecated("stream-segment-threads", int),
-        "dash-segment-timeout": _factory_set_deprecated("stream-segment-timeout", float),
-        "hls-segment-timeout": _factory_set_deprecated("stream-segment-timeout", float),
-        "dash-timeout": _factory_set_deprecated("stream-timeout", float),
-        "hls-timeout": _factory_set_deprecated("stream-timeout", float),
-        "http-stream-timeout": _factory_set_deprecated("stream-timeout", float),
     }
