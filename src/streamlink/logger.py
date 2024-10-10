@@ -185,8 +185,7 @@ def _showwarning(message, category, filename, lineno, file=None, line=None):
         return
 
     warning = WarningMessage(message, category, filename, lineno, None, line)
-    kwargs = {"stacklevel": 2} if sys.version_info >= (3, 8) else {}
-    root.log(WARNING, warning, **kwargs)
+    root.log(WARNING, warning, stacklevel=2)
 
 
 def capturewarnings(capture=False):
