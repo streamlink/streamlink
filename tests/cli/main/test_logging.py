@@ -491,12 +491,7 @@ class TestLogfile:
         streamlink_cli.main.log.info("a")
         streamlink_cli.main.console.msg("b")
         out, err = capsys.readouterr()
-        # TODO: py38 support end: replace conditional assertion
-        assert mock_open.call_args_list == (
-            [call(str(abspath), "a", encoding="utf-8")]
-            if sys.version_info < (3, 9) else
-            [call(str(abspath), "a", encoding="utf-8", errors=None)]
-        )
+        assert mock_open.call_args_list == [call(str(abspath), "a", encoding="utf-8", errors=None)]
         assert streamobj.getvalue() == content
         assert out == ""
         assert err == ""
