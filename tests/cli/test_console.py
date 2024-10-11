@@ -129,6 +129,13 @@ class TestConsoleOutput:
         assert getvalue(output) == ""
         assert mock_input.call_args_list == []
 
+    def test_ask_no_stdin(self, monkeypatch: pytest.MonkeyPatch, output: TextIOWrapper):
+        monkeypatch.setattr("sys.stdin", None)
+
+        console = ConsoleOutput(output)
+        assert console.ask("test: ") is None
+        assert getvalue(output) == ""
+
     def test_ask_input_exception(self, monkeypatch: pytest.MonkeyPatch, output: TextIOWrapper):
         monkeypatch.setattr("builtins.input", Mock(side_effect=ValueError))
 
@@ -150,3 +157,11 @@ class TestConsoleOutput:
     def test_askpass_no_tty(self, output: TextIOWrapper):
         console = ConsoleOutput(output)
         assert console.askpass("test: ") is None
+        assert getvalue(output) == ""
+
+    def test_askpass_no_stdin(self, monkeypatch: pytest.MonkeyPatch, output: TextIOWrapper):
+        monkeypatch.setattr("sys.stdin", None)
+
+        console = ConsoleOutput(output)
+        assert console.askpass("test: ") is None
+        assert getvalue(output) == ""
