@@ -17,6 +17,8 @@ from streamlink_cli.argparser import (
     setup_plugin_options,
     setup_session_options,
 )
+from streamlink_cli.console import ConsoleUserInputRequester
+from streamlink_cli.exceptions import StreamlinkCLIError
 from streamlink_cli.main import main as streamlink_cli_main
 
 
@@ -269,11 +271,18 @@ def test_cli_main_setup_session_options(monkeypatch: pytest.MonkeyPatch, parser:
 
 
 class TestSetupPluginArgsAndOptions:
+    @pytest.fixture(autouse=True)
+    def stdin(self, monkeypatch: pytest.MonkeyPatch):
+        mock_stdin = Mock(isatty=Mock(return_value=True))
+        monkeypatch.setattr("sys.stdin", mock_stdin)
+
+        return mock_stdin
+
     @pytest.fixture()
-    def user_input_requester(self):
+    def console(self):
         return Mock(
             ask=Mock(return_value="answer"),
-            ask_password=Mock(return_value="password"),
+            askpass=Mock(return_value="password"),
         )
 
     @pytest.fixture()
@@ -301,8 +310,8 @@ class TestSetupPluginArgsAndOptions:
         return FakePlugin
 
     @pytest.fixture()
-    def session(self, session: Streamlink, user_input_requester: Mock, parser: ArgumentParser, plugin: type[Plugin]):
-        session.set_option("user-input-requester", user_input_requester)
+    def session(self, session: Streamlink, console: Mock, parser: ArgumentParser, plugin: type[Plugin]):
+        session.set_option("user-input-requester", ConsoleUserInputRequester(console))
         session.plugins["mock"] = plugin
 
         setup_plugin_args(session, parser)
@@ -331,13 +340,13 @@ class TestSetupPluginArgsAndOptions:
             "--mock-captcha",
         ], "Parser has all arguments registered"
 
-    def test_setup_options_no_plugin_arguments(self, session: Streamlink, user_input_requester: Mock):
+    def test_setup_options_no_plugin_arguments(self, session: Streamlink, console: Mock):
         options = setup_plugin_options(session, Namespace(), "mock", Plugin)
         assert not options.defaults
         assert not options.options
 
-        assert not user_input_requester.ask.called
-        assert not user_input_requester.askpass.called
+        assert not console.ask.called
+        assert not console.askpass.called
 
     def test_setup_options_no_user_input_requester(self, session: Streamlink, plugin: type[Plugin]):
         session.set_option("user-input-requester", None)
@@ -345,7 +354,7 @@ class TestSetupPluginArgsAndOptions:
             setup_plugin_options(session, Namespace(), "mock", plugin)
         assert str(exc_info.value) == "The Streamlink session is missing a UserInputRequester"
 
-    def test_setup_options(self, session: Streamlink, plugin: type[Plugin], user_input_requester: Mock):
+    def test_setup_options(self, session: Streamlink, plugin: type[Plugin], console: Mock):
         args = Namespace(
             mock_foo_bar=123,
             mock_baz=654,
@@ -358,8 +367,8 @@ class TestSetupPluginArgsAndOptions:
         )
         options = setup_plugin_options(session, args, "mock", plugin)
 
-        assert user_input_requester.ask.call_args_list == [call("CAPTCHA code")]
-        assert user_input_requester.ask_password.call_args_list == [call("Enter mock pass")]
+        assert console.ask.call_args_list == [call("CAPTCHA code: ")]
+        assert console.askpass.call_args_list == [call("Enter mock pass: ")]
 
         assert plugin.arguments
         arg_foo = plugin.arguments.get("foo-bar")
@@ -384,3 +393,25 @@ class TestSetupPluginArgsAndOptions:
         assert options.get("qux") == arg_qux.default
         assert options.get("pass") is None
         assert options.get("captcha") is None
+
+    def test_setup_options_no_tty(
+        self,
+        session: Streamlink,
+        plugin: type[Plugin],
+        stdin: Mock,
+    ):
+        stdin.isatty.return_value = False
+        with pytest.raises(StreamlinkCLIError) as exc_info:
+            setup_plugin_options(session, Mock(mock_user="username", mock_pass=None), "mock", plugin)
+        assert str(exc_info.value) == "no TTY available"
+
+    def test_setup_options_no_stdin(
+        self,
+        monkeypatch: pytest.MonkeyPatch,
+        session: Streamlink,
+        plugin: type[Plugin],
+    ):
+        monkeypatch.setattr("sys.stdin", None)
+        with pytest.raises(StreamlinkCLIError) as exc_info:
+            setup_plugin_options(session, Mock(mock_user="username", mock_pass=None), "mock", plugin)
+        assert str(exc_info.value) == "no TTY available"

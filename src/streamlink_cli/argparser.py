@@ -18,6 +18,7 @@ from streamlink.user_input import UserInputRequester
 from streamlink.utils.args import boolean, comma_list, comma_list_filter, filesize, keyvalue, num
 from streamlink.utils.times import hours_minutes_seconds_float
 from streamlink_cli.constants import STREAM_PASSTHROUGH
+from streamlink_cli.exceptions import StreamlinkCLIError
 from streamlink_cli.output.player import PlayerOutput
 from streamlink_cli.utils import find_default_player
 
@@ -1538,10 +1539,13 @@ def setup_plugin_options(
     for req in required.values():
         if not values.get(req.dest):
             prompt = f"{req.prompt or f'Enter {pluginname} {req.name}'}"
-            if req.sensitive:
-                value = user_input_requester.ask_password(prompt)
-            else:
-                value = user_input_requester.ask(prompt)
+            try:
+                if req.sensitive:
+                    value = user_input_requester.ask_password(prompt)
+                else:
+                    value = user_input_requester.ask(prompt)
+            except OSError as err:
+                raise StreamlinkCLIError from err
             values[req.dest] = value
 
     options = Options(defaults)

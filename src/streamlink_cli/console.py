@@ -13,16 +13,17 @@ class ConsoleUserInputRequester(UserInputRequester):
     """
     Request input from the user on the console using the standard ask/askpass methods
     """
+
     def __init__(self, console):
         self.console = console
 
     def ask(self, prompt: str) -> str:
-        if not sys.stdin.isatty():
+        if not sys.stdin or not sys.stdin.isatty():
             raise OSError("no TTY available")
         return self.console.ask(f"{prompt.strip()}: ")
 
     def ask_password(self, prompt: str) -> str:
-        if not sys.stdin.isatty():
+        if not sys.stdin or not sys.stdin.isatty():
             raise OSError("no TTY available")
         return self.console.askpass(f"{prompt.strip()}: ")
 
@@ -33,7 +34,7 @@ class ConsoleOutput:
         self.output = output
 
     def ask(self, prompt: str) -> str | None:
-        if not sys.stdin.isatty():
+        if not sys.stdin or not sys.stdin.isatty():
             return None
 
         self.output.write(prompt)
@@ -45,7 +46,7 @@ class ConsoleOutput:
             return None
 
     def askpass(self, prompt: str) -> str | None:
-        if not sys.stdin.isatty():
+        if not sys.stdin or not sys.stdin.isatty():
             return None
 
         return getpass(prompt, self.output)

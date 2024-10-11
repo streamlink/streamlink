@@ -44,54 +44,73 @@ def path(monkeypatch: pytest.MonkeyPatch, request: pytest.FixtureRequest):
 
 
 @pytest.fixture()
-def prompt(monkeypatch: pytest.MonkeyPatch, request: pytest.FixtureRequest):
+def prompt(request: pytest.FixtureRequest, monkeypatch: pytest.MonkeyPatch):
     param = getattr(request, "param", {})
     isatty = param.get("isatty", True)
     ask = param.get("ask", "y")
 
     prompt = Mock(return_value=ask)
-    monkeypatch.setattr("sys.stdin.isatty", Mock(return_value=isatty))
+    if param.get("no-stdin", False):
+        monkeypatch.setattr("sys.stdin", None)
+    else:
+        monkeypatch.setattr("sys.stdin.isatty", Mock(return_value=isatty))
     monkeypatch.setattr("streamlink_cli.main.console", Mock(ask=prompt))
 
     return prompt
 
 
-@pytest.mark.parametrize(("path", "force", "prompt", "exits", "log"), [
-    pytest.param(
-        {"exists": False},
-        False,
-        {},
-        nullcontext(),
-        [
-            ("streamlink.cli", "info", "Writing output to\n/path/to/file"),
-            ("streamlink.cli", "debug", "Checking file output"),
-        ],
-        id="file does not exist",
-    ),
-    pytest.param(
-        {"exists": True},
-        True,
-        {},
-        nullcontext(),
-        [
-            ("streamlink.cli", "info", "Writing output to\n/path/to/file"),
-            ("streamlink.cli", "debug", "Checking file output"),
-        ],
-        id="file exists, force",
-    ),
-    pytest.param(
-        {"exists": True},
-        False,
-        {"isatty": False},
-        pytest.raises(StreamlinkCLIError),
-        [
-            ("streamlink.cli", "info", "Writing output to\n/path/to/file"),
-            ("streamlink.cli", "debug", "Checking file output"),
-            ("streamlink.cli", "error", "File file already exists, use --force to overwrite it."),
-        ],
-        id="file exists, no TTY",
-    ),
-], indirect=["path", "prompt"])
+@pytest.mark.parametrize(
+    ("path", "force", "prompt", "exits", "log"),
+    [
+        pytest.param(
+            {"exists": False},
+            False,
+            {},
+            nullcontext(),
+            [
+                ("streamlink.cli", "info", "Writing output to\n/path/to/file"),
+                ("streamlink.cli", "debug", "Checking file output"),
+            ],
+            id="does-not-exist",
+        ),
+        pytest.param(
+            {"exists": True},
+            True,
+            {},
+            nullcontext(),
+            [
+                ("streamlink.cli", "info", "Writing output to\n/path/to/file"),
+                ("streamlink.cli", "debug", "Checking file output"),
+            ],
+            id="exists-force",
+        ),
+        pytest.param(
+            {"exists": True},
+            False,
+            {"isatty": False},
+            pytest.raises(StreamlinkCLIError),
+            [
+                ("streamlink.cli", "info", "Writing output to\n/path/to/file"),
+                ("streamlink.cli", "debug", "Checking file output"),
+                ("streamlink.cli", "error", "File file already exists, use --force to overwrite it."),
+            ],
+            id="exists-no-tty",
+        ),
+        pytest.param(
+            {"exists": True},
+            False,
+            {"no-stdin": True},
+            pytest.raises(StreamlinkCLIError),
+            [
+                ("streamlink.cli", "info", "Writing output to\n/path/to/file"),
+                ("streamlink.cli", "debug", "Checking file output"),
+                ("streamlink.cli", "error", "File file already exists, use --force to overwrite it."),
+            ],
+            id="exists-no-stdin",
+        ),
+    ],
+    indirect=["path", "prompt"],
+)
 def test_exists(
     caplog: pytest.LogCaptureFixture,
     path: Path,
@@ -110,23 +129,27 @@ def test_exists(
 
 
 @pytest.mark.parametrize("path", [pytest.param({"exists": True}, id="")], indirect=True)
-@pytest.mark.parametrize(("prompt", "exits"), [
-    pytest.param(
-        {"ask": "y"},
-        nullcontext(),
-        id="yes",
-    ),
-    pytest.param(
-        {"ask": "n"},
-        pytest.raises(StreamlinkCLIError),
-        id="no",
-    ),
-    pytest.param(
-        {"ask": None},
-        pytest.raises(StreamlinkCLIError),
-        id="error",
-    ),
-], indirect=["prompt"])
+@pytest.mark.parametrize(
+    ("prompt", "exits"),
+    [
+        pytest.param(
+            {"ask": "y"},
+            nullcontext(),
+            id="yes",
+        ),
+        pytest.param(
+            {"ask": "n"},
+            pytest.raises(StreamlinkCLIError),
+            id="no",
+        ),
+        pytest.param(
+            {"ask": None},
+            pytest.raises(StreamlinkCLIError),
+            id="error",
+        ),
+    ],
+    indirect=["prompt"],
+)
 def test_prompt(
     caplog: pytest.LogCaptureFixture,
     path: Path,
