@@ -20,12 +20,17 @@ from typing import Any
 import streamlink.logger as logger
 from streamlink import NoPluginError, PluginError, StreamError, Streamlink, __version__ as streamlink_version
 from streamlink.exceptions import FatalPluginError, StreamlinkDeprecationWarning
-from streamlink.options import Options
 from streamlink.plugin import Plugin
 from streamlink.stream.stream import Stream, StreamIO
 from streamlink.utils.named_pipe import NamedPipe
 from streamlink.utils.times import LOCAL as LOCALTIMEZONE
-from streamlink_cli.argparser import ArgumentParser, build_parser, setup_session_options
+from streamlink_cli.argparser import (
+    ArgumentParser,
+    build_parser,
+    setup_plugin_args,
+    setup_plugin_options,
+    setup_session_options,
+)
 from streamlink_cli.compat import stdout
 from streamlink_cli.console import ConsoleOutput, ConsoleUserInputRequester
 from streamlink_cli.constants import CONFIG_FILES, DEFAULT_STREAM_METADATA, LOG_DIR, PLUGIN_DIRS, STREAM_SYNONYMS
@@ -576,7 +581,7 @@ def handle_url():
 
     try:
         pluginname, pluginclass, resolved_url = streamlink.resolve_url(args.url)
-        options = setup_plugin_options(pluginname, pluginclass)
+        options = setup_plugin_options(streamlink, args, pluginname, pluginclass)
         plugin = pluginclass(streamlink, resolved_url, options)
         log.info(f"Found matching plugin {pluginname} for URL {args.url}")
 
@@ -762,59 +767,6 @@ def setup_streamlink():
     global streamlink
 
     streamlink = Streamlink({"user-input-requester": ConsoleUserInputRequester(console)})
-
-
-def setup_plugin_args(session: Streamlink, parser: ArgumentParser):
-    """Adds plugin argument data to the argument parser."""
-
-    plugin_args = parser.add_argument_group("Plugin options")
-    for pname, arguments in session.plugins.iter_arguments():
-        group = parser.add_argument_group(pname.capitalize(), parent=plugin_args)
-
-        for parg in arguments:
-            group.add_argument(parg.argument_name(pname), **parg.options)
-
-
-def setup_plugin_options(pluginname: str, pluginclass: type[Plugin]) -> Options:
-    """Initializes plugin options from argument values."""
-
-    if not pluginclass.arguments:
-        return Options()
-
-    defaults = {}
-    values = {}
-    required = {}
-
-    for parg in pluginclass.arguments:
-        defaults[parg.dest] = parg.default
-
-        if parg.help == argparse.SUPPRESS:
-            continue
-
-        value = getattr(args, parg.namespace_dest(pluginname))
-        values[parg.dest] = value
-
-        if parg.required:
-            required[parg.name] = parg
-        # if the value is set, check to see if any of the required arguments are not set
-        if parg.required or value:
-            try:
-                for rparg in pluginclass.arguments.requires(parg.name):
-                    required[rparg.name] = rparg
-            except RuntimeError:  # pragma: no cover
-                log.error(f"{pluginname} plugin has a configuration error and the arguments cannot be parsed")
-                break
-
-    for req in required.values():
-        if not values.get(req.dest):
-            prompt = f"{req.prompt or f'Enter {pluginname} {req.name}'}: "
-            value = console.askpass(prompt) if req.sensitive else console.ask(prompt)
-            values[req.dest] = value
-
-    options = Options(defaults)
-    options.update(values)
-
-    return options
 
 
 def log_root_warning():
