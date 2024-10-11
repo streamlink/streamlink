@@ -203,7 +203,7 @@ class Argument:
         return self._normalize_dest(self._name(plugin))
 
     @property
-    def dest(self):
+    def dest(self) -> str:
         return self._dest or self._normalize_dest(self.name)
 
     @property

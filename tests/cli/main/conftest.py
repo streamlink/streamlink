@@ -15,6 +15,21 @@ def argv(request: pytest.FixtureRequest, monkeypatch: pytest.MonkeyPatch):
     return argv
 
 
+@pytest.fixture()
+def user_input_requester():
+    return Mock(
+        ask=Mock(return_value=None),
+        ask_password=Mock(return_value=None),
+    )
+
+
+@pytest.fixture(autouse=True)
+def session(session: Streamlink, user_input_requester: Mock):
+    session.set_option("user-input-requester", user_input_requester)
+
+    return session
+
+
 @pytest.fixture(autouse=True)
 def _setup(monkeypatch: pytest.MonkeyPatch, requests_mock: Mock, session: Streamlink):
     monkeypatch.setattr("streamlink_cli.main.CONFIG_FILES", [])

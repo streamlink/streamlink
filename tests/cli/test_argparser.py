@@ -1,15 +1,22 @@
 from __future__ import annotations
 
 import gettext
-from argparse import Namespace
+from argparse import SUPPRESS, Namespace
 from pathlib import Path
 from typing import Any
-from unittest.mock import Mock
+from unittest.mock import Mock, call
 
 import pytest
 
+from streamlink.plugin import Plugin, pluginargument
 from streamlink.session import Streamlink
-from streamlink_cli.argparser import ArgumentParser, build_parser, setup_session_options
+from streamlink_cli.argparser import (
+    ArgumentParser,
+    build_parser,
+    setup_plugin_args,
+    setup_plugin_options,
+    setup_session_options,
+)
 from streamlink_cli.main import main as streamlink_cli_main
 
 
@@ -259,3 +266,121 @@ def test_cli_main_setup_session_options(monkeypatch: pytest.MonkeyPatch, parser:
         "Has called setup_session_options() before setting up signals and running actual CLI code"
     assert mock_setup_session_options.call_args_list[0][0][0] is session
     assert isinstance(mock_setup_session_options.call_args_list[0][0][1], Namespace)
+
+
+class TestSetupPluginArgsAndOptions:
+    @pytest.fixture()
+    def user_input_requester(self):
+        return Mock(
+            ask=Mock(return_value="answer"),
+            ask_password=Mock(return_value="password"),
+        )
+
+    @pytest.fixture()
+    def parser(self):
+        return ArgumentParser(add_help=False)
+
+    @pytest.fixture()
+    def plugin(self):
+        # simple argument which requires namespace-name normalization
+        @pluginargument("foo-bar")
+        # argument with default value
+        @pluginargument("baz", default=456)
+        # suppressed argument
+        @pluginargument("qux", default=789, help=SUPPRESS)
+        # required argument with dependencies
+        @pluginargument("user", required=True, requires=["pass", "captcha"])
+        # sensitive argument (using console.askpass if unset)
+        @pluginargument("pass", sensitive=True)
+        # argument with custom prompt (using console.ask if unset)
+        @pluginargument("captcha", prompt="CAPTCHA code")
+        class FakePlugin(Plugin):
+            def _get_streams(self):  # pragma: no cover
+                pass
+
+        return FakePlugin
+
+    @pytest.fixture()
+    def session(self, session: Streamlink, user_input_requester: Mock, parser: ArgumentParser, plugin: type[Plugin]):
+        session.set_option("user-input-requester", user_input_requester)
+        session.plugins["mock"] = plugin
+
+        setup_plugin_args(session, parser)
+
+        return session
+
+    def test_setup_arguments(self, session: Streamlink, parser: ArgumentParser, plugin: type[Plugin]):
+        group_plugins = next((grp for grp in parser._action_groups if grp.title == "Plugin options"), None)  # pragma: no branch
+        assert group_plugins is not None, "Adds the 'Plugin options' arguments group"
+        assert group_plugins in parser.NESTED_ARGUMENT_GROUPS[None], "Adds the 'Plugin options' arguments group"
+
+        group_plugin = next((grp for grp in parser._action_groups if grp.title == "Mock"), None)  # pragma: no branch
+        assert group_plugin is not None, "Adds the 'Mock' arguments group"
+        assert group_plugin in parser.NESTED_ARGUMENT_GROUPS[group_plugins], "Adds the 'Mock' arguments group"
+
+        assert [
+            item
+            for action in parser._actions
+            for item in action.option_strings
+            if action.help != SUPPRESS
+        ] == [
+            "--mock-foo-bar",
+            "--mock-baz",
+            "--mock-user",
+            "--mock-pass",
+            "--mock-captcha",
+        ], "Parser has all arguments registered"
+
+    def test_setup_options_no_plugin_arguments(self, session: Streamlink, user_input_requester: Mock):
+        options = setup_plugin_options(session, Namespace(), "mock", Plugin)
+        assert not options.defaults
+        assert not options.options
+
+        assert not user_input_requester.ask.called
+        assert not user_input_requester.askpass.called
+
+    def test_setup_options_no_user_input_requester(self, session: Streamlink, plugin: type[Plugin]):
+        session.set_option("user-input-requester", None)
+        with pytest.raises(RuntimeError) as exc_info:
+            setup_plugin_options(session, Namespace(), "mock", plugin)
+        assert str(exc_info.value) == "The Streamlink session is missing a UserInputRequester"
+
+    def test_setup_options(self, session: Streamlink, plugin: type[Plugin], user_input_requester: Mock):
+        args = Namespace(
+            mock_foo_bar=123,
+            mock_baz=654,
+            # mock_qux wouldn't be set by the parser if the argument is suppressed
+            # its value will be ignored
+            mock_qux=987,
+            mock_user="username",
+            mock_pass=None,
+            mock_captcha=None,
+        )
+        options = setup_plugin_options(session, args, "mock", plugin)
+
+        assert user_input_requester.ask.call_args_list == [call("CAPTCHA code")]
+        assert user_input_requester.ask_password.call_args_list == [call("Enter mock pass")]
+
+        assert plugin.arguments
+        arg_foo = plugin.arguments.get("foo-bar")
+        arg_baz = plugin.arguments.get("baz")
+        arg_qux = plugin.arguments.get("qux")
+        assert arg_foo
+        assert arg_baz
+        assert arg_qux
+        assert arg_foo.default is None
+        assert arg_baz.default == 456
+        assert arg_qux.default == 789
+
+        assert options.get("foo-bar") == 123, "Overrides the default plugin-argument value"
+        assert options.get("baz") == 654, "Uses the plugin-argument default value"
+        assert options.get("qux") == 789, "Ignores values of suppressed plugin-arguments"
+        assert options.get("pass") == "password"
+        assert options.get("captcha") == "answer"
+
+        options.clear()
+        assert options.get("foo-bar") == arg_foo.default
+        assert options.get("baz") == arg_baz.default
+        assert options.get("qux") == arg_qux.default
+        assert options.get("pass") is None
+        assert options.get("captcha") is None
