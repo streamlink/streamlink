@@ -185,6 +185,14 @@ class Argument:
         self.sensitive = sensitive
         self._argument_name = self._normalize_name(argument_name) if argument_name else None
 
+        # special cases for storing the default value to check whether a plugin argument was set or not
+        if action == "store_true":
+            self.const = True
+            self._default = False if default is None else default
+        elif action == "store_false":
+            self.const = False
+            self._default = True if default is None else default
+
     @staticmethod
     def _normalize_name(name: str) -> str:
         return name.replace("_", "-").strip("-")
@@ -229,7 +237,11 @@ class Argument:
             name: getattr(self, attr)
             for name, attr in self._ARGPARSE_ARGUMENT_KEYWORDS.items()
             # don't pass keywords with ``None`` values to ``ArgumentParser.add_argument()``
-            if getattr(self, attr) is not None
+            if (
+                getattr(self, attr) is not None
+                # don't include the const option value if the action is store_true or store_false
+                and not (name == "const" and self.action in ("store_true", "store_false"))
+            )
         }
 
     def __hash__(self):
