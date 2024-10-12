@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import argparse
 
 import pytest
@@ -188,6 +190,12 @@ class TestArgument:
             "const": 123,
         }
 
+        # doesn't include the const keyword if action is store_true or store_false
+        assert Argument("test", action="store_true").options == {"action": "store_true", "default": False}
+        assert Argument("test", action="store_true", default=123).options == {"action": "store_true", "default": 123}
+        assert Argument("test", action="store_false").options == {"action": "store_false", "default": True}
+        assert Argument("test", action="store_false", default=123).options == {"action": "store_false", "default": 123}
+
     def test_equality(self):
         a1 = Argument(
             "test",
@@ -226,6 +234,20 @@ class TestArgument:
         assert a1 == a2
         assert a1 != a3
         assert a2 != a3
+
+    @pytest.mark.parametrize(
+        ("action", "default", "expected_const", "expected_default"),
+        [
+            pytest.param("store_true", None, True, False, id="store_true-no-default"),
+            pytest.param("store_true", "default", True, "default", id="store_true-with-default"),
+            pytest.param("store_false", None, False, True, id="store_false-no-default"),
+            pytest.param("store_false", "default", False, "default", id="store_false-with-default"),
+        ],
+    )
+    def test_store_true_false(self, action: str, default: str | None, expected_const: bool, expected_default: str | None):
+        arg = Argument("foo", action=action, default=default)
+        assert arg.const is expected_const
+        assert arg.default is expected_default
 
 
 class TestArguments:
