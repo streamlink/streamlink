@@ -8,6 +8,7 @@ from unittest.mock import Mock, call
 
 import pytest
 
+from streamlink.exceptions import StreamlinkDeprecationWarning as SDW
 from streamlink.plugin import Plugin, pluginargument
 from streamlink.session import Streamlink
 from streamlink_cli.argparser import (
@@ -296,7 +297,7 @@ class TestSetupPluginArgsAndOptions:
         # argument with default value
         @pluginargument("baz", default=456)
         # suppressed argument
-        @pluginargument("qux", default=789, help=SUPPRESS)
+        @pluginargument("qux", help=SUPPRESS)
         # required argument with dependencies
         @pluginargument("user", required=True, requires=["pass", "captcha"])
         # sensitive argument (using console.askpass if unset)
@@ -354,13 +355,11 @@ class TestSetupPluginArgsAndOptions:
             setup_plugin_options(session, Namespace(), "mock", plugin)
         assert str(exc_info.value) == "The Streamlink session is missing a UserInputRequester"
 
-    def test_setup_options(self, session: Streamlink, plugin: type[Plugin], console: Mock):
+    def test_setup_options(self, recwarn: pytest.WarningsRecorder, session: Streamlink, plugin: type[Plugin], console: Mock):
         args = Namespace(
             mock_foo_bar=123,
             mock_baz=654,
-            # mock_qux wouldn't be set by the parser if the argument is suppressed
-            # its value will be ignored
-            mock_qux=987,
+            mock_qux="not-none",
             mock_user="username",
             mock_pass=None,
             mock_captcha=None,
@@ -379,20 +378,78 @@ class TestSetupPluginArgsAndOptions:
         assert arg_qux
         assert arg_foo.default is None
         assert arg_baz.default == 456
-        assert arg_qux.default == 789
+        assert arg_qux.default is None
 
         assert options.get("foo-bar") == 123, "Overrides the default plugin-argument value"
         assert options.get("baz") == 654, "Uses the plugin-argument default value"
-        assert options.get("qux") == 789, "Ignores values of suppressed plugin-arguments"
+        assert options.get("qux") is None, "Ignores values of suppressed plugin-arguments"
         assert options.get("pass") == "password"
         assert options.get("captcha") == "answer"
 
         options.clear()
         assert options.get("foo-bar") == arg_foo.default
         assert options.get("baz") == arg_baz.default
-        assert options.get("qux") == arg_qux.default
+        assert options.get("qux") is None
         assert options.get("pass") is None
         assert options.get("captcha") is None
+
+    def test_setup_options_deprecation_warning(self, recwarn: pytest.WarningsRecorder, session: Streamlink):
+        @pluginargument("one-a", help=SUPPRESS)
+        @pluginargument("one-b", default="default", help=SUPPRESS)
+        @pluginargument("two-a", action="store_true", help=SUPPRESS)
+        @pluginargument("two-b", action="store_true", default="default", help=SUPPRESS)
+        @pluginargument("three-a", action="store_false", help=SUPPRESS)
+        @pluginargument("three-b", action="store_false", default="default", help=SUPPRESS)
+        @pluginargument("four-a", action="store_const", const=123, help=SUPPRESS)
+        @pluginargument("four-b", action="store_const", const=123, default="default", help=SUPPRESS)
+        class FakePlugin(Plugin):
+            def _get_streams(self):  # pragma: no cover
+                pass
+
+        args_unset = Namespace(
+            mock_one_a=None,
+            mock_one_b="default",
+            mock_two_a=False,
+            mock_two_b="default",
+            mock_three_a=True,
+            mock_three_b="default",
+            mock_four_a=None,
+            mock_four_b="default",
+        )
+        setup_plugin_options(session, args_unset, "mock", FakePlugin)
+        assert [(item.category, str(item.message)) for item in recwarn.list] == []
+
+        args_set = Namespace(
+            mock_one_a="value",
+            mock_one_b="not-default",
+            mock_two_a=True,
+            mock_two_b="not-default",
+            mock_three_a=False,
+            mock_three_b="not-default",
+            mock_four_a=123,
+            mock_four_b="not-default",
+        )
+        options = setup_plugin_options(session, args_set, "mock", FakePlugin)
+        assert dict(options.items()) == {
+            "one-a": None,
+            "one-b": "default",
+            "two-a": False,
+            "two-b": "default",
+            "three-a": True,
+            "three-b": "default",
+            "four-a": None,
+            "four-b": "default",
+        }
+        assert [(item.category, str(item.message)) for item in recwarn.list] == [
+            (SDW, "The --mock-one-a plugin argument has been disabled and will be removed in the future"),
+            (SDW, "The --mock-one-b plugin argument has been disabled and will be removed in the future"),
+            (SDW, "The --mock-two-a plugin argument has been disabled and will be removed in the future"),
+            (SDW, "The --mock-two-b plugin argument has been disabled and will be removed in the future"),
+            (SDW, "The --mock-three-a plugin argument has been disabled and will be removed in the future"),
+            (SDW, "The --mock-three-b plugin argument has been disabled and will be removed in the future"),
+            (SDW, "The --mock-four-a plugin argument has been disabled and will be removed in the future"),
+            (SDW, "The --mock-four-b plugin argument has been disabled and will be removed in the future"),
+        ]
 
     def test_setup_options_no_tty(
         self,
@@ -402,7 +459,7 @@ class TestSetupPluginArgsAndOptions:
     ):
         stdin.isatty.return_value = False
         with pytest.raises(StreamlinkCLIError) as exc_info:
-            setup_plugin_options(session, Mock(mock_user="username", mock_pass=None), "mock", plugin)
+            setup_plugin_options(session, Mock(mock_user="username", mock_pass=None, mock_qux=None), "mock", plugin)
         assert str(exc_info.value) == "no TTY available"
 
     def test_setup_options_no_stdin(
@@ -413,5 +470,5 @@ class TestSetupPluginArgsAndOptions:
     ):
         monkeypatch.setattr("sys.stdin", None)
         with pytest.raises(StreamlinkCLIError) as exc_info:
-            setup_plugin_options(session, Mock(mock_user="username", mock_pass=None), "mock", plugin)
+            setup_plugin_options(session, Mock(mock_user="username", mock_pass=None, mock_qux=None), "mock", plugin)
         assert str(exc_info.value) == "no TTY available"
