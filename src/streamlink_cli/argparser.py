@@ -4,6 +4,7 @@ import argparse
 import logging
 import numbers
 import re
+import warnings
 from collections.abc import Callable
 from pathlib import Path
 from string import printable
@@ -11,6 +12,7 @@ from textwrap import dedent
 from typing import Any
 
 from streamlink import __version__ as streamlink_version, logger
+from streamlink.exceptions import StreamlinkDeprecationWarning
 from streamlink.options import Options
 from streamlink.plugin import Plugin
 from streamlink.session import Streamlink
@@ -1517,11 +1519,16 @@ def setup_plugin_options(
 
     for parg in pluginclass.arguments:
         defaults[parg.dest] = parg.default
+        value = getattr(args, parg.namespace_dest(pluginname))
 
         if parg.help == argparse.SUPPRESS:
+            if value != parg.default:
+                warnings.warn(
+                    f"The {parg.argument_name(pluginname)} plugin argument has been disabled and will be removed in the future",
+                    StreamlinkDeprecationWarning,
+                    stacklevel=1,
+                )
             continue
-
-        value = getattr(args, parg.namespace_dest(pluginname))
 
         values[parg.dest] = value
 
