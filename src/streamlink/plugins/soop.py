@@ -8,13 +8,13 @@ $metadata author
 $metadata title
 """
 
+import argparse
 import logging
 import re
 
 from streamlink.plugin import Plugin, pluginargument, pluginmatcher
 from streamlink.plugin.api import validate
 from streamlink.stream.hls import HLSStream, HLSStreamReader, HLSStreamWriter
-
 
 log = logging.getLogger(__name__)
 
@@ -60,7 +60,37 @@ class SoopHLSStream(HLSStream):
     metavar="STREAM_PASSWORD",
     help="The password for the stream.",
 )
+@pluginargument(
+    "afreeca-username",
+    argument_name="afreeca-username",
+    sensitive=True,
+    help=argparse.SUPPRESS,
+)
+@pluginargument(
+    "afreeca-password",
+    argument_name="afreeca-password",
+    sensitive=True,
+    help=argparse.SUPPRESS,
+)
+@pluginargument(
+    "afreeca-purge-credentials",
+    argument_name="afreeca-purge-credentials",
+    action="store_true",
+    help=argparse.SUPPRESS,
+)
+@pluginargument(
+    "afreeca-stream-password",
+    argument_name="afreeca-stream-password",
+    help=argparse.SUPPRESS,
+)
 class Soop(Plugin):
+    _OPTIONS_DEPRECATED = {
+        "afreeca-username": "username",
+        "afreeca-password": "password",
+        "afreeca-purge-credentials": "purge-credentials",
+        "afreeca-stream-password": "stream-password",
+    }
+
     _re_bno = re.compile(r"window\.nBroadNo\s*=\s*(?P<bno>\d+);")
 
     CHANNEL_API_URL = "https://live.sooplive.co.kr/afreeca/player_live_api.php"
@@ -99,6 +129,13 @@ class Soop(Plugin):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
+        for opt_deprecated, opt_name in self._OPTIONS_DEPRECATED.items():
+            if (opt_value := self.options.get(opt_deprecated)) and not self.options.get(
+                opt_name,
+            ):
+                self.options.set(opt_name, opt_value)
+
         self._authed = (
             self.session.http.cookies.get("PdboxBbs")
             and self.session.http.cookies.get("PdboxSaveTicket")
@@ -155,7 +192,9 @@ class Soop(Plugin):
 
         if "view_url" in info:
             return SoopHLSStream(
-                self.session, info.get("view_url"), params={"aid": key},
+                self.session,
+                info.get("view_url"),
+                params={"aid": key},
             )
 
     def _login(self, username, password):
@@ -170,7 +209,8 @@ class Soop(Plugin):
             "isLoginRetain": "Y",
         }
         res = self.session.http.post(
-            "https://login.sooplive.co.kr/app/LoginAction.php", data=data,
+            "https://login.sooplive.co.kr/app/LoginAction.php",
+            data=data,
         )
         data = self.session.http.json(res)
         log.trace(f"{data!r}")
@@ -234,7 +274,11 @@ class Soop(Plugin):
             if item["name"] == "auto":
                 continue
             if hls_stream := self._get_hls_stream(
-                broadcast, username, item["name"], rmd, stream_password,
+                broadcast,
+                username,
+                item["name"],
+                rmd,
+                stream_password,
             ):
                 streams[item["label"]] = hls_stream
 
