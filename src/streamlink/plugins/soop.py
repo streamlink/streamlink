@@ -1,7 +1,7 @@
 """
 $description TV and live video game broadcasts, artist performances and personal daily-life video blogs & shows.
-$url play.afreecatv.com
 $url play.sooplive.co.kr
+$url play.afreecatv.com
 $type live
 $metadata id
 $metadata author
@@ -19,46 +19,48 @@ from streamlink.stream.hls import HLSStream, HLSStreamReader, HLSStreamWriter
 log = logging.getLogger(__name__)
 
 
-class AfreecaHLSStreamWriter(HLSStreamWriter):
+class SoopHLSStreamWriter(HLSStreamWriter):
     def should_filter_segment(self, segment):
         return "preloading" in segment.uri or super().should_filter_segment(segment)
 
 
-class AfreecaHLSStreamReader(HLSStreamReader):
-    __writer__ = AfreecaHLSStreamWriter
+class SoopHLSStreamReader(HLSStreamReader):
+    __writer__ = SoopHLSStreamWriter
 
 
-class AfreecaHLSStream(HLSStream):
-    __reader__ = AfreecaHLSStreamReader
+class SoopHLSStream(HLSStream):
+    __reader__ = SoopHLSStreamReader
 
 
-@pluginmatcher(re.compile(
-    r"https?://play\.(afreecatv\.com|sooplive\.co\.kr)/(?P<username>\w+)(?:/(?P<bno>:\d+))?",
-))
+@pluginmatcher(
+    re.compile(
+        r"https?://play\.(sooplive\.co\.kr|afreecatv\.com)/(?P<username>\w+)(?:/(?P<bno>:\d+))?",
+    ),
+)
 @pluginargument(
     "username",
     sensitive=True,
     requires=["password"],
     metavar="USERNAME",
-    help="The username used to register with afreecatv.com.",
+    help="The username used to register with sooplive.co.kr.",
 )
 @pluginargument(
     "password",
     sensitive=True,
     metavar="PASSWORD",
-    help="A afreecatv.com account password to use with --afreeca-username.",
+    help="A sooplive.co.kr account password to use with --soop-username.",
 )
 @pluginargument(
     "purge-credentials",
     action="store_true",
-    help="Purge cached AfreecaTV credentials to initiate a new session and reauthenticate.",
+    help="Purge cached Soop credentials to initiate a new session and reauthenticate.",
 )
 @pluginargument(
     "stream-password",
     metavar="STREAM_PASSWORD",
     help="The password for the stream.",
 )
-class AfreecaTV(Plugin):
+class Soop(Plugin):
     _re_bno = re.compile(r"window\.nBroadNo\s*=\s*(?P<bno>\d+);")
 
     CHANNEL_API_URL = "https://live.sooplive.co.kr/afreeca/player_live_api.php"
@@ -76,10 +78,12 @@ class AfreecaTV(Plugin):
                 validate.optional("CDN"): validate.any(str, None),
                 validate.optional("BJNICK"): validate.any(str, None),
                 validate.optional("TITLE"): validate.any(str, None),
-                validate.optional("VIEWPRESET"): [{
-                    "label": str,
-                    "name": str,
-                }],
+                validate.optional("VIEWPRESET"): [
+                    {
+                        "label": str,
+                        "name": str,
+                    },
+                ],
             },
         },
         validate.get("CHANNEL"),
@@ -150,7 +154,9 @@ class AfreecaTV(Plugin):
         info = self._get_stream_info(broadcast, quality, rmd)
 
         if "view_url" in info:
-            return AfreecaHLSStream(self.session, info.get("view_url"), params={"aid": key})
+            return SoopHLSStream(
+                self.session, info.get("view_url"), params={"aid": key},
+            )
 
     def _login(self, username, password):
         data = {
@@ -163,7 +169,9 @@ class AfreecaTV(Plugin):
             "isSaveJoin": "false",
             "isLoginRetain": "Y",
         }
-        res = self.session.http.post("https://login.sooplive.co.kr/app/LoginAction.php", data=data)
+        res = self.session.http.post(
+            "https://login.sooplive.co.kr/app/LoginAction.php", data=data,
+        )
         data = self.session.http.json(res)
         log.trace(f"{data!r}")
         if data.get("RESULT") != self.CHANNEL_RESULT_OK:
@@ -176,7 +184,9 @@ class AfreecaTV(Plugin):
         login_password = self.get_option("password")
         stream_password = self.get_option("stream-password")
 
-        self.session.http.headers.update({"Referer": self.url, "Origin": "https://play.sooplive.co.kr"})
+        self.session.http.headers.update(
+            {"Referer": self.url, "Origin": "https://play.sooplive.co.kr"},
+        )
 
         if self.options.get("purge_credentials"):
             self.clear_cookies()
@@ -223,7 +233,9 @@ class AfreecaTV(Plugin):
         for item in channel.get("VIEWPRESET"):
             if item["name"] == "auto":
                 continue
-            if hls_stream := self._get_hls_stream(broadcast, username, item["name"], rmd, stream_password):
+            if hls_stream := self._get_hls_stream(
+                broadcast, username, item["name"], rmd, stream_password,
+            ):
                 streams[item["label"]] = hls_stream
 
         if not streams and channel.get("BPWD") == "Y":
@@ -233,4 +245,4 @@ class AfreecaTV(Plugin):
         return streams
 
 
-__plugin__ = AfreecaTV
+__plugin__ = Soop
