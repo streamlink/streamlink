@@ -1518,8 +1518,9 @@ def setup_plugin_options(
     required = {}
 
     for parg in pluginclass.arguments:
-        defaults[parg.dest] = parg.default
         value = getattr(args, parg.namespace_dest(pluginname))
+        values[parg.dest] = value
+        defaults[parg.dest] = parg.default
 
         if parg.help == argparse.SUPPRESS:
             if value != parg.default:
@@ -1529,8 +1530,6 @@ def setup_plugin_options(
                     stacklevel=1,
                 )
             continue
-
-        values[parg.dest] = value
 
         if parg.required:
             required[parg.name] = parg
