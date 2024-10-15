@@ -382,7 +382,7 @@ class TestSetupPluginArgsAndOptions:
 
         assert options.get("foo-bar") == 123, "Overrides the default plugin-argument value"
         assert options.get("baz") == 654, "Uses the plugin-argument default value"
-        assert options.get("qux") is None, "Ignores values of suppressed plugin-arguments"
+        assert options.get("qux") == "not-none", "Does not ignore values of suppressed plugin-arguments"
         assert options.get("pass") == "password"
         assert options.get("captcha") == "answer"
 
@@ -431,14 +431,14 @@ class TestSetupPluginArgsAndOptions:
         )
         options = setup_plugin_options(session, args_set, "mock", FakePlugin)
         assert dict(options.items()) == {
-            "one-a": None,
-            "one-b": "default",
-            "two-a": False,
-            "two-b": "default",
-            "three-a": True,
-            "three-b": "default",
-            "four-a": None,
-            "four-b": "default",
+            "one-a": "value",
+            "one-b": "not-default",
+            "two-a": True,
+            "two-b": "not-default",
+            "three-a": False,
+            "three-b": "not-default",
+            "four-a": 123,
+            "four-b": "not-default",
         }
         assert [(item.category, str(item.message)) for item in recwarn.list] == [
             (SDW, "The --mock-one-a plugin argument has been disabled and will be removed in the future"),
@@ -450,6 +450,18 @@ class TestSetupPluginArgsAndOptions:
             (SDW, "The --mock-four-a plugin argument has been disabled and will be removed in the future"),
             (SDW, "The --mock-four-b plugin argument has been disabled and will be removed in the future"),
         ]
+
+        options.clear()
+        assert dict(options.items()) == {
+            "one-a": None,
+            "one-b": "default",
+            "two-a": False,
+            "two-b": "default",
+            "three-a": True,
+            "three-b": "default",
+            "four-a": None,
+            "four-b": "default",
+        }
 
     def test_setup_options_no_tty(
         self,
