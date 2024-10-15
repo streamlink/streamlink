@@ -9,6 +9,9 @@ class TestPluginCanHandleUrlAfreecaTV(PluginCanHandleUrl):
         "http://play.afreecatv.com/exampleuser",
         "http://play.afreecatv.com/exampleuser/123123123",
         "https://play.afreecatv.com/exampleuser",
+        "http://play.sooplive.co.kr/exampleuser",
+        "http://play.sooplive.co.kr/exampleuser/123123123",
+        "https://play.sooplive.co.kr/exampleuser",
     ]
 
     should_not_match = [

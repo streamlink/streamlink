@@ -1,6 +1,7 @@
 """
 $description TV and live video game broadcasts, artist performances and personal daily-life video blogs & shows.
 $url play.afreecatv.com
+$url play.sooplive.co.kr
 $type live
 $metadata id
 $metadata author
@@ -32,7 +33,7 @@ class AfreecaHLSStream(HLSStream):
 
 
 @pluginmatcher(re.compile(
-    r"https?://play\.afreecatv\.com/(?P<username>\w+)(?:/(?P<bno>:\d+))?",
+    r"https?://play\.(afreecatv\.com|sooplive\.co\.kr)/(?P<username>\w+)(?:/(?P<bno>:\d+))?",
 ))
 @pluginargument(
     "username",
@@ -60,7 +61,7 @@ class AfreecaHLSStream(HLSStream):
 class AfreecaTV(Plugin):
     _re_bno = re.compile(r"window\.nBroadNo\s*=\s*(?P<bno>\d+);")
 
-    CHANNEL_API_URL = "https://live.afreecatv.com/afreeca/player_live_api.php"
+    CHANNEL_API_URL = "https://live.sooplive.co.kr/afreeca/player_live_api.php"
     CHANNEL_RESULT_OK = 1
     CHANNEL_LOGIN_REQUIRED = -6
 
@@ -162,7 +163,7 @@ class AfreecaTV(Plugin):
             "isSaveJoin": "false",
             "isLoginRetain": "Y",
         }
-        res = self.session.http.post("https://login.afreecatv.com/app/LoginAction.php", data=data)
+        res = self.session.http.post("https://login.sooplive.co.kr/app/LoginAction.php", data=data)
         data = self.session.http.json(res)
         log.trace(f"{data!r}")
         if data.get("RESULT") != self.CHANNEL_RESULT_OK:
@@ -175,7 +176,7 @@ class AfreecaTV(Plugin):
         login_password = self.get_option("password")
         stream_password = self.get_option("stream-password")
 
-        self.session.http.headers.update({"Referer": self.url, "Origin": "https://play.afreecatv.com"})
+        self.session.http.headers.update({"Referer": self.url, "Origin": "https://play.sooplive.co.kr"})
 
         if self.options.get("purge_credentials"):
             self.clear_cookies()
