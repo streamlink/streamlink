@@ -417,7 +417,7 @@ class HLSStreamWorker(SegmentedStreamWorker[HLSSegment, Response]):
         d = 0.0
         default = -1
 
-        segments_order = segments if duration >= 0 else reversed(segments)
+        segments_order = iter(segments) if duration >= 0 else reversed(segments)
 
         for segment in segments_order:
             if d >= abs(duration):
