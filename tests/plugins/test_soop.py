@@ -1,11 +1,14 @@
-from streamlink.plugins.afreeca import AfreecaTV
+from streamlink.plugins.soop import Soop
 from tests.plugins import PluginCanHandleUrl
 
 
-class TestPluginCanHandleUrlAfreecaTV(PluginCanHandleUrl):
-    __plugin__ = AfreecaTV
+class TestPluginCanHandleUrlSoop(PluginCanHandleUrl):
+    __plugin__ = Soop
 
     should_match = [
+        "http://play.sooplive.co.kr/exampleuser",
+        "http://play.sooplive.co.kr/exampleuser/123123123",
+        "https://play.sooplive.co.kr/exampleuser",
         "http://play.afreecatv.com/exampleuser",
         "http://play.afreecatv.com/exampleuser/123123123",
         "https://play.afreecatv.com/exampleuser",
