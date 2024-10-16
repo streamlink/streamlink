@@ -7,44 +7,80 @@ streamlink 7.0.0
 Config file paths
 ^^^^^^^^^^^^^^^^^
 
-Support for the old and deprecated config file paths, including plugin-specific config file paths, has been removed.
-Please switch to the config file paths listed in the :ref:`Configuration file <cli/config:Configuration file>`
-section of the CLI docs, or use the :option:`--config` CLI argument to set custom config file paths.
+Support for the old and :ref:`deprecated <deprecations:Config file paths>` config file paths,
+including plugin-specific config file paths, has been removed.
 
 | :octicon:`x-circle` #3766
 | :octicon:`git-pull-request` #6149
 
+.. admonition:: Migration
+   :class: hint
+
+   Please switch to the config file paths listed in the :ref:`Configuration file <cli/config:Configuration file>`
+   section of the CLI docs, or use the :option:`--config` CLI argument to set custom config file paths.
+
 Custom plugins sideloading paths
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Support for the old and deprecated custom plugins sideloading paths has been removed.
-Please see the plugins directory paths listed in the :ref:`Plugin sideloading <cli/plugin-sideloading:Plugin sideloading>`
-section of the CLI docs, or use the :option:`--plugin-dir` CLI argument to set the path to another location.
+Support for the old and :ref:`deprecated <deprecations:Custom plugins sideloading paths>` custom plugins sideloading paths
+has been removed.
 
 | :octicon:`x-circle` #3766
 | :octicon:`git-pull-request` #6150
 
+.. admonition:: Migration
+   :class: hint
+
+   Please see the plugins directory paths listed in the :ref:`Plugin sideloading <cli/plugin-sideloading:Plugin sideloading>`
+   section of the CLI docs, or use the :option:`--plugin-dir` CLI argument to set the path to another location.
+
 Stream-type related CLI arguments
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The deprecated :ref:`stream-type related CLI arguments <cli:Stream transport options>` and their respective
-:ref:`Session options <api/session:Session>` have been removed.
-
-- use :option:`--stream-segment-attempts` instead of ``--{dash,hls}-segment-attempts``
-- use :option:`--stream-segment-threads` instead of ``--{dash,hls}-segment-threads``
-- use :option:`--stream-segment-timeout` instead of ``--{dash,hls}-segment-timeout``
-- use :option:`--stream-timeout` instead of ``--{dash,hls,http-stream}-timeout``
+The :ref:`deprecated <deprecations:Stream-type related CLI arguments>`
+``--hls-segment-{attempts,threads,timeout}`` and ``--{hls,http-stream}-timeout`` CLI arguments,
+as well as their :ref:`deprecated <deprecations:Stream-type related CLI arguments>`
+``{dash,hls}-segment-{attempts,threads,timeout}`` and ``{dash,hls,http-stream}-timeout``
+session option counterparts have been removed.
 
 | :octicon:`x-circle` #3893
 | :octicon:`git-pull-request` #6232
 
+.. admonition:: Migration
+   :class: hint
+
+   .. tab-set::
+
+      .. tab-item:: CLI arguments
+
+         - use :option:`--stream-segment-attempts` instead of ``--hls-segment-attempts``
+         - use :option:`--stream-segment-threads` instead of ``--hls-segment-threads``
+         - use :option:`--stream-segment-timeout` instead of ``--hls-segment-timeout``
+         - use :option:`--stream-timeout` instead of ``--{hls,http-stream}-timeout``
+
+      .. tab-item:: Session options
+
+         - use :class:`stream-segment-attempts <streamlink.session.options.StreamlinkOptions>`
+           instead of ``{dash,hls}-segment-attempts``
+         - use :class:`stream-segment-threads <streamlink.session.options.StreamlinkOptions>`
+           instead of ``{dash,hls}-segment-threads``
+         - use :class:`stream-segment-timeout <streamlink.session.options.StreamlinkOptions>`
+           instead of ``{dash,hls}-segment-timeout``
+         - use :class:`stream-timeout <streamlink.session.options.StreamlinkOptions>`
+           instead of ``{dash,hls,http-stream}-timeout``
+
 --force-progress
 ^^^^^^^^^^^^^^^^
 
-The ``--force-progress`` CLI argument has been removed in favor of :option:`--progress=force`.
+The :ref:`deprecated <deprecations:--force-progress>` ``--force-progress`` CLI argument has been removed.
 
 | :octicon:`x-circle` #5268
 | :octicon:`git-pull-request` #6196
+
+.. admonition:: Migration
+   :class: hint
+
+   Use :option:`--progress=force` instead of ``--force-progress``.
 
 
 streamlink 6.0.0
