@@ -216,8 +216,8 @@ class TestPlayerArgs:
             id="No title on unknown player",
         ),
         pytest.param(
-            dict(path=Path("vlc"), title="foo bar"),
-            ["vlc", "--input-title-format", "foo bar", "-"],
+            dict(path=Path("vlc"), title="foo bar: $a - $t"),
+            ["vlc", "--input-title-format", "foo bar: $$a - $$t", "-"],
             id="VLC title",
         ),
         pytest.param(
