@@ -638,16 +638,6 @@ def build_parser():
 
         This option is only supported for the following players: {', '.join(sorted(PlayerOutput.PLAYERS.keys()))}
 
-        VLC specific information:
-            VLC does support special formatting variables on its own:
-            https://wiki.videolan.org/Documentation:Format_String/
-
-            These variables are accessible in the --title option by adding a backslash
-            in front of the dollar sign which VLC uses as its formatting character.
-
-            For example, to put the current date in your VLC window title,
-            the string `\\$A` could be inserted inside the --title string.
-
         Example:
 
             %(prog)s -p mpv --title "{{author}} - {{category}} - {{title}}" <URL> [STREAM]
