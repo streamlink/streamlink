@@ -1,13 +1,13 @@
 # ruff: noqa: A001, A004, I001
 # order the module members logically (autodoc_member_order == "bysource")
 
-from streamlink.plugin.api.validate._validate import (
+from streamlink.validate._validate import (
     Schema,
     validate,
 )
 
 # noinspection PyPep8Naming,PyShadowingBuiltins
-from streamlink.plugin.api.validate._schemas import (
+from streamlink.validate._schemas import (
     SchemaContainer,
     AllSchema as all,
     AnySchema as any,
@@ -24,7 +24,7 @@ from streamlink.plugin.api.validate._schemas import (
 )
 
 # noinspection PyShadowingBuiltins
-from streamlink.plugin.api.validate._validators import (
+from streamlink.validate._validators import (
     validator_contains as contains,
     validator_startswith as startswith,
     validator_endswith as endswith,

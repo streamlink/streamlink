@@ -7,8 +7,8 @@ from pathlib import Path
 
 import trio
 
+import streamlink.validate as validate
 from streamlink.compat import is_darwin, is_win32
-from streamlink.plugin.api import validate
 from streamlink.session import Streamlink
 from streamlink.utils.socket import find_free_port_ipv4, find_free_port_ipv6
 from streamlink.webbrowser.webbrowser import Webbrowser

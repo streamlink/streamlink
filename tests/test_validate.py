@@ -4,11 +4,11 @@ from textwrap import dedent
 import pytest
 from lxml.etree import Element, tostring as etree_tostring
 
+import streamlink.validate as validate
 from streamlink.exceptions import PluginError
-from streamlink.plugin.api import validate
 
 # noinspection PyProtectedMember
-from streamlink.plugin.api.validate._exception import ValidationError  # noqa: PLC2701
+from streamlink.validate._exception import ValidationError  # noqa: PLC2701
 
 
 def assert_validationerror(exception, expected):

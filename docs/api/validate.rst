@@ -19,6 +19,13 @@ Validation schemas
 Please see the :ref:`validation schema guides <api_guide/validate:Validation schemas>`
 for an introduction to this API and a list of examples.
 
+.. admonition:: Public interface
+   :class: caution
+
+   While the internals are implemented in the ``streamlink.validate`` package,
+   :ref:`streamlink.plugin.api.validate <api/validate:Validation schemas>` provides the main public interface
+   for plugin implementors.
+
 .. autoclass:: streamlink.plugin.api.validate.Schema
     :members:
     :undoc-members:
@@ -244,9 +251,9 @@ for an introduction to this API and a list of examples.
     :exclude-members: Schema, SchemaContainer, validate
     :member-order: bysource
 
-.. automodule:: streamlink.plugin.api.validate._schemas
+.. automodule:: streamlink.validate._schemas
     :exclude-members: SchemaContainer
     :member-order: bysource
     :no-show-inheritance:
 
-.. autoexception:: streamlink.plugin.api.validate._exception.ValidationError
+.. autoexception:: streamlink.validate._exception.ValidationError
