@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import argparse
-import logging
+import logging as _logging
 import numbers
 import re
 import warnings
@@ -25,7 +25,7 @@ from streamlink_cli.output.player import PlayerOutput
 from streamlink_cli.utils import find_default_player
 
 
-log = logging.getLogger(__name__)
+log = _logging.getLogger(__name__)
 
 
 class ArgumentParser(argparse.ArgumentParser):
