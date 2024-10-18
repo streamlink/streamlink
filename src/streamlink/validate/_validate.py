@@ -9,8 +9,8 @@ from typing import Any
 from lxml.etree import Element, iselement
 
 from streamlink.exceptions import PluginError
-from streamlink.plugin.api.validate._exception import ValidationError
-from streamlink.plugin.api.validate._schemas import (
+from streamlink.validate._exception import ValidationError
+from streamlink.validate._schemas import (
     AllSchema,
     AnySchema,
     AttrSchema,
@@ -34,6 +34,7 @@ class Schema(AllSchema):
     which by default raises :class:`PluginError <streamlink.exceptions.PluginError>` on error.
     """
 
+    # TODO: replace default PluginError exception
     def validate(self, value: Any, name: str = "result", exception: type[Exception] = PluginError) -> Any:
         try:
             return validate(self, value)
