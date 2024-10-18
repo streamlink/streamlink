@@ -7,15 +7,15 @@ from urllib.parse import urlparse
 
 from lxml.etree import XPathError, iselement
 
-from streamlink.plugin.api.validate._exception import ValidationError
-from streamlink.plugin.api.validate._schemas import AllSchema, AnySchema, TransformSchema
-from streamlink.plugin.api.validate._validate import validate
 from streamlink.utils.parse import (
     parse_html as _parse_html,
     parse_json as _parse_json,
     parse_qsd as _parse_qsd,
     parse_xml as _parse_xml,
 )
+from streamlink.validate._exception import ValidationError
+from streamlink.validate._schemas import AllSchema, AnySchema, TransformSchema
+from streamlink.validate._validate import validate
 
 
 # String related validators
