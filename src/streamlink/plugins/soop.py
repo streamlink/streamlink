@@ -8,10 +8,13 @@ $metadata author
 $metadata title
 """
 
+from __future__ import annotations
+
 import argparse
 import logging
 import re
 
+from streamlink.exceptions import NoStreamsError
 from streamlink.plugin import Plugin, pluginargument, pluginmatcher
 from streamlink.plugin.api import validate
 from streamlink.stream.hls import HLSStream, HLSStreamReader, HLSStreamWriter
@@ -34,9 +37,7 @@ class SoopHLSStream(HLSStream):
 
 
 @pluginmatcher(
-    re.compile(
-        r"https?://play\.(sooplive\.co\.kr|afreecatv\.com)/(?P<username>\w+)(?:/(?P<bno>:\d+))?",
-    ),
+    re.compile(r"https?://play\.(sooplive\.co\.kr|afreecatv\.com)/(?P<channel>\w+)(?:/(?P<bno>\d+))?"),
 )
 @pluginargument(
     "username",
@@ -92,13 +93,28 @@ class Soop(Plugin):
         "afreeca-stream-password": "stream-password",
     }
 
-    _re_bno = re.compile(r"window\.nBroadNo\s*=\s*(?P<bno>\d+);")
+    CDN_TYPE_MAPPING = {
+        "gs_cdn": "gs_cdn_pc_web",
+    }
 
-    CHANNEL_API_URL = "https://live.sooplive.co.kr/afreeca/player_live_api.php"
     CHANNEL_RESULT_OK = 1
     CHANNEL_LOGIN_REQUIRED = -6
 
+    CHANNEL_API_URL = "https://live.sooplive.co.kr/afreeca/player_live_api.php"
+    CHANNEL_API_DATA_COMMON = {
+        "from_api": "0",
+        "mode": "landing",
+        "player_type": "html5",
+        "stream_type": "common",
+    }
+
+    STREAM_PASSWORD_PROTECTED = "Y"
+
+    LOGIN_URL = "https://login.sooplive.co.kr/app/LoginAction.php"
+    LOGIN_RESULT_OK = 1
+
     _schema_channel = validate.Schema(
+        validate.parse_json(),
         {
             "CHANNEL": {
                 "RESULT": validate.transform(int),
@@ -119,22 +135,12 @@ class Soop(Plugin):
         },
         validate.get("CHANNEL"),
     )
-    _schema_stream = validate.Schema(
-        {
-            validate.optional("view_url"): validate.url(
-                scheme=validate.any("rtmp", "https"),
-            ),
-            "stream_status": str,
-        },
-    )
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
         for opt_deprecated, opt_name in self._OPTIONS_DEPRECATED.items():
-            if (opt_value := self.options.get(opt_deprecated)) and not self.options.get(
-                opt_name,
-            ):
+            if (opt_value := self.options.get(opt_deprecated)) and not self.options.get(opt_name):
                 self.options.set(opt_name, opt_value)
 
         self._authed = (
@@ -145,78 +151,114 @@ class Soop(Plugin):
             and self.session.http.cookies.get("RDB")
         )
 
-    def _get_channel_info(self, broadcast, username):
-        data = {
-            "bid": username,
-            "bno": broadcast,
-            "from_api": "0",
-            "mode": "landing",
-            "player_type": "html5",
-            "pwd": "",
-            "stream_type": "common",
-            "type": "live",
-        }
-        res = self.session.http.post(self.CHANNEL_API_URL, data=data)
-        return self.session.http.json(res, schema=self._schema_channel)
+    def _get_channel_info(self, channel, broadcast) -> tuple[int, str, str, str, str, str, str, list[dict[str, str]]]:
+        return self.session.http.post(
+            self.CHANNEL_API_URL,
+            data={
+                **self.CHANNEL_API_DATA_COMMON,
+                "type": "live",
+                "bid": channel,
+                "bno": broadcast,
+                "pwd": "",
+            },
+            schema=validate.Schema(
+                self._schema_channel,
+                validate.union_get(
+                    "RESULT",
+                    "BNO",
+                    "BJNICK",
+                    "TITLE",
+                    "RMD",
+                    "CDN",
+                    "BPWD",
+                    "VIEWPRESET",
+                ),
+            ),
+        )
 
-    def _get_hls_key(self, broadcast, username, quality, stream_password):
-        data = {
-            "bid": username,
-            "bno": broadcast,
-            "from_api": "0",
-            "mode": "landing",
-            "player_type": "html5",
-            "pwd": stream_password or "",
-            "quality": quality,
-            "stream_type": "common",
-            "type": "aid",
-        }
-        res = self.session.http.post(self.CHANNEL_API_URL, data=data)
-        return self.session.http.json(res, schema=self._schema_channel)
+    def _get_hls_key(self, channel, broadcast, quality, pwd) -> tuple[int, str]:
+        return self.session.http.post(
+            self.CHANNEL_API_URL,
+            data={
+                **self.CHANNEL_API_DATA_COMMON,
+                "type": "aid",
+                "bid": channel,
+                "bno": broadcast,
+                "pwd": pwd or "",
+                "quality": quality,
+            },
+            schema=validate.Schema(
+                self._schema_channel,
+                validate.union_get("RESULT", "AID"),
+            ),
+        )
 
-    def _get_stream_info(self, broadcast, quality, rmd):
-        params = {
-            "return_type": "gs_cdn_pc_web",
-            "broad_key": f"{broadcast}-common-{quality}-hls",
-        }
-        res = self.session.http.get(f"{rmd}/broad_stream_assign.html", params=params)
-        return self.session.http.json(res, schema=self._schema_stream)
+    def _get_stream_info(self, rmd, cdn, broadcast, quality) -> str | None:
+        return self.session.http.get(
+            f"{rmd}/broad_stream_assign.html",
+            params={
+                "return_type": next((v for k, v in self.CDN_TYPE_MAPPING.items() if k in cdn), cdn),
+                "broad_key": f"{broadcast}-common-{quality}-hls",
+            },
+            schema=validate.Schema(
+                validate.parse_json(),
+                {
+                    validate.optional("view_url"): validate.url(),
+                    "stream_status": str,
+                },
+                validate.get("view_url"),
+            ),
+        )
 
-    def _get_hls_stream(self, broadcast, username, quality, rmd, stream_password):
-        keyjson = self._get_hls_key(broadcast, username, quality, stream_password)
-
-        if keyjson.get("RESULT") != self.CHANNEL_RESULT_OK:
+    def _get_hls_stream(self, rmd, cdn, channel, broadcast, quality, pwd):
+        result, aid = self._get_hls_key(channel, broadcast, quality, pwd)
+        if result != self.CHANNEL_RESULT_OK:
             return
-        key = keyjson.get("AID")
 
-        info = self._get_stream_info(broadcast, quality, rmd)
+        view_url = self._get_stream_info(rmd, cdn, broadcast, quality)
+        if not view_url:
+            return
 
-        if "view_url" in info:
-            return SoopHLSStream(
-                self.session,
-                info.get("view_url"),
-                params={"aid": key},
-            )
+        return SoopHLSStream(self.session, view_url, params={"aid": aid})
+
+    def _get_bno(self):
+        bno = self.session.http.get(
+            self.url,
+            schema=validate.Schema(
+                re.compile(r"window\.nBroadNo\s*=\s*(?P<bno>\d+);"),
+                validate.none_or_all(validate.get("bno")),
+            ),
+        )
+        if not bno:
+            raise NoStreamsError("Could not find broadcast number")
+
+        return bno
 
     def _login(self, username, password):
-        data = {
-            "szWork": "login",
-            "szType": "json",
-            "szUid": username,
-            "szPassword": password,
-            "isSaveId": "true",
-            "isSavePw": "false",
-            "isSaveJoin": "false",
-            "isLoginRetain": "Y",
-        }
-        res = self.session.http.post(
-            "https://login.sooplive.co.kr/app/LoginAction.php",
-            data=data,
+        result = self.session.http.post(
+            self.LOGIN_URL,
+            data={
+                "szWork": "login",
+                "szType": "json",
+                "szUid": username,
+                "szPassword": password,
+                "isSaveId": "true",
+                "isSavePw": "false",
+                "isSaveJoin": "false",
+                "isLoginRetain": "Y",
+            },
+            schema=validate.Schema(
+                validate.parse_json(),
+                {
+                    "RESULT": validate.transform(int),
+                },
+                validate.get("RESULT"),
+            ),
         )
-        data = self.session.http.json(res)
-        log.trace(f"{data!r}")
-        if data.get("RESULT") != self.CHANNEL_RESULT_OK:
+
+        if result != self.LOGIN_RESULT_OK:
             return False
+
         self.save_cookies()
         return True
 
@@ -225,9 +267,10 @@ class Soop(Plugin):
         login_password = self.get_option("password")
         stream_password = self.get_option("stream-password")
 
-        self.session.http.headers.update(
-            {"Referer": self.url, "Origin": "https://play.sooplive.co.kr"},
-        )
+        self.session.http.headers.update({
+            "Referer": self.url,
+            "Origin": "https://play.sooplive.co.kr",
+        })
 
         if self.options.get("purge_credentials"):
             self.clear_cookies()
@@ -243,47 +286,34 @@ class Soop(Plugin):
             else:
                 log.error("Failed to login")
 
-        m = self.match.groupdict()
-        username = m.get("username")
-        bno = m.get("bno")
-        if bno is None:
-            res = self.session.http.get(self.url)
-            m = self._re_bno.search(res.text)
-            if not m:
-                log.error("Could not find broadcast number.")
-                return
-            bno = m.group("bno")
+        channel = self.match["channel"]
+        bno = self.match["bno"] or self._get_bno()
 
-        channel = self._get_channel_info(bno, username)
-        log.trace(f"{channel!r}")
-        if channel.get("RESULT") == self.CHANNEL_LOGIN_REQUIRED:
+        result, self.id, self.author, self.title, rmd, cdn, bpwd, viewpreset = self._get_channel_info(channel, bno)
+        if result == self.CHANNEL_LOGIN_REQUIRED:
             log.error("Login required")
             return
-        if channel.get("RESULT") != self.CHANNEL_RESULT_OK:
+        if result != self.CHANNEL_RESULT_OK:
             return
 
-        (broadcast, rmd) = (channel.get("BNO"), channel.get("RMD"))
-        if not (broadcast and rmd):
+        if not self.id or not rmd:
             return
-
-        self.id = channel.get("BNO")
-        self.author = channel.get("BJNICK")
-        self.title = channel.get("TITLE")
 
         streams = {}
-        for item in channel.get("VIEWPRESET"):
+        for item in viewpreset:
             if item["name"] == "auto":
                 continue
             if hls_stream := self._get_hls_stream(
-                broadcast,
-                username,
-                item["name"],
-                rmd,
-                stream_password,
+                rmd=rmd,
+                cdn=cdn,
+                channel=channel,
+                broadcast=self.id,
+                quality=item["name"],
+                pwd=stream_password,
             ):
                 streams[item["label"]] = hls_stream
 
-        if not streams and channel.get("BPWD") == "Y":
+        if not streams and bpwd == self.STREAM_PASSWORD_PROTECTED:
             log.error("Stream is password protected")
             return
 
