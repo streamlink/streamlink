@@ -15,9 +15,9 @@ from streamlink.stream.hls import HLSStream
 log = logging.getLogger(__name__)
 
 
-@pluginmatcher(re.compile(
-    r"https?://(?:www\.)?openrec\.tv/(?:live|movie)/(?P<id>[^/]+)",
-))
+@pluginmatcher(
+    re.compile(r"https?://(?:www\.)?openrec\.tv/(?:live|movie)/(?P<id>[^/]+)"),
+)
 @pluginargument(
     "email",
     requires=["password"],
@@ -58,11 +58,13 @@ class OPENRECtv(Plugin):
     _subscription_schema = validate.Schema({
         validate.optional("status"): int,
         validate.optional("data"): {
-            "items": [{
-                "media": {
-                    "url": validate.any(None, validate.url()),
+            "items": [
+                {
+                    "media": {
+                        "url": validate.any(None, validate.url()),
+                    },
                 },
-            }],
+            ],
         },
     })
 
@@ -87,10 +89,13 @@ class OPENRECtv(Plugin):
 
     def _get_movie_data(self):
         url = self.movie_info_url.format(id=self.video_id)
-        res = self.session.http.get(url, headers={
-            "access-token": self.session.http.cookies.get("access_token"),
-            "uuid": self.session.http.cookies.get("uuid"),
-        })
+        res = self.session.http.get(
+            url,
+            headers={
+                "access-token": self.session.http.cookies.get("access_token"),
+                "uuid": self.session.http.cookies.get("uuid"),
+            },
+        )
         data = self.session.http.json(res, schema=self._info_schema)
 
         if data["id"]:
@@ -101,10 +106,13 @@ class OPENRECtv(Plugin):
 
     def _get_subscription_movie_data(self):
         url = self.subscription_info_url.format(id=self.video_id)
-        res = self.session.http.get(url, headers={
-            "access-token": self.session.http.cookies.get("access_token"),
-            "uuid": self.session.http.cookies.get("uuid"),
-        })
+        res = self.session.http.get(
+            url,
+            headers={
+                "access-token": self.session.http.cookies.get("access_token"),
+                "uuid": self.session.http.cookies.get("uuid"),
+            },
+        )
         data = self.session.http.json(res, schema=self._subscription_schema)
 
         if data["status"] == 0:

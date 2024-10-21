@@ -82,9 +82,7 @@ def _validate_sequence(schema: list | tuple | set | frozenset, value):
     validate(cls, value)
     any_schemas = AnySchema(*schema)
 
-    return cls(
-        validate(any_schemas, v) for v in value
-    )
+    return cls(validate(any_schemas, v) for v in value)
 
 
 @validate.register
@@ -355,9 +353,7 @@ def _validate_xmlelementschema(schema: XmlElementSchema, value):
 
 @validate.register
 def _validate_uniongetschema(schema: UnionGetSchema, value):
-    return schema.seq(
-        validate(getter, value) for getter in schema.getters
-    )
+    return schema.seq(validate(getter, value) for getter in schema.getters)
 
 
 @validate.register
@@ -409,6 +405,4 @@ def _validate_union_dict(schema: dict, value):
 @validate_union.register(set)
 @validate_union.register(frozenset)
 def _validate_union_sequence(schemas: list | tuple | set | frozenset, value):
-    return type(schemas)(
-        validate(schema, value) for schema in schemas
-    )
+    return type(schemas)(validate(schema, value) for schema in schemas)

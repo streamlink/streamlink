@@ -19,18 +19,23 @@ from streamlink.stream.hls import HLSStream
 log = logging.getLogger(__name__)
 
 
-@pluginmatcher(re.compile(r"""
-    https?://(?:www\.)?
-    (?:
-        tf1\.fr/(?:
-            (?P<live>[\w-]+)/direct/?
-            |
-            stream/(?P<stream>[\w-]+)
-        )
-        |
-        (?P<lci>tf1info|lci)\.fr/direct/?
-    )
-""", re.VERBOSE))
+@pluginmatcher(
+    re.compile(
+        r"""
+            https?://(?:www\.)?
+            (?:
+                tf1\.fr/(?:
+                    (?P<live>[\w-]+)/direct/?
+                    |
+                    stream/(?P<stream>[\w-]+)
+                )
+                |
+                (?P<lci>tf1info|lci)\.fr/direct/?
+            )
+        """,
+        re.VERBOSE,
+    ),
+)
 @pluginargument(
     "email",
     requires=["password"],
@@ -186,7 +191,7 @@ class TF1(Plugin):
             not user_token
             and (login_email := self.get_option("email"))
             and (login_password := self.get_option("password"))
-        ):
+        ):  # fmt: skip
             log.info("Acquiring new user-authentication token...")
             user_token = self._login(login_email, login_password)
             self.cache.set(self._CACHE_KEY_USER_TOKEN, user_token)

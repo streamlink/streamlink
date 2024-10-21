@@ -20,9 +20,9 @@ from streamlink.stream.hls import HLSStream
 log = logging.getLogger(__name__)
 
 
-@pluginmatcher(re.compile(
-    r"https?://(?:watch\.)?blaze\.tv/(?:(?P<is_live>live)|watch/replay/\d+)",
-))
+@pluginmatcher(
+    re.compile(r"https?://(?:watch\.)?blaze\.tv/(?:(?P<is_live>live)|watch/replay/\d+)"),
+)
 class BlazeTV(Plugin):
     @staticmethod
     def _get_live_uvid(parsed_html):

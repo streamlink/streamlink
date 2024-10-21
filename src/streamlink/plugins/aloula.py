@@ -33,16 +33,18 @@ class Aloula(Plugin):
             "https://aloula.faulio.com/api/v1/channels",
             schema=validate.Schema(
                 validate.parse_json(),
-                [{
-                    "id": int,
-                    "url": str,
-                    "title": str,
-                    "has_live": bool,
-                    "has_vod": bool,
-                    "streams": {
-                        "hls": validate.url(),
+                [
+                    {
+                        "id": int,
+                        "url": str,
+                        "title": str,
+                        "has_live": bool,
+                        "has_vod": bool,
+                        "streams": {
+                            "hls": validate.url(),
+                        },
                     },
-                }],
+                ],
                 validate.filter(lambda k: k["url"] == live_slug),
             ),
         )
@@ -69,13 +71,17 @@ class Aloula(Plugin):
                 validate.parse_json(),
                 validate.any(
                     validate.all(
-                        {"blocks": [{
-                            "id": str,
-                            "program_title": str,
-                            "title": str,
-                            "season_number": int,
-                            "episode": int,
-                        }]},
+                        {
+                            "blocks": [
+                                {
+                                    "id": str,
+                                    "program_title": str,
+                                    "title": str,
+                                    "season_number": int,
+                                    "episode": int,
+                                },
+                            ],
+                        },
                         validate.get(("blocks", 0)),
                     ),
                     {"cms_error": str, "message": str},

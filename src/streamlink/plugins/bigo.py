@@ -19,9 +19,9 @@ from streamlink.stream.hls import HLSStream
 log = logging.getLogger(__name__)
 
 
-@pluginmatcher(re.compile(
-    r"https?://(?:www\.)?bigo\.tv/(?P<site_id>[^/]+)$",
-))
+@pluginmatcher(
+    re.compile(r"https?://(?:www\.)?bigo\.tv/(?P<site_id>[^/]+)$"),
+)
 class Bigo(Plugin):
     _URL_API = "https://ta.bigo.tv/official_website/studio/getInternalStudioInfo"
 

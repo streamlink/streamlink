@@ -15,9 +15,9 @@ class TestStream(Stream):
         return BytesIO(b"x" * 8192 * 2)
 
 
-@pluginmatcher(re.compile(
-    r"https?://test\.se",
-))
+@pluginmatcher(
+    re.compile(r"https?://test\.se"),
+)
 @pluginargument(
     "bool",
     action="store_true",
@@ -38,6 +38,7 @@ class TestPlugin(Plugin):
             return
 
         if "UnsortableStreamNames" in self.url:
+
             def gen():
                 for _ in range(3):
                     yield "vod", HTTPStream(self.session, "http://test.se/stream")

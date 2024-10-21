@@ -20,15 +20,20 @@ from streamlink.stream.hls import HLSStream
 log = logging.getLogger(__name__)
 
 
-@pluginmatcher(re.compile(r"""
-    https?://(?:www\.)?
-    (?:
-        tv4play\.se/program/[^?/]+/[^?/]+
-        |
-        fotbollskanalen\.se/video
-    )
-    /(?P<video_id>\d+)
-""", re.VERBOSE))
+@pluginmatcher(
+    re.compile(
+        r"""
+            https?://(?:www\.)?
+            (?:
+                tv4play\.se/program/[^?/]+/[^?/]+
+                |
+                fotbollskanalen\.se/video
+            )
+            /(?P<video_id>\d+)
+        """,
+        re.VERBOSE,
+    ),
+)
 class TV4Play(Plugin):
     video_id = None
 

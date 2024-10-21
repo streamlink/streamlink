@@ -37,10 +37,13 @@ class ChromiumWebbrowser(Webbrowser):
                     "Microsoft\\Edge Beta\\Application",
                     "Microsoft\\Edge Dev\\Application",
                 )
-                for base in [os.getenv(env) for env in (
-                    "PROGRAMFILES",
-                    "PROGRAMFILES(X86)",
-                )]
+                for base in [
+                    os.getenv(env)
+                    for env in (
+                        "PROGRAMFILES",
+                        "PROGRAMFILES(X86)",
+                    )
+                ]
                 if base is not None
             ]
             google_chrome: list[str | Path] = [
@@ -50,11 +53,14 @@ class ChromiumWebbrowser(Webbrowser):
                     "Google\\Chrome Beta\\Application",
                     "Google\\Chrome Canary\\Application",
                 )
-                for base in [os.getenv(env) for env in (
-                    "PROGRAMFILES",
-                    "PROGRAMFILES(X86)",
-                    "LOCALAPPDATA",
-                )]
+                for base in [
+                    os.getenv(env)
+                    for env in (
+                        "PROGRAMFILES",
+                        "PROGRAMFILES(X86)",
+                        "LOCALAPPDATA",
+                    )
+                ]
                 if base is not None
             ]
             return ms_edge + google_chrome

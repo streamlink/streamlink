@@ -147,24 +147,29 @@ class FilmOnAPI:
         )
 
 
-@pluginmatcher(re.compile(r"""
-    https?://(?:www\.)?filmon\.(?:tv|com)/
-    (?:
-        (?:
-            index/popout\?
-            |
-            (?:tv/)?channel/(?:export\?)?
-            |
-            tv/(?!channel/)
-            |
-            channel/
-            |
-            (?P<is_group>group/)
-        )(?:channel_id=)?(?P<channel>[-_\w]+)
-        |
-        vod/view/(?P<vod_id>[^/?&]+)
-    )
-""", re.VERBOSE))
+@pluginmatcher(
+    re.compile(
+        r"""
+            https?://(?:www\.)?filmon\.(?:tv|com)/
+            (?:
+                (?:
+                    index/popout\?
+                    |
+                    (?:tv/)?channel/(?:export\?)?
+                    |
+                    tv/(?!channel/)
+                    |
+                    channel/
+                    |
+                    (?P<is_group>group/)
+                )(?:channel_id=)?(?P<channel>[-_\w]+)
+                |
+                vod/view/(?P<vod_id>[^/?&]+)
+            )
+        """,
+        re.VERBOSE,
+    ),
+)
 class Filmon(Plugin):
     quality_weights = {
         "high": 720,
@@ -221,10 +226,13 @@ class Filmon(Plugin):
                 if _id is not None:
                     log.debug(f"Found cached channel ID: {_id}")
                 else:
-                    _id = self.session.http.get(self.url, schema=validate.Schema(
-                        re.compile(r"""channel_id\s*=\s*(?P<q>['"]?)(?P<value>\d+)(?P=q)"""),
-                        validate.any(None, validate.get("value")),
-                    ))
+                    _id = self.session.http.get(
+                        self.url,
+                        schema=validate.Schema(
+                            re.compile(r"""channel_id\s*=\s*(?P<q>['"]?)(?P<value>\d+)(?P=q)"""),
+                            validate.any(None, validate.get("value")),
+                        ),
+                    )
                     log.debug(f"Found channel ID: {_id}")
                     # do not cache a group url
                     if _id and not is_group:

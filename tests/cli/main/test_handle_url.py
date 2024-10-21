@@ -110,7 +110,7 @@ def plugin(session: Streamlink, streams: BaseException | dict[str, FakeStream]):
             {"exc": PluginError("Error while fetching streams")},
             1,
             (
-                "[cli][info] Found matching plugin plugin for URL plugin\n"
+                "[cli][info] Found matching plugin plugin for URL plugin\n"  # formatter: keep separate lines
                 + "error: Error while fetching streams\n"
             ),
             id="fetch-streams-exception",
@@ -228,7 +228,8 @@ def plugin(session: Streamlink, streams: BaseException | dict[str, FakeStream]):
                 },
                 indent=2,
                 separators=(",", ": "),
-            ) + "\n",
+            )
+            + "\n",
             id="json-selection-none",
         ),
         pytest.param(
@@ -275,7 +276,8 @@ def plugin(session: Streamlink, streams: BaseException | dict[str, FakeStream]):
                 },
                 indent=2,
                 separators=(",", ": "),
-            ) + "\n",
+            )
+            + "\n",
             id="json-selection-invalid",
         ),
         pytest.param(
@@ -296,7 +298,8 @@ def plugin(session: Streamlink, streams: BaseException | dict[str, FakeStream]):
                 },
                 indent=2,
                 separators=(",", ": "),
-            ) + "\n",
+            )
+            + "\n",
             id="json-selection-best",
         ),
     ],

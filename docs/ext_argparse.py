@@ -68,9 +68,7 @@ class ArgparseDirective(Directive):
         helptext = dedent(helptext)
 
         helptext = _inline_code_block_re.sub(
-            lambda m: (
-                ":code:`{0}`".format(m.group(1).replace("\\", "\\\\"))
-            ),
+            lambda m: ":code:`{0}`".format(m.group(1).replace("\\", "\\\\")),
             helptext,
         )
 
@@ -107,12 +105,12 @@ class ArgparseDirective(Directive):
         # create cross-links for the "Metadata variables" and "Plugins" sections
         helptext = re.sub(
             r"the \"Metadata variables\" section",
-            "the \":ref:`Metadata variables <cli/metadata:Variables>`\" section",
+            'the ":ref:`Metadata variables <cli/metadata:Variables>`" section',
             helptext,
         )
         helptext = re.sub(
             r"the \"Plugins\" section",
-            "the \":ref:`Plugins <plugins:Plugins>`\" section",
+            'the ":ref:`Plugins <plugins:Plugins>`" section',
             helptext,
         )
 

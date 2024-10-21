@@ -17,18 +17,21 @@ from streamlink.utils.times import localnow
 log = logging.getLogger(__name__)
 
 
-@pluginmatcher(re.compile(
-    r"https?://(?:www\.)?htv\.com\.vn/truc-tuyen(?:\?channel=(?P<channel>\w+)&?|$)",
-))
+@pluginmatcher(
+    re.compile(r"https?://(?:www\.)?htv\.com\.vn/truc-tuyen(?:\?channel=(?P<channel>\w+)&?|$)"),
+)
 class HTV(Plugin):
     def get_channels(self):
-        data = self.session.http.get(self.url, schema=validate.Schema(
-            validate.parse_html(),
-            validate.xml_xpath(".//*[contains(@class,'channel-list')]//a[@data-id][@data-code]"),
-            [
-                validate.union_get("data-id", "data-code"),
-            ],
-        ))
+        data = self.session.http.get(
+            self.url,
+            schema=validate.Schema(
+                validate.parse_html(),
+                validate.xml_xpath(".//*[contains(@class,'channel-list')]//a[@data-id][@data-code]"),
+                [
+                    validate.union_get("data-id", "data-code"),
+                ],
+            ),
+        )
 
         return dict(data)
 

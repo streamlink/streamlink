@@ -14,9 +14,9 @@ from streamlink.plugin.api import validate
 from streamlink.stream.hls import HLSStream
 
 
-@pluginmatcher(re.compile(
-    r"https?://piczel\.tv/watch/(?P<channel>\w+)",
-))
+@pluginmatcher(
+    re.compile(r"https?://piczel\.tv/watch/(?P<channel>\w+)"),
+)
 class Piczel(Plugin):
     _URL_STREAMS = "https://piczel.tv/api/streams"
     _URL_HLS = "https://playback.piczel.tv/live/{id}/llhls.m3u8?_HLS_legacy=YES"
@@ -33,21 +33,26 @@ class Piczel(Plugin):
             },
             schema=validate.Schema(
                 validate.parse_json(),
-                [{
-                    "slug": str,
-                    "live": bool,
-                    "id": int,
-                    "username": str,
-                    "title": str,
-                }],
+                [
+                    {
+                        "slug": str,
+                        "live": bool,
+                        "id": int,
+                        "username": str,
+                        "title": str,
+                    },
+                ],
                 validate.filter(lambda item: item["slug"] == channel),
                 validate.get(0),
-                validate.any(None, validate.union_get(
-                    "id",
-                    "username",
-                    "title",
-                    "live",
-                )),
+                validate.any(
+                    None,
+                    validate.union_get(
+                        "id",
+                        "username",
+                        "title",
+                        "live",
+                    ),
+                ),
             ),
         )
         if not data:

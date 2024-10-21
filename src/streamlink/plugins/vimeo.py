@@ -251,14 +251,14 @@ class Vimeo(Plugin):
             (quality, HTTPStream(self.session, url))
             for quality, url in progressive or []
             if url and quality not in streams
-        )
+        )  # fmt: skip
 
         if text_tracks and self.session.get_option("mux-subtitles"):
             substreams = {
                 lang: HTTPStream(self.session, urljoin("https://vimeo.com/", url))
                 for lang, url in text_tracks
                 if url
-            }
+            }  # fmt: skip
             for quality, stream in streams:
                 yield quality, MuxedStream(self.session, stream, subtitles=substreams)
         else:

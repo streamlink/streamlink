@@ -15,39 +15,42 @@ from streamlink.stream.hls import HLSStream
 from streamlink.stream.http import HTTPStream
 
 
-@pluginmatcher(re.compile(
-    r"https?://(\w+\.)?welt\.de/?",
-))
+@pluginmatcher(
+    re.compile(r"https?://(\w+\.)?welt\.de/?"),
+)
 class Welt(Plugin):
     _re_vod_quality = re.compile(r"_(\d+)\.mp4$")
 
     def _get_streams(self):
-        data = self.session.http.get(self.url, schema=validate.Schema(
-            validate.parse_html(),
-            validate.xml_xpath_string("""
-                .//script
-                [@type='application/json']
-                [starts-with(@data-internal-ref,'WeltVideoPlayer-') or @data-content='VideoPlayer.Config']
-                /text()
-            """),
-            validate.none_or_all(
-                str,
-                validate.parse_json(),
-                {
-                    "title": str,
-                    "sources": [
-                        validate.all(
-                            {
-                                "src": validate.url(),
-                                "extension": str,
-                            },
-                            validate.union_get("extension", "src"),
-                        ),
-                    ],
-                },
-                validate.union_get("sources", "title"),
+        data = self.session.http.get(
+            self.url,
+            schema=validate.Schema(
+                validate.parse_html(),
+                validate.xml_xpath_string("""
+                    .//script
+                    [@type='application/json']
+                    [starts-with(@data-internal-ref,'WeltVideoPlayer-') or @data-content='VideoPlayer.Config']
+                    /text()
+                """),
+                validate.none_or_all(
+                    str,
+                    validate.parse_json(),
+                    {
+                        "title": str,
+                        "sources": [
+                            validate.all(
+                                {
+                                    "src": validate.url(),
+                                    "extension": str,
+                                },
+                                validate.union_get("extension", "src"),
+                            ),
+                        ],
+                    },
+                    validate.union_get("sources", "title"),
+                ),
             ),
-        ))
+        )
         if not data:
             return
 

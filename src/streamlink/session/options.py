@@ -272,7 +272,7 @@ class StreamlinkOptions(Options):
     """
 
     def __init__(self, session: Streamlink) -> None:
-        super().__init__(defaults={
+        super().__init__({
             "user-input-requester": None,
             "locale": None,
             "interface": None,
@@ -364,15 +364,15 @@ class StreamlinkOptions(Options):
             urllib3_util_connection.allowed_gai_family = _original_allowed_gai_family  # type: ignore[attr-defined]
         elif key == "ipv4":
             self.set_explicit("ipv6", False)
-            urllib3_util_connection.allowed_gai_family = (lambda: AF_INET)  # type: ignore[attr-defined]
+            urllib3_util_connection.allowed_gai_family = lambda: AF_INET  # type: ignore[attr-defined]
         else:
             self.set_explicit("ipv4", False)
-            urllib3_util_connection.allowed_gai_family = (lambda: AF_INET6)  # type: ignore[attr-defined]
+            urllib3_util_connection.allowed_gai_family = lambda: AF_INET6  # type: ignore[attr-defined]
 
     def _set_http_proxy(self, key, value):
         self.session.http.proxies["http"] \
             = self.session.http.proxies["https"] \
-            = update_scheme("https://", value, force=False)
+            = update_scheme("https://", value, force=False)  # fmt: skip
         self._deprecate_https_proxy(key)
 
     def _set_http_attr(self, key, value):

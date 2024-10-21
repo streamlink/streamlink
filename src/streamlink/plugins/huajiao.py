@@ -19,9 +19,9 @@ from streamlink.stream.hls import HLSStream
 from streamlink.stream.http import HTTPStream
 
 
-@pluginmatcher(re.compile(
-    r"https?://(?:www\.)?huajiao\.com/l/(?P<channel>[^/]+)",
-))
+@pluginmatcher(
+    re.compile(r"https?://(?:www\.)?huajiao\.com/l/(?P<channel>[^/]+)"),
+)
 class Huajiao(Plugin):
     URL_LAPI = "https://g2.live.360.cn/liveplay"
 

@@ -15,34 +15,52 @@ from streamlink.stream.hls import HLSStream
 RUV_LIVE_API = """http://www.ruv.is/sites/all/themes/at_ruv/scripts/\
 ruv-stream.php?channel={0}&format=json"""
 
-_single_re = re.compile(r"""(?P<url>http://[0-9a-zA-Z\-\.]*/
-                            (lokad|opid)
-                            /
-                            ([0-9]+/[0-9][0-9]/[0-9][0-9]/)?
-                            ([A-Z0-9\$_]+\.mp4\.m3u8)
-                            )
-                         """, re.VERBOSE)
+_single_re = re.compile(
+    r"""
+        (?P<url>http://[0-9a-zA-Z\-\.]*/
+        (lokad|opid)
+        /
+        ([0-9]+/[0-9][0-9]/[0-9][0-9]/)?
+        ([A-Z0-9\$_]+\.mp4\.m3u8)
+        )
+    """,
+    re.VERBOSE,
+)
 
-_multi_re = re.compile(r"""(?P<base_url>http://[0-9a-zA-Z\-\.]*/
-                            (lokad|opid)
-                            /)
-                            manifest.m3u8\?tlm=hls&streams=
-                            (?P<streams>[0-9a-zA-Z\/\.\,:]+)
-                         """, re.VERBOSE)
+_multi_re = re.compile(
+    r"""
+        (?P<base_url>http://[0-9a-zA-Z\-\.]*/
+        (lokad|opid)
+        /)
+        manifest.m3u8\?tlm=hls&streams=
+        (?P<streams>[0-9a-zA-Z\/\.\,:]+)
+    """,
+    re.VERBOSE,
+)
 
 
-@pluginmatcher(re.compile(r"""
-    https?://(?:www\.)?ruv\.is/
-    (?P<stream_id>ruv|ruv2|ruv-2|ras1|ras2|rondo)
-    /?$
-""", re.VERBOSE))
-@pluginmatcher(re.compile(r"""
-    https?://(?:www\.)?ruv\.is/spila/
-    (?P<stream_id>ruv|ruv2|ruv-2|ruv-aukaras)
-    /[a-zA-Z0-9_-]+
-    /[0-9]+
-    /?
-""", re.VERBOSE))
+@pluginmatcher(
+    re.compile(
+        r"""
+            https?://(?:www\.)?ruv\.is/
+            (?P<stream_id>ruv|ruv2|ruv-2|ras1|ras2|rondo)
+            /?$
+        """,
+        re.VERBOSE,
+    ),
+)
+@pluginmatcher(
+    re.compile(
+        r"""
+            https?://(?:www\.)?ruv\.is/spila/
+            (?P<stream_id>ruv|ruv2|ruv-2|ruv-aukaras)
+            /[a-zA-Z0-9_-]+
+            /[0-9]+
+            /?
+        """,
+        re.VERBOSE,
+    ),
+)
 class Ruv(Plugin):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -101,9 +119,12 @@ class Ruv(Plugin):
                 else:
                     key = "1080p"
 
-                yield key, HLSStream(
-                    self.session,
-                    base_url + token,
+                yield (
+                    key,
+                    HLSStream(
+                        self.session,
+                        base_url + token,
+                    ),
                 )
 
         else:

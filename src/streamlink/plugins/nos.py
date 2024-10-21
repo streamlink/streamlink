@@ -18,9 +18,9 @@ from streamlink.stream.hls import HLSStream
 log = logging.getLogger(__name__)
 
 
-@pluginmatcher(re.compile(
-    r"https?://(?:\w+\.)?nos\.nl/(?:live|video|collectie)",
-))
+@pluginmatcher(
+    re.compile(r"https?://(?:\w+\.)?nos\.nl/(?:live|video|collectie)"),
+)
 class NOS(Plugin):
     def _get_streams(self):
         data = self.session.http.get(

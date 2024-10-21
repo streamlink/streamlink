@@ -156,8 +156,10 @@ class TestPlayerOutput:
 
     @pytest.fixture()
     def output(self, player_process: Mock):
-        with patch("subprocess.Popen") as mock_popen, \
-             patch("streamlink_cli.output.player.sleep"):
+        with (
+            patch("subprocess.Popen") as mock_popen,
+            patch("streamlink_cli.output.player.sleep"),
+        ):
             mock_popen.return_value = player_process
             output = FakePlayerOutput(Path("mocked"))
             output.open()
@@ -546,7 +548,7 @@ class TestHTTPServer:
         expectedlogs = (
             ([("streamrunner", "info", "HTTP connection closed")] if logs else [])
             + [("streamrunner", "info", "Stream ended")]
-        )
+        )  # fmt: skip
         assert [(record.module, record.levelname, record.message) for record in caplog.records] == expectedlogs
 
 

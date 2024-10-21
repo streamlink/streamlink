@@ -6,7 +6,8 @@ from streamlink_cli.utils.player import find_default_player
 
 
 __all__ = [
-    "Formatter", "JSONEncoder",
+    "Formatter",
+    "JSONEncoder",
     "datetime",
     "find_default_player",
 ]

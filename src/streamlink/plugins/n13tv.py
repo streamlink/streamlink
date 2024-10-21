@@ -17,9 +17,9 @@ from streamlink.stream.hls import HLSStream
 log = logging.getLogger(__name__)
 
 
-@pluginmatcher(re.compile(
-    r"https?://(?:www\.)?13tv\.co\.il/(live|.*?/)",
-))
+@pluginmatcher(
+    re.compile(r"https?://(?:www\.)?13tv\.co\.il/(live|.*?/)"),
+)
 class N13TV(Plugin):
     api_url = "https://13tv-api.oplayer.io/api/getlink/"
     main_js_url_re = re.compile(r'type="text/javascript" src="(.*?main\..+\.js)"')
@@ -28,28 +28,33 @@ class N13TV(Plugin):
     server_addr_re = re.compile(r"(.*[^/])(/.*)")
     media_file_re = re.compile(r"(.*)(\.[^\.].*)")
 
-    live_schema = validate.Schema(validate.all(
+    live_schema = validate.Schema(
         [{"Link": validate.url()}],
         validate.get(0),
         validate.get("Link"),
-    ))
+    )
 
-    vod_schema = validate.Schema(validate.all([{
-        "ShowTitle": str,
-        "ProtocolType": validate.all(
-            str,
-            validate.transform(lambda x: x.replace("://", "")),
-        ),
-        "ServerAddress": str,
-        "MediaRoot": str,
-        "MediaFile": str,
-        "Bitrates": str,
-        "StreamingType": str,
-        "Token": validate.all(
-            str,
-            validate.transform(lambda x: x.lstrip("?")),
-        ),
-    }], validate.get(0)))
+    vod_schema = validate.Schema(
+        [
+            {
+                "ShowTitle": str,
+                "ProtocolType": validate.all(
+                    str,
+                    validate.transform(lambda x: x.replace("://", "")),
+                ),
+                "ServerAddress": str,
+                "MediaRoot": str,
+                "MediaFile": str,
+                "Bitrates": str,
+                "StreamingType": str,
+                "Token": validate.all(
+                    str,
+                    validate.transform(lambda x: x.lstrip("?")),
+                ),
+            },
+        ],
+        validate.get(0),
+    )
 
     def _get_live(self, user_id):
         res = self.session.http.get(

@@ -5,58 +5,89 @@ import pytest
 from streamlink.utils.url import absolute_url, prepend_www, update_qsd, update_scheme, url_concat, url_equal
 
 
-@pytest.mark.parametrize(("baseurl", "url", "expected"), [
-    ("http://test.se", "/test", "http://test.se/test"),
-    ("http://test.se", "http/test.se/test", "http://test.se/http/test.se/test"),
-    ("http://test.se", "http://test2.se/test", "http://test2.se/test"),
-])
+@pytest.mark.parametrize(
+    ("baseurl", "url", "expected"),
+    [
+        ("http://test.se", "/test", "http://test.se/test"),
+        ("http://test.se", "http/test.se/test", "http://test.se/http/test.se/test"),
+        ("http://test.se", "http://test2.se/test", "http://test2.se/test"),
+    ],
+)
 def test_absolute_url(baseurl, url, expected):
     assert expected == absolute_url(baseurl, url)
 
 
-@pytest.mark.parametrize(("url", "expected"), [
-    ("http://test.se/test", "http://www.test.se/test"),
-    ("http://www.test.se", "http://www.test.se"),
-])
+@pytest.mark.parametrize(
+    ("url", "expected"),
+    [
+        ("http://test.se/test", "http://www.test.se/test"),
+        ("http://www.test.se", "http://www.test.se"),
+    ],
+)
 def test_prepend_www(url, expected):
     assert expected == prepend_www(url)
 
 
-@pytest.mark.parametrize(("assertion", "args", "expected"), [
-    ("current scheme overrides target scheme (https)",
-     ("https://other.com/bar", "http://example.com/foo"),
-     "https://example.com/foo"),
-    ("current scheme overrides target scheme (http)",
-     ("http://other.com/bar", "https://example.com/foo"),
-     "http://example.com/foo"),
-    ("current scheme does not override target scheme if force is False (https)",
-     ("http://other.com/bar", "https://example.com/foo", False),
-     "https://example.com/foo"),
-    ("current scheme does not override target scheme if force is False (http)",
-     ("https://other.com/bar", "http://example.com/foo", False),
-     "http://example.com/foo"),
-    ("current scheme gets applied to scheme-less target",
-     ("https://other.com/bar", "//example.com/foo"),
-     "https://example.com/foo"),
-    ("current scheme gets applied to scheme-less target, even if force is False",
-     ("https://other.com/bar", "//example.com/foo", False),
-     "https://example.com/foo"),
-    ("current scheme gets added to target string",
-     ("https://other.com/bar", "example.com/foo"),
-     "https://example.com/foo"),
-    ("current scheme gets added to target string, even if force is False",
-     ("https://other.com/bar", "example.com/foo", False),
-     "https://example.com/foo"),
-    ("implicit scheme with IPv4+port",
-     ("http://", "127.0.0.1:1234/foo"),
-     "http://127.0.0.1:1234/foo"),
-    ("implicit scheme with hostname+port",
-     ("http://", "foo.bar:1234/foo"),
-     "http://foo.bar:1234/foo"),
-    ("correctly parses all kinds of schemes",
-     ("foo.1+2-bar://baz", "FOO.1+2-BAR://qux"),
-     "foo.1+2-bar://qux"),
-])
+@pytest.mark.parametrize(
+    ("assertion", "args", "expected"),
+    [
+        (
+            "current scheme overrides target scheme (https)",
+            ("https://other.com/bar", "http://example.com/foo"),
+            "https://example.com/foo",
+        ),
+        (
+            "current scheme overrides target scheme (http)",
+            ("http://other.com/bar", "https://example.com/foo"),
+            "http://example.com/foo",
+        ),
+        (
+            "current scheme does not override target scheme if force is False (https)",
+            ("http://other.com/bar", "https://example.com/foo", False),
+            "https://example.com/foo",
+        ),
+        (
+            "current scheme does not override target scheme if force is False (http)",
+            ("https://other.com/bar", "http://example.com/foo", False),
+            "http://example.com/foo",
+        ),
+        (
+            "current scheme gets applied to scheme-less target",
+            ("https://other.com/bar", "//example.com/foo"),
+            "https://example.com/foo",
+        ),
+        (
+            "current scheme gets applied to scheme-less target, even if force is False",
+            ("https://other.com/bar", "//example.com/foo", False),
+            "https://example.com/foo",
+        ),
+        (
+            "current scheme gets added to target string",
+            ("https://other.com/bar", "example.com/foo"),
+            "https://example.com/foo",
+        ),
+        (
+            "current scheme gets added to target string, even if force is False",
+            ("https://other.com/bar", "example.com/foo", False),
+            "https://example.com/foo",
+        ),
+        (
+            "implicit scheme with IPv4+port",
+            ("http://", "127.0.0.1:1234/foo"),
+            "http://127.0.0.1:1234/foo",
+        ),
+        (
+            "implicit scheme with hostname+port",
+            ("http://", "foo.bar:1234/foo"),
+            "http://foo.bar:1234/foo",
+        ),
+        (
+            "correctly parses all kinds of schemes",
+            ("foo.1+2-bar://baz", "FOO.1+2-BAR://qux"),
+            "foo.1+2-bar://qux",
+        ),
+    ],
+)
 def test_update_scheme(assertion, args, expected):
     assert update_scheme(*args) == expected, assertion
 
@@ -85,25 +116,24 @@ def test_update_qsd():
     assert update_qsd("http://test.se?one=1&two=3", {"two": 2}) == "http://test.se?one=1&two=2"
     assert update_qsd("http://test.se?one=1&two=3", remove=["two"]) == "http://test.se?one=1"
     assert update_qsd("http://test.se?one=1&two=3", {"one": None}, remove="*") == "http://test.se?one=1"
-    assert update_qsd("http://test.se", {"one": "", "two": ""}) == "http://test.se?one=&two=", \
-        "should add empty params"
+    assert update_qsd("http://test.se", {"one": "", "two": ""}) == "http://test.se?one=&two=", "should add empty params"
     assert update_qsd("http://test.se?one=", {"one": None}) == "http://test.se?one=", "should leave empty params unchanged"
     assert update_qsd("http://test.se?one=", keep_blank_values=False) == "http://test.se", "should strip blank params"
     assert update_qsd("http://test.se?one=&two=", {"one": None}, keep_blank_values=False) == "http://test.se?one=", \
-        "should leave one"
+        "should leave one"  # fmt: skip
     assert update_qsd("http://test.se?&two=", {"one": ""}, keep_blank_values=False) == "http://test.se?one=", \
-        "should set one blank"
+        "should set one blank"  # fmt: skip
     assert update_qsd("http://test.se?one=", {"two": 2}) == "http://test.se?one=&two=2"
 
     assert update_qsd("http://test.se?foo=%3F", {"bar": "!"}) == "http://test.se?foo=%3F&bar=%21", \
-        "urlencode - encoded URL"
+        "urlencode - encoded URL"  # fmt: skip
     assert update_qsd("http://test.se?foo=?", {"bar": "!"}) == "http://test.se?foo=%3F&bar=%21", \
-        "urlencode - fix URL"
+        "urlencode - fix URL"  # fmt: skip
     assert update_qsd("http://test.se?foo=?", {"bar": "!"}, quote_via=lambda s, *_: s) == "http://test.se?foo=?&bar=!", \
-        "urlencode - dummy quote method"
+        "urlencode - dummy quote method"  # fmt: skip
     assert update_qsd("http://test.se", {"foo": "/ "}) == "http://test.se?foo=%2F+", \
-        "urlencode - default quote_plus"
+        "urlencode - default quote_plus"  # fmt: skip
     assert update_qsd("http://test.se", {"foo": "/ "}, safe="/", quote_via=quote) == "http://test.se?foo=/%20", \
-        "urlencode - regular quote with reserved slash"
+        "urlencode - regular quote with reserved slash"  # fmt: skip
     assert update_qsd("http://test.se", {"foo": "/ "}, safe="", quote_via=quote) == "http://test.se?foo=%2F%20", \
-        "urlencode - regular quote without reserved slash"
+        "urlencode - regular quote without reserved slash"  # fmt: skip

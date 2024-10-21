@@ -26,21 +26,25 @@ class TestGetLatest:
         yield response
         assert response.call_count == 1
 
-    @pytest.mark.parametrize(("pypi", "error"), [
-        (
-            {"status_code": 500},
-            "Error while retrieving version data from PyPI API: "
-            + "500 Server Error: None for url: https://pypi.python.org/pypi/streamlink/json",
-        ),
-        (
-            {"text": "no JSON"},
-            "Could not parse JSON data from PyPI API response",
-        ),
-        (
-            {"json": {"foo": "bar"}},
-            "Error while retrieving version data from PyPI API: 'NoneType' object has no attribute 'get'",
-        ),
-    ], indirect=["pypi"])
+    @pytest.mark.parametrize(
+        ("pypi", "error"),
+        [
+            (
+                {"status_code": 500},
+                "Error while retrieving version data from PyPI API: "
+                + "500 Server Error: None for url: https://pypi.python.org/pypi/streamlink/json",
+            ),
+            (
+                {"text": "no JSON"},
+                "Could not parse JSON data from PyPI API response",
+            ),
+            (
+                {"json": {"foo": "bar"}},
+                "Error while retrieving version data from PyPI API: 'NoneType' object has no attribute 'get'",
+            ),
+        ],
+        indirect=["pypi"],
+    )
     def test_request_error(self, caplog: pytest.LogCaptureFixture, pypi, error):
         assert not get_latest()
         assert [(record.levelname, str(record.message)) for record in caplog.records] == [("error", error)]
@@ -108,10 +112,14 @@ class TestVersionCheck:
         assert not cache.set.call_args_list
         assert not caplog.records
 
-    @pytest.mark.parametrize("cache", [
-        {},
-        {"version_info_printed": True},
-    ], indirect=True)
+    @pytest.mark.parametrize(
+        "cache",
+        [
+            {},
+            {"version_info_printed": True},
+        ],
+        indirect=True,
+    )
     def test_forced_outdated(self, caplog: pytest.LogCaptureFixture, cache: Mock, latest: Mock):
         assert not check_version(True)
         assert latest.call_args_list == [call()]
@@ -123,10 +131,14 @@ class TestVersionCheck:
             ("info", "A new version of Streamlink (1.2.3) is available!"),
         ]
 
-    @pytest.mark.parametrize(("cache", "latest"), [
-        ({}, "1.0.0"),
-        ({"version_info_printed": True}, "1.0.0"),
-    ], indirect=True)
+    @pytest.mark.parametrize(
+        ("cache", "latest"),
+        [
+            ({}, "1.0.0"),
+            ({"version_info_printed": True}, "1.0.0"),
+        ],
+        indirect=True,
+    )
     def test_forced_uptodate(self, caplog: pytest.LogCaptureFixture, cache: Mock, latest: Mock):
         assert check_version(True)
         assert latest.call_args_list == [call()]

@@ -16,9 +16,9 @@ from streamlink.stream.hls import HLSStream
 log = logging.getLogger(__name__)
 
 
-@pluginmatcher(re.compile(
-    r"https?://play\.mrt\.com\.mk/(live|play)/",
-))
+@pluginmatcher(
+    re.compile(r"https?://play\.mrt\.com\.mk/(live|play)/"),
+)
 class MRTmk(Plugin):
     file_re = re.compile(r"""(?P<url>https?://vod-[\d\w]+\.interspace\.com[^"',]+\.m3u8[^"',]*)""")
 

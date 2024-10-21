@@ -34,10 +34,13 @@ class Gulli(Plugin):
         else:
             player_url = self.VOD_PLAYER_URL.format(self.match["video_id"])
 
-        video_url = self.session.http.get(player_url, schema=validate.Schema(
-            validate.parse_html(),
-            validate.xml_xpath_string(".//video-js[1]/source[@src][@type='application/x-mpegURL'][1]/@src"),
-        ))
+        video_url = self.session.http.get(
+            player_url,
+            schema=validate.Schema(
+                validate.parse_html(),
+                validate.xml_xpath_string(".//video-js[1]/source[@src][@type='application/x-mpegURL'][1]/@src"),
+            ),
+        )
         if not video_url:
             return
 

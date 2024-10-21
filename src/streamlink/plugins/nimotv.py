@@ -18,9 +18,9 @@ from streamlink.stream.http import HTTPStream
 log = logging.getLogger(__name__)
 
 
-@pluginmatcher(re.compile(
-    r"https?://(?:www\.|m\.)?nimo\.tv/(?P<username>.*)",
-))
+@pluginmatcher(
+    re.compile(r"https?://(?:www\.|m\.)?nimo\.tv/(?P<username>.*)"),
+)
 class NimoTV(Plugin):
     data_url = "https://m.nimo.tv/{0}"
 
@@ -32,12 +32,12 @@ class NimoTV(Plugin):
         6000: "1080p",
     }
 
-    _re_appid = re.compile(br"appid=(\d+)")
-    _re_domain = re.compile(br"(https?:\/\/[A-Za-z]{2,3}.hls[A-Za-z\.\/]+)(?:V|&)")
-    _re_id = re.compile(br"id=([^|\\]+)")
-    _re_tp = re.compile(br"tp=(\d+)")
-    _re_wsSecret = re.compile(br"wsSecret=(\w+)")
-    _re_wsTime = re.compile(br"wsTime=(\w+)")
+    _re_appid = re.compile(rb"appid=(\d+)")
+    _re_domain = re.compile(rb"(https?:\/\/[A-Za-z]{2,3}.hls[A-Za-z\.\/]+)(?:V|&)")
+    _re_id = re.compile(rb"id=([^|\\]+)")
+    _re_tp = re.compile(rb"tp=(\d+)")
+    _re_wsSecret = re.compile(rb"wsSecret=(\w+)")
+    _re_wsTime = re.compile(rb"wsTime=(\w+)")
 
     def _get_streams(self):
         username = self.match.group("username")

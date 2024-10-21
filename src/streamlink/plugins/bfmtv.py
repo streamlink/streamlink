@@ -18,9 +18,9 @@ from streamlink.stream.http import HTTPStream
 log = logging.getLogger(__name__)
 
 
-@pluginmatcher(re.compile(
-    r"https?://(?:[\w-]+\.)+(?:bfmtv|01net)\.com",
-))
+@pluginmatcher(
+    re.compile(r"https?://(?:[\w-]+\.)+(?:bfmtv|01net)\.com"),
+)
 class BFMTV(Plugin):
     def _brightcove(self, account_id, video_id):
         log.debug(f"Account ID: {account_id}")
@@ -30,16 +30,18 @@ class BFMTV(Plugin):
         return dict(player.get_streams(video_id))
 
     def _streams_brightcove(self, root):
-        schema_brightcove = validate.Schema(validate.any(
-            validate.all(
-                validate.xml_find(".//*[@accountid][@videoid]"),
-                validate.union_get("accountid", "videoid"),
+        schema_brightcove = validate.Schema(
+            validate.any(
+                validate.all(
+                    validate.xml_find(".//*[@accountid][@videoid]"),
+                    validate.union_get("accountid", "videoid"),
+                ),
+                validate.all(
+                    validate.xml_find(".//*[@data-account][@data-video-id]"),
+                    validate.union_get("data-account", "data-video-id"),
+                ),
             ),
-            validate.all(
-                validate.xml_find(".//*[@data-account][@data-video-id]"),
-                validate.union_get("data-account", "data-video-id"),
-            ),
-        ))
+        )
         try:
             account_id, video_id = schema_brightcove.validate(root)
         except PluginError:
@@ -85,16 +87,18 @@ class BFMTV(Plugin):
         return self.session.streams(f"https://www.dailymotion.com/embed/video/{video_id}")
 
     def _streams_audio(self, root):
-        schema_audio = validate.Schema(validate.any(
-            validate.all(
-                validate.xml_xpath_string(".//audio/source[contains(@src,'.mp3')][1]/@src"),
-                str,
+        schema_audio = validate.Schema(
+            validate.any(
+                validate.all(
+                    validate.xml_xpath_string(".//audio/source[contains(@src,'.mp3')][1]/@src"),
+                    str,
+                ),
+                validate.all(
+                    validate.xml_xpath_string(".//div[contains(@class,'audio-player')][@data-media-url][1]/@data-media-url"),
+                    str,
+                ),
             ),
-            validate.all(
-                validate.xml_xpath_string(".//div[contains(@class,'audio-player')][@data-media-url][1]/@data-media-url"),
-                str,
-            ),
-        ))
+        )
         try:
             audio_url = schema_audio.validate(root)
         except PluginError:
@@ -103,9 +107,12 @@ class BFMTV(Plugin):
         return {"audio": HTTPStream(self.session, audio_url)}
 
     def _get_streams(self):
-        root = self.session.http.get(self.url, schema=validate.Schema(
-            validate.parse_html(),
-        ))
+        root = self.session.http.get(
+            self.url,
+            schema=validate.Schema(
+                validate.parse_html(),
+            ),
+        )
 
         return (
             self._streams_brightcove(root)

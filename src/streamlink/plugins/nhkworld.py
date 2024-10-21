@@ -13,9 +13,9 @@ from streamlink.stream.hls import HLSStream
 API_URL = "http://{}.nhk.or.jp/nhkworld/app/tv/hlslive_web.json"
 
 
-@pluginmatcher(re.compile(
-    r"https?://(?:(\w+)\.)?nhk\.or\.jp/nhkworld",
-))
+@pluginmatcher(
+    re.compile(r"https?://(?:(\w+)\.)?nhk\.or\.jp/nhkworld"),
+)
 class NHKWorld(Plugin):
     def _get_streams(self):
         # get the HLS json from the same sub domain as the main url, defaulting to www

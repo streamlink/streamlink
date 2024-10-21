@@ -36,19 +36,22 @@ class CMMedia(Plugin):
         return False
 
     def _get_streams(self):
-        self.author, iframe_url = self.session.http.get(self.url, schema=validate.Schema(
-            validate.parse_html(),
-            validate.union((
-                validate.xml_xpath_string(".//h1[contains(@class, 'btn-title')]/text()"),
-                validate.all(
-                    validate.xml_xpath_string(".//script[contains(text(), '/embedIframeJs/')]/text()"),
-                    validate.none_or_all(
-                        re.compile(r"""{getKs\((?P<q>")(?P<url>.+?)(?P=q)"""),
-                        validate.none_or_all(validate.get("url"), validate.url()),
+        self.author, iframe_url = self.session.http.get(
+            self.url,
+            schema=validate.Schema(
+                validate.parse_html(),
+                validate.union((
+                    validate.xml_xpath_string(".//h1[contains(@class, 'btn-title')]/text()"),
+                    validate.all(
+                        validate.xml_xpath_string(".//script[contains(text(), '/embedIframeJs/')]/text()"),
+                        validate.none_or_all(
+                            re.compile(r"""{getKs\((?P<q>")(?P<url>.+?)(?P=q)"""),
+                            validate.none_or_all(validate.get("url"), validate.url()),
+                        ),
                     ),
-                ),
-            )),
-        ))
+                )),
+            ),
+        )
         if not iframe_url:
             return
 
@@ -60,33 +63,41 @@ class CMMedia(Plugin):
         p = m.group(1)
         sp = m.group(2)
 
-        json = self.session.http.get(iframe_url, schema=validate.Schema(
-            re.compile(r"twindow\.kalturaIframePackageData\s*=\s*({.*});[\\nt]*var isIE8"),
-            validate.none_or_all(
-                validate.get(1),
-                validate.transform(lambda text: re.sub(r'\\"', r'"', text)),
-                validate.parse_json(),
-                validate.any({
-                    "entryResult": {
-                        "contextData": {
-                            "isSiteRestricted": bool,
-                            "isCountryRestricted": bool,
-                            "isSessionRestricted": bool,
-                            "isIpAddressRestricted": bool,
-                            "isUserAgentRestricted": bool,
-                            "flavorAssets": [{
-                                "id": str,
-                            }],
+        json = self.session.http.get(
+            iframe_url,
+            schema=validate.Schema(
+                re.compile(r"twindow\.kalturaIframePackageData\s*=\s*({.*});[\\nt]*var isIE8"),
+                validate.none_or_all(
+                    validate.get(1),
+                    validate.transform(lambda text: re.sub(r'\\"', r'"', text)),
+                    validate.parse_json(),
+                    validate.any(
+                        {
+                            "entryResult": {
+                                "contextData": {
+                                    "isSiteRestricted": bool,
+                                    "isCountryRestricted": bool,
+                                    "isSessionRestricted": bool,
+                                    "isIpAddressRestricted": bool,
+                                    "isUserAgentRestricted": bool,
+                                    "flavorAssets": [
+                                        {
+                                            "id": str,
+                                        },
+                                    ],
+                                },
+                                "meta": {
+                                    "id": str,
+                                    "name": str,
+                                    "categories": validate.any(None, str),
+                                },
+                            },
                         },
-                        "meta": {
-                            "id": str,
-                            "name": str,
-                            "categories": validate.any(None, str),
-                        },
-                    },
-                }, {"error": str}),
+                        {"error": str},
+                    ),
+                ),
             ),
-        ))
+        )
 
         if not json:
             return

@@ -21,12 +21,15 @@ class TestPluginCanHandleUrlAtresPlayer(PluginCanHandleUrl):
 
 
 class TestAtresPlayer:
-    @pytest.mark.parametrize(("url", "expected"), [
-        ("http://www.atresplayer.com/directos/antena3", "https://www.atresplayer.com/directos/antena3/"),
-        ("http://www.atresplayer.com/directos/antena3/", "https://www.atresplayer.com/directos/antena3/"),
-        ("https://www.atresplayer.com/directos/antena3", "https://www.atresplayer.com/directos/antena3/"),
-        ("https://www.atresplayer.com/directos/antena3/", "https://www.atresplayer.com/directos/antena3/"),
-    ])
+    @pytest.mark.parametrize(
+        ("url", "expected"),
+        [
+            ("http://www.atresplayer.com/directos/antena3", "https://www.atresplayer.com/directos/antena3/"),
+            ("http://www.atresplayer.com/directos/antena3/", "https://www.atresplayer.com/directos/antena3/"),
+            ("https://www.atresplayer.com/directos/antena3", "https://www.atresplayer.com/directos/antena3/"),
+            ("https://www.atresplayer.com/directos/antena3/", "https://www.atresplayer.com/directos/antena3/"),
+        ],
+    )
     def test_url(self, url, expected):
         plugin = AtresPlayer(Mock(), url)
         assert plugin.url == expected

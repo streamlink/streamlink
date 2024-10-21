@@ -13,9 +13,9 @@ from streamlink.stream.hls import HLSStream
 from streamlink.utils.url import update_scheme
 
 
-@pluginmatcher(re.compile(
-    r"https?://player\.invintus\.com/\?clientID=(\d+)&eventID=(\d+)",
-))
+@pluginmatcher(
+    re.compile(r"https?://player\.invintus\.com/\?clientID=(\d+)&eventID=(\d+)"),
+)
 class InvintusMedia(Plugin):
     WSC_API_KEY = "7WhiEBzijpritypp8bqcU7pfU9uicDR"  # hard coded in the middle of https://player.invintus.com/app.js
     API_URL = "https://api.v3.invintusmedia.com/v2/Event/getDetailed"

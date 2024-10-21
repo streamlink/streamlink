@@ -57,37 +57,46 @@ class TestPluginCanHandleUrlHLSPlugin(PluginCanHandleUrl):
     ]
 
 
-@pytest.mark.parametrize(("url", "priority"), [
-    ("http://example.com/foo.m3u8", LOW_PRIORITY),
-    ("http://example.com/foo.M3U8", LOW_PRIORITY),
-    ("hls://http://example.com/foo.m3u8", NORMAL_PRIORITY),
-    ("hls://http://example.com/bar", NORMAL_PRIORITY),
-    ("hlsvariant://http://example.com/foo.m3u8", NORMAL_PRIORITY),
-    ("hlsvariant://http://example.com/bar", NORMAL_PRIORITY),
-    ("http://example.com/bar", NO_PRIORITY),
-])
+@pytest.mark.parametrize(
+    ("url", "priority"),
+    [
+        ("http://example.com/foo.m3u8", LOW_PRIORITY),
+        ("http://example.com/foo.M3U8", LOW_PRIORITY),
+        ("hls://http://example.com/foo.m3u8", NORMAL_PRIORITY),
+        ("hls://http://example.com/bar", NORMAL_PRIORITY),
+        ("hlsvariant://http://example.com/foo.m3u8", NORMAL_PRIORITY),
+        ("hlsvariant://http://example.com/bar", NORMAL_PRIORITY),
+        ("http://example.com/bar", NO_PRIORITY),
+    ],
+)
 def test_priority(url, priority):
     assert next((matcher.priority for matcher in HLSPlugin.matchers if matcher.pattern.match(url)), NO_PRIORITY) == priority
 
 
-@pytest.mark.parametrize(("url", "expected"), [
-    ("example.com/foo.m3u8", "https://example.com/foo.m3u8"),
-    ("http://example.com/foo.m3u8", "http://example.com/foo.m3u8"),
-    ("https://example.com/foo.m3u8", "https://example.com/foo.m3u8"),
-    ("file://foo.m3u8", "file://foo.m3u8"),
-    ("file:///foo.m3u8", "file:///foo.m3u8"),
-    ("file://../foo.m3u8", "file://../foo.m3u8"),
-    ("hls://example.com/foo", "https://example.com/foo"),
-    ("hls://http://example.com/foo", "http://example.com/foo"),
-    ("hls://https://example.com/foo", "https://example.com/foo"),
-    ("hlsvariant://example.com/foo", "https://example.com/foo"),
-    ("hlsvariant://http://example.com/foo", "http://example.com/foo"),
-    ("hlsvariant://https://example.com/foo", "https://example.com/foo"),
-])
-@pytest.mark.parametrize(("isvariant", "streams"), [
-    (False, ["live"]),
-    (True, ["720p", "1080p"]),
-])
+@pytest.mark.parametrize(
+    ("url", "expected"),
+    [
+        ("example.com/foo.m3u8", "https://example.com/foo.m3u8"),
+        ("http://example.com/foo.m3u8", "http://example.com/foo.m3u8"),
+        ("https://example.com/foo.m3u8", "https://example.com/foo.m3u8"),
+        ("file://foo.m3u8", "file://foo.m3u8"),
+        ("file:///foo.m3u8", "file:///foo.m3u8"),
+        ("file://../foo.m3u8", "file://../foo.m3u8"),
+        ("hls://example.com/foo", "https://example.com/foo"),
+        ("hls://http://example.com/foo", "http://example.com/foo"),
+        ("hls://https://example.com/foo", "https://example.com/foo"),
+        ("hlsvariant://example.com/foo", "https://example.com/foo"),
+        ("hlsvariant://http://example.com/foo", "http://example.com/foo"),
+        ("hlsvariant://https://example.com/foo", "https://example.com/foo"),
+    ],
+)
+@pytest.mark.parametrize(
+    ("isvariant", "streams"),
+    [
+        (False, ["live"]),
+        (True, ["720p", "1080p"]),
+    ],
+)
 def test_get_streams(
     monkeypatch: pytest.MonkeyPatch,
     session: Streamlink,

@@ -61,27 +61,31 @@ class TestRTPPlay:
 
         return plugin._get_streams()
 
-    @pytest.mark.parametrize(("streams", "expected"), [
-        pytest.param(
-            "",
-            False,
-            id="empty",
-        ),
-        pytest.param(
-            _content_pre + _content_invalid,
-            False,
-            id="invalid",
-        ),
-        pytest.param(
-            _content_pre + _content_valid,
-            True,
-            id="valid",
-        ),
-        pytest.param(
-            _content_pre + _content_valid_b64,
-            True,
-            id="valid-b64",
-        ),
-    ], indirect=["streams"])
+    @pytest.mark.parametrize(
+        ("streams", "expected"),
+        [
+            pytest.param(
+                "",
+                False,
+                id="empty",
+            ),
+            pytest.param(
+                _content_pre + _content_invalid,
+                False,
+                id="invalid",
+            ),
+            pytest.param(
+                _content_pre + _content_valid,
+                True,
+                id="valid",
+            ),
+            pytest.param(
+                _content_pre + _content_valid_b64,
+                True,
+                id="valid-b64",
+            ),
+        ],
+        indirect=["streams"],
+    )
     def test_streams(self, streams, expected):
         assert (streams is not None) is expected

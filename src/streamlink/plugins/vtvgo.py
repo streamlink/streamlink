@@ -25,7 +25,7 @@ class VTVgo(Plugin):
         if (
             not self.session.http.cookies.get(AWSWAF.TOKEN)
             or not self.session.http.get(self.url).content
-        ):
+        ):  # fmt: skip
             log.info("Getting new AWS WAF token (bot-detection)")
             if not AWSWAF(self.session).acquire(self.url):
                 return

@@ -12,7 +12,6 @@ class TestPluginCanHandleUrlPluzz(PluginCanHandleUrl):
         ("francetv", "https://www.france.tv/france-5/direct.html"),
         ("francetv", "https://www.france.tv/franceinfo/direct.html"),
         ("francetv", "https://www.france.tv/france-2/journal-20h00/141003-edition-du-lundi-8-mai-2017.html"),
-
         (
             "francetvinfofr",
             "https://www.francetvinfo.fr/en-direct/tv.html",

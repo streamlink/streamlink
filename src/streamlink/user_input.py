@@ -7,6 +7,7 @@ class UserInputRequester(abc.ABC):
 
     e.g. from the console
     """
+
     @abc.abstractmethod
     def ask(self, prompt: str) -> str:
         """

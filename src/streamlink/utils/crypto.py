@@ -31,17 +31,17 @@ def evp_bytestokey(password, salt, key_len, iv_len):
     while len(d) < key_len + iv_len:
         d_i = hashlib.md5(d_i + password + salt).digest()
         d += d_i
-    return d[:key_len], d[key_len:key_len + iv_len]
+    return d[:key_len], d[key_len : key_len + iv_len]
 
 
 def decrypt_openssl(data, passphrase, key_length=32):
     if data.startswith(b"Salted__"):
-        salt = data[len(b"Salted__"):AES.block_size]
+        salt = data[len(b"Salted__") : AES.block_size]
         key, iv = evp_bytestokey(passphrase, salt, key_length, AES.block_size)
         d = AES.new(key, AES.MODE_CBC, iv)
-        out = d.decrypt(data[AES.block_size:])
+        out = d.decrypt(data[AES.block_size :])
         return unpad_pkcs5(out)
 
 
 def unpad_pkcs5(padded):
-    return padded[:-padded[-1]]
+    return padded[: -padded[-1]]

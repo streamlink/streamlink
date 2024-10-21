@@ -130,26 +130,29 @@ class ZTNR:
                 yield quality, cls._get_source(alphabet, content)
 
 
-@pluginmatcher(re.compile(
-    r"https?://(?:www\.)?rtve\.es/play/videos/.+",
-))
+@pluginmatcher(
+    re.compile(r"https?://(?:www\.)?rtve\.es/play/videos/.+"),
+)
 class Rtve(Plugin):
     URL_M3U8 = "https://ztnr.rtve.es/ztnr/{id}.m3u8"
     URL_VIDEOS = "https://ztnr.rtve.es/ztnr/movil/thumbnail/rtveplayw/videos/{id}.png?q=v2"
     URL_SUBTITLES = "https://www.rtve.es/api/videos/{id}/subtitulos.json"
 
     def _get_streams(self):
-        self.id = self.session.http.get(self.url, schema=validate.Schema(
-            re.compile(r"\bdata-setup='({.+?})'", re.DOTALL),
-            validate.none_or_all(
-                validate.get(1),
-                validate.parse_json(),
-                {
-                    "idAsset": validate.any(int, validate.all(str, validate.transform(int))),
-                },
-                validate.get("idAsset"),
+        self.id = self.session.http.get(
+            self.url,
+            schema=validate.Schema(
+                re.compile(r"\bdata-setup='({.+?})'", re.DOTALL),
+                validate.none_or_all(
+                    validate.get(1),
+                    validate.parse_json(),
+                    {
+                        "idAsset": validate.any(int, validate.all(str, validate.transform(int))),
+                    },
+                    validate.get("idAsset"),
+                ),
             ),
-        ))
+        )
         if not self.id:
             return
 
@@ -185,20 +188,19 @@ class Rtve(Plugin):
                     validate.parse_json(),
                     {
                         "page": {
-                            "items": [{
-                                "lang": str,
-                                "src": validate.url(),
-                            }],
+                            "items": [
+                                {
+                                    "lang": str,
+                                    "src": validate.url(),
+                                },
+                            ],
                         },
                     },
                     validate.get(("page", "items")),
                 ),
             )
             if subs:
-                subtitles = {
-                    s["lang"]: HTTPStream(self.session, update_scheme("https://", s["src"], force=True))
-                    for s in subs
-                }
+                subtitles = {s["lang"]: HTTPStream(self.session, update_scheme("https://", s["src"], force=True)) for s in subs}
                 for quality, stream in streams:
                     yield quality, MuxedStream(self.session, stream, subtitles=subtitles)
                 return

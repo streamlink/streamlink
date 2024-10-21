@@ -26,19 +26,25 @@ class ProgressFormatter:
     # Store formats as a tuple of lists of parsed format strings,
     # so when iterating, we don't have to parse over and over again.
     # Reserve at least 15 characters for the path, so it can be truncated with enough useful information.
-    FORMATS: _TFormat = tuple(list(_stringformatter.parse(fmt)) for fmt in (
-        "[download] Written {written} to {path:15} ({elapsed} @ {speed})",
-        "[download] Written {written} ({elapsed} @ {speed})",
-        "[download] {written} ({elapsed} @ {speed})",
-        "[download] {written} ({elapsed})",
-        "[download] {written}",
-    ))
-    FORMATS_NOSPEED: _TFormat = tuple(list(_stringformatter.parse(fmt)) for fmt in (
-        "[download] Written {written} to {path:15} ({elapsed})",
-        "[download] Written {written} ({elapsed})",
-        "[download] {written} ({elapsed})",
-        "[download] {written}",
-    ))
+    FORMATS: _TFormat = tuple(
+        list(_stringformatter.parse(fmt))
+        for fmt in (
+            "[download] Written {written} to {path:15} ({elapsed} @ {speed})",
+            "[download] Written {written} ({elapsed} @ {speed})",
+            "[download] {written} ({elapsed} @ {speed})",
+            "[download] {written} ({elapsed})",
+            "[download] {written}",
+        )
+    )
+    FORMATS_NOSPEED: _TFormat = tuple(
+        list(_stringformatter.parse(fmt))
+        for fmt in (
+            "[download] Written {written} to {path:15} ({elapsed})",
+            "[download] Written {written} ({elapsed})",
+            "[download] {written} ({elapsed})",
+            "[download] {written}",
+        )
+    )
 
     # Use U+2026 (HORIZONTAL ELLIPSIS) to be able to distinguish between "." and ".." when truncating relative paths
     ELLIPSIS: str = "…"
@@ -168,7 +174,7 @@ class ProgressFormatter:
 
     @staticmethod
     def _round(num: float, n: int = 2) -> float:
-        return floor(num * 10 ** n) / 10 ** n
+        return floor(num * 10**n) / 10**n
 
     @classmethod
     def format_filesize(cls, size: float, suffix: str = "") -> str:
