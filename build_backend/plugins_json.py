@@ -405,7 +405,7 @@ class PluginVisitor(ast.NodeVisitor):
             isinstance(node.value, ast.Name)
             and node.value.id == self.name
             and self.name is not None
-        ):
+        ):  # fmt: skip
             for target in node.targets:
                 if isinstance(target, ast.Name) and target.id == "__plugin__":  # pragma: no branch
                     self.exports = True
@@ -424,7 +424,7 @@ class PluginVisitor(ast.NodeVisitor):
             if (
                 not isinstance(decorator, ast.Call)
                 or not isinstance(decorator.func, ast.Name)
-            ):
+            ):  # fmt: skip
                 continue
 
             if decorator.func.id == "pluginmatcher":
@@ -485,12 +485,13 @@ def build(pluginsdir: Path = DEFAULT_PLUGINSPATH) -> Output:
 def to_json(data: Output, fd: TextIO | None = None, comments: list[str] | None = None, pretty: bool = False) -> None:
     outputformat = {"separators": (",", ": "), "indent": 2} if pretty else {"separators": (",", ":")}
     _fd: TextIO = fd or sys.stdout
-    for line in (PLUGINSJSON_COMMENTS if comments is None else comments):
+    for line in PLUGINSJSON_COMMENTS if comments is None else comments:
         _fd.write(f"// {line}\n")
     json.dump(data, _fd, cls=JSONEncoder, **outputformat)  # type: ignore[arg-type]
 
 
 if __name__ == "__main__":  # pragma: no cover
+
     def main():
         parser = argparse.ArgumentParser()
         parser.add_argument("dir", nargs="?", type=Path, default=DEFAULT_PLUGINSPATH)

@@ -81,7 +81,7 @@ def _filter_cmd_option_args(
             if (
                 is_boolean and (is_shorthand or item == f"--{full}")
                 or not is_boolean and item.startswith(f"--{full}")
-            ):
+            ):  # fmt: skip
                 result.append(item)
                 break
 
