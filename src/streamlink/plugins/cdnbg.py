@@ -25,25 +25,30 @@ from streamlink.utils.url import update_scheme
 log = logging.getLogger(__name__)
 
 
-@pluginmatcher(re.compile(r"""
-    https?://(?:www\.)?(?:
-        armymedia\.bg
-        |
-        bgonair\.bg/tvonline
-        |
-        bloombergtv\.bg/video
-        |
-        (?:tv\.)?bnt\.bg/\w+(?:/\w+)?
-        |
-        live\.bstv\.bg
-        |
-        i\.cdn\.bg/live/
-        |
-        nova\.bg/live
-        |
-        mu-vi\.tv/LiveStreams/pages/Live\.aspx
-    )/?
-""", re.VERBOSE))
+@pluginmatcher(
+    re.compile(
+        r"""
+            https?://(?:www\.)?(?:
+                armymedia\.bg
+                |
+                bgonair\.bg/tvonline
+                |
+                bloombergtv\.bg/video
+                |
+                (?:tv\.)?bnt\.bg/\w+(?:/\w+)?
+                |
+                live\.bstv\.bg
+                |
+                i\.cdn\.bg/live/
+                |
+                nova\.bg/live
+                |
+                mu-vi\.tv/LiveStreams/pages/Live\.aspx
+            )/?
+        """,
+        re.VERBOSE,
+    ),
+)
 class CDNBG(Plugin):
     @staticmethod
     def _find_url(regex: re.Pattern) -> validate.all:
@@ -57,22 +62,25 @@ class CDNBG(Plugin):
             iframe_url = self.url
             h = self.session.get_option("http-headers")
             if not h or not h.get("Referer"):
-                log.error("Missing Referer for iframe URL, use --http-header \"Referer=URL\" ")
+                log.error('Missing Referer for iframe URL, use --http-header "Referer=URL" ')
                 return
             _referer = h.get("Referer")
         else:
             _referer = self.url
-            iframe_url = self.session.http.get(self.url, schema=validate.Schema(
-                validate.any(
-                    self._find_url(
-                        re.compile(r"'src',\s*'(?P<url>https?://i\.cdn\.bg/live/\w+)'\);"),
-                    ),
-                    validate.all(
-                        validate.parse_html(),
-                        validate.xml_xpath_string(".//iframe[contains(@src,'cdn.bg')][1]/@src"),
+            iframe_url = self.session.http.get(
+                self.url,
+                schema=validate.Schema(
+                    validate.any(
+                        self._find_url(
+                            re.compile(r"'src',\s*'(?P<url>https?://i\.cdn\.bg/live/\w+)'\);"),
+                        ),
+                        validate.all(
+                            validate.parse_html(),
+                            validate.xml_xpath_string(".//iframe[contains(@src,'cdn.bg')][1]/@src"),
+                        ),
                     ),
                 ),
-            ))
+            )
 
         if not iframe_url:
             return

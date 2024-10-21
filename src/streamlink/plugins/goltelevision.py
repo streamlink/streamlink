@@ -12,9 +12,9 @@ from streamlink.plugin.api import validate
 from streamlink.stream.hls import HLSStream
 
 
-@pluginmatcher(re.compile(
-    r"https?://(?:www\.)?goltelevision\.com/en-directo",
-))
+@pluginmatcher(
+    re.compile(r"https?://(?:www\.)?goltelevision\.com/en-directo"),
+)
 class GOLTelevision(Plugin):
     def _get_streams(self):
         self.session.http.headers.update({

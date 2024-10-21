@@ -23,7 +23,6 @@ class TestPluginCanHandleUrlArteTV(PluginCanHandleUrl):
             ("live", "https://www.arte.tv/de/live/"),
             {"language": "de"},
         ),
-
         # vod
         (
             ("vod", "https://www.arte.tv/de/videos/097372-001-A/mysterium-satoshi-bitcoin-wie-alles-begann-1-6/"),
@@ -33,7 +32,6 @@ class TestPluginCanHandleUrlArteTV(PluginCanHandleUrl):
             ("vod", "https://www.arte.tv/en/videos/097372-001-A/the-satoshi-mystery-the-story-of-bitcoin/"),
             {"language": "en", "video_id": "097372-001-A"},
         ),
-
         # old vod URLs with redirects
         (
             ("vod", "https://www.arte.tv/guide/de/097372-001-A/mysterium-satoshi-bitcoin-wie-alles-begann-1-6/"),

@@ -95,7 +95,8 @@ class OnePlusOneAPI:
                     validate.parse_json(),
                     {"balancer": validate.url()},
                     validate.get("balancer"),
-                ))
+                ),
+            )
         except PluginError as err:
             log.error(f"ovva-player: {err}")
             return
@@ -111,9 +112,9 @@ class OnePlusOneAPI:
         )
 
 
-@pluginmatcher(re.compile(
-    r"https?://1plus1\.video/(?:\w{2}/)?tvguide/[^/]+/online",
-))
+@pluginmatcher(
+    re.compile(r"https?://1plus1\.video/(?:\w{2}/)?tvguide/[^/]+/online"),
+)
 class OnePlusOne(Plugin):
     def _get_streams(self):
         self.api = OnePlusOneAPI(self.session, self.url)

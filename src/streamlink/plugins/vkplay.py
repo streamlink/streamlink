@@ -19,9 +19,9 @@ from streamlink.stream.hls import HLSStream
 log = logging.getLogger(__name__)
 
 
-@pluginmatcher(re.compile(
-    r"https?://(?:live\.vkplay\.ru|vkplay\.live)/(?P<channel_name>\w+)/?$",
-))
+@pluginmatcher(
+    re.compile(r"https?://(?:live\.vkplay\.ru|vkplay\.live)/(?P<channel_name>\w+)/?$"),
+)
 class VKplay(Plugin):
     API_URL = "https://api.live.vkplay.ru/v1"
 

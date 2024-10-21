@@ -26,11 +26,13 @@ log = logging.getLogger(__name__)
 @pluginmatcher(re.compile(r"https?://(?:www\.)?ceskatelevize\.cz/zive/\w+"))
 class Ceskatelevize(Plugin):
     schema_playlist = {
-        "playlist": [{
-            "streamUrls": {
-                "main": validate.url(),
+        "playlist": [
+            {
+                "streamUrls": {
+                    "main": validate.url(),
+                },
             },
-        }],
+        ],
     }
 
     def get_stream_url(self, video_id):
@@ -79,28 +81,34 @@ class Ceskatelevize(Plugin):
             str,
             validate.parse_json(),
             {
-                "items": [{
-                    "items": [{
-                        validate.optional("video"): {
-                            "data": {
-                                "source": {
-                                    "playlist": [{
-                                        "id": int,
-                                        "key": str,
-                                        "date": str,
-                                        "noDrmData": {
-                                            "id": int,
-                                            "key": str,
-                                            "drm": int,
-                                            "quality": str,
-                                            "assetId": str,
+                "items": [
+                    {
+                        "items": [
+                            {
+                                validate.optional("video"): {
+                                    "data": {
+                                        "source": {
+                                            "playlist": [
+                                                {
+                                                    "id": int,
+                                                    "key": str,
+                                                    "date": str,
+                                                    "noDrmData": {
+                                                        "id": int,
+                                                        "key": str,
+                                                        "drm": int,
+                                                        "quality": str,
+                                                        "assetId": str,
+                                                    },
+                                                },
+                                            ],
                                         },
-                                    }],
+                                    },
                                 },
                             },
-                        },
-                    }],
-                }],
+                        ],
+                    },
+                ],
             },
             validate.get(("items", 0, "items", 0, "video", "data", "source", "playlist", 0)),
             validate.union_get(("noDrmData", "id"), ("noDrmData", "key"), "date"),
@@ -115,16 +123,18 @@ class Ceskatelevize(Plugin):
                 "data": json.dumps(
                     {
                         "contentType": "live",
-                        "items": [{
-                            "id": video_id,
-                            "key": f"{key}",
-                            "assetId": "CT4DRM",
-                            "playerType": "dash",
-                            "date": f"{date}",
-                            "requestSource": "front-sport",
-                            "drm": 0,
-                            "quality": "web",
-                        }],
+                        "items": [
+                            {
+                                "id": video_id,
+                                "key": f"{key}",
+                                "assetId": "CT4DRM",
+                                "playerType": "dash",
+                                "date": f"{date}",
+                                "requestSource": "front-sport",
+                                "drm": 0,
+                                "quality": "web",
+                            },
+                        ],
                     },
                     separators=(",", ":"),
                 ),

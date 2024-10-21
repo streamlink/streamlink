@@ -10,29 +10,32 @@ from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.api import validate
 
 
-@pluginmatcher(re.compile(
-    r"https?://(?:www\.)?cnews\.fr",
-))
+@pluginmatcher(
+    re.compile(r"https?://(?:www\.)?cnews\.fr"),
+)
 class CNEWS(Plugin):
     _dailymotion_url = "https://www.dailymotion.com/embed/video/{}"
 
     def _get_streams(self):
-        data = self.session.http.get(self.url, schema=validate.Schema(
-            re.compile(r"jQuery\.extend\(Drupal\.settings, ({.*})\);"),
-            validate.none_or_all(
-                validate.get(1),
-                validate.parse_json(),
-                {
-                    validate.optional("dm_player_live_dailymotion"): {
-                        validate.optional("video_id"): str,
+        data = self.session.http.get(
+            self.url,
+            schema=validate.Schema(
+                re.compile(r"jQuery\.extend\(Drupal\.settings, ({.*})\);"),
+                validate.none_or_all(
+                    validate.get(1),
+                    validate.parse_json(),
+                    {
+                        validate.optional("dm_player_live_dailymotion"): {
+                            validate.optional("video_id"): str,
+                        },
+                        validate.optional("dm_player_node_dailymotion"): {
+                            validate.optional("video_id"): str,
+                        },
                     },
-                    validate.optional("dm_player_node_dailymotion"): {
-                        validate.optional("video_id"): str,
-                    },
-                },
-                validate.union_get("dm_player_live_dailymotion", "dm_player_node_dailymotion"),
+                    validate.union_get("dm_player_live_dailymotion", "dm_player_node_dailymotion"),
+                ),
             ),
-        ))
+        )
         if not data:
             return
 

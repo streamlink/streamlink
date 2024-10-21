@@ -27,18 +27,30 @@ from streamlink.utils.parse import parse_json
 log = logging.getLogger(__name__)
 
 
-@pluginmatcher(name="default", pattern=re.compile(
-    r"https?://(?:\w+\.)?youtube\.com/(?:v/|live/|watch\?(?:.*&)?v=)(?P<video_id>[\w-]{11})",
-))
-@pluginmatcher(name="channel", pattern=re.compile(
-    r"https?://(?:\w+\.)?youtube\.com/(?:@|c(?:hannel)?/|user/)?(?P<channel>[^/?]+)(?P<live>/live)?/?$",
-))
-@pluginmatcher(name="embed", pattern=re.compile(
-    r"https?://(?:\w+\.)?youtube\.com/embed/(?:live_stream\?channel=(?P<live>[^/?&]+)|(?P<video_id>[\w-]{11}))",
-))
-@pluginmatcher(name="shorthand", pattern=re.compile(
-    r"https?://youtu\.be/(?P<video_id>[\w-]{11})",
-))
+@pluginmatcher(
+    name="default",
+    pattern=re.compile(
+        r"https?://(?:\w+\.)?youtube\.com/(?:v/|live/|watch\?(?:.*&)?v=)(?P<video_id>[\w-]{11})",
+    ),
+)
+@pluginmatcher(
+    name="channel",
+    pattern=re.compile(
+        r"https?://(?:\w+\.)?youtube\.com/(?:@|c(?:hannel)?/|user/)?(?P<channel>[^/?]+)(?P<live>/live)?/?$",
+    ),
+)
+@pluginmatcher(
+    name="embed",
+    pattern=re.compile(
+        r"https?://(?:\w+\.)?youtube\.com/embed/(?:live_stream\?channel=(?P<live>[^/?&]+)|(?P<video_id>[\w-]{11}))",
+    ),
+)
+@pluginmatcher(
+    name="shorthand",
+    pattern=re.compile(
+        r"https?://youtu\.be/(?P<video_id>[\w-]{11})",
+    ),
+)
 class YouTube(Plugin):
     _re_ytInitialData = re.compile(r"""var\s+ytInitialData\s*=\s*({.*?})\s*;\s*</script>""", re.DOTALL)
     _re_ytInitialPlayerResponse = re.compile(r"""var\s+ytInitialPlayerResponse\s*=\s*({.*?});\s*var\s+\w+\s*=""", re.DOTALL)
@@ -137,10 +149,12 @@ class YouTube(Plugin):
     @classmethod
     def _schema_playabilitystatus(cls, data):
         schema = validate.Schema(
-            {"playabilityStatus": {
-                "status": str,
-                validate.optional("reason"): validate.any(str, None),
-            }},
+            {
+                "playabilityStatus": {
+                    "status": str,
+                    validate.optional("reason"): validate.any(str, None),
+                },
+            },
             validate.get("playabilityStatus"),
             validate.union_get("status", "reason"),
         )
@@ -191,30 +205,38 @@ class YouTube(Plugin):
     @classmethod
     def _schema_streamingdata(cls, data):
         schema = validate.Schema(
-            {"streamingData": {
-                validate.optional("hlsManifestUrl"): str,
-                validate.optional("formats"): [validate.all(
-                    {
-                        "itag": int,
-                        "qualityLabel": str,
-                        validate.optional("url"): validate.url(scheme="http"),
-                    },
-                    validate.union_get("url", "qualityLabel"),
-                )],
-                validate.optional("adaptiveFormats"): [validate.all(
-                    {
-                        "itag": int,
-                        "mimeType": validate.all(
-                            str,
-                            validate.regex(re.compile(r"""^(?P<type>\w+)/(?P<container>\w+); codecs="(?P<codecs>.+)"$""")),
-                            validate.union_get("type", "codecs"),
+            {
+                "streamingData": {
+                    validate.optional("hlsManifestUrl"): str,
+                    validate.optional("formats"): [
+                        validate.all(
+                            {
+                                "itag": int,
+                                "qualityLabel": str,
+                                validate.optional("url"): validate.url(scheme="http"),
+                            },
+                            validate.union_get("url", "qualityLabel"),
                         ),
-                        validate.optional("url"): validate.url(scheme="http"),
-                        validate.optional("qualityLabel"): str,
-                    },
-                    validate.union_get("url", "qualityLabel", "itag", "mimeType"),
-                )],
-            }},
+                    ],
+                    validate.optional("adaptiveFormats"): [
+                        validate.all(
+                            {
+                                "itag": int,
+                                "mimeType": validate.all(
+                                    str,
+                                    validate.regex(
+                                        re.compile(r"""^(?P<type>\w+)/(?P<container>\w+); codecs="(?P<codecs>.+)"$"""),
+                                    ),
+                                    validate.union_get("type", "codecs"),
+                                ),
+                                validate.optional("url"): validate.url(scheme="http"),
+                                validate.optional("qualityLabel"): str,
+                            },
+                            validate.union_get("url", "qualityLabel", "itag", "mimeType"),
+                        ),
+                    ],
+                },
+            },
             validate.get("streamingData"),
             validate.union_get("hlsManifestUrl", "formats", "adaptiveFormats"),
         )
@@ -279,7 +301,7 @@ class YouTube(Plugin):
             c_data = {
                 elem.attrib.get("name"): elem.attrib.get("value")
                 for elem in elems
-            }
+            }  # fmt: skip
             log.debug(f"consent target: {target}")
             log.debug(f"consent data: {', '.join(c_data.keys())}")
             res = self.session.http.post(target, data=c_data)

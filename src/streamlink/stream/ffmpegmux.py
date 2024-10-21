@@ -172,9 +172,13 @@ class FFMPEGMuxer(StreamIO):
         self.streams = streams
 
         self.pipes = [NamedPipe() for _ in self.streams]
-        self.pipe_threads = [threading.Thread(target=self.copy_to_pipe, args=(stream, np))
-                             for stream, np in
-                             zip(self.streams, self.pipes)]
+        self.pipe_threads = [
+            threading.Thread(
+                target=self.copy_to_pipe,
+                args=(stream, np),
+            )
+            for stream, np in zip(self.streams, self.pipes)
+        ]
 
         loglevel = session.options.get("ffmpeg-loglevel") or options.pop("loglevel", self.DEFAULT_LOGLEVEL)
         ofmt = session.options.get("ffmpeg-fout") or options.pop("format", self.DEFAULT_OUTPUT_FORMAT)
@@ -251,7 +255,7 @@ class FFMPEGMuxer(StreamIO):
                 executor.submit(stream.close)
                 for stream in self.streams
                 if hasattr(stream, "close") and callable(stream.close)
-            ]
+            ]  # fmt: skip
             concurrent.futures.wait(futures, return_when=concurrent.futures.ALL_COMPLETED)
             log.debug("Closed all the substreams")
 
@@ -260,7 +264,7 @@ class FFMPEGMuxer(StreamIO):
             futures = [
                 executor.submit(thread.join, timeout=timeout)
                 for thread in self.pipe_threads
-            ]
+            ]  # fmt: skip
             concurrent.futures.wait(futures, return_when=concurrent.futures.ALL_COMPLETED)
 
         if self.errorlog is not sys.stderr and self.errorlog is not subprocess.DEVNULL:

@@ -16,17 +16,20 @@ from streamlink.stream.hls import HLSStream
 log = logging.getLogger(__name__)
 
 
-@pluginmatcher(re.compile(
-    r"https?://(?:www\.)?btvplus\.bg/live/?",
-))
+@pluginmatcher(
+    re.compile(r"https?://(?:www\.)?btvplus\.bg/live/?"),
+)
 class BTV(Plugin):
     URL_API = "https://btvplus.bg/lbin/v3/btvplus/player_config.php"
 
     def _get_streams(self):
-        media_id = self.session.http.get(self.url, schema=validate.Schema(
-            re.compile(r"media_id=(\d+)"),
-            validate.any(None, validate.get(1)),
-        ))
+        media_id = self.session.http.get(
+            self.url,
+            schema=validate.Schema(
+                re.compile(r"media_id=(\d+)"),
+                validate.any(None, validate.get(1)),
+            ),
+        )
         if media_id is None:
             return
 

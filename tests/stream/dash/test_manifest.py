@@ -16,25 +16,31 @@ UTC = datetime.timezone.utc
 
 
 class TestSegment:
-    @pytest.mark.parametrize(("segmentdata", "expected"), [
-        ({"uri": "https://foo/bar", "num": 123, "duration": 0.0, "init": True, "content": False}, "initialization"),
-        ({"uri": "https://foo/bar", "num": 123, "duration": 0.0, "init": True, "content": True}, "123"),
-        ({"uri": "https://foo/bar", "num": -1, "duration": 0.0, "init": True, "content": True}, "bar"),
-        ({"uri": "https://foo/bar", "num": 123, "duration": 0.0}, "123"),
-        ({"uri": "https://foo/bar", "num": -1, "duration": 0.0}, "bar"),
-        ({"uri": "https://foo/bar/", "num": -1, "duration": 0.0}, "bar"),
-        ({"uri": "https://foo/bar/baz.qux", "num": -1, "duration": 0.0}, "baz.qux"),
-        ({"uri": "https://foo/bar/baz.qux?asdf", "num": -1, "duration": 0.0}, "baz.qux"),
-    ])
+    @pytest.mark.parametrize(
+        ("segmentdata", "expected"),
+        [
+            ({"uri": "https://foo/bar", "num": 123, "duration": 0.0, "init": True, "content": False}, "initialization"),
+            ({"uri": "https://foo/bar", "num": 123, "duration": 0.0, "init": True, "content": True}, "123"),
+            ({"uri": "https://foo/bar", "num": -1, "duration": 0.0, "init": True, "content": True}, "bar"),
+            ({"uri": "https://foo/bar", "num": 123, "duration": 0.0}, "123"),
+            ({"uri": "https://foo/bar", "num": -1, "duration": 0.0}, "bar"),
+            ({"uri": "https://foo/bar/", "num": -1, "duration": 0.0}, "bar"),
+            ({"uri": "https://foo/bar/baz.qux", "num": -1, "duration": 0.0}, "baz.qux"),
+            ({"uri": "https://foo/bar/baz.qux?asdf", "num": -1, "duration": 0.0}, "baz.qux"),
+        ],
+    )
     def test_name(self, segmentdata: dict, expected: str):
         segment = DASHSegment(**segmentdata)
         assert segment.name == expected
 
-    @pytest.mark.parametrize(("available_at", "expected"), [
-        (datetime.datetime(2000, 1, 2, 3, 4, 5, 123456, tzinfo=UTC), 1 * 86400 + 3 * 3600 + 4 * 60 + 5 + 0.123456),
-        (datetime.datetime(2000, 1, 1, 0, 0, 0, 0, tzinfo=UTC), 0.0),
-        (datetime.datetime(1999, 12, 31, 23, 59, 59, 999999, tzinfo=UTC), 0.0),
-    ])
+    @pytest.mark.parametrize(
+        ("available_at", "expected"),
+        [
+            (datetime.datetime(2000, 1, 2, 3, 4, 5, 123456, tzinfo=UTC), 1 * 86400 + 3 * 3600 + 4 * 60 + 5 + 0.123456),
+            (datetime.datetime(2000, 1, 1, 0, 0, 0, 0, tzinfo=UTC), 0.0),
+            (datetime.datetime(1999, 12, 31, 23, 59, 59, 999999, tzinfo=UTC), 0.0),
+        ],
+    )
     def test_available_in(self, available_at: datetime.datetime, expected: float):
         segment = DASHSegment(
             uri="foo",
@@ -112,10 +118,13 @@ class TestMPDParsers:
 
 
 class TestMPDParser:
-    @pytest.mark.parametrize(("min_buffer_time", "expected"), [
-        pytest.param("PT1S", 3.0, id="minBufferTime lower than suggestedPresentationDelay"),
-        pytest.param("PT5S", 5.0, id="minBufferTime greater than suggestedPresentationDelay"),
-    ])
+    @pytest.mark.parametrize(
+        ("min_buffer_time", "expected"),
+        [
+            pytest.param("PT1S", 3.0, id="minBufferTime lower than suggestedPresentationDelay"),
+            pytest.param("PT5S", 5.0, id="minBufferTime greater than suggestedPresentationDelay"),
+        ],
+    )
     def test_suggested_presentation_delay(self, min_buffer_time: str, expected: float):
         with xml("dash/test_suggested_presentation_delay.mpd") as mpd_xml:
             mpd_xml.attrib["minBufferTime"] = min_buffer_time
@@ -134,7 +143,8 @@ class TestMPDParser:
                         for segment in itertools.islice(representation.segments(), 100)
                     ],
                 }
-                for adaptationset in mpd.periods[0].adaptationSets for representation in adaptationset.representations
+                for adaptationset in mpd.periods[0].adaptationSets
+                for representation in adaptationset.representations
                 if representation.id in ("1", "5", "6")
             ]
         availability = datetime.datetime(1970, 1, 1, 0, 0, 0, tzinfo=UTC)
@@ -204,27 +214,26 @@ class TestMPDParser:
             ]
 
     # access manifest one hour after its availabilityStartTime
-    @pytest.mark.parametrize(("frozen_time", "timestamp"), [
-        pytest.param(
-            freeze_time("2000-01-01T01:00:00Z"),
-            None,
-            id="Without explicit timestamp",
-        ),
-        pytest.param(
-            nullcontext(),
-            datetime.datetime(2000, 1, 1, 1, 0, 0, 0, tzinfo=UTC),
-            id="With explicit timestamp",
-        ),
-    ])
+    @pytest.mark.parametrize(
+        ("frozen_time", "timestamp"),
+        [
+            pytest.param(
+                freeze_time("2000-01-01T01:00:00Z"),
+                None,
+                id="Without explicit timestamp",
+            ),
+            pytest.param(
+                nullcontext(),
+                datetime.datetime(2000, 1, 1, 1, 0, 0, 0, tzinfo=UTC),
+                id="With explicit timestamp",
+            ),
+        ],
+    )
     def test_segments_dynamic_number(self, frozen_time, timestamp):
-        with xml("dash/test_segments_dynamic_number.mpd") as mpd_xml, \
-             frozen_time:
+        with xml("dash/test_segments_dynamic_number.mpd") as mpd_xml, frozen_time:
             mpd = MPD(mpd_xml, base_url="http://test/", url="http://test/manifest.mpd")
             segments_iterator = mpd.periods[0].adaptationSets[0].representations[0].segments(timestamp=timestamp)
-            stream_urls = [
-                (segment.uri, segment.available_at)
-                for segment in itertools.islice(segments_iterator, 4)
-            ]
+            stream_urls = [(segment.uri, segment.available_at) for segment in itertools.islice(segments_iterator, 4)]
 
         assert stream_urls == [
             (
@@ -396,7 +405,7 @@ class TestMPDParser:
             segments_p1 = [
                 (segment.uri, segment.num, segment.available_at)
                 for segment in itertools.islice(iter_segment_p1, 100)
-            ]
+            ]  # fmt: skip
 
         assert segments_p1 == [
             ("http://test/video/init.mp4", -1, datetime.datetime(2018, 1, 1, 1, 0, 0, tzinfo=UTC)),
@@ -414,7 +423,7 @@ class TestMPDParser:
             segments_p2 = [
                 (segment.uri, segment.num, segment.available_at)
                 for segment in itertools.islice(iter_segment_p2, 100)
-            ]
+            ]  # fmt: skip
 
         assert segments_p2 == [
             ("http://test/video/1011000.mp4", 7, datetime.datetime(2018, 1, 1, 13, 0, 1, tzinfo=UTC)),
@@ -426,7 +435,7 @@ class TestMPDParser:
 
     def test_tsegment_t_is_none_1895(self):
         """
-            Verify the fix for https://github.com/streamlink/streamlink/issues/1895
+        Verify the fix for https://github.com/streamlink/streamlink/issues/1895
         """
         with xml("dash/test_8.mpd") as mpd_xml:
             mpd = MPD(mpd_xml, base_url="http://test.se/", url="http://test.se/manifest.mpd")
@@ -470,7 +479,7 @@ class TestMPDParser:
 
     def test_duplicated_resolutions(self):
         """
-            Verify the fix for https://github.com/streamlink/streamlink/issues/3365
+        Verify the fix for https://github.com/streamlink/streamlink/issues/3365
         """
         with xml("dash/test_10.mpd") as mpd_xml:
             mpd = MPD(mpd_xml, base_url="http://test.se/", url="http://test.se/manifest.mpd")
@@ -484,7 +493,7 @@ class TestMPDParser:
 
     def test_segments_static_periods_duration(self):
         """
-            Verify the fix for https://github.com/streamlink/streamlink/issues/2873
+        Verify the fix for https://github.com/streamlink/streamlink/issues/2873
         """
         with xml("dash/test_11_static.mpd") as mpd_xml:
             mpd = MPD(mpd_xml, base_url="http://test.se/", url="http://test.se/manifest.mpd")
@@ -496,12 +505,9 @@ class TestMPDParser:
             mpd = MPD(mpd_xml, base_url="http://test/", url="http://test/manifest.mpd")
 
         segment_urls = [
-            [
-                (seg.uri, seg.init, seg.byterange)
-                for seg in adaptationset.representations[0].segments()
-            ]
+            [(seg.uri, seg.init, seg.byterange) for seg in adaptationset.representations[0].segments()]
             for adaptationset in mpd.periods[0].adaptationSets
-        ]
+        ]  # fmt: skip
 
         assert segment_urls == [
             [
@@ -526,7 +532,8 @@ class TestMPDParser:
 
         segment_urls = [
             [(segment.uri, segment.available_at) for segment in itertools.islice(representation.segments(), 2)]
-            for adaptationset in mpd.periods[0].adaptationSets for representation in adaptationset.representations
+            for adaptationset in mpd.periods[0].adaptationSets
+            for representation in adaptationset.representations
         ]
         # ignores period start time in static manifests
         expected_availability = datetime.datetime(2020, 1, 1, 0, 0, 0, tzinfo=UTC)
@@ -555,15 +562,12 @@ class TestMPDParser:
         ]
 
     def test_timeline_ids(self):
-        with xml("dash/test_timeline_ids.mpd") as mpd_xml, \
-             freeze_time("2000-01-01T00:00:00Z"):
+        with xml("dash/test_timeline_ids.mpd") as mpd_xml, freeze_time("2000-01-01T00:00:00Z"):
             mpd = MPD(mpd_xml, base_url="http://test/", url="http://test/manifest.mpd")
             segment_urls = [
-                [
-                    segment.uri
-                    for segment in itertools.islice(representation.segments(), 3)
-                ]
-                for adaptationset in mpd.periods[0].adaptationSets for representation in adaptationset.representations
+                [segment.uri for segment in itertools.islice(representation.segments(), 3)]
+                for adaptationset in mpd.periods[0].adaptationSets
+                for representation in adaptationset.representations
             ]
         assert segment_urls == [
             [

@@ -16,20 +16,25 @@ from streamlink.plugin.api import validate
 from streamlink.stream.hls import HLSStream
 
 
-@pluginmatcher(re.compile(r"""
-    https?://(?:www\.)?
-    (?:
-        bloomberght\.com/tv
-        |
-        haberturk\.(?:com|tv)(?:/tv)?/canliyayin
-        |
-        showmax\.com\.tr/canli-?yayin
-        |
-        showturk\.com\.tr/canli-?yayin(?:/showtv)?
-        |
-        showtv\.com\.tr/canli-yayin(?:/showtv)?
-    )/?
-""", re.VERBOSE))
+@pluginmatcher(
+    re.compile(
+        r"""
+            https?://(?:www\.)?
+            (?:
+                bloomberght\.com/tv
+                |
+                haberturk\.(?:com|tv)(?:/tv)?/canliyayin
+                |
+                showmax\.com\.tr/canli-?yayin
+                |
+                showturk\.com\.tr/canli-?yayin(?:/showtv)?
+                |
+                showtv\.com\.tr/canli-yayin(?:/showtv)?
+            )/?
+        """,
+        re.VERBOSE,
+    ),
+)
 class CinerGroup(Plugin):
     @staticmethod
     def _schema_videourl():

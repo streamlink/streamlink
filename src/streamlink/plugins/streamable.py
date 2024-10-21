@@ -12,28 +12,31 @@ from streamlink.stream.http import HTTPStream
 from streamlink.utils.url import update_scheme
 
 
-@pluginmatcher(re.compile(
-    r"https?://(?:www\.)?streamable\.com/(.+)",
-))
+@pluginmatcher(
+    re.compile(r"https?://(?:www\.)?streamable\.com/(.+)"),
+)
 class Streamable(Plugin):
     def _get_streams(self):
-        data = self.session.http.get(self.url, schema=validate.Schema(
-            re.compile(r"var\s*videoObject\s*=\s*({.*?});"),
-            validate.none_or_all(
-                validate.get(1),
-                validate.parse_json(),
-                {
-                    "files": {
-                        str: {
-                            "url": validate.url(),
-                            "width": int,
-                            "height": int,
-                            "bitrate": int,
+        data = self.session.http.get(
+            self.url,
+            schema=validate.Schema(
+                re.compile(r"var\s*videoObject\s*=\s*({.*?});"),
+                validate.none_or_all(
+                    validate.get(1),
+                    validate.parse_json(),
+                    {
+                        "files": {
+                            str: {
+                                "url": validate.url(),
+                                "width": int,
+                                "height": int,
+                                "bitrate": int,
+                            },
                         },
                     },
-                },
+                ),
             ),
-        ))
+        )
 
         for info in data["files"].values():
             stream_url = update_scheme("https://", info["url"])

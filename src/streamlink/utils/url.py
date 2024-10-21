@@ -40,7 +40,7 @@ def update_scheme(current: str, target: str, force: bool = True) -> str:
         not _re_uri_implicit_scheme.search(target) and not target.startswith("//")
         # target URLs without scheme and without netloc: ("http://", "foo.bar/foo") -> "http://foo.bar/foo"
         or not target_p.scheme and not target_p.netloc
-    ):
+    ):  # fmt: skip
         return f"{urlparse(current).scheme}://{urlunparse(target_p)}"
 
     # target URLs without scheme but with netloc: ("http://", "//foo.bar/foo") -> "http://foo.bar/foo"
@@ -56,8 +56,16 @@ def update_scheme(current: str, target: str, force: bool = True) -> str:
     return target
 
 
-def url_equal(first, second, ignore_scheme=False, ignore_netloc=False, ignore_path=False, ignore_params=False,
-              ignore_query=False, ignore_fragment=False):
+def url_equal(
+    first,
+    second,
+    ignore_scheme=False,
+    ignore_netloc=False,
+    ignore_path=False,
+    ignore_params=False,
+    ignore_query=False,
+    ignore_fragment=False,
+):
     """
     Compare two URLs and return True if they are equal, some parts of the URLs can be ignored
     :param first: URL

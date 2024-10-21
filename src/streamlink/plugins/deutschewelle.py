@@ -20,27 +20,30 @@ from streamlink.stream.http import HTTPStream
 log = logging.getLogger(__name__)
 
 
-@pluginmatcher(re.compile(
-    r"https?://(?:www\.)?dw\.com/",
-))
+@pluginmatcher(
+    re.compile(r"https?://(?:www\.)?dw\.com/"),
+)
 class DeutscheWelle(Plugin):
     DEFAULT_CHANNEL = "1"
 
     def _get_streams(self):
-        root, channel = self.session.http.get(self.url, schema=validate.Schema(
-            validate.parse_html(),
-            validate.union((
-                validate.xml_find("."),
-                validate.xml_xpath_string(".//a[@data-id][@class='ici'][1]/@data-id"),
-            )),
-        ))
+        root, channel = self.session.http.get(
+            self.url,
+            schema=validate.Schema(
+                validate.parse_html(),
+                validate.union((
+                    validate.xml_find("."),
+                    validate.xml_xpath_string(".//a[@data-id][@class='ici'][1]/@data-id"),
+                )),
+            ),
+        )
 
         # check if a different language has been selected
         channel = int(
             dict(parse_qsl(str(urlparse(self.url).query))).get("channel")
             or channel
             or self.DEFAULT_CHANNEL,
-        )
+        )  # fmt: skip
         log.debug(f"Using channel ID: {channel}")
 
         schema = validate.Schema(

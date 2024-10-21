@@ -27,14 +27,19 @@ from streamlink.stream.hls import HLSStream
 log = logging.getLogger(__name__)
 
 
-@pluginmatcher(re.compile(r"""
-    https?://(?:www\.)?
-    (?:
-        atvavrupa\.tv
-        |
-        (?:a2tv|ahaber|anews|apara|aspor|atv|minikacocuk|minikago|vavtv)\.com\.tr
-    )
-""", re.VERBOSE))
+@pluginmatcher(
+    re.compile(
+        r"""
+            https?://(?:www\.)?
+            (?:
+                atvavrupa\.tv
+                |
+                (?:a2tv|ahaber|anews|apara|aspor|atv|minikacocuk|minikago|vavtv)\.com\.tr
+            )
+        """,
+        re.VERBOSE,
+    ),
+)
 class Turkuvaz(Plugin):
     _VIDEOID_LIVE = "00000000-0000-0000-0000-000000000000"
 

@@ -153,9 +153,12 @@ class TestFilteredHLSStream(TestMixinStreamHLS, unittest.TestCase):
 
     @patch("streamlink.stream.hls.HLSStreamWriter.should_filter_segment", new=filter_segment)
     def test_filtered_closed(self):
-        self.subject(start=False, playlists=[
-            Playlist(0, [SegmentFiltered(0), SegmentFiltered(1)], end=True),
-        ])
+        self.subject(
+            start=False,
+            playlists=[
+                Playlist(0, [SegmentFiltered(0), SegmentFiltered(1)], end=True),
+            ],
+        )
 
         # mock the reader thread's _event_filter.wait method, so that the main thread can wait on its call
         event_filter_wait_called = Event()
@@ -184,13 +187,18 @@ class TestFilteredHLSStream(TestMixinStreamHLS, unittest.TestCase):
             assert self.thread.data == [b""], "Stops reading on stream close"
 
     def test_hls_segment_ignore_names(self):
-        segments = self.subject([
-            Playlist(0, [Segment(0), Segment(1), Segment(2), Segment(3)], end=True),
-        ], {"hls-segment-ignore-names": [
-            ".*",
-            "segment0",
-            "segment2",
-        ]})
+        segments = self.subject(
+            [
+                Playlist(0, [Segment(0), Segment(1), Segment(2), Segment(3)], end=True),
+            ],
+            {
+                "hls-segment-ignore-names": [
+                    ".*",
+                    "segment0",
+                    "segment2",
+                ],
+            },
+        )
 
         self.await_write(4)
         data = self.await_read()

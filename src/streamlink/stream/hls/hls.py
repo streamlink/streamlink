@@ -312,7 +312,8 @@ class HLSStreamWorker(SegmentedStreamWorker[HLSSegment, Response]):
         self.live_edge = self.session.options.get("hls-live-edge")
         self.duration_offset_start = int(self.stream.start_offset + (self.session.options.get("hls-start-offset") or 0))
         self.duration_limit = self.stream.duration or (
-            int(self.session.options.get("hls-duration")) if self.session.options.get("hls-duration") else None)
+            int(self.session.options.get("hls-duration")) if self.session.options.get("hls-duration") else None
+        )
         self.hls_live_restart = self.stream.force_restart or self.session.options.get("hls-live-restart")
 
         if str(self.playlist_reload_time_override).isnumeric() and float(self.playlist_reload_time_override) >= 2:
@@ -361,13 +362,13 @@ class HLSStreamWorker(SegmentedStreamWorker[HLSSegment, Response]):
         if self.playlist_reload_time_override == "segment" and playlist.segments:
             return playlist.segments[-1].duration
         if self.playlist_reload_time_override == "live-edge" and playlist.segments:
-            return sum(s.duration for s in playlist.segments[-max(1, self.live_edge - 1):])
+            return sum(s.duration for s in playlist.segments[-max(1, self.live_edge - 1) :])
         if type(self.playlist_reload_time_override) is float and self.playlist_reload_time_override > 0:
             return self.playlist_reload_time_override
         if playlist.targetduration:
             return playlist.targetduration
         if playlist.segments:
-            return sum(s.duration for s in playlist.segments[-max(1, self.live_edge - 1):])
+            return sum(s.duration for s in playlist.segments[-max(1, self.live_edge - 1) :])
 
         return self.playlist_reload_time
 
@@ -378,7 +379,7 @@ class HLSStreamWorker(SegmentedStreamWorker[HLSSegment, Response]):
         if first_segment.key and first_segment.key.method != "NONE":
             log.debug("Segments in this playlist are encrypted")
 
-        self.playlist_changed = ([s.num for s in self.playlist_segments] != [s.num for s in segments])
+        self.playlist_changed = [s.num for s in self.playlist_segments] != [s.num for s in segments]
         self.playlist_segments = segments
 
         if not self.playlist_changed:
@@ -431,7 +432,7 @@ class HLSStreamWorker(SegmentedStreamWorker[HLSSegment, Response]):
     def iter_segments(self):
         self.playlist_reload_last \
             = self.playlist_sequence_last \
-            = now()
+            = now()  # fmt: skip
 
         try:
             self.reload_playlist()
@@ -450,16 +451,20 @@ class HLSStreamWorker(SegmentedStreamWorker[HLSSegment, Response]):
             self.playlist_sequence = self.duration_to_sequence(self.duration_offset_start, self.playlist_segments)
 
         if self.playlist_segments:
-            log.debug("; ".join([
-                f"First Sequence: {self.playlist_segments[0].num}",
-                f"Last Sequence: {self.playlist_segments[-1].num}",
-            ]))
-            log.debug("; ".join([
-                f"Start offset: {self.duration_offset_start}",
-                f"Duration: {self.duration_limit}",
-                f"Start Sequence: {self.playlist_sequence}",
-                f"End Sequence: {self.playlist_end}",
-            ]))
+            log.debug(
+                "; ".join([
+                    f"First Sequence: {self.playlist_segments[0].num}",
+                    f"Last Sequence: {self.playlist_segments[-1].num}",
+                ]),
+            )
+            log.debug(
+                "; ".join([
+                    f"Start offset: {self.duration_offset_start}",
+                    f"Duration: {self.duration_limit}",
+                    f"Start Sequence: {self.playlist_sequence}",
+                    f"End Sequence: {self.playlist_end}",
+                ]),
+            )
 
         total_duration = 0
         while not self.closed:
@@ -474,8 +479,8 @@ class HLSStreamWorker(SegmentedStreamWorker[HLSSegment, Response]):
                     log.warning(
                         (
                             f"Skipped segments {self.playlist_sequence}-{segment.num - 1} after playlist reload. "
-                            if offset > 1 else
-                            f"Skipped segment {self.playlist_sequence} after playlist reload. "
+                            if offset > 1
+                            else f"Skipped segment {self.playlist_sequence} after playlist reload. "
                         )
                         + "This is unsupported and will result in incoherent output data.",
                     )
@@ -770,7 +775,7 @@ class HLSStream(HTTPStream):
                         and locale.explicit
                         and locale.equivalent(language=media.language)
                     )
-                ):
+                ):  # fmt: skip
                     preferred_audio.append(media)
 
             # final fallback on the first audio stream listed
@@ -796,7 +801,7 @@ class HLSStream(HTTPStream):
                     or names.get("name")
                     or names.get("pixels")
                     or names.get("bitrate")
-                )
+                )  # fmt: skip
 
             if not stream_name:
                 continue
@@ -828,7 +833,7 @@ class HLSStream(HTTPStream):
                 external_audio_msg = ", ".join([
                     f"(language={x.language}, name={x.name or 'N/A'})"
                     for x in external_audio
-                ])
+                ])  # fmt: skip
                 log.debug(f"Using external audio tracks for stream {stream_name} {external_audio_msg}")
 
                 stream = MuxedHLSStream(

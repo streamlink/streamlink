@@ -109,9 +109,9 @@ class PluginCanHandleUrl:
         return (
             # ignore None values in capture group dicts
             {k: v for k, v in match.groupdict().items() if v is not None}
-            if grouptype is dict else
+            if grouptype is dict
             # capture group tuples
-            match.groups()
+            else match.groups()
         )
 
     # ---- misc fixtures
@@ -137,26 +137,26 @@ class PluginCanHandleUrl:
         assert any(  # pragma: no branch
             matcher.pattern.match(url)
             for url in [(item if type(item) is str else item[1]) for item in self.urls_all()]
-        ), "Matcher matches at least one URL"
+        ), "Matcher matches at least one URL"  # fmt: skip
 
     def test_all_named_matchers_have_tests(self, matcher: Matcher):
         assert any(  # pragma: no branch
             name == matcher.name
             for name, url in self.urls_named()
-        ), "Named matcher does have a test"
+        ), "Named matcher does have a test"  # fmt: skip
 
     def test_url_matches_positive_unnamed(self, url: TUrl):
         assert any(  # pragma: no branch
             matcher.pattern.match(url)
             for matcher in self.matchers()
-        ), "Unnamed URL test matches at least one unnamed matcher"
+        ), "Unnamed URL test matches at least one unnamed matcher"  # fmt: skip
 
     def test_url_matches_positive_named(self, name: TName, url: TUrl):
         assert [  # pragma: no branch
             matcher.name
             for matcher in self.matchers()
             if matcher.pattern.match(url)
-        ] == [name], "Named URL test exactly matches one named matcher"
+        ] == [name], "Named URL test exactly matches one named matcher"  # fmt: skip
 
     def test_url_matches_groups_unnamed(self, url: TUrl, groups: TMatchGroup):
         matches = [matcher.pattern.match(url) for matcher in self.matchers() if matcher.name is None]
@@ -174,4 +174,4 @@ class PluginCanHandleUrl:
         assert not any(  # pragma: no branch
             matcher.pattern.match(url)
             for matcher in self.matchers()
-        ), "URL does not match any matcher"
+        ), "URL does not match any matcher"  # fmt: skip

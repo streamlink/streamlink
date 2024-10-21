@@ -17,9 +17,9 @@ from streamlink.utils.url import update_scheme
 log = logging.getLogger(__name__)
 
 
-@pluginmatcher(re.compile(
-    r"https?://(?:www\.)?tv999\.bg/live",
-))
+@pluginmatcher(
+    re.compile(r"https?://(?:www\.)?tv999\.bg/live"),
+)
 class TV999(Plugin):
     title = "TV999"
 

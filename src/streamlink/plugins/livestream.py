@@ -18,19 +18,21 @@ from streamlink.stream.hls import HLSStream
 log = logging.getLogger(__name__)
 
 
-@pluginmatcher(re.compile(
-    r"""
-        https?://(?P<subdomain>api\.new\.|www\.)?livestream\.com
-        /accounts/(?P<account>\d+)
-        (?:
-            /events/(?P<event>\d+)
-            |
-            /[^/]+
-        )?
-        (?:/videos/(?P<video>\d+))?
-    """,
-    re.VERBOSE,
-))
+@pluginmatcher(
+    re.compile(
+        r"""
+            https?://(?P<subdomain>api\.new\.|www\.)?livestream\.com
+            /accounts/(?P<account>\d+)
+            (?:
+                /events/(?P<event>\d+)
+                |
+                /[^/]+
+            )?
+            (?:/videos/(?P<video>\d+))?
+        """,
+        re.VERBOSE,
+    ),
+)
 class Livestream(Plugin):
     URL_API_EVENTS = "https://api.new.livestream.com/accounts/{account}/events"
     URL_API_EVENTS_EVENT = "https://api.new.livestream.com/accounts/{account}/events/{event}"

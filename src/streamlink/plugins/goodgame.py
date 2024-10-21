@@ -21,30 +21,42 @@ from streamlink.stream.hls import HLSStream
 log = logging.getLogger(__name__)
 
 
-@pluginmatcher(name="default", pattern=re.compile(
-    r"https?://(?:www\.)?goodgame\.ru/(?P<name>(?!channel|player)[^/?]+)",
-))
-@pluginmatcher(name="channel", pattern=re.compile(
-    r"https?://(?:www\.)?goodgame\.ru/channel/(?P<channel>[^/?]+)",
-))
-@pluginmatcher(name="player", pattern=re.compile(
-    r"https?://(?:www\.)?goodgame\.ru/player\?(?P<id>\d+)$",
-))
+@pluginmatcher(
+    name="default",
+    pattern=re.compile(
+        r"https?://(?:www\.)?goodgame\.ru/(?P<name>(?!channel|player)[^/?]+)",
+    ),
+)
+@pluginmatcher(
+    name="channel",
+    pattern=re.compile(
+        r"https?://(?:www\.)?goodgame\.ru/channel/(?P<channel>[^/?]+)",
+    ),
+)
+@pluginmatcher(
+    name="player",
+    pattern=re.compile(
+        r"https?://(?:www\.)?goodgame\.ru/player\?(?P<id>\d+)$",
+    ),
+)
 class GoodGame(Plugin):
     _API_STREAMS_ID = "https://goodgame.ru/api/4/streams/2/id/{id}"
     _API_STREAMS_CHANNEL = "https://goodgame.ru/api/4/streams/2/channel/{channel}"
     _URL_HLS = "https://hls.goodgame.ru/manifest/{id}_master.m3u8"
 
     def _get_channel_key(self):
-        return self.session.http.get(self.url, schema=validate.Schema(
-            re.compile(r"api:(?P<json>{.+?}),\n"),
-            validate.none_or_all(
-                validate.get("json"),
-                validate.parse_json(),
-                {"channel_key": str},
-                validate.get("channel_key"),
+        return self.session.http.get(
+            self.url,
+            schema=validate.Schema(
+                re.compile(r"api:(?P<json>{.+?}),\n"),
+                validate.none_or_all(
+                    validate.get("json"),
+                    validate.parse_json(),
+                    {"channel_key": str},
+                    validate.get("channel_key"),
+                ),
             ),
-        ))
+        )
 
     def _get_api_url(self):
         if self.matches["default"]:
@@ -63,62 +75,65 @@ class GoodGame(Plugin):
         raise PluginError("Invalid matcher")
 
     def _api_stream(self, url):
-        return self.session.http.get(url, schema=validate.Schema(
-            validate.parse_json(),
-            validate.any(
-                validate.all(
-                    {
-                        "error": str,
-                    },
-                    validate.get("error"),
-                    validate.transform(lambda data: ("error", data)),
-                ),
-                validate.all(
-                    {
-                        "online": bool,
-                        "id": int,
-                        "streamer": {
-                            "username": str,
+        return self.session.http.get(
+            url,
+            schema=validate.Schema(
+                validate.parse_json(),
+                validate.any(
+                    validate.all(
+                        {
+                            "error": str,
                         },
-                        "streamKey": str,
-                        "game": {
-                            "title": validate.none_or_all(str),
-                        },
-                        "title": validate.none_or_all(str),
-                        "players": [
-                            validate.all(
-                                {
-                                    "title": str,
-                                    "online": bool,
-                                    "content": validate.all(
-                                        str,
-                                        validate.parse_html(),
-                                        validate.xml_find(".//iframe"),
-                                        validate.get("src"),
-                                        validate.transform(urlparse),
-                                    ),
-                                },
-                                validate.union_get(
-                                    "title",
-                                    "online",
-                                    "content",
-                                ),
-                            ),
-                        ],
-                    },
-                    validate.union_get(
-                        "online",
-                        "id",
-                        ("streamer", "username"),
-                        ("game", "title"),
-                        "title",
-                        "streamKey",
-                        "players",
+                        validate.get("error"),
+                        validate.transform(lambda data: ("error", data)),
                     ),
-                    validate.transform(lambda data: ("data", *data)),
+                    validate.all(
+                        {
+                            "online": bool,
+                            "id": int,
+                            "streamer": {
+                                "username": str,
+                            },
+                            "streamKey": str,
+                            "game": {
+                                "title": validate.none_or_all(str),
+                            },
+                            "title": validate.none_or_all(str),
+                            "players": [
+                                validate.all(
+                                    {
+                                        "title": str,
+                                        "online": bool,
+                                        "content": validate.all(
+                                            str,
+                                            validate.parse_html(),
+                                            validate.xml_find(".//iframe"),
+                                            validate.get("src"),
+                                            validate.transform(urlparse),
+                                        ),
+                                    },
+                                    validate.union_get(
+                                        "title",
+                                        "online",
+                                        "content",
+                                    ),
+                                ),
+                            ],
+                        },
+                        validate.union_get(
+                            "online",
+                            "id",
+                            ("streamer", "username"),
+                            ("game", "title"),
+                            "title",
+                            "streamKey",
+                            "players",
+                        ),
+                        validate.transform(lambda data: ("data", *data)),
+                    ),
                 ),
             ),
-        ))
+        )
 
     def _get_streams(self):
         api_url = self._get_api_url()

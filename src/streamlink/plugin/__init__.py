@@ -12,7 +12,15 @@ from streamlink.plugin.plugin import (
 
 
 __all__ = [
-    "HIGH_PRIORITY", "NORMAL_PRIORITY", "LOW_PRIORITY", "NO_PRIORITY",
-    "Plugin", "PluginArguments", "PluginArgument", "PluginError", "PluginOptions",
-    "pluginmatcher", "pluginargument",
+    "HIGH_PRIORITY",
+    "NORMAL_PRIORITY",
+    "LOW_PRIORITY",
+    "NO_PRIORITY",
+    "Plugin",
+    "PluginArguments",
+    "PluginArgument",
+    "PluginError",
+    "PluginOptions",
+    "pluginmatcher",
+    "pluginargument",
 ]

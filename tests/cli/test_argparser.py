@@ -53,43 +53,63 @@ class TestConfigFileArguments:
         assert parsed.player_args == ""
         assert parsed.title is None
 
-    @pytest.mark.parametrize("parsed", [
-        pytest.param(["4"], id="shorthand name"),
-        pytest.param(["ipv4"], id="full name"),
-    ], indirect=True)
+    @pytest.mark.parametrize(
+        "parsed",
+        [
+            pytest.param(["4"], id="shorthand name"),
+            pytest.param(["ipv4"], id="full name"),
+        ],
+        indirect=True,
+    )
     def test_alphanumerical(self, parsed: Namespace):
         assert parsed.ipv4 is True
 
-    @pytest.mark.parametrize("parsed", [
-        pytest.param(["n"], id="shorthand name"),
-        pytest.param(["player-fifo"], id="full name"),
-    ], indirect=True)
+    @pytest.mark.parametrize(
+        "parsed",
+        [
+            pytest.param(["n"], id="shorthand name"),
+            pytest.param(["player-fifo"], id="full name"),
+        ],
+        indirect=True,
+    )
     def test_withoutvalue(self, parsed: Namespace):
         assert parsed.player_fifo is True
 
-    @pytest.mark.parametrize("parsed", [
-        pytest.param(["a=foo bar "], id="shorthand name with operator"),
-        pytest.param(["a = foo bar "], id="shorthand name with operator and surrounding whitespace"),
-        pytest.param(["a   foo bar "], id="shorthand name without operator"),
-        pytest.param(["player-args=foo bar "], id="full name with operator"),
-        pytest.param(["player-args = foo bar "], id="full name with operator and surrounding whitespace"),
-        pytest.param(["player-args   foo bar "], id="full name without operator"),
-    ], indirect=True)
+    @pytest.mark.parametrize(
+        "parsed",
+        [
+            pytest.param(["a=foo bar "], id="shorthand name with operator"),
+            pytest.param(["a = foo bar "], id="shorthand name with operator and surrounding whitespace"),
+            pytest.param(["a   foo bar "], id="shorthand name without operator"),
+            pytest.param(["player-args=foo bar "], id="full name with operator"),
+            pytest.param(["player-args = foo bar "], id="full name with operator and surrounding whitespace"),
+            pytest.param(["player-args   foo bar "], id="full name without operator"),
+        ],
+        indirect=True,
+    )
     def test_withvalue(self, parsed: Namespace):
         assert parsed.player_args == "foo bar"
 
-    @pytest.mark.parametrize("parsed", [
-        pytest.param(["title="], id="operator"),
-        pytest.param(["title ="], id="operator with leading whitespace"),
-        pytest.param(["title = "], id="operator with surrounding whitespace"),
-    ], indirect=True)
+    @pytest.mark.parametrize(
+        "parsed",
+        [
+            pytest.param(["title="], id="operator"),
+            pytest.param(["title ="], id="operator with leading whitespace"),
+            pytest.param(["title = "], id="operator with surrounding whitespace"),
+        ],
+        indirect=True,
+    )
     def test_emptyvalue(self, parsed: Namespace):
         assert parsed.title == ""
 
-    @pytest.mark.parametrize("parsed", [
-        pytest.param(["http-header=foo=bar=baz", "http-header=FOO=BAR=BAZ"], id="With operator"),
-        pytest.param(["http-header foo=bar=baz", "http-header FOO=BAR=BAZ"], id="Without operator"),
-    ], indirect=True)
+    @pytest.mark.parametrize(
+        "parsed",
+        [
+            pytest.param(["http-header=foo=bar=baz", "http-header=FOO=BAR=BAZ"], id="With operator"),
+            pytest.param(["http-header foo=bar=baz", "http-header FOO=BAR=BAZ"], id="Without operator"),
+        ],
+        indirect=True,
+    )
     def test_keyequalsvalue(self, parsed: Namespace):
         assert parsed.http_header == [("foo", "bar=baz"), ("FOO", "BAR=BAZ")]
 
@@ -159,38 +179,41 @@ class TestMatchArgumentOverride:
         assert capsys.readouterr().err.endswith(errormsg)
 
 
-@pytest.mark.parametrize(("argv", "option", "expected"), [
-    pytest.param(
-        ["--locale", "xx_XX"],
-        "locale",
-        "xx_XX",
-        id="Arg+value without mapper",
-    ),
-    pytest.param(
-        ["--http-disable-dh"],
-        "http-disable-dh",
-        True,
-        id="Arg with action=store_true",
-    ),
-    pytest.param(
-        ["--http-no-ssl-verify"],
-        "http-ssl-verify",
-        False,
-        id="Arg with action=store_false",
-    ),
-    pytest.param(
-        ["--http-query-param", "foo=bar", "--http-query-param", "baz=qux"],
-        "http-query-params",
-        {"foo": "bar", "baz": "qux"},
-        id="Arg+value with dict mapper",
-    ),
-    pytest.param(
-        ["--http-ssl-cert-crt-key", "foo.crt", "bar.key"],
-        "http-ssl-cert",
-        ("foo.crt", "bar.key"),
-        id="Arg+value with tuple mapper",
-    ),
-])
+@pytest.mark.parametrize(
+    ("argv", "option", "expected"),
+    [
+        pytest.param(
+            ["--locale", "xx_XX"],
+            "locale",
+            "xx_XX",
+            id="Arg+value without mapper",
+        ),
+        pytest.param(
+            ["--http-disable-dh"],
+            "http-disable-dh",
+            True,
+            id="Arg with action=store_true",
+        ),
+        pytest.param(
+            ["--http-no-ssl-verify"],
+            "http-ssl-verify",
+            False,
+            id="Arg with action=store_false",
+        ),
+        pytest.param(
+            ["--http-query-param", "foo=bar", "--http-query-param", "baz=qux"],
+            "http-query-params",
+            {"foo": "bar", "baz": "qux"},
+            id="Arg+value with dict mapper",
+        ),
+        pytest.param(
+            ["--http-ssl-cert-crt-key", "foo.crt", "bar.key"],
+            "http-ssl-cert",
+            ("foo.crt", "bar.key"),
+            id="Arg+value with tuple mapper",
+        ),
+    ],
+)
 def test_setup_session_options(parser: ArgumentParser, session: Streamlink, argv: list, option: str, expected: Any):
     args = parser.parse_args(argv)
     setup_session_options(session, args)
@@ -206,14 +229,17 @@ def test_setup_session_options_default_values(monkeypatch: pytest.MonkeyPatch, p
     assert not mock_set_option.called, "Value of unset session-option arg must be None and must not call set_option()"
 
 
-@pytest.mark.parametrize(("default", "new", "expected"), [
-    pytest.param(False, None, False, id="Default False, unset"),
-    pytest.param(True, None, True, id="Default True, unset"),
-    pytest.param(False, False, False, id="Default False, set to False"),
-    pytest.param(False, True, True, id="Default False, set to True"),
-    pytest.param(True, False, False, id="Default True, set to False"),
-    pytest.param(True, True, True, id="Default True, set to True"),
-])
+@pytest.mark.parametrize(
+    ("default", "new", "expected"),
+    [
+        pytest.param(False, None, False, id="Default False, unset"),
+        pytest.param(True, None, True, id="Default True, unset"),
+        pytest.param(False, False, False, id="Default False, set to False"),
+        pytest.param(False, True, True, id="Default False, set to True"),
+        pytest.param(True, False, False, id="Default True, set to False"),
+        pytest.param(True, True, True, id="Default True, set to True"),
+    ],
+)
 def test_setup_session_options_override(monkeypatch: pytest.MonkeyPatch, session: Streamlink, default, new, expected):
     arg = "NON_EXISTING_ARGPARSER_ARGUMENT"
     key = "NON-EXISTING-SESSION-OPTION-KEY"
@@ -266,7 +292,7 @@ def test_cli_main_setup_session_options(monkeypatch: pytest.MonkeyPatch, parser:
         streamlink_cli_main()
 
     assert mock_setup_session_options.call_count == 1, \
-        "Has called setup_session_options() before setting up signals and running actual CLI code"
+        "Has called setup_session_options() before setting up signals and running actual CLI code"  # fmt: skip
     assert mock_setup_session_options.call_args_list[0][0][0] is session
     assert isinstance(mock_setup_session_options.call_args_list[0][0][1], Namespace)
 
@@ -339,7 +365,7 @@ class TestSetupPluginArgsAndOptions:
             "--mock-user",
             "--mock-pass",
             "--mock-captcha",
-        ], "Parser has all arguments registered"
+        ], "Parser has all arguments registered"  # fmt: skip
 
     def test_setup_options_no_plugin_arguments(self, session: Streamlink, console: Mock):
         options = setup_plugin_options(session, Namespace(), "mock", Plugin)

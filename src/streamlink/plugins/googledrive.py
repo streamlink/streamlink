@@ -16,9 +16,9 @@ from streamlink.stream.http import HTTPStream
 log = logging.getLogger(__name__)
 
 
-@pluginmatcher(re.compile(
-    r"https?://(?:drive|docs)\.google\.com/file/d/([^/]+)/?",
-))
+@pluginmatcher(
+    re.compile(r"https?://(?:drive|docs)\.google\.com/file/d/([^/]+)/?"),
+)
 class GoogleDocs(Plugin):
     api_url = "https://docs.google.com/get_video_info"
 

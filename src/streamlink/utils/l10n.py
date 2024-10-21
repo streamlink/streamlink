@@ -158,7 +158,7 @@ class Localization:
             return (
                 (not language or self.language == self.get_language(language))
                 and (not country or self.country == self.get_country(country))
-            )
+            )  # fmt: skip
         except LookupError:
             # if an unknown language/country code is given, they cannot be equivalent
             return False

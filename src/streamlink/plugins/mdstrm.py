@@ -7,6 +7,7 @@ $type live
 $metadata id
 $metadata title
 """
+
 import logging
 import re
 from urllib.parse import urlparse
@@ -20,22 +21,22 @@ from streamlink.utils.url import update_scheme
 log = logging.getLogger(__name__)
 
 
-@pluginmatcher(re.compile(
-    r"https://(?:www\.)?latina\.pe/tvenvivo",
-))
-@pluginmatcher(re.compile(
-    r"https://saltillo\.multimedios\.com/video",
-))
-@pluginmatcher(re.compile(
-    r"https://mdstrm\.com/live-stream/\w+",
-))
+@pluginmatcher(
+    re.compile(r"https://(?:www\.)?latina\.pe/tvenvivo"),
+)
+@pluginmatcher(
+    re.compile(r"https://saltillo\.multimedios\.com/video"),
+)
+@pluginmatcher(
+    re.compile(r"https://mdstrm\.com/live-stream/\w+"),
+)
 class MDStrm(Plugin):
     @staticmethod
     def get_script_str(root, search_string, custom_pattern=None, custom_schema=None):
         if custom_pattern:
             pattern = custom_pattern
         else:
-            pattern = fr"{search_string}\s*=\s*'([^']+)';"
+            pattern = rf"{search_string}\s*=\s*'([^']+)';"
         _schema = validate.Schema(
             validate.xml_xpath_string(
                 ".//script[@type='text/javascript'][contains(text(),$search_string)]/text()",

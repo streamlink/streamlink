@@ -128,12 +128,12 @@ class StreamlinkPlugins:
             (name, plugin.arguments)
             for name, plugin in self._plugins.items()
             if plugin.arguments
-        )
+        )  # fmt: skip
         yield from (
             (name, arguments)
             for name, arguments in self._arguments.items()
             if arguments and name not in self._plugins
-        )
+        )  # fmt: skip
 
     def iter_matchers(self) -> Iterator[tuple[str, Matchers]]:
         """Iterate through all plugins and their :class:`Matchers <streamlink.plugin.plugin.Matchers>`"""
@@ -141,12 +141,12 @@ class StreamlinkPlugins:
             (name, plugin.matchers)
             for name, plugin in self._plugins.items()
             if plugin.matchers
-        )
+        )  # fmt: skip
         yield from (
             (name, matchers)
             for name, matchers in self._matchers.items()
             if matchers and name not in self._plugins
-        )
+        )  # fmt: skip
 
     def match_url(self, url: str) -> tuple[str, type[Plugin]] | None:
         """Find a matching plugin by URL and load plugins which haven't been loaded yet"""

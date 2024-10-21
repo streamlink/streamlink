@@ -26,18 +26,24 @@ ROOT = Path(__file__).parents[1].resolve()
 DEFAULT_REPO = "streamlink/streamlink"
 
 
-RE_CHANGELOG = re.compile(r"""
-    ##\sstreamlink\s+
-    (?P<version>\d+\.\d+\.\d+(?:-\S+)?)\s+
-    \((?P<date>\d{4}-\d\d-\d\d)\)\n\n
-    (?P<changelog>.+?)\n\n
-    \[Full\schangelog]\(\S+\)\n+
-    (?=\#\#\sstreamlink|$)
-""", re.VERBOSE | re.DOTALL | re.IGNORECASE)
+RE_CHANGELOG = re.compile(
+    r"""
+        ##\sstreamlink\s+
+        (?P<version>\d+\.\d+\.\d+(?:-\S+)?)\s+
+        \((?P<date>\d{4}-\d\d-\d\d)\)\n\n
+        (?P<changelog>.+?)\n\n
+        \[Full\schangelog]\(\S+\)\n+
+        (?=\#\#\sstreamlink|$)
+    """,
+    re.VERBOSE | re.DOTALL | re.IGNORECASE,
+)
 
-RE_CO_AUTHOR = re.compile(r"""
-    ^\s*Co-Authored-By:\s+(?P<name>.+)\s+<(?P<email>.+?@.+?)>\s*$
-""", re.VERBOSE | re.MULTILINE | re.IGNORECASE)
+RE_CO_AUTHOR = re.compile(
+    r"""
+        ^\s*Co-Authored-By:\s+(?P<name>.+)\s+<(?P<email>.+?@.+?)>\s*$
+    """,
+    re.VERBOSE | re.MULTILINE | re.IGNORECASE,
+)
 
 
 def get_args():
@@ -192,8 +198,10 @@ class GitHubAPI:
         **kwargs,
     ) -> requests.Response:
         func: Callable = (
-            requests.post if method == "POST"  # type: ignore[assignment]
-            else requests.patch if method == "PATCH"
+            requests.post  # type: ignore[assignment]
+            if method == "POST"
+            else requests.patch
+            if method == "PATCH"
             else requests.get
         )
 

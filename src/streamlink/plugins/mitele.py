@@ -18,9 +18,9 @@ from streamlink.utils.url import update_qsd
 log = logging.getLogger(__name__)
 
 
-@pluginmatcher(re.compile(
-    r"https?://(?:www\.)?mitele\.es/directo/(?P<channel>[\w-]+)",
-))
+@pluginmatcher(
+    re.compile(r"https?://(?:www\.)?mitele\.es/directo/(?P<channel>[\w-]+)"),
+)
 class Mitele(Plugin):
     URL_CARONTE = "https://caronte.mediaset.es/delivery/channel/mmc/{channel}/mtweb"
     URL_GBX = "https://mab.mediaset.es/1.0.0/get"
@@ -43,19 +43,21 @@ class Mitele(Plugin):
                         "cerbero": validate.url(),
                         "bbx": str,
                         "dls": validate.all(
-                            [{
-                                "drm": bool,
-                                "format": str,
-                                "stream": validate.all(
-                                    validate.transform(str.strip),
-                                    validate.url(),
-                                ),
-                                "lid": validate.all(
-                                    int,
-                                    validate.transform(str),
-                                ),
-                                validate.optional("assetKey"): str,
-                            }],
+                            [
+                                {
+                                    "drm": bool,
+                                    "format": str,
+                                    "stream": validate.all(
+                                        validate.transform(str.strip),
+                                        validate.url(),
+                                    ),
+                                    "lid": validate.all(
+                                        int,
+                                        validate.transform(str),
+                                    ),
+                                    validate.optional("assetKey"): str,
+                                },
+                            ],
                             validate.filter(lambda obj: obj["format"] == "hls"),
                         ),
                     },

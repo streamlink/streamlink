@@ -79,7 +79,7 @@ class TestCLIFormatter:
         })
         path = formatter.path(f"{{current}}{sep}{{parent}}{sep}{{dots}}{sep}{{separator}}{sep}foo{sep}.{sep}..{sep}bar")
         assert path == Path("_", "_", "...", "_", "foo", ".", "..", "bar"), \
-            "Formats the path's parts separately and ignores current and parent directories in substitutions only"
+            "Formats the path's parts separately and ignores current and parent directories in substitutions only"  # fmt: skip
 
     def test_path_truncation_ascii(self, formatter: Formatter):
         formatter.mapping.update({
