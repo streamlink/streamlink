@@ -41,8 +41,8 @@ class Webbrowser:
         if not resolved:
             raise WebbrowserError(
                 f"Invalid web browser executable: {executable}"
-                if executable else
-                f"{self.ERROR_RESOLVE}: Please set the path to a supported web browser using --webbrowser-executable",
+                if executable
+                else f"{self.ERROR_RESOLVE}: Please set the path to a supported web browser using --webbrowser-executable",
             )
 
         self.executable: str | Path = resolved

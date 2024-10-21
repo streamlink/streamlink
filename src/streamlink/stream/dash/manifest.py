@@ -228,7 +228,7 @@ class MPDNode:
         return [
             cls(child, root=self.root, parent=self, i=i, base_url=self.base_url, **kwargs)
             for i, child in enumerate(children)
-        ]
+        ]  # fmt: skip
 
     def only_child(
         self,
@@ -346,10 +346,12 @@ class MPD(MPDNode):
             parser=MPDParsers.duration(self.publishTime),
             # if there is no delay, use a delay of 3 seconds, but respect the manifest's minBufferTime
             # TODO: add a customizable parameter for this
-            default=timedelta(seconds=max(
-                self.DEFAULT_MINBUFFERTIME,
-                self.minBufferTime.total_seconds(),
-            )),
+            default=timedelta(
+                seconds=max(
+                    self.DEFAULT_MINBUFFERTIME,
+                    self.minBufferTime.total_seconds(),
+                ),
+            ),
         )
 
         # parse children
@@ -762,7 +764,7 @@ class SegmentList(_MultipleSegmentBaseType):
             else:
                 # yield a specific number of segments from the live-edge of dynamic manifests
                 start_number = self.calculate_optimal_start()
-                segment_urls = self.segmentURLs[start_number - self.startNumber:]
+                segment_urls = self.segmentURLs[start_number - self.startNumber :]
 
         else:
             # skip segments with a lower number than the remembered segment number
@@ -778,8 +780,8 @@ class SegmentList(_MultipleSegmentBaseType):
                 log.warning(
                     (
                         f"Skipped segments {start_number}-{self.startNumber - 1} after manifest reload. "
-                        if offset < -1 else
-                        f"Skipped segment {start_number} after manifest reload. "
+                        if offset < -1
+                        else f"Skipped segment {start_number} after manifest reload. "
                     )
                     + "This is unsupported and will result in incoherent output data.",
                 )
@@ -909,16 +911,20 @@ class SegmentTemplate(_MultipleSegmentBaseType):
             log.debug(f"Stream start: {self.period.availabilityStartTime}")
             log.debug(f"Current time: {current_time}")
             log.debug(f"Availability: {available_start}")
-            log.debug("; ".join([
-                f"presentationTimeOffset: {self.presentationTimeOffset}",
-                f"suggestedPresentationDelay: {self.root.suggestedPresentationDelay}",
-                f"minBufferTime: {self.root.minBufferTime}",
-            ]))
-            log.debug("; ".join([
-                f"segmentDuration: {self.duration_seconds}",
-                f"segmentStart: {self.startNumber}",
-                f"segmentOffset: {number_offset} ({seconds_offset}s)",
-            ]))
+            log.debug(
+                "; ".join([
+                    f"presentationTimeOffset: {self.presentationTimeOffset}",
+                    f"suggestedPresentationDelay: {self.root.suggestedPresentationDelay}",
+                    f"minBufferTime: {self.root.minBufferTime}",
+                ]),
+            )
+            log.debug(
+                "; ".join([
+                    f"segmentDuration: {self.duration_seconds}",
+                    f"segmentStart: {self.startNumber}",
+                    f"segmentOffset: {number_offset} ({seconds_offset}s)",
+                ]),
+            )
 
         yield from zip(number_iter, available_iter)
 

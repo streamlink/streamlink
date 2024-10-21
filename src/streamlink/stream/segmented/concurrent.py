@@ -6,6 +6,7 @@ from sys import version_info
 # noinspection PyTypeChecker
 class ThreadPoolExecutor(_ThreadPoolExecutor):
     if version_info < (3, 9):
+
         def shutdown(self, wait=True, cancel_futures=False):  # pragma: no cover
             with self._shutdown_lock:
                 self._shutdown = True

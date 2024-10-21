@@ -169,7 +169,7 @@ class Cache:
             else:
                 prefix = ""
             if key.startswith(prefix):
-                okey = key[len(prefix):]
+                okey = key[len(prefix) :]
                 ret[okey] = value["value"]
 
         return ret

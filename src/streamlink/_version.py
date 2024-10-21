@@ -1,6 +1,7 @@
 # This module will get replaced by versioningit when building a source distribution
 # and instead of trying to get the version string from git, a static version string will be set
 
+
 def _get_version() -> str:
     """
     Get the current version from git in "editable" installs

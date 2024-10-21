@@ -117,26 +117,29 @@ class M3U8Parser(Generic[TM3U8_co, THLSSegment_co, THLSPlaylist_co], metaclass=M
     _TAGS: ClassVar[Mapping[str, Callable[[Self, str], None]]]
 
     _extinf_re = re.compile(r"(?P<duration>\d+(\.\d+)?)(,(?P<title>.+))?")
-    _attr_re = re.compile(r"""
-        (?P<key>[A-Z0-9\-]+)
-        =
-        (?P<value>
-            (?# decimal-integer)
-            \d+
-            (?# hexadecimal-sequence)
-            |0[xX][0-9A-Fa-f]+
-            (?# decimal-floating-point and signed-decimal-floating-point)
-            |-?\d+\.\d+
-            (?# quoted-string)
-            |\"(?P<quoted>[^\r\n\"]*)\"
-            (?# enumerated-string)
-            |[^\",\s]+
-            (?# decimal-resolution)
-            |\d+x\d+
-        )
-        (?# be more lenient and allow spaces around attributes)
-        \s*(?:,\s*|$)
-    """, re.VERBOSE)
+    _attr_re = re.compile(
+        r"""
+            (?P<key>[A-Z0-9\-]+)
+            =
+            (?P<value>
+                (?# decimal-integer)
+                \d+
+                (?# hexadecimal-sequence)
+                |0[xX][0-9A-Fa-f]+
+                (?# decimal-floating-point and signed-decimal-floating-point)
+                |-?\d+\.\d+
+                (?# quoted-string)
+                |\"(?P<quoted>[^\r\n\"]*)\"
+                (?# enumerated-string)
+                |[^\",\s]+
+                (?# decimal-resolution)
+                |\d+x\d+
+            )
+            (?# be more lenient and allow spaces around attributes)
+            \s*(?:,\s*|$)
+        """,
+        re.VERBOSE,
+    )
     _range_re = re.compile(r"(?P<range>\d+)(?:@(?P<offset>\d+))?")
     _tag_re = re.compile(r"#(?P<tag>[\w-]+)(:(?P<value>.+))?")
     _res_re = re.compile(r"(\d+)x(\d+)")

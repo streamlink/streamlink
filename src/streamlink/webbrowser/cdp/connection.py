@@ -27,7 +27,7 @@ except ImportError:  # pragma: no cover
 log = logging.getLogger(__name__)
 
 MAX_BUFFER_SIZE = 10
-MAX_MESSAGE_SIZE = 2 ** 24  # ~16MiB
+MAX_MESSAGE_SIZE = 2**24  # ~16MiB
 CMD_TIMEOUT = 2
 
 TCmdResponse = TypeVar("TCmdResponse")

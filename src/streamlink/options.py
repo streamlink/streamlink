@@ -171,7 +171,7 @@ class Argument:
             tuple(metavar)
             if metavar is not None and not isinstance(metavar, str)
             else metavar
-        )
+        )  # fmt: skip
 
         self._default = default
         self._dest = self._normalize_dest(dest) if dest else None
@@ -301,7 +301,7 @@ class Arguments:
 
         results = {name}
         argument = self.get(name)
-        for reqname in (argument.requires if argument else []):
+        for reqname in argument.requires if argument else []:
             required = self.get(reqname)
             if not required:
                 raise KeyError(f"{reqname} is not a valid argument for this plugin")

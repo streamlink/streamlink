@@ -107,10 +107,13 @@ class DASHStreamWorker(SegmentedStreamWorker[DASHSegment, Response]):
             if self.mpd.type == "static":
                 refresh_wait = 5
             else:
-                refresh_wait = max(
-                    self.mpd.minimumUpdatePeriod.total_seconds(),
-                    representation.period.duration.total_seconds() if representation else 0,
-                ) or 5
+                refresh_wait = (
+                    max(
+                        self.mpd.minimumUpdatePeriod.total_seconds(),
+                        representation.period.duration.total_seconds() if representation else 0,
+                    )
+                    or 5
+                )
 
             with self.sleeper(refresh_wait * back_off_factor):
                 if not representation:
