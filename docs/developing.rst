@@ -105,75 +105,39 @@ performing these checks locally avoids unnecessary build failures.
     pytest path/to/test-file.py::TestClassName::test_method_name ...
 
     # check code for linting errors
-    ruff check
+    ruff check .
+    # check code for formatting errors
+    ruff format --diff .
     # check code for typing errors
     mypy
 
     # build the documentation
     make --directory=docs clean html
-    $BROWSER ./docs/_build/html/index.html
+
+    # check the documentation
+    python -m http.server 8000 --bind '127.0.0.1' --directory 'docs/_build/html/'
+    "${BROWSER}" http://127.0.0.1:8000/
 
 
 Code style
 ----------
 
-Streamlink uses `Ruff`_ as primary code linting tool and the project aims to use best practices for achieving great
-code readability with minimal git diffs, as detailed in :pep:`8` and implemented in related linting tools, such as `Black`_.
+Streamlink uses `Ruff`_ as primary code `linting <Ruff-linter>`_ and `formatting <Ruff-formatter>`_ tool.
 
-These are the best practices most likely to be relevant to plugin authors:
+The project aims to use best practices for achieving great code readability with minimal git diffs,
+as detailed in :pep:`8` and implemented in related linting and formatting tools, such as `Black`_.
 
-1. `Import order according to PEP8 <pep8-imports_>`_
-
-2. `Indentation of 4 spaces per level <pep8-indentation_>`_
-
-3. `Double quotes for all string literals <black-quotes_>`_
-
-4. `Line length of at most 128 characters <pyproject.toml_>`_
-
-5. `Balanced line wrapping for readability <black-line-wrapping_>`_
-
-6. `Blank lines <pep8-blank-lines_>`_
-
-7. `Comments <pep8-comments_>`_
-
-8. `Line breaks and binary operators <pep8-binary-operators_>`_
-
-9. New indented line for each bracket item (args, lists, etc.) in multi-line definitions, with trailing comma
-
-   .. code-block:: python
-
-      # incorrect:
-      schema=validate.Schema(
-          validate.parse_json(), [{
-              "foo": {"bar": validate.url(schema="https", path=validate.endswith(".m3u8"))}, "baz": str
-          }]
-      )
-
-      # correct:
-      schema=validate.Schema(
-          validate.parse_json(),
-          [{
-              "foo": {
-                  "bar": validate.url(schema="https", path=validate.endswith(".m3u8")),
-              },
-              "baz": str,
-          }],
-      )
+For detailed linting and formatting configurations specific to Streamlink, please have a look at `pyproject.toml`_.
 
 It might be helpful to new plugin authors to pick a small and recently modified existing plugin to use as an initial
 template from which to work. If care is taken to preserve existing blank lines during modification, the main plugin
 structure should be compliant-ready for `linting <Validating changes_>`_.
 
-.. _Ruff: https://github.com/charliermarsh/ruff#readme
+.. _Ruff: https://github.com/astral-sh/ruff
+.. _Ruff-linter: https://docs.astral.sh/ruff/linter/
+.. _Ruff-formatter: https://docs.astral.sh/ruff/formatter/
 .. _Black: https://black.readthedocs.io/en/stable/the_black_code_style/current_style.html
 .. _pyproject.toml: https://github.com/streamlink/streamlink/blob/master/pyproject.toml
-.. _pep8-binary-operators: https://peps.python.org/pep-0008/#should-a-line-break-before-or-after-a-binary-operator
-.. _pep8-blank-lines: https://peps.python.org/pep-0008/#blank-lines
-.. _pep8-comments: https://peps.python.org/pep-0008/#comments
-.. _pep8-imports: https://peps.python.org/pep-0008/#imports
-.. _pep8-indentation: https://peps.python.org/pep-0008/#indentation
-.. _black-line-wrapping: https://black.readthedocs.io/en/stable/the_black_code_style/current_style.html#how-black-wraps-lines
-.. _black-quotes: https://black.readthedocs.io/en/stable/the_black_code_style/current_style.html#strings
 
 
 Plugins
