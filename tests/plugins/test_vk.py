@@ -77,7 +77,6 @@ class TestPluginCanHandleUrlVK(PluginCanHandleUrl):
             does_not_raise,
             id="from-meta-og-url",
         ),
-
         # no video ID
         pytest.param(
             "https://vk.com/videos-0123456789?z=",

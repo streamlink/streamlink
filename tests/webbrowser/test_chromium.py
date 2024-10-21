@@ -18,32 +18,42 @@ from streamlink.webbrowser.exceptions import WebbrowserError
 
 
 class TestInit:
-    @pytest.mark.parametrize(("executable", "resolve_executable", "raises"), [
-        pytest.param(
-            None,
-            None,
-            pytest.raises(WebbrowserError, match="^Could not find Chromium-based web browser executable: Please set the path "),
-            id="Failure with unset path",
-        ),
-        pytest.param(
-            "custom",
-            None,
-            pytest.raises(WebbrowserError, match="^Invalid web browser executable: custom$"),
-            id="Failure with custom path",
-        ),
-        pytest.param(
-            None,
-            "default",
-            nullcontext(),
-            id="Success with default path",
-        ),
-        pytest.param(
-            "custom",
-            "custom",
-            nullcontext(),
-            id="Success with custom path",
-        ),
-    ], indirect=["resolve_executable"])
+    @pytest.mark.parametrize(
+        ("executable", "resolve_executable", "raises"),
+        [
+            pytest.param(
+                None,
+                None,
+                pytest.raises(
+                    WebbrowserError,
+                    match="^Could not find Chromium-based web browser executable: Please set the path ",
+                ),
+                id="Failure with unset path",
+            ),
+            pytest.param(
+                "custom",
+                None,
+                pytest.raises(
+                    WebbrowserError,
+                    match="^Invalid web browser executable: custom$",
+                ),
+                id="Failure with custom path",
+            ),
+            pytest.param(
+                None,
+                "default",
+                nullcontext(),
+                id="Success with default path",
+            ),
+            pytest.param(
+                "custom",
+                "custom",
+                nullcontext(),
+                id="Success with custom path",
+            ),
+        ],
+        indirect=["resolve_executable"],
+    )
     def test_resolve_executable(self, resolve_executable, executable: str | None, raises: nullcontext):
         with raises:
             ChromiumWebbrowser(executable=executable)
@@ -54,11 +64,14 @@ class TestFallbacks:
         monkeypatch.setattr("streamlink.webbrowser.chromium.is_win32", True)
         monkeypatch.setattr("streamlink.webbrowser.chromium.is_darwin", False)
         monkeypatch.setattr("streamlink.webbrowser.chromium.Path", PureWindowsPath)
-        monkeypatch.setattr("os.getenv", {
-            "PROGRAMFILES": "C:\\Program Files",
-            "PROGRAMFILES(X86)": "C:\\Program Files (x86)",
-            "LOCALAPPDATA": "C:\\Users\\user\\AppData\\Local",
-        }.get)
+        monkeypatch.setattr(
+            "os.getenv",
+            {
+                "PROGRAMFILES": "C:\\Program Files",
+                "PROGRAMFILES(X86)": "C:\\Program Files (x86)",
+                "LOCALAPPDATA": "C:\\Users\\user\\AppData\\Local",
+            }.get,
+        )
         assert ChromiumWebbrowser.fallback_paths() == [
             "C:\\Program Files\\Microsoft\\Edge\\Application\\msedge.exe",
             "C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe",
@@ -138,7 +151,7 @@ async def test_launch(
         )
         assert param_user_data_dir is not None
 
-        user_data_dir = Path(param_user_data_dir[len("--user-data-dir="):])
+        user_data_dir = Path(param_user_data_dir[len("--user-data-dir=") :])
         assert user_data_dir.exists()
 
         # turn the 0.5s sleep() call at the end into a 0.5ms sleep() call

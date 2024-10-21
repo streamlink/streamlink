@@ -305,29 +305,32 @@ class TestArguments:
             list(args.requires("test1"))
         assert cm.value.args[0] == "test2 is not a valid argument for this plugin"
 
-    @pytest.mark.parametrize("args", [
-        pytest.param(
-            Arguments(
-                Argument("test1", requires="test2"),
-                Argument("test2", requires="test1"),
+    @pytest.mark.parametrize(
+        "args",
+        [
+            pytest.param(
+                Arguments(
+                    Argument("test1", requires="test2"),
+                    Argument("test2", requires="test1"),
+                ),
+                id="Cycle",
             ),
-            id="Cycle",
-        ),
-        pytest.param(
-            Arguments(
-                Argument("test1", requires="test2"),
-                Argument("test2", requires="test3"),
-                Argument("test3", requires="test1"),
+            pytest.param(
+                Arguments(
+                    Argument("test1", requires="test2"),
+                    Argument("test2", requires="test3"),
+                    Argument("test3", requires="test1"),
+                ),
+                id="Cycle deep",
             ),
-            id="Cycle deep",
-        ),
-        pytest.param(
-            Arguments(
-                Argument("test1", requires="test1"),
+            pytest.param(
+                Arguments(
+                    Argument("test1", requires="test1"),
+                ),
+                id="Cycle self",
             ),
-            id="Cycle self",
-        ),
-    ])
+        ],
+    )
     def test_requires_cycle(self, args: Arguments):
         with pytest.raises(RuntimeError) as cm:
             list(args.requires("test1"))

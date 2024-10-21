@@ -40,7 +40,8 @@ PATH_TESTPLUGINS_OVERRIDE = PATH_TESTPLUGINS / "override"
 
 
 class _Plugin(Plugin):
-    def _get_streams(self): pass  # pragma: no cover
+    def _get_streams(self):  # pragma: no cover
+        pass
 
 
 @pytest.fixture(autouse=True)
@@ -169,7 +170,7 @@ class TestLoad:
                 "streamlink.session",
                 "info",
                 f"Plugin testplugin is being overridden by {PATH_TESTPLUGINS / 'testplugin.py'}"
-                + " (sha256:627b3bd0f33bfba1c3db37c5c5e751f396eb376e0aaf971a3e9bd299e77a5dc0)",
+                + " (sha256:088c9f6ddbe5ff046c0ea1ce0cacb7baff46189d153cf3f149b2e023ddf66f6c)",
             ),
         ]
 
@@ -261,32 +262,36 @@ class TestLoadPluginsData:
         return data
 
     # noinspection PyTestParametrized
-    @pytest.mark.parametrize(("metadata_files", "pluginsdata", "logs"), [
-        pytest.param(
-            {},
-            None,
-            [],
-            id="empty-json-file",
-        ),
-        pytest.param(
-            {"package-record": False},
-            """{}""",
-            [],
-            id="no-package-record",
-        ),
-        pytest.param(
-            {"package-record-hash-mode": "unknown"},
-            """{}""",
-            [("streamlink.session", "error", "Unknown plugins data hash mode, falling back to loading all plugins")],
-            id="invalid-package-record-hash-mode",
-        ),
-        pytest.param(
-            {"package-record-hash-value": "invalid"},
-            """{}""",
-            [("streamlink.session", "error", "Plugins data checksum mismatch, falling back to loading all plugins")],
-            id="invalid-package-record-hash-value",
-        ),
-    ], indirect=["metadata_files", "pluginsdata"])
+    @pytest.mark.parametrize(
+        ("metadata_files", "pluginsdata", "logs"),
+        [
+            pytest.param(
+                {},
+                None,
+                [],
+                id="empty-json-file",
+            ),
+            pytest.param(
+                {"package-record": False},
+                """{}""",
+                [],
+                id="no-package-record",
+            ),
+            pytest.param(
+                {"package-record-hash-mode": "unknown"},
+                """{}""",
+                [("streamlink.session", "error", "Unknown plugins data hash mode, falling back to loading all plugins")],
+                id="invalid-package-record-hash-mode",
+            ),
+            pytest.param(
+                {"package-record-hash-value": "invalid"},
+                """{}""",
+                [("streamlink.session", "error", "Plugins data checksum mismatch, falling back to loading all plugins")],
+                id="invalid-package-record-hash-value",
+            ),
+        ],
+        indirect=["metadata_files", "pluginsdata"],
+    )
     def test_fallback_load_builtin(self, caplog: pytest.LogCaptureFixture, session: Streamlink, logs: list):
         assert session.plugins.get_names() == ["fake"]
         assert [(record.name, record.levelname, record.message) for record in caplog.get_records(when="setup")] == logs
@@ -320,29 +325,33 @@ class TestLoadPluginsData:
         assert session.plugins.get_names() == ["testplugin"]
         assert [(record.name, record.levelname, record.message) for record in caplog.get_records(when="setup")] == []
 
-    @pytest.mark.parametrize("pluginsdata", [
-        pytest.param(
-            # language=json
-            """
-                {
-                    "testpluginA": {
-                        "matchers": [
-                            {"pattern": "foo"},
-                            {"pattern": "bar", "flags": 64, "priority": 10, "name": "bar"}
-                        ],
-                        "arguments": []
-                    },
-                    "testpluginB": {
-                        "matchers": [
-                            {"pattern": "baz"}
-                        ],
-                        "arguments": []
+    @pytest.mark.parametrize(
+        "pluginsdata",
+        [
+            pytest.param(
+                # language=json
+                """
+                    {
+                        "testpluginA": {
+                            "matchers": [
+                                {"pattern": "foo"},
+                                {"pattern": "bar", "flags": 64, "priority": 10, "name": "bar"}
+                            ],
+                            "arguments": []
+                        },
+                        "testpluginB": {
+                            "matchers": [
+                                {"pattern": "baz"}
+                            ],
+                            "arguments": []
+                        }
                     }
-                }
-            """,
-            id="matchers",
-        ),
-    ], indirect=True)
+                """,
+                id="matchers",
+            ),
+        ],
+        indirect=True,
+    )
     def test_matchers(self, caplog: pytest.LogCaptureFixture, session: Streamlink, pluginsdata: str):
         assert "fake" not in session.plugins
         assert "testpluginA" not in session.plugins
@@ -357,24 +366,28 @@ class TestLoadPluginsData:
         matchers_b.register(Matcher(pattern=re.compile(r"baz"), priority=NORMAL_PRIORITY, name=None))
         assert list(session.plugins.iter_matchers()) == [("testpluginA", matchers_a), ("testpluginB", matchers_b)]
 
-    @pytest.mark.parametrize("pluginsdata", [
-        pytest.param(
-            # language=json
-            """
-                {
-                    "success": {
-                        "matchers": [{"pattern": "foo"}],
-                        "arguments": []
-                    },
-                    "fail": {
-                        "matchers": [{"pattern": {"invalid": "type"}}],
-                        "arguments": []
+    @pytest.mark.parametrize(
+        "pluginsdata",
+        [
+            pytest.param(
+                # language=json
+                """
+                    {
+                        "success": {
+                            "matchers": [{"pattern": "foo"}],
+                            "arguments": []
+                        },
+                        "fail": {
+                            "matchers": [{"pattern": {"invalid": "type"}}],
+                            "arguments": []
+                        }
                     }
-                }
-            """,
-            id="matchers",
-        ),
-    ], indirect=True)
+                """,
+                id="matchers",
+            ),
+        ],
+        indirect=True,
+    )
     def test_matchers_failure(self, caplog: pytest.LogCaptureFixture, session: Streamlink, pluginsdata: str):
         assert "fake" in session.plugins
         assert "success" not in session.plugins
@@ -385,59 +398,63 @@ class TestLoadPluginsData:
             ("streamlink.session", "error", "Error while loading pluginmatcher data from JSON"),
         ]
 
-    @pytest.mark.parametrize("pluginsdata", [
-        pytest.param(
-            # language=json
-            """
-                {
-                    "empty": {
-                        "matchers": [{"pattern": "foo"}]
-                    },
-                    "testpluginA": {
-                        "matchers": [{"pattern": "bar"}],
-                        "arguments": [
-                            {
-                                "name": "foo",
-                                "action": "store",
-                                "nargs": 1,
-                                "default": "foo",
-                                "choices": ["foo", "bar"],
-                                "required": true,
-                                "help": "foo",
-                                "metavar": "FOO",
-                                "dest": "oof",
-                                "argument_name": "oof"
-                            },
-                            {
-                                "name": "bar",
-                                "const": "bar"
-                            }
-                        ]
-                    },
-                    "testpluginB": {
-                        "matchers": [{"pattern": "baz"}],
-                        "arguments": [
-                            {
-                                "name": "invalid",
-                                "type": "type_which_does_not_exist"
-                            },
-                            {
-                                "name": "bool",
-                                "type": "bool"
-                            },
-                            {
-                                "name": "cmf",
-                                "type": "comma_list_filter",
-                                "type_args": [["1", "2", "3"]],
-                                "type_kwargs": {"unique": true}
-                            }
-                        ]
+    @pytest.mark.parametrize(
+        "pluginsdata",
+        [
+            pytest.param(
+                # language=json
+                """
+                    {
+                        "empty": {
+                            "matchers": [{"pattern": "foo"}]
+                        },
+                        "testpluginA": {
+                            "matchers": [{"pattern": "bar"}],
+                            "arguments": [
+                                {
+                                    "name": "foo",
+                                    "action": "store",
+                                    "nargs": 1,
+                                    "default": "foo",
+                                    "choices": ["foo", "bar"],
+                                    "required": true,
+                                    "help": "foo",
+                                    "metavar": "FOO",
+                                    "dest": "oof",
+                                    "argument_name": "oof"
+                                },
+                                {
+                                    "name": "bar",
+                                    "const": "bar"
+                                }
+                            ]
+                        },
+                        "testpluginB": {
+                            "matchers": [{"pattern": "baz"}],
+                            "arguments": [
+                                {
+                                    "name": "invalid",
+                                    "type": "type_which_does_not_exist"
+                                },
+                                {
+                                    "name": "bool",
+                                    "type": "bool"
+                                },
+                                {
+                                    "name": "cmf",
+                                    "type": "comma_list_filter",
+                                    "type_args": [["1", "2", "3"]],
+                                    "type_kwargs": {"unique": true}
+                                }
+                            ]
+                        }
                     }
-                }
-            """,
-            id="arguments",
-        ),
-    ], indirect=True)
+                """,
+                id="arguments",
+            ),
+        ],
+        indirect=True,
+    )
     def test_arguments(self, caplog: pytest.LogCaptureFixture, session: Streamlink, pluginsdata: str):
         assert "fake" not in session.plugins
         assert "testpluginA" not in session.plugins
@@ -448,51 +465,63 @@ class TestLoadPluginsData:
         # arguments are added in reverse order:
         # `Arguments` does this because of the reverse order of the @pluginargument decorator
         arguments_a = Arguments()
-        arguments_a.add(Argument(
-            name="bar",
-            const="bar",
-        ))
-        arguments_a.add(Argument(
-            name="foo",
-            action="store",
-            nargs=1,
-            default="foo",
-            choices=["foo", "bar"],
-            required=True,
-            help="foo",
-            metavar="FOO",
-            dest="oof",
-            argument_name="oof",
-        ))
+        arguments_a.add(
+            Argument(
+                name="bar",
+                const="bar",
+            ),
+        )
+        arguments_a.add(
+            Argument(
+                name="foo",
+                action="store",
+                nargs=1,
+                default="foo",
+                choices=["foo", "bar"],
+                required=True,
+                help="foo",
+                metavar="FOO",
+                dest="oof",
+                argument_name="oof",
+            ),
+        )
         arguments_b = Arguments()
-        arguments_b.add(Argument(
-            name="cmf",
-            type=comma_list_filter(["1", "2", "3"], unique=True),
-        ))
-        arguments_b.add(Argument(
-            name="bool",
-            type=boolean,
-        ))
+        arguments_b.add(
+            Argument(
+                name="cmf",
+                type=comma_list_filter(["1", "2", "3"], unique=True),
+            ),
+        )
+        arguments_b.add(
+            Argument(
+                name="bool",
+                type=boolean,
+            ),
+        )
         assert list(session.plugins.iter_arguments()) == [("testpluginA", arguments_a), ("testpluginB", arguments_b)]
 
-    @pytest.mark.parametrize("pluginsdata", [
-        pytest.param(
-            # language=json
-            """
-                {
-                    "success": {
-                        "matchers": [{"pattern": "foo"}],
-                        "arguments": [{"name": "foo"}]
-                    },
-                    "fail": {
-                        "matchers": [{"pattern": "bar"}],
-                        "arguments": [{"name": {"invalid": "type"}}]
+    @pytest.mark.parametrize(
+        "pluginsdata",
+        [
+            pytest.param(
+                # language=json
+                """
+                    {
+                        "success": {
+                            "matchers": [{"pattern": "foo"}],
+                            "arguments": [{"name": "foo"}]
+                        },
+                        "fail": {
+                            "matchers": [{"pattern": "bar"}],
+                            "arguments": [{"name": {"invalid": "type"}}]
+                        }
                     }
-                }
-            """,
-            id="arguments",
-        ),
-    ], indirect=True)
+                """,
+                id="arguments",
+            ),
+        ],
+        indirect=True,
+    )
     def test_arguments_failure(self, caplog: pytest.LogCaptureFixture, session: Streamlink, pluginsdata: str):
         assert "fake" in session.plugins
         assert "success" not in session.plugins

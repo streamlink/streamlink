@@ -28,36 +28,44 @@ class TestConsoleOutput:
 
         return output
 
-    @pytest.mark.parametrize(("output", "expected"), [
-        pytest.param(
-            {"encoding": "utf-8"},
-            "Bär: 🐻",
-            id="utf-8 encoding",
-        ),
-        pytest.param(
-            {"encoding": "ascii"},
-            "B\\xe4r: \\U0001f43b",  # Unicode character: "Bear Face" (U+1F43B)
-            id="ascii encoding",
-        ),
-    ], indirect=["output"])
+    @pytest.mark.parametrize(
+        ("output", "expected"),
+        [
+            pytest.param(
+                {"encoding": "utf-8"},
+                "Bär: 🐻",
+                id="utf-8 encoding",
+            ),
+            pytest.param(
+                {"encoding": "ascii"},
+                "B\\xe4r: \\U0001f43b",  # Unicode character: "Bear Face" (U+1F43B)
+                id="ascii encoding",
+            ),
+        ],
+        indirect=["output"],
+    )
     def test_msg(self, output: TextIOWrapper, expected: str):
         console = ConsoleOutput(output)
         console.msg("Bär: 🐻")
         console.msg_json({"test": 1})
         assert getvalue(output) == f"{expected}\n"
 
-    @pytest.mark.parametrize(("output", "expected"), [
-        pytest.param(
-            {"encoding": "utf-8"},
-            "Bär: 🐻",
-            id="utf-8 encoding",
-        ),
-        pytest.param(
-            {"encoding": "ascii"},
-            "B\\u00e4r: \\ud83d\\udc3b",  # Unicode character: "Bear Face" (U+1F43B) - UTF-16: 0xD83D 0xDC3B
-            id="ascii encoding",
-        ),
-    ], indirect=["output"])
+    @pytest.mark.parametrize(
+        ("output", "expected"),
+        [
+            pytest.param(
+                {"encoding": "utf-8"},
+                "Bär: 🐻",
+                id="utf-8 encoding",
+            ),
+            pytest.param(
+                {"encoding": "ascii"},
+                "B\\u00e4r: \\ud83d\\udc3b",  # Unicode character: "Bear Face" (U+1F43B) - UTF-16: 0xD83D 0xDC3B
+                id="ascii encoding",
+            ),
+        ],
+        indirect=["output"],
+    )
     def test_msg_json(self, output: TextIOWrapper, expected: str):
         console = ConsoleOutput(output, json=True)
         console.msg("foo")
@@ -80,13 +88,16 @@ class TestConsoleOutput:
         test_obj1 = {"test": 1, "foo": "foo"}
         test_obj2 = Mock(__json__=Mock(return_value={"test": 2}))
         console.msg_json(test_obj1, test_obj2, ["qux"], foo="bar", baz="qux")
-        assert getvalue(output) == dedent("""
-            {
-              "test": 2,
-              "foo": "bar",
-              "baz": "qux"
-            }
-        """).lstrip()
+        assert (
+            getvalue(output)
+            == dedent("""
+                {
+                  "test": 2,
+                  "foo": "bar",
+                  "baz": "qux"
+                }
+            """).lstrip()
+        )
         assert list(test_obj1.items()) == [("test", 1), ("foo", "foo")]
 
     def test_msg_json_merge_list(self, output: TextIOWrapper):
@@ -94,23 +105,26 @@ class TestConsoleOutput:
         test_list1 = ["foo", "bar"]
         test_list2 = Mock(__json__=Mock(return_value={"foo": "bar"}))
         console.msg_json(test_list1, ["baz"], test_list2, {"foo": "bar"}, foo="bar", baz="qux")
-        assert getvalue(output) == dedent("""
-            [
-              "foo",
-              "bar",
-              "baz",
-              {
-                "foo": "bar"
-              },
-              {
-                "foo": "bar"
-              },
-              {
-                "foo": "bar",
-                "baz": "qux"
-              }
-            ]
-        """).lstrip()
+        assert (
+            getvalue(output)
+            == dedent("""
+                [
+                  "foo",
+                  "bar",
+                  "baz",
+                  {
+                    "foo": "bar"
+                  },
+                  {
+                    "foo": "bar"
+                  },
+                  {
+                    "foo": "bar",
+                    "baz": "qux"
+                  }
+                ]
+            """).lstrip()
+        )
         assert test_list1 == ["foo", "bar"]
 
     def test_ask(self, monkeypatch: pytest.MonkeyPatch, output: TextIOWrapper):

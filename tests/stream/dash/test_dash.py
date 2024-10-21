@@ -46,10 +46,13 @@ class TestDASHStreamParseManifest:
         monkeypatch.setattr("streamlink.stream.dash.dash.MPD", mpd)
         return mpd
 
-    @pytest.mark.parametrize(("se_parse_xml", "se_mpd"), [
-        (ParseError, None),
-        (None, MPDParsingError),
-    ])
+    @pytest.mark.parametrize(
+        ("se_parse_xml", "se_mpd"),
+        [
+            (ParseError, None),
+            (None, MPDParsingError),
+        ],
+    )
     def test_parse_fail(self, session: Streamlink, mpd: Mock, parse_xml: Mock, se_parse_xml, se_mpd):
         parse_xml.side_effect = se_parse_xml
         mpd.side_effect = se_mpd
@@ -86,32 +89,35 @@ class TestDASHStreamParseManifest:
         assert mpd.call_args_list == [call(ANY, url="http://test/manifest.mpd", base_url="http://test")]
         assert sorted(streams.keys()) == sorted(["a128k", "a256k"])
 
-    @pytest.mark.parametrize(("with_video_only", "with_audio_only", "expected"), [
-        pytest.param(
-            False,
-            False,
-            ["720p+a128k", "720p+a256k", "1080p+a128k", "1080p+a256k"],
-            id="Only muxed streams",
-        ),
-        pytest.param(
-            True,
-            False,
-            ["720p", "720p+a128k", "720p+a256k", "1080p", "1080p+a128k", "1080p+a256k"],
-            id="With video-only streams",
-        ),
-        pytest.param(
-            False,
-            True,
-            ["a128k", "a256k", "720p+a128k", "720p+a256k", "1080p+a128k", "1080p+a256k"],
-            id="With audio-only streams",
-        ),
-        pytest.param(
-            True,
-            True,
-            ["a128k", "a256k", "720p", "720p+a128k", "720p+a256k", "1080p", "1080p+a128k", "1080p+a256k"],
-            id="With video-only and audio-only streams",
-        ),
-    ])
+    @pytest.mark.parametrize(
+        ("with_video_only", "with_audio_only", "expected"),
+        [
+            pytest.param(
+                False,
+                False,
+                ["720p+a128k", "720p+a256k", "1080p+a128k", "1080p+a256k"],
+                id="Only muxed streams",
+            ),
+            pytest.param(
+                True,
+                False,
+                ["720p", "720p+a128k", "720p+a256k", "1080p", "1080p+a128k", "1080p+a256k"],
+                id="With video-only streams",
+            ),
+            pytest.param(
+                False,
+                True,
+                ["a128k", "a256k", "720p+a128k", "720p+a256k", "1080p+a128k", "1080p+a256k"],
+                id="With audio-only streams",
+            ),
+            pytest.param(
+                True,
+                True,
+                ["a128k", "a256k", "720p", "720p+a128k", "720p+a256k", "1080p", "1080p+a128k", "1080p+a256k"],
+                id="With video-only and audio-only streams",
+            ),
+        ],
+    )
     def test_with_videoaudio_only(
         self,
         session: Streamlink,
@@ -279,16 +285,19 @@ class TestDASHStreamParseManifest:
         assert getattr(streams["1080p_alt"].video_representation, "bandwidth", None) == pytest.approx(64.0)
         assert getattr(streams["1080p_alt2"].video_representation, "bandwidth", None) == pytest.approx(32.0)
 
-    @pytest.mark.parametrize("adaptationset", [
-        pytest.param(
-            Mock(contentProtections="DRM", representations=[]),
-            id="ContentProtection on AdaptationSet",
-        ),
-        pytest.param(
-            Mock(contentProtections=None, representations=[Mock(id="1", contentProtections="DRM")]),
-            id="ContentProtection on Representation",
-        ),
-    ])
+    @pytest.mark.parametrize(
+        "adaptationset",
+        [
+            pytest.param(
+                Mock(contentProtections="DRM", representations=[]),
+                id="ContentProtection on AdaptationSet",
+            ),
+            pytest.param(
+                Mock(contentProtections=None, representations=[Mock(id="1", contentProtections="DRM")]),
+                id="ContentProtection on Representation",
+            ),
+        ],
+    )
     def test_contentprotection(self, session: Streamlink, mpd: Mock, adaptationset: Mock):
         mpd.return_value = Mock(periods=[Mock(adaptationSets=[adaptationset])])
 
@@ -465,10 +474,13 @@ class TestDASHStreamWorker:
         assert worker._wait.is_set()
 
     # Verify the fix for https://github.com/streamlink/streamlink/issues/2873
-    @pytest.mark.parametrize("duration", [
-        0,
-        204.32,
-    ])
+    @pytest.mark.parametrize(
+        "duration",
+        [
+            0,
+            204.32,
+        ],
+    )
     def test_static_refresh_wait(
         self,
         timestamp: datetime,

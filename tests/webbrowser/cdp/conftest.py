@@ -15,4 +15,4 @@ def websocket_connection(monkeypatch: pytest.MonkeyPatch):
         yield fake_websocket_connection
     finally:
         assert fake_websocket_connection.closed
-        assert mock_connect_websocket_url.call_args_list == [call(ANY, "ws://localhost:1234/fake", max_message_size=2 ** 24)]
+        assert mock_connect_websocket_url.call_args_list == [call(ANY, "ws://localhost:1234/fake", max_message_size=2**24)]

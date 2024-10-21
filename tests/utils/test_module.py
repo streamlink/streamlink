@@ -12,27 +12,30 @@ __test_marker__ = "test_marker"
 _here = Path(__file__).parent
 
 
-@pytest.mark.parametrize(("name", "path", "expected"), [
-    pytest.param(
-        "some_module",
-        _here / "does_not_exist",
-        ImportError(
-            f"Not a package path: {_here / 'does_not_exist'}",
-            path=str(_here / "does_not_exist"),
+@pytest.mark.parametrize(
+    ("name", "path", "expected"),
+    [
+        pytest.param(
+            "some_module",
+            _here / "does_not_exist",
+            ImportError(
+                f"Not a package path: {_here / 'does_not_exist'}",
+                path=str(_here / "does_not_exist"),
+            ),
+            id="no-package",
         ),
-        id="no-package",
-    ),
-    pytest.param(
-        "does_not_exist",
-        _here,
-        ImportError(
-            "No module named 'does_not_exist'",
-            name="does_not_exist",
-            path=str(_here),
+        pytest.param(
+            "does_not_exist",
+            _here,
+            ImportError(
+                "No module named 'does_not_exist'",
+                name="does_not_exist",
+                path=str(_here),
+            ),
+            id="no-module",
         ),
-        id="no-module",
-    ),
-])
+    ],
+)
 def test_load_module_importerror(name: str, path: Path, expected: ImportError):
     with pytest.raises(ImportError) as cm:
         load_module(name, path)

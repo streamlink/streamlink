@@ -33,91 +33,95 @@ class TestDeprecated:
 
         return mod
 
-    @pytest.mark.parametrize(("module", "attr", "has_attr", "warnings", "raises_on_missing"), [
-        pytest.param(
-            dedent("""
-                from streamlink.compat import deprecated
-                deprecated({
-                    "Streamlink": ("streamlink.session.Streamlink", None, None),
-                })
-            """).strip(),
-            "Streamlink",
-            False,
-            [(__file__, StreamlinkDeprecationWarning, "'mocked_module.Streamlink' has been deprecated")],
-            pytest.raises(AttributeError),
-            id="import-path",
-        ),
-        pytest.param(
-            dedent("""
-                from streamlink.compat import deprecated
-                deprecated({
-                    "Streamlink": ("streamlink.session.Streamlink", None, "custom warning"),
-                })
-            """).strip(),
-            "Streamlink",
-            False,
-            [(__file__, StreamlinkDeprecationWarning, "custom warning")],
-            pytest.raises(AttributeError),
-            id="import-path-custom-msg",
-        ),
-        pytest.param(
-            dedent("""
-                from streamlink.compat import deprecated
-                from streamlink.session import Streamlink
-                deprecated({
-                    "Streamlink": (None, Streamlink, None),
-                })
-            """).strip(),
-            "Streamlink",
-            False,
-            [(__file__, StreamlinkDeprecationWarning, "'mocked_module.Streamlink' has been deprecated")],
-            pytest.raises(AttributeError),
-            id="import-obj",
-        ),
-        pytest.param(
-            dedent("""
-                from streamlink.compat import deprecated
-                from streamlink.session import Streamlink
-                deprecated({
-                    "Streamlink": (None, Streamlink, "custom warning"),
-                })
-            """).strip(),
-            "Streamlink",
-            False,
-            [(__file__, StreamlinkDeprecationWarning, "custom warning")],
-            pytest.raises(AttributeError),
-            id="import-obj-custom-msg",
-        ),
-        pytest.param(
-            dedent("""
-                from streamlink.compat import deprecated
-                foo = 1
-                deprecated({
-                    "Streamlink": ("streamlink.session.Streamlink", None, None),
-                })
-            """).strip(),
-            "foo",
-            True,
-            [],
-            pytest.raises(AttributeError),
-            id="no-warning-has-attr",
-        ),
-        pytest.param(
-            dedent("""
-                from streamlink.compat import deprecated
-                def __getattr__(name):
-                    return "foo"
-                deprecated({
-                    "Streamlink": ("streamlink.session.Streamlink", None, None),
-                })
-            """).strip(),
-            "foo",
-            False,
-            [],
-            nullcontext(),
-            id="no-warning-has-getattr",
-        ),
-    ], indirect=["module"])
+    @pytest.mark.parametrize(
+        ("module", "attr", "has_attr", "warnings", "raises_on_missing"),
+        [
+            pytest.param(
+                dedent("""
+                    from streamlink.compat import deprecated
+                    deprecated({
+                        "Streamlink": ("streamlink.session.Streamlink", None, None),
+                    })
+                """).strip(),
+                "Streamlink",
+                False,
+                [(__file__, StreamlinkDeprecationWarning, "'mocked_module.Streamlink' has been deprecated")],
+                pytest.raises(AttributeError),
+                id="import-path",
+            ),
+            pytest.param(
+                dedent("""
+                    from streamlink.compat import deprecated
+                    deprecated({
+                        "Streamlink": ("streamlink.session.Streamlink", None, "custom warning"),
+                    })
+                """).strip(),
+                "Streamlink",
+                False,
+                [(__file__, StreamlinkDeprecationWarning, "custom warning")],
+                pytest.raises(AttributeError),
+                id="import-path-custom-msg",
+            ),
+            pytest.param(
+                dedent("""
+                    from streamlink.compat import deprecated
+                    from streamlink.session import Streamlink
+                    deprecated({
+                        "Streamlink": (None, Streamlink, None),
+                    })
+                """).strip(),
+                "Streamlink",
+                False,
+                [(__file__, StreamlinkDeprecationWarning, "'mocked_module.Streamlink' has been deprecated")],
+                pytest.raises(AttributeError),
+                id="import-obj",
+            ),
+            pytest.param(
+                dedent("""
+                    from streamlink.compat import deprecated
+                    from streamlink.session import Streamlink
+                    deprecated({
+                        "Streamlink": (None, Streamlink, "custom warning"),
+                    })
+                """).strip(),
+                "Streamlink",
+                False,
+                [(__file__, StreamlinkDeprecationWarning, "custom warning")],
+                pytest.raises(AttributeError),
+                id="import-obj-custom-msg",
+            ),
+            pytest.param(
+                dedent("""
+                    from streamlink.compat import deprecated
+                    foo = 1
+                    deprecated({
+                        "Streamlink": ("streamlink.session.Streamlink", None, None),
+                    })
+                """).strip(),
+                "foo",
+                True,
+                [],
+                pytest.raises(AttributeError),
+                id="no-warning-has-attr",
+            ),
+            pytest.param(
+                dedent("""
+                    from streamlink.compat import deprecated
+                    def __getattr__(name):
+                        return "foo"
+                    deprecated({
+                        "Streamlink": ("streamlink.session.Streamlink", None, None),
+                    })
+                """).strip(),
+                "foo",
+                False,
+                [],
+                nullcontext(),
+                id="no-warning-has-getattr",
+            ),
+        ],
+        indirect=["module"],
+    )
     def test_deprecated(
         self,
         recwarn: pytest.WarningsRecorder,
