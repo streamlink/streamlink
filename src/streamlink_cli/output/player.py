@@ -232,7 +232,7 @@ class PlayerOutput(Output):
         playerpath = args[0]
         args[0] = which(playerpath)
         if not args[0]:
-            if playerpath[:1] in ("\"", "'"):
+            if playerpath[:1] in ('"', "'"):
                 warnings.warn(
                     "\n".join([
                         "The --player argument has been changed and now only takes player path values:",

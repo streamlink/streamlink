@@ -39,7 +39,7 @@ def _find_default_player_win32() -> Path | None:
             if p
         ),
         "vlc.exe",
-    )
+    )  # fmt: skip
 
 
 def _find_default_player_darwin() -> Path | None:
