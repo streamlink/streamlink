@@ -136,7 +136,7 @@ class PluginUrlTester:
         url: str = item[1] if isinstance(item, tuple) else item
         if not any(re.search(ignore, url) for ignore in self.ignorelist):
             for string, replacement in self.replacelist:
-                url = re.sub(fr"\b{re.escape(string)}\b", replacement, url)
+                url = re.sub(rf"\b{re.escape(string)}\b", replacement, url)
             self.urls.add(url)
 
     def iter_urls(self) -> Iterator[TUrlOrNamedUrl]:
