@@ -16,9 +16,9 @@ from streamlink.stream.http import HTTPStream
 log = logging.getLogger(__name__)
 
 
-@pluginmatcher(re.compile(
-    r"https?://(?:(?P<subdomain>\w+)\.)?euronews\.com/(?P<live>live$)?",
-))
+@pluginmatcher(
+    re.compile(r"https?://(?:(?P<subdomain>\w+)\.)?euronews\.com/(?P<live>live$)?"),
+)
 class Euronews(Plugin):
     API_URL = "https://{subdomain}.euronews.com/api/live/data"
 
@@ -103,9 +103,12 @@ class Euronews(Plugin):
         if live:
             return live
 
-        root = self.session.http.get(self.url, schema=validate.Schema(
-            validate.parse_html(),
-        ))
+        root = self.session.http.get(
+            self.url,
+            schema=validate.Schema(
+                validate.parse_html(),
+            ),
+        )
 
         return self._get_embed(root) or self._get_vod(root)
 

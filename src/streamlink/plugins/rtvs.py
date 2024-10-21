@@ -13,17 +13,20 @@ from streamlink.plugin.api import validate
 from streamlink.stream.hls import HLSStream
 
 
-@pluginmatcher(re.compile(
-    r"https?://www\.rtvs\.sk/televizia/(?:live-|sport)",
-))
+@pluginmatcher(
+    re.compile(r"https?://www\.rtvs\.sk/televizia/(?:live-|sport)"),
+)
 class Rtvs(Plugin):
     def _get_streams(self):
-        channel = self.session.http.get(self.url, schema=validate.Schema(
-            validate.parse_html(),
-            validate.xml_xpath_string(".//iframe[@id='player_live']//@src"),
-            validate.url(path=validate.startswith("/embed/live/")),
-            validate.transform(lambda embed: urlparse(embed).path[len("/embed/live/"):]),
-        ))
+        channel = self.session.http.get(
+            self.url,
+            schema=validate.Schema(
+                validate.parse_html(),
+                validate.xml_xpath_string(".//iframe[@id='player_live']//@src"),
+                validate.url(path=validate.startswith("/embed/live/")),
+                validate.transform(lambda embed: urlparse(embed).path[len("/embed/live/") :]),
+            ),
+        )
         if not channel:
             return
 
@@ -40,10 +43,12 @@ class Rtvs(Plugin):
                 validate.parse_json(),
                 {
                     "clip": {
-                        "sources": [{
-                            "src": validate.url(),
-                            "type": str,
-                        }],
+                        "sources": [
+                            {
+                                "src": validate.url(),
+                                "type": str,
+                            },
+                        ],
                     },
                 },
                 validate.get(("clip", "sources")),

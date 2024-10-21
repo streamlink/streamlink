@@ -78,42 +78,46 @@ class UStreamTVWsClient(WebsocketClient):
         "args": [{str: object}],
     })
     _schema_stream_formats = validate.Schema({
-        "streams": [validate.any(
-            validate.all(
-                {
-                    "contentType": "video/mp4",
-                    "sourceStreamVersion": int,
-                    "initUrl": str,
-                    "segmentUrl": str,
-                    "bitrate": int,
-                    "height": int,
-                },
-                validate.transform(lambda obj: StreamFormatVideo(**obj)),
+        "streams": [
+            validate.any(
+                validate.all(
+                    {
+                        "contentType": "video/mp4",
+                        "sourceStreamVersion": int,
+                        "initUrl": str,
+                        "segmentUrl": str,
+                        "bitrate": int,
+                        "height": int,
+                    },
+                    validate.transform(lambda obj: StreamFormatVideo(**obj)),
+                ),
+                validate.all(
+                    {
+                        "contentType": "audio/mp4",
+                        "sourceStreamVersion": int,
+                        "initUrl": str,
+                        "segmentUrl": str,
+                        "bitrate": int,
+                        validate.optional("language"): str,
+                    },
+                    validate.transform(lambda obj: StreamFormatAudio(**obj)),
+                ),
+                object,
             ),
-            validate.all(
-                {
-                    "contentType": "audio/mp4",
-                    "sourceStreamVersion": int,
-                    "initUrl": str,
-                    "segmentUrl": str,
-                    "bitrate": int,
-                    validate.optional("language"): str,
-                },
-                validate.transform(lambda obj: StreamFormatAudio(**obj)),
-            ),
-            object,
-        )],
+        ],
     })
     _schema_stream_segments = validate.Schema({
         "chunkId": int,
         "chunkTime": int,
         "contentAccess": validate.all(
             {
-                "accessList": [{
-                    "data": {
-                        "path": str,
+                "accessList": [
+                    {
+                        "data": {
+                            "path": str,
+                        },
                     },
-                }],
+                ],
             },
             validate.get(("accessList", 0, "data", "path")),
         ),
@@ -155,7 +159,7 @@ class UStreamTVWsClient(WebsocketClient):
         super().__init__(session, self._get_url(), origin="https://www.ustream.tv")
 
     def _get_url(self):
-        return self.API_URL.format(randint(0, 0xffffff), self.media_id, self.application, self.cluster)
+        return self.API_URL.format(randint(0, 0xFFFFFF), self.media_id, self.application, self.cluster)
 
     def _set_error(self, error: Any):
         self.stream_error = error
@@ -255,7 +259,9 @@ class UStreamTVWsClient(WebsocketClient):
             data["protocol"],
             data["data"][0]["data"][0]["sites"][0]["host"],
             data["data"][0]["data"][0]["sites"][0]["path"],
-            "", "", "",
+            "",
+            "",
+            "",
         ))
         self._set_ready()
 
@@ -311,14 +317,16 @@ class UStreamTVWsClient(WebsocketClient):
                     # the last id->hash item will use the previous diff to extrapolate segment IDs
                     diff = sorted_ids[idx_next] - segment_id
                 for num in range(segment_id, segment_id + diff):
-                    self._segments_append(UStreamTVSegment(
-                        uri="",
-                        num=num,
-                        duration=duration,
-                        available_at=current_time + timedelta(seconds=(num - current_id - 1) * duration / 1000),
-                        hash=hashes[segment_id],
-                        path=path,
-                    ))
+                    self._segments_append(
+                        UStreamTVSegment(
+                            uri="",
+                            num=num,
+                            duration=duration,
+                            available_at=current_time + timedelta(seconds=(num - current_id - 1) * duration / 1000),
+                            hash=hashes[segment_id],
+                            path=path,
+                        ),
+                    )
 
         self._set_ready()
 
@@ -470,17 +478,22 @@ class UStreamTVStream(Stream):
         return reader
 
 
-@pluginmatcher(re.compile(r"""
-    https?://(?:(?:www\.)?ustream\.tv|video\.ibm\.com)
-    (?:
-        /combined-embed
-        /(?P<combined_channel_id>\d+)
-        (?:/video/(?P<combined_video_id>\d+))?
-        |
-        (?:(?:/embed/|/channel/(?:id/)?)(?P<channel_id>\d+))?
-        (?:(?:/embed)?/recorded/(?P<video_id>\d+))?
-    )
-""", re.VERBOSE))
+@pluginmatcher(
+    re.compile(
+        r"""
+            https?://(?:(?:www\.)?ustream\.tv|video\.ibm\.com)
+            (?:
+                /combined-embed
+                /(?P<combined_channel_id>\d+)
+                (?:/video/(?P<combined_video_id>\d+))?
+                |
+                (?:(?:/embed/|/channel/(?:id/)?)(?P<channel_id>\d+))?
+                (?:(?:/embed)?/recorded/(?P<video_id>\d+))?
+            )
+        """,
+        re.VERBOSE,
+    ),
+)
 @pluginargument(
     "password",
     sensitive=True,
@@ -526,7 +539,8 @@ class UStreamTV(Plugin):
             password=self.get_option("password"),
         )
         log.debug(
-            "Connecting to UStream API: " + ", ".join([
+            "Connecting to UStream API: "
+            + ", ".join([
                 f"media_id={media_id}",
                 f"application={application}",
                 f"referrer={self.url}",
@@ -540,7 +554,7 @@ class UStreamTV(Plugin):
             not wsclient.ready.wait(self.STREAM_READY_TIMEOUT)
             or not wsclient.is_alive()
             or wsclient.stream_error
-        ):
+        ):  # fmt: skip
             log.error(wsclient.stream_error or "Waiting for stream data timed out.")
             wsclient.close()
             return
@@ -551,10 +565,13 @@ class UStreamTV(Plugin):
         else:
             for video in wsclient.stream_formats_video:
                 for audio in wsclient.stream_formats_audio:
-                    yield f"{video.height}p+a{audio.bitrate}k", MuxedStream(
-                        self.session,
-                        UStreamTVStream(self.session, "video", wsclient, video),
-                        UStreamTVStream(self.session, "audio", wsclient, audio),
+                    yield (
+                        f"{video.height}p+a{audio.bitrate}k",
+                        MuxedStream(
+                            self.session,
+                            UStreamTVStream(self.session, "video", wsclient, video),
+                            UStreamTVStream(self.session, "audio", wsclient, audio),
+                        ),
                     )
 
 

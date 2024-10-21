@@ -13,28 +13,33 @@ from streamlink.plugin.api import validate
 from streamlink.stream.hls import HLSStream
 
 
-@pluginmatcher(re.compile(
-    r"https?://(?:www\.)?cbsnews\.com/(?:\w+/)?live/?",
-))
+@pluginmatcher(
+    re.compile(r"https?://(?:www\.)?cbsnews\.com/(?:\w+/)?live/?"),
+)
 class CBSNews(Plugin):
     def _get_streams(self):
-        data = self.session.http.get(self.url, schema=validate.Schema(
-            re.compile(r"CBSNEWS\.defaultPayload\s*=\s*(\{.*?})\s*\n"),
-            validate.none_or_all(
-                validate.get(1),
-                validate.parse_json(),
-                {
-                    "items": [{
-                        "id": str,
-                        "canonicalTitle": str,
-                        "video": validate.url(),
-                        "format": "application/x-mpegURL",
-                    }],
-                },
-                validate.get(("items", 0)),
-                validate.union_get("id", "canonicalTitle", "video"),
+        data = self.session.http.get(
+            self.url,
+            schema=validate.Schema(
+                re.compile(r"CBSNEWS\.defaultPayload\s*=\s*(\{.*?})\s*\n"),
+                validate.none_or_all(
+                    validate.get(1),
+                    validate.parse_json(),
+                    {
+                        "items": [
+                            {
+                                "id": str,
+                                "canonicalTitle": str,
+                                "video": validate.url(),
+                                "format": "application/x-mpegURL",
+                            },
+                        ],
+                    },
+                    validate.get(("items", 0)),
+                    validate.union_get("id", "canonicalTitle", "video"),
+                ),
             ),
-        ))
+        )
         if not data:
             return
 

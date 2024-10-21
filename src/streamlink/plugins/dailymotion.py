@@ -19,14 +19,19 @@ from streamlink.stream.http import HTTPStream
 log = logging.getLogger(__name__)
 
 
-@pluginmatcher(re.compile(r"""
-    https?://(?:\w+\.)?dailymotion\.com
-    (?:
-        (/embed)?/(video|live)/(?P<media_id>[^_?/]+)
-        |
-        /(?P<user>[\w-]+)
-    )
-""", re.VERBOSE))
+@pluginmatcher(
+    re.compile(
+        r"""
+            https?://(?:\w+\.)?dailymotion\.com
+            (?:
+                (/embed)?/(video|live)/(?P<media_id>[^_?/]+)
+                |
+                /(?P<user>[\w-]+)
+            )
+        """,
+        re.VERBOSE,
+    ),
+)
 class DailyMotion(Plugin):
     _URL_API_USER_VIDEO = "https://api.dailymotion.com/user/{user}/videos"
     _URL_STREAM_INFO = "https://www.dailymotion.com/player/metadata/video/{media_id}"
@@ -53,10 +58,12 @@ class DailyMotion(Plugin):
                         },
                         "title": str,
                         "qualities": {
-                            str: [{
-                                "type": str,
-                                "url": validate.url(),
-                            }],
+                            str: [
+                                {
+                                    "type": str,
+                                    "url": validate.url(),
+                                },
+                            ],
                         },
                     },
                 ),

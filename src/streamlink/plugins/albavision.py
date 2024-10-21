@@ -30,45 +30,50 @@ from streamlink.utils.url import update_qsd
 log = logging.getLogger(__name__)
 
 
-@pluginmatcher(re.compile(r"""
-    https?://(?:www\.)?
-    (
-        antena7\.com\.do
-        |
-        atv\.pe
-        |
-        c9n\.com\.py
-        |
-        canal10\.com\.ni
-        |
-        canal12\.com\.sv
-        |
-        chapintv\.com
-        |
-        elnueve\.com\.ar
-        |
-        redbolivision\.tv\.bo
-        |
-        repretel\.com
-        |
-        rts\.com\.ec
-        |
-        snt\.com\.py
-        |
-        tvc\.com\.ec
-        |
-        vtv\.com\.hn
-    )
-    /
-    (?:
-        (?:
-            en-?vivo(?:-atv(?:mas)?|-canal-?\d{1,2})?
-        )
-        |
-        upptv
-    )
-    (?:/|\#)?$
-""", re.VERBOSE))
+@pluginmatcher(
+    re.compile(
+        r"""
+            https?://(?:www\.)?
+            (
+                antena7\.com\.do
+                |
+                atv\.pe
+                |
+                c9n\.com\.py
+                |
+                canal10\.com\.ni
+                |
+                canal12\.com\.sv
+                |
+                chapintv\.com
+                |
+                elnueve\.com\.ar
+                |
+                redbolivision\.tv\.bo
+                |
+                repretel\.com
+                |
+                rts\.com\.ec
+                |
+                snt\.com\.py
+                |
+                tvc\.com\.ec
+                |
+                vtv\.com\.hn
+            )
+            /
+            (?:
+                (?:
+                    en-?vivo(?:-atv(?:mas)?|-canal-?\d{1,2})?
+                )
+                |
+                upptv
+            )
+            (?:/|\#)?$
+        """,
+        re.VERBOSE,
+    ),
+)
 class Albavision(Plugin):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -77,9 +82,12 @@ class Albavision(Plugin):
     @property
     def page(self):
         if self._page is None:
-            self._page = self.session.http.get(self.url, schema=validate.Schema(
-                validate.parse_html(),
-            ))
+            self._page = self.session.http.get(
+                self.url,
+                schema=validate.Schema(
+                    validate.parse_html(),
+                ),
+            )
         return self._page
 
     def _is_token_based_site(self):
@@ -145,13 +153,17 @@ class Albavision(Plugin):
         if not token_req_url:
             return
 
-        res = self.session.http.get(token_req_url, schema=validate.Schema(
-            validate.parse_json(), {
-                "success": bool,
-                validate.optional("error"): int,
-                validate.optional("token"): str,
-            },
-        ))
+        res = self.session.http.get(
+            token_req_url,
+            schema=validate.Schema(
+                validate.parse_json(),
+                {
+                    "success": bool,
+                    validate.optional("error"): int,
+                    validate.optional("token"): str,
+                },
+            ),
+        )
 
         if not res["success"]:
             if res["error"]:

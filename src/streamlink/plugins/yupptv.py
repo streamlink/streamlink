@@ -82,7 +82,7 @@ class YuppTV(Plugin):
         authed = (
             self.session.http.cookies.get("BoxId")
             and self.session.http.cookies.get("YuppflixToken")
-        )
+        )  # fmt: skip
 
         login_box_id = self.get_option("boxid")
         login_yuppflix_token = self.get_option("yuppflixtoken")

@@ -19,9 +19,9 @@ from streamlink.utils.times import seconds_to_hhmmss
 log = logging.getLogger(__name__)
 
 
-@pluginmatcher(re.compile(
-    r"https?://network\.wwe\.com/(?:video|live)/(?P<stream_id>\d+)",
-))
+@pluginmatcher(
+    re.compile(r"https?://network\.wwe\.com/(?:video|live)/(?P<stream_id>\d+)"),
+)
 @pluginargument(
     "email",
     required=True,
@@ -53,11 +53,13 @@ class WWENetwork(Plugin):
 
     def request(self, method, url, **kwargs):
         headers = kwargs.pop("headers", {})
-        headers.update({"x-api-key": self.API_KEY,
-                        "Origin": "https://network.wwe.com",
-                        "Referer": "https://network.wwe.com/signin",
-                        "Accept": "application/json",
-                        "Realm": "dce.wwe"})
+        headers.update({
+            "x-api-key": self.API_KEY,
+            "Origin": "https://network.wwe.com",
+            "Referer": "https://network.wwe.com/signin",
+            "Accept": "application/json",
+            "Realm": "dce.wwe",
+        })
         if self.auth_token:
             headers["Authorization"] = "Bearer {0}".format(self.auth_token)
 
@@ -67,19 +69,24 @@ class WWENetwork(Plugin):
         data = self.session.http.json(res)
 
         if "status" in data and data["status"] != 200:
-            log.debug("API request failed: {0}:{1} ({2})".format(
-                data["status"],
-                data.get("code"),
-                "; ".join(data.get("messages", [])),
-            ))
+            log.debug(
+                "API request failed: {0}:{1} ({2})".format(
+                    data["status"],
+                    data.get("code"),
+                    "; ".join(data.get("messages", [])),
+                ),
+            )
         return data
 
     def login(self, email, password):
         log.debug("Attempting login as {0}".format(email))
         # sets some required cookies to login
-        data = self.request("POST", self.login_url,
-                            data=json.dumps({"id": email, "secret": password}),
-                            headers={"Content-Type": "application/json"})
+        data = self.request(
+            "POST",
+            self.login_url,
+            data=json.dumps({"id": email, "secret": password}),
+            headers={"Content-Type": "application/json"},
+        )
         if "authorisationToken" in data:
             self.auth_token = data["authorisationToken"]
 

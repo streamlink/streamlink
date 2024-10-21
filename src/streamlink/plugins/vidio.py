@@ -19,9 +19,9 @@ from streamlink.stream.hls import HLSStream
 log = logging.getLogger(__name__)
 
 
-@pluginmatcher(re.compile(
-    r"https?://(?:www\.)?vidio\.com/.+",
-))
+@pluginmatcher(
+    re.compile(r"https?://(?:www\.)?vidio\.com/.+"),
+)
 class Vidio(Plugin):
     tokens_url = "https://www.vidio.com/live/{id}/tokens"
 

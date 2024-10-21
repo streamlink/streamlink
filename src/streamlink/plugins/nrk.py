@@ -18,9 +18,9 @@ from streamlink.stream.http import HTTPStream
 log = logging.getLogger(__name__)
 
 
-@pluginmatcher(re.compile(
-    r"https?://(?:tv|radio)\.nrk\.no/(program|direkte|serie|podkast)(?:/.+)?/([^/]+)",
-))
+@pluginmatcher(
+    re.compile(r"https?://(?:tv|radio)\.nrk\.no/(program|direkte|serie|podkast)(?:/.+)?/([^/]+)"),
+)
 class NRK(Plugin):
     _URL_MANIFEST = "https://psapi.nrk.no/playback/manifest/{manifest_type}/{program_id}"
     _URL_METADATA = "https://psapi.nrk.no/playback/metadata/{manifest_type}/{program_id}?eea-portability=true"
@@ -34,19 +34,22 @@ class NRK(Plugin):
 
     def _get_metadata(self, manifest_type, program_id):
         url_metadata = self._URL_METADATA.format(manifest_type=manifest_type, program_id=program_id)
-        non_playable = self.session.http.get(url_metadata, schema=validate.Schema(
-            validate.parse_json(),
-            {
-                validate.optional("nonPlayable"): validate.none_or_all(
-                    {
-                        "reason": str,
-                        "endUserMessage": str,
-                    },
-                    validate.union_get("reason", "endUserMessage"),
-                ),
-            },
-            validate.get("nonPlayable"),
-        ))
+        non_playable = self.session.http.get(
+            url_metadata,
+            schema=validate.Schema(
+                validate.parse_json(),
+                {
+                    validate.optional("nonPlayable"): validate.none_or_all(
+                        {
+                            "reason": str,
+                            "endUserMessage": str,
+                        },
+                        validate.union_get("reason", "endUserMessage"),
+                    ),
+                },
+                validate.get("nonPlayable"),
+            ),
+        )
         if non_playable:
             reason, end_user_message = non_playable
             log.error(f"Not playable: {reason} - {end_user_message or 'error'}")
@@ -55,10 +58,13 @@ class NRK(Plugin):
         return True
 
     def _update_program_id(self, program_id):
-        new_program_id = self.session.http.get(self.url, schema=validate.Schema(
-            validate.parse_html(),
-            validate.xml_xpath_string(".//meta[@property='nrk:program-id']/@content"),
-        ))
+        new_program_id = self.session.http.get(
+            self.url,
+            schema=validate.Schema(
+                validate.parse_html(),
+                validate.xml_xpath_string(".//meta[@property='nrk:program-id']/@content"),
+            ),
+        )
         return new_program_id or program_id
 
     def _get_assets(self, manifest_type, program_id):

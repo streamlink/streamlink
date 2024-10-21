@@ -27,18 +27,30 @@ from streamlink.stream.hls import HLSStream
 log = logging.getLogger(__name__)
 
 
-@pluginmatcher(name="default", pattern=re.compile(
-    r"https?://(?:stream|tvpstream\.vod)\.tvp\.pl(?:/(?:\?channel_id=(?P<channel_id>\d+))?)?$",
-))
-@pluginmatcher(name="vod", pattern=re.compile(
-    r"https?://vod\.tvp\.pl/[^/]+/.+,(?P<vod_id>\d+)$",
-))
-@pluginmatcher(name="tvp_info", pattern=re.compile(
-    r"https?://(?:www\.)?tvp\.info/",
-))
-@pluginmatcher(name="tvp_sport", pattern=re.compile(
-    r"https?://sport\.tvp\.pl/(?P<stream_id>\d+)/.+",
-))
+@pluginmatcher(
+    name="default",
+    pattern=re.compile(
+        r"https?://(?:stream|tvpstream\.vod)\.tvp\.pl(?:/(?:\?channel_id=(?P<channel_id>\d+))?)?$",
+    ),
+)
+@pluginmatcher(
+    name="vod",
+    pattern=re.compile(
+        r"https?://vod\.tvp\.pl/[^/]+/.+,(?P<vod_id>\d+)$",
+    ),
+)
+@pluginmatcher(
+    name="tvp_info",
+    pattern=re.compile(
+        r"https?://(?:www\.)?tvp\.info/",
+    ),
+)
+@pluginmatcher(
+    name="tvp_sport",
+    pattern=re.compile(
+        r"https?://sport\.tvp\.pl/(?P<stream_id>\d+)/.+",
+    ),
+)
 class TVP(Plugin):
     _URL_VOD = "https://vod.tvp.pl/api/products/{vod_id}/videos/playlist"
     _URL_INFO_API_TOKEN = "https://api.tvp.pl/tokenizer/token/{token}"
@@ -93,9 +105,11 @@ class TVP(Plugin):
                             {
                                 "id": int,
                                 "items": validate.none_or_all(
-                                    [{
-                                        "video_id": int,
-                                    }],
+                                    [
+                                        {
+                                            "video_id": int,
+                                        },
+                                    ],
                                     validate.get((0, "video_id")),
                                 ),
                             },
@@ -139,9 +153,11 @@ class TVP(Plugin):
                     validate.all(
                         {
                             "sources": {
-                                validate.optional("HLS"): [{
-                                    "src": validate.url(),
-                                }],
+                                validate.optional("HLS"): [
+                                    {
+                                        "src": validate.url(),
+                                    },
+                                ],
                             },
                         },
                         validate.get("sources"),

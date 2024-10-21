@@ -22,14 +22,19 @@ from streamlink.utils.parse import parse_json
 log = logging.getLogger(__name__)
 
 
-@pluginmatcher(re.compile(r"""
-    https?://(?:www\.)?bbc\.co\.uk/iplayer/
-    (
-        episode/(?P<episode_id>\w+)
-        |
-        live/(?P<channel_name>\w+)
-    )
-""", re.VERBOSE))
+@pluginmatcher(
+    re.compile(
+        r"""
+            https?://(?:www\.)?bbc\.co\.uk/iplayer/
+            (
+                episode/(?P<episode_id>\w+)
+                |
+                live/(?P<channel_name>\w+)
+            )
+        """,
+        re.VERBOSE,
+    ),
+)
 @pluginargument(
     "username",
     requires=["password"],
@@ -53,8 +58,8 @@ class BBCiPlayer(Plugin):
     Allows streaming of live channels from bbc.co.uk/iplayer/live/* and of iPlayer programmes from
     bbc.co.uk/iplayer/episode/*
     """
-    mediator_re = re.compile(
-        r"window\.__IPLAYER_REDUX_STATE__\s*=\s*({.*?});", re.DOTALL)
+
+    mediator_re = re.compile(r"window\.__IPLAYER_REDUX_STATE__\s*=\s*({.*?});", re.DOTALL)
     state_re = re.compile(r"window.__IPLAYER_REDUX_STATE__\s*=\s*({.*?});</script>")
     account_locals_re = re.compile(r"window.bbcAccount.locals\s*=\s*({.*?});")
     hash = base64.b64decode(b"N2RmZjc2NzFkMGM2OTdmZWRiMWQ5MDVkOWExMjE3MTk5MzhiOTJiZg==")
@@ -70,19 +75,28 @@ class BBCiPlayer(Plugin):
         {
             "versions": [{"id": str}],
         },
-        validate.get("versions"), validate.get(0),
+        validate.get("versions"),
+        validate.get(0),
         validate.get("id"),
     )
     mediaselector_schema = validate.Schema(
         validate.parse_json(),
-        {"media": [
-            {"connection":
-                validate.all([{
-                    validate.optional("href"): validate.url(),
-                    validate.optional("transferFormat"): str,
-                }], validate.filter(lambda c: c.get("href"))),
-                "kind": str},
-        ]},
+        {
+            "media": [
+                {
+                    "connection": validate.all(
+                        [
+                            {
+                                validate.optional("href"): validate.url(),
+                                validate.optional("transferFormat"): str,
+                            },
+                        ],
+                        validate.filter(lambda c: c.get("href")),
+                    ),
+                    "kind": str,
+                },
+            ],
+        },
         validate.get("media"),
         validate.filter(lambda x: x["kind"] == "video"),
     )
@@ -126,8 +140,7 @@ class BBCiPlayer(Plugin):
     def mediaselector(self, vpid):
         urls = defaultdict(set)
         for platform in self.platforms:
-            url = self.api_url.format(vpid=vpid, vpid_hash=self._hash_vpid(vpid),
-                                      platform=platform)
+            url = self.api_url.format(vpid=vpid, vpid_hash=self._hash_vpid(vpid), platform=platform)
             log.debug(f"Info API request: {url}")
             medias = self.session.http.get(url, schema=self.mediaselector_schema)
             for media in medias:
@@ -178,15 +191,15 @@ class BBCiPlayer(Plugin):
                 password=self.get_option("password"),
                 attempts=0,
             ),
-            headers={"Referer": self.url})
+            headers={"Referer": self.url},
+        )
 
         return auth_check(res)
 
     def _get_streams(self):
         if not self.get_option("username"):
             log.error(
-                "BBC iPlayer requires an account you must login using "
-                + "--bbciplayer-username and --bbciplayer-password",
+                "BBC iPlayer requires an account. You must login using --bbciplayer-username and --bbciplayer-password",
             )
             return
         log.info(
@@ -194,8 +207,7 @@ class BBCiPlayer(Plugin):
             + "information: https://www.bbc.co.uk/iplayer/help/tvlicence",
         )
         if not self.login(self.url):
-            log.error(
-                "Could not authenticate, check your username and password")
+            log.error("Could not authenticate, check your username and password")
             return
 
         episode_id = self.match.group("episode_id")

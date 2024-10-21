@@ -23,9 +23,9 @@ from streamlink.utils.url import update_qsd
 log = logging.getLogger(__name__)
 
 
-@pluginmatcher(re.compile(
-    r"https?://twitcasting\.tv/(?P<channel>[^/]+)",
-))
+@pluginmatcher(
+    re.compile(r"https?://twitcasting\.tv/(?P<channel>[^/]+)"),
+)
 @pluginargument(
     "password",
     sensitive=True,

@@ -58,15 +58,21 @@ class Pandalive(Plugin):
                             "liveType": str,
                         },
                         "PlayList": {
-                            validate.optional("hls"): [{
-                                "url": validate.url(),
-                            }],
-                            validate.optional("hls2"): [{
-                                "url": validate.url(),
-                            }],
-                            validate.optional("hls3"): [{
-                                "url": validate.url(),
-                            }],
+                            validate.optional("hls"): [
+                                {
+                                    "url": validate.url(),
+                                },
+                            ],
+                            validate.optional("hls2"): [
+                                {
+                                    "url": validate.url(),
+                                },
+                            ],
+                            validate.optional("hls3"): [
+                                {
+                                    "url": validate.url(),
+                                },
+                            ],
                         },
                         "result": bool,
                         "message": str,

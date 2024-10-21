@@ -41,53 +41,65 @@ class Pluzz(Plugin):
         CHROME_VERSION = re.compile(r"Chrome/(\d+)").search(useragents.CHROME).group(1)
 
         # Retrieve geolocation data
-        country_code = self.session.http.get(self.GEO_URL, schema=validate.Schema(
-            validate.parse_json(),
-            {"reponse": {"geo_info": {
-                "country_code": str,
-            }}},
-            validate.get(("reponse", "geo_info", "country_code")),
-        ))
+        country_code = self.session.http.get(
+            self.GEO_URL,
+            schema=validate.Schema(
+                validate.parse_json(),
+                {
+                    "reponse": {
+                        "geo_info": {
+                            "country_code": str,
+                        },
+                    },
+                },
+                validate.get(("reponse", "geo_info", "country_code")),
+            ),
+        )
         log.debug(f"Country: {country_code}")
 
         # Retrieve URL page and search for video ID
         video_id = None
         try:
-            video_id = self.session.http.get(self.url, schema=validate.Schema(
-                validate.parse_html(),
-                validate.any(
-                    # default francetv player
-                    validate.all(
-                        validate.xml_xpath_string(".//script[contains(text(),'window.FTVPlayerVideos')][1]/text()"),
-                        str,
-                        validate.regex(re.compile(
-                            r"window\.FTVPlayerVideos\s*=\s*(?P<json>\[{.+?}])\s*;\s*(?:$|var)",
-                            re.DOTALL,
-                        )),
-                        validate.get("json"),
-                        validate.parse_json(),
-                        [{"videoId": str}],
-                        validate.get((0, "videoId")),
-                    ),
-                    # francetvinfo.fr overseas live stream
-                    validate.all(
-                        validate.xml_xpath_string(".//script[contains(text(),'magneto:{videoId:')][1]/text()"),
-                        str,
-                        validate.regex(re.compile(r"""magneto:\{videoId:(?P<q>['"])(?P<video_id>.+?)(?P=q)""")),
-                        validate.get("video_id"),
-                    ),
-                    # francetvinfo.fr news article
-                    validate.all(
-                        validate.xml_xpath_string(".//*[@id][contains(@class,'francetv-player-wrapper')][1]/@id"),
-                        str,
-                    ),
-                    # francetvinfo.fr videos
-                    validate.all(
-                        validate.xml_xpath_string(".//*[@data-id][contains(@class,'magneto')][1]/@data-id"),
-                        str,
+            video_id = self.session.http.get(
+                self.url,
+                schema=validate.Schema(
+                    validate.parse_html(),
+                    validate.any(
+                        # default francetv player
+                        validate.all(
+                            validate.xml_xpath_string(".//script[contains(text(),'window.FTVPlayerVideos')][1]/text()"),
+                            str,
+                            validate.regex(
+                                re.compile(
+                                    r"window\.FTVPlayerVideos\s*=\s*(?P<json>\[{.+?}])\s*;\s*(?:$|var)",
+                                    re.DOTALL,
+                                ),
+                            ),
+                            validate.get("json"),
+                            validate.parse_json(),
+                            [{"videoId": str}],
+                            validate.get((0, "videoId")),
+                        ),
+                        # francetvinfo.fr overseas live stream
+                        validate.all(
+                            validate.xml_xpath_string(".//script[contains(text(),'magneto:{videoId:')][1]/text()"),
+                            str,
+                            validate.regex(re.compile(r"""magneto:\{videoId:(?P<q>['"])(?P<video_id>.+?)(?P=q)""")),
+                            validate.get("video_id"),
+                        ),
+                        # francetvinfo.fr news article
+                        validate.all(
+                            validate.xml_xpath_string(".//*[@id][contains(@class,'francetv-player-wrapper')][1]/@id"),
+                            str,
+                        ),
+                        # francetvinfo.fr videos
+                        validate.all(
+                            validate.xml_xpath_string(".//*[@data-id][contains(@class,'magneto')][1]/@data-id"),
+                            str,
+                        ),
                     ),
                 ),
-            ))
+            )
         except PluginError:
             pass
         if not video_id:

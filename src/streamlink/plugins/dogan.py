@@ -139,7 +139,7 @@ class Dogan(Plugin):
         return urljoin(service_url or default_service_url, secure_path)
 
     def _query_hls_url(self, content_id):
-        for idx, match in enumerate(self.matches[:len(self.API_URLS)]):
+        for idx, match in enumerate(self.matches[: len(self.API_URLS)]):
             if match:
                 return self._api_query_new(content_id, self.API_URLS[idx])
 
