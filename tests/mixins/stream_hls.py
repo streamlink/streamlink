@@ -54,7 +54,7 @@ class Tag(HLSItemBase):
 
     @classmethod
     def val_quoted_string(cls, value):
-        return "\"{0}\"".format(value)
+        return '"{0}"'.format(value)
 
     @classmethod
     def val_hex(cls, value):
@@ -139,6 +139,7 @@ class HLSStreamReadThread(Thread):
     """
     Run the reader on a separate thread, so that each read can be controlled from within the main thread
     """
+
     def __init__(self, session: Streamlink, stream: HLSStream, *args, **kwargs):
         super().__init__(*args, **kwargs, daemon=True)
 

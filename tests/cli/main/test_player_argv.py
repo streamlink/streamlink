@@ -65,8 +65,8 @@ def _test(argv: list, mock_subprocess: Mock):
             id="player-args-single-hyphen-ghissue-971",
         ),
         pytest.param(
-            ["-p", "player", "-a", "--input-title-format \"foo \\\"bar\\\"\"", "--player-passthrough=hls", "test.se", "hls"],
-            {"call": ["player", "--input-title-format", "foo \"bar\"", "http://test.se/playlist.m3u8"]},
+            ["-p", "player", "-a", '--input-title-format "foo \\"bar\\""', "--player-passthrough=hls", "test.se", "hls"],
+            {"call": ["player", "--input-title-format", 'foo "bar"', "http://test.se/playlist.m3u8"]},
             id="player-passthrough",
         ),
     ],

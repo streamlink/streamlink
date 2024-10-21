@@ -21,12 +21,12 @@ class ValidationError(ValueError):
     ):
         self.schema = schema
         if len(errors) == 1 and isinstance(errors[0], str):
-            self.errors = (self._truncate(errors[0], **errkeywords), )
+            self.errors = (self._truncate(errors[0], **errkeywords),)
         else:
             self.errors = errors
 
     def _ellipsis(self, string: str):
-        return string if len(string) <= self.MAX_LENGTH else f"<{string[:self.MAX_LENGTH - 5]}...>"
+        return string if len(string) <= self.MAX_LENGTH else f"<{string[: self.MAX_LENGTH - 5]}...>"
 
     def _truncate(self, template: str, **kwargs):
         return template.format(**{k: self._ellipsis(str(v)) for k, v in kwargs.items()})

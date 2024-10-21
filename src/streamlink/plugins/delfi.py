@@ -21,9 +21,9 @@ from streamlink.utils.url import update_scheme
 log = logging.getLogger(__name__)
 
 
-@pluginmatcher(re.compile(
-    r"https?://(?:[\w-]+\.)?delfi\.(?P<tld>lt|lv|ee)",
-))
+@pluginmatcher(
+    re.compile(r"https?://(?:[\w-]+\.)?delfi\.(?P<tld>lt|lv|ee)"),
+)
 class Delfi(Plugin):
     _api = {
         "lt": "https://g2.dcdn.lt/vfe/data.php",
@@ -46,10 +46,12 @@ class Delfi(Plugin):
                         "data": {
                             "versions": {
                                 str: validate.all(
-                                    [{
-                                        "type": str,
-                                        "src": str,
-                                    }],
+                                    [
+                                        {
+                                            "type": str,
+                                            "src": str,
+                                        },
+                                    ],
                                     validate.filter(lambda item: item["type"] == "application/x-mpegurl"),
                                 ),
                             },
@@ -68,24 +70,31 @@ class Delfi(Plugin):
 
     def _get_streams_delfi(self, src):
         try:
-            data = self.session.http.get(src, schema=validate.Schema(
-                validate.parse_html(),
-                validate.xml_xpath_string(".//script[contains(text(),'embedJs.setAttribute(')][1]/text()"),
-                validate.none_or_all(
-                    re.compile(r"embedJs\.setAttribute\('src',\s*'(.+?)'"),
+            data = self.session.http.get(
+                src,
+                schema=validate.Schema(
+                    validate.parse_html(),
+                    validate.xml_xpath_string(".//script[contains(text(),'embedJs.setAttribute(')][1]/text()"),
                     validate.none_or_all(
-                        validate.get(1),
-                        validate.transform(lambda url: parse_qsd(urlparse(url).fragment)),
-                        {"stream": str},
-                        validate.get("stream"),
-                        validate.parse_json(),
-                        {"versions": [{
-                            "hls": str,
-                        }]},
-                        validate.get("versions"),
+                        re.compile(r"embedJs\.setAttribute\('src',\s*'(.+?)'"),
+                        validate.none_or_all(
+                            validate.get(1),
+                            validate.transform(lambda url: parse_qsd(urlparse(url).fragment)),
+                            {"stream": str},
+                            validate.get("stream"),
+                            validate.parse_json(),
+                            {
+                                "versions": [
+                                    {
+                                        "hls": str,
+                                    },
+                                ],
+                            },
+                            validate.get("versions"),
+                        ),
                     ),
                 ),
-            ))
+            )
         except PluginError:
             log.error("Failed to get streams from iframe")
             return
@@ -95,9 +104,12 @@ class Delfi(Plugin):
             yield from HLSStream.parse_variant_playlist(self.session, src).items()
 
     def _get_streams(self):
-        root = self.session.http.get(self.url, schema=validate.Schema(
-            validate.parse_html(),
-        ))
+        root = self.session.http.get(
+            self.url,
+            schema=validate.Schema(
+                validate.parse_html(),
+            ),
+        )
 
         video_id = root.xpath("string(.//div[@data-provider='dvideo'][@data-id][1]/@data-id)")
         if video_id:

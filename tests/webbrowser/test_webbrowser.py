@@ -19,32 +19,36 @@ class _FakeWebbrowser(Webbrowser):
 
 
 class TestInit:
-    @pytest.mark.parametrize(("executable", "resolve_executable", "raises"), [
-        pytest.param(
-            None,
-            None,
-            pytest.raises(WebbrowserError, match="^Could not find web browser executable: Please set the path "),
-            id="Failure with unset path",
-        ),
-        pytest.param(
-            "custom",
-            None,
-            pytest.raises(WebbrowserError, match="^Invalid web browser executable: custom$"),
-            id="Failure with custom path",
-        ),
-        pytest.param(
-            None,
-            "default",
-            nullcontext(),
-            id="Success with default path",
-        ),
-        pytest.param(
-            "custom",
-            "custom",
-            nullcontext(),
-            id="Success with custom path",
-        ),
-    ], indirect=["resolve_executable"])
+    @pytest.mark.parametrize(
+        ("executable", "resolve_executable", "raises"),
+        [
+            pytest.param(
+                None,
+                None,
+                pytest.raises(WebbrowserError, match="^Could not find web browser executable: Please set the path "),
+                id="Failure with unset path",
+            ),
+            pytest.param(
+                "custom",
+                None,
+                pytest.raises(WebbrowserError, match="^Invalid web browser executable: custom$"),
+                id="Failure with custom path",
+            ),
+            pytest.param(
+                None,
+                "default",
+                nullcontext(),
+                id="Success with default path",
+            ),
+            pytest.param(
+                "custom",
+                "custom",
+                nullcontext(),
+                id="Success with custom path",
+            ),
+        ],
+        indirect=["resolve_executable"],
+    )
     def test_resolve_executable(self, resolve_executable, executable: str | None, raises: nullcontext):
         with raises:
             Webbrowser(executable=executable)

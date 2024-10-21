@@ -17,9 +17,9 @@ from streamlink.stream.http import HTTPStream
 from streamlink.utils.url import update_scheme
 
 
-@pluginmatcher(re.compile(
-    r"https?://(?:[\w-]+\.)*(?:tv5monde|tivi5mondeplus)\.com/",
-))
+@pluginmatcher(
+    re.compile(r"https?://(?:[\w-]+\.)*(?:tv5monde|tivi5mondeplus)\.com/"),
+)
 class TV5Monde(Plugin):
     _URL_API = "https://api.tv5monde.com/player/asset/{asset}/resolve"
 
@@ -60,30 +60,38 @@ class TV5Monde(Plugin):
     def _get_broadcast(self, data):
         schema_broadcast = validate.Schema(
             validate.parse_json(),
-            [{
-                "type": str,
-                "url": str,
-            }],
+            [
+                {
+                    "type": str,
+                    "url": str,
+                },
+            ],
         )
         broadcast = schema_broadcast.validate(data)
 
         deferred = next((item["url"] for item in broadcast if item["type"] == "application/deferred"), None)
         if deferred:
             url = self._URL_API.format(asset=quote(deferred))
-            broadcast = self.session.http.get(url, schema=validate.Schema(
-                validate.parse_json(),
-            ))
+            broadcast = self.session.http.get(
+                url,
+                schema=validate.Schema(
+                    validate.parse_json(),
+                ),
+            )
 
         return self._find_streams(broadcast)
 
     def _get_streams(self):
-        playlist, broadcast = self.session.http.get(self.url, schema=validate.Schema(
-            validate.parse_html(),
-            validate.union((
-                validate.xml_xpath_string(".//*[@data-playlist][1]/@data-playlist"),
-                validate.xml_xpath_string(".//*[@data-broadcast][1]/@data-broadcast"),
-            )),
-        ))
+        playlist, broadcast = self.session.http.get(
+            self.url,
+            schema=validate.Schema(
+                validate.parse_html(),
+                validate.union((
+                    validate.xml_xpath_string(".//*[@data-playlist][1]/@data-playlist"),
+                    validate.xml_xpath_string(".//*[@data-broadcast][1]/@data-broadcast"),
+                )),
+            ),
+        )
 
         # data-playlist needs higher priority (data-broadcast attribute exists on the same DOM node)
         if playlist:

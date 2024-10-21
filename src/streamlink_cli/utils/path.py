@@ -12,7 +12,7 @@ SPECIAL_PATH_PARTS = (".", "..")
 
 _UNPRINTABLE = "".join(chr(c) for c in range(32))
 _UNSUPPORTED_POSIX = "/"
-_UNSUPPORTED_WIN32 = "\x7f\"*/:<>?\\|"
+_UNSUPPORTED_WIN32 = '\x7f"*/:<>?\\|'
 
 RE_CHARS_POSIX = re.compile(f"[{re.escape(_UNPRINTABLE + _UNSUPPORTED_POSIX)}]+")
 RE_CHARS_WIN32 = re.compile(f"[{re.escape(_UNPRINTABLE + _UNSUPPORTED_WIN32)}]+")
@@ -51,7 +51,7 @@ def truncate_path(path: str, length: int = 255, keep_extension: bool = True) -> 
 
     # truncate file name, but keep file name extension
     encoded = parts[0].encode("utf-8")
-    truncated = encoded[:length - len(parts[1]) - 1]
+    truncated = encoded[: length - len(parts[1]) - 1]
     decoded = truncated.decode("utf-8", errors="ignore")
     return f"{decoded}.{parts[1]}"
 

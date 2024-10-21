@@ -17,27 +17,34 @@ from streamlink.stream.http import HTTPStream
 log = logging.getLogger(__name__)
 
 
-@pluginmatcher(re.compile(
-    r"https?://fanxing\.kugou\.com/(?P<room_id>\d+)",
-))
+@pluginmatcher(
+    re.compile(r"https?://fanxing\.kugou\.com/(?P<room_id>\d+)"),
+)
 class Kugou(Plugin):
     _roomid_re = re.compile(r"roomId:\s*'(\d+)'")
     _room_stream_list_schema = validate.Schema(
         {
-            "data": validate.any(None, {
-                "httpflv": validate.url(),
-            }),
+            "data": validate.any(
+                None,
+                {
+                    "httpflv": validate.url(),
+                },
+            ),
         },
         validate.get("httpflv_room_stream_list_schema"),
     )
 
-    _stream_hv_schema = validate.Schema(validate.any(
-        None,
-        [{
-            "httpshls": [validate.url()],
-            "httpsflv": [validate.url()],
-        }],
-    ))
+    _stream_hv_schema = validate.Schema(
+        validate.any(
+            None,
+            [
+                {
+                    "httpshls": [validate.url()],
+                    "httpsflv": [validate.url()],
+                },
+            ],
+        ),
+    )
     _stream_data_schema = validate.Schema({
         "msg": str,
         "code": int,

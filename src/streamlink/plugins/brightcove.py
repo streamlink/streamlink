@@ -58,13 +58,15 @@ class BrightcovePlayer:
             schema=validate.Schema(
                 validate.parse_json(),
                 {
-                    "sources": [{
-                        "src": validate.url(),
-                        validate.optional("type"): str,
-                        validate.optional("container"): str,
-                        validate.optional("height"): int,
-                        validate.optional("avg_bitrate"): int,
-                    }],
+                    "sources": [
+                        {
+                            "src": validate.url(),
+                            validate.optional("type"): str,
+                            validate.optional("container"): str,
+                            validate.optional("height"): int,
+                            validate.optional("avg_bitrate"): int,
+                        },
+                    ],
                     validate.optional("name"): str,
                 },
                 validate.union_get("sources", "name"),
@@ -87,9 +89,9 @@ class BrightcovePlayer:
                 yield q, HTTPStream(self.session, source.get("src"))
 
 
-@pluginmatcher(re.compile(
-    r"https?://players\.brightcove\.net/(?P<account_id>[^/]+)/(?P<player_id>[^/]+)/index\.html",
-))
+@pluginmatcher(
+    re.compile(r"https?://players\.brightcove\.net/(?P<account_id>[^/]+)/(?P<player_id>[^/]+)/index\.html"),
+)
 class Brightcove(Plugin):
     def _get_streams(self):
         video_id = parse_qsd(urlparse(self.url).query).get("videoId")

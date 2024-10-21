@@ -76,19 +76,20 @@ def test_sdist(build: Path):
         (build / "setup.py").read_text(encoding="utf-8"),
         re.MULTILINE,
     ), "setup() call defines a static version string"
-    assert (build / "src" / "streamlink" / "_version.py").read_text(encoding="utf-8") \
-        == "__version__ = \"1.2.3+fake\"\n", \
-        "streamlink._version exports a static version string"
+    assert (
+        (build / "src" / "streamlink" / "_version.py").read_text(encoding="utf-8")
+        == '__version__ = "1.2.3+fake"\n'
+    ), "streamlink._version exports a static version string"  # fmt: skip
 
 
 @pytest.mark.parametrize("build", [pytest.param({"is_source": False}, id="is_source=False")], indirect=True)
 def test_bdist(build: Path):
-    assert (build / "pyproject.toml").read_text(encoding="utf-8") \
-        == (PROJECT_ROOT / "pyproject.toml").read_text(encoding="utf-8"), \
-        "Doesn't touch pyproject.toml (irrelevant for non-sdist)"
-    assert (build / "setup.py").read_text(encoding="utf-8") \
-        == (PROJECT_ROOT / "setup.py").read_text(encoding="utf-8"), \
-        "Doesn't touch setup.py (irrelevant for non-sdist)"
-    assert (build / "streamlink" / "_version.py").read_text(encoding="utf-8") \
-        == "__version__ = \"1.2.3+fake\"\n", \
-        "streamlink._version exports a static version string"
+    assert (
+        (build / "pyproject.toml").read_text(encoding="utf-8") == (PROJECT_ROOT / "pyproject.toml").read_text(encoding="utf-8")
+    ), "Doesn't touch pyproject.toml (irrelevant for non-sdist)"  # fmt: skip
+    assert (
+        (build / "setup.py").read_text(encoding="utf-8") == (PROJECT_ROOT / "setup.py").read_text(encoding="utf-8")
+    ), "Doesn't touch setup.py (irrelevant for non-sdist)"  # fmt: skip
+    assert (
+        (build / "streamlink" / "_version.py").read_text(encoding="utf-8") == '__version__ = "1.2.3+fake"\n'
+    ), "streamlink._version exports a static version string"  # fmt: skip

@@ -25,12 +25,12 @@ class SteamLoginFailed(Exception):
     pass
 
 
-@pluginmatcher(re.compile(
-    r"https?://steamcommunity\.com/broadcast/watch/(\d+)",
-))
-@pluginmatcher(re.compile(
-    r"https?://steam\.tv/(\w+)",
-))
+@pluginmatcher(
+    re.compile(r"https?://steamcommunity\.com/broadcast/watch/(\d+)"),
+)
+@pluginmatcher(
+    re.compile(r"https?://steam\.tv/(\w+)"),
+)
 @pluginargument(
     "email",
     requires=["password"],
@@ -193,15 +193,18 @@ class SteamBroadcastPlugin(Plugin):
         )
 
     def _find_steamid(self, url):
-        return self.session.http.get(url, schema=validate.Schema(
-            validate.parse_html(),
-            validate.xml_xpath_string(".//div[@id='webui_config']/@data-broadcast"),
-            validate.none_or_all(
-                validate.parse_json(),
-                {"steamid": str},
-                validate.get("steamid"),
+        return self.session.http.get(
+            url,
+            schema=validate.Schema(
+                validate.parse_html(),
+                validate.xml_xpath_string(".//div[@id='webui_config']/@data-broadcast"),
+                validate.none_or_all(
+                    validate.parse_json(),
+                    {"steamid": str},
+                    validate.get("steamid"),
+                ),
             ),
-        ))
+        )
 
     def _get_streams(self):
         self.session.http.headers["User-Agent"] = f"streamlink/{self.session.version}"

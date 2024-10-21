@@ -28,7 +28,7 @@ def test_translate_no_content():
 def test_translate_no_streams():
     # real payload without any tEXt chunks that match the expected format
     data = (
-          "iVBORw0KGgoAAAANSUhEUgAAAsAAAAGMAQMAAADuk4YmAAAAA1BMVEX///+nxBvIAAAAAXRSTlMA"
+        "iVBORw0KGgoAAAANSUhEUgAAAsAAAAGMAQMAAADuk4YmAAAAA1BMVEX///+nxBvIAAAAAXRSTlMA"
         + "QObYZgAAADlJREFUeF7twDEBAAAAwiD7p7bGDlgYAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
         + "AAAAAAAAwAGJrAABgPqdWQAAAcp0RVh0ak9lNmRyNkUtV2hmeEE0dERMdS9FOTlCT2d3MF9HMDdG"
         + "RmxQNy1ZLTdFOFRac0MmbD93VEp5SENvUUlseVY1bjdrYmF2ZkhUUjc4aTBHAEBxY08zdk4yYldE"
@@ -46,7 +46,7 @@ def test_translate_no_streams():
 def test_translate_has_streams():
     # real payload with modified end (IEND chunk of size 0), to reduce test size
     data = (
-          "iVBORw0KGgoAAAANSUhEUgAAAVQAAAFUCAIAAAD08FPiAAACr3RFWHRXczlVSWdtM2ZPTGY4b2R4"
+        "iVBORw0KGgoAAAANSUhEUgAAAVQAAAFUCAIAAAD08FPiAAACr3RFWHRXczlVSWdtM2ZPTGY4b2R4"
         + "dWo5aHZnRlRhOndvZEtxN3pLOG5oNGRpbT1vREBTWHhOMGtzUVomNndAWkV5cz1GOUlCSiYxdDcy"
         + "QmdDOFM2NGFVJmh1Nzk2bUpwOFVJOE1DJlpAY2lzdGcmbEUmRE5DZFV4SHpEOFgvLmppZ1l4b3M1"
         + "QU1lOnl3ZS04VlBwQkZvLlFMUWZHTy1vQjNVeHhfVDF1JkRSQTpPP2J4Wm0zbFlxS3IjAEhEX1JF"

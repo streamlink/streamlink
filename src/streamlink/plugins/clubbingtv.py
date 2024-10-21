@@ -15,9 +15,9 @@ from streamlink.stream.hls import HLSStream
 log = logging.getLogger(__name__)
 
 
-@pluginmatcher(re.compile(
-    r"https?://(www\.)?clubbingtv\.com/",
-))
+@pluginmatcher(
+    re.compile(r"https?://(www\.)?clubbingtv\.com/"),
+)
 @pluginargument(
     "username",
     required=True,

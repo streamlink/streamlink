@@ -12,6 +12,7 @@ try:
     # noinspection PyProtectedMember
     from versioningit.onbuild import SetuptoolsFileProvider  # type: ignore[attr-defined]
 except ImportError:  # pragma: no cover
+
     @dataclass
     class SetuptoolsFileProvider:  # type: ignore[no-redef]
         build_dir: Path
@@ -54,30 +55,34 @@ def onbuild(
     # Remove versioningit from ``build-system.requires`` in ``pyproject.toml``
     if is_source:
         with update_file(base_dir / "pyproject.toml") as cmproxy:
-            cmproxy.set(re.sub(
-                r"^(\s*)(\"versioningit\b.+?\",).*$",
-                "\\1# \\2",
-                cmproxy.get(),
-                flags=re.MULTILINE,
-                count=1,
-            ))
+            cmproxy.set(
+                re.sub(
+                    r"^(\s*)(\"versioningit\b.+?\",).*$",
+                    "\\1# \\2",
+                    cmproxy.get(),
+                    flags=re.MULTILINE,
+                    count=1,
+                ),
+            )
 
     # Set the static version string that gets passed directly to setuptools via ``setup.py``.
     # This is much easier compared to adding the ``project.version`` field and removing "version" from ``project.dynamic``
     # in ``pyproject.toml``.
     if is_source:
         with update_file(base_dir / "setup.py") as cmproxy:
-            cmproxy.set(re.sub(
-                r"^(\s*)# (version=\"\",).*$",
-                f"\\1version=\"{version}\",",
-                cmproxy.get(),
-                flags=re.MULTILINE,
-                count=1,
-            ))
+            cmproxy.set(
+                re.sub(
+                    r"^(\s*)# (version=\"\",).*$",
+                    f'\\1version="{version}",',
+                    cmproxy.get(),
+                    flags=re.MULTILINE,
+                    count=1,
+                ),
+            )
 
     # Overwrite the entire ``streamlink._version`` module
     with update_file(pkg_dir / "streamlink" / "_version.py") as cmproxy:
-        cmproxy.set(f"__version__ = \"{version}\"\n")
+        cmproxy.set(f'__version__ = "{version}"\n')
 
 
 TProxyItem = TypeVar("TProxyItem")

@@ -53,21 +53,24 @@ class OKru(Plugin):
         return super().stream_weight(key)
 
     def _get_streams_mobile(self):
-        data = self.session.http.get(self.url, schema=validate.Schema(
-            validate.parse_html(),
-            validate.xml_find(".//a[@data-video]"),
-            validate.get("data-video"),
-            validate.none_or_all(
-                str,
-                validate.parse_json(),
-                {
-                    "videoName": str,
-                    "videoSrc": validate.url(),
-                    "movieId": str,
-                },
-                validate.union_get("movieId", "videoName", "videoSrc"),
+        data = self.session.http.get(
+            self.url,
+            schema=validate.Schema(
+                validate.parse_html(),
+                validate.xml_find(".//a[@data-video]"),
+                validate.get("data-video"),
+                validate.none_or_all(
+                    str,
+                    validate.parse_json(),
+                    {
+                        "videoName": str,
+                        "videoSrc": validate.url(),
+                        "movieId": str,
+                    },
+                    validate.union_get("movieId", "videoName", "videoSrc"),
+                ),
             ),
-        ))
+        )
         if not data:
             return
 
@@ -79,8 +82,8 @@ class OKru(Plugin):
 
         return (
             HLSStream.parse_variant_playlist(self.session, stream_url)
-            if urlparse(stream_url).path.endswith(".m3u8") else
-            {"vod": HTTPStream(self.session, stream_url)}
+            if urlparse(stream_url).path.endswith(".m3u8")
+            else {"vod": HTTPStream(self.session, stream_url)}
         )
 
     def _get_streams_default(self):
@@ -98,31 +101,38 @@ class OKru(Plugin):
                 validate.optional("hlsManifestUrl"): validate.url(),
                 validate.optional("hlsMasterPlaylistUrl"): validate.url(),
                 validate.optional("liveDashManifestUrl"): validate.url(),
-                validate.optional("videos"): [validate.all(
-                    {
-                        "name": str,
-                        "url": validate.url(),
-                    },
-                    validate.union_get("name", "url"),
-                )],
+                validate.optional("videos"): [
+                    validate.all(
+                        {
+                            "name": str,
+                            "url": validate.url(),
+                        },
+                        validate.union_get("name", "url"),
+                    ),
+                ],
             },
         )
 
-        metadata, metadata_url = self.session.http.get(self.url, schema=validate.Schema(
-            validate.parse_html(),
-            validate.xml_find(".//*[@data-options]"),
-            validate.get("data-options"),
-            validate.parse_json(),
-            {"flashvars": {
-                validate.optional("metadata"): str,
-                validate.optional("metadataUrl"): validate.all(
-                    validate.transform(unquote),
-                    validate.url(),
-                ),
-            }},
-            validate.get("flashvars"),
-            validate.union_get("metadata", "metadataUrl"),
-        ))
+        metadata, metadata_url = self.session.http.get(
+            self.url,
+            schema=validate.Schema(
+                validate.parse_html(),
+                validate.xml_find(".//*[@data-options]"),
+                validate.get("data-options"),
+                validate.parse_json(),
+                {
+                    "flashvars": {
+                        validate.optional("metadata"): str,
+                        validate.optional("metadataUrl"): validate.all(
+                            validate.transform(unquote),
+                            validate.url(),
+                        ),
+                    },
+                },
+                validate.get("flashvars"),
+                validate.union_get("metadata", "metadataUrl"),
+            ),
+        )
 
         self.session.http.headers.update({"Referer": self.url})
 

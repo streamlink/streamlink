@@ -17,9 +17,9 @@ from streamlink.stream.hls import HLSStream
 log = logging.getLogger(__name__)
 
 
-@pluginmatcher(re.compile(
-    r"https?://(?:\w+\.)?showroom-live\.com/",
-))
+@pluginmatcher(
+    re.compile(r"https?://(?:\w+\.)?showroom-live\.com/"),
+)
 class Showroom(Plugin):
     LIVE_STATUS = 2
 
@@ -73,10 +73,14 @@ class Showroom(Plugin):
             },
             schema=validate.Schema(
                 validate.parse_json(),
-                {"streaming_url_list": [{
-                    "type": str,
-                    "url": validate.url(),
-                }]},
+                {
+                    "streaming_url_list": [
+                        {
+                            "type": str,
+                            "url": validate.url(),
+                        },
+                    ],
+                },
                 validate.get("streaming_url_list"),
                 validate.filter(lambda p: p["type"] == "hls_all"),
                 validate.get((0, "url")),

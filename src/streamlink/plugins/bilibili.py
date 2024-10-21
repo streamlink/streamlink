@@ -16,9 +16,9 @@ from streamlink.stream.hls import HLSStream
 log = logging.getLogger(__name__)
 
 
-@pluginmatcher(re.compile(
-    r"https?://live\.bilibili\.com/(?P<channel>[^/]+)",
-))
+@pluginmatcher(
+    re.compile(r"https?://live\.bilibili\.com/(?P<channel>[^/]+)"),
+)
 class Bilibili(Plugin):
     _URL_API_PLAYINFO = "https://api.live.bilibili.com/xlive/web-room/v2/index/getRoomPlayInfo"
 
@@ -29,26 +29,34 @@ class Bilibili(Plugin):
     @staticmethod
     def _schema_streams():
         return validate.all(
-            [{
-                "protocol_name": str,
-                "format": validate.all(
-                    [{
-                        "format_name": str,
-                        "codec": validate.all(
-                            [{
-                                "codec_name": str,
-                                "base_url": str,
-                                "url_info": [{
-                                    "host": validate.url(),
-                                    "extra": str,
-                                }],
-                            }],
-                            validate.filter(lambda item: item["codec_name"] == "avc"),
-                        ),
-                    }],
-                    validate.filter(lambda item: item["format_name"] == "fmp4"),
-                ),
-            }],
+            [
+                {
+                    "protocol_name": str,
+                    "format": validate.all(
+                        [
+                            {
+                                "format_name": str,
+                                "codec": validate.all(
+                                    [
+                                        {
+                                            "codec_name": str,
+                                            "base_url": str,
+                                            "url_info": [
+                                                {
+                                                    "host": validate.url(),
+                                                    "extra": str,
+                                                },
+                                            ],
+                                        },
+                                    ],
+                                    validate.filter(lambda item: item["codec_name"] == "avc"),
+                                ),
+                            },
+                        ],
+                        validate.filter(lambda item: item["format_name"] == "fmp4"),
+                    ),
+                },
+            ],
             validate.filter(lambda item: item["protocol_name"] == "http_hls"),
         )
 

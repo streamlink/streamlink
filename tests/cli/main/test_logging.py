@@ -37,15 +37,19 @@ class TestStdoutStderr:
         monkeypatch.setattr("streamlink_cli.main.log_current_arguments", Mock())
 
     # noinspection PyUnresolvedReferences
-    @pytest.mark.parametrize(("argv", "stream"), [
-        pytest.param([], "stdout", id="default"),
-        pytest.param(["--stdout"], "stderr", id="--stdout"),
-        pytest.param(["--output=file"], "stdout", id="--output=file"),
-        pytest.param(["--output=-"], "stderr", id="--output=-"),
-        pytest.param(["--record=file"], "stdout", id="--record=file"),
-        pytest.param(["--record=-"], "stderr", id="--record=-"),
-        pytest.param(["--record-and-pipe=file"], "stderr", id="--record-and-pipe=file"),
-    ], indirect=["argv"])
+    @pytest.mark.parametrize(
+        ("argv", "stream"),
+        [
+            pytest.param([], "stdout", id="default"),
+            pytest.param(["--stdout"], "stderr", id="--stdout"),
+            pytest.param(["--output=file"], "stdout", id="--output=file"),
+            pytest.param(["--output=-"], "stderr", id="--output=-"),
+            pytest.param(["--record=file"], "stdout", id="--record=file"),
+            pytest.param(["--record=-"], "stderr", id="--record=-"),
+            pytest.param(["--record-and-pipe=file"], "stderr", id="--record-and-pipe=file"),
+        ],
+        indirect=["argv"],
+    )
     def test_streams(self, capsys: pytest.CaptureFixture, parser: ArgumentParser, argv: list, stream: str):
         streamlink_cli.main.setup(parser)
 
@@ -58,12 +62,16 @@ class TestStdoutStderr:
         assert rootlogger.handlers[0].stream is streamobj
         assert streamlink_cli.main.console.output is streamobj
 
-    @pytest.mark.parametrize(("argv", "stdout", "stderr"), [
-        pytest.param([], "[cli][info] a\n[test_main_logging][error] b\nerror: c\n", "", id="no-pipe-no-json"),
-        pytest.param(["--json"], "{\n  \"error\": \"c\"\n}\n", "", id="no-pipe-json"),
-        pytest.param(["--stdout"], "", "[cli][info] a\n[test_main_logging][error] b\nerror: c\n", id="pipe-no-json"),
-        pytest.param(["--stdout", "--json"], "", "{\n  \"error\": \"c\"\n}\n", id="pipe-json"),
-    ], indirect=["argv"])
+    @pytest.mark.parametrize(
+        ("argv", "stdout", "stderr"),
+        [
+            pytest.param([], "[cli][info] a\n[test_main_logging][error] b\nerror: c\n", "", id="no-pipe-no-json"),
+            pytest.param(["--json"], '{\n  "error": "c"\n}\n', "", id="no-pipe-json"),
+            pytest.param(["--stdout"], "", "[cli][info] a\n[test_main_logging][error] b\nerror: c\n", id="pipe-no-json"),
+            pytest.param(["--stdout", "--json"], "", '{\n  "error": "c"\n}\n', id="pipe-json"),
+        ],
+        indirect=["argv"],
+    )
     def test_output(
         self,
         monkeypatch: pytest.MonkeyPatch,
@@ -178,10 +186,14 @@ class TestStdoutStderr:
 class TestInfos:
     # noinspection PyTestParametrized
     @pytest.mark.posix_only()
-    @pytest.mark.parametrize(("_euid", "logs"), [
-        pytest.param(1000, [], id="user"),
-        pytest.param(0, [("cli", "info", "streamlink is running as root! Be careful!")], id="root"),
-    ], indirect=["_euid"])
+    @pytest.mark.parametrize(
+        ("_euid", "logs"),
+        [
+            pytest.param(1000, [], id="user"),
+            pytest.param(0, [("cli", "info", "streamlink is running as root! Be careful!")], id="root"),
+        ],
+        indirect=["_euid"],
+    )
     def test_log_root_warning(
         self,
         monkeypatch: pytest.MonkeyPatch,
@@ -195,56 +207,60 @@ class TestInfos:
         streamlink_cli.main.setup(parser)
         assert [(record.name, record.levelname, record.message) for record in caplog.records] == logs
 
-    @pytest.mark.parametrize(("argv", "platform", "logs"), [
-        pytest.param(
-            ["--loglevel", "info"],
-            "linux",
-            [],
-            id="non-debug-loglevel",
-        ),
-        pytest.param(
-            ["--loglevel", "debug"],
-            "darwin",
-            [
-                ("cli", "debug", "OS:         macOS 0.0.0"),
-                ("cli", "debug", "Python:     PYTHON_VERSION"),
-                ("cli", "debug", "OpenSSL:    OPENSSL_VERSION"),
-                ("cli", "debug", "Streamlink: STREAMLINK_VERSION"),
-                ("cli", "debug", "Dependencies:"),
-                ("cli", "debug", " foo: 1.2.3"),
-                ("cli", "debug", " bar-baz: 2.0.0"),
-            ],
-            id="darwin",
-        ),
-        pytest.param(
-            ["--loglevel", "debug"],
-            "win32",
-            [
-                ("cli", "debug", "OS:         Windows 0.0.0"),
-                ("cli", "debug", "Python:     PYTHON_VERSION"),
-                ("cli", "debug", "OpenSSL:    OPENSSL_VERSION"),
-                ("cli", "debug", "Streamlink: STREAMLINK_VERSION"),
-                ("cli", "debug", "Dependencies:"),
-                ("cli", "debug", " foo: 1.2.3"),
-                ("cli", "debug", " bar-baz: 2.0.0"),
-            ],
-            id="win32",
-        ),
-        pytest.param(
-            ["--loglevel", "debug"],
-            "linux",
-            [
-                ("cli", "debug", "OS:         linux"),
-                ("cli", "debug", "Python:     PYTHON_VERSION"),
-                ("cli", "debug", "OpenSSL:    OPENSSL_VERSION"),
-                ("cli", "debug", "Streamlink: STREAMLINK_VERSION"),
-                ("cli", "debug", "Dependencies:"),
-                ("cli", "debug", " foo: 1.2.3"),
-                ("cli", "debug", " bar-baz: 2.0.0"),
-            ],
-            id="linux",
-        ),
-    ], indirect=["argv"])
+    @pytest.mark.parametrize(
+        ("argv", "platform", "logs"),
+        [
+            pytest.param(
+                ["--loglevel", "info"],
+                "linux",
+                [],
+                id="non-debug-loglevel",
+            ),
+            pytest.param(
+                ["--loglevel", "debug"],
+                "darwin",
+                [
+                    ("cli", "debug", "OS:         macOS 0.0.0"),
+                    ("cli", "debug", "Python:     PYTHON_VERSION"),
+                    ("cli", "debug", "OpenSSL:    OPENSSL_VERSION"),
+                    ("cli", "debug", "Streamlink: STREAMLINK_VERSION"),
+                    ("cli", "debug", "Dependencies:"),
+                    ("cli", "debug", " foo: 1.2.3"),
+                    ("cli", "debug", " bar-baz: 2.0.0"),
+                ],
+                id="darwin",
+            ),
+            pytest.param(
+                ["--loglevel", "debug"],
+                "win32",
+                [
+                    ("cli", "debug", "OS:         Windows 0.0.0"),
+                    ("cli", "debug", "Python:     PYTHON_VERSION"),
+                    ("cli", "debug", "OpenSSL:    OPENSSL_VERSION"),
+                    ("cli", "debug", "Streamlink: STREAMLINK_VERSION"),
+                    ("cli", "debug", "Dependencies:"),
+                    ("cli", "debug", " foo: 1.2.3"),
+                    ("cli", "debug", " bar-baz: 2.0.0"),
+                ],
+                id="win32",
+            ),
+            pytest.param(
+                ["--loglevel", "debug"],
+                "linux",
+                [
+                    ("cli", "debug", "OS:         linux"),
+                    ("cli", "debug", "Python:     PYTHON_VERSION"),
+                    ("cli", "debug", "OpenSSL:    OPENSSL_VERSION"),
+                    ("cli", "debug", "Streamlink: STREAMLINK_VERSION"),
+                    ("cli", "debug", "Dependencies:"),
+                    ("cli", "debug", " foo: 1.2.3"),
+                    ("cli", "debug", " bar-baz: 2.0.0"),
+                ],
+                id="linux",
+            ),
+        ],
+        indirect=["argv"],
+    )
     def test_log_current_versions(
         self,
         monkeypatch: pytest.MonkeyPatch,
@@ -286,35 +302,39 @@ class TestInfos:
         assert mock_importlib_metadata.requires.call_args_list == ([call("streamlink")] if logs else [])
         assert [(record.name, record.levelname, record.message) for record in caplog.records] == logs
 
-    @pytest.mark.parametrize(("argv", "logs"), [
-        pytest.param(
-            ["--loglevel", "info"],
-            [],
-            id="non-debug-loglevel",
-        ),
-        pytest.param(
-            [
-                "--loglevel",
-                "debug",
-                "-p",
-                "custom",
-                "--testplugin-bool",
-                "--testplugin-password=secret",
-                "test.se/channel",
-                "best,worst",
-            ],
-            [
-                ("cli", "debug", "Arguments:"),
-                ("cli", "debug", " url=test.se/channel"),
-                ("cli", "debug", " stream=['best', 'worst']"),
-                ("cli", "debug", " --loglevel=debug"),
-                ("cli", "debug", " --player=custom"),
-                ("cli", "debug", " --testplugin-bool=True"),
-                ("cli", "debug", " --testplugin-password=********"),
-            ],
-            id="arguments",
-        ),
-    ], indirect=["argv"])
+    @pytest.mark.parametrize(
+        ("argv", "logs"),
+        [
+            pytest.param(
+                ["--loglevel", "info"],
+                [],
+                id="non-debug-loglevel",
+            ),
+            pytest.param(
+                [
+                    "--loglevel",
+                    "debug",
+                    "-p",
+                    "custom",
+                    "--testplugin-bool",
+                    "--testplugin-password=secret",
+                    "test.se/channel",
+                    "best,worst",
+                ],
+                [
+                    ("cli", "debug", "Arguments:"),
+                    ("cli", "debug", " url=test.se/channel"),
+                    ("cli", "debug", " stream=['best', 'worst']"),
+                    ("cli", "debug", " --loglevel=debug"),
+                    ("cli", "debug", " --player=custom"),
+                    ("cli", "debug", " --testplugin-bool=True"),
+                    ("cli", "debug", " --testplugin-password=********"),
+                ],
+                id="arguments",
+            ),
+        ],
+        indirect=["argv"],
+    )
     def test_log_current_arguments(
         self,
         monkeypatch: pytest.MonkeyPatch,
@@ -402,20 +422,24 @@ class TestLogfile:
         return tmp_path
 
     # noinspection PyUnresolvedReferences
-    @pytest.mark.parametrize(("argv", "stdout", "stderr"), [
-        pytest.param(
-            [],
-            "[cli][info] a\nb\n",
-            "",
-            id="no-logfile",
-        ),
-        pytest.param(
-            ["--logfile=file", "--loglevel=none"],
-            "b\n",
-            "",
-            id="logfile-loglevel-none",
-        ),
-    ], indirect=["argv"])
+    @pytest.mark.parametrize(
+        ("argv", "stdout", "stderr"),
+        [
+            pytest.param(
+                [],
+                "[cli][info] a\nb\n",
+                "",
+                id="no-logfile",
+            ),
+            pytest.param(
+                ["--logfile=file", "--loglevel=none"],
+                "b\n",
+                "",
+                id="logfile-loglevel-none",
+            ),
+        ],
+        indirect=["argv"],
+    )
     def test_no_logfile(
         self,
         monkeypatch: pytest.MonkeyPatch,
@@ -443,26 +467,30 @@ class TestLogfile:
         assert err == stderr
 
     # noinspection PyUnresolvedReferences
-    @pytest.mark.parametrize(("argv", "path", "content"), [
-        pytest.param(
-            ["--logfile=path/to/logfile"],
-            Path("path", "to", "logfile"),
-            "[cli][info] a\nb\n",
-            id="logfile-path-resolve",
-        ),
-        pytest.param(
-            ["--logfile=~/path/to/logfile"],
-            Path("user", "path", "to", "logfile"),
-            "[cli][info] a\nb\n",
-            id="logfile-path-expanduser",
-        ),
-        pytest.param(
-            ["--logfile=-"],
-            Path("user", "logs", "2000-01-01_12-34-56.log"),
-            "[cli][info] a\nb\n",
-            id="logfile-auto",
-        ),
-    ], indirect=["argv"])
+    @pytest.mark.parametrize(
+        ("argv", "path", "content"),
+        [
+            pytest.param(
+                ["--logfile=path/to/logfile"],
+                Path("path", "to", "logfile"),
+                "[cli][info] a\nb\n",
+                id="logfile-path-resolve",
+            ),
+            pytest.param(
+                ["--logfile=~/path/to/logfile"],
+                Path("user", "path", "to", "logfile"),
+                "[cli][info] a\nb\n",
+                id="logfile-path-expanduser",
+            ),
+            pytest.param(
+                ["--logfile=-"],
+                Path("user", "logs", "2000-01-01_12-34-56.log"),
+                "[cli][info] a\nb\n",
+                id="logfile-auto",
+            ),
+        ],
+        indirect=["argv"],
+    )
     def test_logfile(
         self,
         monkeypatch: pytest.MonkeyPatch,
@@ -514,30 +542,43 @@ class TestPrint:
         return out
 
     def test_usage(self, stdout: str):
-        assert stdout == dedent("""
-            usage: streamlink [OPTIONS] <URL> [STREAM]
+        assert (
+            stdout
+            == dedent("""
+                usage: streamlink [OPTIONS] <URL> [STREAM]
 
-            Use -h/--help to see the available options or read the manual at https://streamlink.github.io
-        """).lstrip()
+                Use -h/--help to see the available options or read the manual at https://streamlink.github.io
+            """).lstrip()
+        )
 
     @pytest.mark.parametrize("argv", [["--help"]], indirect=["argv"])
     def test_help(self, argv: list, stdout: str):
         assert "usage: streamlink [OPTIONS] <URL> [STREAM]" in stdout
-        assert dedent("""
-            Streamlink is a command-line utility that extracts streams from various
-            services and pipes them into a video player of choice.
-        """) in stdout
-        assert dedent("""
-            For more in-depth documentation see:
-              https://streamlink.github.io
+        assert (
+            dedent("""
+                Streamlink is a command-line utility that extracts streams from various
+                services and pipes them into a video player of choice.
+            """)
+            in stdout
+        )
+        assert (
+            dedent("""
+                For more in-depth documentation see:
+                  https://streamlink.github.io
 
-            Please report broken plugins or bugs to the issue tracker on GitHub:
-              https://github.com/streamlink/streamlink/issues
-        """) in stdout
+                Please report broken plugins or bugs to the issue tracker on GitHub:
+                  https://github.com/streamlink/streamlink/issues
+            """)
+            in stdout
+        )
 
-    @pytest.mark.parametrize(("argv", "expected"), [
-        pytest.param(["--plugins"], "Available plugins: testplugin\n", id="plugins-no-json"),
-        pytest.param(["--plugins", "--json"], """[\n  "testplugin"\n]\n""", id="plugins-json"),
-    ], indirect=["argv"])
+    @pytest.mark.parametrize(
+        ("argv", "expected"),
+        [
+            pytest.param(["--plugins"], "Available plugins: testplugin\n", id="plugins-no-json"),
+            pytest.param(["--plugins", "--json"], """[\n  "testplugin"\n]\n""", id="plugins-json"),
+        ],
+        indirect=["argv"],
+    )
     def test_plugins(self, argv: list, expected: str, stdout: str):
         assert stdout == expected

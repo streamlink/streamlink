@@ -127,7 +127,7 @@ class RingBuffer(Buffer):
                 write_len = min(self.free, data_left)
                 written = data_total - data_left
 
-                Buffer.write(self, data[written:written + write_len])
+                Buffer.write(self, data[written : written + write_len])
                 data_left -= write_len
 
                 self._check_events()

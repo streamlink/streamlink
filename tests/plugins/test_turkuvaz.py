@@ -22,7 +22,6 @@ class TestPluginCanHandleUrlTurkuvaz(PluginCanHandleUrl):
         "https://www.minikacocuk.com.tr/webtv/canli-yayin",  # minika cocuk
         "https://www.minikago.com.tr/webtv/canli-yayin",  # minika go
         "https://vavtv.com.tr/canli-yayin",  # vavtv
-
         # vods
         "https://www.ahaber.com.tr/video/yasam-videolari/samsunda-sel-sularindan-kacma-ani-kamerada",
         "https://www.anews.com.tr/webtv/world/pro-ukraine-militia-says-it-has-captured-russian-soldiers",
@@ -31,7 +30,6 @@ class TestPluginCanHandleUrlTurkuvaz(PluginCanHandleUrl):
         "https://www.atvavrupa.tv/diger-program//ozelvideo/izle",
         "https://www.minikago.com.tr/webtv/mondo-yan/bolum/mondo-yan-eylul-tanitim",
         "https://vavtv.com.tr/vavradyo/video/guncel/munafiklarin-ozellikleri-nelerdir",
-
         # other links for info/doc
         "https://www.atv.com.tr/webtv/canli-yayin",  # redirect to atv.com.tr/canli-yayin
         "https://www.ahaber.com.tr/canli-yayin-atv.html",  # links to atv.com.tr/webtv/canli-yayin

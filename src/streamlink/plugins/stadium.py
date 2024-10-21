@@ -16,29 +16,35 @@ from streamlink.utils.url import update_qsd
 log = logging.getLogger(__name__)
 
 
-@pluginmatcher(re.compile(
-    r"https?://(?:www\.)?watchstadium\.com/",
-))
+@pluginmatcher(
+    re.compile(r"https?://(?:www\.)?watchstadium\.com/"),
+)
 class Stadium(Plugin):
     _API_URL = "https://edge.api.brightcove.com/playback/v1/accounts/{data_account}/videos/{data_video_id}"
     _PLAYER_URL = "https://players.brightcove.net/{data_account}/{data_player}_default/index.min.js"
 
     def _get_streams(self):
         try:
-            data = self.session.http.get(self.url, schema=validate.Schema(
-                validate.parse_html(),
-                validate.xml_find(".//video[@id='brightcove_video_player']"),
-                validate.union_get("data-video-id", "data-account", "data-ad-config-id", "data-player"),
-            ))
+            data = self.session.http.get(
+                self.url,
+                schema=validate.Schema(
+                    validate.parse_html(),
+                    validate.xml_find(".//video[@id='brightcove_video_player']"),
+                    validate.union_get("data-video-id", "data-account", "data-ad-config-id", "data-player"),
+                ),
+            )
         except PluginError:
             return
         data_video_id, data_account, data_ad_config_id, data_player = data
 
         url = self._PLAYER_URL.format(data_account=data_account, data_player=data_player)
-        policy_key = self.session.http.get(url, schema=validate.Schema(
-            re.compile(r"""options:\s*{.+policyKey:\s*"([^"]+)""", re.DOTALL),
-            validate.any(None, validate.get(1)),
-        ))
+        policy_key = self.session.http.get(
+            url,
+            schema=validate.Schema(
+                re.compile(r"""options:\s*{.+policyKey:\s*"([^"]+)""", re.DOTALL),
+                validate.any(None, validate.get(1)),
+            ),
+        )
         if not policy_key:
             return
 
@@ -52,10 +58,12 @@ class Stadium(Plugin):
             schema=validate.Schema(
                 validate.parse_json(),
                 {
-                    "sources": [{
-                        validate.optional("type"): str,
-                        "src": validate.url(),
-                    }],
+                    "sources": [
+                        {
+                            validate.optional("type"): str,
+                            "src": validate.url(),
+                        },
+                    ],
                 },
                 validate.get("sources"),
                 validate.filter(lambda source: source.get("type") == "application/x-mpegURL"),

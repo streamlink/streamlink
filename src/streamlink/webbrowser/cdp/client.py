@@ -343,13 +343,15 @@ class CDPClientSession:
         """
         Continue a request and optionally override the request method, URL, POST data or request headers.
         """
-        await self.cdp_session.send(fetch.continue_request(
-            request_id=request.request_id,
-            url=url,
-            method=method,
-            post_data=base64.b64encode(post_data.encode()).decode() if post_data is not None else None,
-            headers=self._headers_entries_from_mapping(headers),
-        ))
+        await self.cdp_session.send(
+            fetch.continue_request(
+                request_id=request.request_id,
+                url=url,
+                method=method,
+                post_data=base64.b64encode(post_data.encode()).decode() if post_data is not None else None,
+                headers=self._headers_entries_from_mapping(headers),
+            ),
+        )
         self._requests_handled.add(request.request_id)
 
     async def fail_request(
@@ -360,10 +362,12 @@ class CDPClientSession:
         """
         Let a request fail, with an optional error reason which defaults to ``BlockedByClient``.
         """
-        await self.cdp_session.send(fetch.fail_request(
-            request_id=request.request_id,
-            error_reason=network.ErrorReason(error_reason or network.ErrorReason.BLOCKED_BY_CLIENT),
-        ))
+        await self.cdp_session.send(
+            fetch.fail_request(
+                request_id=request.request_id,
+                error_reason=network.ErrorReason(error_reason or network.ErrorReason.BLOCKED_BY_CLIENT),
+            ),
+        )
         self._requests_handled.add(request.request_id)
 
     async def fulfill_request(
@@ -376,12 +380,14 @@ class CDPClientSession:
         """
         Fulfill a response and override its status code, headers and body.
         """
-        await self.cdp_session.send(fetch.fulfill_request(
-            request_id=request.request_id,
-            response_code=response_code,
-            response_headers=self._headers_entries_from_mapping(response_headers),
-            body=base64.b64encode(body.encode()).decode() if body is not None else None,
-        ))
+        await self.cdp_session.send(
+            fetch.fulfill_request(
+                request_id=request.request_id,
+                response_code=response_code,
+                response_headers=self._headers_entries_from_mapping(response_headers),
+                body=base64.b64encode(body.encode()).decode() if body is not None else None,
+            ),
+        )
         self._requests_handled.add(request.request_id)
 
     @asynccontextmanager
@@ -413,10 +419,7 @@ class CDPClientSession:
 
     @staticmethod
     def _headers_entries_from_mapping(headers: Mapping[str, str] | None):
-        return None if headers is None else [
-            fetch.HeaderEntry(name=name, value=value)
-            for name, value in headers.items()
-        ]
+        return None if headers is None else [fetch.HeaderEntry(name=name, value=value) for name, value in headers.items()]
 
     async def _on_target_detached_from_target(self) -> None:
         detached_from_target: target.DetachedFromTarget

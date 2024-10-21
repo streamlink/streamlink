@@ -142,6 +142,7 @@ def escape_backticks(docstr: str) -> str:
     If we double the backticks in that string, then it won't be valid RST. The
     fix is to insert an apostrophe if an "s" trails the backticks.
     """
+
     def replace_one(match):
         if match.group(2) == "s":
             return f"``{match.group(1)}``'s"
@@ -177,7 +178,7 @@ def docstring(description: str | None) -> str:
         return ""
 
     description = escape_backticks(description)
-    return dedent(f"\"\"\"\n{description}\n\"\"\"")
+    return dedent(f'"""\n{description}\n"""')
 
 
 def is_builtin(name: str) -> bool:
@@ -218,6 +219,7 @@ def ref_to_python(ref: str, domain: str) -> str:
 
 class CdpPrimitiveType(Enum):
     """All of the CDP types that map directly to a Python type."""
+
     boolean = "bool"
     integer = "int"
     number = "float"
@@ -245,6 +247,7 @@ class CdpPrimitiveType(Enum):
 @dataclass
 class CdpItems:
     """Represents the type of a repeated item."""
+
     type: str
     ref: str
 
@@ -257,6 +260,7 @@ class CdpItems:
 @dataclass
 class CdpProperty:
     """A property belonging to a non-primitive CDP type."""
+
     name: str
     description: str | None
     type: str | None
@@ -321,7 +325,7 @@ class CdpProperty:
     def generate_to_json(self, dict_: str, use_self: bool = True) -> str:
         """Generate the code that exports this property to the specified JSON dict."""
         self_ref = "self." if use_self else ""
-        assign = f"{dict_}[\"{self.name}\"] = "
+        assign = f'{dict_}["{self.name}"] = '
         if self.items:
             if self.items.ref:
                 assign += f"[i.to_json() for i in {self_ref}{self.py_name}]"
@@ -345,27 +349,28 @@ class CdpProperty:
         if self.items:
             if self.items.ref:
                 py_ref = ref_to_python(self.items.ref, self.domain)
-                expr = f"[{py_ref}.from_json(i) for i in {dict_}[\"{self.name}\"]]"
+                expr = f'[{py_ref}.from_json(i) for i in {dict_}["{self.name}"]]'
             else:
                 cons = CdpPrimitiveType.get_constructor(self.items.type, "i")
                 if cons == "i":
-                    expr = f"list({dict_}[\"{self.name}\"])"
+                    expr = f'list({dict_}["{self.name}"])'
                 else:
-                    expr = f"[{cons} for i in {dict_}[\"{self.name}\"]]"
+                    expr = f'[{cons} for i in {dict_}["{self.name}"]]'
         else:
             if self.ref:
                 py_ref = ref_to_python(self.ref, self.domain)
-                expr = f"{py_ref}.from_json({dict_}[\"{self.name}\"])"
+                expr = f'{py_ref}.from_json({dict_}["{self.name}"])'
             else:
-                expr = CdpPrimitiveType.get_constructor(self.type, f"{dict_}[\"{self.name}\"]")
+                expr = CdpPrimitiveType.get_constructor(self.type, f'{dict_}["{self.name}"]')
         if self.optional:
-            expr = f"{expr} if \"{self.name}\" in {dict_} else None"
+            expr = f'{expr} if "{self.name}" in {dict_} else None'
         return expr
 
 
 @dataclass
 class CdpType:
     """A top-level CDP type."""
+
     id: str
     description: str | None
     type: str
@@ -458,7 +463,7 @@ class CdpType:
             code += indent(doc, 4) + "\n"
         for enum_member in self.enum:
             snake_name = snake_case(enum_member).upper()
-            enum_code = f"{snake_name} = \"{enum_member}\"\n"
+            enum_code = f'{snake_name} = "{enum_member}"\n'
             code += indent(enum_code, 4)
         code += "\n" + indent(def_to_json, 4)
         code += "\n\n" + indent(def_from_json, 4)
@@ -541,6 +546,7 @@ class CdpType:
 
 class CdpParameter(CdpProperty):
     """A parameter to a CDP command."""
+
     def generate_code(self) -> str:
         """Generate the code for a parameter in a function call."""
         if self.items:
@@ -595,6 +601,7 @@ class CdpParameter(CdpProperty):
 
 class CdpReturn(CdpProperty):
     """A return value from a CDP command."""
+
     @property
     def py_annotation(self):
         """Return the Python type annotation for this return."""
@@ -633,6 +640,7 @@ class CdpReturn(CdpProperty):
 @dataclass
 class CdpCommand:
     """A CDP command."""
+
     name: str
     description: str
     experimental: bool
@@ -723,9 +731,9 @@ class CdpCommand:
         code += indent("\n".join(assigns), 4)
         code += "\n"
         code += indent("cmd_dict: T_JSON_DICT = {\n", 4)
-        code += indent(f"\"method\": \"{self.domain}.{self.name}\",\n", 8)
+        code += indent(f'"method": "{self.domain}.{self.name}",\n', 8)
         if parameters:
-            code += indent("\"params\": params,\n", 8)
+            code += indent('"params": params,\n', 8)
         code += indent("}\n", 4)
         code += indent(f"{'json = ' if len(self.returns) else ''}yield cmd_dict", 4)
         if len(self.returns) == 0:
@@ -755,6 +763,7 @@ class CdpCommand:
 @dataclass
 class CdpEvent:
     """A CDP event object."""
+
     name: str
     description: str | None
     deprecated: bool
@@ -825,6 +834,7 @@ class CdpEvent:
 @dataclass
 class CdpDomain:
     """A CDP domain contains metadata, types, commands, and events."""
+
     domain: str
     description: str | None
     experimental: bool

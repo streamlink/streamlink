@@ -78,8 +78,20 @@ NORMAL_PRIORITY = 20
 LOW_PRIORITY = 10
 NO_PRIORITY = 0
 
-_COOKIE_KEYS = \
-    "version", "name", "value", "port", "domain", "path", "secure", "expires", "discard", "comment", "comment_url", "rfc2109"
+_COOKIE_KEYS = (
+    "version",
+    "name",
+    "value",
+    "port",
+    "domain",
+    "path",
+    "secure",
+    "expires",
+    "discard",
+    "comment",
+    "comment_url",
+    "rfc2109",
+)
 
 
 def stream_weight(stream):
@@ -389,9 +401,7 @@ class Plugin:
             stream_types = self.default_stream_types(ostreams)
 
         # Add streams depending on stream type and priorities
-        sorted_streams = sorted(iterate_streams(ostreams),
-                                key=partial(stream_type_priority,
-                                            stream_types))
+        sorted_streams = sorted(iterate_streams(ostreams), key=partial(stream_type_priority, stream_types))
 
         streams = {}
         for name, stream in sorted_streams:
@@ -403,7 +413,7 @@ class Plugin:
 
             # drop _alt from any stream names
             if name.endswith("_alt"):
-                name = name[:-len("_alt")]
+                name = name[: -len("_alt")]
 
             existing = streams.get(name)
             if existing:
@@ -752,8 +762,12 @@ def pluginargument(
 
 
 __all__ = [
-    "HIGH_PRIORITY", "NORMAL_PRIORITY", "LOW_PRIORITY", "NO_PRIORITY",
+    "HIGH_PRIORITY",
+    "NORMAL_PRIORITY",
+    "LOW_PRIORITY",
+    "NO_PRIORITY",
     "Plugin",
-    "Matcher", "pluginmatcher",
+    "Matcher",
+    "pluginmatcher",
     "pluginargument",
 ]

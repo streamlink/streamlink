@@ -29,20 +29,15 @@ from streamlink.validate._validators import (
     validator_startswith as startswith,
     validator_endswith as endswith,
     validator_length as length,
-
     validator_getattr as getattr,
     validator_hasattr as hasattr,
-
     validator_filter as filter,
     validator_map as map,
-
     validator_url as url,
-
     validator_parse_html as parse_html,
     validator_parse_json as parse_json,
     validator_parse_qsd as parse_qsd,
     validator_parse_xml as parse_xml,
-
     validator_xml_find as xml_find,
     validator_xml_findall as xml_findall,
     validator_xml_findtext as xml_findtext,

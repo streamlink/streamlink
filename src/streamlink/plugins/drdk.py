@@ -16,17 +16,21 @@ from streamlink.stream.hls import HLSStream
 log = logging.getLogger(__name__)
 
 
-@pluginmatcher(re.compile(
-    r"https?://(?:www\.)?dr\.dk/drtv(/kanal/[\w-]+)",
-))
+@pluginmatcher(
+    re.compile(r"https?://(?:www\.)?dr\.dk/drtv(/kanal/[\w-]+)"),
+)
 class DRDK(Plugin):
     live_api_url = "https://www.dr-massive.com/api/page"
 
     _live_data_schema = validate.Schema(
-        {"item": {"customFields": {
-            validate.optional("hlsURL"): validate.url(),
-            validate.optional("hlsWithSubtitlesURL"): validate.url(),
-        }}},
+        {
+            "item": {
+                "customFields": {
+                    validate.optional("hlsURL"): validate.url(),
+                    validate.optional("hlsWithSubtitlesURL"): validate.url(),
+                },
+            },
+        },
         validate.get("item"),
         validate.get("customFields"),
     )
@@ -45,11 +49,13 @@ class DRDK(Plugin):
             if name == "hlsWithSubtitlesURL":
                 name_prefix = "subtitled_"
 
-            streams.update(HLSStream.parse_variant_playlist(
-                self.session,
-                url,
-                name_prefix=name_prefix,
-            ))
+            streams.update(
+                HLSStream.parse_variant_playlist(
+                    self.session,
+                    url,
+                    name_prefix=name_prefix,
+                ),
+            )
 
         return streams
 

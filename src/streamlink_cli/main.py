@@ -391,7 +391,7 @@ def output_stream(stream, formatter: Formatter):
             show_progress = (
                 args.progress == "force"
                 or args.progress == "yes" and (sys.stderr.isatty() if sys.stderr else False)
-            )
+            )  # fmt: skip
             # TODO: finally clean up the global variable mess and refactor the streamlink_cli package
             # noinspection PyUnboundLocalVariable
             stream_runner = StreamRunner(stream_fd, output, show_progress=show_progress)
@@ -468,13 +468,14 @@ def handle_stream(plugin: Plugin, streams: Mapping[str, Stream], stream_name: st
 def fetch_streams(plugin: Plugin) -> Mapping[str, Stream]:
     """Fetches streams using correct parameters."""
 
-    return plugin.streams(stream_types=args.stream_types,
-                          sorting_excludes=args.stream_sorting_excludes)
+    return plugin.streams(
+        stream_types=args.stream_types,
+        sorting_excludes=args.stream_sorting_excludes,
+    )
 
 
 def fetch_streams_with_retry(plugin: Plugin, interval: float, count: int) -> Mapping[str, Stream] | None:
-    """Attempts to fetch streams repeatedly
-       until some are returned or limit hit."""
+    """Attempts to fetch streams repeatedly until some are returned or limit hit."""
 
     try:
         streams = fetch_streams(plugin)
@@ -724,7 +725,7 @@ def setup_config_args(parser, ignore_unknown=False):
             config_file
             for config_file in [Path(path).expanduser() for path in reversed(args.config)]
             if config_file.is_file()
-        )
+        )  # fmt: skip
 
     else:
         # Only load first available default config
@@ -802,7 +803,7 @@ def log_current_versions():
         match.group(0)
         for match in map(re_name.match, importlib.metadata.requires("streamlink"))
         if match is not None
-    ]:
+    ]:  # fmt: skip
         try:
             version = importlib.metadata.version(name)
         except importlib.metadata.PackageNotFoundError:
@@ -828,10 +829,14 @@ def log_current_arguments(session: Streamlink, parser: argparse.ArgumentParser):
         seen.add(action.dest)
         value = getattr(args, action.dest)
         if action.default != value:
-            name = next(  # pragma: no branch
-                (option for option in action.option_strings if option.startswith("--")),
-                action.option_strings[0],
-            ) if action.option_strings else action.dest
+            name = (
+                next(  # pragma: no branch
+                    (option for option in action.option_strings if option.startswith("--")),
+                    action.option_strings[0],
+                )
+                if action.option_strings
+                else action.dest
+            )  # fmt: skip
             log.debug(f" {name}={value if name not in sensitive else '*' * 8}")
 
 
@@ -947,10 +952,7 @@ def run(parser: ArgumentParser) -> int:
         exit_code = handle_url_wrapper()
     else:
         usage = parser.format_usage()
-        console.msg(
-            f"{usage}\n"
-            + "Use -h/--help to see the available options or read the manual at https://streamlink.github.io",
-        )
+        console.msg(f"{usage}\nUse -h/--help to see the available options or read the manual at https://streamlink.github.io")
 
     return exit_code
 

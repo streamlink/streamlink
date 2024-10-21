@@ -16,14 +16,17 @@ from streamlink.stream.hls import HLSStream
 log = logging.getLogger(__name__)
 
 
-@pluginmatcher(re.compile(
-    r"https?://([\w-]+\.)*reuters\.(com|tv)",
-))
+@pluginmatcher(
+    re.compile(r"https?://([\w-]+\.)*reuters\.(com|tv)"),
+)
 class Reuters(Plugin):
     def _get_data(self):
-        root = self.session.http.get(self.url, schema=validate.Schema(
-            validate.parse_html(),
-        ))
+        root = self.session.http.get(
+            self.url,
+            schema=validate.Schema(
+                validate.parse_html(),
+            ),
+        )
 
         try:
             log.debug("Trying to find source via meta tag")
