@@ -33,9 +33,12 @@ jobs:
           python -m pip install -U
           -e .
           -r dev-requirements.txt
-      - name: ruff
+      - name: ruff check
         run: >
           python -m ruff check .
+      - name: ruff format
+        run: >
+          python -m ruff format --diff .
 
   typing:
     name: Typing
