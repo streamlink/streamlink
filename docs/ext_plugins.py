@@ -160,7 +160,7 @@ class PluginArguments(ast.NodeVisitor, IDatalistItem):
                 decorator.args
                 and type(decorator.args[0]) is ast.Constant
                 and decorator.args[0].value
-            )
+            )  # fmt: skip
             if name:
                 self.arguments.append(f"{self.pluginname}-{name}")
 
