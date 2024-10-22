@@ -21,3 +21,5 @@ ae920e12a7912d4b93be0032b9a20b7cbaa323bf
 16a1d84386539c8c8e480b73a519e179fcb8703c
 # webbrowser.cdp.devtools: rebuild modules
 045166b52acb62af4d6e3e3635ffaf4bd23c0e31
+# chore: ruff format
+98991c15f3aa21b9e3ba8f5fe7650abf9e0434de
