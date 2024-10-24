@@ -547,7 +547,7 @@ class TestPrint:
             == dedent("""
                 usage: streamlink [OPTIONS] <URL> [STREAM]
 
-                Use -h/--help to see the available options or read the manual at https://streamlink.github.io
+                Use -h/--help to see the available options or read the manual at https://streamlink.github.io/
             """).lstrip()
         )
 
@@ -564,7 +564,7 @@ class TestPrint:
         assert (
             dedent("""
                 For more in-depth documentation see:
-                  https://streamlink.github.io
+                  https://streamlink.github.io/
 
                 Please report broken plugins or bugs to the issue tracker on GitHub:
                   https://github.com/streamlink/streamlink/issues

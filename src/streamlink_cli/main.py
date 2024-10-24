@@ -954,7 +954,7 @@ def run(parser: ArgumentParser) -> int:
         exit_code = handle_url_wrapper()
     else:
         usage = parser.format_usage()
-        console.msg(f"{usage}\nUse -h/--help to see the available options or read the manual at https://streamlink.github.io")
+        console.msg(f"{usage}\nUse -h/--help to see the available options or read the manual at https://streamlink.github.io/")
 
     return exit_code
 
