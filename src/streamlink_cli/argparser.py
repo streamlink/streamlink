@@ -167,7 +167,7 @@ def build_parser():
         """),
         epilog=dedent("""
             For more in-depth documentation see:
-              https://streamlink.github.io
+              https://streamlink.github.io/
 
             Please report broken plugins or bugs to the issue tracker on GitHub:
               https://github.com/streamlink/streamlink/issues
