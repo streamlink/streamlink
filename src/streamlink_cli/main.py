@@ -698,7 +698,8 @@ def setup_args(
     arglist = sys.argv[1:]
 
     # Load arguments from config files
-    configs = [f"@{config_file}" for config_file in config_files or []]
+    prefix = parser.fromfile_prefix_chars or "@"
+    configs = [f"{prefix}{config_file}" for config_file in config_files or []]
 
     args, unknown = parser.parse_known_args(configs + arglist)
     if unknown and not ignore_unknown:
