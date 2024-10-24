@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import gettext
-from argparse import SUPPRESS, Namespace
+from argparse import SUPPRESS, ArgumentError, Namespace
 from pathlib import Path
 from typing import Any
 from unittest.mock import Mock, call
@@ -123,8 +123,7 @@ class TestMatchArgumentOverride:
 
     @pytest.fixture(scope="module")
     def parser(self):
-        # TODO: py38 support end: set exit_on_error=False and capture argparse.ArgumentError
-        parser = ArgumentParser()
+        parser = ArgumentParser(exit_on_error=False)
         parser.add_argument("-a", "--one", dest="arg")
         parser.add_argument("-b", "--two", nargs=2)
         parser.add_argument("--one-or-more", nargs="+")
@@ -157,26 +156,25 @@ class TestMatchArgumentOverride:
         [
             pytest.param(
                 ["--one"],
-                "argument -a/--one: expected one argument\n",
+                "argument -a/--one: expected one argument",
                 id="missing-value",
             ),
             pytest.param(
                 ["--two"],
-                "argument -b/--two: expected 2 arguments\n",
+                "argument -b/--two: expected 2 arguments",
                 id="missing-values",
             ),
             pytest.param(
                 ["--one-or-more"],
-                "argument --one-or-more: expected at least one argument\n",
+                "argument --one-or-more: expected at least one argument",
                 id="one-or-more",
             ),
         ],
     )
-    def test_match_argument_error(self, capsys: pytest.CaptureFixture[str], parser: ArgumentParser, argv: list, errormsg: str):
-        with pytest.raises(SystemExit) as exc_info:
+    def test_match_argument_error(self, parser: ArgumentParser, argv: list, errormsg: str):
+        with pytest.raises(ArgumentError) as exc_info:
             parser.parse_known_args(argv)
-        assert exc_info.value.code == 2
-        assert capsys.readouterr().err.endswith(errormsg)
+        assert str(exc_info.value) == errormsg
 
 
 @pytest.mark.parametrize(

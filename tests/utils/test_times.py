@@ -181,13 +181,12 @@ class TestHoursMinutesSeconds:
             hours_minutes_seconds_float(timestamp)
 
     @pytest.mark.parametrize("method", [hours_minutes_seconds, hours_minutes_seconds_float])
-    def test_hours_minutes_seconds_argparse_failure(self, capfd: pytest.CaptureFixture, method):
-        parser = argparse.ArgumentParser()
+    def test_hours_minutes_seconds_argparse_failure(self, method):
+        parser = argparse.ArgumentParser(exit_on_error=False)
         parser.add_argument("hms", type=method)
-        with pytest.raises(SystemExit):
+        with pytest.raises(argparse.ArgumentError) as exc_info:
             parser.parse_args(["invalid"])
-        stderr = capfd.readouterr().err
-        assert "error: argument hms: invalid hours_minutes_seconds value: 'invalid'\n" in stderr, \
+        assert str(exc_info.value) == "argument hms: invalid hours_minutes_seconds value: 'invalid'", \
             "has the correct method name, so argparse errors are useful"  # fmt: skip
 
     def test_hours_minutes_seconds_hashable(self):
