@@ -944,7 +944,8 @@ def run(parser: ArgumentParser) -> int:
     if args.version_check:
         pass
     elif args.help:
-        parser.print_help()
+        helptext = parser.format_help()
+        console.msg(helptext)
     elif args.plugins:
         print_plugins()
     elif args.can_handle_url or args.can_handle_url_no_redirect:
