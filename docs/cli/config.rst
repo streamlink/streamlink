@@ -19,29 +19,20 @@ your platform:
     * - Platform
       - Location
     * - Linux, BSD
-      - :bdg-primary:`Path`
-
-        - ``${XDG_CONFIG_HOME:-${HOME}/.config}/streamlink/config``
-
-        :bdg-info-line:`Example`
-
-        - ``/home/USERNAME/.config/streamlink/config``
+      - | **Path**
+        | ``${XDG_CONFIG_HOME:-${HOME}/.config}/streamlink/config``
+        | **Example**
+        | ``/home/USERNAME/.config/streamlink/config``
     * - macOS
-      - :bdg-primary:`Path`
-
-        - ``${HOME}/Library/Application Support/streamlink/config``
-
-        :bdg-info-line:`Example`
-
-        - ``/Users/USERNAME/Library/Application Support/streamlink/config``
+      - | **Path**
+        | ``${HOME}/Library/Application Support/streamlink/config``
+        | **Example**
+        | ``/Users/USERNAME/Library/Application Support/streamlink/config``
     * - Windows
-      - :bdg-primary:`Path`
-
-        - ``%APPDATA%\streamlink\config``
-
-        :bdg-info-line:`Example`
-
-        - ``C:\Users\USERNAME\AppData\Roaming\streamlink\config``
+      - | **Path**
+        | ``%APPDATA%\streamlink\config``
+        | **Example**
+        | ``C:\Users\USERNAME\AppData\Roaming\streamlink\config``
 
 You can also specify the location yourself using the :option:`--config` option.
 
@@ -109,29 +100,20 @@ Streamlink expects these configs to be named like the main config but with ``.<p
     * - Platform
       - Location
     * - Linux, BSD
-      - :bdg-primary:`Path`
-
-        - ``${XDG_CONFIG_HOME:-${HOME}/.config}/streamlink/config.pluginname``
-
-        :bdg-info-line:`Example`
-
-        - ``/home/USERNAME/.config/streamlink/config.twitch``
+      - | **Path**
+        | ``${XDG_CONFIG_HOME:-${HOME}/.config}/streamlink/config.pluginname``
+        | **Example**
+        | ``/home/USERNAME/.config/streamlink/config.twitch``
     * - macOS
-      - :bdg-primary:`Path`
-
-        - ``${HOME}/Library/Application Support/streamlink/config.pluginname``
-
-        :bdg-info-line:`Example`
-
-        - ``/Users/USERNAME/Library/Application Support/streamlink/config.twitch``
+      - | **Path**
+        | ``${HOME}/Library/Application Support/streamlink/config.pluginname``
+        | **Example**
+        | ``/Users/USERNAME/Library/Application Support/streamlink/config.twitch``
     * - Windows
-      - :bdg-primary:`Path`
-
-        - ``%APPDATA%\streamlink\config.pluginname``
-
-        :bdg-info-line:`Example`
-
-        - ``C:\Users\USERNAME\AppData\Roaming\streamlink\config.twitch``
+      - | **Path**
+        | ``%APPDATA%\streamlink\config.pluginname``
+        | **Example**
+        | ``C:\Users\USERNAME\AppData\Roaming\streamlink\config.twitch``
 
 Have a look at the :ref:`list of plugins <plugins:Plugins>`, or
 check the :option:`--plugins` option to see the name of each built-in plugin.
