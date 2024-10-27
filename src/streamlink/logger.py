@@ -206,13 +206,14 @@ def capturewarnings(capture=False):
 
 # noinspection PyShadowingBuiltins,PyPep8Naming
 def basicConfig(
+    *,
     filename: str | Path | None = None,
     filemode: str = "a",
-    stream: IO | None = None,
-    level: str | None = None,
-    format: str = FORMAT_BASE,  # noqa: A002  # TODO: rename to "fmt" (breaking)
-    style: Literal["%", "{", "$"] = FORMAT_STYLE,
+    format: str = FORMAT_BASE,  # noqa: A002
     datefmt: str = FORMAT_DATE,
+    style: Literal["%", "{", "$"] = FORMAT_STYLE,
+    level: str | None = None,
+    stream: IO | None = None,
     remove_base: list[str] | None = None,
     capture_warnings: bool = False,
 ) -> logging.StreamHandler:

@@ -875,12 +875,12 @@ def setup_logger_and_console(
 
     try:
         streamhandler = logger.basicConfig(
-            stream=stream,
             filename=filename,
-            level=level,
-            style="{",
             format=fmt,
             datefmt=datefmt,
+            style="{",
+            level=level,
+            stream=stream,
             capture_warnings=True,
         )
     except Exception as err:
