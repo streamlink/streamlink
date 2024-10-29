@@ -52,7 +52,6 @@ jobs:
           -r dev-requirements.txt
         continue-on-error: ${{ matrix.continue || false }}
       - name: Install optional Python dependencies
-        if: ${{ ! startsWith(matrix['python-version'], '3.13') }}
         run: >
           python -m pip install -U
           brotli
