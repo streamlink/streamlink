@@ -47,12 +47,29 @@ class Streamlink:
         #: Used for any kind of HTTP request made by plugin and stream implementations.
         self.http: HTTPSession = HTTPSession()
 
+        self.ip: str = ""
+        self.proxy_ip: str = ""
+
         #: Options of this session instance.
         #: :class:`StreamlinkOptions <streamlink.session.options.StreamlinkOptions>` is a subclass
         #: of :class:`Options <streamlink.options.Options>` with special getter/setter mappings.
         self.options: StreamlinkOptions = StreamlinkOptions(self)
         if options:
             self.options.update(options)
+
+            try:
+                m3u8_proxy = self.http.proxies.get("m3u8-proxy")
+                if m3u8_proxy:
+                    res = self.http.get("https://checkip.amazonaws.com")
+                    self.ip = res.content.decode("utf-8").strip()
+
+                    res = self.http.get("https://checkip.amazonaws.com",
+                                        proxies={"http": m3u8_proxy, "https": m3u8_proxy})
+                    self.proxy_ip = res.content.decode("utf-8").strip()
+            except Exception:
+                self.ip = ""
+                self.proxy_ip = ""
+                pass
 
         #: Plugins of this session instance.
         self.plugins: StreamlinkPlugins = StreamlinkPlugins(builtin=plugins_builtin, lazy=plugins_lazy)

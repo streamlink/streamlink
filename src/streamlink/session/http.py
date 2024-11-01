@@ -3,6 +3,7 @@ from __future__ import annotations
 import re
 import ssl
 import time
+import logging
 import warnings
 from typing import Any
 
@@ -16,6 +17,7 @@ from streamlink.exceptions import PluginError, StreamlinkDeprecationWarning
 from streamlink.packages.requests_file import FileAdapter
 from streamlink.utils.parse import parse_json, parse_xml
 
+log = logging.getLogger(".".join(__name__.split(".")[:-1]))
 
 try:
     from urllib3.util import create_urllib3_context  # type: ignore[attr-defined]
@@ -78,7 +80,8 @@ class Urllib3UtilUrlPercentReOverride:
 
 
 # urllib3>=2.0.0: _PERCENT_RE, urllib3<2.0.0: PERCENT_RE
-urllib3.util.url._PERCENT_RE = urllib3.util.url.PERCENT_RE = Urllib3UtilUrlPercentReOverride  # type: ignore[attr-defined]
+# type: ignore[attr-defined]
+urllib3.util.url._PERCENT_RE = urllib3.util.url.PERCENT_RE = Urllib3UtilUrlPercentReOverride
 
 
 # requests.Request.__init__ keywords, except for "hooks"
@@ -108,7 +111,8 @@ class HTTPSession(Session):
         :param sample: a sample of at least 4 bytes of the JSON text
         :return: the most likely encoding of the JSON text
         """
-        warnings.warn("Deprecated HTTPSession.determine_json_encoding() call", StreamlinkDeprecationWarning, stacklevel=1)
+        warnings.warn("Deprecated HTTPSession.determine_json_encoding() call",
+                      StreamlinkDeprecationWarning, stacklevel=1)
         data = int.from_bytes(sample[:4], "big")
 
         if data & 0xFFFFFF00 == 0:
@@ -184,6 +188,9 @@ class HTTPSession(Session):
                     proxies=proxies,
                     **kwargs,
                 )
+                if res.status_code != 200:
+                    log.warning(
+                        f'HTTP request failed - Response code: {res.status_code}.\n Response headers: {res.headers}.\n Request headers: {res.request.headers}.')
                 if raise_for_status and res.status_code not in acceptable_status:
                     res.raise_for_status()
                 break

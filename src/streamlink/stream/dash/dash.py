@@ -37,12 +37,12 @@ class DASHStreamWriter(SegmentedStreamWriter[DASHSegment, Response]):
             return
 
         name = segment.name
-        available_in = segment.available_in
-        if available_in > 0:
-            log.debug(f"{self.reader.mime_type} segment {name}: waiting {available_in:.01f}s ({segment.availability})")
-            if not self.wait(available_in):
-                log.debug(f"{self.reader.mime_type} segment {name}: cancelled")
-                return
+        # available_in = segment.available_in
+        # if available_in > 0:
+        #     log.debug(f"{self.reader.mime_type} segment {name}: waiting {available_in:.01f}s ({segment.availability})")
+        #     if not self.wait(available_in):
+        #         log.debug(f"{self.reader.mime_type} segment {name}: cancelled")
+        #         return
         log.debug(f"{self.reader.mime_type} segment {name}: downloading ({segment.availability})")
 
         request_args = copy.deepcopy(self.reader.stream.args)
@@ -96,6 +96,26 @@ class DASHStreamWorker(SegmentedStreamWorker[DASHSegment, Response]):
         time_to_sleep = duration - (time() - s)
         if time_to_sleep > 0:
             self.wait(time_to_sleep)
+
+    # def iter_segments(self, init=True):
+    #     # find the representation by ID
+    #     representation = self.mpd.get_representation(self.reader.ident)
+    #     if not representation:
+    #         return
+
+    #     iter_segments = representation.segments(
+    #         init=init,
+    #         # sync initial timeline generation between audio and video threads
+    #         timestamp=self.reader.timestamp if init else None,
+    #     )
+    #     for segment in iter_segments:
+    #         if self.closed:
+    #             break
+    #         yield segment
+
+    #     # close worker without reloading
+    #     self.close()
+    #     return
 
     def iter_segments(self):
         init = True

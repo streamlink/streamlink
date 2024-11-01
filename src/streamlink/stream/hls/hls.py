@@ -6,7 +6,7 @@ import struct
 from collections.abc import Mapping
 from concurrent.futures import Future
 from datetime import datetime, timedelta
-from typing import Any, ClassVar
+from typing import Any, ClassVar, Optional
 from urllib.parse import urlparse
 
 from requests import Response
@@ -322,11 +322,15 @@ class HLSStreamWorker(SegmentedStreamWorker[HLSSegment, Response]):
             self.playlist_reload_time_override = 0
 
     def _fetch_playlist(self) -> Response:
+        m3u8_proxy = self.session.http.proxies.get("m3u8-proxy")
         res = self.session.http.get(
+            # url=self.stream.url.replace(f"/ip/{self.session.ip}/",
+            #                             f"/ip/{self.session.proxy_ip}/") if proxy else self.stream.url,
             self.stream.url,
             exception=StreamError,
             retries=self.playlist_reload_retries,
-            **self.reader.request_params,
+            proxies={"http": m3u8_proxy, "https": m3u8_proxy} if m3u8_proxy else {},
+            ** self.reader.request_params,
         )
         res.encoding = "utf-8"
 
@@ -362,13 +366,13 @@ class HLSStreamWorker(SegmentedStreamWorker[HLSSegment, Response]):
         if self.playlist_reload_time_override == "segment" and playlist.segments:
             return playlist.segments[-1].duration
         if self.playlist_reload_time_override == "live-edge" and playlist.segments:
-            return sum(s.duration for s in playlist.segments[-max(1, self.live_edge - 1) :])
+            return sum(s.duration for s in playlist.segments[-max(1, self.live_edge - 1):])
         if type(self.playlist_reload_time_override) is float and self.playlist_reload_time_override > 0:
             return self.playlist_reload_time_override
         if playlist.targetduration:
             return playlist.targetduration
         if playlist.segments:
-            return sum(s.duration for s in playlist.segments[-max(1, self.live_edge - 1) :])
+            return sum(s.duration for s in playlist.segments[-max(1, self.live_edge - 1):])
 
         return self.playlist_reload_time
 
@@ -451,20 +455,18 @@ class HLSStreamWorker(SegmentedStreamWorker[HLSSegment, Response]):
             self.playlist_sequence = self.duration_to_sequence(self.duration_offset_start, self.playlist_segments)
 
         if self.playlist_segments:
-            log.debug(
-                "; ".join([
-                    f"First Sequence: {self.playlist_segments[0].num}",
-                    f"Last Sequence: {self.playlist_segments[-1].num}",
-                ]),
-            )
-            log.debug(
-                "; ".join([
-                    f"Start offset: {self.duration_offset_start}",
-                    f"Duration: {self.duration_limit}",
-                    f"Start Sequence: {self.playlist_sequence}",
-                    f"End Sequence: {self.playlist_end}",
-                ]),
-            )
+            self.stream.first_segment_timestamp = int(self.playlist_segments[0].date.timestamp() * 1000)
+            log.debug("; ".join([
+                f"First Sequence: {self.playlist_segments[0].num}",
+                f"First Sequence Timestamp: {self.stream.first_segment_timestamp}",
+                f"Last Sequence: {self.playlist_segments[-1].num}",
+            ]))
+            log.debug("; ".join([
+                f"Start offset: {self.duration_offset_start}",
+                f"Duration: {self.duration_limit}",
+                f"Start Sequence: {self.playlist_sequence}",
+                f"End Sequence: {self.playlist_end}",
+            ]))
 
         total_duration = 0
         while not self.closed:
@@ -646,6 +648,7 @@ class HLSStream(HTTPStream):
         self.force_restart = force_restart
         self.start_offset = start_offset
         self.duration = duration
+        self.first_segment_timestamp: Optional[int] = None
 
     def __json__(self):  # noqa: PLW3201
         json = super().__json__()
@@ -684,7 +687,13 @@ class HLSStream(HTTPStream):
 
     @classmethod
     def _fetch_variant_playlist(cls, session, url: str, **request_args) -> Response:
-        res = session.http.get(url, exception=OSError, **request_args)
+        m3u8_proxy = session.http.proxies.get("m3u8-proxy")
+        res = session.http.get(
+            # url=url.replace(f"/ip/{session.ip}/", f"/ip/{session.proxy_ip}/") if proxy else url,
+            url,
+            exception=OSError,
+            proxies={"http": m3u8_proxy, "https": m3u8_proxy} if m3u8_proxy else {},
+            **request_args)
         res.encoding = "utf-8"
 
         return res

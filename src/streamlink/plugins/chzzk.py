@@ -218,8 +218,10 @@ class Chzzk(Plugin):
 
         media, status, self.id, self.author, self.category, self.title, adult = data
         if status != "OPEN":
-            log.error("The stream is unavailable")
+            log.debug("The stream is not live.")
             return
+
+        self.is_live = True
         if media is None:
             if adult:
                 log.error(

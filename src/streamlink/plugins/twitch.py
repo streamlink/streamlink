@@ -93,8 +93,8 @@ class TwitchM3U8Parser(M3U8Parser[TwitchM3U8, TwitchHLSSegment, HLSPlaylist]):
         # Use the average duration of all regular segments for the duration of prefetch segments.
         # This is better than using the duration of the last segment when regular segment durations vary a lot.
         # In low latency mode, the playlist reload time is the duration of the last segment.
-        duration = last.duration if last.prefetch else sum(segment.duration for segment in segments) / float(len(segments))
-
+        duration = last.duration if last.prefetch else sum(
+            segment.duration for segment in segments) / float(len(segments))
         # Use the last duration for extrapolating the start time of the prefetch segment, which is needed for checking
         # whether it is an ad segment and matches the parsed date ranges or not
         date = last.date + timedelta(seconds=last.duration)
@@ -826,7 +826,7 @@ class Twitch(Plugin):
             return inner
 
         parent = super()
-        for metadata in "id", "author", "category", "title":
+        for metadata in "id", "author", "category", "title", "is_live":
             method = f"get_{metadata}"
             setattr(self, method, method_factory(getattr(parent, method)))
 
@@ -957,6 +957,9 @@ class Twitch(Plugin):
                 # Don't raise and simply return no streams on 4xx/5xx playlist responses
                 return
             raise PluginError(err) from err
+
+        if not extra_params.get('force_restart', False):
+            self.is_live = True
 
         for name in restricted_bitrates:
             if name not in streams:

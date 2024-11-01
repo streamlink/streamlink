@@ -345,6 +345,9 @@ class StreamlinkOptions(Options):
     def _get_http_attr(self, key):
         return getattr(self.session.http, self._OPTIONS_HTTP_ATTRS[key])
 
+    def _get_m3u8_proxy(self, key):
+        return self.session.http.proxies.get("m3u8-proxy")
+
     # ---- setters
 
     def _set_interface(self, key, value):
@@ -374,6 +377,9 @@ class StreamlinkOptions(Options):
             = self.session.http.proxies["https"] \
             = update_scheme("https://", value, force=False)  # fmt: skip
         self._deprecate_https_proxy(key)
+
+    def _set_m3u8_proxy(self, key, value):
+        self.session.http.proxies['m3u8-proxy'] = update_scheme("https://", value, force=False)
 
     def _set_http_attr(self, key, value):
         setattr(self.session.http, self._OPTIONS_HTTP_ATTRS[key], value)
@@ -427,6 +433,7 @@ class StreamlinkOptions(Options):
     _MAP_GETTERS: ClassVar[Mapping[str, Callable[[StreamlinkOptions, str], Any]]] = {
         "http-proxy": _get_http_proxy,
         "https-proxy": _get_http_proxy,
+        "m3u8-proxy": _get_m3u8_proxy,
         "http-cookies": _get_http_attr,
         "http-headers": _get_http_attr,
         "http-query-params": _get_http_attr,
@@ -442,6 +449,7 @@ class StreamlinkOptions(Options):
         "ipv6": _set_ipv4_ipv6,
         "http-proxy": _set_http_proxy,
         "https-proxy": _set_http_proxy,
+        "m3u8-proxy": _set_m3u8_proxy,
         "http-cookies": _factory_set_http_attr_key_equals_value(";"),
         "http-headers": _factory_set_http_attr_key_equals_value(";"),
         "http-query-params": _factory_set_http_attr_key_equals_value("&"),

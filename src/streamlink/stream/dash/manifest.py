@@ -223,7 +223,8 @@ class MPDNode:
     ) -> list[TMPDNode_co]:
         children = self.node.findall(cls.__tag__)
         if len(children) < minimum or (maximum and len(children) > maximum):
-            raise MPDParsingError(f"Expected to find {self.__tag__}/{cls.__tag__} required [{minimum}..{maximum or 'unbound'})")
+            raise MPDParsingError(
+                f"Expected to find {self.__tag__}/{cls.__tag__} required [{minimum}..{maximum or 'unbound'})")
 
         return [
             cls(child, root=self.root, parent=self, i=i, base_url=self.base_url, **kwargs)
@@ -307,16 +308,17 @@ class MPD(MPDNode):
             parser=MPDParsers.type,
             default="static",
         )
-        self.publishTime = self.attr(
-            "publishTime",
-            parser=MPDParsers.datetime,
-            required=self.type == "dynamic",
-        )
         self.availabilityStartTime = self.attr(
             "availabilityStartTime",
             parser=MPDParsers.datetime,
             default=EPOCH_START,
             required=self.type == "dynamic",
+        )
+        self.publishTime = self.attr(
+            "publishTime",
+            parser=MPDParsers.datetime,
+            # required=self.type == "dynamic",
+            default=self.availabilityStartTime,
         )
         self.availabilityEndTime = self.attr(
             "availabilityEndTime",
@@ -764,7 +766,7 @@ class SegmentList(_MultipleSegmentBaseType):
             else:
                 # yield a specific number of segments from the live-edge of dynamic manifests
                 start_number = self.calculate_optimal_start()
-                segment_urls = self.segmentURLs[start_number - self.startNumber :]
+                segment_urls = self.segmentURLs[start_number - self.startNumber:]
 
         else:
             # skip segments with a lower number than the remembered segment number
@@ -798,7 +800,8 @@ class SegmentList(_MultipleSegmentBaseType):
         suggested_delay = self.root.suggestedPresentationDelay
 
         if self.duration_seconds == 0.0:
-            log.info(f"Unknown segment duration. Falling back to an offset of {MPD.DEFAULT_LIVE_EDGE_SEGMENTS} segments.")
+            log.info(
+                f"Unknown segment duration. Falling back to an offset of {MPD.DEFAULT_LIVE_EDGE_SEGMENTS} segments.")
             offset = MPD.DEFAULT_LIVE_EDGE_SEGMENTS
         else:
             offset = max(0, math.ceil(suggested_delay.total_seconds() / self.duration_seconds))
