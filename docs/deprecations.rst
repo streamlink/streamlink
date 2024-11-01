@@ -55,6 +55,8 @@ streamlink 6.6.0
 HTTPSession and HTTPAdapters
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+:bdg-ref-danger:`Removed in 7.0.0 <migrations:HTTPSession and HTTPAdapters>`
+
 The module structure of the :class:`Streamlink <streamlink.session.Streamlink>` session implementation and related classes
 like the ``HTTPSession`` has been re-organized.
 

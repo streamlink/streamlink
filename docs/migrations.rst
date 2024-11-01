@@ -69,6 +69,24 @@ session option counterparts have been removed.
          - use :class:`stream-timeout <streamlink.session.options.StreamlinkOptions>`
            instead of ``{dash,hls,http-stream}-timeout``
 
+HTTPSession and HTTPAdapters
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The :ref:`deprecated <deprecations:HTTPSession and HTTPAdapters>` import paths for the ``HTTPSession`` class
+and custom ``HTTPAdapter`` classes have been removed.
+
+| :octicon:`x-circle` #5807
+| :octicon:`git-pull-request` #6274
+
+.. admonition:: Migration
+   :class: hint
+
+   Plugin implementors were never supposed to import the ``HTTPSession`` class directly, and instead should always reference
+   the :attr:`http <streamlink.session.Streamlink.http>` attribute of Streamlink's
+   :attr:`session <streamlink.plugin.Plugin.session>` attribute in instances of ``Plugin``.
+
+   Import Streamlink's custom ``HTTPAdapter`` classes from ``streamlink.session.http``.
+
 --force-progress
 ^^^^^^^^^^^^^^^^
 
