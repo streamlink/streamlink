@@ -31,6 +31,8 @@ streamlink 6.8.0
 streamlink.plugins re-exports
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+:bdg-ref-danger:`Removed in 7.0.0 <migrations:streamlink.plugins re-exports>`
+
 Importing :class:`NoPluginError <streamlink.exceptions.NoPluginError>`,
 :class:`NoStreamsError <streamlink.exceptions.NoStreamsError>`, :class:`PluginError <streamlink.exceptions.PluginError>`,
 or :class:`Plugin <streamlink.plugin.plugin.Plugin>` from ``streamlink.plugins`` now emits

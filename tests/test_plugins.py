@@ -8,9 +8,8 @@ import pytest
 
 import streamlink.plugins
 import tests.plugins
-from streamlink.exceptions import StreamlinkDeprecationWarning
 from streamlink.plugin.plugin import Matcher, Plugin
-from streamlink.utils.module import exec_module, load_module
+from streamlink.utils.module import exec_module
 
 
 plugins_path = streamlink.plugins.__path__[0]
@@ -210,38 +209,3 @@ class TestPluginMetadata:
         indexes = [PLUGIN_METADATA.index(val.split(" ")[0]) for key, val in metadata_items if key == "metadata"]
         assert [PLUGIN_METADATA[i] for i in indexes] == [PLUGIN_METADATA[i] for i in sorted(indexes)], \
             "$metadata metadata values are ordered correctly"  # fmt: skip
-
-
-@pytest.mark.parametrize(
-    ("attr", "msg"),
-    [
-        pytest.param(
-            "NoPluginError",
-            "Importing from streamlink.plugins.NoPluginError has been deprecated",
-            id="NoPluginError",
-        ),
-        pytest.param(
-            "NoStreamsError",
-            "Importing from streamlink.plugins.NoStreamsError has been deprecated",
-            id="NoStreamsError",
-        ),
-        pytest.param(
-            "PluginError",
-            "Importing from streamlink.plugins.PluginError has been deprecated",
-            id="PluginError",
-        ),
-        pytest.param(
-            "Plugin",
-            "Importing from streamlink.plugins.Plugin has been deprecated",
-            id="Plugin",
-        ),
-    ],
-)
-def test_deprecated_exports(recwarn: pytest.WarningsRecorder, attr: str, msg: str):
-    plugins_module = load_module("__init__", plugins_path)
-    assert recwarn.list == []
-
-    getattr(plugins_module, attr)
-    assert [(record.filename, record.category, str(record.message)) for record in recwarn.list] == [
-        (__file__, StreamlinkDeprecationWarning, msg),
-    ]
