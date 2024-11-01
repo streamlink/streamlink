@@ -87,6 +87,24 @@ and custom ``HTTPAdapter`` classes have been removed.
 
    Import Streamlink's custom ``HTTPAdapter`` classes from ``streamlink.session.http``.
 
+streamlink.plugins re-exports
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The :ref:`deprecated <deprecations:streamlink.plugins re-exports>` import paths for
+the :class:`NoPluginError <streamlink.exceptions.NoPluginError>`,
+:class:`NoStreamsError <streamlink.exceptions.NoStreamsError>`, :class:`PluginError <streamlink.exceptions.PluginError>`,
+and :class:`Plugin <streamlink.plugin.plugin.Plugin>` classes have been removed.
+
+| :octicon:`x-circle` #6005
+| :octicon:`git-pull-request` #6274
+
+.. admonition:: Migration
+   :class: hint
+
+   Import error classes from ``streamlink.exceptions`` or ``streamlink.plugin``.
+
+   Import the ``Plugin`` class from ``streamlink.plugin``.
+
 --force-progress
 ^^^^^^^^^^^^^^^^
 
