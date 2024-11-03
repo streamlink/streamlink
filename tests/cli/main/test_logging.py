@@ -225,8 +225,8 @@ class TestInfos:
                     ("cli", "debug", "OpenSSL:    OPENSSL_VERSION"),
                     ("cli", "debug", "Streamlink: STREAMLINK_VERSION"),
                     ("cli", "debug", "Dependencies:"),
-                    ("cli", "debug", " foo: 1.2.3"),
                     ("cli", "debug", " bar-baz: 2.0.0"),
+                    ("cli", "debug", " foo: 1.2.3"),
                 ],
                 id="darwin",
             ),
@@ -239,8 +239,8 @@ class TestInfos:
                     ("cli", "debug", "OpenSSL:    OPENSSL_VERSION"),
                     ("cli", "debug", "Streamlink: STREAMLINK_VERSION"),
                     ("cli", "debug", "Dependencies:"),
-                    ("cli", "debug", " foo: 1.2.3"),
                     ("cli", "debug", " bar-baz: 2.0.0"),
+                    ("cli", "debug", " foo: 1.2.3"),
                 ],
                 id="win32",
             ),
@@ -253,8 +253,8 @@ class TestInfos:
                     ("cli", "debug", "OpenSSL:    OPENSSL_VERSION"),
                     ("cli", "debug", "Streamlink: STREAMLINK_VERSION"),
                     ("cli", "debug", "Dependencies:"),
-                    ("cli", "debug", " foo: 1.2.3"),
                     ("cli", "debug", " bar-baz: 2.0.0"),
+                    ("cli", "debug", " foo: 1.2.3"),
                 ],
                 id="linux",
             ),
@@ -282,7 +282,12 @@ class TestInfos:
 
         mock_importlib_metadata = Mock()
         mock_importlib_metadata.PackageNotFoundError = FakePackageNotFoundError
-        mock_importlib_metadata.requires.return_value = ["foo>1", "bar-baz==2", "qux~=3"]
+        mock_importlib_metadata.requires.return_value = [
+            "foo>1 ; python_version>='3.13'",
+            "foo<=1 ; python_version<'3.13'",
+            "bar-baz==2",
+            "qux~=3",
+        ]
         mock_importlib_metadata.version.side_effect = version
 
         monkeypatch.setattr("importlib.metadata", mock_importlib_metadata)

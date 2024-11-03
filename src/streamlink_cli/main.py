@@ -777,8 +777,7 @@ def log_root_warning():
             log.info("streamlink is running as root! Be careful!")
 
 
-def log_current_versions():
-    """Show current installed versions"""
+def log_current_versions() -> None:
     if not logger.root.isEnabledFor(logging.DEBUG):
         return
 
@@ -797,14 +796,17 @@ def log_current_versions():
     log.debug(f"OpenSSL:    {ssl.OPENSSL_VERSION}")
     log.debug(f"Streamlink: {streamlink_version}")
 
+    log.debug("Dependencies:")
     # https://peps.python.org/pep-0508/#names
     re_name = re.compile(r"[A-Z\d](?:[A-Z\d._-]*[A-Z\d])?", re.IGNORECASE)
-    log.debug("Dependencies:")
-    for name in [
-        match.group(0)
-        for match in map(re_name.match, importlib.metadata.requires("streamlink"))
+    dependencies: list[str] = importlib.metadata.requires("streamlink") or []
+    dependency_names: set[str] = {
+        match[0]
+        for match in [re_name.match(item) for item in dependencies]
         if match is not None
-    ]:  # fmt: skip
+    }  # fmt: skip
+    # noinspection PyTypeChecker
+    for name in sorted(dependency_names, key=str.lower):
         try:
             version = importlib.metadata.version(name)
         except importlib.metadata.PackageNotFoundError:
