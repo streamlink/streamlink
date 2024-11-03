@@ -1,5 +1,48 @@
 # Changelog
 
+## streamlink 7.0.0 (2024-11-04)
+
+- BREAKING: dropped support for [EOL Python 3.8](https://peps.python.org/pep-0569/#lifespan) (Win 7/8 are now unsupported) ([#6230](https://github.com/streamlink/streamlink/pull/6230))
+- BREAKING/CLI: [removed deprecated config file and plugin config file paths](https://streamlink.github.io/migrations.html#config-file-paths) ([#6149](https://github.com/streamlink/streamlink/pull/6149))
+- BREAKING/CLI: [removed deprecated plugin sideloading paths](https://streamlink.github.io/migrations.html#custom-plugins-sideloading-paths) ([#6150](https://github.com/streamlink/streamlink/pull/6150))
+- BREAKING/CLI: [removed deprecated `--force-progress` CLI argument](https://streamlink.github.io/migrations.html#force-progress) ([#6196](https://github.com/streamlink/streamlink/pull/6196))
+- BREAKING/CLI: [removed deprecated stream-type related CLI arguments](https://streamlink.github.io/migrations.html#stream-type-related-cli-arguments) ([#6232](https://github.com/streamlink/streamlink/pull/6232))
+  - `--hls-segment-attempts`
+  - `--hls-segment-threads`
+  - `--hls-segment-timeout`
+  - `--hls-timeout`
+  - `--http-stream-timeout`
+- BREAKING/API: [removed deprecated stream-type related session options](https://streamlink.github.io/migrations.html#stream-type-related-cli-arguments) ([#6232](https://github.com/streamlink/streamlink/pull/6232))
+  - `hls-segment-attempts`
+  - `hls-segment-threads`
+  - `hls-segment-timeout`
+  - `hls-timeout`
+  - `dash-segment-attempts`
+  - `dash-segment-threads`
+  - `dash-segment-timeout`
+  - `dash-timeout`
+  - `http-stream-timeout`
+- BREAKING/API: [removed deprecated import paths for `HTTPSession` and `HTTPAdapter`s](https://streamlink.github.io/migrations.html#httpsession-and-httpadapters) ([#6274](https://github.com/streamlink/streamlink/pull/6274))
+- BREAKING/API: [removed deprecated import paths for `NoPluginError`, `NoStreamsError`, `PluginError` and `Plugin`](https://streamlink.github.io/migrations.html#streamlink-plugins-re-exports) ([#6274](https://github.com/streamlink/streamlink/pull/6274))
+- BREAKING/packaging: dropped "32 bit" Windows x86 and Linux AppImage i686 builds ([#6052](https://github.com/streamlink/streamlink/pull/6052))
+- Removed: flawed implementation of VLC-specific player variables ([#6251](https://github.com/streamlink/streamlink/pull/6251), [#6253](https://github.com/streamlink/streamlink/pull/6253))
+- Deprecated: [`--verbose-player` CLI argument in favor of `--player-verbose`](https://streamlink.github.io/deprecations.html#verbose-player) ([#6227](https://github.com/streamlink/streamlink/pull/6227))
+- Deprecated: [`--fifo` CLI argument in favor of `--player-fifo`](https://streamlink.github.io/deprecations.html#fifo) ([#6227](https://github.com/streamlink/streamlink/pull/6227))
+- Added: warning messages for deprecated/suppressed plugin arguments ([#6240](https://github.com/streamlink/streamlink/pull/6240), [#6249](https://github.com/streamlink/streamlink/pull/6249))
+- Fixed: errors on missing `stdin` file descriptor ([#6239](https://github.com/streamlink/streamlink/pull/6239))
+- Fixed: `--interface` not having an effect on custom `HTTPAdapter`s ([#6223](https://github.com/streamlink/streamlink/pull/6223))
+- Updated plugins:
+  - afreeca: renamed to soop, overhauled plugin and deprecated old plugin CLI arguments ([#6247](https://github.com/streamlink/streamlink/pull/6247), [#6257](https://github.com/streamlink/streamlink/pull/6257))
+  - ruv: rewritten and fixed plugin ([#6262](https://github.com/streamlink/streamlink/pull/6262))
+  - tv3cat: updated plugin matchers ([#6242](https://github.com/streamlink/streamlink/pull/6242))
+- Docs: updated documentation of various CLI arguments ([#6226](https://github.com/streamlink/streamlink/pull/6226), [#6255](https://github.com/streamlink/streamlink/pull/6255), [#6225](https://github.com/streamlink/streamlink/pull/6225))
+- Chore: updated typing annotations (PEP 563, PEP 585, PEP 604, PEP 613) ([#6218](https://github.com/streamlink/streamlink/pull/6218))
+- Chore: reformatted the whole code base using ruff ([#6260](https://github.com/streamlink/streamlink/pull/6260))
+- Build: bumped `trio` dependency to `>=0.25.0,<1` on Python >= 3.13 ([#6244](https://github.com/streamlink/streamlink/pull/6244))
+
+[Full changelog](https://github.com/streamlink/streamlink/compare/6.11.0...7.0.0)
+
+
 ## streamlink 6.11.0 (2024-10-01)
 
 - Deprecated: [`--record-and-pipe=...` in favor of `--stdout --record=...`](https://streamlink.github.io/deprecations.html#r-record-and-pipe) (and explicitly disallowed `--stdout --output=...`) ([#6194](https://github.com/streamlink/streamlink/pull/6194))
