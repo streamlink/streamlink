@@ -76,7 +76,7 @@ Homepage = "https://github.com/streamlink/streamlink"
 Documentation = "https://streamlink.github.io/"
 Tracker = "https://github.com/streamlink/streamlink/issues"
 Source = "https://github.com/streamlink/streamlink"
-Funding = "https://streamlink.github.io/latest/donate.html"
+Funding = "https://streamlink.github.io/latest/support.html"
 
 
 # https://setuptools.pypa.io/en/stable/userguide/pyproject_config.html
