@@ -5,10 +5,10 @@ Overview
 --------
 
 Streamlink is a :ref:`command-line utility <cli:Command-Line Interface>` which pipes video streams
-from various services into a video player, such as `VLC`_.
+from various services into a video player, such as `VLC`_ or `mpv`_.
 The main purpose of Streamlink is to avoid resource-heavy and unoptimized websites,
 while still allowing the user to enjoy various streamed content.
-There is also an :ref:`API <api_guide:API Guide>` available for developers who want access
+There is also a :ref:`Python API <api:API Reference>` available for developers who want access
 to the stream data.
 
 This project was forked from Livestreamer, which is no longer maintained.
@@ -28,6 +28,9 @@ This project was forked from Livestreamer, which is no longer maintained.
 :octicon:`law` Free software
     Simplified BSD license
 
+.. _VLC: https://www.videolan.org/
+.. _mpv: https://mpv.io/
+
 Features
 --------
 
@@ -40,7 +43,7 @@ A list of all plugins currently included can be found on the :ref:`plugins <plug
 Quickstart
 ----------
 
-The default behavior of Streamlink is to play back streams in the `VLC <https://www.videolan.org/>`_ player.
+The default behavior of Streamlink is to play back streams in the `VLC`_ player.
 
 .. sourcecode:: console
 
