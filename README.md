@@ -75,4 +75,4 @@ Your support is very much appreciated, thank you!
   [streamlink-plugins]: https://streamlink.github.io/plugins.html
   [player-vlc]: https://www.videolan.org/vlc/
   [contributing]: https://github.com/streamlink/streamlink/blob/master/CONTRIBUTING.md
-  [support]: https://streamlink.github.io/latest/donate.html
+  [support]: https://streamlink.github.io/latest/support.html
