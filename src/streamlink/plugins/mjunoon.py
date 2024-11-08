@@ -137,12 +137,12 @@ class Mjunoon(Plugin):
                 json=js_data["credentials"],
             )
             token_data = self.session.http.json(res, schema=self.token_schema)
-            log.debug(f'Token={token_data["token"]}')
+            log.debug(f"Token={token_data['token']}")
 
             self.cache.set("token", token_data["token"], expires=token_data["expires_in"])
             self.cache.set("token_type", token_data["token_type"], expires=token_data["expires_in"])
 
-        headers = {"Authorization": f'{token_data["token_type"]} {token_data["token"]}'}
+        headers = {"Authorization": f"{token_data['token_type']} {token_data['token']}"}
         data = {
             "slug": slug,
             "type": js_data["type"],
