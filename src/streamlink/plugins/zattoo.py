@@ -285,7 +285,7 @@ class Zattoo(Plugin):
         log.debug("get channel ID for {0}".format(channel))
         try:
             res = self.session.http.get(
-                f'{self.base_url}/zapi/v2/cached/channels/{self._session_attributes.get("power_guide_hash")}',
+                f"{self.base_url}/zapi/v2/cached/channels/{self._session_attributes.get('power_guide_hash')}",
                 headers=self.headers,
                 params={"details": "False"},
             )

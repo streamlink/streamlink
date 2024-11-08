@@ -151,7 +151,7 @@ class Huya(Plugin):
         timestamp = int(time.time() * 1000)
         seqid = uid + timestamp
         ws_secret_prefix = base64.b64decode(unquote(fm).encode()).decode().split("_")[0]
-        ws_secret_hash = hashlib.md5(f'{seqid}|{ctype}|{self._CONSTANTS["t"]}'.encode()).hexdigest()
+        ws_secret_hash = hashlib.md5(f"{seqid}|{ctype}|{self._CONSTANTS['t']}".encode()).hexdigest()
         ws_secret = hashlib.md5(
             f"{ws_secret_prefix}_{convert_uid}_{stream_name}_{ws_secret_hash}_{ws_time}".encode(),
         ).hexdigest()
