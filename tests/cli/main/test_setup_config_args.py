@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from argparse import Namespace
 from pathlib import Path
 from unittest.mock import Mock, call
@@ -87,7 +89,7 @@ def session(monkeypatch: pytest.MonkeyPatch, session: Streamlink):
             [
                 CONFIGDIR / "non-existent",
             ],
-            [],
+            None,
             id="No URL, non-existent default config",
         ),
         pytest.param(
@@ -101,7 +103,7 @@ def session(monkeypatch: pytest.MonkeyPatch, session: Streamlink):
             [
                 CONFIGDIR / "primary",
             ],
-            [],
+            None,
             id="No URL, non-existent custom config",
         ),
         pytest.param(
@@ -143,7 +145,7 @@ def session(monkeypatch: pytest.MonkeyPatch, session: Streamlink):
             [
                 CONFIGDIR / "non-existent",
             ],
-            [],
+            None,
             id="No plugin, non-existent default config",
         ),
         pytest.param(
@@ -157,7 +159,7 @@ def session(monkeypatch: pytest.MonkeyPatch, session: Streamlink):
             [
                 CONFIGDIR / "primary",
             ],
-            [],
+            None,
             id="No plugin, non-existent custom config",
         ),
         pytest.param(
@@ -184,7 +186,7 @@ def session(monkeypatch: pytest.MonkeyPatch, session: Streamlink):
             [
                 CONFIGDIR / "non-existent",
             ],
-            [],
+            None,
             id="Testplugin, non-existent default config",
         ),
         pytest.param(
@@ -249,7 +251,7 @@ def session(monkeypatch: pytest.MonkeyPatch, session: Streamlink):
             [
                 CONFIGDIR / "primary",
             ],
-            [],
+            None,
             id="No config, default config",
         ),
         pytest.param(
@@ -264,7 +266,7 @@ def session(monkeypatch: pytest.MonkeyPatch, session: Streamlink):
             [
                 CONFIGDIR / "primary",
             ],
-            [],
+            None,
             id="No config, multiple custom configs",
         ),
     ],
@@ -274,11 +276,12 @@ def session(monkeypatch: pytest.MonkeyPatch, session: Streamlink):
 def test_setup_config_args(
     recwarn: pytest.WarningsRecorder,
     setup_args: Mock,
-    expected: list,
+    expected: list | None,
     ignore_unknown: bool,
 ):
     parser = Mock()
     setup_config_args(parser, ignore_unknown=ignore_unknown)
-    assert setup_args.call_args_list == (
-        [call(parser, expected, ignore_unknown=ignore_unknown)] if expected else []
-    ), "Calls setup_args with the correct list of config files"
+    if expected is not None:
+        assert setup_args.call_args_list == [call(parser, expected, ignore_unknown=ignore_unknown)]
+    else:
+        assert setup_args.call_args_list == []
