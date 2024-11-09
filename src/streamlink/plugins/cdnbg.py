@@ -26,28 +26,36 @@ log = logging.getLogger(__name__)
 
 
 @pluginmatcher(
-    re.compile(
-        r"""
-            https?://(?:www\.)?(?:
-                armymedia\.bg
-                |
-                bgonair\.bg/tvonline
-                |
-                bloombergtv\.bg/video
-                |
-                (?:tv\.)?bnt\.bg/\w+(?:/\w+)?
-                |
-                live\.bstv\.bg
-                |
-                i\.cdn\.bg/live/
-                |
-                nova\.bg/live
-                |
-                mu-vi\.tv/LiveStreams/pages/Live\.aspx
-            )/?
-        """,
-        re.VERBOSE,
-    ),
+    name="armymedia",
+    pattern=re.compile(r"https?://(?:www\.)?armymedia\.bg/?"),
+)
+@pluginmatcher(
+    name="bgonair",
+    pattern=re.compile(r"https?://(?:www\.)?bgonair\.bg/tvonline/?"),
+)
+@pluginmatcher(
+    name="bloombergtv",
+    pattern=re.compile(r"https?://(?:www\.)?bloombergtv\.bg/video/?"),
+)
+@pluginmatcher(
+    name="bnt",
+    pattern=re.compile(r"https?://(?:www\.)?(?:tv\.)?bnt\.bg/\w+(?:/\w+)?/?"),
+)
+@pluginmatcher(
+    name="bstv",
+    pattern=re.compile(r"https?://(?:www\.)?live\.bstv\.bg/?"),
+)
+@pluginmatcher(
+    name="nova",
+    pattern=re.compile(r"https?://(?:www\.)?nova\.bg/live/?"),
+)
+@pluginmatcher(
+    name="mu-vi",
+    pattern=re.compile(r"https?://(?:www\.)?mu-vi\.tv/LiveStreams/pages/Live\.aspx/?"),
+)
+@pluginmatcher(
+    name="cdnbg",
+    pattern=re.compile(r"https?://(?:www\.)?i\.cdn\.bg/live/?"),
 )
 class CDNBG(Plugin):
     @staticmethod

@@ -20,15 +20,7 @@ log = logging.getLogger(__name__)
 
 
 @pluginmatcher(
-    re.compile(
-        r"""
-            https?://(?:www\.)?adultswim\.com
-            /(streams|videos)
-            (?:/([^/]+))?
-            (?:/([^/]+))?
-        """,
-        re.VERBOSE,
-    ),
+    re.compile(r"https?://(?:www\.)?adultswim\.com/(streams|videos)(?:/([^/]+))?(?:/([^/]+))?"),
 )
 class AdultSwim(Plugin):
     token_url = "https://token.ngtv.io/token/token_spe"

@@ -21,21 +21,20 @@ log = logging.getLogger(__name__)
 
 
 @pluginmatcher(
-    re.compile(
-        r"""
-            https?://(?:www\.)?picarto\.tv/
-            (?:
-                streampopout/(?P<po_user>[^/]+)/public
-            |
-                videopopout/(?P<po_vod_id>\d+)
-            |
-                [^/]+/videos/(?P<vod_id>\d+)
-            |
-                (?P<user>[^/?&]+)
-            )$
-        """,
-        re.VERBOSE,
-    ),
+    name="streampopout",
+    pattern=re.compile(r"https?://(?:www\.)?picarto\.tv/streampopout/(?P<po_user>[^/]+)/public$"),
+)
+@pluginmatcher(
+    name="videopopout",
+    pattern=re.compile(r"https?://(?:www\.)?picarto\.tv/videopopout/(?P<po_vod_id>\d+)$"),
+)
+@pluginmatcher(
+    name="vod",
+    pattern=re.compile(r"https?://(?:www\.)?picarto\.tv/[^/]+/videos/(?P<vod_id>\d+)$"),
+)
+@pluginmatcher(
+    name="user",
+    pattern=re.compile(r"https?://(?:www\.)?picarto\.tv/(?P<user>[^/?&]+)$"),
 )
 class Picarto(Plugin):
     API_URL_LIVE = "https://ptvintern.picarto.tv/api/channel/detail/{username}"

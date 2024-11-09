@@ -20,18 +20,12 @@ log = logging.getLogger(__name__)
 
 
 @pluginmatcher(
-    re.compile(
-        r"""
-            https?://(\w+\.)?ardmediathek\.de/
-            (?:
-                live/(?:[^/]+/)?(?P<id_live>\w+)
-                |
-                video/(?:[^/]+/[^/]+/[^/]+/)?(?P<id_video>\w+)
-            )
-            (?:\?|$)
-        """,
-        re.VERBOSE,
-    ),
+    name="live",
+    pattern=re.compile(r"https?://(\w+\.)?ardmediathek\.de/live/(?:[^/]+/)?(?P<id_live>\w+)(?:\?|$)"),
+)
+@pluginmatcher(
+    name="video",
+    pattern=re.compile(r"https?://(\w+\.)?ardmediathek\.de/video/(?:[^/]+/[^/]+/[^/]+/)?(?P<id_video>\w+)(?:\?|$)"),
 )
 class ARDMediathek(Plugin):
     _URL_API = "https://api.ardmediathek.de/page-gateway/pages/ard/item/{item}"

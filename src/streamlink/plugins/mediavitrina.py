@@ -19,20 +19,21 @@ log = logging.getLogger(__name__)
 
 
 @pluginmatcher(
-    re.compile(
-        r"""
-            https?://(?:www\.)?(?:
-                chetv
-                |
-                ctc(?:love)?
-                |
-                domashniy
-            )\.ru/(?:live|online)
-        """,
-        re.VERBOSE,
-    ),
+    name="chetv",
+    pattern=re.compile(r"https?://(?:www\.)?chetv\.ru/(?:live|online)"),
 )
-@pluginmatcher(re.compile(r"https?://player\.mediavitrina\.ru/.+/player\.html"))
+@pluginmatcher(
+    name="ctc",
+    pattern=re.compile(r"https?://(?:www\.)?ctc(?:love)?\.ru/(?:live|online)"),
+)
+@pluginmatcher(
+    name="domashniy",
+    pattern=re.compile(r"https?://(?:www\.)?domashniy\.ru/(?:live|online)"),
+)
+@pluginmatcher(
+    name="mediavitrina",
+    pattern=re.compile(r"https?://player\.mediavitrina\.ru/.+/player\.html"),
+)
 class MediaVitrina(Plugin):
     _re_url_json = re.compile(r"https://media\.mediavitrina\.ru/(?:proxy)?api/v3/[\w-]+/playlist/[\w-]+_as_array\.json[^\"']+")
 

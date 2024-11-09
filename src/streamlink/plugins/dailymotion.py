@@ -20,17 +20,12 @@ log = logging.getLogger(__name__)
 
 
 @pluginmatcher(
-    re.compile(
-        r"""
-            https?://(?:\w+\.)?dailymotion\.com
-            (?:
-                (/embed)?/(video|live)/(?P<media_id>[^_?/]+)
-                |
-                /(?P<user>[\w-]+)
-            )
-        """,
-        re.VERBOSE,
-    ),
+    name="user",
+    pattern=re.compile(r"https?://(?:\w+\.)?dailymotion\.com/(?P<user>(?!embed|video|live)[\w-]+)"),
+)
+@pluginmatcher(
+    name="media",
+    pattern=re.compile(r"https?://(?:\w+\.)?dailymotion\.com/(?:embed/)?(?:video|live)/(?P<media_id>[^_?/]+)"),
 )
 class DailyMotion(Plugin):
     _URL_API_USER_VIDEO = "https://api.dailymotion.com/user/{user}/videos"
