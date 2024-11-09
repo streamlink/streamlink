@@ -20,21 +20,16 @@ log = logging.getLogger(__name__)
 
 
 @pluginmatcher(
-    re.compile(
-        r"""
-            https?://(?:www\.)?
-            (?:
-                tf1\.fr/(?:
-                    (?P<live>[\w-]+)/direct/?
-                    |
-                    stream/(?P<stream>[\w-]+)
-                )
-                |
-                (?P<lci>tf1info|lci)\.fr/direct/?
-            )
-        """,
-        re.VERBOSE,
-    ),
+    name="live",
+    pattern=re.compile(r"https?://(?:www\.)?tf1\.fr/(?P<live>[\w-]+)/direct/?"),
+)
+@pluginmatcher(
+    name="stream",
+    pattern=re.compile(r"https?://(?:www\.)?tf1\.fr/stream/(?P<stream>[\w-]+)"),
+)
+@pluginmatcher(
+    name="lci",
+    pattern=re.compile(r"https?://(?:www\.)?(?:tf1info|lci)\.fr/direct/?"),
 )
 @pluginargument(
     "email",
@@ -122,15 +117,15 @@ class TF1(Plugin):
         )
 
     def _get_channel(self):
-        if self.match["live"]:
+        if self.matches["live"]:
             channel = self.match["live"]
             channel_id = f"L_{channel.upper()}"
-        elif self.match["lci"]:
-            channel = "LCI"
-            channel_id = "L_LCI"
-        elif self.match["stream"]:
+        elif self.matches["stream"]:
             channel = self.match["stream"]
             channel_id = f"L_FAST_v2l-{channel}"
+        elif self.matches["lci"]:
+            channel = "LCI"
+            channel_id = "L_LCI"
         else:  # pragma: no cover
             raise PluginError("Invalid channel")
 

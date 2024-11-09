@@ -112,18 +112,16 @@ class AbemaTVLicenseAdapter(BaseAdapter):
 
 
 @pluginmatcher(
-    re.compile(
-        r"""
-            https?://abema\.tv/(
-                now-on-air/(?P<onair>[^?]+)
-                |
-                video/episode/(?P<episode>[^?]+)
-                |
-                channels/.+?/slots/(?P<slots>[^?]+)
-            )
-        """,
-        re.VERBOSE,
-    ),
+    name="onair",
+    pattern=re.compile(r"https?://abema\.tv/now-on-air/(?P<onair>[^?]+)"),
+)
+@pluginmatcher(
+    name="episode",
+    pattern=re.compile(r"https?://abema\.tv/video/episode/(?P<episode>[^?]+)"),
+)
+@pluginmatcher(
+    name="slots",
+    pattern=re.compile(r"https?://abema\.tv/channels/.+?/slots/(?P<slots>[^?]+)"),
 )
 class AbemaTV(Plugin):
     _CHANNEL = "https://api.abema.io/v1/channels"

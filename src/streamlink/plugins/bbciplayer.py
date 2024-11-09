@@ -23,17 +23,12 @@ log = logging.getLogger(__name__)
 
 
 @pluginmatcher(
-    re.compile(
-        r"""
-            https?://(?:www\.)?bbc\.co\.uk/iplayer/
-            (
-                episode/(?P<episode_id>\w+)
-                |
-                live/(?P<channel_name>\w+)
-            )
-        """,
-        re.VERBOSE,
-    ),
+    name="live",
+    pattern=re.compile(r"https?://(?:www\.)?bbc\.co\.uk/iplayer/live/(?P<channel_name>\w+)"),
+)
+@pluginmatcher(
+    name="episode",
+    pattern=re.compile(r"https?://(?:www\.)?bbc\.co\.uk/iplayer/episode/(?P<episode_id>\w+)"),
 )
 @pluginargument(
     "username",

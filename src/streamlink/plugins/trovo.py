@@ -23,12 +23,7 @@ log = logging.getLogger(__name__)
 
 
 @pluginmatcher(
-    re.compile(
-        r"""
-            https?://(?:www\.)?trovo\.live/s/(?P<user>[^/?&]+)(?:/\d+\?vid=(?P<video_id>[^/?&]+))?
-        """,
-        re.VERBOSE,
-    ),
+    re.compile(r"https?://(?:www\.)?trovo\.live/s/(?P<user>[^/?&]+)(?:/\d+\?vid=(?P<video_id>[^/?&]+))?"),
 )
 class Trovo(Plugin):
     @classmethod

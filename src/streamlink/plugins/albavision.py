@@ -31,48 +31,56 @@ log = logging.getLogger(__name__)
 
 
 @pluginmatcher(
-    re.compile(
-        r"""
-            https?://(?:www\.)?
-            (
-                antena7\.com\.do
-                |
-                atv\.pe
-                |
-                c9n\.com\.py
-                |
-                canal10\.com\.ni
-                |
-                canal12\.com\.sv
-                |
-                chapintv\.com
-                |
-                elnueve\.com\.ar
-                |
-                redbolivision\.tv\.bo
-                |
-                repretel\.com
-                |
-                rts\.com\.ec
-                |
-                snt\.com\.py
-                |
-                tvc\.com\.ec
-                |
-                vtv\.com\.hn
-            )
-            /
-            (?:
-                (?:
-                    en-?vivo(?:-atv(?:mas)?|-canal-?\d{1,2})?
-                )
-                |
-                upptv
-            )
-            (?:/|\#)?$
-        """,
-        re.VERBOSE,
-    ),
+    name="antena7",
+    pattern=re.compile(r"https?://(?:www\.)?antena7\.com\.do/en-?vivo-canal-?\d{1,2}[/#]?$"),
+)
+@pluginmatcher(
+    name="atv",
+    pattern=re.compile(r"https?://(?:www\.)?atv\.pe/envivo-atv(?:mas)?/?"),
+)
+@pluginmatcher(
+    name="c9n",
+    pattern=re.compile(r"https?://(?:www\.)?c9n\.com\.py/envivo/?"),
+)
+@pluginmatcher(
+    name="canal10",
+    pattern=re.compile(r"https?://(?:www\.)?canal10\.com\.ni/envivo/?"),
+)
+@pluginmatcher(
+    name="canal12",
+    pattern=re.compile(r"https?://(?:www\.)?canal12\.com\.sv/envivo/?"),
+)
+@pluginmatcher(
+    name="chapintv",
+    pattern=re.compile(r"https?://(?:www\.)?chapintv\.com/envivo-canal-\d{1,2}/?"),
+)
+@pluginmatcher(
+    name="elnueve",
+    pattern=re.compile(r"https?://(?:www\.)?elnueve\.com\.ar/en-vivo/?"),
+)
+@pluginmatcher(
+    name="redbolivision",
+    pattern=re.compile(r"https?://(?:www\.)?redbolivision\.tv\.bo/(?:envivo-canal-?\d{1,2}|upptv)/?"),
+)
+@pluginmatcher(
+    name="repretel",
+    pattern=re.compile(r"https?://(?:www\.)?repretel\.com/en-?vivo(?:-canal-?\d{1,2})?/?"),
+)
+@pluginmatcher(
+    name="rts",
+    pattern=re.compile(r"https?://(?:www\.)?rts\.com\.ec/envivo/?"),
+)
+@pluginmatcher(
+    name="snt",
+    pattern=re.compile(r"https?://(?:www\.)?snt\.com\.py/envivo/?"),
+)
+@pluginmatcher(
+    name="tvc",
+    pattern=re.compile(r"https?://(?:www\.)?tvc\.com\.ec/envivo/?"),
+)
+@pluginmatcher(
+    name="vtv",
+    pattern=re.compile(r"https?://(?:www\.)?vtv\.com\.hn/envivo/?"),
 )
 class Albavision(Plugin):
     def __init__(self, *args, **kwargs):

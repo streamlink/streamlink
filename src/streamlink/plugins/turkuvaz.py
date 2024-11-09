@@ -28,17 +28,40 @@ log = logging.getLogger(__name__)
 
 
 @pluginmatcher(
-    re.compile(
-        r"""
-            https?://(?:www\.)?
-            (?:
-                atvavrupa\.tv
-                |
-                (?:a2tv|ahaber|anews|apara|aspor|atv|minikacocuk|minikago|vavtv)\.com\.tr
-            )
-        """,
-        re.VERBOSE,
-    ),
+    name="atvavrupa",
+    pattern=re.compile(r"https?://(?:www\.)?atvavrupa\.tv"),
+)
+@pluginmatcher(
+    name="ahaber",
+    pattern=re.compile(r"https?://(?:www\.)?ahaber\.com\.tr"),
+)
+@pluginmatcher(
+    name="anews",
+    pattern=re.compile(r"https?://(?:www\.)?anews\.com\.tr"),
+)
+@pluginmatcher(
+    name="apara",
+    pattern=re.compile(r"https?://(?:www\.)?apara\.com\.tr"),
+)
+@pluginmatcher(
+    name="aspor",
+    pattern=re.compile(r"https?://(?:www\.)?aspor\.com\.tr"),
+)
+@pluginmatcher(
+    name="atv",
+    pattern=re.compile(r"https?://(?:www\.)?atv\.com\.tr"),
+)
+@pluginmatcher(
+    name="minikacocuk",
+    pattern=re.compile(r"https?://(?:www\.)?minikacocuk\.com\.tr"),
+)
+@pluginmatcher(
+    name="minikago",
+    pattern=re.compile(r"https?://(?:www\.)?minikago\.com\.tr"),
+)
+@pluginmatcher(
+    name="vavtv",
+    pattern=re.compile(r"https?://(?:www\.)?vavtv\.com\.tr"),
 )
 class Turkuvaz(Plugin):
     _VIDEOID_LIVE = "00000000-0000-0000-0000-000000000000"

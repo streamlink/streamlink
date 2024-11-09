@@ -27,25 +27,28 @@ log = logging.getLogger(__name__)
 
 
 @pluginmatcher(
-    re.compile(r"https?://ott\.streann\.com/s(?:treaming|-secure)/player\.html"),
+    name="centroecuador",
+    pattern=re.compile(r"https?://(?:www\.)?centroecuador\.ec"),
 )
 @pluginmatcher(
-    re.compile(
-        r"""
-            https?://(?:www\.)?(?:
-                centroecuador\.ec
-                |
-                columnaestilos\.com
-                |
-                crc\.cr/estaciones/
-                |
-                evtv\.online/noticias-de-venezuela/
-                |
-                telecuracao\.com
-            )
-        """,
-        re.VERBOSE,
-    ),
+    name="columnaestilos",
+    pattern=re.compile(r"https?://(?:www\.)?columnaestilos\.com"),
+)
+@pluginmatcher(
+    name="crc",
+    pattern=re.compile(r"https?://(?:www\.)?crc\.cr/estaciones/"),
+)
+@pluginmatcher(
+    name="evtv",
+    pattern=re.compile(r"https?://(?:www\.)?evtv\.online/noticias-de-venezuela/"),
+)
+@pluginmatcher(
+    name="telecuracao",
+    pattern=re.compile(r"https?://(?:www\.)?telecuracao\.com"),
+)
+@pluginmatcher(
+    name="streann",
+    pattern=re.compile(r"https?://ott\.streann\.com/s(?:treaming|-secure)/player\.html"),
 )
 @pluginargument(
     "url",

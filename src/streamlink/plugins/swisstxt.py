@@ -18,15 +18,7 @@ log = logging.getLogger(__name__)
 
 
 @pluginmatcher(
-    re.compile(
-        r"""
-            https?://(?:
-                live\.(rsi)\.ch/|
-                (?:www\.)?(srf)\.ch/sport/resultcenter
-            )
-        """,
-        re.VERBOSE,
-    ),
+    re.compile(r"https?://(?:live\.(rsi)\.ch/|(?:www\.)?(srf)\.ch/sport/resultcenter)"),
 )
 class Swisstxt(Plugin):
     api_url = "http://event.api.swisstxt.ch/v1/stream/{site}/byEventItemIdAndType/{id}/HLS"

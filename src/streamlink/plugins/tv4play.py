@@ -21,18 +21,12 @@ log = logging.getLogger(__name__)
 
 
 @pluginmatcher(
-    re.compile(
-        r"""
-            https?://(?:www\.)?
-            (?:
-                tv4play\.se/program/[^?/]+/[^?/]+
-                |
-                fotbollskanalen\.se/video
-            )
-            /(?P<video_id>\d+)
-        """,
-        re.VERBOSE,
-    ),
+    name="default",
+    pattern=re.compile(r"https?://(?:www\.)?tv4play\.se/program/[^?/]+/[^?/]+/(?P<video_id>\d+)"),
+)
+@pluginmatcher(
+    name="fotbollskanalen",
+    pattern=re.compile(r"https?://(?:www\.)?fotbollskanalen\.se/video/(?P<video_id>\d+)"),
 )
 class TV4Play(Plugin):
     video_id = None
