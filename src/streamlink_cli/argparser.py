@@ -270,6 +270,13 @@ def build_parser():
         """,
     )
     general.add_argument(
+        "--show-matchers",
+        metavar="PLUGIN",
+        help="""
+            Show the list of matchers of a specific plugin (URL regex pattern with opt. priority and opt. name).
+        """,
+    )
+    general.add_argument(
         "--can-handle-url",
         metavar="URL",
         help="""
