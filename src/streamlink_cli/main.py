@@ -36,6 +36,7 @@ from streamlink_cli.console import ConsoleOutput, ConsoleUserInputRequester
 from streamlink_cli.constants import CONFIG_FILES, DEFAULT_STREAM_METADATA, LOG_DIR, PLUGIN_DIRS, STREAM_SYNONYMS
 from streamlink_cli.exceptions import StreamlinkCLIError
 from streamlink_cli.output import FileOutput, HTTPOutput, PlayerOutput
+from streamlink_cli.show_matchers import show_matchers
 from streamlink_cli.streamrunner import StreamRunner
 from streamlink_cli.utils import Formatter, datetime
 from streamlink_cli.utils.versioncheck import check_version
@@ -950,6 +951,8 @@ def run(parser: ArgumentParser) -> int:
         console.msg(helptext)
     elif args.plugins:
         print_plugins()
+    elif args.show_matchers:
+        show_matchers(streamlink, console, args.show_matchers)
     elif args.can_handle_url or args.can_handle_url_no_redirect:
         exit_code = can_handle_url()
     elif args.url:
