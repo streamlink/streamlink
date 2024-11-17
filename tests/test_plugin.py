@@ -268,12 +268,29 @@ class TestPluginArguments:
         assert tuple(arg.dest for arg in pluginclass.arguments) == ("_foo", "_bar", "_baz"), "Argument keyword"
         assert tuple(arg.options.get("help") for arg in pluginclass.arguments) == ("FOO", "BAR", "BAZ"), "argparse keyword"
 
-    def test_mixed(self):
+    @pytest.mark.parametrize("pluginclass", [DecoratedPlugin, ClassAttrPlugin])
+    def test_arguments_mixed(self, pluginclass):
         @pluginargument("qux")
-        class MixedPlugin(self.ClassAttrPlugin):
+        class MixedPlugin(pluginclass):
             pass
 
         assert tuple(arg.name for arg in MixedPlugin.arguments) == ("qux", "foo", "bar", "baz")
+
+    def test_arguments_inheritance(self):
+        @pluginargument("foo", help="FOO")
+        @pluginargument("bar", help="BAR")
+        class PluginOne(FakePlugin):
+            pass
+
+        @pluginargument("baz", help="BAZ")
+        @pluginargument("qux", help="QUX")
+        class PluginTwo(PluginOne):
+            pass
+
+        assert PluginOne.arguments is not PluginTwo.arguments
+        assert PluginOne.arguments.arguments is not PluginTwo.arguments.arguments
+        assert tuple(arg.name for arg in PluginOne.arguments) == ("foo", "bar")
+        assert tuple(arg.name for arg in PluginTwo.arguments) == ("baz", "qux", "foo", "bar")
 
     @pytest.mark.parametrize(
         ("options", "args", "expected", "raises"),
@@ -362,7 +379,8 @@ class TestPluginArguments:
         assert str(cm.value) == "Foo is not a Plugin"
 
     def test_empty(self):
-        assert Plugin.arguments is None
+        assert FakePlugin.arguments is not None
+        assert tuple(iter(FakePlugin.arguments)) == ()
 
 
 @pytest.mark.parametrize("attr", ["id", "author", "category", "title"])
