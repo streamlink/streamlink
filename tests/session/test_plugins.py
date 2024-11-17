@@ -360,10 +360,10 @@ class TestLoadPluginsData:
         assert [(record.name, record.levelname, record.message) for record in caplog.get_records(when="setup")] == []
 
         matchers_a = Matchers()
-        matchers_a.register(Matcher(pattern=re.compile(r"foo"), priority=NORMAL_PRIORITY, name=None))
-        matchers_a.register(Matcher(pattern=re.compile(r"bar", re.VERBOSE), priority=10, name="bar"))
+        matchers_a.add(Matcher(pattern=re.compile(r"foo"), priority=NORMAL_PRIORITY, name=None))
+        matchers_a.add(Matcher(pattern=re.compile(r"bar", re.VERBOSE), priority=10, name="bar"))
         matchers_b = Matchers()
-        matchers_b.register(Matcher(pattern=re.compile(r"baz"), priority=NORMAL_PRIORITY, name=None))
+        matchers_b.add(Matcher(pattern=re.compile(r"baz"), priority=NORMAL_PRIORITY, name=None))
         assert list(session.plugins.iter_matchers()) == [("testpluginA", matchers_a), ("testpluginB", matchers_b)]
 
     @pytest.mark.parametrize(

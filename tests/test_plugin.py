@@ -126,7 +126,7 @@ class TestPluginMatcher:
 
         plugin = MyPlugin(Mock(), "http://foo")
         assert plugin.url == "http://foo"
-        assert plugin.matchers is None
+        assert plugin.matchers == []
         assert plugin.matches == []
         assert plugin.matcher is None
         assert plugin.match is None
@@ -143,6 +143,41 @@ class TestPluginMatcher:
             Matcher(re.compile("bar"), HIGH_PRIORITY),
             Matcher(re.compile("baz"), HIGH_PRIORITY, "baz"),
         ]
+
+    def test_matchers_inheritance(self):
+        @pluginmatcher(re.compile("foo"))
+        @pluginmatcher(re.compile("bar"))
+        class PluginOne(FakePlugin):
+            pass
+
+        @pluginmatcher(re.compile("baz"))
+        @pluginmatcher(re.compile("qux"))
+        class PluginTwo(PluginOne):
+            pass
+
+        assert PluginOne.matchers is not PluginTwo.matchers
+        assert PluginOne.matchers == [
+            Matcher(re.compile("foo"), NORMAL_PRIORITY),
+            Matcher(re.compile("bar"), NORMAL_PRIORITY),
+        ]
+        assert PluginTwo.matchers == [
+            Matcher(re.compile("baz"), NORMAL_PRIORITY),
+            Matcher(re.compile("qux"), NORMAL_PRIORITY),
+            Matcher(re.compile("foo"), NORMAL_PRIORITY),
+            Matcher(re.compile("bar"), NORMAL_PRIORITY),
+        ]
+
+    # noinspection PyUnusedLocal
+    def test_matchers_inheritance_named_duplicate(self):
+        @pluginmatcher(name="foo", pattern=re.compile("foo"))
+        class PluginOne(FakePlugin):
+            pass
+
+        with pytest.raises(ValueError, match=r"^A matcher named 'foo' has already been registered$"):
+
+            @pluginmatcher(name="foo", pattern=re.compile("foo"))
+            class PluginTwo(PluginOne):
+                pass
 
     def test_url_setter(self):
         @pluginmatcher(re.compile("http://(foo)"))

@@ -307,7 +307,7 @@ class StreamlinkPluginsData:
             matchers = Matchers()
             for m in plugindata.get("matchers") or []:
                 matcher = cls._build_matcher(m)
-                matchers.register(matcher)
+                matchers.add(matcher)
 
             res[pluginname] = matchers
 
