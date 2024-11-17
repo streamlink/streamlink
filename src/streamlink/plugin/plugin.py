@@ -244,6 +244,7 @@ class PluginMeta(type):
     def __init__(cls, name, bases, namespace, **kwargs):
         super().__init__(name, bases, namespace, **kwargs)
         cls.matchers = Matchers(*getattr(cls, "matchers", []))
+        cls.arguments = Arguments(*getattr(cls, "arguments", []))
 
 
 class Plugin(metaclass=PluginMeta):
@@ -270,7 +271,7 @@ class Plugin(metaclass=PluginMeta):
     #: The plugin's :class:`Arguments <streamlink.options.Arguments>` collection.
     #:
     #: Use the :func:`pluginargument` decorator to initialize plugin arguments.
-    arguments: ClassVar[Arguments | None] = None
+    arguments: ClassVar[Arguments]
 
     #: A list of optional :class:`re.Match` results of all defined matchers.
     #: Supports match lookups by the matcher index or the optional matcher name.
@@ -761,8 +762,6 @@ def pluginargument(
     def decorator(cls: Type[Plugin]) -> Type[Plugin]:
         if not issubclass(cls, Plugin):
             raise TypeError(f"{repr(cls)} is not a Plugin")  # noqa: RUF010  # builtins.repr gets monkeypatched in tests
-        if cls.arguments is None:
-            cls.arguments = Arguments()
         cls.arguments.add(arg)
 
         return cls
