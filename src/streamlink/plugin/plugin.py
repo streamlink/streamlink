@@ -203,8 +203,8 @@ MType = TypeVar("MType")
 
 
 class _MCollection(List[MType]):
-    def __init__(self, **kwargs) -> None:
-        super().__init__(**kwargs)
+    def __init__(self, *args, **kwargs) -> None:
+        super().__init__(*args, **kwargs)
         self._names: dict[str, MType] = {}
 
     def __getitem__(self, item):
@@ -212,8 +212,16 @@ class _MCollection(List[MType]):
 
 
 class Matchers(_MCollection[Matcher]):
-    def register(self, matcher: Matcher) -> None:
+    def __init__(self, *matchers):
+        super().__init__(matchers)
+        for matcher in matchers:
+            self._add_named_matcher(matcher)
+
+    def add(self, matcher: Matcher) -> None:
         super().insert(0, matcher)
+        self._add_named_matcher(matcher)
+
+    def _add_named_matcher(self, matcher: Matcher) -> None:
         if matcher.name:
             if matcher.name in self._names:
                 raise ValueError(f"A matcher named '{matcher.name}' has already been registered")
@@ -232,7 +240,13 @@ class Matches(_MCollection[Union[re.Match, None]]):
         return next(((matcher.pattern, match) for matcher, match in matches if match is not None), (None, None))
 
 
-class Plugin:
+class PluginMeta(type):
+    def __init__(cls, name, bases, namespace, **kwargs):
+        super().__init__(name, bases, namespace, **kwargs)
+        cls.matchers = Matchers(*getattr(cls, "matchers", []))
+
+
+class Plugin(metaclass=PluginMeta):
     """
     Plugin base class for retrieving streams and metadata from the URL specified.
     """
@@ -251,7 +265,7 @@ class Plugin:
     #: Supports matcher lookups by the matcher index or the optional matcher name.
     #:
     #: Use the :func:`pluginmatcher` decorator to initialize plugin matchers.
-    matchers: ClassVar[Matchers | None] = None
+    matchers: ClassVar[Matchers]
 
     #: The plugin's :class:`Arguments <streamlink.options.Arguments>` collection.
     #:
@@ -651,9 +665,7 @@ def pluginmatcher(
     def decorator(cls: type[Plugin]) -> type[Plugin]:
         if not issubclass(cls, Plugin):
             raise TypeError(f"{cls.__name__} is not a Plugin")
-        if cls.matchers is None:
-            cls.matchers = Matchers()
-        cls.matchers.register(matcher)
+        cls.matchers.add(matcher)
 
         return cls
 
