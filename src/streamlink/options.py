@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import argparse
 from collections.abc import Callable, Iterable, Iterator, Mapping
-from typing import Any, ClassVar, Literal, TypeVar
+from typing import Any, ClassVar, Dict, Literal, TypeVar
 
 
 class Options:
@@ -267,7 +267,7 @@ class Argument:
         return isinstance(other, self.__class__) and hash(self) == hash(other)
 
 
-class Arguments:
+class Arguments(Dict[str, Argument]):
     """
     A collection of :class:`Argument` instances for :class:`Plugin <streamlink.plugin.Plugin>` classes.
 
@@ -276,23 +276,23 @@ class Arguments:
 
     def __init__(self, *args):
         # keep the initial arguments of the constructor in reverse order (see __iter__())
-        self.arguments = {arg.name: arg for arg in reversed(args)}
+        super().__init__({arg.name: arg for arg in reversed(args)})
 
-    def __iter__(self) -> Iterator[Argument]:
+    def __iter__(self) -> Iterator[Argument]:  # type: ignore[override]
         # iterate in reverse order due to add() being called by multiple pluginargument decorators in reverse order
-        return reversed(self.arguments.values())
+        return reversed(self.values())
 
     def __hash__(self):
-        return hash(tuple(self.arguments.items()))
+        return hash(tuple(self.items()))
 
     def __eq__(self, other):
         return isinstance(other, self.__class__) and hash(self) == hash(other)
 
-    def add(self, argument: Argument) -> None:
-        self.arguments[argument.name] = argument
+    def __ne__(self, other):
+        return not self.__eq__(other)
 
-    def get(self, name: str) -> Argument | None:
-        return self.arguments.get(name)
+    def add(self, argument: Argument) -> None:
+        self[argument.name] = argument
 
     def requires(self, name: str) -> Iterator[Argument]:
         """
