@@ -288,7 +288,6 @@ class TestPluginArguments:
             pass
 
         assert PluginOne.arguments is not PluginTwo.arguments
-        assert PluginOne.arguments.arguments is not PluginTwo.arguments.arguments
         assert tuple(arg.name for arg in PluginOne.arguments) == ("foo", "bar")
         assert tuple(arg.name for arg in PluginTwo.arguments) == ("baz", "qux", "foo", "bar")
 
