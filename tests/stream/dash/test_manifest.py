@@ -526,8 +526,33 @@ class TestMPDParser:
             ],
         ]
 
+    def test_baseurl_urljoin(self):
+        with xml("dash/test_baseurl_urljoin.mpd") as mpd_xml:
+            mpd = MPD(mpd_xml, base_url="https://foo/", url="https://test/manifest.mpd")
+
+        segment_urls = [
+            [segment.uri for segment in itertools.islice(representation.segments(), 2)]
+            for period in mpd.periods
+            for adaptationset in period.adaptationSets
+            for representation in adaptationset.representations
+        ]
+        assert segment_urls == [
+            [
+                "https://hostname/path/init_video_5000kbps.m4s",
+                "https://hostname/path/media_video_5000kbps-1.m4s",
+            ],
+            [
+                "https://hostname/path/init_video_5000kbps.m4s",
+                "https://hostname/path/media_video_5000kbps-1.m4s",
+            ],
+            [
+                "https://hostname/path/manifest.mpd/init_video_5000kbps.m4s",
+                "https://hostname/path/manifest.mpd/media_video_5000kbps-1.m4s",
+            ],
+        ]
+
     def test_nested_baseurls(self):
-        with xml("dash/test_nested_baseurls.mpd") as mpd_xml:
+        with xml("dash/test_baseurl_nested.mpd") as mpd_xml:
             mpd = MPD(mpd_xml, base_url="https://foo/", url="https://test/manifest.mpd")
 
         segment_urls = [
