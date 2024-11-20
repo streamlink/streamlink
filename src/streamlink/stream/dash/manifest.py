@@ -402,7 +402,7 @@ class BaseURL(MPDNode):
             return other
         elif url:
             parts = list(urlsplit(url))
-            if not parts[2].endswith("/"):
+            if not parts[2].endswith("/") and not parts[3]:
                 parts[2] += "/"
             url = urlunsplit(parts)
             return urljoin(url, other)
