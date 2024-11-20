@@ -7,6 +7,7 @@
   <a href="https://github.com/streamlink/streamlink/issues"><img alt="Open issues" src="https://img.shields.io/github/issues/streamlink/streamlink.svg?style=flat-square&maxAge=86400"></a>
   <a href="https://github.com/streamlink/streamlink/actions?query=event%3Apush"><img alt="Build status" src="https://img.shields.io/github/actions/workflow/status/streamlink/streamlink/test.yml?branch=master&event=push&style=flat-square&maxAge=86400"></a>
   <a href="https://codecov.io/github/streamlink/streamlink?branch=master"><img alt="Overall code coverage" src="https://img.shields.io/codecov/c/github/streamlink/streamlink.svg?branch=master&style=flat-square&maxAge=86400"></a>
+  <a href="https://gurubase.io/g/streamlink"><img alt="Gurubase" src="https://img.shields.io/badge/Gurubase-Ask%20Streamlink%20Guru-006BFF?style=flat-square&maxAge=86400"></a>
 </p>
 
 <p align="center">
