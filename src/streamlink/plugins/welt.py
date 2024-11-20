@@ -28,7 +28,6 @@ class Welt(Plugin):
                 validate.parse_html(),
                 validate.xml_xpath_string("""
                     .//script
-                    [@type='application/json']
                     [starts-with(@data-internal-ref,'WeltVideoPlayer-') or @data-content='VideoPlayer.Config']
                     /text()
                 """),
