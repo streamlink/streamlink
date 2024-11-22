@@ -111,11 +111,11 @@ class TestResolveURL:
             session.resolve_url_no_redirect("http://invalid")
 
     def test_resolve_url_scheme(self, session: Streamlink):
-        @pluginmatcher(re.compile("http://insecure"))
+        @pluginmatcher(re.compile(r"http://insecure"))
         class PluginHttp(_EmptyPlugin):
             pass
 
-        @pluginmatcher(re.compile("https://secure"))
+        @pluginmatcher(re.compile(r"https://secure"))
         class PluginHttps(_EmptyPlugin):
             pass
 

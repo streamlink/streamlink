@@ -12,9 +12,9 @@ from streamlink.session import Streamlink
 
 @pytest.fixture(autouse=True)
 def session(session: Streamlink):
-    @pluginmatcher(re.compile("foo", re.IGNORECASE))
-    @pluginmatcher(name="asdf", pattern=re.compile("bar"), priority=HIGH_PRIORITY)
-    @pluginmatcher(re.compile("baz\nqux", re.IGNORECASE + re.VERBOSE), priority=100)
+    @pluginmatcher(re.compile(r"foo", re.IGNORECASE))
+    @pluginmatcher(name="asdf", pattern=re.compile(r"bar"), priority=HIGH_PRIORITY)
+    @pluginmatcher(re.compile(rf"baz{chr(0x0A)}qux", re.IGNORECASE | re.VERBOSE), priority=100)
     class MyPlugin(Plugin):
         def _get_streams(self):  # pragma: no cover
             pass

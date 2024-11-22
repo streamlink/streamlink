@@ -10,7 +10,7 @@ from streamlink.session import Streamlink
 
 @pytest.fixture(autouse=True)
 def _plugins(session: Streamlink):
-    @pluginmatcher(re.compile("http://exists$"))
+    @pluginmatcher(re.compile(r"http://exists$"))
     class FakePlugin(Plugin):
         def _get_streams(self):  # pragma: no cover
             pass

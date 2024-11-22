@@ -40,7 +40,7 @@ plugintests = [
 PLUGIN_TYPES = "live", "vod", "live, vod"
 PLUGIN_METADATA = "id", "author", "category", "title"
 
-re_url = re.compile("^https?://")
+re_url = re.compile(r"^https?://")
 re_metadata = re.compile(rf"^({'|'.join(re.escape(item) for item in PLUGIN_METADATA)})(\s.+)?$")
 
 
