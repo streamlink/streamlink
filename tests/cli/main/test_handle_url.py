@@ -78,7 +78,7 @@ def streams(request: pytest.FixtureRequest, session: Streamlink):
 
 @pytest.fixture(autouse=True)
 def plugin(session: Streamlink, streams: BaseException | dict[str, FakeStream]):
-    @pluginmatcher(re.compile("https?://plugin"))
+    @pluginmatcher(re.compile(r"https?://plugin"))
     class FakePlugin(Plugin):
         __module__ = "plugin"
 

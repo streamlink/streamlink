@@ -446,5 +446,5 @@ class CDPClientSession:
         user_agent: str = await self.evaluate("navigator.userAgent", await_promise=False)
         if not user_agent:  # pragma: no cover
             raise CDPError("Could not read navigator.userAgent value")
-        user_agent = re.sub("Headless", "", user_agent, flags=re.IGNORECASE)
+        user_agent = re.sub(r"Headless", "", user_agent, flags=re.IGNORECASE)
         await self.cdp_session.send(network.set_user_agent_override(user_agent=user_agent))

@@ -444,7 +444,7 @@ class Plugin(metaclass=PluginMeta):
                         name = "{0}{1}".format(name, num_alts + 1)
 
             # Validate stream name and discard the stream if it's bad.
-            match = re.match("([A-z0-9_+]+)", name)
+            match = re.match(r"([A-z0-9_+]+)", name)
             if match:
                 name = match.group(1)
             else:
