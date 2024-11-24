@@ -4,12 +4,11 @@ import logging
 import queue
 from collections.abc import Generator
 from concurrent import futures
-from concurrent.futures import Future
+from concurrent.futures import Future, ThreadPoolExecutor
 from threading import Event, Thread, current_thread
 from typing import ClassVar, Generic, TypeVar
 
 from streamlink.buffers import RingBuffer
-from streamlink.stream.segmented.concurrent import ThreadPoolExecutor
 from streamlink.stream.segmented.segment import Segment
 from streamlink.stream.stream import Stream, StreamIO
 
