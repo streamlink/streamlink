@@ -391,16 +391,18 @@ class DASHStream(Stream):
         if rep_video:
             video = DASHStreamReader(self, rep_video, timestamp)
             log.debug(f"Opening DASH reader for: {rep_video.ident!r} - {rep_video.mimeType}")
-            video.open()
 
         if rep_audio:
             audio = DASHStreamReader(self, rep_audio, timestamp)
             log.debug(f"Opening DASH reader for: {rep_audio.ident!r} - {rep_audio.mimeType}")
-            audio.open()
 
-        if video and audio:
+        if video and audio and FFMPEGMuxer.is_usable(self.session):
+            video.open()
+            audio.open()
             return FFMPEGMuxer(self.session, video, audio, copyts=True).open()
         elif video:
+            video.open()
             return video
         elif audio:
+            audio.open()
             return audio

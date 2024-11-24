@@ -255,9 +255,9 @@ class SegmentedStreamReader(StreamIO, Generic[TSegment, TResult]):
         self.buffer.close()
 
         current = current_thread()
-        if current is not self.worker:  # pragma: no branch
+        if current is not self.worker and self.worker.is_alive():  # pragma: no branch
             self.worker.join(timeout=self.timeout)
-        if current is not self.writer:  # pragma: no branch
+        if current is not self.writer and self.writer.is_alive():  # pragma: no branch
             self.writer.join(timeout=self.timeout)
 
         super().close()
