@@ -336,6 +336,7 @@ class TestDASHStreamOpen:
     @pytest.fixture()
     def muxer(self, monkeypatch: pytest.MonkeyPatch):
         muxer = Mock()
+        muxer.is_usable.return_value = True
         monkeypatch.setattr("streamlink.stream.dash.dash.FFMPEGMuxer", muxer)
         return muxer
 
