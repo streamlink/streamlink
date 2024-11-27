@@ -5,7 +5,7 @@ from collections.abc import Callable, Iterable, Iterator, Mapping
 from typing import Any, ClassVar, Dict, Literal, TypeVar
 
 
-class Options:
+class Options(Dict[str, Any]):
     """
     For storing options to be used by the Streamlink session and plugins, with default values.
 
@@ -13,18 +13,16 @@ class Options:
           This means that the keys ``example_one`` and ``example-one`` are equivalent.
     """
 
+    #: Optional getter mapping for :class:`Options` subclasses
     _MAP_GETTERS: ClassVar[Mapping[str, Callable[[Any, str], Any]]] = {}
-    """Optional getter mapping for :class:`Options` subclasses"""
 
+    #: Optional setter mapping for :class:`Options` subclasses
     _MAP_SETTERS: ClassVar[Mapping[str, Callable[[Any, str, Any], None]]] = {}
-    """Optional setter mapping for :class:`Options` subclasses"""
 
     def __init__(self, defaults: Mapping[str, Any] | None = None):
-        if not defaults:
-            defaults = {}
-
-        self.defaults = self._normalize_dict(defaults)
-        self.options = self.defaults.copy()
+        super().__init__()
+        self._defaults = self._normalize_dict(defaults or {})
+        super().update(self._defaults)
 
     @staticmethod
     def _normalize_key(name: str) -> str:
@@ -35,13 +33,17 @@ class Options:
         normalize_key = cls._normalize_key
         return {normalize_key(key): value for key, value in src.items()}
 
+    @property
+    def defaults(self):
+        return self._defaults
+
     def clear(self) -> None:
         """Restore default options"""
 
-        self.options.clear()
-        self.options.update(self.defaults.copy())
+        super().clear()
+        self.update(self._defaults)
 
-    def get(self, key: str) -> Any:
+    def get(self, key: str) -> Any:  # type: ignore[override]
         """Get the stored value of a specific key"""
 
         normalized = self._normalize_key(key)
@@ -49,13 +51,13 @@ class Options:
         if method is not None:
             return method(self, normalized)
         else:
-            return self.options.get(normalized)
+            return super().get(normalized)
 
     def get_explicit(self, key: str) -> Any:
         """Get the stored value of a specific key and ignore any get-mappings"""
 
         normalized = self._normalize_key(key)
-        return self.options.get(normalized)
+        return super().get(normalized)
 
     def set(self, key: str, value: Any) -> None:
         """Set the value for a specific key"""
@@ -65,43 +67,26 @@ class Options:
         if method is not None:
             method(self, normalized, value)
         else:
-            self.options[normalized] = value
+            super().__setitem__(normalized, value)
 
     def set_explicit(self, key: str, value: Any) -> None:
         """Set the value for a specific key and ignore any set-mappings"""
 
         normalized = self._normalize_key(key)
-        self.options[normalized] = value
+        super().__setitem__(normalized, value)
 
-    def update(self, options: Mapping[str, Any]) -> None:
+    # noinspection PyMethodOverriding
+    def update(self, options: Mapping[str, Any]) -> None:  # type: ignore[override]
         """Merge options"""
 
         for key, value in options.items():
             self.set(key, value)
-
-    def keys(self):
-        return self.options.keys()
-
-    def values(self):
-        return self.options.values()
-
-    def items(self):
-        return self.options.items()
 
     def __getitem__(self, item):
         return self.get(item)
 
     def __setitem__(self, item, value):
         return self.set(item, value)
-
-    def __contains__(self, item):
-        return self.options.__contains__(item)
-
-    def __len__(self):
-        return self.options.__len__()
-
-    def __iter__(self):
-        return self.options.__iter__()
 
 
 _TChoices = TypeVar("_TChoices", bound=Iterable)

@@ -223,7 +223,7 @@ def test_setup_session_options_default_values(monkeypatch: pytest.MonkeyPatch, p
     monkeypatch.setattr(session, "set_option", mock_set_option)
     args = parser.parse_args([])
     setup_session_options(session, args)
-    assert session.options.options == session.options.defaults
+    assert session.options == session.options.defaults
     assert not mock_set_option.called, "Value of unset session-option arg must be None and must not call set_option()"
 
 
@@ -367,8 +367,8 @@ class TestSetupPluginArgsAndOptions:
 
     def test_setup_options_no_plugin_arguments(self, session: Streamlink, console: Mock):
         options = setup_plugin_options(session, Namespace(), "mock", Plugin)
-        assert not options.defaults
-        assert not options.options
+        assert options == {}
+        assert options.defaults == {}
 
         assert not console.ask.called
         assert not console.askpass.called
