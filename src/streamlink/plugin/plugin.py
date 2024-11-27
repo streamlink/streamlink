@@ -294,7 +294,7 @@ class Plugin(metaclass=PluginMeta):
 
     _url: str = ""
 
-    def __init__(self, session: Streamlink, url: str, options: Options | None = None):
+    def __init__(self, session: Streamlink, url: str, options: Mapping[str, Any] | Options | None = None):
         """
         :param session: The Streamlink session instance
         :param url: The input URL used for finding and resolving streams
@@ -304,7 +304,9 @@ class Plugin(metaclass=PluginMeta):
         modulename = self.__class__.__module__
         self.module = modulename.split(".")[-1]
         self.logger = logging.getLogger(modulename)
-        self.options = Options() if options is None else options
+
+        self.options = Options(options)
+
         self.cache = Cache(
             filename="plugin-cache.json",
             key_prefix=self.module,
