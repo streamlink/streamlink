@@ -779,7 +779,7 @@ class HLSStream(HTTPStream):
                     preferred_audio.append(media)
 
             # final fallback on the first audio stream listed
-            if not fallback_audio and len(audio_streams) and audio_streams[0].uri:
+            if not fallback_audio and audio_streams and audio_streams[0].uri:
                 fallback_audio = [audio_streams[0]]
 
             if playlist.stream_info.resolution and playlist.stream_info.resolution.height:
