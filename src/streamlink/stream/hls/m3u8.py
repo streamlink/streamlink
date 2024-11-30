@@ -6,7 +6,7 @@ import re
 from binascii import Error as BinasciiError, unhexlify
 from collections.abc import Callable, Iterator, Mapping
 from datetime import datetime, timedelta
-from typing import ClassVar, Generic, TypeVar
+from typing import TYPE_CHECKING, ClassVar, Generic, TypeVar
 from urllib.parse import urljoin, urlparse
 
 from isodate import ISO8601Error, parse_datetime  # type: ignore[import]
@@ -29,10 +29,11 @@ from streamlink.stream.hls.segment import (
 )
 
 
-try:
-    from typing import Self  # type: ignore[attr-defined]
-except ImportError:  # pragma: no cover
-    from typing_extensions import Self
+if TYPE_CHECKING:
+    try:
+        from typing import Self  # type: ignore[attr-defined]
+    except ImportError:
+        from typing_extensions import Self
 
 
 log: StreamlinkLogger = logging.getLogger(__name__)  # type: ignore[assignment]
