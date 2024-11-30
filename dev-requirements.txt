@@ -18,6 +18,7 @@ ruff ==0.8.1
 
 # typing
 mypy[faster-cache] ==1.13.0
+typing-extensions >=4.0.0
 lxml-stubs
 trio-typing
 types-freezegun

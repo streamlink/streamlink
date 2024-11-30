@@ -6,17 +6,18 @@ from collections.abc import Generator
 from concurrent import futures
 from concurrent.futures import Future, ThreadPoolExecutor
 from threading import Event, Thread, current_thread
-from typing import ClassVar, Generic, TypeVar
+from typing import TYPE_CHECKING, ClassVar, Generic, TypeVar
 
 from streamlink.buffers import RingBuffer
 from streamlink.stream.segmented.segment import Segment
 from streamlink.stream.stream import Stream, StreamIO
 
 
-try:
-    from typing import TypeAlias  # type: ignore[attr-defined]
-except ImportError:  # pragma: no cover
-    from typing_extensions import TypeAlias
+if TYPE_CHECKING:
+    try:
+        from typing import TypeAlias  # type: ignore[attr-defined]
+    except ImportError:
+        from typing_extensions import TypeAlias
 
 
 log = logging.getLogger(".".join(__name__.split(".")[:-1]))

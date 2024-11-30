@@ -11,7 +11,7 @@ from collections.abc import Iterator, Mapping
 from contextlib import suppress
 from pathlib import Path
 from types import ModuleType
-from typing import TYPE_CHECKING, Literal
+from typing import TYPE_CHECKING, Literal, TypedDict
 
 import streamlink.plugins
 from streamlink.options import Argument, Arguments
@@ -21,13 +21,12 @@ from streamlink.plugin.plugin import _PLUGINARGUMENT_TYPE_REGISTRY, NO_PRIORITY,
 from streamlink.utils.module import exec_module, get_finder
 
 
-try:
-    from typing import TypeAlias, TypedDict  # type: ignore[attr-defined]
-except ImportError:  # pragma: no cover
-    from typing_extensions import TypeAlias, TypedDict
+if TYPE_CHECKING:
+    try:
+        from typing import TypeAlias  # type: ignore[attr-defined]
+    except ImportError:
+        from typing_extensions import TypeAlias
 
-
-if TYPE_CHECKING:  # pragma: no cover
     from _typeshed.importlib import PathEntryFinderProtocol
 
 
