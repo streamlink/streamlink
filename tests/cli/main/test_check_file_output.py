@@ -9,7 +9,7 @@ from streamlink_cli.exceptions import StreamlinkCLIError
 from streamlink_cli.main import check_file_output
 
 
-if TYPE_CHECKING:  # pragma: no cover
+if TYPE_CHECKING:
     _BasePath = PurePosixPath
 else:
     _BasePath = type(PurePosixPath())

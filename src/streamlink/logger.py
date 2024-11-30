@@ -18,7 +18,7 @@ from streamlink.exceptions import StreamlinkWarning
 from streamlink.utils.times import fromlocaltimestamp
 
 
-if TYPE_CHECKING:  # pragma: no cover
+if TYPE_CHECKING:
     _BaseLoggerClass = logging.Logger
 else:
     _BaseLoggerClass = logging.getLoggerClass()

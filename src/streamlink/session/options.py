@@ -15,7 +15,7 @@ from streamlink.session.http import TLSNoDHAdapter
 from streamlink.utils.url import update_scheme
 
 
-if TYPE_CHECKING:  # pragma: no cover
+if TYPE_CHECKING:
     from streamlink.session import Streamlink
 
 
