@@ -1,9 +1,9 @@
-from streamlink.plugins.vkplay import VKplay
+from streamlink.plugins.vkvideo import VKvideo
 from tests.plugins import PluginCanHandleUrl
 
 
-class TestPluginCanHandleUrlVKplay(PluginCanHandleUrl):
-    __plugin__ = VKplay
+class TestPluginCanHandleUrlVKvideo(PluginCanHandleUrl):
+    __plugin__ = VKvideo
 
     should_match = [
         "https://live.vkvideo.ru/CHANNEL",
