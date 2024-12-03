@@ -110,6 +110,8 @@ class Soop(Plugin):
 
     STREAM_PASSWORD_PROTECTED = "Y"
 
+    AUTH_CHECK_URL = "https://afevent2.sooplive.co.kr/api/get_private_info.php"
+
     LOGIN_URL = "https://login.sooplive.co.kr/app/LoginAction.php"
     LOGIN_RESULT_OK = 1
 
@@ -143,13 +145,9 @@ class Soop(Plugin):
             if (opt_value := self.options.get(opt_deprecated)) and not self.options.get(opt_name):
                 self.options.set(opt_name, opt_value)
 
-        self._authed = (
-            self.session.http.cookies.get("PdboxBbs")
-            and self.session.http.cookies.get("PdboxSaveTicket")
-            and self.session.http.cookies.get("PdboxTicket")
-            and self.session.http.cookies.get("PdboxUser")
-            and self.session.http.cookies.get("RDB")
-        )
+        if self.options.get("purge_credentials"):
+            self.clear_cookies()
+            log.info("All credentials were successfully removed")
 
     def _get_channel_info(self, channel, broadcast) -> tuple[int, str, str, str, str, str, str, list[dict[str, str]]]:
         return self.session.http.post(
@@ -234,6 +232,17 @@ class Soop(Plugin):
 
         return bno
 
+    def _check_auth(self):
+        return self.session.http.get(
+            self.AUTH_CHECK_URL,
+            schema=validate.Schema(
+                validate.parse_json(),
+                {"CHANNEL": {"LOGIN_ID": str}},
+                validate.get(("CHANNEL", "LOGIN_ID")),
+                validate.transform(lambda login_id: len(login_id) > 0),
+            ),
+        )
+
     def _login(self, username, password):
         result = self.session.http.post(
             self.LOGIN_URL,
@@ -272,19 +281,19 @@ class Soop(Plugin):
             "Origin": "https://play.sooplive.co.kr",
         })
 
-        if self.options.get("purge_credentials"):
-            self.clear_cookies()
-            self._authed = False
-            log.info("All credentials were successfully removed")
+        authed = False
+        if self.session.http.cookies.get_dict(domain=".sooplive.co.kr"):
+            if authed := self._check_auth():
+                log.debug("Authentication using stored credentials was successful")
+            else:
+                log.error("Authentication using stored credentials has failed. Please re-authenticate or purge credentials.")
 
-        if self._authed:
-            log.debug("Attempting to authenticate using cached cookies")
-        elif login_username and login_password:
+        if not authed and login_username and login_password:
             log.debug("Attempting to login using username and password")
             if self._login(login_username, login_password):
                 log.info("Login was successful")
             else:
-                log.error("Failed to login")
+                log.error("Login has failed")
 
         channel = self.match["channel"]
         bno = self.match["bno"] or self._get_bno()
