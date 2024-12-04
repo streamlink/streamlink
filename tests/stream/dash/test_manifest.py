@@ -270,6 +270,32 @@ class TestMPDParser:
             ("http://test/dash/150633-video_eng=194000-4000.dash", expected_availability),
         ]
 
+    @pytest.mark.parametrize(
+        ("manifest", "expected_time"),
+        [
+            pytest.param("dash/test_dynamic_no_publish_time_timeline_with_start.mpd", "155994772214430", id="with-start"),
+            pytest.param("dash/test_dynamic_no_publish_time_timeline_without_start.mpd", "4320000", id="without-start"),
+        ],
+    )
+    def test_dynamic_no_publish_time_with_timeline(self, manifest: str, expected_time: str):
+        with xml(manifest) as mpd_xml:
+            mpd = MPD(mpd_xml, base_url="http://test/", url="http://test/manifest.mpd")
+
+        segments = [
+            (segment.uri, segment.num, segment.duration, segment.available_at, segment.init, segment.content)
+            for segment in itertools.islice(mpd.periods[0].adaptationSets[0].representations[0].segments(), 100)
+        ]
+        assert segments == [
+            (
+                f"http://test/video_1920x1080_avc1-{expected_time}.m4s",
+                9,
+                6.0,
+                datetime.datetime(1970, 1, 1, 0, 0, 0, tzinfo=UTC),
+                False,
+                True,
+            ),
+        ]
+
     def test_segment_list(self):
         with xml("dash/test_segment_list.mpd") as mpd_xml:
             mpd = MPD(mpd_xml, base_url="http://test/", url="http://test/manifest.mpd")

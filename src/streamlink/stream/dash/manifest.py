@@ -310,13 +310,12 @@ class MPD(MPDNode):
         self.publishTime = self.attr(
             "publishTime",
             parser=MPDParsers.datetime,
-            required=self.type == "dynamic",
+            default=EPOCH_START,
         )
         self.availabilityStartTime = self.attr(
             "availabilityStartTime",
             parser=MPDParsers.datetime,
             default=EPOCH_START,
-            required=self.type == "dynamic",
         )
         self.availabilityEndTime = self.attr(
             "availabilityEndTime",
@@ -938,12 +937,11 @@ class SegmentTemplate(_MultipleSegmentBaseType):
             time = self.root.timelines[ident]
             is_initial = time == -1
 
-            publish_time = self.root.publishTime or EPOCH_START
-            threshold = publish_time - self.root.suggestedPresentationDelay
+            threshold = self.root.publishTime - self.root.suggestedPresentationDelay
 
             # transform the timeline into a segment list
             timeline = []
-            available_at = publish_time
+            available_at = self.root.publishTime
 
             # the last segment in the timeline is the most recent one
             # so, work backwards and calculate when each of the segments was
