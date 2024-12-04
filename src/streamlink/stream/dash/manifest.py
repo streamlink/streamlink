@@ -847,11 +847,11 @@ class SegmentTemplate(_MultipleSegmentBaseType):
                     content=False,
                     byterange=None,
                 )
-        for media_url, num, available_at in self.format_media(ident, base_url, timestamp=timestamp, **kwargs):
+        for media_url, num, duration, available_at in self.format_media(ident, base_url, timestamp=timestamp, **kwargs):
             yield DASHSegment(
                 uri=media_url,
                 num=num,
-                duration=self.duration_seconds,
+                duration=duration,
                 available_at=available_at,
                 init=False,
                 content=True,
@@ -972,20 +972,22 @@ class SegmentTemplate(_MultipleSegmentBaseType):
         base_url: str,
         timestamp: datetime | None = None,
         **kwargs,
-    ) -> Iterator[tuple[str, int, datetime]]:
+    ) -> Iterator[tuple[str, int, float, datetime]]:
         if self.fmt_media is None:  # pragma: no cover
             return
 
         if not self.segmentTimeline:
             log.debug(f"Generating segment numbers for {self.root.type} playlist: {ident!r}")
+            duration = self.duration_seconds
             for number, available_at in self.segment_numbers(timestamp=timestamp):
                 url = self.make_url(base_url, self.fmt_media(Number=number, **kwargs))
-                yield url, number, available_at
+                yield url, number, duration, available_at
         else:
             log.debug(f"Generating segment timeline for {self.root.type} playlist: {ident!r}")
             for number, segment, available_at in self.segment_timeline(ident):
                 url = self.make_url(base_url, self.fmt_media(Time=segment.t, Number=number, **kwargs))
-                yield url, number, available_at
+                duration = segment.d / self.timescale
+                yield url, number, duration, available_at
 
 
 class SegmentTimeline(MPDNode):

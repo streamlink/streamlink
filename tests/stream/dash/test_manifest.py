@@ -403,17 +403,17 @@ class TestMPDParser:
             mpd_p1 = MPD(mpd_xml_p1, base_url="http://test/", url="http://test/manifest.mpd")
             iter_segment_p1 = mpd_p1.periods[0].adaptationSets[0].representations[0].segments()
             segments_p1 = [
-                (segment.uri, segment.num, segment.available_at)
+                (segment.uri, segment.num, segment.duration, segment.available_at)
                 for segment in itertools.islice(iter_segment_p1, 100)
             ]  # fmt: skip
 
         assert segments_p1 == [
-            ("http://test/video/init.mp4", -1, datetime.datetime(2018, 1, 1, 1, 0, 0, tzinfo=UTC)),
-            ("http://test/video/1006000.mp4", 7, datetime.datetime(2018, 1, 1, 12, 59, 56, tzinfo=UTC)),
-            ("http://test/video/1007000.mp4", 8, datetime.datetime(2018, 1, 1, 12, 59, 57, tzinfo=UTC)),
-            ("http://test/video/1008000.mp4", 9, datetime.datetime(2018, 1, 1, 12, 59, 58, tzinfo=UTC)),
-            ("http://test/video/1009000.mp4", 10, datetime.datetime(2018, 1, 1, 12, 59, 59, tzinfo=UTC)),
-            ("http://test/video/1010000.mp4", 11, datetime.datetime(2018, 1, 1, 13, 0, 0, tzinfo=UTC)),
+            ("http://test/video/init.mp4", -1, 0.0, datetime.datetime(2018, 1, 1, 1, 0, 0, tzinfo=UTC)),
+            ("http://test/video/1006000.mp4", 7, 1.0, datetime.datetime(2018, 1, 1, 12, 59, 56, tzinfo=UTC)),
+            ("http://test/video/1007000.mp4", 8, 1.0, datetime.datetime(2018, 1, 1, 12, 59, 57, tzinfo=UTC)),
+            ("http://test/video/1008000.mp4", 9, 1.0, datetime.datetime(2018, 1, 1, 12, 59, 58, tzinfo=UTC)),
+            ("http://test/video/1009000.mp4", 10, 1.0, datetime.datetime(2018, 1, 1, 12, 59, 59, tzinfo=UTC)),
+            ("http://test/video/1010000.mp4", 11, 1.0, datetime.datetime(2018, 1, 1, 13, 0, 0, tzinfo=UTC)),
         ]
 
         # continue with the next manifest
@@ -421,16 +421,16 @@ class TestMPDParser:
             mpd_p2 = MPD(mpd_xml_p2, base_url=mpd_p1.base_url, url=mpd_p1.url, timelines=mpd_p1.timelines)
             iter_segment_p2 = mpd_p2.periods[0].adaptationSets[0].representations[0].segments(init=False)
             segments_p2 = [
-                (segment.uri, segment.num, segment.available_at)
+                (segment.uri, segment.num, segment.duration, segment.available_at)
                 for segment in itertools.islice(iter_segment_p2, 100)
             ]  # fmt: skip
 
         assert segments_p2 == [
-            ("http://test/video/1011000.mp4", 7, datetime.datetime(2018, 1, 1, 13, 0, 1, tzinfo=UTC)),
-            ("http://test/video/1012000.mp4", 8, datetime.datetime(2018, 1, 1, 13, 0, 2, tzinfo=UTC)),
-            ("http://test/video/1013000.mp4", 9, datetime.datetime(2018, 1, 1, 13, 0, 3, tzinfo=UTC)),
-            ("http://test/video/1014000.mp4", 10, datetime.datetime(2018, 1, 1, 13, 0, 4, tzinfo=UTC)),
-            ("http://test/video/1015000.mp4", 11, datetime.datetime(2018, 1, 1, 13, 0, 5, tzinfo=UTC)),
+            ("http://test/video/1011000.mp4", 7, 1.0, datetime.datetime(2018, 1, 1, 13, 0, 1, tzinfo=UTC)),
+            ("http://test/video/1012000.mp4", 8, 1.0, datetime.datetime(2018, 1, 1, 13, 0, 2, tzinfo=UTC)),
+            ("http://test/video/1013000.mp4", 9, 1.0, datetime.datetime(2018, 1, 1, 13, 0, 3, tzinfo=UTC)),
+            ("http://test/video/1014000.mp4", 10, 1.0, datetime.datetime(2018, 1, 1, 13, 0, 4, tzinfo=UTC)),
+            ("http://test/video/1015000.mp4", 11, 1.0, datetime.datetime(2018, 1, 1, 13, 0, 5, tzinfo=UTC)),
         ]
 
     def test_tsegment_t_is_none_1895(self):
