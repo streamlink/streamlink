@@ -2,12 +2,14 @@
 $description Global live-streaming and video hosting social platform owned by Kick Streaming Pty Ltd.
 $url kick.com
 $type live, vod
+$webbrowser Required for solving a JS challenge that allows access to the Kick API
 $metadata id
 $metadata author
 $metadata category
 $metadata title
 """
 
+import logging
 import re
 from ssl import OP_NO_TICKET
 
@@ -15,6 +17,9 @@ from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.api import validate
 from streamlink.session.http import SSLContextAdapter
 from streamlink.stream.hls import HLSStream
+
+
+log = logging.getLogger(__name__)
 
 
 class KickAdapter(SSLContextAdapter):
@@ -38,7 +43,10 @@ class KickAdapter(SSLContextAdapter):
     pattern=re.compile(r"https?://(?:\w+\.)?kick\.com/(?!video/)(?P<channel>[^/?]+)\?clip=(?P<clip>[^&]+)$"),
 )
 class Kick(Plugin):
-    _URL_TOKEN = "https://kick.com/"
+    _TOKEN_NAME = "XSRF-TOKEN"
+    _TOKEN_EXPIRATION = 3600 * 24 * 30
+
+    _URL_API_CHECK_TOKEN = "https://kick.com/api/v1/categories/top"
     _URL_API_LIVESTREAM = "https://kick.com/api/v2/channels/{channel}/livestream"
     _URL_API_VOD = "https://kick.com/api/v1/video/{vod}"
     _URL_API_CLIP = "https://kick.com/api/v2/clips/{clip}"
@@ -46,20 +54,61 @@ class Kick(Plugin):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.session.http.mount("https://kick.com/", KickAdapter())
-
-    def _get_token(self):
-        res = self.session.http.get(self._URL_TOKEN, raise_for_status=False)
-        return res.cookies.get("XSRF-TOKEN", "")
+        self._token = self.cache.get(self._TOKEN_NAME)
 
     def _get_api_headers(self):
-        token = self._get_token()
-
         return {
             "Accept": "application/json",
             "Accept-Language": "en-US",
             "Referer": self.url,
-            "Authorization": f"Bearer {token}",
+            "Authorization": f"Bearer {self._token}",
         }
+
+    def _check_token(self):
+        if not self._token:
+            return False
+
+        res = self.session.http.get(
+            self._URL_API_CHECK_TOKEN,
+            headers=self._get_api_headers(),
+            raise_for_status=False,
+        )
+        if 400 <= res.status_code < 500:
+            self.cache.set(self._TOKEN_NAME, None, expires=0)
+            return False
+
+        log.debug("Using cached JS challenge token")
+
+        return True
+
+    def _get_token(self):
+        from streamlink.compat import BaseExceptionGroup  # noqa: PLC0415
+        from streamlink.webbrowser.cdp import CDPClient, CDPClientSession  # noqa: PLC0415
+
+        eval_timeout = self.session.get_option("webbrowser-timeout")
+
+        async def get_challenge_cookies(client: CDPClient):
+            client_session: CDPClientSession
+            async with client.session() as client_session:
+                async with client_session.navigate(self.url) as frame_id:
+                    await client_session.loaded(frame_id)
+                    return await client_session.evaluate("document.cookie", timeout=eval_timeout)
+
+        log.info("Solving JS challenge using webbrowser API")
+
+        cookiestring = ""
+        try:
+            cookiestring = CDPClient.launch(self.session, get_challenge_cookies)
+        except BaseExceptionGroup:
+            log.exception("Failed solving JS challenge")
+        except Exception as err:
+            log.error(err)
+
+        cookies = dict(cookie.split("=", 1) for cookie in cookiestring.split("; "))
+        self._token = cookies.get(self._TOKEN_NAME)
+
+        if self._token:
+            self.cache.set(self._TOKEN_NAME, self._token, expires=self._TOKEN_EXPIRATION)
 
     def _get_streams_live(self):
         self.author = self.match["channel"]
@@ -193,6 +242,9 @@ class Kick(Plugin):
         return {"clip": HLSStream(self.session, hls_url)}
 
     def _get_streams(self):
+        if not self._check_token():
+            self._get_token()
+
         if self.matches["live"]:
             return self._get_streams_live()
         if self.matches["vod"]:
