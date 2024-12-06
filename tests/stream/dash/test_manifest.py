@@ -554,26 +554,96 @@ class TestMPDParser:
 
     def test_baseurl_urljoin(self):
         with xml("dash/test_baseurl_urljoin.mpd") as mpd_xml:
-            mpd = MPD(mpd_xml, base_url="https://foo/", url="https://test/manifest.mpd")
+            mpd = MPD(mpd_xml, base_url="https://foo/bar/", url="https://test/manifest.mpd")
 
         segment_urls = [
-            [segment.uri for segment in itertools.islice(representation.segments(), 2)]
+            [
+                (period.id, adaptationset.id, segment.uri)
+                for segment in itertools.islice(representation.segments(), 2)
+            ]
             for period in mpd.periods
             for adaptationset in period.adaptationSets
             for representation in adaptationset.representations
-        ]
+        ]  # fmt: skip
         assert segment_urls == [
             [
-                "https://hostname/path/init_video_5000kbps.m4s",
-                "https://hostname/path/media_video_5000kbps-1.m4s",
+                ("empty-baseurl", "absolute-segments", "https://foo/absolute/init_video_5000kbps.m4s"),
+                ("empty-baseurl", "absolute-segments", "https://foo/absolute/media_video_5000kbps-1.m4s"),
             ],
             [
-                "https://hostname/path/init_video_5000kbps.m4s",
-                "https://hostname/path/media_video_5000kbps-1.m4s",
+                ("empty-baseurl", "relative-segments", "https://foo/bar/relative/init_video_5000kbps.m4s"),
+                ("empty-baseurl", "relative-segments", "https://foo/bar/relative/media_video_5000kbps-1.m4s"),
             ],
             [
-                "https://hostname/path/manifest.mpd/init_video_5000kbps.m4s",
-                "https://hostname/path/manifest.mpd/media_video_5000kbps-1.m4s",
+                ("baseurl-with-scheme", "absolute-segments", "https://host/absolute/init_video_5000kbps.m4s"),
+                ("baseurl-with-scheme", "absolute-segments", "https://host/absolute/media_video_5000kbps-1.m4s"),
+            ],
+            [
+                ("baseurl-with-scheme", "relative-segments", "https://host/path/relative/init_video_5000kbps.m4s"),
+                ("baseurl-with-scheme", "relative-segments", "https://host/path/relative/media_video_5000kbps-1.m4s"),
+            ],
+            [
+                ("absolute-baseurl", "absolute-segments", "https://foo/absolute/init_video_5000kbps.m4s"),
+                ("absolute-baseurl", "absolute-segments", "https://foo/absolute/media_video_5000kbps-1.m4s"),
+            ],
+            [
+                ("absolute-baseurl", "relative-segments", "https://foo/path/relative/init_video_5000kbps.m4s"),
+                ("absolute-baseurl", "relative-segments", "https://foo/path/relative/media_video_5000kbps-1.m4s"),
+            ],
+            [
+                ("relative-baseurl", "absolute-segments", "https://foo/absolute/init_video_5000kbps.m4s"),
+                ("relative-baseurl", "absolute-segments", "https://foo/absolute/media_video_5000kbps-1.m4s"),
+            ],
+            [
+                ("relative-baseurl", "relative-segments", "https://foo/bar/path/relative/init_video_5000kbps.m4s"),
+                ("relative-baseurl", "relative-segments", "https://foo/bar/path/relative/media_video_5000kbps-1.m4s"),
+            ],
+        ]
+
+        with xml("dash/test_baseurl_urljoin.mpd") as mpd_xml:
+            mpd = MPD(mpd_xml, base_url="", url="https://test/manifest.mpd")
+
+        segment_urls = [
+            [
+                (period.id, adaptationset.id, segment.uri)
+                for segment in itertools.islice(representation.segments(), 2)
+            ]
+            for period in mpd.periods
+            for adaptationset in period.adaptationSets
+            for representation in adaptationset.representations
+        ]  # fmt: skip
+        assert segment_urls == [
+            [
+                ("empty-baseurl", "absolute-segments", "/absolute/init_video_5000kbps.m4s"),
+                ("empty-baseurl", "absolute-segments", "/absolute/media_video_5000kbps-1.m4s"),
+            ],
+            [
+                ("empty-baseurl", "relative-segments", "relative/init_video_5000kbps.m4s"),
+                ("empty-baseurl", "relative-segments", "relative/media_video_5000kbps-1.m4s"),
+            ],
+            [
+                ("baseurl-with-scheme", "absolute-segments", "https://host/absolute/init_video_5000kbps.m4s"),
+                ("baseurl-with-scheme", "absolute-segments", "https://host/absolute/media_video_5000kbps-1.m4s"),
+            ],
+            [
+                ("baseurl-with-scheme", "relative-segments", "https://host/path/relative/init_video_5000kbps.m4s"),
+                ("baseurl-with-scheme", "relative-segments", "https://host/path/relative/media_video_5000kbps-1.m4s"),
+            ],
+            [
+                ("absolute-baseurl", "absolute-segments", "/absolute/init_video_5000kbps.m4s"),
+                ("absolute-baseurl", "absolute-segments", "/absolute/media_video_5000kbps-1.m4s"),
+            ],
+            [
+                ("absolute-baseurl", "relative-segments", "/path/relative/init_video_5000kbps.m4s"),
+                ("absolute-baseurl", "relative-segments", "/path/relative/media_video_5000kbps-1.m4s"),
+            ],
+            [
+                ("relative-baseurl", "absolute-segments", "/absolute/init_video_5000kbps.m4s"),
+                ("relative-baseurl", "absolute-segments", "/absolute/media_video_5000kbps-1.m4s"),
+            ],
+            [
+                ("relative-baseurl", "relative-segments", "path/relative/init_video_5000kbps.m4s"),
+                ("relative-baseurl", "relative-segments", "path/relative/media_video_5000kbps-1.m4s"),
             ],
         ]
 
