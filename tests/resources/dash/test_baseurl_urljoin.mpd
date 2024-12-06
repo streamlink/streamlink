@@ -10,44 +10,94 @@
   mediaPresentationDuration="PT0H0M6.00S"
   minBufferTime="PT6.0S"
 >
-  <Period id="0" start="PT12M34S">
-    <BaseURL>https://hostname/path</BaseURL>
-    <AdaptationSet id="0" mimeType="video/mp4">
+  <Period id="empty-baseurl" start="PT12M34S">
+    <BaseURL/>
+    <AdaptationSet id="absolute-segments" mimeType="video/mp4">
       <SegmentTemplate
-        presentationTimeOffset="0"
+        initialization="/absolute/init_$RepresentationID$.m4s"
+        media="/absolute/media_$RepresentationID$-$Number$.m4s"
+        startNumber="1"
         timescale="90000"
         duration="540000"
+      />
+      <Representation id="video_5000kbps" codecs="avc1.640028" width="1920" height="1080" sar="1:1" bandwidth="5000000"/>
+    </AdaptationSet>
+    <AdaptationSet id="relative-segments" mimeType="video/mp4">
+      <SegmentTemplate
+        initialization="relative/init_$RepresentationID$.m4s"
+        media="relative/media_$RepresentationID$-$Number$.m4s"
         startNumber="1"
-        media="media_$RepresentationID$-$Number$.m4s"
-        initialization="init_$RepresentationID$.m4s"
+        timescale="90000"
+        duration="540000"
       />
       <Representation id="video_5000kbps" codecs="avc1.640028" width="1920" height="1080" sar="1:1" bandwidth="5000000"/>
     </AdaptationSet>
   </Period>
-  <Period id="1" start="PT12M34S">
-    <BaseURL>https://hostname/path/manifest.mpd?query</BaseURL>
-    <AdaptationSet id="0" mimeType="video/mp4">
+  <Period id="baseurl-with-scheme" start="PT12M34S">
+    <BaseURL>https://host/path/subpath</BaseURL>
+    <AdaptationSet id="absolute-segments" mimeType="video/mp4">
       <SegmentTemplate
-        presentationTimeOffset="0"
+        initialization="/absolute/init_$RepresentationID$.m4s"
+        media="/absolute/media_$RepresentationID$-$Number$.m4s"
+        startNumber="1"
         timescale="90000"
         duration="540000"
+      />
+      <Representation id="video_5000kbps" codecs="avc1.640028" width="1920" height="1080" sar="1:1" bandwidth="5000000"/>
+    </AdaptationSet>
+    <AdaptationSet id="relative-segments" mimeType="video/mp4">
+      <SegmentTemplate
+        initialization="relative/init_$RepresentationID$.m4s"
+        media="relative/media_$RepresentationID$-$Number$.m4s"
         startNumber="1"
-        media="media_$RepresentationID$-$Number$.m4s"
-        initialization="init_$RepresentationID$.m4s"
+        timescale="90000"
+        duration="540000"
       />
       <Representation id="video_5000kbps" codecs="avc1.640028" width="1920" height="1080" sar="1:1" bandwidth="5000000"/>
     </AdaptationSet>
   </Period>
-  <Period id="2" start="PT12M34S">
-    <BaseURL>https://hostname/path/manifest.mpd</BaseURL>
-    <AdaptationSet id="0" mimeType="video/mp4">
+  <Period id="absolute-baseurl" start="PT12M34S">
+    <BaseURL>/path/subpath</BaseURL>
+    <AdaptationSet id="absolute-segments" mimeType="video/mp4">
       <SegmentTemplate
-        presentationTimeOffset="0"
+        initialization="/absolute/init_$RepresentationID$.m4s"
+        media="/absolute/media_$RepresentationID$-$Number$.m4s"
+        startNumber="1"
         timescale="90000"
         duration="540000"
+      />
+      <Representation id="video_5000kbps" codecs="avc1.640028" width="1920" height="1080" sar="1:1" bandwidth="5000000"/>
+    </AdaptationSet>
+    <AdaptationSet id="relative-segments" mimeType="video/mp4">
+      <SegmentTemplate
+        initialization="relative/init_$RepresentationID$.m4s"
+        media="relative/media_$RepresentationID$-$Number$.m4s"
         startNumber="1"
-        media="media_$RepresentationID$-$Number$.m4s"
-        initialization="init_$RepresentationID$.m4s"
+        timescale="90000"
+        duration="540000"
+      />
+      <Representation id="video_5000kbps" codecs="avc1.640028" width="1920" height="1080" sar="1:1" bandwidth="5000000"/>
+    </AdaptationSet>
+  </Period>
+  <Period id="relative-baseurl" start="PT12M34S">
+    <BaseURL>path/subpath</BaseURL>
+    <AdaptationSet id="absolute-segments" mimeType="video/mp4">
+      <SegmentTemplate
+        initialization="/absolute/init_$RepresentationID$.m4s"
+        media="/absolute/media_$RepresentationID$-$Number$.m4s"
+        startNumber="1"
+        timescale="90000"
+        duration="540000"
+      />
+      <Representation id="video_5000kbps" codecs="avc1.640028" width="1920" height="1080" sar="1:1" bandwidth="5000000"/>
+    </AdaptationSet>
+    <AdaptationSet id="relative-segments" mimeType="video/mp4">
+      <SegmentTemplate
+        initialization="relative/init_$RepresentationID$.m4s"
+        media="relative/media_$RepresentationID$-$Number$.m4s"
+        startNumber="1"
+        timescale="90000"
+        duration="540000"
       />
       <Representation id="video_5000kbps" codecs="avc1.640028" width="1920" height="1080" sar="1:1" bandwidth="5000000"/>
     </AdaptationSet>
