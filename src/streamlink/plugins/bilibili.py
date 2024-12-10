@@ -53,7 +53,7 @@ class Bilibili(Plugin):
                                 ),
                             },
                         ],
-                        validate.filter(lambda item: item["format_name"] == "fmp4"),
+                        validate.filter(lambda item: item["format_name"] in ("fmp4", "ts")),
                     ),
                 },
             ],
