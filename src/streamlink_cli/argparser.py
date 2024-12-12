@@ -352,7 +352,7 @@ def build_parser():
             and the available `LogRecord` attributes. Streamlink's formatter uses the curly brace style.
 
             The default format depends on the chosen log level:
-            "[{name}][{levelname}] {message}" for lower loglevels, or
+            "[{name}][{levelname}] {message}" for the lower levels, or
             "[{asctime}][{name}][{levelname}] {message}" for verbose levels ("trace", "all").
         """,
     )
@@ -364,9 +364,9 @@ def build_parser():
 
             This formats the `LogRecord`'s `asctime` attribute via `strftime()`.
 
-            The default date format depends on the chosen log level (may include fractions).
-
-            Default is "%%H:%%M:%%S".
+            The default date format depends on the chosen log level:
+            "%%H:%%M:%%S" for the lower levels, or
+            "%%H:%%M:%%S.%%f" for verbose levels ("trace", "all").
         """,
     )
     logging.add_argument(
