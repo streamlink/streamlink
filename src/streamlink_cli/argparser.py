@@ -351,9 +351,9 @@ def build_parser():
             See the Python standard library's `logging.Formatter` docs for more information about the logging format
             and the available `LogRecord` attributes. Streamlink's formatter uses the curly brace style.
 
-            The default format depends on the chosen log level (may include the `asctime` attribute).
-
-            Default is "[{name}][{levelname}] {message}".
+            The default format depends on the chosen log level:
+            "[{name}][{levelname}] {message}" for lower loglevels, or
+            "[{asctime}][{name}][{levelname}] {message}" for verbose levels ("trace", "all").
         """,
     )
     logging.add_argument(
