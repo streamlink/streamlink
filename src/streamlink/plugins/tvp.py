@@ -121,9 +121,9 @@ class TVP(Plugin):
         )
 
         if channel_id is not None:
-            _channel_id = int(channel_id)
+            channel_id_number = int(channel_id)
             try:
-                return next(item[1] for item in items if item[0] == _channel_id)
+                return next(item[1] for item in items if item[0] == channel_id_number)
             except StopIteration:
                 pass
 
@@ -195,8 +195,8 @@ class TVP(Plugin):
         if not data:
             return
 
-        _type, self.id = data
-        if _type == "NEWS":
+        vod_type, self.id = data
+        if vod_type == "NEWS":
             self.id, self.title = self.session.http.get(
                 self._URL_INFO_API_NEWS.format(id=self.id),
                 schema=validate.Schema(

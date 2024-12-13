@@ -34,8 +34,8 @@ class OnePlusOneHLS(HLSStream):
         self.api = OnePlusOneAPI(session, self_url)
 
     def _next_watch_timeout(self):
-        _next = fromlocaltimestamp(self.watch_timeout).isoformat(" ")
-        log.debug(f"next watch_timeout at {_next}")
+        when = fromlocaltimestamp(self.watch_timeout).isoformat(" ")
+        log.debug(f"next watch_timeout at {when}")
 
     def open(self):
         self._next_watch_timeout()
@@ -45,11 +45,11 @@ class OnePlusOneHLS(HLSStream):
     def url(self):
         if int(time()) >= self.watch_timeout:
             log.debug("Reloading HLS URL")
-            _hls_url = self.api.get_hls_url()
-            if not _hls_url:
+            hls_url = self.api.get_hls_url()
+            if not hls_url:
                 self.watch_timeout += 10
                 return self._url
-            parsed = urlparse(_hls_url)
+            parsed = urlparse(hls_url)
             path_parts = parsed.path.split("/")
             path_parts[-1] = self._first_path_chunklist
             self.watch_timeout = int(path_parts[2]) - 15

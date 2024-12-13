@@ -731,15 +731,15 @@ def pluginargument(
     assuming the plugin's module name is ``myplugin``.
     """
 
-    _type: Callable[[Any], _TChoices] | None
+    argument_type: Callable[[Any], _TChoices] | None
     if not isinstance(type, str):
-        _type = type
+        argument_type = type
     else:
         if type not in _PLUGINARGUMENT_TYPE_REGISTRY:
             raise TypeError(f"Invalid pluginargument type {type}")
-        _type = _PLUGINARGUMENT_TYPE_REGISTRY[type]
+        argument_type = _PLUGINARGUMENT_TYPE_REGISTRY[type]
         if type_args is not None or type_kwargs is not None:
-            _type = _type(*(type_args or ()), **(type_kwargs or {}))
+            argument_type = argument_type(*(type_args or ()), **(type_kwargs or {}))
 
     arg = Argument(
         name=name,
@@ -747,7 +747,7 @@ def pluginargument(
         nargs=nargs,
         const=const,
         default=default,
-        type=_type,
+        type=argument_type,
         choices=choices,
         required=required,
         help=help,

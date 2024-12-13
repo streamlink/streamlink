@@ -139,17 +139,17 @@ class Zattoo(Plugin):
             ),
         )
         if self._uuid:
-            __uuid = self._uuid
+            uuid_data = self._uuid
         else:
-            __uuid = str(uuid.uuid4())
-            self._session_attributes.set("uuid", __uuid, expires=self.TIME_SESSION)
+            uuid_data = str(uuid.uuid4())
+            self._session_attributes.set("uuid", uuid_data, expires=self.TIME_SESSION)
 
         params = {
             "app_version": "3.2120.1",
             "client_app_token": app_token,
             "format": "json",
             "lang": "en",
-            "uuid": __uuid,
+            "uuid": uuid_data,
         }
         res = self.session.http.post(
             f"{self.base_url}/zapi/v3/session/hello",

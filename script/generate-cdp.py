@@ -210,11 +210,11 @@ def ref_to_python(ref: str, domain: str) -> str:
     if "." not in ref:
         return f"{ref}"
 
-    _domain, subtype = ref.split(".")
-    if _domain == domain:
+    domain_, subtype = ref.split(".")
+    if domain_ == domain:
         return subtype
 
-    return f"{snake_case(_domain)}.{subtype}"
+    return f"{snake_case(domain_)}.{subtype}"
 
 
 class CdpPrimitiveType(Enum):

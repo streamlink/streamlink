@@ -59,8 +59,8 @@ def deprecated(items: Mapping[str, tuple[str | None, Any, Any]]) -> None:
                 stacklevel=2,
             )
             if path:
-                *_path, name = path.split(".")
-                imported = importlib.import_module(".".join(_path))
+                *parts, name = path.split(".")
+                imported = importlib.import_module(".".join(parts))
                 obj = getattr(imported, name, None)
 
             return obj

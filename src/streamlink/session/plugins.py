@@ -338,14 +338,14 @@ class StreamlinkPluginsData:
     @staticmethod
     def _build_argument(data: _TPluginArgumentData) -> Argument | None:
         name: str = data.get("name")  # type: ignore[assignment]
-        _typedata = data.get("type")
-        if not _typedata:
-            _type = None
-        elif _type := _PLUGINARGUMENT_TYPE_REGISTRY.get(_typedata):
-            _type_args = data.get("type_args") or ()
-            _type_kwargs = data.get("type_kwargs") or {}
-            if _type_args or _type_kwargs:
-                _type = _type(*_type_args, **_type_kwargs)
+        type_data = data.get("type")
+        if not type_data:
+            argument_type = None
+        elif argument_type := _PLUGINARGUMENT_TYPE_REGISTRY.get(type_data):
+            type_args = data.get("type_args") or ()
+            type_kwargs = data.get("type_kwargs") or {}
+            if type_args or type_kwargs:
+                argument_type = argument_type(*type_args, **type_kwargs)
         else:
             return None
 
@@ -355,7 +355,7 @@ class StreamlinkPluginsData:
             nargs=data.get("nargs"),
             const=data.get("const"),
             default=data.get("default"),
-            type=_type,
+            type=argument_type,
             choices=data.get("choices"),
             required=data.get("required") or False,
             help=data.get("help"),

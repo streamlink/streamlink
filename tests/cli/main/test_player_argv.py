@@ -25,7 +25,7 @@ def _player_setup(monkeypatch: pytest.MonkeyPatch):
 def mock_subprocess(request: pytest.FixtureRequest, monkeypatch: pytest.MonkeyPatch):
     param = getattr(request, "param", {})
     popen = param.get("popen", [])
-    _call = param.get("call", [])
+    call_ = param.get("call", [])
 
     mock_call = Mock()
     monkeypatch.setattr("streamlink_cli.output.player.subprocess.call", mock_call)
@@ -41,7 +41,7 @@ def mock_subprocess(request: pytest.FixtureRequest, monkeypatch: pytest.MonkeyPa
         assert mock_call.call_args_list == []
     else:
         assert mock_popen.call_args_list == []
-        assert mock_call.call_args_list == [call(_call, env=ANY, stdout=ANY, stderr=ANY)]
+        assert mock_call.call_args_list == [call(call_, env=ANY, stdout=ANY, stderr=ANY)]
 
 
 @pytest.fixture(autouse=True)

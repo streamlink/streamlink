@@ -76,40 +76,40 @@ class NimoTV(Plugin):
 
         mStreamPkg = bytes.fromhex(mStreamPkg)
         try:
-            _appid = self._re_appid.search(mStreamPkg).group(1).decode("utf-8")
-            _domain = self._re_domain.search(mStreamPkg).group(1).decode("utf-8")
-            _id = self._re_id.search(mStreamPkg).group(1).decode("utf-8")
-            _tp = self._re_tp.search(mStreamPkg).group(1).decode("utf-8")
-            _wsSecret = self._re_wsSecret.search(mStreamPkg).group(1).decode("utf-8")
-            _wsTime = self._re_wsTime.search(mStreamPkg).group(1).decode("utf-8")
+            appid = self._re_appid.search(mStreamPkg).group(1).decode("utf-8")
+            domain = self._re_domain.search(mStreamPkg).group(1).decode("utf-8")
+            id_ = self._re_id.search(mStreamPkg).group(1).decode("utf-8")
+            tp = self._re_tp.search(mStreamPkg).group(1).decode("utf-8")
+            ws_secret = self._re_wsSecret.search(mStreamPkg).group(1).decode("utf-8")
+            ws_time = self._re_wsTime.search(mStreamPkg).group(1).decode("utf-8")
         except AttributeError:
             log.error("invalid mStreamPkg")
             return
 
         params = {
-            "appid": _appid,
-            "id": _id,
-            "tp": _tp,
-            "wsSecret": _wsSecret,
-            "wsTime": _wsTime,
+            "appid": appid,
+            "id": id_,
+            "tp": tp,
+            "wsSecret": ws_secret,
+            "wsTime": ws_time,
             "u": "0",
             "t": "100",
             "needwm": 1,
         }
-        url = f"{_domain}{_id}.flv"
+        url = f"{domain}{id_}.flv"
         url = url.replace("hls.nimo.tv", "flv.nimo.tv")
         log.debug(f"URL={url}")
         for k, v in self.video_qualities.items():
-            _params = params.copy()
-            _params["ratio"] = k
+            params = params.copy()
+            params["ratio"] = k
             if v == "1080p":
-                _params["needwm"] = 0
+                params["needwm"] = 0
             elif v in ("720p", "480p", "360p"):
-                _params["sphd"] = 1
+                params["sphd"] = 1
 
-            log.trace(f"{v} params={_params!r}")
+            log.trace(f"{v} params={params!r}")
             # some qualities might not exist, but it will select a different lower quality
-            yield v, HTTPStream(self.session, url, params=_params)
+            yield v, HTTPStream(self.session, url, params=params)
 
         self.author = data["nickname"]
         self.category = data["game"]
