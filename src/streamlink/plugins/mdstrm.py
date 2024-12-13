@@ -37,7 +37,7 @@ class MDStrm(Plugin):
             pattern = custom_pattern
         else:
             pattern = rf"{search_string}\s*=\s*'([^']+)';"
-        _schema = validate.Schema(
+        schema = validate.Schema(
             validate.xml_xpath_string(
                 ".//script[@type='text/javascript'][contains(text(),$search_string)]/text()",
                 search_string=search_string,
@@ -47,15 +47,15 @@ class MDStrm(Plugin):
                 validate.none_or_all(validate.get(1)),
             ),
         )
-        _string = _schema.validate(root)
-        if not _string:
+        string = schema.validate(root)
+        if not string:
             log.debug(f"Failed to find {search_string}")
         if custom_schema:
             try:
-                _string = custom_schema.validate(_string)
+                string = custom_schema.validate(string)
             except ValueError:
                 pass
-        return _string
+        return string
 
     def _get_streams(self):
         p_netloc = urlparse(self.url).netloc

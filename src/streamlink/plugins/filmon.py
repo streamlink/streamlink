@@ -220,30 +220,30 @@ class Filmon(Plugin):
                     yield quality, HTTPStream(self.session, url)
         else:
             if not channel or channel.isdigit():
-                _id = channel
+                id_ = channel
             else:
-                _id = self.cache.get(channel)
-                if _id is not None:
-                    log.debug(f"Found cached channel ID: {_id}")
+                id_ = self.cache.get(channel)
+                if id_ is not None:
+                    log.debug(f"Found cached channel ID: {id_}")
                 else:
-                    _id = self.session.http.get(
+                    id_ = self.session.http.get(
                         self.url,
                         schema=validate.Schema(
                             re.compile(r"""channel_id\s*=\s*(?P<q>['"]?)(?P<value>\d+)(?P=q)"""),
                             validate.any(None, validate.get("value")),
                         ),
                     )
-                    log.debug(f"Found channel ID: {_id}")
+                    log.debug(f"Found channel ID: {id_}")
                     # do not cache a group url
-                    if _id and not is_group:
-                        self.cache.set(channel, _id, expires=self.TIME_CHANNEL)
+                    if id_ and not is_group:
+                        self.cache.set(channel, id_, expires=self.TIME_CHANNEL)
 
-            if _id is None:
+            if id_ is None:
                 raise PluginError(f"Unable to find channel ID: {channel}")
 
             try:
-                for quality, url, _timeout in self.api.channel(_id):
-                    yield quality, FilmOnHLS(self.session, url, self.api, channel=_id, quality=quality)
+                for quality, url, _timeout in self.api.channel(id_):
+                    yield quality, FilmOnHLS(self.session, url, self.api, channel=id_, quality=quality)
             except Exception:
                 if channel and not channel.isdigit():
                     self.cache.set(channel, None, expires=0)

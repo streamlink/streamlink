@@ -484,10 +484,10 @@ def build(pluginsdir: Path = DEFAULT_PLUGINSPATH) -> Output:
 
 def to_json(data: Output, fd: TextIO | None = None, comments: list[str] | None = None, pretty: bool = False) -> None:
     outputformat = {"separators": (",", ": "), "indent": 2} if pretty else {"separators": (",", ":")}
-    _fd: TextIO = fd or sys.stdout
+    textio: TextIO = fd or sys.stdout
     for line in PLUGINSJSON_COMMENTS if comments is None else comments:
-        _fd.write(f"// {line}\n")
-    json.dump(data, _fd, cls=JSONEncoder, **outputformat)  # type: ignore[arg-type]
+        textio.write(f"// {line}\n")
+    json.dump(data, textio, cls=JSONEncoder, **outputformat)  # type: ignore[arg-type]
 
 
 if __name__ == "__main__":  # pragma: no cover

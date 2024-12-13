@@ -126,10 +126,10 @@ def os_environ(request: pytest.FixtureRequest, monkeypatch: pytest.MonkeyPatch) 
 def _patch_trio_run():
     import trio  # noqa: PLC0415
 
-    _trio_run = trio.run
+    trio_run = trio.run
     # `strict_exception_groups` changed from False to True in `trio==0.25`:
     # Patch `trio.run()` and make older versions of trio behave like `trio>=0.25`
     # as pytest-trio doesn't allow setting custom `trio.run()` args/kwargs
     trio.run = partial(trio.run, strict_exception_groups=True)
     yield
-    trio.run = _trio_run
+    trio.run = trio_run

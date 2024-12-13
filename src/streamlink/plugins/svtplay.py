@@ -37,7 +37,7 @@ class SVTPlay(Plugin):
     }
 
     def _api_call(self, item):
-        _schema_items = validate.all(
+        schema_items = validate.all(
             [
                 validate.all(
                     {
@@ -57,8 +57,8 @@ class SVTPlay(Plugin):
                 {
                     validate.optional("programTitle"): str,
                     validate.optional("episodeTitle"): str,
-                    "videoReferences": _schema_items,
-                    validate.optional("subtitleReferences"): _schema_items,
+                    "videoReferences": schema_items,
+                    validate.optional("subtitleReferences"): schema_items,
                 },
                 validate.union_get(
                     "programTitle",

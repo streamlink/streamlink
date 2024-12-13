@@ -1124,11 +1124,7 @@ class TestTwitchMetadata:
 
     @pytest.mark.parametrize(("mock_request_channel", "metadata"), [(True, "https://twitch.tv/foo")], indirect=True)
     def test_metadata_channel(self, mock_request_channel, metadata):
-        _id, author, category, title = metadata
-        assert _id == "stream id"
-        assert author == "channel name"
-        assert category == "channel game"
-        assert title == "channel status"
+        assert metadata == ("stream id", "channel name", "channel game", "channel status")
         assert mock_request_channel.call_count == 1
         assert mock_request_channel.request_history[0].json() == [
             {
@@ -1160,20 +1156,12 @@ class TestTwitchMetadata:
 
     @pytest.mark.parametrize(("mock_request_channel", "metadata"), [(False, "https://twitch.tv/foo")], indirect=True)
     def test_metadata_channel_no_data(self, mock_request_channel, metadata):
-        _id, author, category, title = metadata
-        assert _id is None
-        assert author is None
-        assert category is None
-        assert title is None
+        assert metadata == (None, None, None, None)
         assert mock_request_channel.call_count == 1
 
     @pytest.mark.parametrize(("mock_request_video", "metadata"), [(True, "https://twitch.tv/videos/1337")], indirect=True)
     def test_metadata_video(self, mock_request_video, metadata):
-        _id, author, category, title = metadata
-        assert _id == "video id"
-        assert author == "channel name"
-        assert category == "video game"
-        assert title == "video title"
+        assert metadata == ("video id", "channel name", "video game", "video title")
         assert mock_request_video.call_count == 1
         assert mock_request_video.request_history[0].json() == {
             "operationName": "VideoMetadata",
@@ -1191,20 +1179,12 @@ class TestTwitchMetadata:
 
     @pytest.mark.parametrize(("mock_request_video", "metadata"), [(False, "https://twitch.tv/videos/1337")], indirect=True)
     def test_metadata_video_no_data(self, mock_request_video, metadata):
-        _id, author, category, title = metadata
-        assert _id is None
-        assert author is None
-        assert category is None
-        assert title is None
+        assert metadata == (None, None, None, None)
         assert mock_request_video.call_count == 1
 
     @pytest.mark.parametrize(("mock_request_clip", "metadata"), [(True, "https://clips.twitch.tv/foo")], indirect=True)
     def test_metadata_clip(self, mock_request_clip, metadata):
-        _id, author, category, title = metadata
-        assert _id == "clip id"
-        assert author == "channel name"
-        assert category == "game name"
-        assert title == "clip title"
+        assert metadata == ("clip id", "channel name", "game name", "clip title")
         assert mock_request_clip.call_count == 1
         assert mock_request_clip.request_history[0].json() == [
             {
@@ -1235,8 +1215,4 @@ class TestTwitchMetadata:
 
     @pytest.mark.parametrize(("mock_request_clip", "metadata"), [(False, "https://clips.twitch.tv/foo")], indirect=True)
     def test_metadata_clip_no_data(self, mock_request_clip, metadata):
-        _id, author, category, title = metadata
-        assert _id is None
-        assert author is None
-        assert category is None
-        assert title is None
+        assert metadata == (None, None, None, None)

@@ -195,7 +195,7 @@ def test_get_websocket_address(
     raises: nullcontext,
 ):
     monkeypatch.setattr("time.sleep", lambda _: None)
-    _host = f"[{host}]" if ":" in host else host
+    hostaddr = f"[{host}]" if ":" in host else host
 
     payload = {
         "Browser": "Chrome/114.0.5735.133",
@@ -203,7 +203,7 @@ def test_get_websocket_address(
         "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36",
         "V8-Version": "11.4.183.23",
         "WebKit-Version": "537.36 (@fbfa2ce68d01b2201d8c667c2e73f648a61c4f4a)",
-        "webSocketDebuggerUrl": f"ws://{_host}:{port}/devtools/browser/some-uuid4",
+        "webSocketDebuggerUrl": f"ws://{hostaddr}:{port}/devtools/browser/some-uuid4",
     }
 
     responses: list[dict[str, Any]] = [{"exc": Timeout()} for _ in range(num)]
@@ -212,7 +212,7 @@ def test_get_websocket_address(
 
     webbrowser = ChromiumWebbrowser(host=host, port=port)
     with raises:
-        assert webbrowser.get_websocket_url(session) == f"ws://{_host}:{port}/devtools/browser/some-uuid4"
+        assert webbrowser.get_websocket_url(session) == f"ws://{hostaddr}:{port}/devtools/browser/some-uuid4"
         assert mock.called
         assert mock.last_request
         assert not mock.last_request.proxies.get("http")

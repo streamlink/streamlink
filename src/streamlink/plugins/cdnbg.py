@@ -72,9 +72,9 @@ class CDNBG(Plugin):
             if not h or not h.get("Referer"):
                 log.error('Missing Referer for iframe URL, use --http-header "Referer=URL" ')
                 return
-            _referer = h.get("Referer")
+            referer = h.get("Referer")
         else:
-            _referer = self.url
+            referer = self.url
             iframe_url = self.session.http.get(
                 self.url,
                 schema=validate.Schema(
@@ -98,7 +98,7 @@ class CDNBG(Plugin):
 
         stream_url = self.session.http.get(
             iframe_url,
-            headers={"Referer": _referer},
+            headers={"Referer": referer},
             schema=validate.Schema(
                 validate.any(
                     self._find_url(

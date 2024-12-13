@@ -186,12 +186,12 @@ class HLSStreamWriter(SegmentedStreamWriter[HLSSegment, Response]):
             log.error(f"Failed to fetch segment {segment.num}: {err}")
 
     def fetch_map(self, segment: HLSSegment) -> Response | None:
-        _map: Map = segment.map  # type: ignore[assignment]  # map is not None
+        segment_map: Map = segment.map  # type: ignore[assignment]  # map is not None
         try:
             return self._fetch(
-                _map.uri,
+                segment_map.uri,
                 stream=False,
-                **self.create_request_params(segment.num, _map, True),
+                **self.create_request_params(segment.num, segment_map, True),
             )
         except StreamError as err:
             log.error(f"Failed to fetch map for segment {segment.num}: {err}")

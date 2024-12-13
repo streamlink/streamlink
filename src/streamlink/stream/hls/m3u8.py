@@ -169,8 +169,8 @@ class M3U8Parser(Generic[TM3U8_co, THLSSegment_co, THLSPlaylist_co], metaclass=M
         except ValueError:
             bandwidth = 0
 
-        _resolution = streaminf.get("RESOLUTION")
-        resolution = None if not _resolution else cls.parse_resolution(_resolution)
+        res = streaminf.get("RESOLUTION")
+        resolution = None if not res else cls.parse_resolution(res)
 
         codecs = (streaminf.get("CODECS") or "").split(",")
 
@@ -228,9 +228,10 @@ class M3U8Parser(Generic[TM3U8_co, THLSSegment_co, THLSPlaylist_co], metaclass=M
         if match is None:
             return None
 
-        _range, offset = match.groups()
+        offset = match["offset"]
+
         return ByteRange(
-            range=int(_range),
+            range=int(match["range"]),
             offset=int(offset) if offset is not None else None,
         )
 
@@ -452,16 +453,16 @@ class M3U8Parser(Generic[TM3U8_co, THLSSegment_co, THLSPlaylist_co], metaclass=M
         https://datatracker.ietf.org/doc/html/rfc8216#section-4.3.4.1
         """
         attr = self.parse_attributes(value)
-        _type = attr.get("TYPE")
+        mediatype = attr.get("TYPE")
         uri = attr.get("URI")
         group_id = attr.get("GROUP-ID")
         name = attr.get("NAME")
 
-        if not _type or not group_id or not name:
+        if not mediatype or not group_id or not name:
             return
 
         media = Media(
-            type=_type,
+            type=mediatype,
             uri=self.uri(uri) if uri else None,
             group_id=group_id,
             language=attr.get("LANGUAGE"),

@@ -317,38 +317,38 @@ class YouTube(Plugin):
 
     def _get_data_from_api(self, res):
         try:
-            _i_video_id = self.match["video_id"]
+            video_id = self.match["video_id"]
         except IndexError:
-            _i_video_id = None
+            video_id = None
 
-        if _i_video_id is None:
+        if video_id is None:
             try:
-                _i_video_id = self._schema_canonical(res.text)
+                video_id = self._schema_canonical(res.text)
             except (PluginError, TypeError):
                 return
 
         try:
-            _i_api_key = re.search(r'"INNERTUBE_API_KEY":\s*"([^"]+)"', res.text).group(1)
+            api_key = re.search(r'"INNERTUBE_API_KEY":\s*"([^"]+)"', res.text).group(1)
         except AttributeError:
-            _i_api_key = "AIzaSyAO_FJ2SlqU8Q4STEHLGCilw_Y9_11qcW8"
+            api_key = "AIzaSyAO_FJ2SlqU8Q4STEHLGCilw_Y9_11qcW8"
 
         try:
-            _i_version = re.search(r'"INNERTUBE_CLIENT_VERSION":\s*"([\d\.]+)"', res.text).group(1)
+            client_version = re.search(r'"INNERTUBE_CLIENT_VERSION":\s*"([\d\.]+)"', res.text).group(1)
         except AttributeError:
-            _i_version = "1.20210616.1.0"
+            client_version = "1.20210616.1.0"
 
         res = self.session.http.post(
             "https://www.youtube.com/youtubei/v1/player",
             headers={"Content-Type": "application/json"},
-            params={"key": _i_api_key},
+            params={"key": api_key},
             data=json.dumps({
-                "videoId": _i_video_id,
+                "videoId": video_id,
                 "contentCheckOk": True,
                 "racyCheckOk": True,
                 "context": {
                     "client": {
                         "clientName": "WEB",
-                        "clientVersion": _i_version,
+                        "clientVersion": client_version,
                         "platform": "DESKTOP",
                         "clientScreen": "EMBED",
                         "clientFormFactor": "UNKNOWN_FORM_FACTOR",
