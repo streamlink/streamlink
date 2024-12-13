@@ -304,10 +304,6 @@ class HLSStreamWorker(SegmentedStreamWorker[HLSSegment, Response]):
         self.playlist_sequence_last: datetime = now()
         self.playlist_segments: list[HLSSegment] = []
 
-        self.playlist_reload_last: datetime = now()
-        self.playlist_reload_time: float = 6
-        self.playlist_reload_time_override = self.session.options.get("hls-playlist-reload-time")
-        self.playlist_reload_retries = self.session.options.get("hls-playlist-reload-attempts")
         self.segment_queue_timing_threshold_factor = self.session.options.get("hls-segment-queue-threshold")
         self.live_edge = self.session.options.get("hls-live-edge")
         self.duration_offset_start = int(self.stream.start_offset + (self.session.options.get("hls-start-offset") or 0))
@@ -316,23 +312,27 @@ class HLSStreamWorker(SegmentedStreamWorker[HLSSegment, Response]):
         )
         self.hls_live_restart = self.stream.force_restart or self.session.options.get("hls-live-restart")
 
-        if str(self.playlist_reload_time_override).isnumeric() and float(self.playlist_reload_time_override) >= 2:
-            self.playlist_reload_time_override = float(self.playlist_reload_time_override)
-        elif self.playlist_reload_time_override not in ["segment", "live-edge"]:
-            self.playlist_reload_time_override = 0
+        self._reload_last: datetime = now()
+        self._reload_time: float = 6
+        self._reload_time_override = self.session.options.get("hls-playlist-reload-time")
+        self._reload_retries = self.session.options.get("hls-playlist-reload-attempts")
+        if str(self._reload_time_override).isnumeric() and float(self._reload_time_override) >= 2:
+            self._reload_time_override = float(self._reload_time_override)
+        elif self._reload_time_override not in ("segment", "live-edge"):
+            self._reload_time_override = 0
 
     def _fetch_playlist(self) -> Response:
         res = self.session.http.get(
             self.stream.url,
             exception=StreamError,
-            retries=self.playlist_reload_retries,
+            retries=self._reload_retries,
             **self.reader.request_params,
         )
         res.encoding = "utf-8"
 
         return res
 
-    def reload_playlist(self):
+    def reload(self):
         if self.closed:  # pragma: no cover
             return
 
@@ -353,24 +353,24 @@ class HLSStreamWorker(SegmentedStreamWorker[HLSSegment, Response]):
             raise StreamError("Streams containing I-frames only are not playable")
 
         self.playlist_targetduration = playlist.targetduration or 0
-        self.playlist_reload_time = self._playlist_reload_time(playlist)
+        self._reload_time = self._get_reload_time(playlist)
 
         if playlist.segments:
             self.process_segments(playlist)
 
-    def _playlist_reload_time(self, playlist: M3U8[HLSSegment, HLSPlaylist]) -> float:
-        if self.playlist_reload_time_override == "segment" and playlist.segments:
+    def _get_reload_time(self, playlist: M3U8[HLSSegment, HLSPlaylist]) -> float:
+        if self._reload_time_override == "segment" and playlist.segments:
             return playlist.segments[-1].duration
-        if self.playlist_reload_time_override == "live-edge" and playlist.segments:
+        if self._reload_time_override == "live-edge" and playlist.segments:
             return sum(s.duration for s in playlist.segments[-max(1, self.live_edge - 1) :])
-        if type(self.playlist_reload_time_override) is float and self.playlist_reload_time_override > 0:
-            return self.playlist_reload_time_override
+        if type(self._reload_time_override) is float and self._reload_time_override > 0:
+            return self._reload_time_override
         if playlist.targetduration:
             return playlist.targetduration
         if playlist.segments:
             return sum(s.duration for s in playlist.segments[-max(1, self.live_edge - 1) :])
 
-        return self.playlist_reload_time
+        return self._reload_time
 
     def process_segments(self, playlist: M3U8[HLSSegment, HLSPlaylist]) -> None:
         segments = playlist.segments
@@ -383,7 +383,7 @@ class HLSStreamWorker(SegmentedStreamWorker[HLSSegment, Response]):
         self.playlist_segments = segments
 
         if not self.playlist_changed:
-            self.playlist_reload_time = max(self.playlist_reload_time / 2, 1)
+            self._reload_time = max(self._reload_time / 2, 1)
 
         if playlist.is_endlist:
             self.playlist_end = last_segment.num
@@ -430,12 +430,12 @@ class HLSStreamWorker(SegmentedStreamWorker[HLSSegment, Response]):
         return default
 
     def iter_segments(self):
-        self.playlist_reload_last \
+        self._reload_last \
             = self.playlist_sequence_last \
             = now()  # fmt: skip
 
         try:
-            self.reload_playlist()
+            self.reload()
         except StreamError as err:
             log.error(f"{err}")
             self.reader.close()
@@ -510,19 +510,19 @@ class HLSStreamWorker(SegmentedStreamWorker[HLSSegment, Response]):
             # Exclude playlist fetch+processing time from the overall playlist reload time
             # and reload playlist in a strict time interval
             time_completed = now()
-            time_elapsed = max(0.0, (time_completed - self.playlist_reload_last).total_seconds())
-            time_wait = max(0.0, self.playlist_reload_time - time_elapsed)
+            time_elapsed = max(0.0, (time_completed - self._reload_last).total_seconds())
+            time_wait = max(0.0, self._reload_time - time_elapsed)
             if self.wait(time_wait):
                 if time_wait > 0:
                     # If we had to wait, then don't call now() twice and instead reference the timestamp from before
                     # the wait() call, to prevent a shifting time offset due to the execution time.
-                    self.playlist_reload_last = time_completed + timedelta(seconds=time_wait)
+                    self._reload_last = time_completed + timedelta(seconds=time_wait)
                 else:
                     # Otherwise, get the current time, as the reload interval already has shifted.
-                    self.playlist_reload_last = now()
+                    self._reload_last = now()
 
                 try:
-                    self.reload_playlist()
+                    self.reload()
                 except StreamError as err:
                     log.warning(f"Failed to reload playlist: {err}")
 
