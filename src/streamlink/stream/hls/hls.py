@@ -16,7 +16,7 @@ from streamlink.stream.filtered import FilteredStream
 from streamlink.stream.hls.m3u8 import M3U8Parser, parse_m3u8
 from streamlink.stream.hls.segment import HLSSegment
 from streamlink.stream.http import HTTPStream
-from streamlink.stream.segmented import SegmentedStreamReader, SegmentedStreamWorker, SegmentedStreamWriter
+from streamlink.stream.segmented import PollingSegmentedStreamWorker, SegmentedStreamReader, SegmentedStreamWriter
 from streamlink.utils.cache import LRUCache
 from streamlink.utils.crypto import AES, unpad
 from streamlink.utils.formatter import Formatter
@@ -300,7 +300,7 @@ class HLSStreamWriter(SegmentedStreamWriter[HLSSegment, Response]):
             log.debug(f"Segment {segment.num} complete")
 
 
-class HLSStreamWorker(SegmentedStreamWorker[HLSSegment, Response]):
+class HLSStreamWorker(PollingSegmentedStreamWorker[HLSSegment, Response]):
     reader: HLSStreamReader
     writer: HLSStreamWriter
     stream: HLSStream
@@ -309,9 +309,6 @@ class HLSStreamWorker(SegmentedStreamWorker[HLSSegment, Response]):
 
     reload_attempts: int
     reload_time: float | Literal["segment", "live-edge"]
-
-    _RELOAD_TIME_MIN = 2.0
-    _RELOAD_TIME_DEFAULT = 6.0
 
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
@@ -337,8 +334,6 @@ class HLSStreamWorker(SegmentedStreamWorker[HLSSegment, Response]):
             self.reload_time = float(self.reload_time)
         elif self.reload_time not in ("segment", "live-edge"):
             self.reload_time = 0.0
-        self._reload_time: float = self._RELOAD_TIME_DEFAULT
-        self._reload_last: datetime = now()
 
     def _fetch_playlist(self) -> Response:
         res = self.session.http.get(
@@ -526,24 +521,7 @@ class HLSStreamWorker(SegmentedStreamWorker[HLSSegment, Response]):
             elif self._segment_queue_timing_threshold_reached():
                 return
 
-            # Exclude playlist fetch+processing time from the overall playlist reload time
-            # and reload playlist in a strict time interval
-            time_completed = now()
-            time_elapsed = max(0.0, (time_completed - self._reload_last).total_seconds())
-            time_wait = max(0.0, self._reload_time - time_elapsed)
-            if self.wait(time_wait):
-                if time_wait > 0:
-                    # If we had to wait, then don't call now() twice and instead reference the timestamp from before
-                    # the wait() call, to prevent a shifting time offset due to the execution time.
-                    self._reload_last = time_completed + timedelta(seconds=time_wait)
-                else:
-                    # Otherwise, get the current time, as the reload interval already has shifted.
-                    self._reload_last = now()
-
-                try:
-                    self.reload()
-                except StreamError as err:
-                    log.warning(f"Failed to reload playlist: {err}")
+            self.wait_and_reload()
 
 
 class HLSStreamReader(FilteredStream, SegmentedStreamReader[HLSSegment, Response]):

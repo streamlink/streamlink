@@ -1105,7 +1105,8 @@ class TestHlsPlaylistParseErrors(TestMixinStreamHLS, unittest.TestCase):
         assert mock_log.debug.mock_calls == [call("Reloading playlist")]
         assert mock_log.error.mock_calls == [call("Missing #EXTM3U header")]
 
-    def test_reload(self, mock_log):
+    @patch("streamlink.stream.segmented.polling.log")
+    def test_reload(self, mock_log, *_):
         segments = self.subject([
             Playlist(1, [Segment(0)]),
             self.InvalidPlaylist(),
@@ -1118,8 +1119,8 @@ class TestHlsPlaylistParseErrors(TestMixinStreamHLS, unittest.TestCase):
         self.close()
         self.await_close()
         assert mock_log.warning.mock_calls == [
-            call("Failed to reload playlist: Missing #EXTM3U header"),
-            call("Failed to reload playlist: Missing #EXTM3U header"),
+            call("Reloading failed: Missing #EXTM3U header"),
+            call("Reloading failed: Missing #EXTM3U header"),
         ]
 
     @patch("streamlink.stream.hls.hls.parse_m3u8", Mock(return_value=FakePlaylist(is_master=True)))
