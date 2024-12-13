@@ -5,7 +5,6 @@ import re
 import struct
 from collections.abc import Mapping
 from concurrent.futures import Future
-from datetime import datetime, timedelta
 from typing import Any, ClassVar
 from urllib.parse import urlparse
 
@@ -292,8 +291,6 @@ class HLSStreamWorker(PollingSegmentedStreamWorker[HLSSegment, Response]):
     writer: HLSStreamWriter
     stream: HLSStream
 
-    SEGMENT_QUEUE_TIMING_THRESHOLD_MIN = 5.0
-
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
 
@@ -301,10 +298,8 @@ class HLSStreamWorker(PollingSegmentedStreamWorker[HLSSegment, Response]):
         self.playlist_end: int | None = None
         self.playlist_targetduration: float = 0
         self.playlist_sequence: int = -1
-        self.playlist_sequence_last: datetime = now()
         self.playlist_segments: list[HLSSegment] = []
 
-        self.segment_queue_timing_threshold_factor = self.session.options.get("hls-segment-queue-threshold")
         self.live_edge = self.session.options.get("hls-live-edge")
         self.duration_offset_start = int(self.stream.start_offset + (self.session.options.get("hls-start-offset") or 0))
         self.duration_limit = self.stream.duration or (
@@ -318,6 +313,8 @@ class HLSStreamWorker(PollingSegmentedStreamWorker[HLSSegment, Response]):
             self._reload_time_override = float(self._reload_time_override)
         elif self._reload_time_override not in ("segment", "live-edge"):
             self._reload_time_override = 0
+
+        self._queue_deadline_factor = self.session.options.get("hls-segment-queue-threshold")
 
     def _fetch_playlist(self) -> Response:
         res = self.session.http.get(
@@ -355,6 +352,9 @@ class HLSStreamWorker(PollingSegmentedStreamWorker[HLSSegment, Response]):
 
         if playlist.segments:
             self.process_segments(playlist)
+
+    def get_duration(self) -> float:
+        return self.playlist_targetduration
 
     def _get_reload_time(self, playlist: M3U8[HLSSegment, HLSPlaylist]) -> float:
         if self._reload_time_override == "segment" and playlist.segments:
@@ -397,20 +397,6 @@ class HLSStreamWorker(PollingSegmentedStreamWorker[HLSSegment, Response]):
     def valid_segment(self, segment: HLSSegment) -> bool:
         return segment.num >= self.playlist_sequence
 
-    def _segment_queue_timing_threshold_reached(self) -> bool:
-        if self.segment_queue_timing_threshold_factor <= 0:
-            return False
-
-        threshold = max(
-            self.SEGMENT_QUEUE_TIMING_THRESHOLD_MIN,
-            self.playlist_targetduration * self.segment_queue_timing_threshold_factor,
-        )
-        if now() <= self.playlist_sequence_last + timedelta(seconds=threshold):
-            return False
-
-        log.warning(f"No new segments in playlist for more than {threshold:.2f}s. Stopping...")
-        return True
-
     @staticmethod
     def duration_to_sequence(duration: float, segments: list[HLSSegment]) -> int:
         d = 0.0
@@ -429,7 +415,7 @@ class HLSStreamWorker(PollingSegmentedStreamWorker[HLSSegment, Response]):
 
     def iter_segments(self):
         self._reload_last \
-            = self.playlist_sequence_last \
+            = self._queue_last \
             = now()  # fmt: skip
 
         try:
@@ -496,13 +482,12 @@ class HLSStreamWorker(PollingSegmentedStreamWorker[HLSSegment, Response]):
 
                 self.playlist_sequence = segment.num + 1
 
-            # End of stream
+            # Explicit end of stream
             if self.closed or self.playlist_end is not None and (not queued or self.playlist_sequence > self.playlist_end):
                 return
 
-            if queued:
-                self.playlist_sequence_last = now()
-            elif self._segment_queue_timing_threshold_reached():
+            # Implicit end of stream
+            if self.check_queue_deadline(queued):
                 return
 
             self.wait_and_reload()

@@ -276,7 +276,7 @@ class TestHLSStreamWorker(TestMixinStreamHLS, unittest.TestCase):
     def get_session(self, options=None, *args, **kwargs):
         return super().get_session({**self.OPTIONS, **(options or {})}, *args, **kwargs)
 
-    def test_segment_queue_timing_threshold_reached(self) -> None:
+    def test_queue_deadline_reached(self) -> None:
         self.subject(
             start=False,
             playlists=[
@@ -290,13 +290,13 @@ class TestHLSStreamWorker(TestMixinStreamHLS, unittest.TestCase):
 
         with (
             freezegun.freeze_time(EPOCH) as frozen_time,
-            patch("streamlink.stream.hls.hls.log") as mock_log,
+            patch("streamlink.stream.segmented.polling.log") as mock_log,
         ):
             self.start()
 
             assert worker.handshake_reload.wait_ready(1), "Loads playlist for the first time"
             assert worker.playlist_sequence == -1, "Initial sequence number"
-            assert worker.playlist_sequence_last == EPOCH, "Sets the initial last queue time"
+            assert worker._queue_last == EPOCH, "Sets the initial last queue time"
 
             # first playlist reload has taken one second
             frozen_time.tick(ONE_SECOND)
@@ -304,8 +304,8 @@ class TestHLSStreamWorker(TestMixinStreamHLS, unittest.TestCase):
 
             assert worker.handshake_wait.wait_ready(1), "Arrives at wait() call #1"
             assert worker.playlist_sequence == 1, "Updates the sequence number"
-            assert worker.playlist_sequence_last == EPOCH + ONE_SECOND, "Updates the last queue time"
-            assert worker.playlist_targetduration == 5.0
+            assert worker._queue_last == EPOCH + ONE_SECOND, "Updates the last queue time"
+            assert worker.get_duration() == 5.0
 
             # trigger next reload when the target duration has passed
             frozen_time.tick(targetduration)
@@ -314,8 +314,8 @@ class TestHLSStreamWorker(TestMixinStreamHLS, unittest.TestCase):
 
             assert worker.handshake_wait.wait_ready(1), "Arrives at wait() call #2"
             assert worker.playlist_sequence == 2, "Updates the sequence number again"
-            assert worker.playlist_sequence_last == EPOCH + ONE_SECOND + targetduration, "Updates the last queue time again"
-            assert worker.playlist_targetduration == 5.0
+            assert worker._queue_last == EPOCH + ONE_SECOND + targetduration, "Updates the last queue time again"
+            assert worker.get_duration() == 5.0
 
             for num in range(3, 6):
                 # trigger next reload when the target duration has passed
@@ -325,8 +325,8 @@ class TestHLSStreamWorker(TestMixinStreamHLS, unittest.TestCase):
 
                 assert worker.handshake_wait.wait_ready(1), f"Arrives at wait() call #{num}"
                 assert worker.playlist_sequence == 2, "Sequence number is unchanged"
-                assert worker.playlist_sequence_last == EPOCH + ONE_SECOND + targetduration, "Last queue time is unchanged"
-                assert worker.playlist_targetduration == 5.0
+                assert worker._queue_last == EPOCH + ONE_SECOND + targetduration, "Last queue time is unchanged"
+                assert worker.get_duration() == 5.0
 
             assert mock_log.warning.call_args_list == []
 
@@ -338,9 +338,9 @@ class TestHLSStreamWorker(TestMixinStreamHLS, unittest.TestCase):
             self.await_read(read_all=True)
             self.await_close(1)
 
-            assert mock_log.warning.call_args_list == [call("No new segments in playlist for more than 15.00s. Stopping...")]
+            assert mock_log.warning.call_args_list == [call("No new segments for more than 15.00s. Stopping...")]
 
-    def test_segment_queue_timing_threshold_reached_ignored(self) -> None:
+    def test_queue_deadline_reached_ignored(self) -> None:
         segments = self.subject(
             start=False,
             options={"hls-segment-queue-threshold": 0},
@@ -357,7 +357,7 @@ class TestHLSStreamWorker(TestMixinStreamHLS, unittest.TestCase):
 
             assert worker.handshake_reload.wait_ready(1), "Loads playlist for the first time"
             assert worker.playlist_sequence == -1, "Initial sequence number"
-            assert worker.playlist_sequence_last == EPOCH, "Sets the initial last queue time"
+            assert worker._queue_last == EPOCH, "Sets the initial last queue time"
 
             # first playlist reload has taken one second
             frozen_time.tick(ONE_SECOND)
@@ -365,8 +365,8 @@ class TestHLSStreamWorker(TestMixinStreamHLS, unittest.TestCase):
 
             assert worker.handshake_wait.wait_ready(1), "Arrives at first wait() call"
             assert worker.playlist_sequence == 1, "Updates the sequence number"
-            assert worker.playlist_sequence_last == EPOCH + ONE_SECOND, "Updates the last queue time"
-            assert worker.playlist_targetduration == 5.0
+            assert worker._queue_last == EPOCH + ONE_SECOND, "Updates the last queue time"
+            assert worker.get_duration() == 5.0
             assert self.await_read() == self.content(segments)
 
             # keep reloading a couple of times
@@ -377,7 +377,7 @@ class TestHLSStreamWorker(TestMixinStreamHLS, unittest.TestCase):
 
                 assert worker.handshake_wait.wait_ready(1), f"Arrives at wait() #{num + 1}"
                 assert worker.playlist_sequence == 1, "Sequence number is unchanged"
-                assert worker.playlist_sequence_last == EPOCH + ONE_SECOND, "Last queue time is unchanged"
+                assert worker._queue_last == EPOCH + ONE_SECOND, "Last queue time is unchanged"
 
         assert self.thread.data == [], "No new data"
         assert worker.is_alive()
@@ -385,7 +385,7 @@ class TestHLSStreamWorker(TestMixinStreamHLS, unittest.TestCase):
         # make stream end gracefully to avoid any unnecessary thread blocking
         self.thread.reader.writer.put(None)
 
-    def test_segment_queue_timing_threshold_reached_min(self) -> None:
+    def test_queue_deadline_reached_min(self) -> None:
         self.subject(
             start=False,
             playlists=[
@@ -398,13 +398,13 @@ class TestHLSStreamWorker(TestMixinStreamHLS, unittest.TestCase):
 
         with (
             freezegun.freeze_time(EPOCH) as frozen_time,
-            patch("streamlink.stream.hls.hls.log") as mock_log,
+            patch("streamlink.stream.segmented.polling.log") as mock_log,
         ):
             self.start()
 
             assert worker.handshake_reload.wait_ready(1), "Loads playlist for the first time"
             assert worker.playlist_sequence == -1, "Initial sequence number"
-            assert worker.playlist_sequence_last == EPOCH, "Sets the initial last queue time"
+            assert worker._queue_last == EPOCH, "Sets the initial last queue time"
 
             # first playlist reload has taken one second
             frozen_time.tick(ONE_SECOND)
@@ -412,8 +412,8 @@ class TestHLSStreamWorker(TestMixinStreamHLS, unittest.TestCase):
 
             assert worker.handshake_wait.wait_ready(1), "Arrives at wait() call #1"
             assert worker.playlist_sequence == 1, "Updates the sequence number"
-            assert worker.playlist_sequence_last == EPOCH + ONE_SECOND, "Updates the last queue time"
-            assert worker.playlist_targetduration == 1.0
+            assert worker._queue_last == EPOCH + ONE_SECOND, "Updates the last queue time"
+            assert worker.get_duration() == 1.0
 
             for num in range(2, 7):
                 # trigger next reload when the target duration has passed
@@ -423,8 +423,8 @@ class TestHLSStreamWorker(TestMixinStreamHLS, unittest.TestCase):
 
                 assert worker.handshake_wait.wait_ready(1), f"Arrives at wait() call #{num}"
                 assert worker.playlist_sequence == 1, "Sequence number is unchanged"
-                assert worker.playlist_sequence_last == EPOCH + ONE_SECOND, "Last queue time is unchanged"
-                assert worker.playlist_targetduration == 1.0
+                assert worker._queue_last == EPOCH + ONE_SECOND, "Last queue time is unchanged"
+                assert worker.get_duration() == 1.0
 
             assert mock_log.warning.call_args_list == []
 
@@ -433,7 +433,7 @@ class TestHLSStreamWorker(TestMixinStreamHLS, unittest.TestCase):
             self.await_playlist_wait(1)
             self.await_reload(1)
 
-            assert mock_log.warning.call_args_list == [call("No new segments in playlist for more than 5.00s. Stopping...")]
+            assert mock_log.warning.call_args_list == [call("No new segments for more than 5.00s. Stopping...")]
 
     def test_playlist_reload_offset(self) -> None:
         segments = self.subject(
@@ -1033,7 +1033,7 @@ class TestHlsReloadTime(TestMixinStreamHLS, unittest.TestCase):
 
 @patch("streamlink.stream.hls.hls.log")
 @patch("streamlink.stream.hls.hls.HLSStreamWorker.wait", Mock(return_value=True))
-@patch("streamlink.stream.hls.hls.HLSStreamWorker._segment_queue_timing_threshold_reached", Mock(return_value=False))
+@patch("streamlink.stream.hls.hls.HLSStreamWorker.check_queue_deadline", Mock(return_value=False))
 class TestHlsPlaylistParseErrors(TestMixinStreamHLS, unittest.TestCase):
     __stream__ = EventedWriterHLSStream
 
