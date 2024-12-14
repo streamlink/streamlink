@@ -72,7 +72,7 @@ class TestDASHStreamParseManifest:
         mpd.return_value = Mock(periods=[Mock(adaptationSets=[adaptationset])])
 
         streams = DASHStream.parse_manifest(session, "http://test/manifest.mpd")
-        assert mpd.call_args_list == [call(ANY, url="http://test/manifest.mpd", base_url="http://test")]
+        assert mpd.call_args_list == [call(ANY, url="http://test/manifest.mpd", base_url="http://test/manifest.mpd")]
         assert sorted(streams.keys()) == sorted(["720p", "1080p"])
 
     def test_audio_only(self, session: Streamlink, mpd: Mock):
@@ -86,7 +86,7 @@ class TestDASHStreamParseManifest:
         mpd.return_value = Mock(periods=[Mock(adaptationSets=[adaptationset])])
 
         streams = DASHStream.parse_manifest(session, "http://test/manifest.mpd")
-        assert mpd.call_args_list == [call(ANY, url="http://test/manifest.mpd", base_url="http://test")]
+        assert mpd.call_args_list == [call(ANY, url="http://test/manifest.mpd", base_url="http://test/manifest.mpd")]
         assert sorted(streams.keys()) == sorted(["a128k", "a256k"])
 
     @pytest.mark.parametrize(
@@ -143,7 +143,7 @@ class TestDASHStreamParseManifest:
             with_video_only=with_video_only,
             with_audio_only=with_audio_only,
         )
-        assert mpd.call_args_list == [call(ANY, url="http://test/manifest.mpd", base_url="http://test")]
+        assert mpd.call_args_list == [call(ANY, url="http://test/manifest.mpd", base_url="http://test/manifest.mpd")]
         assert list(streams.keys()) == expected
 
     def test_audio_single(self, session: Streamlink, mpd: Mock):
@@ -158,7 +158,7 @@ class TestDASHStreamParseManifest:
         mpd.return_value = Mock(periods=[Mock(adaptationSets=[adaptationset])])
 
         streams = DASHStream.parse_manifest(session, "http://test/manifest.mpd")
-        assert mpd.call_args_list == [call(ANY, url="http://test/manifest.mpd", base_url="http://test")]
+        assert mpd.call_args_list == [call(ANY, url="http://test/manifest.mpd", base_url="http://test/manifest.mpd")]
         assert sorted(streams.keys()) == sorted(["720p", "1080p"])
 
     def test_audio_multi(self, session: Streamlink, mpd: Mock):
@@ -174,7 +174,7 @@ class TestDASHStreamParseManifest:
         mpd.return_value = Mock(periods=[Mock(adaptationSets=[adaptationset])])
 
         streams = DASHStream.parse_manifest(session, "http://test/manifest.mpd")
-        assert mpd.call_args_list == [call(ANY, url="http://test/manifest.mpd", base_url="http://test")]
+        assert mpd.call_args_list == [call(ANY, url="http://test/manifest.mpd", base_url="http://test/manifest.mpd")]
         assert sorted(streams.keys()) == sorted(["720p+a128k", "1080p+a128k", "720p+a256k", "1080p+a256k"])
 
     def test_audio_multi_lang(self, session: Streamlink, mpd: Mock):
@@ -190,7 +190,7 @@ class TestDASHStreamParseManifest:
         mpd.return_value = Mock(periods=[Mock(adaptationSets=[adaptationset])])
 
         streams = DASHStream.parse_manifest(session, "http://test/manifest.mpd")
-        assert mpd.call_args_list == [call(ANY, url="http://test/manifest.mpd", base_url="http://test")]
+        assert mpd.call_args_list == [call(ANY, url="http://test/manifest.mpd", base_url="http://test/manifest.mpd")]
         assert sorted(streams.keys()) == sorted(["720p", "1080p"])
         assert getattr(streams["720p"].audio_representation, "lang", None) == "en"
         assert getattr(streams["1080p"].audio_representation, "lang", None) == "en"
@@ -208,7 +208,7 @@ class TestDASHStreamParseManifest:
         mpd.return_value = Mock(periods=[Mock(adaptationSets=[adaptationset])])
 
         streams = DASHStream.parse_manifest(session, "http://test/manifest.mpd")
-        assert mpd.call_args_list == [call(ANY, url="http://test/manifest.mpd", base_url="http://test")]
+        assert mpd.call_args_list == [call(ANY, url="http://test/manifest.mpd", base_url="http://test/manifest.mpd")]
         assert sorted(streams.keys()) == sorted(["720p", "1080p"])
         assert getattr(streams["720p"].audio_representation, "lang", None) == "eng"
         assert getattr(streams["1080p"].audio_representation, "lang", None) == "eng"
@@ -225,7 +225,7 @@ class TestDASHStreamParseManifest:
         mpd.return_value = Mock(periods=[Mock(adaptationSets=[adaptationset])])
 
         streams = DASHStream.parse_manifest(session, "http://test/manifest.mpd")
-        assert mpd.call_args_list == [call(ANY, url="http://test/manifest.mpd", base_url="http://test")]
+        assert mpd.call_args_list == [call(ANY, url="http://test/manifest.mpd", base_url="http://test/manifest.mpd")]
         assert sorted(streams.keys()) == sorted(["720p", "1080p"])
         assert getattr(streams["720p"].audio_representation, "lang", None) == "en_no_voice"
         assert getattr(streams["1080p"].audio_representation, "lang", None) == "en_no_voice"
@@ -245,7 +245,7 @@ class TestDASHStreamParseManifest:
         mpd.return_value = Mock(periods=[Mock(adaptationSets=[adaptationset])])
 
         streams = DASHStream.parse_manifest(session, "http://test/manifest.mpd")
-        assert mpd.call_args_list == [call(ANY, url="http://test/manifest.mpd", base_url="http://test")]
+        assert mpd.call_args_list == [call(ANY, url="http://test/manifest.mpd", base_url="http://test/manifest.mpd")]
         assert sorted(streams.keys()) == sorted(["720p", "1080p"])
         assert getattr(streams["720p"].audio_representation, "lang", None) == "es"
         assert getattr(streams["1080p"].audio_representation, "lang", None) == "es"
@@ -264,7 +264,7 @@ class TestDASHStreamParseManifest:
         mpd.return_value = Mock(periods=[Mock(adaptationSets=[adaptationset])])
 
         streams = DASHStream.parse_manifest(session, "http://test/manifest.mpd")
-        assert mpd.call_args_list == [call(ANY, url="http://test/manifest.mpd", base_url="http://test")]
+        assert mpd.call_args_list == [call(ANY, url="http://test/manifest.mpd", base_url="http://test/manifest.mpd")]
         assert sorted(streams.keys()) == sorted(["720p", "1080p", "1080p_alt", "1080p_alt2"])
 
     # Verify the fix for https://github.com/streamlink/streamlink/issues/4217
@@ -280,7 +280,7 @@ class TestDASHStreamParseManifest:
         mpd.return_value = Mock(periods=[Mock(adaptationSets=[adaptationset])])
 
         streams = DASHStream.parse_manifest(session, "http://test/manifest.mpd")
-        assert mpd.call_args_list == [call(ANY, url="http://test/manifest.mpd", base_url="http://test")]
+        assert mpd.call_args_list == [call(ANY, url="http://test/manifest.mpd", base_url="http://test/manifest.mpd")]
         assert getattr(streams["1080p"].video_representation, "bandwidth", None) == pytest.approx(128.0)
         assert getattr(streams["1080p_alt"].video_representation, "bandwidth", None) == pytest.approx(64.0)
         assert getattr(streams["1080p_alt2"].video_representation, "bandwidth", None) == pytest.approx(32.0)
@@ -319,10 +319,10 @@ class TestDASHStreamParseManifest:
     #       This test currently achieves nothing... (manifest fixture added in 7aada92)
     def test_segments_number_time(self, session: Streamlink, mpd: Mock):
         with xml("dash/test_9.mpd") as mpd_xml:
-            mpd.return_value = MPD(mpd_xml, base_url="http://test", url="http://test/manifest.mpd")
+            mpd.return_value = MPD(mpd_xml, base_url="http://test/manifest.mpd", url="http://test/manifest.mpd")
 
         streams = DASHStream.parse_manifest(session, "http://test/manifest.mpd")
-        assert mpd.call_args_list == [call(ANY, url="http://test/manifest.mpd", base_url="http://test")]
+        assert mpd.call_args_list == [call(ANY, url="http://test/manifest.mpd", base_url="http://test/manifest.mpd")]
         assert list(streams.keys()) == ["480p"]
 
 

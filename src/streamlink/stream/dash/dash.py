@@ -9,7 +9,6 @@ from contextlib import contextmanager, suppress
 from datetime import datetime
 from time import time
 from typing import Any
-from urllib.parse import urlparse, urlunparse
 
 from requests import Response
 
@@ -253,11 +252,7 @@ class DASHStream(Stream):
         manifest: str = res.text
         url: str = res.url
 
-        urlp = list(urlparse(url))
-        urlp[2], _ = urlp[2].rsplit("/", 1)
-        base_url: str = urlunparse(urlp)
-
-        return manifest, dict(url=url, base_url=base_url)
+        return manifest, dict(url=url, base_url=url)
 
     @staticmethod
     def parse_mpd(manifest: str, mpd_params: Mapping[str, Any]) -> MPD:
