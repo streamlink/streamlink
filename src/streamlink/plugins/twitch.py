@@ -36,6 +36,7 @@ from streamlink.exceptions import NoStreamsError, PluginError
 from streamlink.plugin import Plugin, pluginargument, pluginmatcher
 from streamlink.plugin.api import validate
 from streamlink.session import Streamlink
+from streamlink.stream.ffmpegmux import FFMPEGMuxer
 from streamlink.stream.hls import (
     M3U8,
     DateRange,
@@ -46,6 +47,7 @@ from streamlink.stream.hls import (
     HLSStreamWorker,
     HLSStreamWriter,
     M3U8Parser,
+    MuxedHLSStream,
     parse_tag,
 )
 from streamlink.stream.http import HTTPStream
@@ -251,10 +253,41 @@ class TwitchHLSStream(HLSStream):
     __reader__ = TwitchHLSStreamReader
     __parser__ = TwitchM3U8Parser
 
+    CODECS_REMUX = "av01", "hev1"
+
     def __init__(self, *args, disable_ads: bool = False, low_latency: bool = False, **kwargs):
         super().__init__(*args, **kwargs)
         self.disable_ads = disable_ads
         self.low_latency = low_latency
+
+    @classmethod
+    def parse_variant_playlist(cls, session, url, **kwargs):
+        supported_codecs = kwargs.pop("supported_codecs", [])
+        streams = super().parse_variant_playlist(session, url, **kwargs)
+
+        remux = supported_codecs != ["h264"] and FFMPEGMuxer.is_usable(session)
+
+        res = {}
+        for name, stream in streams.items():
+            # digustingly dirty hack: read codec info like that until the whole stream selection has been rewritten
+            codecs = next((pl.stream_info.codecs for pl in stream.multivariant.playlists if pl.uri == stream.url), None)
+            if (
+                not remux
+                or not codecs
+                or not any(codec.split(".", 1)[0] in cls.CODECS_REMUX for codec in codecs)
+            ):  # fmt: skip
+                res[name] = stream
+            else:
+                res[name] = MuxedHLSStream(
+                    session,
+                    video=stream.url,
+                    audio=[],
+                    hlsstream=TwitchHLSStream,
+                    multivariant=stream.multivariant,
+                    **kwargs,
+                )
+
+        return res
 
 
 class UsherService:
@@ -957,6 +990,7 @@ class Twitch(Plugin):
                 check_streams=True,
                 disable_ads=self.get_option("disable-ads"),
                 low_latency=self.get_option("low-latency"),
+                supported_codecs=self.get_option("supported-codecs"),
                 **extra_params,
             )
         except OSError as err:
