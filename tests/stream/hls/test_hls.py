@@ -213,7 +213,7 @@ class TestHLSStream(TestMixinStreamHLS, unittest.TestCase):
 # TODO: finally rewrite the segmented/HLS test setup using pytest and replace redundant setups with parametrization
 @patch("streamlink.stream.hls.hls.HLSStreamWorker.wait", Mock(return_value=True))
 class TestHLSStreamPlaylistReloadDiscontinuity(TestMixinStreamHLS, unittest.TestCase):
-    @patch("streamlink.stream.hls.hls.log")
+    @patch("streamlink.stream.segmented.polling.log")
     def test_no_discontinuity(self, mock_log: Mock):
         segments = self.subject([
             Playlist(0, [Segment(0), Segment(1)]),
@@ -226,7 +226,7 @@ class TestHLSStreamPlaylistReloadDiscontinuity(TestMixinStreamHLS, unittest.Test
         assert all(self.called(s) for s in segments.values())
         assert mock_log.warning.call_args_list == []
 
-    @patch("streamlink.stream.hls.hls.log")
+    @patch("streamlink.stream.segmented.polling.log")
     def test_discontinuity_single_segment(self, mock_log: Mock):
         segments = self.subject([
             Playlist(0, [Segment(0), Segment(1)]),
@@ -243,7 +243,7 @@ class TestHLSStreamPlaylistReloadDiscontinuity(TestMixinStreamHLS, unittest.Test
             call("Skipped segment 7 after playlist reload. This is unsupported and will result in incoherent output data."),
         ]
 
-    @patch("streamlink.stream.hls.hls.log")
+    @patch("streamlink.stream.segmented.polling.log")
     def test_discontinuity_multiple_segments(self, mock_log: Mock):
         segments = self.subject([
             Playlist(0, [Segment(0), Segment(1)]),
