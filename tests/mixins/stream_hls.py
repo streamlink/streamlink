@@ -16,7 +16,7 @@ from tests.testutils.handshake import Handshake
 TIMEOUT_AWAIT_READ = 5
 TIMEOUT_AWAIT_READ_ONCE = 5
 TIMEOUT_AWAIT_WRITE = 60  # https://github.com/streamlink/streamlink/issues/3868
-TIMEOUT_AWAIT_PLAYLIST_RELOAD = 5
+TIMEOUT_AWAIT_RELOAD = 5
 TIMEOUT_AWAIT_PLAYLIST_WAIT = 5
 TIMEOUT_AWAIT_CLOSE = 5
 
@@ -100,9 +100,9 @@ class EventedHLSStreamWorker(_HLSStreamWorker):
         self.handshake_wait = Handshake()
         self.time_wait = None
 
-    def reload_playlist(self):
+    def reload(self):
         with self.handshake_reload():
-            return super().reload_playlist()
+            return super().reload()
 
     def wait(self, time):
         self.time_wait = time
@@ -251,7 +251,7 @@ class TestMixinStreamHLS(unittest.TestCase):
         thread.join(timeout)
         assert self.thread.reader.closed, "Stream reader is closed"
 
-    def await_playlist_reload(self, timeout=TIMEOUT_AWAIT_PLAYLIST_RELOAD) -> None:
+    def await_reload(self, timeout=TIMEOUT_AWAIT_RELOAD) -> None:
         worker: EventedHLSStreamWorker = self.thread.reader.worker  # type: ignore[assignment]
         assert worker.is_alive()
         assert worker.handshake_reload.step(timeout)
