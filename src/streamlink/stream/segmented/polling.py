@@ -85,3 +85,16 @@ class PollingSegmentedStreamWorker(SegmentedStreamWorker[TSegment, TResult], met
 
         log.warning(f"No new segments for more than {deadline:.2f}s. Stopping...")
         return True
+
+    # noinspection PyMethodMayBeStatic
+    def check_queue_gap(self, segment: TSegment, position: int) -> None:
+        offset = segment.num - position
+        if offset > 0:
+            log.warning(
+                (
+                    f"Segments {position}-{segment.num - 1} were missing after reloading. "
+                    if offset > 1
+                    else f"Segment {position} was missing after reloading. "
+                )
+                + "This is unsupported and will result in incoherent output data.",
+            )  # fmt: skip
