@@ -25,13 +25,13 @@ class TestInit:
             pytest.param(
                 None,
                 None,
-                pytest.raises(WebbrowserError, match="^Could not find web browser executable: Please set the path "),
+                pytest.raises(WebbrowserError, match=r"^Could not find web browser executable: Please set the path "),
                 id="Failure with unset path",
             ),
             pytest.param(
                 "custom",
                 None,
-                pytest.raises(WebbrowserError, match="^Invalid web browser executable: custom$"),
+                pytest.raises(WebbrowserError, match=r"^Invalid web browser executable: custom$"),
                 id="Failure with custom path",
             ),
             pytest.param(

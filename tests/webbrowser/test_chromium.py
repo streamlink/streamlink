@@ -26,7 +26,7 @@ class TestInit:
                 None,
                 pytest.raises(
                     WebbrowserError,
-                    match="^Could not find Chromium-based web browser executable: Please set the path ",
+                    match=r"^Could not find Chromium-based web browser executable: Please set the path ",
                 ),
                 id="Failure with unset path",
             ),
@@ -35,7 +35,7 @@ class TestInit:
                 None,
                 pytest.raises(
                     WebbrowserError,
-                    match="^Invalid web browser executable: custom$",
+                    match=r"^Invalid web browser executable: custom$",
                 ),
                 id="Failure with custom path",
             ),

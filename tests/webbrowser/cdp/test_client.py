@@ -129,7 +129,7 @@ class TestLaunch:
         [
             pytest.param(
                 {"webbrowser": False},
-                pytest.raises(CDPError, match="^The webbrowser API has been disabled by the user$"),
+                pytest.raises(CDPError, match=r"^The webbrowser API has been disabled by the user$"),
                 id="Raises CDPError",
             ),
         ],
