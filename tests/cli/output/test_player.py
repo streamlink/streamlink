@@ -367,14 +367,14 @@ class TestPlayerOutput:
             pytest.param(
                 dict(path=Path("foo")),
                 None,
-                pytest.raises(FileNotFoundError, match="^Player executable not found$"),
+                pytest.raises(FileNotFoundError, match=r"^Player executable not found$"),
                 False,
                 id="Player not found",
             ),
             pytest.param(
                 dict(path=Path('"foo bar"')),
                 None,
-                pytest.raises(FileNotFoundError, match="^Player executable not found$"),
+                pytest.raises(FileNotFoundError, match=r"^Player executable not found$"),
                 True,
                 id="Player not found with quotation warning",
             ),

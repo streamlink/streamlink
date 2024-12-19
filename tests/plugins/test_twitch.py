@@ -877,7 +877,7 @@ class TestTwitchAPIAccessToken:
         indirect=True,
     )
     def test_auth_failure(self, plugin: Twitch, mock: rm.Mocker):
-        with pytest.raises(PluginError, match='^Unauthorized: The "Authorization" token is invalid\\.$'):
+        with pytest.raises(PluginError, match=r'^Unauthorized: The "Authorization" token is invalid\.$'):
             plugin._access_token(True, "channelname")
         assert len(mock.request_history) == 2, "Always tries again on error, with integrity-token on second attempt"
 
