@@ -31,7 +31,7 @@ class Streamlink:
 
     def __init__(
         self,
-        options: Mapping[str, Any] | None = None,
+        options: Mapping[str, Any] | Options | None = None,
         *,
         plugins_builtin: bool = True,
         plugins_lazy: bool = True,
