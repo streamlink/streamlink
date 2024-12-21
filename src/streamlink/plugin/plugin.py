@@ -536,7 +536,10 @@ class Plugin(metaclass=PluginMeta):
         cookie_filter = cookie_filter or (lambda c: True)
         saved = []
 
-        for cookie in filter(cookie_filter, self.session.http.cookies):
+        for cookie in self.session.http.cookies:
+            if not cookie_filter(cookie):
+                continue
+
             cookie_dict = {}
             for key in _COOKIE_KEYS:
                 cookie_dict[key] = getattr(cookie, key, None)
