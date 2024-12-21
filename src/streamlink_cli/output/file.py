@@ -10,7 +10,7 @@ from streamlink_cli.output.abc import Output
 
 if is_win32:
     import msvcrt
-    from os import O_BINARY
+    from os import O_BINARY  # type: ignore[attr-defined]
 
 
 class FileOutput(Output):
