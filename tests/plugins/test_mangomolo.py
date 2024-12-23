@@ -12,19 +12,31 @@ class TestPluginCanHandleUrlMangomolo(PluginCanHandleUrl):
             + "&autoplay=true&filter=none&signature=9ea6c8ed03b8de6e339d6df2b0685f25&app_id=43",
         ),
         (
-            "mediagovkw",
-            "https://media.gov.kw/LiveTV.aspx?PanChannel=KTV1",
+            "51comkw",
+            "https://51.com.kw/live",
         ),
         (
-            "mediagovkw",
-            "https://www.media.gov.kw/LiveTV.aspx?PanChannel=KTV1",
+            "51comkw",
+            "https://51.com.kw/live/",
         ),
         (
-            "mediagovkw",
-            "https://media.gov.kw/LiveTV.aspx?PanChannel=KTVSports",
+            "51comkw",
+            "https://51.com.kw/live/355/AlKuwait",
         ),
         (
-            "mediagovkw",
-            "https://www.media.gov.kw/LiveTV.aspx?PanChannel=KTVSports",
+            "51comkw",
+            "https://51.com.kw/live/361/KTV2",
+        ),
+        (
+            "51comkw",
+            "https://51.com.kw/live/356/News",
+        ),
+        (
+            "51comkw",
+            "https://51.com.kw/live/362/Sport",
+        ),
+        (
+            "51comkw",
+            "https://51.com.kw/live/357/Sport2",
         ),
     ]
