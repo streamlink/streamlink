@@ -23,8 +23,8 @@ log = logging.getLogger(__name__)
     pattern=re.compile(r"https?://player\.mangomolo\.com/v1/"),
 )
 @pluginmatcher(
-    name="mediagovkw",
-    pattern=re.compile(r"https?://(www\.)?media\.gov\.kw/"),
+    name="51comkw",
+    pattern=re.compile(r"https?://51\.com\.kw/live(?:/|$)"),
 )
 class Mangomolo(Plugin):
     def _get_player_url(self):
