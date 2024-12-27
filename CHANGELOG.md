@@ -1,5 +1,28 @@
 # Changelog
 
+## streamlink 7.1.0 (2024-12-28)
+
+- Added: `--show-matchers=pluginname` CLI argument ([#6287](https://github.com/streamlink/streamlink/pull/6287))
+- Updated: `Streamlink` and `Plugin` constructors to allow both `Mapping` and `Options` as `options` types ([#6311](https://github.com/streamlink/streamlink/pull/6311))
+- Fixed: uncaught DASH errors if FFmpeg is unavailable ([#6306](https://github.com/streamlink/streamlink/pull/6306))  
+  As a side effect, if FFmpeg is unavailable, DASH streams will only return one sub-stream of the video and/or audio streams that would be muxed otherwise.
+- Fixed: incorrect DASH segment duration in timeline manifests ([#6323](https://github.com/streamlink/streamlink/pull/6323))
+- Fixed: dynamic DASH streams incorrectly requiring the `publishTime` and `availabilityStartTime` attributes ([#6324](https://github.com/streamlink/streamlink/pull/6324))
+- Fixed: incorrect DASH segment and manifest base-URL joining ([#6328](https://github.com/streamlink/streamlink/pull/6328), [#6338](https://github.com/streamlink/streamlink/pull/6338))
+- Fixed: `matchers` and `arguments` objects being shared in inherited `Plugin` classes ([#6297](https://github.com/streamlink/streamlink/pull/6297), [#6298](https://github.com/streamlink/streamlink/pull/6298))
+- Updated plugins:
+  - various: replaced verbose URL matcher regexes of most plugins with multiple simple ones ([#6285](https://github.com/streamlink/streamlink/pull/6285))
+  - bilibili: updated schema to include MPEG-TS HLS streams ([#6332](https://github.com/streamlink/streamlink/pull/6332))
+  - bilibili: added back high-res `HTTPStream` streams from the v1 API with higher priority ([#5782](https://github.com/streamlink/streamlink/pull/5782))
+  - mangomolo: replaced media.gov.kw with 51.com.kw ([#6353](https://github.com/streamlink/streamlink/pull/6353))
+  - soop: rewritten authentication ([#6321](https://github.com/streamlink/streamlink/pull/6321))
+  - vkplay: renamed to vkvideo and updated matcher ([#6319](https://github.com/streamlink/streamlink/pull/6319))
+  - welt: fixed schema ([#6301](https://github.com/streamlink/streamlink/pull/6301))
+- Build: removed `typing-extensions` from runtime dependencies ([#6314](https://github.com/streamlink/streamlink/pull/6314))
+
+[Full changelog](https://github.com/streamlink/streamlink/compare/7.0.0...7.1.0)
+
+
 ## streamlink 7.0.0 (2024-11-04)
 
 - BREAKING: dropped support for [EOL Python 3.8](https://peps.python.org/pep-0569/#lifespan) (Win 7/8 are now unsupported) ([#6230](https://github.com/streamlink/streamlink/pull/6230))
