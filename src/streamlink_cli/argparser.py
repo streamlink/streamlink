@@ -274,6 +274,8 @@ def build_parser():
         metavar="PLUGIN",
         help="""
             Show the list of matchers of a specific plugin (URL regex pattern with opt. priority and opt. name).
+
+            The output is a human-readable pseudo YAML format. Please use --json when reading matcher data programmatically.
         """,
     )
     general.add_argument(
