@@ -6,7 +6,9 @@ from textwrap import dedent
 import pytest
 
 import streamlink_cli.main
-from streamlink.plugin import HIGH_PRIORITY, NORMAL_PRIORITY, Plugin, pluginmatcher
+
+# noinspection PyProtectedMember
+from streamlink.plugin.plugin import HIGH_PRIORITY, NORMAL_PRIORITY, Matcher, Matchers, Plugin, pluginmatcher
 from streamlink.session import Streamlink
 
 
@@ -20,6 +22,11 @@ def session(session: Streamlink):
             pass
 
     session.plugins.update({"plugin": MyPlugin})
+
+    # noinspection PyProtectedMember
+    session.plugins._matchers["lazy"] = Matchers(
+        Matcher(re.compile(r"FOO"), priority=NORMAL_PRIORITY),
+    )
 
     return session
 
@@ -66,7 +73,14 @@ def test_plugin_not_found(capsys: pytest.CaptureFixture[str], argv: list[str], o
                     baz
                     qux
             """).lstrip(),
-            id="no-json",
+            id="non-lazy-no-json",
+        ),
+        pytest.param(
+            ["--show-matchers", "lazy"],
+            dedent("""
+                - pattern: FOO
+            """).lstrip(),
+            id="lazy-no-json",
         ),
         pytest.param(
             ["--show-matchers", "plugin", "--json"],
@@ -93,6 +107,20 @@ def test_plugin_not_found(capsys: pytest.CaptureFixture[str], argv: list[str], o
                 ]
             """).lstrip(),
             id="json",
+        ),
+        pytest.param(
+            ["--show-matchers", "lazy", "--json"],
+            dedent(f"""
+                [
+                  {{
+                    "name": null,
+                    "priority": {NORMAL_PRIORITY},
+                    "flags": 0,
+                    "pattern": "FOO"
+                  }}
+                ]
+            """).lstrip(),
+            id="non-lazy-json",
         ),
     ],
     indirect=["argv"],
