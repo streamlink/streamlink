@@ -1,5 +1,12 @@
 # Changelog
 
+## streamlink 7.1.1 (2024-12-28)
+
+- Fixed: `--show-matchers=pluginname` not working when plugins are loaded lazily ([#6361](https://github.com/streamlink/streamlink/pull/6361))
+
+[Full changelog](https://github.com/streamlink/streamlink/compare/7.1.0...7.1.1)
+
+
 ## streamlink 7.1.0 (2024-12-28)
 
 - Added: `--show-matchers=pluginname` CLI argument ([#6287](https://github.com/streamlink/streamlink/pull/6287))
