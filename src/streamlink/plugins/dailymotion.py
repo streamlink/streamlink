@@ -124,11 +124,10 @@ class DailyMotion(Plugin):
         return data["list"][0]["id"]
 
     def _get_streams(self):
-        media_id = self.match.group("media_id")
-        user = self.match.group("user")
-
-        if not media_id and user:
-            media_id = self._get_media_id(user)
+        if self.matches["user"]:
+            media_id = self._get_media_id(self.match["user"])
+        else:
+            media_id = self.match["media_id"]
 
         if media_id:
             log.debug(f"Found media ID: {media_id}")
