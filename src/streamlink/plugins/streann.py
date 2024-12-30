@@ -135,7 +135,7 @@ class Streann(Plugin):
         return data["token"]
 
     def _get_streams(self):
-        if not self.matches[0]:
+        if not self.matches["streann"]:
             self._domain = urlparse(self.url).netloc
             iframes = self.session.http.get(
                 self.url,

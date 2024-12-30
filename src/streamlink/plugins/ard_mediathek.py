@@ -56,7 +56,7 @@ class ARDMediathek(Plugin):
         )
         if not data_json:
             data_json = self.session.http.get(
-                self._URL_API.format(item=self.match.group("id_live") or self.match.group("id_video")),
+                self._URL_API.format(item=self.match["id_live"] if self.matches["live"] else self.match["id_video"]),
                 params={
                     "devicetype": "pc",
                     "embedded": "false",
