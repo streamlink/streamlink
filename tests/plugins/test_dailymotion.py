@@ -9,6 +9,8 @@ class TestPluginCanHandleUrlDailyMotion(PluginCanHandleUrl):
         (("user", "https://www.dailymotion.com/france24"), {"user": "france24"}),
         (("media", "https://www.dailymotion.com/video/x8dmdzz"), {"media_id": "x8dmdzz"}),
         (("media", "https://www.dailymotion.com/embed/video/x8dmdzz"), {"media_id": "x8dmdzz"}),
+        (("lequipe", "https://www.lequipe.fr/tv/videos/live/k3HiS3JB0BsORKqwC49"), {}),
+        (("lequipe", "https://www.lequipe.fr/tv/replay/le-resume-de-la-mass-start-du-grand-bornand/20201780"), {}),
     ]
 
     should_not_match = [
