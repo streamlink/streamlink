@@ -205,10 +205,8 @@ class BBCiPlayer(Plugin):
             log.error("Could not authenticate, check your username and password")
             return
 
-        episode_id = self.match.group("episode_id")
-        channel_name = self.match.group("channel_name")
-
-        if episode_id:
+        if self.matches["episode"]:
+            episode_id = self.match["episode_id"]
             log.debug(f"Loading streams for episode: {episode_id}")
             vpid = self.find_vpid(self.url)
             if vpid:
@@ -216,7 +214,9 @@ class BBCiPlayer(Plugin):
                 yield from self.mediaselector(vpid)
             else:
                 log.error(f"Could not find VPID for episode {episode_id}")
-        elif channel_name:
+
+        elif self.matches["live"]:
+            channel_name = self.match["channel_name"]
             log.debug(f"Loading stream for live channel: {channel_name}")
             if self.get_option("hd"):
                 tvip = f"{self.find_tvip(self.url, master=True)}_hd"

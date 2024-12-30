@@ -167,12 +167,12 @@ class Picarto(Plugin):
     def _get_streams(self):
         m = self.match.groupdict()
 
-        if m["po_vod_id"] or m["vod_id"]:
+        if m.get("po_vod_id") or m.get("vod_id"):
             log.debug("Type=VOD")
-            return self.get_vod(m["po_vod_id"] or m["vod_id"])
-        elif m["po_user"] or m["user"]:
+            return self.get_vod(m.get("po_vod_id") or m.get("vod_id"))
+        elif m.get("po_user") or m.get("user"):
             log.debug("Type=Live")
-            return self.get_live(m["po_user"] or m["user"])
+            return self.get_live(m.get("po_user") or m.get("user"))
 
 
 __plugin__ = Picarto

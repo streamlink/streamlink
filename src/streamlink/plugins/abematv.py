@@ -222,9 +222,8 @@ class AbemaTV(Plugin):
         jsonres = self.session.http.json(res, schema=self._USER_SCHEMA)
         self.usertoken = jsonres["token"]  # for authorzation
 
-        matchresult = self.match
-        if matchresult.group("onair"):
-            onair = matchresult.group("onair")
+        if self.matches["onair"]:
+            onair = self.match["onair"]
             if onair == "news-global":
                 self._CHANNEL = update_qsd(self._CHANNEL, {"division": "1"})
             res = self.session.http.get(self._CHANNEL)
@@ -236,14 +235,14 @@ class AbemaTV(Plugin):
             else:
                 raise NoStreamsError
             playlisturl = channel["playback"]["hls"]
-        elif matchresult.group("episode"):
-            episode = matchresult.group("episode")
+        elif self.matches["episode"]:
+            episode = self.match["episode"]
             if not self._is_playable("episode", episode):
                 log.error("Premium stream is not playable")
                 return {}
             playlisturl = self._PRGM3U8.format(episode)
-        elif matchresult.group("slots"):
-            slots = matchresult.group("slots")
+        elif self.matches["slots"]:
+            slots = self.match["slots"]
             if not self._is_playable("slots", slots):
                 log.error("Premium stream is not playable")
                 return {}
