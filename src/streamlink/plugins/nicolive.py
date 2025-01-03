@@ -165,9 +165,7 @@ class NicoLive(Plugin):
     STREAM_READY_TIMEOUT = 6
     LOGIN_URL = "https://account.nicovideo.jp/login/redirector"
     LOGIN_URL_PARAMS = {
-        "show_button_twitter": 1,
-        "show_button_facebook": 1,
-        "next_url": "/",
+        "site": "niconico",
     }
 
     wsclient: NicoLiveWsClient
