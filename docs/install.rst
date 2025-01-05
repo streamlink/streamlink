@@ -307,11 +307,11 @@ On some systems, this isn't the case by default and an alternative, like :comman
 
 .. warning::
 
-    On Linux, when not using a virtual environment, it is recommended to **install custom python packages like this
-    only for the current user** (see the ``--user`` parameter below), since system-wide packages can cause conflicts with
-    the system's regular package manager.
+    On Linux, when not using a `virtual environment`_, it is recommended to **install custom python packages like this
+    only for the current user** using the ``--user`` parameter, since system-wide packages can cause conflicts with
+    the system's regular package manager. Never install Python packages via sudo in your system's global Python environment.
 
-    Those user-packages will be installed into ``~/.local`` instead of ``/usr``, and entry-scripts for
+    User-packages will be installed into ``~/.local`` instead of ``/usr``, and entry-scripts for
     running the programs can be found in ``~/.local/bin``, e.g. ``~/.local/bin/streamlink``.
 
     In order for the command line shell to be able to find these executables, the user's ``PATH`` environment variable
@@ -327,29 +327,33 @@ On some systems, this isn't the case by default and an alternative, like :comman
     * - :octicon:`verified` `Latest release`_
       - .. code-block:: bash
 
-            pip install --user -U streamlink
+            pip install -U streamlink
     * - :octicon:`verified` `Master branch`_
       - .. code-block:: bash
 
-            pip install --user -U git+https://github.com/streamlink/streamlink.git
-    * - :octicon:`unverified` `Specific tag/branch/commit`_
+            pip install -U git+https://github.com/streamlink/streamlink.git
+    * - :octicon:`unverified` `From a pull request <pip-install-vcs_>`_
       - .. code-block:: bash
 
-            pip install --user -U git+https://github.com/USERNAME/streamlink.git@REVISION
+            pip install -U git+https://github.com/streamlink/streamlink.git@refs/pull/PULL-REQUEST-ID/head
+    * - :octicon:`unverified` `Specific tag/branch/commit <pip-install-vcs_>`_
+      - .. code-block:: bash
+
+            pip install -U git+https://github.com/USERNAME/streamlink.git@REVISION
 
 .. _pip: https://pip.pypa.io/en/stable/
 .. _Latest release: https://pypi.python.org/pypi/streamlink
 .. _Master branch: https://github.com/streamlink/streamlink/commits/master
-.. _Specific tag/branch/commit: https://pip.pypa.io/en/stable/reference/pip_install/#git
+.. _pip-install-vcs: https://pip.pypa.io/en/stable/topics/vcs-support/#git
 
 
 Virtual environment
 -------------------
 
-Another way of installing Streamlink in a non-system-wide way is using the `venv`_ or `virtualenv`_ Python packages,
-which both create a user-owned Python environment which is isolated from the system's main Python package environment.
+A better way of installing Streamlink as a non-system Python package is using the `venv`_ or `virtualenv`_ Python modules,
+which both create a user-owned Python environment which is isolated from the system's main Python environment.
 
-While `venv`_ is part of Python's standard library since ``3.3``, `virtualenv`_ is the project which `venv`_ was built from,
+While `venv`_ is part of Python's standard library since ``3.3``, `virtualenv`_ is the project which `venv`_ originated from,
 but it first needs to be installed, either via `pip`_ or from the system's package manager. It also implements more features,
 so depending on your needs, you may want to use `virtualenv`_ instead of `venv`_.
 
