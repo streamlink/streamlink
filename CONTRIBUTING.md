@@ -211,8 +211,9 @@ After that's done, either install Streamlink by cloning its git repository and f
 # via git (further code modifications are simple)
 git clone https://github.com/streamlink/streamlink
 cd streamlink
-# install in "development mode" (changes to the code are picked up automatically)
-python -m pip install -e .
+# install in "editable mode", including required development dependencies
+# (changes to the code are picked up automatically)
+python -m pip install -r dev-requirements.txt -e .
 # fetch and checkout pull request branch
 git fetch --force origin "refs/pull/PULL-REQUEST-ID/head:LOCAL-BRANCH-NAME"
 git checkout "LOCAL-BRANCH-NAME"
