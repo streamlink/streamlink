@@ -31,7 +31,7 @@ class KickAdapter(SSLContextAdapter):
 )
 @pluginmatcher(
     name="vod",
-    pattern=re.compile(r"https?://(?:\w+\.)?kick\.com/video/(?P<vod>[^/?]+)"),
+    pattern=re.compile(r"https?://(?:\w+\.)?kick\.com/(?:video/|[^/]+/videos/)(?P<vod>[^/?]+)"),
 )
 @pluginmatcher(
     name="clip",
@@ -46,6 +46,7 @@ class Kick(Plugin):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.session.http.mount("https://kick.com/", KickAdapter())
+        self.session.http.headers.update({"Sec-Fetch-User": "?1"})
 
     def _get_token(self):
         res = self.session.http.get(self._URL_TOKEN, raise_for_status=False)
