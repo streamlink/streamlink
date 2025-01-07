@@ -1,6 +1,7 @@
 """
 $description Global live-streaming and video on-demand hosting platform.
 $url dailymotion.com
+$url lequipe.fr
 $type live, vod
 $metadata id
 $metadata author
