@@ -1,5 +1,18 @@
 # Changelog
 
+## streamlink 7.1.2 (2025-01-08)
+
+- Updated plugins:
+  - various: fixed access of URL matcher regex capture groups, affecting abematv, ard\_mediathek, bbiplayer, dailymotion, picarto, streann ([#6364](https://github.com/streamlink/streamlink/pull/6364), [#6368](https://github.com/streamlink/streamlink/pull/6368))
+  - chzzk: added support for clips ([#6389](https://github.com/streamlink/streamlink/pull/6389))
+  - dailymotion: added support for lequipe.fr ([#6372](https://github.com/streamlink/streamlink/pull/6372))
+  - kick: fixed 403 HTTP errors, fixed VOD URL matcher ([#6384](https://github.com/streamlink/streamlink/pull/6384))
+  - nicolive: fixed authentication ([#6378](https://github.com/streamlink/streamlink/pull/6378))
+  - tiktok: rewritten plugin, fixed live streams, added VODs ([#6381](https://github.com/streamlink/streamlink/pull/6381))
+
+[Full changelog](https://github.com/streamlink/streamlink/compare/7.1.1...7.1.2)
+
+
 ## streamlink 7.1.1 (2024-12-28)
 
 - Fixed: `--show-matchers=pluginname` not working when plugins are loaded lazily ([#6361](https://github.com/streamlink/streamlink/pull/6361))
