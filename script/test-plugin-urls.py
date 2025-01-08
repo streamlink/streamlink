@@ -133,11 +133,11 @@ class PluginUrlTester:
         return logger
 
     def add_url(self, item: TUrlOrNamedUrl) -> None:
-        url: str = item[1] if isinstance(item, tuple) else item
-        if not any(re.search(ignore, url) for ignore in self.ignorelist):
+        template: str = item[1] if isinstance(item, tuple) else item
+        if not any(re.search(ignore, template) for ignore in self.ignorelist):
             for string, replacement in self.replacelist:
-                url = re.sub(rf"\b{re.escape(string)}\b", replacement, url)
-            self.urls.add(url)
+                url = re.sub(rf"\b{re.escape(string)}\b", replacement, template)
+                self.urls.add(url)
 
     def iter_urls(self) -> Iterator[TUrlOrNamedUrl]:
         if not re.match(r"^\w+$", self.pluginname):
