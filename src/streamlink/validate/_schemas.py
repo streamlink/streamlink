@@ -128,7 +128,7 @@ class TransformSchema:
         self.kwargs = kwargs
 
 
-class OptionalSchema:
+class OptionalSchema:  # noqa: B903
     """
     An optional key set in a :class:`dict`.
 
@@ -189,7 +189,7 @@ class AttrSchema(SchemaContainer):
     """
 
 
-class GetItemSchema:
+class GetItemSchema:  # noqa: B903
     """
     Get an ``item`` from the input.
 
@@ -305,7 +305,7 @@ class UnionGetSchema:
         self.seq = seq
 
 
-class RegexSchema:
+class RegexSchema:  # noqa: B903
     """
     A :class:`re.Pattern` that **must** match.
 
@@ -350,7 +350,7 @@ class RegexSchema:
         self.method = method
 
 
-class XmlElementSchema:
+class XmlElementSchema:  # noqa: B903
     """
     Validate an XML element.
 

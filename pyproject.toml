@@ -233,7 +233,7 @@ select = [
 ]
 ignore = [
   "A003",  # builtin-attribute-shadowing
-  "A005",  # builtin-module-shadowing
+  "A005",  # stdlib-module-shadowing
   "ASYNC109",  # async-function-with-timeout
   "C408",  # unnecessary-collection-call
   "ISC003",  # explicit-string-concatenation
