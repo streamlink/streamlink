@@ -264,12 +264,15 @@ class UsherService:
     def _create_url(self, endpoint, **extra_params):
         url = f"https://usher.ttvnw.net{endpoint}"
         params = {
-            "player": "twitchweb",
-            "p": int(random() * 999999),
-            "type": "any",
-            "allow_source": "true",
             "allow_audio_only": "true",
+            "allow_source": "true",
             "allow_spectre": "false",
+
+            "p": int(random() * 999999),
+            "player": "twitchweb",
+
+            "type": "any",
+            "supported_codecs": "av1,h265,h264,mp4a",
         }
         params.update(extra_params)
 
@@ -295,7 +298,7 @@ class UsherService:
         return self._create_url(f"/api/channel/hls/{channel.lower()}.m3u8", **extra_params)
 
     def video(self, video_id: str, **extra_params) -> str:
-        return self._create_url(f"/vod/{video_id}", **extra_params)
+        return self._create_url(f"/vod/{video_id}.m3u8", **extra_params)
 
 
 class TwitchAPI:
