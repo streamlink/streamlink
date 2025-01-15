@@ -288,9 +288,11 @@ class UsherService:
                     "hide_ads": bool,
                     "server_ads": bool,
                     "show_ads": bool,
+                    "subscriber": bool,
+                    "turbo": bool,
                 },
             ).validate(extra_params)
-            log.debug(f"{extra_params_debug!r}")
+            log.debug(" ".join(f"{key}={value!r}" for key, value in extra_params_debug.items()))
 
         return self._create_url(f"/api/channel/hls/{channel.lower()}.m3u8", **extra_params)
 

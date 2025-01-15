@@ -646,16 +646,42 @@ class TestUsherService:
         args = param.get("args", ("twitch",))
 
         token = {
-            "expires": 9876543210,
-            "channel": "twitch",
-            "channel_id": 123,
-            "user_id": 456,
-            "user_ip": "127.0.0.1",
             "adblock": False,
+            "authorization": {
+                "forbidden": False,
+                "reason": "",
+            },
+            "blackout_enabled": False,
+            "channel": "CHANNEL",
+            "channel_id": 1234567890,
+            "chansub": {
+                "restricted_bitrates": [],
+                "view_until": 1924905600,
+            },
+            "ci_gb": False,
             "geoblock_reason": "",
+            "device_id": None,
+            "expires": 1736957801,
+            "extended_history_allowed": False,
+            "game": "",
             "hide_ads": False,
+            "https_required": True,
+            "mature": False,
+            "partner": False,
+            "platform": "web",
+            "player_type": "embed",
+            "private": {
+                "allowed_to_view": True,
+            },
+            "privileged": False,
+            "role": "",
             "server_ads": True,
             "show_ads": True,
+            "subscriber": False,
+            "turbo": False,
+            "user_id": 1234,
+            "user_ip": "127.0.0.1",
+            "version": 2,
         }
 
         return getattr(plugin.usher, service)(*args, token=json.dumps(token), sig="tokensignature")
@@ -670,7 +696,10 @@ class TestUsherService:
                     (
                         "streamlink.plugins.twitch",
                         "debug",
-                        "{'adblock': False, 'geoblock_reason': '', 'hide_ads': False, 'server_ads': True, 'show_ads': True}",
+                        (
+                            "adblock=False geoblock_reason='' hide_ads=False server_ads=True show_ads=True"
+                            + " subscriber=False turbo=False"
+                        ),
                     ),
                 ],
                 id="channel",
