@@ -703,9 +703,7 @@ class TestTwitchAPIAccessToken:
 
     @pytest.fixture()
     def plugin(self, request: pytest.FixtureRequest, session: Streamlink):
-        options = Options()
-        for param in getattr(request, "param", {}):
-            options.set(*param)
+        options = Options(getattr(request, "param", {}))
 
         return Twitch(session, "https://twitch.tv/channelname", options)
 
@@ -750,7 +748,7 @@ class TestTwitchAPIAccessToken:
         ("plugin", "exp_headers", "exp_variables"),
         [
             (
-                [],
+                {},
                 {"Client-ID": TwitchAPI.CLIENT_ID},
                 {
                     "isLive": True,
@@ -761,22 +759,16 @@ class TestTwitchAPIAccessToken:
                 },
             ),
             (
-                [
-                    (
-                        "api-header",
-                        [
-                            ("Authorization", "invalid data"),
-                            ("Authorization", "OAuth 0123456789abcdefghijklmnopqrst"),
-                        ],
-                    ),
-                    (
-                        "access-token-param",
-                        [
-                            ("specialVariable", "specialValue"),
-                            ("playerType", "frontpage"),
-                        ],
-                    ),
-                ],
+                {
+                    "api-header": [
+                        ("Authorization", "invalid data"),
+                        ("Authorization", "OAuth 0123456789abcdefghijklmnopqrst"),
+                    ],
+                    "access-token-param": [
+                        ("specialVariable", "specialValue"),
+                        ("playerType", "frontpage"),
+                    ],
+                },
                 {
                     "Client-ID": TwitchAPI.CLIENT_ID,
                     "Authorization": "OAuth 0123456789abcdefghijklmnopqrst",
@@ -867,7 +859,9 @@ class TestTwitchAPIAccessToken:
         ("plugin", "mock"),
         [
             (
-                [("api-header", [("Authorization", "OAuth invalid-token")])],
+                {
+                    "api-header": [("Authorization", "OAuth invalid-token")],
+                },
                 {
                     "status_code": 401,
                     "json": {"error": "Unauthorized", "status": 401, "message": 'The "Authorization" token is invalid.'},
@@ -896,7 +890,9 @@ class TestTwitchAPIAccessToken:
         ("plugin", "mock"),
         [
             (
-                [("api-header", [("Authorization", "OAuth invalid-token")])],
+                {
+                    "api-header": [("Authorization", "OAuth invalid-token")],
+                },
                 {
                     "response_list": [
                         {
