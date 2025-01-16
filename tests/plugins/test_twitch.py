@@ -798,17 +798,33 @@ class TestTwitchAPIAccessToken:
 
     @pytest.mark.usefixtures("_assert_live")
     @pytest.mark.parametrize(
-        "mock",
+        ("plugin", "mock"),
         [
-            {
-                "json": {"data": {"streamPlaybackAccessToken": {"value": '{"channel":"foo"}', "signature": "sig"}}},
-            },
+            pytest.param(
+                {
+                    "force-client-integrity": False,
+                },
+                {
+                    "json": {"data": {"streamPlaybackAccessToken": {"value": '{"channel":"foo"}', "signature": "sig"}}},
+                },
+                id="no-force-client-integrity",
+            ),
+            pytest.param(
+                {
+                    "force-client-integrity": True,
+                },
+                {
+                    "json": {"data": {"streamPlaybackAccessToken": {"value": '{"channel":"foo"}', "signature": "sig"}}},
+                },
+                id="force-client-integrity",
+            ),
         ],
         indirect=True,
     )
     def test_live_success(self, plugin: Twitch, mock: rm.Mocker):
         data = plugin._access_token(True, "channelname")
         assert data == ("sig", '{"channel":"foo"}', [])
+        assert len(mock.request_history) == 1
 
     @pytest.mark.usefixtures("_assert_live")
     @pytest.mark.parametrize(
@@ -891,6 +907,7 @@ class TestTwitchAPIAccessToken:
         [
             (
                 {
+                    "force-client-integrity": False,
                     "api-header": [("Authorization", "OAuth invalid-token")],
                 },
                 {
@@ -908,7 +925,7 @@ class TestTwitchAPIAccessToken:
         ],
         indirect=True,
     )
-    def test_failed_integrity_check(self, plugin: Twitch, mock: rm.Mocker):
+    def test_integrity_check_not_forced(self, plugin: Twitch, mock: rm.Mocker):
         data = plugin._access_token(True, "channelname")
         assert data == ("sig", '{"channel":"foo"}', [])
         assert len(mock.request_history) == 2, "Always tries again on error, with integrity-token on second attempt"
@@ -922,6 +939,66 @@ class TestTwitchAPIAccessToken:
         assert headers["Authorization"] == "OAuth invalid-token"
         assert headers["Device-Id"] == "device-id"
         assert headers["Client-Integrity"] == "client-integrity-token"
+
+    @pytest.mark.usefixtures("_assert_live")
+    @pytest.mark.parametrize(
+        ("plugin", "mock"),
+        [
+            (
+                {
+                    "force-client-integrity": True,
+                    "api-header": [("Authorization", "OAuth invalid-token")],
+                },
+                {
+                    "response_list": [
+                        {
+                            "json": {"data": {"streamPlaybackAccessToken": {"value": '{"channel":"foo"}', "signature": "sig"}}},
+                        },
+                    ],
+                },
+            ),
+        ],
+        indirect=True,
+    )
+    def test_integrity_check_forced(self, plugin: Twitch, mock: rm.Mocker):
+        data = plugin._access_token(True, "channelname")
+        assert data == ("sig", '{"channel":"foo"}', [])
+        assert len(mock.request_history) == 1
+
+        headers: dict = mock.request_history[0]._request.headers
+        assert headers["Authorization"] == "OAuth invalid-token"
+        assert headers["Device-Id"] == "device-id"
+        assert headers["Client-Integrity"] == "client-integrity-token"
+
+    @pytest.mark.usefixtures("_assert_vod")
+    @pytest.mark.parametrize(
+        ("plugin", "mock"),
+        [
+            (
+                {
+                    "force-client-integrity": True,
+                    "api-header": [("Authorization", "OAuth invalid-token")],
+                },
+                {
+                    "response_list": [
+                        {
+                            "json": {"data": {"videoPlaybackAccessToken": {"value": '{"channel":"foo"}', "signature": "sig"}}},
+                        },
+                    ],
+                },
+            ),
+        ],
+        indirect=True,
+    )
+    def test_integrity_check_vod(self, plugin: Twitch, mock: rm.Mocker):
+        data = plugin._access_token(False, "vodid")
+        assert data == ("sig", '{"channel":"foo"}', [])
+        assert len(mock.request_history) == 1
+
+        headers: dict = mock.request_history[0]._request.headers
+        assert headers["Authorization"] == "OAuth invalid-token"
+        assert "Device-Id" not in headers
+        assert "Client-Integrity" not in headers
 
 
 class TestTwitchHLSMultivariantResponse:

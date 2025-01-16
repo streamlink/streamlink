@@ -875,22 +875,23 @@ class Twitch(Plugin):
         response = ""
         data = (None, None)
 
-        # try without a client-integrity token first (the web player did the same on 2023-05-31)
-        if not self.options.get("force-client-integrity"):
+        # if live, try without a client-integrity token first (the web player did the same on 2023-05-31)
+        # if not live, we don't need a client-integrity token
+        if not is_live or not self.options.get("force-client-integrity"):
             response, *data = self.api.access_token(is_live, channel_or_vod)
 
-        # try again with a client-integrity token if the API response was erroneous
-        if response != "token":
-            client_integrity = self._client_integrity_token(channel_or_vod) if is_live else None
+        # if live and the previous API response was erroneous, try again with a client-integrity token
+        if is_live and response != "token":
+            client_integrity = self._client_integrity_token(channel_or_vod)
             response, *data = self.api.access_token(is_live, channel_or_vod, client_integrity)
 
-            # unknown API response error: abort
-            if response != "token":
-                error, message = data
-                raise PluginError(f"{error or 'Error'}: {message or 'Unknown error'}")
+        # unknown API response error: abort
+        if response != "token":
+            error, message = data
+            raise PluginError(f"{error or 'Error'}: {message or 'Unknown error'}")
 
         # access token response was empty: stream is offline or channel doesn't exist
-        if response == "token" and data[0] is None:
+        elif data[0] is None:
             raise NoStreamsError
 
         sig, token = data
