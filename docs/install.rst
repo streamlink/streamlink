@@ -689,7 +689,7 @@ Linux AppImages
 
 **Contents**
 
-.. grid:: 2
+.. grid:: 3
     :padding: 0
     :class-container: grid-with-images
 
@@ -714,6 +714,17 @@ Linux AppImages
             :alt: Streamlink
 
         Streamlink |br| :sub:`and dependencies`
+
+    .. grid-item-card::
+        :padding: 3
+        :link: https://github.com/streamlink/FFmpeg-Builds
+        :link-alt: FFmpeg, required for muxing streams
+        :text-align: center
+
+        .. image:: _static/icon-ffmpeg.svg
+            :alt: FFmpeg
+
+        FFmpeg |br| :sub:`for muxing streams` |br| :sub:`(optional)`
 
 **How-To**
 
