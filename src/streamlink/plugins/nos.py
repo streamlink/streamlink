@@ -19,7 +19,7 @@ log = logging.getLogger(__name__)
 
 
 @pluginmatcher(
-    re.compile(r"https?://(?:\w+\.)?nos\.nl/(?:live|video|collectie)"),
+    re.compile(r"https?://(?:\w+\.)?nos\.nl/(?:live$|livestream/|l/|video/|collectie/)"),
 )
 class NOS(Plugin):
     def _get_streams(self):
@@ -31,7 +31,13 @@ class NOS(Plugin):
                 validate.none_or_all(
                     validate.parse_json(),
                     {
-                        "@type": "VideoObject",
+                        "@type": validate.any(
+                            "VideoObject",
+                            validate.all(
+                                list,
+                                validate.contains("VideoObject"),
+                            ),
+                        ),
                         "encodingFormat": "application/vnd.apple.mpegurl",
                         "contentUrl": validate.url(),
                         "identifier": validate.any(int, str),
