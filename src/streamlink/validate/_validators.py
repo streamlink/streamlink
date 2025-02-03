@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import operator
-from collections.abc import Callable, Mapping
+from collections.abc import Callable, Container, Mapping
 from typing import Any, Literal
 from urllib.parse import urlparse
 
@@ -141,9 +141,10 @@ def validator_endswith(string: str) -> Callable[[str], bool]:
     return ends_with
 
 
-def validator_contains(string: str) -> Callable[[str], bool]:
+def validator_contains(obj: object) -> Callable[[Container], bool]:
     """
-    Utility function for checking whether the input string contains another string.
+    Utility function for checking whether the input contains a certain element,
+    e.g. a string within a string, an object in a list, a key in a dict, etc.
 
     Example:
 
@@ -156,17 +157,26 @@ def validator_contains(string: str) -> Callable[[str], bool]:
         schema.validate("987654321")  # raises ValidationError
         schema.validate(None)  # raises ValidationError
 
-    :raise ValidationError: If input is not an instance of :class:`str`
-    :raise ValidationError: If input doesn't contain ``string``
+    .. code-block:: python
+
+        schema = validate.Schema(
+            validate.contains(456),
+        )
+        assert schema.validate([123, 456, 789]) == [123, 456, 789]
+        schema.validate([987, 654, 321])  # raises ValidationError
+        schema.validate(None)  # raises ValidationError
+
+    :raise ValidationError: If input is not an instance of :class:`collections.abc.Container`
+    :raise ValidationError: If input doesn't contain ``obj``
     """
 
     def contains_str(value):
-        validate(str, value)
-        if string not in value:
+        validate(Container, value)
+        if obj not in value:
             raise ValidationError(
-                "{value} does not contain {string}",
+                "{value} does not contain {obj}",
                 value=repr(value),
-                string=repr(string),
+                obj=repr(obj),
                 schema="contains",
             )
 
