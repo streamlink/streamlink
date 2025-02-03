@@ -1084,10 +1084,11 @@ class TestEndsWithValidator:
 
 
 class TestContainsValidator:
-    def test_success(self):
-        assert validate.validate(validate.contains("bar"), "foo bar baz")
+    def test_string_success(self):
+        obj = "foo bar baz"
+        assert validate.validate(validate.contains("bar"), obj) is obj
 
-    def test_failure(self):
+    def test_string_failure(self):
         with pytest.raises(ValidationError) as cm:
             validate.validate(validate.contains("invalid"), "foo bar baz")
         assert_validationerror(
@@ -1098,6 +1099,36 @@ class TestContainsValidator:
             """,
         )
 
+    def test_list_success(self):
+        obj = [123, 456, 789]
+        assert validate.validate(validate.contains(456), obj) is obj
+
+    def test_list_failure(self):
+        with pytest.raises(ValidationError) as cm:
+            validate.validate(validate.contains(456), [987, 654, 321])
+        assert_validationerror(
+            cm.value,
+            """
+                ValidationError(contains):
+                  [987, 654, 321] does not contain 456
+            """,
+        )
+
+    def test_dict_success(self):
+        obj = {"abc": 123, "def": 456, "ghi": 789}
+        assert validate.validate(validate.contains("def"), obj) is obj
+
+    def test_dict_failure(self):
+        with pytest.raises(ValidationError) as cm:
+            validate.validate(validate.contains("def"), {"ihg": 987, "fed": 654, "cba": 321})
+        assert_validationerror(
+            cm.value,
+            """
+                ValidationError(contains):
+                  {'ihg': 987, 'fed': 654, 'cba': 321} does not contain 'def'
+            """,
+        )
+
     def test_failure_schema(self):
         with pytest.raises(ValidationError) as cm:
             validate.validate(validate.contains("invalid"), 1)
@@ -1105,7 +1136,7 @@ class TestContainsValidator:
             cm.value,
             """
                 ValidationError(type):
-                  Type of 1 should be str, but is int
+                  Type of 1 should be Container, but is int
             """,
         )
 
