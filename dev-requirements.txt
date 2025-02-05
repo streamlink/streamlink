@@ -17,7 +17,7 @@ coverage[toml]
 ruff ==0.9.4
 
 # typing
-mypy[faster-cache] ==1.14.1
+mypy[faster-cache] ==1.15.0
 typing-extensions >=4.0.0
 lxml-stubs
 trio-typing
