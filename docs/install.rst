@@ -543,21 +543,21 @@ Windows binaries
 
         **Windows stable releases**
         ^^^
-        :fas:`download` GitHub releases page
+        :fas:`download;fa-2x` GitHub releases page
 
-        The most recent Streamlink release
+        :fas:`check-circle;sd-text-success fa-lg` The most recent Streamlink release
 
     .. grid-item-card::
         :padding: 3
-        :link: https://github.com/streamlink/windows-builds/actions?query=event%3Aschedule+is%3Asuccess+branch%3Amaster
-        :link-alt: Windows nightly builds
+        :link: https://github.com/streamlink/windows-builds/actions/workflows/preview-build.yml
+        :link-alt: Windows preview builds
         :text-align: center
 
-        **Windows nightly builds**
+        **Windows preview builds**
         ^^^
-        :fas:`download` GitHub actions build artifacts
+        :fas:`download;fa-2x` GitHub actions build artifacts
 
-        Built once each day at midnight UTC |br| :sub:`GitHub account required`
+        :fab:`github;fa-lg` Account required
 
 **Flavors**
 
@@ -654,21 +654,21 @@ Linux AppImages
 
         **AppImage stable releases**
         ^^^
-        :fas:`download` GitHub releases page
+        :fas:`download;fa-2x` GitHub releases page
 
-        The most recent Streamlink release
+        :fas:`check-circle;sd-text-success fa-lg` The most recent Streamlink release
 
     .. grid-item-card::
         :padding: 3
-        :link: https://github.com/streamlink/streamlink-appimage/actions?query=event%3Aschedule+is%3Asuccess+branch%3Amaster
-        :link-alt: AppImage nightly builds
+        :link: https://github.com/streamlink/streamlink-appimage/actions/workflows/preview-build.yml
+        :link-alt: AppImage preview builds
         :text-align: center
 
-        **AppImage nightly builds**
+        **AppImage preview builds**
         ^^^
-        :fas:`download` GitHub actions build artifacts
+        :fas:`download;fa-2x` GitHub actions build artifacts
 
-        Built once each day at midnight UTC |br| :sub:`GitHub account required`
+        :fab:`github;fa-lg` Account required
 
 **Architectures**
 
