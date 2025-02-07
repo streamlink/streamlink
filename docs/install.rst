@@ -63,7 +63,7 @@ Windows
       - See the `Windows binaries`_ section below
     * - :octicon:`verified` Portable
       - See the `Windows binaries`_ section below
-    * - :octicon:`verified` Nightly builds
+    * - :octicon:`verified` Preview builds
       - See the `Windows binaries`_ section below
     * - :octicon:`verified` Python pip
       - See the `PyPI package and source code`_ section below
@@ -132,7 +132,7 @@ Linux and BSD
       - Installing
     * - :octicon:`verified` AppImage
       - See the `Linux AppImages`_ section below
-    * - :octicon:`verified` AppImage nightly builds
+    * - :octicon:`verified` AppImage preview builds
       - See the `Linux AppImages`_ section below
     * - :octicon:`verified` Python pip
       - See the `PyPI package and source code`_ section below
