@@ -174,7 +174,7 @@ Please don't hesitate to provide feedback after a pull request was submitted whi
 
 If the pull request is just about a plugin fix or a new plugin inclusion **without additional changes to Streamlink's codebase**, then the new plugin file can be [sideloaded][plugin-sideloading] **when running the latest stable release version of Streamlink**. However, if the pull request is based on changes that have been made to Streamlink's master branch since the latest stable release, then an installation from the pull request's own git branch or Streamlink's master branch will be necessary.
 
-Nightly development builds from Streamlink's **master branch** are available [on Windows][nightly-builds-windows] as well as on [Linux (via AppImages)][nightly-builds-linux].
+Preview builds from Streamlink's **master branch** are available [on Windows][preview-builds-windows] as well as on [Linux (via AppImages)][preview-builds-linux].
 
 In case sideloading is possible, simply download the pull request's plugin changes using your web browser from GitHub's pull request interface: "Files changed" tab at the top -> breadcrumbs button of the specific plugin file ("...") -> "View raw". Then download the file into the directory described by the [plugin sideloading documentation][plugin-sideloading].
 
@@ -245,8 +245,8 @@ This contributing guide has been adapted from [HTML5 boilerplate's guide][ref-h5
   [license]: https://github.com/streamlink/streamlink/blob/master/LICENSE
   [debug-log]: https://streamlink.github.io/latest/cli.html#cmdoption-loglevel
   [plugin-sideloading]: https://streamlink.github.io/latest/cli/plugin-sideloading.html
-  [nightly-builds-windows]: https://streamlink.github.io/latest/install.html#windows-binaries
-  [nightly-builds-linux]: https://streamlink.github.io/latest/install.html#linux-appimages
+  [preview-builds-windows]: https://streamlink.github.io/latest/install.html#windows-binaries
+  [preview-builds-linux]: https://streamlink.github.io/latest/install.html#linux-appimages
   [python-version]: https://streamlink.github.io/latest/install.html#dependencies
   [python-venv]: https://streamlink.github.io/latest/install.html#virtual-environment
   [ref-h5bp]: https://github.com/h5bp/html5-boilerplate/blob/master/CONTRIBUTING.md
