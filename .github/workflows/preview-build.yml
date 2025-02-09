@@ -1,5 +1,5 @@
 name: Preview build
-run-name: "Preview build - ${{ github.ref }}"
+run-name: "Preview build - ${{ github.sha }}"
 
 on:
   push:
@@ -16,7 +16,7 @@ on:
 
 jobs:
   trigger:
-    name: "Preview build - ${{ github.ref }}"
+    name: "Preview build - ${{ github.sha }}"
     if: github.repository == 'streamlink/streamlink'
     runs-on: ubuntu-latest
     steps:
@@ -27,7 +27,7 @@ jobs:
             -H 'Accept: application/vnd.github+json' \
             -H 'X-GitHub-Api-Version: 2022-11-28' \
             -H 'Authorization: Bearer ${{ secrets.STREAMLINKBOT_PREVIEW_BUILD }}' \
-            -d '{"ref":"master","inputs":{"ref":"${{ github.ref }}"}}' \
+            -d '{"ref":"master","inputs":{"ref":"${{ github.sha }}"}}' \
             https://api.github.com/repos/streamlink/windows-builds/actions/workflows/preview-build.yml/dispatches
 
           echo -e '## Windows builds\n\nhttps://github.com/streamlink/windows-builds/actions/workflows/preview-build.yml\n' \
@@ -39,7 +39,7 @@ jobs:
             -H 'Accept: application/vnd.github+json' \
             -H 'X-GitHub-Api-Version: 2022-11-28' \
             -H 'Authorization: Bearer ${{ secrets.STREAMLINKBOT_PREVIEW_BUILD }}' \
-            -d '{"ref":"master","inputs":{"ref":"${{ github.ref }}"}}' \
+            -d '{"ref":"master","inputs":{"ref":"${{ github.sha }}"}}' \
             https://api.github.com/repos/streamlink/streamlink-appimage/actions/workflows/preview-build.yml/dispatches
 
           echo -e '## AppImage\n\nhttps://github.com/streamlink/streamlink-appimage/actions/workflows/preview-build.yml\n' \
