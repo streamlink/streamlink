@@ -41,7 +41,7 @@ log = logging.getLogger(__name__)
     "password",
     sensitive=True,
     metavar="PASSWORD",
-    help="A tf1.fr account password to use with --tf1-username.",
+    help="A tf1.fr account password to use with --tf1-email.",
 )
 @pluginargument(
     "purge-credentials",
