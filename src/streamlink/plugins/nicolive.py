@@ -112,7 +112,8 @@ class NicoLiveHLSStream(HLSStream):
     __reader__ = NicoLiveHLSStreamReader
     wsclient: NicoLiveWsClient
 
-    def set_wsclient(self, wsclient: NicoLiveWsClient):
+    def __init__(self, *args, wsclient: NicoLiveWsClient, **kwargs):
+        super().__init__(*args, **kwargs)
         self.wsclient = wsclient
 
 
@@ -204,9 +205,7 @@ class NicoLive(Plugin):
         if offset and "timeshift" in wss_api_url:
             hls_stream_url = update_qsd(hls_stream_url, {"start": offset})
 
-        for quality, stream in NicoLiveHLSStream.parse_variant_playlist(self.session, hls_stream_url).items():
-            stream.set_wsclient(self.wsclient)
-            yield quality, stream
+        return NicoLiveHLSStream.parse_variant_playlist(self.session, hls_stream_url, wsclient=self.wsclient)
 
     def _get_hls_stream_url(self):
         log.debug(f"Waiting for permit (for at most {self.STREAM_READY_TIMEOUT} seconds)...")
