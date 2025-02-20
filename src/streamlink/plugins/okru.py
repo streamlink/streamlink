@@ -10,8 +10,9 @@ $metadata title
 
 import logging
 import re
-from urllib.parse import unquote, urlparse
+from urllib.parse import unquote
 
+from streamlink.exceptions import NoStreamsError
 from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.api import validate
 from streamlink.stream.dash import DASHStream
@@ -52,41 +53,26 @@ class OKru(Plugin):
 
         return super().stream_weight(key)
 
-    def _get_streams_mobile(self):
-        data = self.session.http.get(
+    def _canonicalize_mobile_url(self):
+        url = self.session.http.get(
             self.url,
             schema=validate.Schema(
                 validate.parse_html(),
-                validate.xml_find(".//a[@data-video]"),
-                validate.get("data-video"),
+                validate.xml_xpath_string(".//head/link[@rel='canonical'][@href][1]/@href"),
                 validate.none_or_all(
-                    str,
-                    validate.parse_json(),
-                    {
-                        "videoName": str,
-                        "videoSrc": validate.url(),
-                        "movieId": str,
-                    },
-                    validate.union_get("movieId", "videoName", "videoSrc"),
+                    validate.url(),
                 ),
             ),
         )
-        if not data:
-            return
+        if not url or not self.matchers["default"].pattern.match(url):
+            raise NoStreamsError
 
-        self.id, self.title, url = data
+        self.url = url
 
-        stream_url = self.session.http.head(url).headers.get("Location")
-        if not stream_url:
-            return
+    def _get_streams(self):
+        if self.matches["mobile"]:
+            self._canonicalize_mobile_url()
 
-        return (
-            HLSStream.parse_variant_playlist(self.session, stream_url)
-            if urlparse(stream_url).path.endswith(".m3u8")
-            else {"vod": HTTPStream(self.session, stream_url)}
-        )
-
-    def _get_streams_default(self):
         schema_metadata = validate.Schema(
             validate.parse_json(),
             {
@@ -157,9 +143,6 @@ class OKru(Plugin):
             f"{self.QUALITY_WEIGHTS[name]}p" if name in self.QUALITY_WEIGHTS else name: HTTPStream(self.session, url)
             for name, url in data.get("videos", [])
         }
-
-    def _get_streams(self):
-        return self._get_streams_default() if self.matches["default"] else self._get_streams_mobile()
 
 
 __plugin__ = OKru
