@@ -324,6 +324,7 @@ class M3U8Parser(Generic[TM3U8_co, THLSSegment_co, THLSPlaylist_co], metaclass=M
         """
         self._discontinuity = True
         self._map = None
+        self._key = None
 
     @parse_tag("EXT-X-KEY")
     def parse_tag_ext_x_key(self, value: str) -> None:

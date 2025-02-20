@@ -936,6 +936,38 @@ class TestHLSStreamEncrypted(TestMixinStreamHLS, unittest.TestCase):
         assert data == self.content([segments[1]], prop="content_plain")
         assert mock_log.error.mock_calls == [call("Error while decrypting segment 0: PKCS#7 padding is incorrect.")]
 
+    def test_hls_encrypted_aes128_discontinuity(self):
+        aesKey1, aesIv1, key1 = self.gen_key()
+        aesKey2, aesIv2, key2 = self.gen_key()
+        discontinuity = Tag("EXT-X-DISCONTINUITY")
+
+        segments = self.subject([
+            Playlist(
+                0,
+                [
+                    key1,
+                    SegmentEnc(0, aesKey1, aesIv1),
+                    SegmentEnc(1, aesKey1, aesIv1),
+                    discontinuity,
+                    key2,
+                    SegmentEnc(2, aesKey2, aesIv2),
+                    SegmentEnc(3, aesKey2, aesIv2),
+                    discontinuity,
+                    Segment(4),
+                    Segment(5),
+                ],
+                end=True,
+            ),
+        ])
+
+        self.await_write(6)
+        data = self.await_read(read_all=True)
+        self.await_close()
+
+        expected = self.content(segments, prop="content_plain", cond=lambda s: 0 <= s.num <= 3)
+        expected += self.content(segments, cond=lambda s: 4 <= s.num <= 5)
+        assert data == expected, "Resets key state on discontinuity"
+
 
 @patch("streamlink.stream.hls.hls.HLSStreamWorker.wait", Mock(return_value=True))
 class TestHlsPlaylistReloadTime(TestMixinStreamHLS, unittest.TestCase):
