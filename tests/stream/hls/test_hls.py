@@ -936,6 +936,38 @@ class TestHLSStreamEncrypted(TestMixinStreamHLS, unittest.TestCase):
         assert data == self.content([segments[1]], prop="content_plain")
         assert mock_log.error.mock_calls == [call("Error while decrypting segment 0: PKCS#7 padding is incorrect.")]
 
+    def test_hls_encrypted_switch_methods(self):
+        aesKey1, aesIv1, key_aes128_1 = self.gen_key()
+        aesKey2, aesIv2, key_aes128_2 = self.gen_key()
+        key_none = Tag("EXT-X-KEY", {"METHOD": "NONE"})
+
+        segments = self.subject([
+            Playlist(
+                0,
+                [
+                    key_aes128_1,
+                    SegmentEnc(0, aesKey1, aesIv1),
+                    SegmentEnc(1, aesKey1, aesIv1),
+                    key_none,
+                    Segment(2),
+                    Segment(3),
+                    key_aes128_2,
+                    SegmentEnc(4, aesKey2, aesIv2),
+                    SegmentEnc(5, aesKey2, aesIv2),
+                ],
+                end=True,
+            ),
+        ])
+
+        self.await_write(6)
+        data = self.await_read(read_all=True)
+        self.await_close()
+
+        expected = self.content(segments, prop="content_plain", cond=lambda s: 0 <= s.num <= 1)
+        expected += self.content(segments, cond=lambda s: 2 <= s.num <= 3)
+        expected += self.content(segments, prop="content_plain", cond=lambda s: 4 <= s.num <= 5)
+        assert data == expected, "Switches between encryption key methods"
+
 
 @patch("streamlink.stream.hls.hls.HLSStreamWorker.wait", Mock(return_value=True))
 class TestHlsPlaylistReloadTime(TestMixinStreamHLS, unittest.TestCase):
