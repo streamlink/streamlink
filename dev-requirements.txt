@@ -14,7 +14,7 @@ pytest-cov
 coverage[toml]
 
 # code-linting / code-formatting
-ruff ==0.9.5
+ruff ==0.9.7
 
 # typing
 mypy[faster-cache] ==1.15.0
