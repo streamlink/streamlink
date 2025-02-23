@@ -586,7 +586,7 @@ class TestTwitchHLSStream(TestMixinStreamHLS, unittest.TestCase):
 
         self.await_write(4)
         self.await_read(read_all=True)
-        assert self.thread.reader.worker.playlist_reload_time == pytest.approx(23 / 3)
+        assert self.thread.reader.worker._reload_time == pytest.approx(23 / 3)
 
     @patch("streamlink.stream.hls.hls.log")
     def test_hls_prefetch_after_discontinuity(self, mock_log):
