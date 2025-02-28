@@ -70,6 +70,13 @@ dependencies = [
   "websocket-client >=1.2.1,<2",
 ]
 
+[project.optional-dependencies]
+decompress = [
+  # don't define brotli or zstandard library versions here
+  # and instead rely on urllib3's version requirements
+  "urllib3[brotli,zstd] >=1.26.0,<3"
+]
+
 [project.urls]
 Homepage = "https://github.com/streamlink/streamlink"
 Documentation = "https://streamlink.github.io/"
