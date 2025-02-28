@@ -501,6 +501,14 @@ Streamlink defines a `build system <pyproject.toml_>`__ according to `PEP-517`_ 
 
         - DASH streams with video and audio content always have to get remuxed.
         - HLS streams optionally need to get remuxed depending on the stream selection.
+    * - optional
+      - | `brotli`_
+        | ``decompress`` extras marker
+      - Used for decompressing HTTP responses
+    * - optional
+      - | `zstandard`_
+        | ``decompress`` extras marker
+      - Used for decompressing HTTP responses
 
 .. _pyproject.toml: https://github.com/streamlink/streamlink/blob/master/pyproject.toml
 .. _PEP-517: https://peps.python.org/pep-0517/
@@ -523,6 +531,9 @@ Streamlink defines a `build system <pyproject.toml_>`__ according to `PEP-517`_ 
 .. _trio-websocket: https://trio-websocket.readthedocs.io/en/stable/
 .. _urllib3: https://urllib3.readthedocs.io/en/stable/
 .. _websocket-client: https://pypi.org/project/websocket-client/
+
+.. _brotli: https://pypi.org/project/Brotli/
+.. _zstandard: https://pypi.org/project/zstandard/
 
 .. _FFmpeg: https://www.ffmpeg.org/
 .. _muxing: https://en.wikipedia.org/wiki/Multiplexing#Video_processing
