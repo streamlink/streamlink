@@ -480,6 +480,8 @@ def fetch_streams_with_retry(plugin: Plugin, interval: float, count: int) -> Map
 
     try:
         streams = fetch_streams(plugin)
+    except FatalPluginError:
+        raise
     except PluginError as err:
         log.error(err)
         streams = None
