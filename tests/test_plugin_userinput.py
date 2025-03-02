@@ -1,4 +1,4 @@
-from unittest.mock import Mock, call, patch
+from unittest.mock import Mock, call
 
 import pytest
 
@@ -8,51 +8,66 @@ from streamlink_cli.console import ConsoleUserInputRequester
 from tests.plugin.testplugin import TestPlugin as _TestPlugin
 
 
-def test_session():
-    console_input = ConsoleUserInputRequester(Mock())
-    session = Streamlink({"user-input-requester": console_input}, plugins_builtin=False)
-    assert session.get_option("user-input-requester") is console_input
+@pytest.fixture()
+def console(request: pytest.FixtureRequest):
+    param = getattr(request, "param", {})
+
+    console = Mock()
+    if not param.get("failure", False):
+        console.ask.return_value = "username"
+        console.askpass.return_value = "password"
+    else:
+        console.ask.side_effect = OSError("No input TTY available")
+        console.askpass.side_effect = OSError("No input TTY available")
+
+    return console
 
 
-class TestPluginUserInput:
-    @pytest.fixture()
-    def testplugin(self, session: Streamlink):
-        return _TestPlugin(session, "http://example.com/stream")
+@pytest.fixture()
+def session(session: Streamlink, console: Mock):
+    user_input = ConsoleUserInputRequester(console)
+    session.set_option("user-input-requester", user_input)
 
-    @pytest.fixture()
-    def console_input(self, request, session: Streamlink):
-        isatty: bool = request.param
-        with patch("streamlink_cli.console.sys.stdin.isatty", return_value=isatty):
-            mock_console = Mock()
-            mock_console.ask.return_value = "username"
-            mock_console.askpass.return_value = "password"
-            console_input = ConsoleUserInputRequester(mock_console)
-            session.set_option("user-input-requester", console_input)
-            yield console_input
+    return session
 
-    def test_user_input_not_implemented(self, testplugin: _TestPlugin):
-        with pytest.raises(FatalPluginError) as cm:
-            testplugin.input_ask("test")
-        assert str(cm.value) == "This plugin requires user input, however it is not supported on this platform"
 
-        with pytest.raises(FatalPluginError) as cm:
-            testplugin.input_ask_password("test")
-        assert str(cm.value) == "This plugin requires user input, however it is not supported on this platform"
+@pytest.fixture()
+def testplugin(session: Streamlink):
+    return _TestPlugin(session, "http://example.com/stream")
 
-    @pytest.mark.parametrize("console_input", [True], indirect=True)
-    def test_user_input_console(self, testplugin: _TestPlugin, console_input: ConsoleUserInputRequester):
-        assert testplugin.input_ask("username") == "username"
-        assert console_input.console.ask.call_args_list == [call("username: ")]
 
-        assert testplugin.input_ask_password("password") == "password"
-        assert console_input.console.askpass.call_args_list == [call("password: ")]
+def test_session(session: Streamlink, console: Mock):
+    user_input = session.get_option("user-input-requester")
+    assert user_input
+    assert user_input.console is console
 
-    @pytest.mark.parametrize("console_input", [False], indirect=True)
-    def test_user_input_console_no_tty(self, testplugin: _TestPlugin, console_input: ConsoleUserInputRequester):
-        with pytest.raises(FatalPluginError) as cm:
-            testplugin.input_ask("username")
-        assert str(cm.value) == "User input error: no TTY available"
 
-        with pytest.raises(FatalPluginError) as cm:
-            testplugin.input_ask_password("username")
-        assert str(cm.value) == "User input error: no TTY available"
+def test_user_input_not_implemented(session: Streamlink, testplugin: _TestPlugin):
+    session.set_option("user-input-requester", None)
+
+    with pytest.raises(FatalPluginError) as cm:
+        testplugin.input_ask("test")
+    assert str(cm.value) == "This plugin requires user input, however it is not supported on this platform"
+
+    with pytest.raises(FatalPluginError) as cm:
+        testplugin.input_ask_password("test")
+    assert str(cm.value) == "This plugin requires user input, however it is not supported on this platform"
+
+
+def test_user_input_console(console: Mock, testplugin: _TestPlugin):
+    assert testplugin.input_ask("username") == "username"
+    assert console.ask.call_args_list == [call("username: ")]
+
+    assert testplugin.input_ask_password("password") == "password"
+    assert console.askpass.call_args_list == [call("password: ")]
+
+
+@pytest.mark.parametrize("console", [{"failure": True}], indirect=True)
+def test_user_input_console_no_tty(console: Mock, testplugin: _TestPlugin):
+    with pytest.raises(FatalPluginError) as cm:
+        testplugin.input_ask("username")
+    assert str(cm.value) == "User input error: No input TTY available"
+
+    with pytest.raises(FatalPluginError) as cm:
+        testplugin.input_ask_password("username")
+    assert str(cm.value) == "User input error: No input TTY available"

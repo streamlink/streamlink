@@ -296,13 +296,6 @@ def test_cli_main_setup_session_options(monkeypatch: pytest.MonkeyPatch, parser:
 
 
 class TestSetupPluginArgsAndOptions:
-    @pytest.fixture(autouse=True)
-    def stdin(self, monkeypatch: pytest.MonkeyPatch):
-        mock_stdin = Mock(isatty=Mock(return_value=True))
-        monkeypatch.setattr("sys.stdin", mock_stdin)
-
-        return mock_stdin
-
     @pytest.fixture()
     def console(self):
         return Mock(
@@ -487,24 +480,14 @@ class TestSetupPluginArgsAndOptions:
             "four-b": "default",
         }
 
-    def test_setup_options_no_tty(
+    def test_setup_options_user_input_oserror(
         self,
         session: Streamlink,
         plugin: type[Plugin],
-        stdin: Mock,
+        console: Mock,
     ):
-        stdin.isatty.return_value = False
+        console.ask.side_effect = OSError("No input TTY available")
+        console.askpass.side_effect = OSError("No input TTY available")
         with pytest.raises(StreamlinkCLIError) as exc_info:
             setup_plugin_options(session, Mock(mock_user="username", mock_pass=None, mock_qux=None), "mock", plugin)
-        assert str(exc_info.value) == "no TTY available"
-
-    def test_setup_options_no_stdin(
-        self,
-        monkeypatch: pytest.MonkeyPatch,
-        session: Streamlink,
-        plugin: type[Plugin],
-    ):
-        monkeypatch.setattr("sys.stdin", None)
-        with pytest.raises(StreamlinkCLIError) as exc_info:
-            setup_plugin_options(session, Mock(mock_user="username", mock_pass=None, mock_qux=None), "mock", plugin)
-        assert str(exc_info.value) == "no TTY available"
+        assert str(exc_info.value) == "No input TTY available"

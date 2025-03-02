@@ -86,12 +86,12 @@ def check_file_output(path: Path, force: bool) -> Path:
     log.debug("Checking file output")
 
     if realpath.is_file() and not force:
-        if sys.stdin and sys.stdin.isatty():
+        try:
             answer = console.ask(f"File {path} already exists! Overwrite it? [y/N] ")
-            if not answer or answer.lower() != "y":
-                raise StreamlinkCLIError()
-        else:
+        except OSError:
             log.error(f"File {path} already exists, use --force to overwrite it.")
+            raise StreamlinkCLIError() from None
+        if not answer or answer.lower() != "y":
             raise StreamlinkCLIError()
 
     return realpath

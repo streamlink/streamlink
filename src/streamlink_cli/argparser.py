@@ -412,7 +412,7 @@ def build_parser():
         "--quiet",
         action="store_true",
         help="""
-            Suppress console and log output.
+            Suppress console and log output, and disable user input prompts.
         """,
     )
     logging.add_argument(

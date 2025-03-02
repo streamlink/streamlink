@@ -18,13 +18,9 @@ class ConsoleUserInputRequester(UserInputRequester):
         self.console = console
 
     def ask(self, prompt: str) -> str:
-        if not sys.stdin or not sys.stdin.isatty():
-            raise OSError("no TTY available")
         return self.console.ask(f"{prompt.strip()}: ")
 
     def ask_password(self, prompt: str) -> str:
-        if not sys.stdin or not sys.stdin.isatty():
-            raise OSError("no TTY available")
         return self.console.askpass(f"{prompt.strip()}: ")
 
 
@@ -33,10 +29,14 @@ class ConsoleOutput:
         self.json = json
         self.output = output
 
-    def ask(self, prompt: str) -> str | None:
+    def _check_streams(self):
         if not sys.stdin or not sys.stdin.isatty():
-            return None
+            raise OSError("No input TTY available")
+        if not self.output or not self.output.isatty():
+            raise OSError("No output TTY available")
 
+    def ask(self, prompt: str) -> str | None:
+        self._check_streams()
         self.output.write(prompt)
 
         # noinspection PyBroadException
@@ -46,8 +46,7 @@ class ConsoleOutput:
             return None
 
     def askpass(self, prompt: str) -> str | None:
-        if not sys.stdin or not sys.stdin.isatty():
-            return None
+        self._check_streams()
 
         return getpass(prompt, self.output)
 
