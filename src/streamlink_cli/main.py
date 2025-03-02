@@ -31,7 +31,7 @@ from streamlink_cli.argparser import (
     setup_plugin_options,
     setup_session_options,
 )
-from streamlink_cli.compat import stdout
+from streamlink_cli.compat import stdout_or_devnull_bin
 from streamlink_cli.console import ConsoleOutput, ConsoleUserInputRequester
 from streamlink_cli.constants import CONFIG_FILES, DEFAULT_STREAM_METADATA, LOG_DIR, PLUGIN_DIRS, STREAM_SYNONYMS
 from streamlink_cli.exceptions import StreamlinkCLIError
@@ -115,7 +115,7 @@ def create_output(formatter: Formatter) -> FileOutput | PlayerOutput:
             raise StreamlinkCLIError("The -o/--output argument is incompatible with -r/--record and -R/--record-and-pipe")
 
         if args.output == "-":
-            return FileOutput(fd=stdout)
+            return FileOutput(fd=stdout_or_devnull_bin)
         else:
             filename = check_file_output(formatter.path(args.output, args.fs_safe_rules), args.force)
             return FileOutput(filename=filename)
@@ -125,10 +125,10 @@ def create_output(formatter: Formatter) -> FileOutput | PlayerOutput:
             raise StreamlinkCLIError("The -O/--stdout argument is incompatible with -R/--record-and-pipe")
 
         if not args.record or args.record == "-":
-            return FileOutput(fd=stdout)
+            return FileOutput(fd=stdout_or_devnull_bin)
         else:
             filename = check_file_output(formatter.path(args.record, args.fs_safe_rules), args.force)
-            return FileOutput(fd=stdout, record=FileOutput(filename=filename))
+            return FileOutput(fd=stdout_or_devnull_bin, record=FileOutput(filename=filename))
 
     elif args.record_and_pipe:
         warnings.warn(
@@ -137,7 +137,7 @@ def create_output(formatter: Formatter) -> FileOutput | PlayerOutput:
             stacklevel=1,
         )
         filename = check_file_output(formatter.path(args.record_and_pipe, args.fs_safe_rules), args.force)
-        return FileOutput(fd=stdout, record=FileOutput(filename=filename))
+        return FileOutput(fd=stdout_or_devnull_bin, record=FileOutput(filename=filename))
 
     elif args.player:
         http = namedpipe = record = None
@@ -152,7 +152,7 @@ def create_output(formatter: Formatter) -> FileOutput | PlayerOutput:
 
         if args.record:
             if args.record == "-":
-                record = FileOutput(fd=stdout)
+                record = FileOutput(fd=stdout_or_devnull_bin)
             else:
                 filename = check_file_output(formatter.path(args.record, args.fs_safe_rules), args.force)
                 record = FileOutput(filename=filename)

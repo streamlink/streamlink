@@ -1,18 +1,24 @@
 import sys
-from os import devnull
+from atexit import register as _atexit_register
+from os import devnull as _devnull
 from typing import BinaryIO
 
 
-try:
-    stdout: BinaryIO = sys.stdout.buffer
-except AttributeError:  # pragma: no cover
-    from atexit import register as _atexit_register
+devnull_bin = open(_devnull, "wb")
+_atexit_register(devnull_bin.close)
+devnull_txt = open(_devnull, "w", encoding=None)
+_atexit_register(devnull_txt.close)
 
-    stdout = open(devnull, "wb")
-    _atexit_register(stdout.close)
-    del _atexit_register
+try:
+    stdout_or_devnull_bin: BinaryIO = sys.stdout.buffer
+except AttributeError:  # pragma: no cover
+    stdout_or_devnull_bin = devnull_bin
+
+del _atexit_register, _devnull
 
 
 __all__ = [
-    "stdout",
+    "devnull_bin",
+    "devnull_txt",
+    "stdout_or_devnull_bin",
 ]
