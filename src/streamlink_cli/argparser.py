@@ -412,9 +412,7 @@ def build_parser():
         "--quiet",
         action="store_true",
         help="""
-            Hide all log output.
-
-            Alias for --loglevel=none.
+            Suppress console and log output.
         """,
     )
     logging.add_argument(

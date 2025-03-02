@@ -13,6 +13,7 @@ import tests
 from streamlink.logger import ALL, TRACE, StringFormatter
 from streamlink.session import Streamlink
 from streamlink_cli.argparser import ArgumentParser
+from streamlink_cli.compat import devnull_txt
 from streamlink_cli.exceptions import StreamlinkCLIError
 from streamlink_cli.main import build_parser
 
@@ -41,6 +42,7 @@ class TestStdoutStderr:
         ("argv", "stream"),
         [
             pytest.param([], "stdout", id="default"),
+            pytest.param(["--quiet"], "devnull", id="--quiet"),
             pytest.param(["--stdout"], "stderr", id="--stdout"),
             pytest.param(["--output=file"], "stdout", id="--output=file"),
             pytest.param(["--output=-"], "stderr", id="--output=-"),
@@ -55,7 +57,11 @@ class TestStdoutStderr:
 
         rootlogger = logging.getLogger("streamlink")
         clilogger = streamlink_cli.main.log
-        streamobj = getattr(sys, stream)
+        streamobj = {
+            "stdout": sys.stdout,
+            "stderr": sys.stderr,
+            "devnull": devnull_txt,
+        }.get(stream)
 
         assert clilogger.parent is rootlogger
         assert isinstance(rootlogger.handlers[0], logging.StreamHandler)

@@ -15,7 +15,7 @@ from contextlib import closing, suppress
 from gettext import gettext
 from pathlib import Path
 from time import sleep
-from typing import Any
+from typing import Any, TextIO
 
 import streamlink.logger as logger
 from streamlink import NoPluginError, PluginError, StreamError, Streamlink, __version__ as streamlink_version
@@ -31,7 +31,7 @@ from streamlink_cli.argparser import (
     setup_plugin_options,
     setup_session_options,
 )
-from streamlink_cli.compat import stdout_or_devnull_bin
+from streamlink_cli.compat import devnull_txt, stdout_or_devnull_bin
 from streamlink_cli.console import ConsoleOutput, ConsoleUserInputRequester
 from streamlink_cli.constants import CONFIG_FILES, DEFAULT_STREAM_METADATA, LOG_DIR, PLUGIN_DIRS, STREAM_SYNONYMS
 from streamlink_cli.exceptions import StreamlinkCLIError
@@ -899,9 +899,11 @@ def setup(parser: ArgumentParser) -> None:
     # call argument set up as early as possible to load args from config files
     setup_config_args(parser, ignore_unknown=True)
 
-    # Console output should be on stderr if we are outputting
-    # a stream to stdout.
-    if args.stdout or args.output == "-" or args.record == "-" or args.record_and_pipe:
+    # Console output should be on stderr if we are outputting a stream to stdout
+    console_out: TextIO
+    if args.quiet:
+        console_out = devnull_txt
+    elif args.stdout or args.output == "-" or args.record == "-" or args.record_and_pipe:
         console_out = sys.stderr
     else:
         console_out = sys.stdout
