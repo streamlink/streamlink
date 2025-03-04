@@ -25,7 +25,7 @@ class TestPluginUserInput:
         with patch("streamlink_cli.console.sys.stdin.isatty", return_value=isatty):
             mock_console = Mock()
             mock_console.ask.return_value = "username"
-            mock_console.askpass.return_value = "password"
+            mock_console.ask_password.return_value = "password"
             console_input = ConsoleUserInputRequester(mock_console)
             session.set_option("user-input-requester", console_input)
             yield console_input
@@ -45,7 +45,7 @@ class TestPluginUserInput:
         assert console_input.console.ask.call_args_list == [call("username: ")]
 
         assert testplugin.input_ask_password("password") == "password"
-        assert console_input.console.askpass.call_args_list == [call("password: ")]
+        assert console_input.console.ask_password.call_args_list == [call("password: ")]
 
     @pytest.mark.parametrize("console_input", [False], indirect=True)
     def test_user_input_console_no_tty(self, testplugin: _TestPlugin, console_input: ConsoleUserInputRequester):

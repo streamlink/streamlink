@@ -157,7 +157,7 @@ class TestConsoleOutput:
         assert console.ask("test: ") is None
         assert getvalue(output) == "test: "
 
-    def test_askpass(self, monkeypatch: pytest.MonkeyPatch, output: TextIOWrapper):
+    def test_ask_password(self, monkeypatch: pytest.MonkeyPatch, output: TextIOWrapper):
         def getpass(prompt, stream):
             stream.write(prompt)
             return "hello"
@@ -165,17 +165,17 @@ class TestConsoleOutput:
         monkeypatch.setattr("streamlink_cli.console.getpass", getpass)
 
         console = ConsoleOutput(output)
-        assert console.askpass("test: ") == "hello"
+        assert console.ask_password("test: ") == "hello"
         assert getvalue(output) == "test: "
 
-    def test_askpass_no_tty(self, output: TextIOWrapper):
+    def test_ask_password_no_tty(self, output: TextIOWrapper):
         console = ConsoleOutput(output)
-        assert console.askpass("test: ") is None
+        assert console.ask_password("test: ") is None
         assert getvalue(output) == ""
 
-    def test_askpass_no_stdin(self, monkeypatch: pytest.MonkeyPatch, output: TextIOWrapper):
+    def test_ask_password_no_stdin(self, monkeypatch: pytest.MonkeyPatch, output: TextIOWrapper):
         monkeypatch.setattr("sys.stdin", None)
 
         console = ConsoleOutput(output)
-        assert console.askpass("test: ") is None
+        assert console.ask_password("test: ") is None
         assert getvalue(output) == ""

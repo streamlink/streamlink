@@ -307,7 +307,7 @@ class TestSetupPluginArgsAndOptions:
     def console(self):
         return Mock(
             ask=Mock(return_value="answer"),
-            askpass=Mock(return_value="password"),
+            ask_password=Mock(return_value="password"),
         )
 
     @pytest.fixture()
@@ -324,7 +324,7 @@ class TestSetupPluginArgsAndOptions:
         @pluginargument("qux", help=SUPPRESS)
         # required argument with dependencies
         @pluginargument("user", required=True, requires=["pass", "captcha"])
-        # sensitive argument (using console.askpass if unset)
+        # sensitive argument (using console.ask_password if unset)
         @pluginargument("pass", sensitive=True)
         # argument with custom prompt (using console.ask if unset)
         @pluginargument("captcha", prompt="CAPTCHA code")
@@ -371,7 +371,7 @@ class TestSetupPluginArgsAndOptions:
         assert options.defaults == {}
 
         assert not console.ask.called
-        assert not console.askpass.called
+        assert not console.ask_password.called
 
     def test_setup_options_no_user_input_requester(self, session: Streamlink, plugin: type[Plugin]):
         session.set_option("user-input-requester", None)
@@ -391,7 +391,7 @@ class TestSetupPluginArgsAndOptions:
         options = setup_plugin_options(session, args, "mock", plugin)
 
         assert console.ask.call_args_list == [call("CAPTCHA code: ")]
-        assert console.askpass.call_args_list == [call("Enter mock pass: ")]
+        assert console.ask_password.call_args_list == [call("Enter mock pass: ")]
 
         assert plugin.arguments
         arg_foo = plugin.arguments.get("foo-bar")

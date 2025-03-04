@@ -25,7 +25,7 @@ class ConsoleUserInputRequester(UserInputRequester):
     def ask_password(self, prompt: str) -> str:
         if not sys.stdin or not sys.stdin.isatty():
             raise OSError("no TTY available")
-        return self.console.askpass(f"{prompt.strip()}: ")
+        return self.console.ask_password(f"{prompt.strip()}: ")
 
 
 class ConsoleOutput:
@@ -45,7 +45,7 @@ class ConsoleOutput:
         except Exception:
             return None
 
-    def askpass(self, prompt: str) -> str | None:
+    def ask_password(self, prompt: str) -> str | None:
         if not sys.stdin or not sys.stdin.isatty():
             return None
 
