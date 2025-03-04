@@ -1,10 +1,12 @@
+from __future__ import annotations
+
 from io import BytesIO, TextIOWrapper
 from textwrap import dedent
 from unittest.mock import Mock
 
 import pytest
 
-from streamlink_cli.console import ConsoleOutput
+from streamlink_cli.console import ConsoleOutput, ConsoleUserInputRequester
 
 
 def getvalue(output: TextIOWrapper, size: int = -1):
@@ -13,21 +15,37 @@ def getvalue(output: TextIOWrapper, size: int = -1):
     return output.read(size)
 
 
-class TestConsoleOutput:
-    @pytest.fixture(autouse=True)
-    def _isatty(self, request: pytest.FixtureRequest, monkeypatch: pytest.MonkeyPatch):
-        isatty = not request.function.__name__.endswith("_no_tty")
-        monkeypatch.setattr("sys.stdin.isatty", lambda: isatty)
+def build_textiowrapper(params):
+    if not params.pop("exists", True):
+        return None
 
-    @pytest.fixture()
-    def output(self, request: pytest.FixtureRequest):
-        params = getattr(request, "param", {})
-        params.setdefault("encoding", "utf-8")
-        params.setdefault("errors", "backslashreplace")
-        output = TextIOWrapper(BytesIO(), **params)
+    isatty = params.pop("isatty", True)
+    params.setdefault("encoding", "utf-8")
+    params.setdefault("errors", "backslashreplace")
+    stream = TextIOWrapper(BytesIO(), **params)
+    stream.isatty = lambda: isatty
 
-        return output
+    return stream
 
+
+@pytest.fixture(autouse=True)
+def stdin(request: pytest.FixtureRequest, monkeypatch: pytest.MonkeyPatch):
+    params = getattr(request, "param", {})
+    stdin = build_textiowrapper(params)
+    monkeypatch.setattr("sys.stdin", stdin)
+
+    return stdin
+
+
+@pytest.fixture()
+def output(request: pytest.FixtureRequest):
+    params = getattr(request, "param", {})
+    output = build_textiowrapper(params)
+
+    return output
+
+
+class TestMessages:
     @pytest.mark.parametrize(
         ("output", "expected"),
         [
@@ -127,35 +145,51 @@ class TestConsoleOutput:
         )
         assert test_list1 == ["foo", "bar"]
 
+
+class TestPrompts:
+    def test_prompt_exception(self, output: TextIOWrapper):
+        console = ConsoleOutput(output)
+        with pytest.raises(BaseException) as exc_info:  # noqa: PT011
+            with console._prompt():
+                raise EOFError
+        assert isinstance(exc_info.value, OSError)
+        assert isinstance(exc_info.value.__cause__, EOFError)
+
+    @pytest.mark.parametrize("exception", [OSError, KeyboardInterrupt])
+    def test_prompt_exception_passthrough(self, output: TextIOWrapper, exception: type[Exception]):
+        console = ConsoleOutput(output)
+        with pytest.raises(BaseException) as exc_info:  # noqa: PT011
+            with console._prompt():
+                raise exception
+        assert isinstance(exc_info.value, exception)
+
     def test_ask(self, monkeypatch: pytest.MonkeyPatch, output: TextIOWrapper):
         monkeypatch.setattr("builtins.input", Mock(return_value="hello"))
 
         console = ConsoleOutput(output)
-        assert console.ask("test: ") == "hello"
+        user_input = ConsoleUserInputRequester(console)
+        assert user_input.ask("test") == "hello"
         assert getvalue(output) == "test: "
 
-    def test_ask_no_tty(self, monkeypatch: pytest.MonkeyPatch, output: TextIOWrapper):
+    @pytest.mark.parametrize(
+        ("stdin", "output", "expected"),
+        [
+            pytest.param({"exists": False}, {}, "^No input TTY available$", id="no-stdin"),
+            pytest.param({"isatty": False}, {}, "^No input TTY available$", id="stdin-no-tty"),
+            pytest.param({}, {"exists": False}, "^No output TTY available$", id="no-output"),
+            pytest.param({}, {"isatty": False}, "^No output TTY available$", id="output-no-tty"),
+        ],
+        indirect=["stdin", "output"],
+    )
+    def test_ask_failure(self, monkeypatch: pytest.MonkeyPatch, stdin: TextIOWrapper, output: TextIOWrapper, expected: str):
         mock_input = Mock()
         monkeypatch.setattr("builtins.input", mock_input)
 
         console = ConsoleOutput(output)
-        assert console.ask("test: ") is None
-        assert getvalue(output) == ""
+        user_input = ConsoleUserInputRequester(console)
+        with pytest.raises(OSError, match=expected):
+            user_input.ask("test")
         assert mock_input.call_args_list == []
-
-    def test_ask_no_stdin(self, monkeypatch: pytest.MonkeyPatch, output: TextIOWrapper):
-        monkeypatch.setattr("sys.stdin", None)
-
-        console = ConsoleOutput(output)
-        assert console.ask("test: ") is None
-        assert getvalue(output) == ""
-
-    def test_ask_input_exception(self, monkeypatch: pytest.MonkeyPatch, output: TextIOWrapper):
-        monkeypatch.setattr("builtins.input", Mock(side_effect=ValueError))
-
-        console = ConsoleOutput(output)
-        assert console.ask("test: ") is None
-        assert getvalue(output) == "test: "
 
     def test_ask_password(self, monkeypatch: pytest.MonkeyPatch, output: TextIOWrapper):
         def getpass(prompt, stream):
@@ -165,17 +199,32 @@ class TestConsoleOutput:
         monkeypatch.setattr("streamlink_cli.console.getpass", getpass)
 
         console = ConsoleOutput(output)
-        assert console.ask_password("test: ") == "hello"
+        user_input = ConsoleUserInputRequester(console)
+        assert user_input.ask_password("test") == "hello"
         assert getvalue(output) == "test: "
 
-    def test_ask_password_no_tty(self, output: TextIOWrapper):
-        console = ConsoleOutput(output)
-        assert console.ask_password("test: ") is None
-        assert getvalue(output) == ""
+    @pytest.mark.parametrize(
+        ("stdin", "output", "expected"),
+        [
+            pytest.param({"exists": False}, {}, "^No input TTY available$", id="no-stdin"),
+            pytest.param({"isatty": False}, {}, "^No input TTY available$", id="stdin-no-tty"),
+            pytest.param({}, {"exists": False}, "^No output TTY available$", id="no-output"),
+            pytest.param({}, {"isatty": False}, "^No output TTY available$", id="output-no-tty"),
+        ],
+        indirect=["stdin", "output"],
+    )
+    def test_ask_password_failure(
+        self,
+        monkeypatch: pytest.MonkeyPatch,
+        stdin: TextIOWrapper,
+        output: TextIOWrapper,
+        expected: str,
+    ):
+        mock_getpass = Mock()
+        monkeypatch.setattr("streamlink_cli.console.getpass", mock_getpass)
 
-    def test_ask_password_no_stdin(self, monkeypatch: pytest.MonkeyPatch, output: TextIOWrapper):
-        monkeypatch.setattr("sys.stdin", None)
-
         console = ConsoleOutput(output)
-        assert console.ask_password("test: ") is None
-        assert getvalue(output) == ""
+        user_input = ConsoleUserInputRequester(console)
+        with pytest.raises(OSError, match=expected):
+            user_input.ask_password("test")
+        assert mock_getpass.call_args_list == []

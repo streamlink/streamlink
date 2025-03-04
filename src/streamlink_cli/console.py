@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import sys
+from contextlib import contextmanager
 from getpass import getpass
 from json import dumps
 from typing import Any, TextIO
@@ -14,17 +15,13 @@ class ConsoleUserInputRequester(UserInputRequester):
     Request input from the user on the console using the standard ask/askpass methods
     """
 
-    def __init__(self, console):
+    def __init__(self, console: ConsoleOutput):
         self.console = console
 
     def ask(self, prompt: str) -> str:
-        if not sys.stdin or not sys.stdin.isatty():
-            raise OSError("no TTY available")
         return self.console.ask(f"{prompt.strip()}: ")
 
     def ask_password(self, prompt: str) -> str:
-        if not sys.stdin or not sys.stdin.isatty():
-            raise OSError("no TTY available")
         return self.console.ask_password(f"{prompt.strip()}: ")
 
 
@@ -33,23 +30,28 @@ class ConsoleOutput:
         self.json = json
         self.output = output
 
-    def ask(self, prompt: str) -> str | None:
+    @contextmanager
+    def _prompt(self):
         if not sys.stdin or not sys.stdin.isatty():
-            return None
+            raise OSError("No input TTY available")
+        if not self.output or not self.output.isatty():
+            raise OSError("No output TTY available")
 
-        self.output.write(prompt)
-
-        # noinspection PyBroadException
         try:
+            yield
+        except OSError:
+            raise
+        except Exception as err:
+            raise OSError(err) from err
+
+    def ask(self, prompt: str) -> str:
+        with self._prompt():
+            self.output.write(prompt)
             return input().strip()
-        except Exception:
-            return None
 
-    def ask_password(self, prompt: str) -> str | None:
-        if not sys.stdin or not sys.stdin.isatty():
-            return None
-
-        return getpass(prompt, self.output)
+    def ask_password(self, prompt: str) -> str:
+        with self._prompt():
+            return getpass(prompt=prompt, stream=self.output)
 
     def msg(self, msg: str) -> None:
         if self.json:
