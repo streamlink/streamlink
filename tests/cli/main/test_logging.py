@@ -61,6 +61,7 @@ class TestStdoutStderr:
         assert isinstance(rootlogger.handlers[0], logging.StreamHandler)
         assert rootlogger.handlers[0].stream is streamobj
         assert streamlink_cli.main.console.console_output is streamobj
+        assert streamlink_cli.main.console.file_output is None
 
     @pytest.mark.parametrize(
         ("argv", "stdout", "stderr"),
@@ -463,6 +464,7 @@ class TestLogfile:
         assert isinstance(rootlogger.handlers[0], logging.StreamHandler)
         assert rootlogger.handlers[0].stream is sys.stdout
         assert streamlink_cli.main.console.console_output is sys.stdout
+        assert streamlink_cli.main.console.file_output is None
 
         streamlink_cli.main.log.info("a")
         streamlink_cli.main.console.msg("b")
@@ -473,24 +475,27 @@ class TestLogfile:
 
     # noinspection PyUnresolvedReferences
     @pytest.mark.parametrize(
-        ("argv", "path", "content"),
+        ("argv", "path", "logcontent", "filecontent"),
         [
             pytest.param(
                 ["--logfile=path/to/logfile"],
                 Path("path", "to", "logfile"),
                 "[cli][info] a\nb\n",
+                "b\n",
                 id="logfile-path-resolve",
             ),
             pytest.param(
                 ["--logfile=~/path/to/logfile"],
                 Path("user", "path", "to", "logfile"),
                 "[cli][info] a\nb\n",
+                "b\n",
                 id="logfile-path-expanduser",
             ),
             pytest.param(
                 ["--logfile=-"],
                 Path("user", "logs", "2000-01-01_12-34-56.log"),
                 "[cli][info] a\nb\n",
+                "b\n",
                 id="logfile-auto",
             ),
         ],
@@ -504,7 +509,8 @@ class TestLogfile:
         logpath: Path,
         argv: list,
         path: str,
-        content: str,
+        logcontent: str,
+        filecontent: str,
     ):
         abspath = Path().resolve() / path
 
@@ -519,14 +525,49 @@ class TestLogfile:
         assert isinstance(rootlogger.handlers[0], logging.FileHandler)
         assert rootlogger.handlers[0].baseFilename == str(abspath)
         assert rootlogger.handlers[0].stream is streamobj
-        assert streamlink_cli.main.console.console_output is streamobj
+        assert streamlink_cli.main.console.console_output is not streamobj
+        assert streamlink_cli.main.console.file_output is streamobj
 
         streamlink_cli.main.log.info("a")
         streamlink_cli.main.console.msg("b")
         out, err = capsys.readouterr()
         assert mock_open.call_args_list == [call(str(abspath), "a", encoding="utf-8", errors=None)]
-        assert streamobj.getvalue() == content
-        assert out == ""
+        assert streamobj.getvalue() == logcontent
+        assert out == filecontent
+        assert err == ""
+
+    @pytest.mark.parametrize("argv", [pytest.param(["--logfile=tty"], id="tty")], indirect=["argv"])
+    def test_logfile_isatty(
+        self,
+        monkeypatch: pytest.MonkeyPatch,
+        capsys: pytest.CaptureFixture,
+        argv: list,
+        parser: ArgumentParser,
+    ):
+        abspath = str(Path().resolve() / "tty")
+
+        streamobj = StringIO()
+        streamobj.isatty = lambda: True  # type: ignore[method-assign]
+
+        mock_open = Mock(return_value=streamobj)
+        monkeypatch.setattr("builtins.open", mock_open)
+
+        streamlink_cli.main.setup(parser)
+        assert mock_open.call_args_list == [call(abspath, "a", encoding="utf-8", errors=None)]
+
+        rootlogger = logging.getLogger("streamlink")
+        handler = rootlogger.handlers[0]
+        assert isinstance(handler, logging.FileHandler)
+        assert handler.stream is streamobj
+
+        assert streamlink_cli.main.console.console_output is not streamobj
+        assert streamlink_cli.main.console.file_output is None
+
+        streamlink_cli.main.log.info("a")
+        streamlink_cli.main.console.msg("b")
+        out, err = capsys.readouterr()
+        assert streamobj.getvalue() == "[cli][info] a\n"
+        assert out == "b\n"
         assert err == ""
 
 
