@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import sys
-from contextlib import contextmanager
+from contextlib import contextmanager, suppress
 from getpass import getpass
 from json import dumps
 from typing import Any, TextIO
@@ -26,15 +26,49 @@ class ConsoleUserInputRequester(UserInputRequester):
 
 
 class ConsoleOutput:
-    def __init__(self, output: TextIO, json: bool = False):
-        self.json = json
-        self.output = output
+    def __init__(
+        self,
+        *,
+        console_output: TextIO | None = None,
+        file_output: TextIO | None = None,
+        json: bool = False,
+    ):
+        self.json: bool = json
+        self._console_output: TextIO | None = console_output
+        self._file_output: TextIO | None = file_output
+
+    @property
+    def console_output(self) -> TextIO | None:
+        return self._console_output
+
+    @console_output.setter
+    def console_output(self, console_output: TextIO | None) -> None:
+        self._console_output = console_output
+
+    @property
+    def file_output(self) -> TextIO | None:
+        return self._file_output
+
+    @file_output.setter
+    def file_output(self, file_output: TextIO | None) -> None:
+        if file_output is None or file_output.isatty():
+            self._file_output = None
+        else:
+            self._file_output = file_output
+
+    @staticmethod
+    def _write(stream: TextIO | None, msg: str):
+        if stream is None:
+            return
+        with suppress(OSError):
+            stream.write(msg)
+            stream.flush()
 
     @contextmanager
     def _prompt(self):
         if not sys.stdin or not sys.stdin.isatty():
             raise OSError("No input TTY available")
-        if not self.output or not self.output.isatty():
+        if not self._console_output or not self._console_output.isatty():
             raise OSError("No output TTY available")
 
         try:
@@ -46,17 +80,19 @@ class ConsoleOutput:
 
     def ask(self, prompt: str) -> str:
         with self._prompt():
-            self.output.write(prompt)
+            self._write(self._console_output, prompt)
             return input().strip()
 
     def ask_password(self, prompt: str) -> str:
         with self._prompt():
-            return getpass(prompt=prompt, stream=self.output)
+            return getpass(prompt=prompt, stream=self._console_output)
 
     def msg(self, msg: str) -> None:
         if self.json:
             return
-        self.output.write(f"{msg}\n")
+        msg = f"{msg}\n"
+        self._write(self._console_output, msg)
+        self._write(self._file_output, msg)
 
     def msg_json(self, *objs: Any, **keywords: Any) -> None:
         if not self.json:
@@ -84,11 +120,15 @@ class ConsoleOutput:
                 out.update(**obj)
             out.update(**keywords)
 
-        # don't escape Unicode characters outside the ASCII range if the output encoding is UTF-8
-        ensure_ascii = self.output.encoding != "utf-8"
+        if self._console_output is not None:
+            # don't escape Unicode characters outside the ASCII range if the output encoding is UTF-8
+            ensure_ascii = self._console_output.encoding != "utf-8"
+            msg = dumps(out, cls=JSONEncoder, ensure_ascii=ensure_ascii, indent=2)
+            self._write(self._console_output, f"{msg}\n")
 
-        msg = dumps(out, cls=JSONEncoder, ensure_ascii=ensure_ascii, indent=2)
-        self.output.write(f"{msg}\n")
+        if self._file_output is not None:
+            msg = dumps(out, cls=JSONEncoder, ensure_ascii=False, indent=2)
+            self._write(self._file_output, f"{msg}\n")
 
 
 __all__ = ["ConsoleOutput", "ConsoleUserInputRequester"]
