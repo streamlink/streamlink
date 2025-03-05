@@ -15,7 +15,7 @@ from contextlib import closing, suppress
 from gettext import gettext
 from pathlib import Path
 from time import sleep
-from typing import Any
+from typing import Any, TextIO
 
 import streamlink.logger as logger
 from streamlink import NoPluginError, PluginError, StreamError, Streamlink, __version__ as streamlink_version
@@ -716,6 +716,8 @@ def setup_args(
     if not args.url and args.url_param:
         args.url = args.url_param
 
+    args.silent_log = any(getattr(args, attr) for attr in QUIET_OPTIONS)
+
 
 def setup_config_args(parser, ignore_unknown=False):
     if args.no_config:
@@ -846,17 +848,26 @@ def log_current_arguments(session: Streamlink, parser: argparse.ArgumentParser):
             log.debug(f" {name}={value if name not in sensitive else '*' * 8}")
 
 
-def setup_logger_and_console(
-    stream=sys.stdout,
-    level: str = "info",
-    fmt: str | None = None,
-    datefmt: str | None = None,
-    file: str | None = None,
-    json=False,
-):
+def setup_console() -> None:
     global console
 
-    verbose = level in ("trace", "all")
+    console_output: TextIO | None
+    if args.stdout or args.output == "-" or args.record == "-" or args.record_and_pipe:
+        # Console output should be on stderr if we are outputting a stream to stdout
+        console_output = sys.stderr
+    else:
+        console_output = sys.stdout
+
+    console = ConsoleOutput(console_output=console_output, json=args.json)
+
+
+def setup_logger() -> None:
+    level: str = args.loglevel if not args.silent_log else logging.getLevelName(logger.NONE)
+    file: str | None = args.logfile if level != logging.getLevelName(logger.NONE) else None
+    fmt: str | None = args.logformat
+    datefmt: str | None = args.logdateformat
+
+    verbose = level in (logging.getLevelName(logger.TRACE), logging.getLevelName(logger.ALL))
     if not fmt:
         if verbose:
             fmt = "[{asctime}][{name}][{levelname}] {message}"
@@ -885,13 +896,14 @@ def setup_logger_and_console(
             datefmt=datefmt,
             style="{",
             level=level,
-            stream=stream,
+            stream=console.console_output,
             capture_warnings=True,
         )
     except Exception as err:
         raise StreamlinkCLIError(f"Logging setup error: {err}") from err
 
-    console = ConsoleOutput(console_output=streamhandler.stream, json=json)
+    if isinstance(streamhandler, logging.FileHandler):
+        console.file_output = streamhandler.stream
 
 
 def setup(parser: ArgumentParser) -> None:
@@ -899,25 +911,8 @@ def setup(parser: ArgumentParser) -> None:
     # call argument set up as early as possible to load args from config files
     setup_config_args(parser, ignore_unknown=True)
 
-    # Console output should be on stderr if we are outputting
-    # a stream to stdout.
-    if args.stdout or args.output == "-" or args.record == "-" or args.record_and_pipe:
-        console_out = sys.stderr
-    else:
-        console_out = sys.stdout
-
-    # We don't want log output when we are printing JSON or a command-line.
-    silent_log = any(getattr(args, attr) for attr in QUIET_OPTIONS)
-    log_level = args.loglevel if not silent_log else "none"
-    log_file = args.logfile if log_level != "none" else None
-    setup_logger_and_console(
-        stream=console_out,
-        level=log_level,
-        fmt=args.logformat,
-        datefmt=args.logdateformat,
-        file=log_file,
-        json=args.json,
-    )
+    setup_console()
+    setup_logger()
 
     setup_streamlink()
     # load additional plugins
@@ -928,8 +923,7 @@ def setup(parser: ArgumentParser) -> None:
     setup_config_args(parser)
 
     # update the logging level if changed by a plugin specific config
-    log_level = args.loglevel if not silent_log else "none"
-    logger.root.setLevel(log_level)
+    logger.root.setLevel(args.loglevel if not args.silent_log else logger.NONE)
 
     log_root_warning()
     log_current_versions()
