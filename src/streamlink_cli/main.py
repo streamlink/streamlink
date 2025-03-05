@@ -891,7 +891,7 @@ def setup_logger_and_console(
     except Exception as err:
         raise StreamlinkCLIError(f"Logging setup error: {err}") from err
 
-    console = ConsoleOutput(streamhandler.stream, json)
+    console = ConsoleOutput(console_output=streamhandler.stream, json=json)
 
 
 def setup(parser: ArgumentParser) -> None:

@@ -60,7 +60,7 @@ class TestStdoutStderr:
         assert clilogger.parent is rootlogger
         assert isinstance(rootlogger.handlers[0], logging.StreamHandler)
         assert rootlogger.handlers[0].stream is streamobj
-        assert streamlink_cli.main.console.output is streamobj
+        assert streamlink_cli.main.console.console_output is streamobj
 
     @pytest.mark.parametrize(
         ("argv", "stdout", "stderr"),
@@ -462,7 +462,7 @@ class TestLogfile:
         rootlogger = logging.getLogger("streamlink")
         assert isinstance(rootlogger.handlers[0], logging.StreamHandler)
         assert rootlogger.handlers[0].stream is sys.stdout
-        assert streamlink_cli.main.console.output is sys.stdout
+        assert streamlink_cli.main.console.console_output is sys.stdout
 
         streamlink_cli.main.log.info("a")
         streamlink_cli.main.console.msg("b")
@@ -519,7 +519,7 @@ class TestLogfile:
         assert isinstance(rootlogger.handlers[0], logging.FileHandler)
         assert rootlogger.handlers[0].baseFilename == str(abspath)
         assert rootlogger.handlers[0].stream is streamobj
-        assert streamlink_cli.main.console.output is streamobj
+        assert streamlink_cli.main.console.console_output is streamobj
 
         streamlink_cli.main.log.info("a")
         streamlink_cli.main.console.msg("b")
