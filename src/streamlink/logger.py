@@ -5,7 +5,6 @@ import sys
 import warnings
 from collections.abc import Iterator
 from logging import CRITICAL, DEBUG, ERROR, INFO, WARNING
-from os import devnull
 from pathlib import Path
 from sys import version_info
 from threading import Lock
@@ -146,8 +145,6 @@ class StreamHandler(logging.StreamHandler):
         return res
 
     def _stream_reconfigure(self):
-        if not self.stream:
-            return
         # make stream write calls escape unsupported characters (stdout/stderr encoding is not guaranteed to be utf-8)
         self.stream.reconfigure(errors="backslashreplace")
 
@@ -216,27 +213,25 @@ def basicConfig(
     stream: IO | None = None,
     remove_base: list[str] | None = None,
     capture_warnings: bool = False,
-) -> logging.StreamHandler:
+) -> logging.StreamHandler | None:
     with _config_lock:
-        handler: logging.StreamHandler
+        handler: logging.StreamHandler | None = None
         if filename is not None:
             handler = logging.FileHandler(filename, filemode, encoding="utf-8")
-        else:
+        elif stream is not None:
             handler = StreamHandler(stream)
-            # logging.StreamHandler internally falls back to sys.stderr if stream is None
-            # sys.stderr however can also be None if fd2 doesn't exist, so use a devnull FileHandler in this case instead
-            if not handler.stream:
-                handler = logging.FileHandler(devnull)
 
-        formatter = StringFormatter(
-            fmt=format,
-            datefmt=datefmt,
-            style=style,
-            remove_base=remove_base or REMOVE_BASE,
-        )
-        handler.setFormatter(formatter)
+        if handler is not None:
+            formatter = StringFormatter(
+                fmt=format,
+                datefmt=datefmt,
+                style=style,
+                remove_base=remove_base or REMOVE_BASE,
+            )
+            handler.setFormatter(formatter)
 
-        root.addHandler(handler)
+            root.addHandler(handler)
+
         if level is not None:
             root.setLevel(level)
 
