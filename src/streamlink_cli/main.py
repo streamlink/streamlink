@@ -18,6 +18,7 @@ from time import sleep
 from typing import Any, TextIO
 
 import streamlink.logger as logger
+import streamlink_cli.compat as compat
 from streamlink import NoPluginError, PluginError, StreamError, Streamlink, __version__ as streamlink_version
 from streamlink.exceptions import FatalPluginError, StreamlinkDeprecationWarning
 from streamlink.plugin import Plugin
@@ -852,7 +853,9 @@ def setup_console() -> None:
     global console
 
     console_output: TextIO | None
-    if args.stdout or args.output == "-" or args.record == "-" or args.record_and_pipe:
+    if args.quiet:
+        console_output = compat.devnull_txt
+    elif args.stdout or args.output == "-" or args.record == "-" or args.record_and_pipe:
         # Console output should be on stderr if we are outputting a stream to stdout
         console_output = sys.stderr
     else:

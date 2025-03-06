@@ -8,6 +8,7 @@ from unittest.mock import Mock, call
 
 import pytest
 
+import streamlink_cli.compat
 import streamlink_cli.main
 import tests
 from streamlink.logger import ALL, TRACE, StringFormatter
@@ -41,6 +42,7 @@ class TestStdoutStderr:
         ("argv", "stream"),
         [
             pytest.param([], "stdout", id="default"),
+            pytest.param(["--quiet"], "devnull", id="--quiet"),
             pytest.param(["--stdout"], "stderr", id="--stdout"),
             pytest.param(["--output=file"], "stdout", id="--output=file"),
             pytest.param(["--output=-"], "stderr", id="--output=-"),
@@ -55,7 +57,11 @@ class TestStdoutStderr:
 
         rootlogger = logging.getLogger("streamlink")
         clilogger = streamlink_cli.main.log
-        streamobj = getattr(sys, stream)
+        streamobj = {
+            "stdout": sys.stdout,
+            "stderr": sys.stderr,
+            "devnull": streamlink_cli.compat.devnull_txt,
+        }.get(stream)
 
         assert clilogger.parent is rootlogger
         assert isinstance(rootlogger.handlers[0], logging.StreamHandler)
@@ -429,19 +435,28 @@ class TestLogfile:
 
     # noinspection PyUnresolvedReferences
     @pytest.mark.parametrize(
-        ("argv", "stdout", "stderr"),
+        ("argv", "stream", "stdout", "stderr"),
         [
             pytest.param(
                 [],
+                "stdout",
                 "[cli][info] a\nb\n",
                 "",
                 id="no-logfile",
             ),
             pytest.param(
                 ["--logfile=file", "--loglevel=none"],
+                "stdout",
                 "b\n",
                 "",
                 id="logfile-loglevel-none",
+            ),
+            pytest.param(
+                ["--logfile=file", "--quiet"],
+                "devnull",
+                "",
+                "",
+                id="logfile-quiet",
             ),
         ],
         indirect=["argv"],
@@ -452,18 +467,26 @@ class TestLogfile:
         capsys: pytest.CaptureFixture,
         parser: ArgumentParser,
         argv: list,
+        stream: str,
         stdout: str,
         stderr: str,
     ):
         mock_open = Mock()
         monkeypatch.setattr("builtins.open", mock_open)
 
+        streamobj = {
+            "stdout": sys.stdout,
+            "stderr": sys.stderr,
+            "devnull": streamlink_cli.compat.devnull_txt,
+        }.get(stream)
+
         streamlink_cli.main.setup(parser)
 
         rootlogger = logging.getLogger("streamlink")
-        assert isinstance(rootlogger.handlers[0], logging.StreamHandler)
-        assert rootlogger.handlers[0].stream is sys.stdout
-        assert streamlink_cli.main.console.console_output is sys.stdout
+        handler = rootlogger.handlers[0]
+        assert isinstance(handler, logging.StreamHandler)
+        assert handler.stream is streamobj
+        assert streamlink_cli.main.console.console_output is streamobj
         assert streamlink_cli.main.console.file_output is None
 
         streamlink_cli.main.log.info("a")
