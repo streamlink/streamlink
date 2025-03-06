@@ -4,7 +4,7 @@ from pathlib import Path
 from typing import BinaryIO
 
 from streamlink.compat import is_win32
-from streamlink_cli.compat import stdout
+from streamlink_cli.compat import stdout_or_devnull_bin
 from streamlink_cli.output.abc import Output
 
 
@@ -37,7 +37,7 @@ class FileOutput(Output):
             msvcrt.setmode(self.fd.fileno(), O_BINARY)
 
     def _close(self):
-        if self.fd is not stdout:
+        if self.fd is not stdout_or_devnull_bin:
             self.fd.close()
         if self.record:
             self.record.close()

@@ -29,7 +29,7 @@ def fd(tmp_path: Path):
 def fake_stdout(monkeypatch: pytest.MonkeyPatch, tmp_path: Path):
     # can't use in-memory io.BytesIO, since fd.fileno() is called on Windows
     with _create_fd(tmp_path, "stdout") as fd:
-        monkeypatch.setattr("streamlink_cli.output.file.stdout", fd)
+        monkeypatch.setattr("streamlink_cli.output.file.stdout_or_devnull_bin", fd)
         yield fd
 
 
