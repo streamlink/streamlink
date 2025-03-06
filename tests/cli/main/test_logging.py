@@ -43,6 +43,7 @@ class TestStdoutStderr:
         ("argv", "stream"),
         [
             pytest.param([], "stdout", id="default"),
+            pytest.param(["--quiet"], None, id="--quiet"),
             pytest.param(["--stdout"], "stderr", id="--stdout"),
             pytest.param(["--output=file"], "stdout", id="--output=file"),
             pytest.param(["--output=-"], "stderr", id="--output=-"),
@@ -52,18 +53,26 @@ class TestStdoutStderr:
         ],
         indirect=["argv"],
     )
-    def test_streams(self, capsys: pytest.CaptureFixture, parser: ArgumentParser, argv: list, stream: str):
+    def test_streams(self, capsys: pytest.CaptureFixture, parser: ArgumentParser, argv: list, stream: str | None):
         streamlink_cli.main.setup(parser)
 
         rootlogger = logging.getLogger("streamlink")
         clilogger = streamlink_cli.main.log
-        streamobj = getattr(sys, stream)
+        streamobj = {
+            None: None,
+            "stdout": sys.stdout,
+            "stderr": sys.stderr,
+        }.get(stream)
 
-        assert clilogger.parent is rootlogger
-        assert isinstance(rootlogger.handlers[0], logging.StreamHandler)
-        assert rootlogger.handlers[0].stream is streamobj
         assert streamlink_cli.main.console.console_output is streamobj
         assert streamlink_cli.main.console.file_output is None
+        assert clilogger.parent is rootlogger
+        if stream is None:
+            assert not rootlogger.handlers
+        else:
+            handler = rootlogger.handlers[0]
+            assert isinstance(handler, logging.StreamHandler)
+            assert handler.stream is streamobj
 
     @pytest.mark.parametrize(
         ("argv", "stdout", "stderr"),
@@ -479,19 +488,28 @@ class TestLogfile:
 
     # noinspection PyUnresolvedReferences
     @pytest.mark.parametrize(
-        ("argv", "stdout", "stderr"),
+        ("argv", "stream", "stdout", "stderr"),
         [
             pytest.param(
                 [],
+                "stdout",
                 "[cli][info] a\nb\n",
                 "",
                 id="no-logfile",
             ),
             pytest.param(
                 ["--logfile=file", "--loglevel=none"],
+                "stdout",
                 "b\n",
                 "",
                 id="logfile-loglevel-none",
+            ),
+            pytest.param(
+                ["--logfile=file", "--quiet"],
+                None,
+                "",
+                "",
+                id="logfile-quiet",
             ),
         ],
         indirect=["argv"],
@@ -502,19 +520,31 @@ class TestLogfile:
         capsys: pytest.CaptureFixture,
         parser: ArgumentParser,
         argv: list,
+        stream: str | None,
         stdout: str,
         stderr: str,
     ):
         mock_open = Mock()
         monkeypatch.setattr("builtins.open", mock_open)
 
+        streamobj = {
+            None: None,
+            "stdout": sys.stdout,
+            "stderr": sys.stderr,
+        }.get(stream)
+
         streamlink_cli.main.setup(parser)
 
-        rootlogger = logging.getLogger("streamlink")
-        assert isinstance(rootlogger.handlers[0], logging.StreamHandler)
-        assert rootlogger.handlers[0].stream is sys.stdout
-        assert streamlink_cli.main.console.console_output is sys.stdout
+        assert streamlink_cli.main.console.console_output is streamobj
         assert streamlink_cli.main.console.file_output is None
+
+        rootlogger = logging.getLogger("streamlink")
+        if stream is None:
+            assert not rootlogger.handlers
+        else:
+            handler = rootlogger.handlers[0]
+            assert isinstance(handler, logging.StreamHandler)
+            assert handler.stream is streamobj
 
         streamlink_cli.main.log.info("a")
         streamlink_cli.main.console.msg("b")

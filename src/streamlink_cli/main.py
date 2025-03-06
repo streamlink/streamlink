@@ -852,7 +852,9 @@ def setup_console() -> None:
     global console
 
     console_output: TextIO | None
-    if args.stdout or args.output == "-" or args.record == "-" or args.record_and_pipe:
+    if args.quiet:
+        console_output = None
+    elif args.stdout or args.output == "-" or args.record == "-" or args.record_and_pipe:
         # Console output should be on stderr if we are outputting a stream to stdout
         console_output = sys.stderr
     else:
