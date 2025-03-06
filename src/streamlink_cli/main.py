@@ -856,7 +856,7 @@ def setup_console() -> None:
         # Console output should be on stderr if we are outputting a stream to stdout
         console_output = sys.stderr
     else:
-        console_output = sys.stdout
+        console_output = sys.stdout or sys.stderr
 
     console = ConsoleOutput(console_output=console_output, json=args.json)
 

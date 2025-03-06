@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import logging
 import sys
 from errno import EINVAL, EPIPE
@@ -97,12 +99,60 @@ class TestStdoutStderr:
         assert out == stdout
         assert err == stderr
 
-    def test_no_stdout(self, monkeypatch: pytest.MonkeyPatch):
-        monkeypatch.setattr("sys.stdout", None)
+    @pytest.mark.parametrize(
+        ("missing_stdio", "expected_stdout", "expected_stderr"),
+        [
+            pytest.param(
+                [],
+                "[cli][info] a\n[test_main_logging][error] b\nerror: c\n",
+                "",
+                id="none-missing",
+            ),
+            pytest.param(
+                ["sys.stdout"],
+                "",
+                "[cli][info] a\n[test_main_logging][error] b\nerror: c\n",
+                id="missing-stdout",
+            ),
+            pytest.param(
+                ["sys.stderr"],
+                "[cli][info] a\n[test_main_logging][error] b\nerror: c\n",
+                "",
+                id="missing-stderr",
+            ),
+            pytest.param(
+                ["sys.stdout", "sys.stderr"],
+                "",
+                "",
+                id="missing-stdout-and-stderr",
+            ),
+        ],
+    )
+    def test_missing_stdio(
+        self,
+        monkeypatch: pytest.MonkeyPatch,
+        capsys: pytest.CaptureFixture,
+        missing_stdio: list[str],
+        expected_stdout: str,
+        expected_stderr: str,
+    ):
+        def run(_parser):
+            childlogger = logging.getLogger("streamlink.test_main_logging")
+            streamlink_cli.main.log.info("a")
+            childlogger.error("b")
+            raise StreamlinkCLIError("c")
+
+        monkeypatch.setattr("streamlink_cli.main.run", run)
+        for item in missing_stdio:
+            monkeypatch.setattr(item, None)
 
         with pytest.raises(SystemExit) as excinfo:
             streamlink_cli.main.main()
-        assert excinfo.value.code == 0
+        assert excinfo.value.code == 1
+
+        out, err = capsys.readouterr()
+        assert out == expected_stdout
+        assert err == expected_stderr
 
     @pytest.mark.parametrize(
         "errno",
