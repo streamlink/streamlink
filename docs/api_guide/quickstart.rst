@@ -17,7 +17,7 @@ The simplest use of the Streamlink API looks like this:
 
 This simply attempts to find a plugin and use it to extract streams from
 the URL. This works great in simple cases but if you want more
-fine tuning you need to use a `session object`_ instead.
+fine tuning you need to use a `session object`_ instead and `fetch streams <fetching streams_>`_ manually.
 
 The returned value is a dict containing :py:class:`Stream <streamlink.stream.Stream>` objects:
 
@@ -80,19 +80,55 @@ when extracting streams more than once. You start by creating a
 .. code-block:: python
 
     >>> from streamlink import Streamlink
-    >>> session = Streamlink()
+    >>> session = Streamlink({"optional-session-option": 123})
 
-You can then set options like this:
+On the session instance, you can set additional options like so:
 
 .. code-block:: python
 
     >>> session.set_option("stream-timeout", 30)
+    >>> session.options.set("stream-timeout", 30)
 
-and extract streams like this:
+See :py:class:`StreamlinkOptions <streamlink.session.options.StreamlinkOptions>` for all available session options.
+
+
+Fetching streams
+^^^^^^^^^^^^^^^^
+
+Streams can be fetched in two different ways.
+
+The first example will automatically try to find a matching plugin and available streams from the input URL:
 
 .. code-block:: python
 
     >>> streams = session.streams("URL")
 
+See :py:meth:`Streamlink.streams() <streamlink.session.Streamlink.streams>` for more.
 
-See :py:meth:`Streamlink.set_option() <streamlink.session.Streamlink.set_option>` to see which options are available.
+``Streamlink.streams()`` however doen't allow you to set any plugin options which might be necessary in order to access streams,
+e.g. when authentication data is required, or plugin options which may alter the plugin's behavior.
+Be aware that plugin options are distinct from the session options, and since these options depend on the plugin in use,
+plugin options can't be set without resolving the matching plugin first.
+
+Plugins can therefore be resolved and initialized manually from the input URL, so plugin options can be passed to the plugin:
+
+.. code-block:: python
+
+    >>> plugin_name, plugin_class, resolved_url = session.resolve_url("URL")
+    >>> plugin = plugin_class(session, resolved_url, options={"plugin-option": 123})
+    >>> streams = plugin.streams()
+
+See :py:meth:`Streamlink.resolve_url() <streamlink.session.Streamlink.resolve_url>`
+and :py:class:`Plugin <streamlink.plugin.Plugin>` for more.
+
+Alternatively, the plugin class can be imported directly from the respective module of the ``streamlink.plugins`` package.
+The input URL then must match the plugin's URL matchers.
+
+.. code-block:: python
+
+    >>> from streamlink.plugins.twitch import __plugin__ as Twitch
+    >>> plugin = Twitch(session, "https://twitch.tv/CHANNEL", options={"disable-ads": True, "low-latency": True})
+    >>> streams = plugin.streams()
+
+Available plugin options are defined using the :py:meth:`@pluginargument <streamlink.plugin.pluginargument>`
+Plugin class decorator in each plugin's module.
