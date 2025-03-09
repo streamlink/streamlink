@@ -296,18 +296,11 @@ def test_cli_main_setup_session_options(monkeypatch: pytest.MonkeyPatch, parser:
 
 
 class TestSetupPluginArgsAndOptions:
-    @pytest.fixture(autouse=True)
-    def stdin(self, monkeypatch: pytest.MonkeyPatch):
-        mock_stdin = Mock(isatty=Mock(return_value=True))
-        monkeypatch.setattr("sys.stdin", mock_stdin)
-
-        return mock_stdin
-
     @pytest.fixture()
     def console(self):
         return Mock(
             ask=Mock(return_value="answer"),
-            askpass=Mock(return_value="password"),
+            ask_password=Mock(return_value="password"),
         )
 
     @pytest.fixture()
@@ -324,7 +317,7 @@ class TestSetupPluginArgsAndOptions:
         @pluginargument("qux", help=SUPPRESS)
         # required argument with dependencies
         @pluginargument("user", required=True, requires=["pass", "captcha"])
-        # sensitive argument (using console.askpass if unset)
+        # sensitive argument (using console.ask_password if unset)
         @pluginargument("pass", sensitive=True)
         # argument with custom prompt (using console.ask if unset)
         @pluginargument("captcha", prompt="CAPTCHA code")
@@ -371,7 +364,7 @@ class TestSetupPluginArgsAndOptions:
         assert options.defaults == {}
 
         assert not console.ask.called
-        assert not console.askpass.called
+        assert not console.ask_password.called
 
     def test_setup_options_no_user_input_requester(self, session: Streamlink, plugin: type[Plugin]):
         session.set_option("user-input-requester", None)
@@ -391,7 +384,7 @@ class TestSetupPluginArgsAndOptions:
         options = setup_plugin_options(session, args, "mock", plugin)
 
         assert console.ask.call_args_list == [call("CAPTCHA code: ")]
-        assert console.askpass.call_args_list == [call("Enter mock pass: ")]
+        assert console.ask_password.call_args_list == [call("Enter mock pass: ")]
 
         assert plugin.arguments
         arg_foo = plugin.arguments.get("foo-bar")
@@ -487,24 +480,14 @@ class TestSetupPluginArgsAndOptions:
             "four-b": "default",
         }
 
-    def test_setup_options_no_tty(
+    def test_setup_options_user_input_oserror(
         self,
         session: Streamlink,
         plugin: type[Plugin],
-        stdin: Mock,
+        console: Mock,
     ):
-        stdin.isatty.return_value = False
+        console.ask.side_effect = OSError("No input TTY available")
+        console.ask_password.side_effect = OSError("No input TTY available")
         with pytest.raises(StreamlinkCLIError) as exc_info:
             setup_plugin_options(session, Mock(mock_user="username", mock_pass=None, mock_qux=None), "mock", plugin)
-        assert str(exc_info.value) == "no TTY available"
-
-    def test_setup_options_no_stdin(
-        self,
-        monkeypatch: pytest.MonkeyPatch,
-        session: Streamlink,
-        plugin: type[Plugin],
-    ):
-        monkeypatch.setattr("sys.stdin", None)
-        with pytest.raises(StreamlinkCLIError) as exc_info:
-            setup_plugin_options(session, Mock(mock_user="username", mock_pass=None, mock_qux=None), "mock", plugin)
-        assert str(exc_info.value) == "no TTY available"
+        assert str(exc_info.value) == "No input TTY available"

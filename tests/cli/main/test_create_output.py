@@ -5,7 +5,7 @@ from unittest.mock import Mock, call
 import pytest
 
 from streamlink.exceptions import StreamlinkDeprecationWarning
-from streamlink_cli.compat import stdout
+from streamlink_cli.compat import stdout_or_devnull_bin
 from streamlink_cli.exceptions import StreamlinkCLIError
 from streamlink_cli.main import (
     Formatter,
@@ -123,7 +123,7 @@ def test_player_record_stdout(formatter: Formatter, argv: list):
     assert output.env == {"VAR1": "abc", "VAR2": "def"}
     assert type(output.record) is FileOutput
     assert output.record.filename is None
-    assert output.record.fd is stdout
+    assert output.record.fd is stdout_or_devnull_bin
     assert output.record.record is None
 
 
@@ -157,7 +157,7 @@ def test_stdout(formatter: Formatter, argv: list):
     output = create_output(formatter)
     assert isinstance(output, FileOutput)
     assert output.filename is None
-    assert output.fd is stdout
+    assert output.fd is stdout_or_devnull_bin
     assert output.record is None
 
 
@@ -203,7 +203,7 @@ def test_stdout_record(
     assert check_file_output.call_args_list == [call(Path("foo"), force)]
     assert isinstance(output, FileOutput)
     assert output.filename is None
-    assert output.fd is stdout
+    assert output.fd is stdout_or_devnull_bin
     assert isinstance(output.record, FileOutput)
     assert output.record.filename == Path("foo")
     assert output.record.fd is None
