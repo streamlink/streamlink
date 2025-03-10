@@ -315,6 +315,8 @@ class Plugin(metaclass=PluginMeta):
         self.session: Streamlink = session
         self.matches = Matches()
         self.url: str = url
+        if self.matchers and not self.match:
+            raise PluginError("The input URL did not match any of this plugin's matchers")
 
         self.load_cookies()
 

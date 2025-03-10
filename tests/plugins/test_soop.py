@@ -79,5 +79,5 @@ class TestPluginCanHandleUrlSoop(PluginCanHandleUrl):
 def test_options(session: Streamlink, plugin_options: dict, expected: dict):
     options = Options()
     options.update(plugin_options)
-    plugin = Soop(session, "https://play.soop.co.kr/CHANNEL/0123456789", options)
+    plugin = Soop(session, "https://play.sooplive.co.kr/CHANNEL/0123456789", options)
     assert dict(plugin.options.items()) == expected
