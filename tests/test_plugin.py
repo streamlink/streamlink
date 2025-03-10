@@ -20,6 +20,7 @@ from streamlink.plugin import (
     Plugin,
     PluginArgument,
     PluginArguments,
+    PluginError,
     pluginargument,
     pluginmatcher,
 )
@@ -178,6 +179,18 @@ class TestPluginMatcher:
             @pluginmatcher(name="foo", pattern=re.compile(r"foo"))
             class PluginTwo(PluginOne):
                 pass
+
+    def test_matchers_not_matching(self):
+        @pluginmatcher(re.compile(r"http://foo"))
+        class MyPlugin(FakePlugin):
+            pass
+
+        with pytest.raises(PluginError, match=r"^The input URL did not match any of this plugin's matchers$"):
+            MyPlugin(Mock(), "http://bar")
+
+    def test_no_matchers_not_matching(self):
+        plugin = FakePlugin(Mock(), "")
+        assert plugin.match is None
 
     def test_url_setter(self):
         @pluginmatcher(re.compile(r"http://(foo)"))
