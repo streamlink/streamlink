@@ -24,6 +24,7 @@ from streamlink.stream.segmented import SegmentedStreamReader, SegmentedStreamWo
 from streamlink.utils.cache import LRUCache
 from streamlink.utils.crypto import AES, unpad
 from streamlink.utils.formatter import Formatter
+from streamlink.utils.l10n import Language
 from streamlink.utils.times import now
 
 
@@ -721,7 +722,18 @@ class HLSStream(HTTPStream):
 
         locale = session.localization
         hls_audio_select = session.options.get("hls-audio-select")
-        audio_select = [item.strip().lower() for item in hls_audio_select]
+        audio_select_any: bool = "*" in hls_audio_select
+        audio_select_langs: list[Language] = []
+        audio_select_codes: list[str] = []
+
+        for item in hls_audio_select:
+            item = item.strip().lower()
+            if item == "*":
+                continue
+            try:
+                audio_select_langs.append(Language.get(item))
+            except LookupError:
+                audio_select_codes.append(item)
 
         request_args = session.http.valid_request_args(**kwargs)
         res = cls._fetch_variant_playlist(session, url, **request_args)
@@ -766,11 +778,19 @@ class HLSStream(HTTPStream):
 
                 # select the first audio stream that matches the user's explict language selection
                 if (
-                    (
-                        "*" in audio_select
-                        or media.language in audio_select
-                        or media.name in audio_select
+                    # user has selected all languages
+                    audio_select_any
+                    # compare plain language codes first
+                    or (
+                        media.language is not None
+                        and media.language in audio_select_codes
                     )
+                    # then compare parsed language codes and user input
+                    or (
+                        media.parsed_language is not None
+                        and media.parsed_language in audio_select_langs
+                    )
+                    # fallback: find first media playlist matching the user's locale
                     or (
                         (not preferred_audio or media.default)
                         and locale.explicit

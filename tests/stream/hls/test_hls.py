@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import itertools
+import logging
 import os
 import unittest
 from datetime import datetime, timedelta, timezone
@@ -1129,8 +1130,9 @@ class TestHlsExtAudio:
         monkeypatch.setattr("streamlink.stream.hls.hls.FFMPEGMuxer.is_usable", Mock(return_value=True))
 
     @pytest.fixture(autouse=True)
-    def _playlist(self, requests_mock: rm.Mocker):
-        with text("hls/test_2.m3u8") as playlist:
+    def _playlist(self, request: pytest.FixtureRequest, requests_mock: rm.Mocker):
+        params = getattr(request, "param", {})
+        with text(params.get("playlist", "hls/test_media_language.m3u8")) as playlist:
             requests_mock.get("http://mocked/path/master.m3u8", text=playlist.read())
             yield
 
@@ -1148,8 +1150,10 @@ class TestHlsExtAudio:
     @pytest.mark.parametrize(
         ("session", "selection"),
         [
-            pytest.param({"hls-audio-select": ["EN"]}, "http://mocked/path/en.m3u8", id="English"),
-            pytest.param({"hls-audio-select": ["es"]}, "http://mocked/path/es.m3u8", id="Spanish"),
+            pytest.param({"hls-audio-select": ["EN"]}, "http://mocked/path/en.m3u8", id="English-language"),
+            pytest.param({"hls-audio-select": ["English"]}, "http://mocked/path/en.m3u8", id="English-name"),
+            pytest.param({"hls-audio-select": ["es"]}, "http://mocked/path/es.m3u8", id="Spanish-language"),
+            pytest.param({"hls-audio-select": ["spanish"]}, "http://mocked/path/es.m3u8", id="Spanish-name"),
         ],
         indirect=["session"],
     )
@@ -1174,6 +1178,33 @@ class TestHlsExtAudio:
             "http://mocked/path/playlist.m3u8",
             "http://mocked/path/en.m3u8",
             "http://mocked/path/es.m3u8",
+        ]
+
+    @pytest.mark.parametrize(
+        ("session", "_playlist"),
+        [
+            pytest.param(
+                {"hls-audio-select": ["und", "qaa", "invalid"]},
+                {"playlist": "hls/test_media_language_special.m3u8"},
+                id="special-language-codes",
+            ),
+        ],
+        indirect=["session", "_playlist"],
+    )
+    def test_parse_media_language(self, caplog: pytest.LogCaptureFixture, session: Streamlink, stream: MuxedHLSStream):
+        assert isinstance(stream, MuxedHLSStream)
+        assert [substream.url for substream in stream.substreams] == [
+            "http://mocked/path/playlist.m3u8",
+            "http://mocked/path/qaa.m3u8",
+            "http://mocked/path/invalid.m3u8",
+            "http://mocked/path/und.m3u8",
+        ]
+        assert [
+            record.message
+            for record in caplog.get_records(when="setup")
+            if record.name == "streamlink.stream.hls" and record.levelno == logging.WARNING
+        ] == [
+            "Unrecognized language for media playlist: language='invalid' name='Does not exist'",
         ]
 
 
