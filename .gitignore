@@ -54,5 +54,3 @@ pip-selfcheck.json
 .coverage
 coverage.xml
 htmlcov
-ffmpeg.sh
-test.sh
