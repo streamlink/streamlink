@@ -1,5 +1,8 @@
+from __future__ import annotations
+
+from collections.abc import Awaitable, Callable
 from contextlib import nullcontext
-from typing import Awaitable, Callable, Union, cast
+from typing import TYPE_CHECKING, cast
 from unittest.mock import ANY, AsyncMock, Mock, call
 
 import pytest
@@ -16,8 +19,15 @@ from streamlink.webbrowser.cdp.exceptions import CDPError
 from tests.webbrowser.cdp import FakeWebsocketConnection
 
 
+if TYPE_CHECKING:
+    from typing_extensions import TypeAlias
+
+
+TAsyncHandler: TypeAlias = "AsyncMock | Callable[[CDPClientSession, RequestPaused], Awaitable]"
+
+
 def async_handler(*args, **kwargs):
-    return cast(Union[AsyncMock, Callable[[CDPClientSession, RequestPaused], Awaitable]], AsyncMock(*args, **kwargs))
+    return cast(TAsyncHandler, AsyncMock(*args, **kwargs))
 
 
 @pytest.fixture()
@@ -69,10 +79,12 @@ class TestLaunch:
 
     @pytest.fixture(autouse=True)
     def mock_run(self, monkeypatch: pytest.MonkeyPatch, cdp_client: Mock):
-        mock_run = Mock(return_value=Mock(
-            __aenter__=AsyncMock(return_value=cdp_client),
-            __aexit__=AsyncMock(),
-        ))
+        mock_run = Mock(
+            return_value=Mock(
+                __aenter__=AsyncMock(return_value=cdp_client),
+                __aexit__=AsyncMock(),
+            ),
+        )
         monkeypatch.setattr(CDPClient, "run", mock_run)
         return mock_run
 
@@ -84,37 +96,45 @@ class TestLaunch:
             assert CDPClient.launch(session, mock_runner) is result
             assert mock_runner.await_args_list == [call(cdp_client)]
 
-    @pytest.mark.parametrize(("session", "options"), [
-        pytest.param(
-            {},
-            dict(executable=None, timeout=20.0, cdp_host=None, cdp_port=None, cdp_timeout=2.0, headless=False),
-            id="Default options",
-        ),
-        pytest.param(
-            {
-                "webbrowser-executable": "foo",
-                "webbrowser-timeout": 123.45,
-                "webbrowser-cdp-host": "::1",
-                "webbrowser-cdp-port": 1234,
-                "webbrowser-cdp-timeout": 12.34,
-                "webbrowser-headless": True,
-            },
-            dict(executable="foo", timeout=123.45, cdp_host="::1", cdp_port=1234, cdp_timeout=12.34, headless=True),
-            id="Custom options",
-        ),
-    ], indirect=["session"])
+    @pytest.mark.parametrize(
+        ("session", "options"),
+        [
+            pytest.param(
+                {},
+                dict(executable=None, timeout=20.0, cdp_host=None, cdp_port=None, cdp_timeout=2.0, headless=False),
+                id="Default options",
+            ),
+            pytest.param(
+                {
+                    "webbrowser-executable": "foo",
+                    "webbrowser-timeout": 123.45,
+                    "webbrowser-cdp-host": "::1",
+                    "webbrowser-cdp-port": 1234,
+                    "webbrowser-cdp-timeout": 12.34,
+                    "webbrowser-headless": True,
+                },
+                dict(executable="foo", timeout=123.45, cdp_host="::1", cdp_port=1234, cdp_timeout=12.34, headless=True),
+                id="Custom options",
+            ),
+        ],
+        indirect=["session"],
+    )
     def test_options(self, session: Streamlink, mock_run: Mock, options: dict):
         assert mock_run.call_args_list == [call(session=session, **options)]
 
     # noinspection PyTestParametrized
     @pytest.mark.usefixtures("_mock_launch")
-    @pytest.mark.parametrize(("session", "_mock_launch"), [
-        pytest.param(
-            {"webbrowser": False},
-            pytest.raises(CDPError, match="^The webbrowser API has been disabled by the user$"),
-            id="Raises CDPError",
-        ),
-    ], indirect=["session", "_mock_launch"])
+    @pytest.mark.parametrize(
+        ("session", "_mock_launch"),
+        [
+            pytest.param(
+                {"webbrowser": False},
+                pytest.raises(CDPError, match=r"^The webbrowser API has been disabled by the user$"),
+                id="Raises CDPError",
+            ),
+        ],
+        indirect=["session", "_mock_launch"],
+    )
     def test_disabled(self, session: Streamlink, mock_run):
         assert not mock_run.called
 
@@ -235,53 +255,56 @@ class TestEvaluate:
 
 
 class TestRequestPausedHandler:
-    @pytest.mark.parametrize(("url_pattern", "regex_pattern"), [
-        pytest.param(
-            r"abc?def?xyz",
-            r"^abc.def.xyz$",
-            id="Question mark",
-        ),
-        pytest.param(
-            r"abc*def*xyz",
-            r"^abc.+def.+xyz$",
-            id="Star",
-        ),
-        pytest.param(
-            r"^(.[a-z])\d$",
-            r"^\^\(\.\[a\-z\]\)\\d\$$",
-            id="Special characters",
-        ),
-        pytest.param(
-            r"abc\?def\*xyz",
-            r"^abc\?def\*xyz$",
-            id="Escaped question mark and star",
-        ),
-        pytest.param(
-            r"abc\\?def\\*xyz",
-            r"^abc\\\\.def\\\\.+xyz$",
-            id="2 escape characters",
-        ),
-        pytest.param(
-            r"abc\\\?def\\\*xyz",
-            r"^abc\\\\\?def\\\\\*xyz$",
-            id="3 escape characters",
-        ),
-        pytest.param(
-            r"abc\\\\?def\\\\*xyz",
-            r"^abc\\\\\\\\.def\\\\\\\\.+xyz$",
-            id="4 escape characters",
-        ),
-        pytest.param(
-            r"abc\\\\\?def\\\\\*xyz",
-            r"^abc\\\\\\\\\?def\\\\\\\\\*xyz$",
-            id="5 escape characters",
-        ),
-        pytest.param(
-            r"http://*.name.tld/foo\?bar=baz",
-            r"^http://.+\.name\.tld/foo\?bar=baz$",
-            id="Typical URL pattern",
-        ),
-    ])
+    @pytest.mark.parametrize(
+        ("url_pattern", "regex_pattern"),
+        [
+            pytest.param(
+                r"abc?def?xyz",
+                r"^abc.def.xyz$",
+                id="Question mark",
+            ),
+            pytest.param(
+                r"abc*def*xyz",
+                r"^abc.+def.+xyz$",
+                id="Star",
+            ),
+            pytest.param(
+                r"^(.[a-z])\d$",
+                r"^\^\(\.\[a\-z\]\)\\d\$$",
+                id="Special characters",
+            ),
+            pytest.param(
+                r"abc\?def\*xyz",
+                r"^abc\?def\*xyz$",
+                id="Escaped question mark and star",
+            ),
+            pytest.param(
+                r"abc\\?def\\*xyz",
+                r"^abc\\\\.def\\\\.+xyz$",
+                id="2 escape characters",
+            ),
+            pytest.param(
+                r"abc\\\?def\\\*xyz",
+                r"^abc\\\\\?def\\\\\*xyz$",
+                id="3 escape characters",
+            ),
+            pytest.param(
+                r"abc\\\\?def\\\\*xyz",
+                r"^abc\\\\\\\\.def\\\\\\\\.+xyz$",
+                id="4 escape characters",
+            ),
+            pytest.param(
+                r"abc\\\\\?def\\\\\*xyz",
+                r"^abc\\\\\\\\\?def\\\\\\\\\*xyz$",
+                id="5 escape characters",
+            ),
+            pytest.param(
+                r"http://*.name.tld/foo\?bar=baz",
+                r"^http://.+\.name\.tld/foo\?bar=baz$",
+                id="Typical URL pattern",
+            ),
+        ],
+    )
     def test_url_pattern_to_regex_pattern(self, url_pattern: str, regex_pattern: str):
         assert RequestPausedHandler._url_pattern_to_regex_pattern(url_pattern).pattern == regex_pattern
 
@@ -301,33 +324,36 @@ class TestRequestPausedHandler:
         assert cdp_client_session._request_handlers[1].on_request
         assert cdp_client_session._request_handlers[3].on_request
 
-    @pytest.mark.parametrize(("args", "matches"), [
-        pytest.param(
-            dict(async_handler=async_handler(), on_request=False),
-            False,
-            id="On response - Any URL",
-        ),
-        pytest.param(
-            dict(async_handler=async_handler(), on_request=True),
-            True,
-            id="On request - Any URL",
-        ),
-        pytest.param(
-            dict(async_handler=async_handler(), url_pattern="http://localhost/", on_request=True),
-            True,
-            id="Matching URL",
-        ),
-        pytest.param(
-            dict(async_handler=async_handler(), url_pattern="http://l?c?l*/", on_request=True),
-            True,
-            id="Matching wildcard URL",
-        ),
-        pytest.param(
-            dict(async_handler=async_handler(), url_pattern="http://other/", on_request=True),
-            False,
-            id="Non-matching URL",
-        ),
-    ])
+    @pytest.mark.parametrize(
+        ("args", "matches"),
+        [
+            pytest.param(
+                dict(async_handler=async_handler(), on_request=False),
+                False,
+                id="On response - Any URL",
+            ),
+            pytest.param(
+                dict(async_handler=async_handler(), on_request=True),
+                True,
+                id="On request - Any URL",
+            ),
+            pytest.param(
+                dict(async_handler=async_handler(), url_pattern="http://localhost/", on_request=True),
+                True,
+                id="Matching URL",
+            ),
+            pytest.param(
+                dict(async_handler=async_handler(), url_pattern="http://l?c?l*/", on_request=True),
+                True,
+                id="Matching wildcard URL",
+            ),
+            pytest.param(
+                dict(async_handler=async_handler(), url_pattern="http://other/", on_request=True),
+                False,
+                id="Non-matching URL",
+            ),
+        ],
+    )
     def test_matches_request(self, args: dict, matches: bool):
         request = RequestPaused.from_json({
             "requestId": "request-1",
@@ -344,33 +370,36 @@ class TestRequestPausedHandler:
         request_handler = RequestPausedHandler(**args)
         assert request_handler.matches(request) is matches
 
-    @pytest.mark.parametrize(("args", "matches"), [
-        pytest.param(
-            dict(async_handler=async_handler(), on_request=False),
-            True,
-            id="On response - Any URL",
-        ),
-        pytest.param(
-            dict(async_handler=async_handler(), on_request=True),
-            False,
-            id="On request - Any URL",
-        ),
-        pytest.param(
-            dict(async_handler=async_handler(), url_pattern="http://localhost/", on_request=False),
-            True,
-            id="Matching URL",
-        ),
-        pytest.param(
-            dict(async_handler=async_handler(), url_pattern="http://l?c?l*/", on_request=False),
-            True,
-            id="Matching wildcard URL",
-        ),
-        pytest.param(
-            dict(async_handler=async_handler(), url_pattern="http://other/", on_request=False),
-            False,
-            id="Non-matching URL",
-        ),
-    ])
+    @pytest.mark.parametrize(
+        ("args", "matches"),
+        [
+            pytest.param(
+                dict(async_handler=async_handler(), on_request=False),
+                True,
+                id="On response - Any URL",
+            ),
+            pytest.param(
+                dict(async_handler=async_handler(), on_request=True),
+                False,
+                id="On request - Any URL",
+            ),
+            pytest.param(
+                dict(async_handler=async_handler(), url_pattern="http://localhost/", on_request=False),
+                True,
+                id="Matching URL",
+            ),
+            pytest.param(
+                dict(async_handler=async_handler(), url_pattern="http://l?c?l*/", on_request=False),
+                True,
+                id="Matching wildcard URL",
+            ),
+            pytest.param(
+                dict(async_handler=async_handler(), url_pattern="http://other/", on_request=False),
+                False,
+                id="Non-matching URL",
+            ),
+        ],
+    )
     def test_matches_response(self, args: dict, matches: bool):
         request = RequestPaused.from_json({
             "requestId": "request-1",
@@ -516,58 +545,61 @@ class TestNavigate:
         assert loaded
 
     @pytest.mark.trio()
-    @pytest.mark.parametrize(("on_request", "fetch_enable_params"), [
-        pytest.param(
-            (False,),
-            (
-                """{"handleAuthRequests":true,"patterns":[{"requestStage":"Response","urlPattern":"*"},"""
-                + """{"requestStage":"Response","urlPattern":"http://foo"}]}"""
+    @pytest.mark.parametrize(
+        ("on_request", "fetch_enable_params"),
+        [
+            pytest.param(
+                (False,),
+                (
+                    """{"handleAuthRequests":true,"patterns":[{"requestStage":"Response","urlPattern":"*"},"""
+                    + """{"requestStage":"Response","urlPattern":"http://foo"}]}"""
+                ),
+                id="Single request handler, on response",
             ),
-            id="Single request handler, on response",
-        ),
-        pytest.param(
-            (True,),
-            (
-                """{"handleAuthRequests":true,"patterns":[{"requestStage":"Request","urlPattern":"*"},"""
-                + """{"requestStage":"Request","urlPattern":"http://foo"}]}"""
+            pytest.param(
+                (True,),
+                (
+                    """{"handleAuthRequests":true,"patterns":[{"requestStage":"Request","urlPattern":"*"},"""
+                    + """{"requestStage":"Request","urlPattern":"http://foo"}]}"""
+                ),
+                id="Single request handler, on request",
             ),
-            id="Single request handler, on request",
-        ),
-        pytest.param(
-            (False, False),
-            (
-                """{"handleAuthRequests":true,"patterns":[{"requestStage":"Response","urlPattern":"*"},"""
-                + """{"requestStage":"Response","urlPattern":"http://foo"}]}"""
+            pytest.param(
+                (False, False),
+                (
+                    """{"handleAuthRequests":true,"patterns":[{"requestStage":"Response","urlPattern":"*"},"""
+                    + """{"requestStage":"Response","urlPattern":"http://foo"}]}"""
+                ),
+                id="Multiple request handlers, on response",
             ),
-            id="Multiple request handlers, on response",
-        ),
-        pytest.param(
-            (True, True),
-            (
-                """{"handleAuthRequests":true,"patterns":[{"requestStage":"Request","urlPattern":"*"},"""
-                + """{"requestStage":"Request","urlPattern":"http://foo"}]}"""
+            pytest.param(
+                (True, True),
+                (
+                    """{"handleAuthRequests":true,"patterns":[{"requestStage":"Request","urlPattern":"*"},"""
+                    + """{"requestStage":"Request","urlPattern":"http://foo"}]}"""
+                ),
+                id="Multiple request handlers, on request",
             ),
-            id="Multiple request handlers, on request",
-        ),
-        pytest.param(
-            (False, True),
-            (
-                """{"handleAuthRequests":true,"patterns":[{"requestStage":"Response","urlPattern":"*"},"""
-                + """{"requestStage":"Request","urlPattern":"*"},{"requestStage":"Response","urlPattern":"http://foo"},"""
-                + """{"requestStage":"Request","urlPattern":"http://foo"}]}"""
+            pytest.param(
+                (False, True),
+                (
+                    """{"handleAuthRequests":true,"patterns":[{"requestStage":"Response","urlPattern":"*"},"""
+                    + """{"requestStage":"Request","urlPattern":"*"},{"requestStage":"Response","urlPattern":"http://foo"},"""
+                    + """{"requestStage":"Request","urlPattern":"http://foo"}]}"""
+                ),
+                id="Multiple request handlers, on response and on request",
             ),
-            id="Multiple request handlers, on response and on request",
-        ),
-        pytest.param(
-            (True, False),
-            (
-                """{"handleAuthRequests":true,"patterns":[{"requestStage":"Response","urlPattern":"*"},"""
-                + """{"requestStage":"Request","urlPattern":"*"},{"requestStage":"Response","urlPattern":"http://foo"},"""
-                + """{"requestStage":"Request","urlPattern":"http://foo"}]}"""
+            pytest.param(
+                (True, False),
+                (
+                    """{"handleAuthRequests":true,"patterns":[{"requestStage":"Response","urlPattern":"*"},"""
+                    + """{"requestStage":"Request","urlPattern":"*"},{"requestStage":"Response","urlPattern":"http://foo"},"""
+                    + """{"requestStage":"Request","urlPattern":"http://foo"}]}"""
+                ),
+                id="Multiple request handlers, on request and on response",
             ),
-            id="Multiple request handlers, on request and on response",
-        ),
-    ])
+        ],
+    )
     async def test_fetch_enable(
         self,
         monkeypatch: pytest.MonkeyPatch,

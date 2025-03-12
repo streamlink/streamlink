@@ -8,9 +8,8 @@ import pytest
 
 import streamlink.plugins
 import tests.plugins
-from streamlink.exceptions import StreamlinkDeprecationWarning
 from streamlink.plugin.plugin import Matcher, Plugin
-from streamlink.utils.module import exec_module, load_module
+from streamlink.utils.module import exec_module
 
 
 plugins_path = streamlink.plugins.__path__[0]
@@ -29,7 +28,7 @@ plugin_modules = [
     module_info
     for module_info in pkgutil.iter_modules([plugins_path])
     if not module_info.name.startswith("common_")
-]
+]  # fmt: skip
 plugins = [module_info.name for module_info in plugin_modules]
 plugins_no_protocols = [pname for pname in plugins if pname not in protocol_plugins]
 plugintests = [
@@ -41,7 +40,7 @@ plugintests = [
 PLUGIN_TYPES = "live", "vod", "live, vod"
 PLUGIN_METADATA = "id", "author", "category", "title"
 
-re_url = re.compile("^https?://")
+re_url = re.compile(r"^https?://")
 re_metadata = re.compile(rf"^({'|'.join(re.escape(item) for item in PLUGIN_METADATA)})(\s.+)?$")
 
 
@@ -78,7 +77,7 @@ class TestPlugins:
                 ("args", Parameter.VAR_POSITIONAL),
                 ("kwargs", Parameter.VAR_KEYWORD),
             )
-        )
+        )  # fmt: skip
 
     def test_matchers(self, plugin):
         pluginclass = plugin.__plugin__
@@ -139,7 +138,7 @@ class TestPluginMetadata:
             key
             for key in metadata_keys_all
             if key not in metadata_keys_repeat
-        )
+        )  # fmt: skip
 
     @pytest.fixture(scope="class", params=plugins_no_protocols)
     def tokeninfo(self, request):
@@ -159,7 +158,7 @@ class TestPluginMetadata:
         lines = [
             re.search(r"^\$(?P<key>\w+) (?P<value>\S.+)$", line)
             for line in match.group("metadata").split("\n")
-        ]
+        ]  # fmt: skip
         assert all(lines), "All lines are properly formatted using the '$key value' format"
 
         return [(match.group("key"), match.group("value")) for match in lines]
@@ -174,23 +173,23 @@ class TestPluginMetadata:
 
     def test_no_unknown(self, metadata_keys_all, metadata_keys):
         assert not any(True for key in metadata_keys if key not in metadata_keys_all), \
-            "No unknown metadata keys are set"
+            "No unknown metadata keys are set"  # fmt: skip
 
     def test_required(self, metadata_keys_required, metadata_keys):
         assert all(True for tag in metadata_keys_required if tag in metadata_keys), \
-            "All required metadata keys are set"
+            "All required metadata keys are set"  # fmt: skip
 
     def test_order(self, metadata_keys_all, metadata_keys):
         keys = tuple(key for key in metadata_keys_all if key in metadata_keys)
         assert keys == tuple(unique(metadata_keys)), \
-            "All metadata keys are defined in order"
+            "All metadata keys are defined in order"  # fmt: skip
         assert tuple(reversed(keys)) == tuple(unique(reversed(metadata_keys))), \
-            "All repeatable metadata keys are defined in order"
+            "All repeatable metadata keys are defined in order"  # fmt: skip
 
     def test_repeat(self, metadata_keys_repeat, metadata_keys, metadata_items):
         items = {key: tuple(v for k, v in metadata_items if k == key) for key in metadata_keys if key in metadata_keys_repeat}
         assert items == {key: tuple(unique(value)) for key, value in items.items()}, \
-            "Repeatable keys don't have any duplicates"
+            "Repeatable keys don't have any duplicates"  # fmt: skip
 
     def test_no_repeat(self, metadata_keys_no_repeat, metadata_keys):
         keys = tuple(key for key in metadata_keys if key in metadata_keys_no_repeat)
@@ -198,31 +197,15 @@ class TestPluginMetadata:
 
     def test_key_url(self, metadata_items):
         assert not any(re_url.match(val) for key, val in metadata_items if key == "url"), \
-            "$url metadata values don't start with http:// or https://"
+            "$url metadata values don't start with http:// or https://"  # fmt: skip
 
     def test_key_type(self, metadata_dict):
         assert metadata_dict.get("type") in PLUGIN_TYPES, \
-            "$type metadata has the correct value"
+            "$type metadata has the correct value"  # fmt: skip
 
     def test_key_metadata(self, metadata_items):
         assert all(re_metadata.match(val) for key, val in metadata_items if key == "metadata"), \
-            "$metadata metadata values have the correct format"
+            "$metadata metadata values have the correct format"  # fmt: skip
         indexes = [PLUGIN_METADATA.index(val.split(" ")[0]) for key, val in metadata_items if key == "metadata"]
         assert [PLUGIN_METADATA[i] for i in indexes] == [PLUGIN_METADATA[i] for i in sorted(indexes)], \
-            "$metadata metadata values are ordered correctly"
-
-
-@pytest.mark.parametrize(("attr", "msg"), [
-    pytest.param("NoPluginError", "Importing from streamlink.plugins.NoPluginError has been deprecated", id="NoPluginError"),
-    pytest.param("NoStreamsError", "Importing from streamlink.plugins.NoStreamsError has been deprecated", id="NoStreamsError"),
-    pytest.param("PluginError", "Importing from streamlink.plugins.PluginError has been deprecated", id="PluginError"),
-    pytest.param("Plugin", "Importing from streamlink.plugins.Plugin has been deprecated", id="Plugin"),
-])
-def test_deprecated_exports(recwarn: pytest.WarningsRecorder, attr: str, msg: str):
-    plugins_module = load_module("__init__", plugins_path)
-    assert recwarn.list == []
-
-    getattr(plugins_module, attr)
-    assert [(record.filename, record.category, str(record.message)) for record in recwarn.list] == [
-        (__file__, StreamlinkDeprecationWarning, msg),
-    ]
+            "$metadata metadata values are ordered correctly"  # fmt: skip

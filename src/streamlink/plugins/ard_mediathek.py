@@ -19,18 +19,14 @@ from streamlink.stream.http import HTTPStream
 log = logging.getLogger(__name__)
 
 
-@pluginmatcher(re.compile(
-    r"""
-        https?://(\w+\.)?ardmediathek\.de/
-        (?:
-            live/(?:[^/]+/)?(?P<id_live>\w+)
-            |
-            video/(?:[^/]+/[^/]+/[^/]+/)?(?P<id_video>\w+)
-        )
-        (?:\?|$)
-    """,
-    re.VERBOSE,
-))
+@pluginmatcher(
+    name="live",
+    pattern=re.compile(r"https?://(\w+\.)?ardmediathek\.de/live/(?:[^/]+/)?(?P<id_live>\w+)(?:\?|$)"),
+)
+@pluginmatcher(
+    name="video",
+    pattern=re.compile(r"https?://(\w+\.)?ardmediathek\.de/video/(?:[^/]+/[^/]+/[^/]+/)?(?P<id_video>\w+)(?:\?|$)"),
+)
 class ARDMediathek(Plugin):
     _URL_API = "https://api.ardmediathek.de/page-gateway/pages/ard/item/{item}"
     _QUALITY_MAP = {
@@ -42,22 +38,25 @@ class ARDMediathek(Plugin):
     }
 
     def _get_streams(self):
-        data_json = self.session.http.get(self.url, schema=validate.Schema(
-            validate.parse_html(),
-            validate.xml_xpath_string(".//script[@type='application/json'][@id='fetchedContextValue2'][1]/text()"),
-            validate.none_or_all(
-                validate.parse_json(),
-                [validate.list(str, {"data": dict})],
-                validate.filter(lambda item: item[0].startswith("https://api.ardmediathek.de/page-gateway/pages/")),
-                validate.any(
-                    validate.get((0, 1, "data")),
-                    [],
+        data_json = self.session.http.get(
+            self.url,
+            schema=validate.Schema(
+                validate.parse_html(),
+                validate.xml_xpath_string(".//script[@type='application/json'][@id='fetchedContextValue2'][1]/text()"),
+                validate.none_or_all(
+                    validate.parse_json(),
+                    [validate.list(str, {"data": dict})],
+                    validate.filter(lambda item: item[0].startswith("https://api.ardmediathek.de/page-gateway/pages/")),
+                    validate.any(
+                        validate.get((0, 1, "data")),
+                        [],
+                    ),
                 ),
             ),
-        ))
+        )
         if not data_json:
             data_json = self.session.http.get(
-                self._URL_API.format(item=self.match.group("id_live") or self.match.group("id_video")),
+                self._URL_API.format(item=self.match["id_live"] if self.matches["live"] else self.match["id_video"]),
                 params={
                     "devicetype": "pc",
                     "embedded": "false",
@@ -73,43 +72,53 @@ class ARDMediathek(Plugin):
                 [dict],
                 validate.filter(lambda item: item.get("mediaCollection")),
                 validate.get(0),
-                validate.any(None, validate.all(
-                    {
-                        "geoblocked": bool,
-                        "publicationService": {
-                            "name": str,
-                        },
-                        "show": validate.any(None, validate.all(
-                            {"title": str},
-                            validate.get("title"),
-                        )),
-                        "title": str,
-                        "mediaCollection": {
-                            "embedded": {
-                                "_mediaArray": [validate.all(
-                                    {
-                                        "_mediaStreamArray": [validate.all(
+                validate.any(
+                    None,
+                    validate.all(
+                        {
+                            "geoblocked": bool,
+                            "publicationService": {
+                                "name": str,
+                            },
+                            "show": validate.any(
+                                None,
+                                validate.all(
+                                    {"title": str},
+                                    validate.get("title"),
+                                ),
+                            ),
+                            "title": str,
+                            "mediaCollection": {
+                                "embedded": {
+                                    "_mediaArray": [
+                                        validate.all(
                                             {
-                                                "_quality": validate.any(str, int),
-                                                "_stream": validate.url(),
+                                                "_mediaStreamArray": [
+                                                    validate.all(
+                                                        {
+                                                            "_quality": validate.any(str, int),
+                                                            "_stream": validate.url(),
+                                                        },
+                                                        validate.union_get("_quality", "_stream"),
+                                                    ),
+                                                ],
                                             },
-                                            validate.union_get("_quality", "_stream"),
-                                        )],
-                                    },
-                                    validate.get("_mediaStreamArray"),
-                                    validate.transform(dict),
-                                )],
+                                            validate.get("_mediaStreamArray"),
+                                            validate.transform(dict),
+                                        ),
+                                    ],
+                                },
                             },
                         },
-                    },
-                    validate.union_get(
-                        "geoblocked",
-                        ("mediaCollection", "embedded", "_mediaArray", 0),
-                        ("publicationService", "name"),
-                        "title",
-                        "show",
+                        validate.union_get(
+                            "geoblocked",
+                            ("mediaCollection", "embedded", "_mediaArray", 0),
+                            ("publicationService", "name"),
+                            "title",
+                            "show",
+                        ),
                     ),
-                )),
+                ),
             ),
         })
         data = schema_data.validate(data_json)

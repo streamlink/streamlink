@@ -12,9 +12,10 @@ $region Poland
 $notes Some live streams and VODs may be geo-restricted. Authentication is not supported.
 """
 
+from __future__ import annotations
+
 import logging
 import re
-from typing import List, Optional, Tuple
 
 from streamlink.exceptions import NoStreamsError
 from streamlink.plugin import Plugin, pluginmatcher
@@ -26,18 +27,30 @@ from streamlink.stream.hls import HLSStream
 log = logging.getLogger(__name__)
 
 
-@pluginmatcher(name="default", pattern=re.compile(
-    r"https?://(?:stream|tvpstream\.vod)\.tvp\.pl(?:/(?:\?channel_id=(?P<channel_id>\d+))?)?$",
-))
-@pluginmatcher(name="vod", pattern=re.compile(
-    r"https?://vod\.tvp\.pl/[^/]+/.+,(?P<vod_id>\d+)$",
-))
-@pluginmatcher(name="tvp_info", pattern=re.compile(
-    r"https?://(?:www\.)?tvp\.info/",
-))
-@pluginmatcher(name="tvp_sport", pattern=re.compile(
-    r"https?://sport\.tvp\.pl/(?P<stream_id>\d+)/.+",
-))
+@pluginmatcher(
+    name="default",
+    pattern=re.compile(
+        r"https?://(?:stream|tvpstream\.vod)\.tvp\.pl(?:/(?:\?channel_id=(?P<channel_id>\d+))?)?$",
+    ),
+)
+@pluginmatcher(
+    name="vod",
+    pattern=re.compile(
+        r"https?://vod\.tvp\.pl/[^/]+/.+,(?P<vod_id>\d+)$",
+    ),
+)
+@pluginmatcher(
+    name="tvp_info",
+    pattern=re.compile(
+        r"https?://(?:www\.)?tvp\.info/",
+    ),
+)
+@pluginmatcher(
+    name="tvp_sport",
+    pattern=re.compile(
+        r"https?://sport\.tvp\.pl/(?P<stream_id>\d+)/.+",
+    ),
+)
 class TVP(Plugin):
     _URL_VOD = "https://vod.tvp.pl/api/products/{vod_id}/videos/playlist"
     _URL_INFO_API_TOKEN = "https://api.tvp.pl/tokenizer/token/{token}"
@@ -75,8 +88,8 @@ class TVP(Plugin):
             if mime_type == "application/dash+xml":
                 yield from DASHStream.parse_manifest(self.session, url).items()
 
-    def _get_video_id(self, channel_id: Optional[str]):
-        items: List[Tuple[int, int]] = self.session.http.get(
+    def _get_video_id(self, channel_id: str | None):
+        items: list[tuple[int, int]] = self.session.http.get(
             self.url,
             headers={
                 # required, otherwise the next request for retrieving the HLS URL will be aborted by the server
@@ -92,9 +105,11 @@ class TVP(Plugin):
                             {
                                 "id": int,
                                 "items": validate.none_or_all(
-                                    [{
-                                        "video_id": int,
-                                    }],
+                                    [
+                                        {
+                                            "video_id": int,
+                                        },
+                                    ],
                                     validate.get((0, "video_id")),
                                 ),
                             },
@@ -106,15 +121,15 @@ class TVP(Plugin):
         )
 
         if channel_id is not None:
-            _channel_id = int(channel_id)
+            channel_id_number = int(channel_id)
             try:
-                return next(item[1] for item in items if item[0] == _channel_id)
+                return next(item[1] for item in items if item[0] == channel_id_number)
             except StopIteration:
                 pass
 
         return items[0][1] if items else None
 
-    def _get_live(self, channel_id: Optional[str]):
+    def _get_live(self, channel_id: str | None):
         self.id = self._get_video_id(channel_id)
         if not self.id:
             log.error("Could not find video ID")
@@ -138,9 +153,11 @@ class TVP(Plugin):
                     validate.all(
                         {
                             "sources": {
-                                validate.optional("HLS"): [{
-                                    "src": validate.url(),
-                                }],
+                                validate.optional("HLS"): [
+                                    {
+                                        "src": validate.url(),
+                                    },
+                                ],
                             },
                         },
                         validate.get("sources"),
@@ -178,8 +195,8 @@ class TVP(Plugin):
         if not data:
             return
 
-        _type, self.id = data
-        if _type == "NEWS":
+        vod_type, self.id = data
+        if vod_type == "NEWS":
             self.id, self.title = self.session.http.get(
                 self._URL_INFO_API_NEWS.format(id=self.id),
                 schema=validate.Schema(

@@ -23,9 +23,9 @@ from streamlink.stream.http import HTTPStream
 log = logging.getLogger(__name__)
 
 
-@pluginmatcher(re.compile(
-    r"https?://(?:www\.)?svtplay\.se/(?P<live>kanaler/)?",
-))
+@pluginmatcher(
+    re.compile(r"https?://(?:www\.)?svtplay\.se/(?P<live>kanaler/)?"),
+)
 class SVTPlay(Plugin):
     _URL_API_VIDEO = "https://api.svt.se/videoplayer-api/video/{item}"
     _MAP_CHANNEL_NAMES = {
@@ -37,7 +37,7 @@ class SVTPlay(Plugin):
     }
 
     def _api_call(self, item):
-        _schema_items = validate.all(
+        schema_items = validate.all(
             [
                 validate.all(
                     {
@@ -57,8 +57,8 @@ class SVTPlay(Plugin):
                 {
                     validate.optional("programTitle"): str,
                     validate.optional("episodeTitle"): str,
-                    "videoReferences": _schema_items,
-                    validate.optional("subtitleReferences"): _schema_items,
+                    "videoReferences": schema_items,
+                    validate.optional("subtitleReferences"): schema_items,
                 },
                 validate.union_get(
                     "programTitle",
@@ -90,10 +90,13 @@ class SVTPlay(Plugin):
         vod_id = get_vod_id(self.url)
 
         if vod_id is None:
-            vod_url = self.session.http.get(self.url, schema=validate.Schema(
-                validate.parse_html(),
-                validate.xml_xpath_string(".//*[@data-rt='top-area-play-button'][@href][1]/@href"),
-            ))
+            vod_url = self.session.http.get(
+                self.url,
+                schema=validate.Schema(
+                    validate.parse_html(),
+                    validate.xml_xpath_string(".//*[@data-rt='top-area-play-button'][@href][1]/@href"),
+                ),
+            )
             if vod_url:
                 vod_id = get_vod_id(vod_url)
 
@@ -114,7 +117,6 @@ class SVTPlay(Plugin):
             "dash-avc": DASHStream,  # DASH AVC
             "dash-full": DASHStream,  # DASH AVC
             "dash": DASHStream,  # DASH AVC
-
             "hlswebvtt": HLSStream,  # HLS with subtitles
             "hls-cmaf-live-vtt": HLSStream,  # HLS with subtitles
             "hls-ts-avc": HLSStream,  # HLS with MPEG-TS
@@ -122,9 +124,7 @@ class SVTPlay(Plugin):
             "hls": HLSStream,  # HLS with MPEG-TS
             "hls-cmaf-live": HLSStream,  # HLS with fMP4
             "hls-cmaf-full": HLSStream,  # HLS with fMP4
-
             "dash-hbbtv-hevc": DASHStream,  # DASH HEVC (low prio, because of potential user decoder issues)
-
             "hls-ts-lb-full": HLSStream,  # low bitrate
             "hls-cmaf-lb-full": HLSStream,  # low bitrate
             "dash-lb-full": DASHStream,  # low bitrate

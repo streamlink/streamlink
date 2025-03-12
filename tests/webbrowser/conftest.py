@@ -1,7 +1,8 @@
+from __future__ import annotations
+
 import sys
 from contextlib import asynccontextmanager
 from subprocess import PIPE
-from typing import Optional
 from unittest.mock import Mock
 
 import pytest
@@ -49,7 +50,7 @@ def webbrowser_launch(monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCapture
     monkeypatch.setattr("trio.run_process", fake_trio_run_process)
 
     @asynccontextmanager
-    async def webbrowser_launch(*args, webbrowser: Optional[Webbrowser] = None, **kwargs):
+    async def webbrowser_launch(*args, webbrowser: Webbrowser | None = None, **kwargs):
         # dummy web browser process, which idles until stdin receives input with an exit code
         webbrowser = webbrowser or Webbrowser()
         webbrowser.executable = sys.executable

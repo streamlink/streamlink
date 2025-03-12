@@ -1,7 +1,8 @@
+from __future__ import annotations
+
 from datetime import datetime, timedelta, timezone
 from json import JSONDecodeError
 from pathlib import Path
-from typing import Type, Union
 from unittest.mock import Mock, patch
 
 import freezegun
@@ -31,11 +32,14 @@ def cache(request: pytest.FixtureRequest, cache_dir: Path):
 
 
 class TestPathlibAndStr:
-    @pytest.mark.parametrize("filename", [
-        pytest.param("foo", id="str"),
-        pytest.param(Path("foo"), id="Path"),
-    ])
-    def test_constructor(self, cache_dir: Path, filename: Union[str, Path]):
+    @pytest.mark.parametrize(
+        "filename",
+        [
+            pytest.param("foo", id="str"),
+            pytest.param(Path("foo"), id="Path"),
+        ],
+    )
+    def test_constructor(self, cache_dir: Path, filename: str | Path):
         cache = Cache(filename)
         assert cache.filename == cache_dir / Path(filename)
 
@@ -80,19 +84,25 @@ class TestPrefix:
 
 
 class TestExpiration:
-    @pytest.mark.parametrize(("expires", "expected"), [
-        pytest.param(-20, None, id="past"),
-        pytest.param(20, "value", id="future"),
-    ])
+    @pytest.mark.parametrize(
+        ("expires", "expected"),
+        [
+            pytest.param(-20, None, id="past"),
+            pytest.param(20, "value", id="future"),
+        ],
+    )
     def test_expires(self, cache: Cache, expires: float, expected):
         with freezegun.freeze_time("2000-01-01T00:00:00Z"):
             cache.set("key", "value", expires=expires)
             assert cache.get("key") == expected
 
-    @pytest.mark.parametrize(("delta", "expected"), [
-        pytest.param(timedelta(seconds=-20), None, id="past"),
-        pytest.param(timedelta(seconds=20), "value", id="future"),
-    ])
+    @pytest.mark.parametrize(
+        ("delta", "expected"),
+        [
+            pytest.param(timedelta(seconds=-20), None, id="past"),
+            pytest.param(timedelta(seconds=20), "value", id="future"),
+        ],
+    )
     def test_expires_at(self, cache: Cache, delta: timedelta, expected):
         with freezegun.freeze_time("2000-01-01T00:00:00Z"):
             cache.set("key", "value", expires_at=datetime.now(tz=timezone.utc) + delta)
@@ -112,22 +122,28 @@ class TestExpiration:
 
 
 class TestIO:
-    @pytest.mark.parametrize(("mockpath", "side_effect"), [
-        ("pathlib.Path.open", OSError),
-        ("json.load", JSONDecodeError),
-    ])
-    def test_load_fail(self, cache: Cache, mockpath: str, side_effect: Type[Exception]):
+    @pytest.mark.parametrize(
+        ("mockpath", "side_effect"),
+        [
+            ("pathlib.Path.open", OSError),
+            ("json.load", JSONDecodeError),
+        ],
+    )
+    def test_load_fail(self, cache: Cache, mockpath: str, side_effect: type[Exception]):
         with patch("pathlib.Path.exists", return_value=True):
             with patch(mockpath, side_effect=side_effect):
                 cache._load()
         assert not cache._cache
 
-    @pytest.mark.parametrize("side_effect", [
-        RecursionError,
-        TypeError,
-        ValueError,
-    ])
-    def test_save_fail_jsondump(self, cache: Cache, side_effect: Type[Exception]):
+    @pytest.mark.parametrize(
+        "side_effect",
+        [
+            RecursionError,
+            TypeError,
+            ValueError,
+        ],
+    )
+    def test_save_fail_jsondump(self, cache: Cache, side_effect: type[Exception]):
         with patch("json.dump", side_effect=side_effect):
             with pytest.raises(side_effect):
                 cache.set("key", "value")

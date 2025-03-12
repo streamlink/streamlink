@@ -12,22 +12,25 @@ from streamlink.plugin.api import validate
 from streamlink.stream.hls import HLSStream
 
 
-@pluginmatcher(re.compile(
-    r"https?://plus\.nasa\.gov/"),
+@pluginmatcher(
+    re.compile(r"https?://plus\.nasa\.gov/"),
 )
 class NASAPlus(Plugin):
     def _get_streams(self):
-        data = self.session.http.get(self.url, schema=validate.Schema(
-            validate.parse_html(),
-            validate.xml_xpath(".//video[@id='main-video'][1]"),
-            validate.none_or_all(
-                validate.get(0),
-                validate.union((
-                    validate.xml_xpath_string("./source[@src][@type='application/x-mpegURL'][1]/@src"),
-                    validate.get("title"),
-                )),
+        data = self.session.http.get(
+            self.url,
+            schema=validate.Schema(
+                validate.parse_html(),
+                validate.xml_xpath(".//video[@id='main-video'][1]"),
+                validate.none_or_all(
+                    validate.get(0),
+                    validate.union((
+                        validate.xml_xpath_string("./source[@src][@type='application/x-mpegURL'][1]/@src"),
+                        validate.get("title"),
+                    )),
+                ),
             ),
-        ))
+        )
         if not data:
             return None
 

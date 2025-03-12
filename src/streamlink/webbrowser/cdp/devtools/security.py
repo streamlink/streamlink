@@ -3,14 +3,15 @@
 # This file is generated from the CDP specification. If you need to make
 # changes, edit the generator and regenerate all modules.
 #
-# CDP version: v0.0.1156692
+# CDP version: v0.0.1359167
 # CDP domain: Security
 
 from __future__ import annotations
 
 import enum
-import typing
+from collections.abc import Generator
 from dataclasses import dataclass
+from typing import Any
 
 import streamlink.webbrowser.cdp.devtools.network as network
 from streamlink.webbrowser.cdp.devtools.util import T_JSON_DICT, event_class
@@ -82,7 +83,7 @@ class CertificateSecurityState:
     cipher: str
 
     #: Page certificate.
-    certificate: typing.List[str]
+    certificate: list[str]
 
     #: Certificate subject name.
     subject_name: str
@@ -96,7 +97,7 @@ class CertificateSecurityState:
     #: Certificate valid to (expiration) date
     valid_to: network.TimeSinceEpoch
 
-    #: True if the certificate uses a weak signature aglorithm.
+    #: True if the certificate uses a weak signature algorithm.
     certificate_has_weak_signature: bool
 
     #: True if the certificate has a SHA1 signature in the chain.
@@ -118,13 +119,13 @@ class CertificateSecurityState:
     obsolete_ssl_signature: bool
 
     #: (EC)DH group used by the connection, if applicable.
-    key_exchange_group: typing.Optional[str] = None
+    key_exchange_group: str | None = None
 
     #: TLS MAC. Note that AEAD ciphers do not have separate MACs.
-    mac: typing.Optional[str] = None
+    mac: str | None = None
 
     #: The highest priority network error code, if the certificate has an error.
-    certificate_network_error: typing.Optional[str] = None
+    certificate_network_error: str | None = None
 
     def to_json(self) -> T_JSON_DICT:
         json: T_JSON_DICT = {}
@@ -193,7 +194,7 @@ class SafetyTipInfo:
     safety_tip_status: SafetyTipStatus
 
     #: The URL the safety tip suggested ("Did you mean?"). Only filled in for lookalike matches.
-    safe_url: typing.Optional[str] = None
+    safe_url: str | None = None
 
     def to_json(self) -> T_JSON_DICT:
         json: T_JSON_DICT = {}
@@ -219,13 +220,13 @@ class VisibleSecurityState:
     security_state: SecurityState
 
     #: Array of security state issues ids.
-    security_state_issue_ids: typing.List[str]
+    security_state_issue_ids: list[str]
 
     #: Security state details about the page certificate.
-    certificate_security_state: typing.Optional[CertificateSecurityState] = None
+    certificate_security_state: CertificateSecurityState | None = None
 
     #: The type of Safety Tip triggered on the page. Note that this field will be set even if the Safety Tip UI was not actually shown.
-    safety_tip_info: typing.Optional[SafetyTipInfo] = None
+    safety_tip_info: SafetyTipInfo | None = None
 
     def to_json(self) -> T_JSON_DICT:
         json: T_JSON_DICT = {}
@@ -268,10 +269,10 @@ class SecurityStateExplanation:
     mixed_content_type: MixedContentType
 
     #: Page certificate.
-    certificate: typing.List[str]
+    certificate: list[str]
 
     #: Recommendations to fix any issues.
-    recommendations: typing.Optional[typing.List[str]] = None
+    recommendations: list[str] | None = None
 
     def to_json(self) -> T_JSON_DICT:
         json: T_JSON_DICT = {}
@@ -364,7 +365,7 @@ class CertificateErrorAction(enum.Enum):
         return cls(json)
 
 
-def disable() -> typing.Generator[T_JSON_DICT, T_JSON_DICT, None]:
+def disable() -> Generator[T_JSON_DICT, T_JSON_DICT, None]:
     """
     Disables tracking security state changes.
     """
@@ -374,7 +375,7 @@ def disable() -> typing.Generator[T_JSON_DICT, T_JSON_DICT, None]:
     yield cmd_dict
 
 
-def enable() -> typing.Generator[T_JSON_DICT, T_JSON_DICT, None]:
+def enable() -> Generator[T_JSON_DICT, T_JSON_DICT, None]:
     """
     Enables tracking security state changes.
     """
@@ -386,11 +387,9 @@ def enable() -> typing.Generator[T_JSON_DICT, T_JSON_DICT, None]:
 
 def set_ignore_certificate_errors(
     ignore: bool,
-) -> typing.Generator[T_JSON_DICT, T_JSON_DICT, None]:
+) -> Generator[T_JSON_DICT, T_JSON_DICT, None]:
     """
     Enable/disable whether all certificate errors should be ignored.
-
-    **EXPERIMENTAL**
 
     :param ignore: If true, all certificate errors will be ignored.
     """
@@ -406,7 +405,7 @@ def set_ignore_certificate_errors(
 def handle_certificate_error(
     event_id: int,
     action: CertificateErrorAction,
-) -> typing.Generator[T_JSON_DICT, T_JSON_DICT, None]:
+) -> Generator[T_JSON_DICT, T_JSON_DICT, None]:
     """
     Handles a certificate error that fired a certificateError event.
 
@@ -425,7 +424,7 @@ def handle_certificate_error(
 
 def set_override_certificate_errors(
     override: bool,
-) -> typing.Generator[T_JSON_DICT, T_JSON_DICT, None]:
+) -> Generator[T_JSON_DICT, T_JSON_DICT, None]:
     """
     Enable/disable overriding certificate errors. If enabled, all certificate error events need to
     be handled by the DevTools client and should be answered with ``handleCertificateError`` commands.
@@ -496,11 +495,11 @@ class SecurityStateChanged:
     scheme_is_cryptographic: bool
     #: Previously a list of explanations for the security state. Now always
     #: empty.
-    explanations: typing.List[SecurityStateExplanation]
+    explanations: list[SecurityStateExplanation]
     #: Information about insecure content on the page.
     insecure_content_status: InsecureContentStatus
     #: Overrides user-visible description of the state. Always omitted.
-    summary: typing.Optional[str]
+    summary: str | None
 
     @classmethod
     def from_json(cls, json: T_JSON_DICT) -> SecurityStateChanged:

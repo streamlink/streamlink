@@ -3,14 +3,15 @@
 # This file is generated from the CDP specification. If you need to make
 # changes, edit the generator and regenerate all modules.
 #
-# CDP version: v0.0.1156692
+# CDP version: v0.0.1359167
 # CDP domain: Page
 
 from __future__ import annotations
 
 import enum
-import typing
+from collections.abc import Generator
 from dataclasses import dataclass
+from typing import Any
 
 import streamlink.webbrowser.cdp.devtools.debugger as debugger
 import streamlink.webbrowser.cdp.devtools.dom as dom
@@ -72,7 +73,7 @@ class AdFrameStatus:
     """
     ad_frame_type: AdFrameType
 
-    explanations: typing.Optional[typing.List[AdFrameExplanation]] = None
+    explanations: list[AdFrameExplanation] | None = None
 
     def to_json(self) -> T_JSON_DICT:
         json: T_JSON_DICT = {}
@@ -169,18 +170,21 @@ class PermissionsPolicyFeature(enum.Enum):
     in third_party/blink/renderer/core/permissions_policy/permissions_policy_features.json5.
     """
     ACCELEROMETER = "accelerometer"
+    ALL_SCREENS_CAPTURE = "all-screens-capture"
     AMBIENT_LIGHT_SENSOR = "ambient-light-sensor"
     ATTRIBUTION_REPORTING = "attribution-reporting"
     AUTOPLAY = "autoplay"
     BLUETOOTH = "bluetooth"
     BROWSING_TOPICS = "browsing-topics"
     CAMERA = "camera"
+    CAPTURED_SURFACE_CONTROL = "captured-surface-control"
     CH_DPR = "ch-dpr"
     CH_DEVICE_MEMORY = "ch-device-memory"
     CH_DOWNLINK = "ch-downlink"
     CH_ECT = "ch-ect"
     CH_PREFERS_COLOR_SCHEME = "ch-prefers-color-scheme"
     CH_PREFERS_REDUCED_MOTION = "ch-prefers-reduced-motion"
+    CH_PREFERS_REDUCED_TRANSPARENCY = "ch-prefers-reduced-transparency"
     CH_RTT = "ch-rtt"
     CH_SAVE_DATA = "ch-save-data"
     CH_UA = "ch-ua"
@@ -189,6 +193,7 @@ class PermissionsPolicyFeature(enum.Enum):
     CH_UA_PLATFORM = "ch-ua-platform"
     CH_UA_MODEL = "ch-ua-model"
     CH_UA_MOBILE = "ch-ua-mobile"
+    CH_UA_FORM_FACTORS = "ch-ua-form-factors"
     CH_UA_FULL_VERSION = "ch-ua-full-version"
     CH_UA_FULL_VERSION_LIST = "ch-ua-full-version-list"
     CH_UA_PLATFORM_VERSION = "ch-ua-platform-version"
@@ -199,8 +204,12 @@ class PermissionsPolicyFeature(enum.Enum):
     CLIPBOARD_READ = "clipboard-read"
     CLIPBOARD_WRITE = "clipboard-write"
     COMPUTE_PRESSURE = "compute-pressure"
+    CONTROLLED_FRAME = "controlled-frame"
     CROSS_ORIGIN_ISOLATED = "cross-origin-isolated"
+    DEFERRED_FETCH = "deferred-fetch"
+    DIGITAL_CREDENTIALS_GET = "digital-credentials-get"
     DIRECT_SOCKETS = "direct-sockets"
+    DIRECT_SOCKETS_PRIVATE = "direct-sockets-private"
     DISPLAY_CAPTURE = "display-capture"
     DOCUMENT_DOMAIN = "document-domain"
     ENCRYPTED_MEDIA = "encrypted-media"
@@ -220,14 +229,17 @@ class PermissionsPolicyFeature(enum.Enum):
     KEYBOARD_MAP = "keyboard-map"
     LOCAL_FONTS = "local-fonts"
     MAGNETOMETER = "magnetometer"
+    MEDIA_PLAYBACK_WHILE_NOT_VISIBLE = "media-playback-while-not-visible"
     MICROPHONE = "microphone"
     MIDI = "midi"
     OTP_CREDENTIALS = "otp-credentials"
     PAYMENT = "payment"
     PICTURE_IN_PICTURE = "picture-in-picture"
+    POPINS = "popins"
     PRIVATE_AGGREGATION = "private-aggregation"
     PRIVATE_STATE_TOKEN_ISSUANCE = "private-state-token-issuance"
     PRIVATE_STATE_TOKEN_REDEMPTION = "private-state-token-redemption"
+    PUBLICKEY_CREDENTIALS_CREATE = "publickey-credentials-create"
     PUBLICKEY_CREDENTIALS_GET = "publickey-credentials-get"
     RUN_AD_AUCTION = "run-ad-auction"
     SCREEN_WAKE_LOCK = "screen-wake-lock"
@@ -236,14 +248,18 @@ class PermissionsPolicyFeature(enum.Enum):
     SHARED_STORAGE = "shared-storage"
     SHARED_STORAGE_SELECT_URL = "shared-storage-select-url"
     SMART_CARD = "smart-card"
+    SPEAKER_SELECTION = "speaker-selection"
     STORAGE_ACCESS = "storage-access"
+    SUB_APPS = "sub-apps"
     SYNC_XHR = "sync-xhr"
     UNLOAD = "unload"
     USB = "usb"
+    USB_UNRESTRICTED = "usb-unrestricted"
     VERTICAL_SCROLL = "vertical-scroll"
+    WEB_APP_INSTALLATION = "web-app-installation"
+    WEB_PRINTING = "web-printing"
     WEB_SHARE = "web-share"
     WINDOW_MANAGEMENT = "window-management"
-    WINDOW_PLACEMENT = "window-placement"
     XR_SPATIAL_TRACKING = "xr-spatial-tracking"
 
     def to_json(self) -> str:
@@ -297,7 +313,7 @@ class PermissionsPolicyFeatureState:
 
     allowed: bool
 
-    locator: typing.Optional[PermissionsPolicyBlockLocator] = None
+    locator: PermissionsPolicyBlockLocator | None = None
 
     def to_json(self) -> T_JSON_DICT:
         json: T_JSON_DICT = {}
@@ -415,7 +431,7 @@ class OriginTrialTokenWithStatus:
 
     #: ``parsedToken`` is present only when the token is extractable and
     #: parsable.
-    parsed_token: typing.Optional[OriginTrialToken] = None
+    parsed_token: OriginTrialToken | None = None
 
     def to_json(self) -> T_JSON_DICT:
         json: T_JSON_DICT = {}
@@ -440,7 +456,7 @@ class OriginTrial:
 
     status: OriginTrialStatus
 
-    tokens_with_status: typing.List[OriginTrialTokenWithStatus]
+    tokens_with_status: list[OriginTrialTokenWithStatus]
 
     def to_json(self) -> T_JSON_DICT:
         json: T_JSON_DICT = {}
@@ -491,22 +507,22 @@ class Frame:
     cross_origin_isolated_context_type: CrossOriginIsolatedContextType
 
     #: Indicated which gated APIs / features are available.
-    gated_api_features: typing.List[GatedAPIFeatures]
+    gated_api_features: list[GatedAPIFeatures]
 
     #: Parent frame identifier.
-    parent_id: typing.Optional[FrameId] = None
+    parent_id: FrameId | None = None
 
     #: Frame's name as specified in the tag.
-    name: typing.Optional[str] = None
+    name: str | None = None
 
     #: Frame document's URL fragment including the '#'.
-    url_fragment: typing.Optional[str] = None
+    url_fragment: str | None = None
 
     #: If the frame failed to load, this contains the URL that could not be loaded. Note that unlike url above, this URL may contain a fragment.
-    unreachable_url: typing.Optional[str] = None
+    unreachable_url: str | None = None
 
     #: Indicates whether this frame was tagged as an ad and why.
-    ad_frame_status: typing.Optional[AdFrameStatus] = None
+    ad_frame_status: AdFrameStatus | None = None
 
     def to_json(self) -> T_JSON_DICT:
         json: T_JSON_DICT = {}
@@ -566,16 +582,16 @@ class FrameResource:
     mime_type: str
 
     #: last-modified timestamp as reported by server.
-    last_modified: typing.Optional[network.TimeSinceEpoch] = None
+    last_modified: network.TimeSinceEpoch | None = None
 
     #: Resource content size.
-    content_size: typing.Optional[float] = None
+    content_size: float | None = None
 
     #: True if the resource failed to load.
-    failed: typing.Optional[bool] = None
+    failed: bool | None = None
 
     #: True if the resource was canceled during loading.
-    canceled: typing.Optional[bool] = None
+    canceled: bool | None = None
 
     def to_json(self) -> T_JSON_DICT:
         json: T_JSON_DICT = {}
@@ -614,10 +630,10 @@ class FrameResourceTree:
     frame: Frame
 
     #: Information about frame resources.
-    resources: typing.List[FrameResource]
+    resources: list[FrameResource]
 
     #: Child frames.
-    child_frames: typing.Optional[typing.List[FrameResourceTree]] = None
+    child_frames: list[FrameResourceTree] | None = None
 
     def to_json(self) -> T_JSON_DICT:
         json: T_JSON_DICT = {}
@@ -645,7 +661,7 @@ class FrameTree:
     frame: Frame
 
     #: Child frames.
-    child_frames: typing.Optional[typing.List[FrameTree]] = None
+    child_frames: list[FrameTree] | None = None
 
     def to_json(self) -> T_JSON_DICT:
         json: T_JSON_DICT = {}
@@ -767,7 +783,7 @@ class ScreencastFrameMetadata:
     scroll_offset_y: float
 
     #: Frame swap timestamp.
-    timestamp: typing.Optional[network.TimeSinceEpoch] = None
+    timestamp: network.TimeSinceEpoch | None = None
 
     def to_json(self) -> T_JSON_DICT:
         json: T_JSON_DICT = {}
@@ -819,7 +835,7 @@ class AppManifestError:
     #: Error message.
     message: str
 
-    #: If criticial, this is a non-recoverable parse error.
+    #: If critical, this is a non-recoverable parse error.
     critical: int
 
     #: Error line.
@@ -928,7 +944,7 @@ class VisualViewport:
     scale: float
 
     #: Page zoom factor (CSS to device independent pixels ratio).
-    zoom: typing.Optional[float] = None
+    zoom: float | None = None
 
     def to_json(self) -> T_JSON_DICT:
         json: T_JSON_DICT = {}
@@ -1003,25 +1019,25 @@ class FontFamilies:
     Generic font families collection.
     """
     #: The standard font-family.
-    standard: typing.Optional[str] = None
+    standard: str | None = None
 
     #: The fixed font-family.
-    fixed: typing.Optional[str] = None
+    fixed: str | None = None
 
     #: The serif font-family.
-    serif: typing.Optional[str] = None
+    serif: str | None = None
 
     #: The sansSerif font-family.
-    sans_serif: typing.Optional[str] = None
+    sans_serif: str | None = None
 
     #: The cursive font-family.
-    cursive: typing.Optional[str] = None
+    cursive: str | None = None
 
     #: The fantasy font-family.
-    fantasy: typing.Optional[str] = None
+    fantasy: str | None = None
 
     #: The math font-family.
-    math: typing.Optional[str] = None
+    math: str | None = None
 
     def to_json(self) -> T_JSON_DICT:
         json: T_JSON_DICT = {}
@@ -1085,10 +1101,10 @@ class FontSizes:
     Default font sizes.
     """
     #: Default standard font size.
-    standard: typing.Optional[int] = None
+    standard: int | None = None
 
     #: Default fixed font size.
-    fixed: typing.Optional[int] = None
+    fixed: int | None = None
 
     def to_json(self) -> T_JSON_DICT:
         json: T_JSON_DICT = {}
@@ -1107,14 +1123,16 @@ class FontSizes:
 
 
 class ClientNavigationReason(enum.Enum):
+    ANCHOR_CLICK = "anchorClick"
     FORM_SUBMISSION_GET = "formSubmissionGet"
     FORM_SUBMISSION_POST = "formSubmissionPost"
     HTTP_HEADER_REFRESH = "httpHeaderRefresh"
-    SCRIPT_INITIATED = "scriptInitiated"
+    INITIAL_FRAME_NAVIGATION = "initialFrameNavigation"
     META_TAG_REFRESH = "metaTagRefresh"
+    OTHER = "other"
     PAGE_BLOCK_INTERSTITIAL = "pageBlockInterstitial"
     RELOAD = "reload"
-    ANCHOR_CLICK = "anchorClick"
+    SCRIPT_INITIATED = "scriptInitiated"
 
     def to_json(self) -> str:
         return self.value
@@ -1169,7 +1187,7 @@ class InstallabilityError:
     error_id: str
 
     #: The list of error arguments (e.g. {name:'minimum-icon-size-in-pixels', value:'64'}).
-    error_arguments: typing.List[InstallabilityErrorArgument]
+    error_arguments: list[InstallabilityErrorArgument]
 
     def to_json(self) -> T_JSON_DICT:
         json: T_JSON_DICT = {}
@@ -1216,7 +1234,7 @@ class CompilationCacheParams:
 
     #: A hint to the backend whether eager compilation is recommended.
     #: (the actual compilation mode used is upon backend discretion).
-    eager: typing.Optional[bool] = None
+    eager: bool | None = None
 
     def to_json(self) -> T_JSON_DICT:
         json: T_JSON_DICT = {}
@@ -1233,9 +1251,405 @@ class CompilationCacheParams:
         )
 
 
+@dataclass
+class FileFilter:
+    name: str | None = None
+
+    accepts: list[str] | None = None
+
+    def to_json(self) -> T_JSON_DICT:
+        json: T_JSON_DICT = {}
+        if self.name is not None:
+            json["name"] = self.name
+        if self.accepts is not None:
+            json["accepts"] = list(self.accepts)
+        return json
+
+    @classmethod
+    def from_json(cls, json: T_JSON_DICT) -> FileFilter:
+        return cls(
+            name=str(json["name"]) if "name" in json else None,
+            accepts=[str(i) for i in json["accepts"]] if "accepts" in json else None,
+        )
+
+
+@dataclass
+class FileHandler:
+    action: str
+
+    name: str
+
+    #: Won't repeat the enums, using string for easy comparison. Same as the
+    #: other enums below.
+    launch_type: str
+
+    icons: list[ImageResource] | None = None
+
+    #: Mimic a map, name is the key, accepts is the value.
+    accepts: list[FileFilter] | None = None
+
+    def to_json(self) -> T_JSON_DICT:
+        json: T_JSON_DICT = {}
+        json["action"] = self.action
+        json["name"] = self.name
+        json["launchType"] = self.launch_type
+        if self.icons is not None:
+            json["icons"] = [i.to_json() for i in self.icons]
+        if self.accepts is not None:
+            json["accepts"] = [i.to_json() for i in self.accepts]
+        return json
+
+    @classmethod
+    def from_json(cls, json: T_JSON_DICT) -> FileHandler:
+        return cls(
+            action=str(json["action"]),
+            name=str(json["name"]),
+            launch_type=str(json["launchType"]),
+            icons=[ImageResource.from_json(i) for i in json["icons"]] if "icons" in json else None,
+            accepts=[FileFilter.from_json(i) for i in json["accepts"]] if "accepts" in json else None,
+        )
+
+
+@dataclass
+class ImageResource:
+    """
+    The image definition used in both icon and screenshot.
+    """
+    #: The src field in the definition, but changing to url in favor of
+    #: consistency.
+    url: str
+
+    sizes: str | None = None
+
+    type_: str | None = None
+
+    def to_json(self) -> T_JSON_DICT:
+        json: T_JSON_DICT = {}
+        json["url"] = self.url
+        if self.sizes is not None:
+            json["sizes"] = self.sizes
+        if self.type_ is not None:
+            json["type"] = self.type_
+        return json
+
+    @classmethod
+    def from_json(cls, json: T_JSON_DICT) -> ImageResource:
+        return cls(
+            url=str(json["url"]),
+            sizes=str(json["sizes"]) if "sizes" in json else None,
+            type_=str(json["type"]) if "type" in json else None,
+        )
+
+
+@dataclass
+class LaunchHandler:
+    client_mode: str
+
+    def to_json(self) -> T_JSON_DICT:
+        json: T_JSON_DICT = {}
+        json["clientMode"] = self.client_mode
+        return json
+
+    @classmethod
+    def from_json(cls, json: T_JSON_DICT) -> LaunchHandler:
+        return cls(
+            client_mode=str(json["clientMode"]),
+        )
+
+
+@dataclass
+class ProtocolHandler:
+    protocol: str
+
+    url: str
+
+    def to_json(self) -> T_JSON_DICT:
+        json: T_JSON_DICT = {}
+        json["protocol"] = self.protocol
+        json["url"] = self.url
+        return json
+
+    @classmethod
+    def from_json(cls, json: T_JSON_DICT) -> ProtocolHandler:
+        return cls(
+            protocol=str(json["protocol"]),
+            url=str(json["url"]),
+        )
+
+
+@dataclass
+class RelatedApplication:
+    url: str
+
+    id_: str | None = None
+
+    def to_json(self) -> T_JSON_DICT:
+        json: T_JSON_DICT = {}
+        json["url"] = self.url
+        if self.id_ is not None:
+            json["id"] = self.id_
+        return json
+
+    @classmethod
+    def from_json(cls, json: T_JSON_DICT) -> RelatedApplication:
+        return cls(
+            url=str(json["url"]),
+            id_=str(json["id"]) if "id" in json else None,
+        )
+
+
+@dataclass
+class ScopeExtension:
+    #: Instead of using tuple, this field always returns the serialized string
+    #: for easy understanding and comparison.
+    origin: str
+
+    has_origin_wildcard: bool
+
+    def to_json(self) -> T_JSON_DICT:
+        json: T_JSON_DICT = {}
+        json["origin"] = self.origin
+        json["hasOriginWildcard"] = self.has_origin_wildcard
+        return json
+
+    @classmethod
+    def from_json(cls, json: T_JSON_DICT) -> ScopeExtension:
+        return cls(
+            origin=str(json["origin"]),
+            has_origin_wildcard=bool(json["hasOriginWildcard"]),
+        )
+
+
+@dataclass
+class Screenshot:
+    image: ImageResource
+
+    form_factor: str
+
+    label: str | None = None
+
+    def to_json(self) -> T_JSON_DICT:
+        json: T_JSON_DICT = {}
+        json["image"] = self.image.to_json()
+        json["formFactor"] = self.form_factor
+        if self.label is not None:
+            json["label"] = self.label
+        return json
+
+    @classmethod
+    def from_json(cls, json: T_JSON_DICT) -> Screenshot:
+        return cls(
+            image=ImageResource.from_json(json["image"]),
+            form_factor=str(json["formFactor"]),
+            label=str(json["label"]) if "label" in json else None,
+        )
+
+
+@dataclass
+class ShareTarget:
+    action: str
+
+    method: str
+
+    enctype: str
+
+    #: Embed the ShareTargetParams
+    title: str | None = None
+
+    text: str | None = None
+
+    url: str | None = None
+
+    files: list[FileFilter] | None = None
+
+    def to_json(self) -> T_JSON_DICT:
+        json: T_JSON_DICT = {}
+        json["action"] = self.action
+        json["method"] = self.method
+        json["enctype"] = self.enctype
+        if self.title is not None:
+            json["title"] = self.title
+        if self.text is not None:
+            json["text"] = self.text
+        if self.url is not None:
+            json["url"] = self.url
+        if self.files is not None:
+            json["files"] = [i.to_json() for i in self.files]
+        return json
+
+    @classmethod
+    def from_json(cls, json: T_JSON_DICT) -> ShareTarget:
+        return cls(
+            action=str(json["action"]),
+            method=str(json["method"]),
+            enctype=str(json["enctype"]),
+            title=str(json["title"]) if "title" in json else None,
+            text=str(json["text"]) if "text" in json else None,
+            url=str(json["url"]) if "url" in json else None,
+            files=[FileFilter.from_json(i) for i in json["files"]] if "files" in json else None,
+        )
+
+
+@dataclass
+class Shortcut:
+    name: str
+
+    url: str
+
+    def to_json(self) -> T_JSON_DICT:
+        json: T_JSON_DICT = {}
+        json["name"] = self.name
+        json["url"] = self.url
+        return json
+
+    @classmethod
+    def from_json(cls, json: T_JSON_DICT) -> Shortcut:
+        return cls(
+            name=str(json["name"]),
+            url=str(json["url"]),
+        )
+
+
+@dataclass
+class WebAppManifest:
+    background_color: str | None = None
+
+    #: The extra description provided by the manifest.
+    description: str | None = None
+
+    dir_: str | None = None
+
+    display: str | None = None
+
+    #: The overrided display mode controlled by the user.
+    display_overrides: list[str] | None = None
+
+    #: The handlers to open files.
+    file_handlers: list[FileHandler] | None = None
+
+    icons: list[ImageResource] | None = None
+
+    id_: str | None = None
+
+    lang: str | None = None
+
+    #: TODO(crbug.com/1231886): This field is non-standard and part of a Chrome
+    #: experiment. See:
+    #: https://github.com/WICG/web-app-launch/blob/main/launch_handler.md
+    launch_handler: LaunchHandler | None = None
+
+    name: str | None = None
+
+    orientation: str | None = None
+
+    prefer_related_applications: bool | None = None
+
+    #: The handlers to open protocols.
+    protocol_handlers: list[ProtocolHandler] | None = None
+
+    related_applications: list[RelatedApplication] | None = None
+
+    scope: str | None = None
+
+    #: Non-standard, see
+    #: https://github.com/WICG/manifest-incubations/blob/gh-pages/scope_extensions-explainer.md
+    scope_extensions: list[ScopeExtension] | None = None
+
+    #: The screenshots used by chromium.
+    screenshots: list[Screenshot] | None = None
+
+    share_target: ShareTarget | None = None
+
+    short_name: str | None = None
+
+    shortcuts: list[Shortcut] | None = None
+
+    start_url: str | None = None
+
+    theme_color: str | None = None
+
+    def to_json(self) -> T_JSON_DICT:
+        json: T_JSON_DICT = {}
+        if self.background_color is not None:
+            json["backgroundColor"] = self.background_color
+        if self.description is not None:
+            json["description"] = self.description
+        if self.dir_ is not None:
+            json["dir"] = self.dir_
+        if self.display is not None:
+            json["display"] = self.display
+        if self.display_overrides is not None:
+            json["displayOverrides"] = list(self.display_overrides)
+        if self.file_handlers is not None:
+            json["fileHandlers"] = [i.to_json() for i in self.file_handlers]
+        if self.icons is not None:
+            json["icons"] = [i.to_json() for i in self.icons]
+        if self.id_ is not None:
+            json["id"] = self.id_
+        if self.lang is not None:
+            json["lang"] = self.lang
+        if self.launch_handler is not None:
+            json["launchHandler"] = self.launch_handler.to_json()
+        if self.name is not None:
+            json["name"] = self.name
+        if self.orientation is not None:
+            json["orientation"] = self.orientation
+        if self.prefer_related_applications is not None:
+            json["preferRelatedApplications"] = self.prefer_related_applications
+        if self.protocol_handlers is not None:
+            json["protocolHandlers"] = [i.to_json() for i in self.protocol_handlers]
+        if self.related_applications is not None:
+            json["relatedApplications"] = [i.to_json() for i in self.related_applications]
+        if self.scope is not None:
+            json["scope"] = self.scope
+        if self.scope_extensions is not None:
+            json["scopeExtensions"] = [i.to_json() for i in self.scope_extensions]
+        if self.screenshots is not None:
+            json["screenshots"] = [i.to_json() for i in self.screenshots]
+        if self.share_target is not None:
+            json["shareTarget"] = self.share_target.to_json()
+        if self.short_name is not None:
+            json["shortName"] = self.short_name
+        if self.shortcuts is not None:
+            json["shortcuts"] = [i.to_json() for i in self.shortcuts]
+        if self.start_url is not None:
+            json["startUrl"] = self.start_url
+        if self.theme_color is not None:
+            json["themeColor"] = self.theme_color
+        return json
+
+    @classmethod
+    def from_json(cls, json: T_JSON_DICT) -> WebAppManifest:
+        return cls(
+            background_color=str(json["backgroundColor"]) if "backgroundColor" in json else None,
+            description=str(json["description"]) if "description" in json else None,
+            dir_=str(json["dir"]) if "dir" in json else None,
+            display=str(json["display"]) if "display" in json else None,
+            display_overrides=[str(i) for i in json["displayOverrides"]] if "displayOverrides" in json else None,
+            file_handlers=[FileHandler.from_json(i) for i in json["fileHandlers"]] if "fileHandlers" in json else None,
+            icons=[ImageResource.from_json(i) for i in json["icons"]] if "icons" in json else None,
+            id_=str(json["id"]) if "id" in json else None,
+            lang=str(json["lang"]) if "lang" in json else None,
+            launch_handler=LaunchHandler.from_json(json["launchHandler"]) if "launchHandler" in json else None,
+            name=str(json["name"]) if "name" in json else None,
+            orientation=str(json["orientation"]) if "orientation" in json else None,
+            prefer_related_applications=bool(json["preferRelatedApplications"]) if "preferRelatedApplications" in json else None,
+            protocol_handlers=[ProtocolHandler.from_json(i) for i in json["protocolHandlers"]] if "protocolHandlers" in json else None,
+            related_applications=[RelatedApplication.from_json(i) for i in json["relatedApplications"]] if "relatedApplications" in json else None,
+            scope=str(json["scope"]) if "scope" in json else None,
+            scope_extensions=[ScopeExtension.from_json(i) for i in json["scopeExtensions"]] if "scopeExtensions" in json else None,
+            screenshots=[Screenshot.from_json(i) for i in json["screenshots"]] if "screenshots" in json else None,
+            share_target=ShareTarget.from_json(json["shareTarget"]) if "shareTarget" in json else None,
+            short_name=str(json["shortName"]) if "shortName" in json else None,
+            shortcuts=[Shortcut.from_json(i) for i in json["shortcuts"]] if "shortcuts" in json else None,
+            start_url=str(json["startUrl"]) if "startUrl" in json else None,
+            theme_color=str(json["themeColor"]) if "themeColor" in json else None,
+        )
+
+
 class AutoResponseMode(enum.Enum):
     """
-    Enum of possible auto-reponse for permisison / prompt dialogs.
+    Enum of possible auto-response for permission / prompt dialogs.
     """
     NONE = "none"
     AUTO_ACCEPT = "autoAccept"
@@ -1323,6 +1737,14 @@ class BackForwardCacheNotRestoredReason(enum.Enum):
     ERROR_DOCUMENT = "ErrorDocument"
     FENCED_FRAMES_EMBEDDER = "FencedFramesEmbedder"
     COOKIE_DISABLED = "CookieDisabled"
+    HTTP_AUTH_REQUIRED = "HTTPAuthRequired"
+    COOKIE_FLUSHED = "CookieFlushed"
+    BROADCAST_CHANNEL_ON_MESSAGE = "BroadcastChannelOnMessage"
+    WEB_VIEW_SETTINGS_CHANGED = "WebViewSettingsChanged"
+    WEB_VIEW_JAVA_SCRIPT_OBJECT_CHANGED = "WebViewJavaScriptObjectChanged"
+    WEB_VIEW_MESSAGE_LISTENER_INJECTED = "WebViewMessageListenerInjected"
+    WEB_VIEW_SAFE_BROWSING_ALLOWLIST_CHANGED = "WebViewSafeBrowsingAllowlistChanged"
+    WEB_VIEW_DOCUMENT_START_JAVASCRIPT_CHANGED = "WebViewDocumentStartJavascriptChanged"
     WEB_SOCKET = "WebSocket"
     WEB_TRANSPORT = "WebTransport"
     WEB_RTC = "WebRTC"
@@ -1332,16 +1754,13 @@ class BackForwardCacheNotRestoredReason(enum.Enum):
     SUBRESOURCE_HAS_CACHE_CONTROL_NO_CACHE = "SubresourceHasCacheControlNoCache"
     CONTAINS_PLUGINS = "ContainsPlugins"
     DOCUMENT_LOADED = "DocumentLoaded"
-    DEDICATED_WORKER_OR_WORKLET = "DedicatedWorkerOrWorklet"
     OUTSTANDING_NETWORK_REQUEST_OTHERS = "OutstandingNetworkRequestOthers"
-    OUTSTANDING_INDEXED_DB_TRANSACTION = "OutstandingIndexedDBTransaction"
     REQUESTED_MIDI_PERMISSION = "RequestedMIDIPermission"
     REQUESTED_AUDIO_CAPTURE_PERMISSION = "RequestedAudioCapturePermission"
     REQUESTED_VIDEO_CAPTURE_PERMISSION = "RequestedVideoCapturePermission"
     REQUESTED_BACK_FORWARD_CACHE_BLOCKED_SENSORS = "RequestedBackForwardCacheBlockedSensors"
     REQUESTED_BACKGROUND_WORK_PERMISSION = "RequestedBackgroundWorkPermission"
     BROADCAST_CHANNEL = "BroadcastChannel"
-    INDEXED_DB_CONNECTION = "IndexedDBConnection"
     WEB_XR = "WebXR"
     SHARED_WORKER = "SharedWorker"
     WEB_LOCKS = "WebLocks"
@@ -1355,7 +1774,6 @@ class BackForwardCacheNotRestoredReason(enum.Enum):
     PRINTING = "Printing"
     WEB_DATABASE = "WebDatabase"
     PICTURE_IN_PICTURE = "PictureInPicture"
-    PORTAL = "Portal"
     SPEECH_RECOGNIZER = "SpeechRecognizer"
     IDLE_MANAGER = "IdleManager"
     PAYMENT_MANAGER = "PaymentManager"
@@ -1369,7 +1787,13 @@ class BackForwardCacheNotRestoredReason(enum.Enum):
     INDEXED_DB_EVENT = "IndexedDBEvent"
     DUMMY = "Dummy"
     JS_NETWORK_REQUEST_RECEIVED_CACHE_CONTROL_NO_STORE_RESOURCE = "JsNetworkRequestReceivedCacheControlNoStoreResource"
-    WEB_SERIAL = "WebSerial"
+    WEB_RTC_STICKY = "WebRTCSticky"
+    WEB_TRANSPORT_STICKY = "WebTransportSticky"
+    WEB_SOCKET_STICKY = "WebSocketSticky"
+    SMART_CARD = "SmartCard"
+    LIVE_MEDIA_STREAM_TRACK = "LiveMediaStreamTrack"
+    UNLOAD_HANDLER = "UnloadHandler"
+    PARSER_ABORTED = "ParserAborted"
     CONTENT_SECURITY_HANDLER = "ContentSecurityHandler"
     CONTENT_WEB_AUTHENTICATION_API = "ContentWebAuthenticationAPI"
     CONTENT_FILE_CHOOSER = "ContentFileChooser"
@@ -1380,6 +1804,7 @@ class BackForwardCacheNotRestoredReason(enum.Enum):
     CONTENT_WEB_USB = "ContentWebUSB"
     CONTENT_MEDIA_SESSION_SERVICE = "ContentMediaSessionService"
     CONTENT_SCREEN_READER = "ContentScreenReader"
+    CONTENT_DISCARDED = "ContentDiscarded"
     EMBEDDER_POPUP_BLOCKER_TAB_HELPER = "EmbedderPopupBlockerTabHelper"
     EMBEDDER_SAFE_BROWSING_TRIGGERED_POPUP_BLOCKER = "EmbedderSafeBrowsingTriggeredPopupBlocker"
     EMBEDDER_SAFE_BROWSING_THREAT_DETAILS = "EmbedderSafeBrowsingThreatDetails"
@@ -1395,6 +1820,7 @@ class BackForwardCacheNotRestoredReason(enum.Enum):
     EMBEDDER_EXTENSION_MESSAGING = "EmbedderExtensionMessaging"
     EMBEDDER_EXTENSION_MESSAGING_FOR_OPEN_PORT = "EmbedderExtensionMessagingForOpenPort"
     EMBEDDER_EXTENSION_SENT_MESSAGE_TO_CACHED_FRAME = "EmbedderExtensionSentMessageToCachedFrame"
+    REQUESTED_BY_WEB_VIEW_CLIENT = "RequestedByWebViewClient"
 
     def to_json(self) -> str:
         return self.value
@@ -1421,6 +1847,40 @@ class BackForwardCacheNotRestoredReasonType(enum.Enum):
 
 
 @dataclass
+class BackForwardCacheBlockingDetails:
+    #: Line number in the script (0-based).
+    line_number: int
+
+    #: Column number in the script (0-based).
+    column_number: int
+
+    #: Url of the file where blockage happened. Optional because of tests.
+    url: str | None = None
+
+    #: Function name where blockage happened. Optional because of anonymous functions and tests.
+    function: str | None = None
+
+    def to_json(self) -> T_JSON_DICT:
+        json: T_JSON_DICT = {}
+        json["lineNumber"] = self.line_number
+        json["columnNumber"] = self.column_number
+        if self.url is not None:
+            json["url"] = self.url
+        if self.function is not None:
+            json["function"] = self.function
+        return json
+
+    @classmethod
+    def from_json(cls, json: T_JSON_DICT) -> BackForwardCacheBlockingDetails:
+        return cls(
+            line_number=int(json["lineNumber"]),
+            column_number=int(json["columnNumber"]),
+            url=str(json["url"]) if "url" in json else None,
+            function=str(json["function"]) if "function" in json else None,
+        )
+
+
+@dataclass
 class BackForwardCacheNotRestoredExplanation:
     #: Type of the reason
     type_: BackForwardCacheNotRestoredReasonType
@@ -1431,7 +1891,9 @@ class BackForwardCacheNotRestoredExplanation:
     #: Context associated with the reason. The meaning of this context is
     #: dependent on the reason:
     #: - EmbedderExtensionSentMessageToCachedFrame: the extension ID.
-    context: typing.Optional[str] = None
+    context: str | None = None
+
+    details: list[BackForwardCacheBlockingDetails] | None = None
 
     def to_json(self) -> T_JSON_DICT:
         json: T_JSON_DICT = {}
@@ -1439,6 +1901,8 @@ class BackForwardCacheNotRestoredExplanation:
         json["reason"] = self.reason.to_json()
         if self.context is not None:
             json["context"] = self.context
+        if self.details is not None:
+            json["details"] = [i.to_json() for i in self.details]
         return json
 
     @classmethod
@@ -1447,6 +1911,7 @@ class BackForwardCacheNotRestoredExplanation:
             type_=BackForwardCacheNotRestoredReasonType.from_json(json["type"]),
             reason=BackForwardCacheNotRestoredReason.from_json(json["reason"]),
             context=str(json["context"]) if "context" in json else None,
+            details=[BackForwardCacheBlockingDetails.from_json(i) for i in json["details"]] if "details" in json else None,
         )
 
 
@@ -1456,10 +1921,10 @@ class BackForwardCacheNotRestoredExplanationTree:
     url: str
 
     #: Not restored reasons of each frame
-    explanations: typing.List[BackForwardCacheNotRestoredExplanation]
+    explanations: list[BackForwardCacheNotRestoredExplanation]
 
     #: Array of children frame
-    children: typing.List[BackForwardCacheNotRestoredExplanationTree]
+    children: list[BackForwardCacheNotRestoredExplanationTree]
 
     def to_json(self) -> T_JSON_DICT:
         json: T_JSON_DICT = {}
@@ -1479,7 +1944,7 @@ class BackForwardCacheNotRestoredExplanationTree:
 
 def add_script_to_evaluate_on_load(
     script_source: str,
-) -> typing.Generator[T_JSON_DICT, T_JSON_DICT, ScriptIdentifier]:
+) -> Generator[T_JSON_DICT, T_JSON_DICT, ScriptIdentifier]:
     """
     Deprecated, please use addScriptToEvaluateOnNewDocument instead.
 
@@ -1500,15 +1965,17 @@ def add_script_to_evaluate_on_load(
 
 def add_script_to_evaluate_on_new_document(
     source: str,
-    world_name: typing.Optional[str] = None,
-    include_command_line_api: typing.Optional[bool] = None,
-) -> typing.Generator[T_JSON_DICT, T_JSON_DICT, ScriptIdentifier]:
+    world_name: str | None = None,
+    include_command_line_api: bool | None = None,
+    run_immediately: bool | None = None,
+) -> Generator[T_JSON_DICT, T_JSON_DICT, ScriptIdentifier]:
     """
     Evaluates given script in every frame upon creation (before loading frame's scripts).
 
     :param source:
     :param world_name: **(EXPERIMENTAL)** *(Optional)* If specified, creates an isolated world with the given name and evaluates given script in it. This world name will be used as the ExecutionContextDescription::name when the corresponding event is emitted.
     :param include_command_line_api: **(EXPERIMENTAL)** *(Optional)* Specifies whether command line API should be available to the script, defaults to false.
+    :param run_immediately: **(EXPERIMENTAL)** *(Optional)* If true, runs the script immediately on existing execution contexts or worlds. Default: false.
     :returns: Identifier of the added script.
     """
     params: T_JSON_DICT = {}
@@ -1517,6 +1984,8 @@ def add_script_to_evaluate_on_new_document(
         params["worldName"] = world_name
     if include_command_line_api is not None:
         params["includeCommandLineAPI"] = include_command_line_api
+    if run_immediately is not None:
+        params["runImmediately"] = run_immediately
     cmd_dict: T_JSON_DICT = {
         "method": "Page.addScriptToEvaluateOnNewDocument",
         "params": params,
@@ -1525,7 +1994,7 @@ def add_script_to_evaluate_on_new_document(
     return ScriptIdentifier.from_json(json["identifier"])
 
 
-def bring_to_front() -> typing.Generator[T_JSON_DICT, T_JSON_DICT, None]:
+def bring_to_front() -> Generator[T_JSON_DICT, T_JSON_DICT, None]:
     """
     Brings page to front (activates tab).
     """
@@ -1536,13 +2005,13 @@ def bring_to_front() -> typing.Generator[T_JSON_DICT, T_JSON_DICT, None]:
 
 
 def capture_screenshot(
-    format_: typing.Optional[str] = None,
-    quality: typing.Optional[int] = None,
-    clip: typing.Optional[Viewport] = None,
-    from_surface: typing.Optional[bool] = None,
-    capture_beyond_viewport: typing.Optional[bool] = None,
-    optimize_for_speed: typing.Optional[bool] = None,
-) -> typing.Generator[T_JSON_DICT, T_JSON_DICT, str]:
+    format_: str | None = None,
+    quality: int | None = None,
+    clip: Viewport | None = None,
+    from_surface: bool | None = None,
+    capture_beyond_viewport: bool | None = None,
+    optimize_for_speed: bool | None = None,
+) -> Generator[T_JSON_DICT, T_JSON_DICT, str]:
     """
     Capture page screenshot.
 
@@ -1576,8 +2045,8 @@ def capture_screenshot(
 
 
 def capture_snapshot(
-    format_: typing.Optional[str] = None,
-) -> typing.Generator[T_JSON_DICT, T_JSON_DICT, str]:
+    format_: str | None = None,
+) -> Generator[T_JSON_DICT, T_JSON_DICT, str]:
     """
     Returns a snapshot of the page as a string. For MHTML format, the serialization includes
     iframes, shadow DOM, external resources, and element-inline styles.
@@ -1598,7 +2067,7 @@ def capture_snapshot(
     return str(json["data"])
 
 
-def clear_device_metrics_override() -> typing.Generator[T_JSON_DICT, T_JSON_DICT, None]:
+def clear_device_metrics_override() -> Generator[T_JSON_DICT, T_JSON_DICT, None]:
     """
     Clears the overridden device metrics.
 
@@ -1610,7 +2079,7 @@ def clear_device_metrics_override() -> typing.Generator[T_JSON_DICT, T_JSON_DICT
     yield cmd_dict
 
 
-def clear_device_orientation_override() -> typing.Generator[T_JSON_DICT, T_JSON_DICT, None]:
+def clear_device_orientation_override() -> Generator[T_JSON_DICT, T_JSON_DICT, None]:
     """
     Clears the overridden Device Orientation.
 
@@ -1622,7 +2091,7 @@ def clear_device_orientation_override() -> typing.Generator[T_JSON_DICT, T_JSON_
     yield cmd_dict
 
 
-def clear_geolocation_override() -> typing.Generator[T_JSON_DICT, T_JSON_DICT, None]:
+def clear_geolocation_override() -> Generator[T_JSON_DICT, T_JSON_DICT, None]:
     """
     Clears the overridden Geolocation Position and Error.
     """
@@ -1634,9 +2103,9 @@ def clear_geolocation_override() -> typing.Generator[T_JSON_DICT, T_JSON_DICT, N
 
 def create_isolated_world(
     frame_id: FrameId,
-    world_name: typing.Optional[str] = None,
-    grant_univeral_access: typing.Optional[bool] = None,
-) -> typing.Generator[T_JSON_DICT, T_JSON_DICT, runtime.ExecutionContextId]:
+    world_name: str | None = None,
+    grant_univeral_access: bool | None = None,
+) -> Generator[T_JSON_DICT, T_JSON_DICT, runtime.ExecutionContextId]:
     """
     Creates an isolated world for the given frame.
 
@@ -1662,7 +2131,7 @@ def create_isolated_world(
 def delete_cookie(
     cookie_name: str,
     url: str,
-) -> typing.Generator[T_JSON_DICT, T_JSON_DICT, None]:
+) -> Generator[T_JSON_DICT, T_JSON_DICT, None]:
     """
     Deletes browser cookie with given name, domain and path.
 
@@ -1681,7 +2150,7 @@ def delete_cookie(
     yield cmd_dict
 
 
-def disable() -> typing.Generator[T_JSON_DICT, T_JSON_DICT, None]:
+def disable() -> Generator[T_JSON_DICT, T_JSON_DICT, None]:
     """
     Disables page domain notifications.
     """
@@ -1691,7 +2160,7 @@ def disable() -> typing.Generator[T_JSON_DICT, T_JSON_DICT, None]:
     yield cmd_dict
 
 
-def enable() -> typing.Generator[T_JSON_DICT, T_JSON_DICT, None]:
+def enable() -> Generator[T_JSON_DICT, T_JSON_DICT, None]:
     """
     Enables page domain notifications.
     """
@@ -1701,19 +2170,31 @@ def enable() -> typing.Generator[T_JSON_DICT, T_JSON_DICT, None]:
     yield cmd_dict
 
 
-def get_app_manifest() -> typing.Generator[T_JSON_DICT, T_JSON_DICT, typing.Tuple[str, typing.List[AppManifestError], typing.Optional[str], typing.Optional[AppManifestParsedProperties]]]:
+def get_app_manifest(
+    manifest_id: str | None = None,
+) -> Generator[T_JSON_DICT, T_JSON_DICT, tuple[str, list[AppManifestError], str | None, AppManifestParsedProperties | None, WebAppManifest]]:
     """
+    Gets the processed manifest for this current document.
+      This API always waits for the manifest to be loaded.
+      If manifestId is provided, and it does not match the manifest of the
+        current document, this API errors out.
+      If there is not a loaded page, this API errors out immediately.
 
-
+    :param manifest_id: *(Optional)*
     :returns: A tuple with the following items:
 
         0. **url** - Manifest location.
         1. **errors** -
         2. **data** - *(Optional)* Manifest content.
-        3. **parsed** - *(Optional)* Parsed manifest properties
+        3. **parsed** - *(Optional)* Parsed manifest properties. Deprecated, use manifest instead.
+        4. **manifest** -
     """
+    params: T_JSON_DICT = {}
+    if manifest_id is not None:
+        params["manifestId"] = manifest_id
     cmd_dict: T_JSON_DICT = {
         "method": "Page.getAppManifest",
+        "params": params,
     }
     json = yield cmd_dict
     return (
@@ -1721,10 +2202,11 @@ def get_app_manifest() -> typing.Generator[T_JSON_DICT, T_JSON_DICT, typing.Tupl
         [AppManifestError.from_json(i) for i in json["errors"]],
         str(json["data"]) if "data" in json else None,
         AppManifestParsedProperties.from_json(json["parsed"]) if "parsed" in json else None,
+        WebAppManifest.from_json(json["manifest"]),
     )
 
 
-def get_installability_errors() -> typing.Generator[T_JSON_DICT, T_JSON_DICT, typing.List[InstallabilityError]]:
+def get_installability_errors() -> Generator[T_JSON_DICT, T_JSON_DICT, list[InstallabilityError]]:
     """
 
 
@@ -1739,7 +2221,7 @@ def get_installability_errors() -> typing.Generator[T_JSON_DICT, T_JSON_DICT, ty
     return [InstallabilityError.from_json(i) for i in json["installabilityErrors"]]
 
 
-def get_manifest_icons() -> typing.Generator[T_JSON_DICT, T_JSON_DICT, typing.Optional[str]]:
+def get_manifest_icons() -> Generator[T_JSON_DICT, T_JSON_DICT, str | None]:
     """
     Deprecated because it's not guaranteed that the returned icon is in fact the one used for PWA installation.
 
@@ -1754,7 +2236,7 @@ def get_manifest_icons() -> typing.Generator[T_JSON_DICT, T_JSON_DICT, typing.Op
     return str(json["primaryIcon"]) if "primaryIcon" in json else None
 
 
-def get_app_id() -> typing.Generator[T_JSON_DICT, T_JSON_DICT, typing.Tuple[typing.Optional[str], typing.Optional[str]]]:
+def get_app_id() -> Generator[T_JSON_DICT, T_JSON_DICT, tuple[str | None, str | None]]:
     """
     Returns the unique (PWA) app id.
     Only returns values if the feature flag 'WebAppEnableManifestId' is enabled
@@ -1778,7 +2260,7 @@ def get_app_id() -> typing.Generator[T_JSON_DICT, T_JSON_DICT, typing.Tuple[typi
 
 def get_ad_script_id(
     frame_id: FrameId,
-) -> typing.Generator[T_JSON_DICT, T_JSON_DICT, typing.Optional[AdScriptId]]:
+) -> Generator[T_JSON_DICT, T_JSON_DICT, AdScriptId | None]:
     """
 
 
@@ -1797,24 +2279,7 @@ def get_ad_script_id(
     return AdScriptId.from_json(json["adScriptId"]) if "adScriptId" in json else None
 
 
-def get_cookies() -> typing.Generator[T_JSON_DICT, T_JSON_DICT, typing.List[network.Cookie]]:
-    """
-    Returns all browser cookies for the page and all of its subframes. Depending
-    on the backend support, will return detailed cookie information in the
-    ``cookies`` field.
-
-    **EXPERIMENTAL**
-
-    :returns: Array of cookie objects.
-    """
-    cmd_dict: T_JSON_DICT = {
-        "method": "Page.getCookies",
-    }
-    json = yield cmd_dict
-    return [network.Cookie.from_json(i) for i in json["cookies"]]
-
-
-def get_frame_tree() -> typing.Generator[T_JSON_DICT, T_JSON_DICT, FrameTree]:
+def get_frame_tree() -> Generator[T_JSON_DICT, T_JSON_DICT, FrameTree]:
     """
     Returns present frame tree structure.
 
@@ -1827,7 +2292,7 @@ def get_frame_tree() -> typing.Generator[T_JSON_DICT, T_JSON_DICT, FrameTree]:
     return FrameTree.from_json(json["frameTree"])
 
 
-def get_layout_metrics() -> typing.Generator[T_JSON_DICT, T_JSON_DICT, typing.Tuple[LayoutViewport, VisualViewport, dom.Rect, LayoutViewport, VisualViewport, dom.Rect]]:
+def get_layout_metrics() -> Generator[T_JSON_DICT, T_JSON_DICT, tuple[LayoutViewport, VisualViewport, dom.Rect, LayoutViewport, VisualViewport, dom.Rect]]:
     """
     Returns metrics relating to the layouting of the page, such as viewport bounds/scale.
 
@@ -1854,7 +2319,7 @@ def get_layout_metrics() -> typing.Generator[T_JSON_DICT, T_JSON_DICT, typing.Tu
     )
 
 
-def get_navigation_history() -> typing.Generator[T_JSON_DICT, T_JSON_DICT, typing.Tuple[int, typing.List[NavigationEntry]]]:
+def get_navigation_history() -> Generator[T_JSON_DICT, T_JSON_DICT, tuple[int, list[NavigationEntry]]]:
     """
     Returns navigation history for the current page.
 
@@ -1873,7 +2338,7 @@ def get_navigation_history() -> typing.Generator[T_JSON_DICT, T_JSON_DICT, typin
     )
 
 
-def reset_navigation_history() -> typing.Generator[T_JSON_DICT, T_JSON_DICT, None]:
+def reset_navigation_history() -> Generator[T_JSON_DICT, T_JSON_DICT, None]:
     """
     Resets navigation history for the current page.
     """
@@ -1886,7 +2351,7 @@ def reset_navigation_history() -> typing.Generator[T_JSON_DICT, T_JSON_DICT, Non
 def get_resource_content(
     frame_id: FrameId,
     url: str,
-) -> typing.Generator[T_JSON_DICT, T_JSON_DICT, typing.Tuple[str, bool]]:
+) -> Generator[T_JSON_DICT, T_JSON_DICT, tuple[str, bool]]:
     """
     Returns content of the given resource.
 
@@ -1913,7 +2378,7 @@ def get_resource_content(
     )
 
 
-def get_resource_tree() -> typing.Generator[T_JSON_DICT, T_JSON_DICT, FrameResourceTree]:
+def get_resource_tree() -> Generator[T_JSON_DICT, T_JSON_DICT, FrameResourceTree]:
     """
     Returns present frame / resource tree structure.
 
@@ -1930,8 +2395,8 @@ def get_resource_tree() -> typing.Generator[T_JSON_DICT, T_JSON_DICT, FrameResou
 
 def handle_java_script_dialog(
     accept: bool,
-    prompt_text: typing.Optional[str] = None,
-) -> typing.Generator[T_JSON_DICT, T_JSON_DICT, None]:
+    prompt_text: str | None = None,
+) -> Generator[T_JSON_DICT, T_JSON_DICT, None]:
     """
     Accepts or dismisses a JavaScript initiated dialog (alert, confirm, prompt, or onbeforeunload).
 
@@ -1951,11 +2416,11 @@ def handle_java_script_dialog(
 
 def navigate(
     url: str,
-    referrer: typing.Optional[str] = None,
-    transition_type: typing.Optional[TransitionType] = None,
-    frame_id: typing.Optional[FrameId] = None,
-    referrer_policy: typing.Optional[ReferrerPolicy] = None,
-) -> typing.Generator[T_JSON_DICT, T_JSON_DICT, typing.Tuple[FrameId, typing.Optional[network.LoaderId], typing.Optional[str]]]:
+    referrer: str | None = None,
+    transition_type: TransitionType | None = None,
+    frame_id: FrameId | None = None,
+    referrer_policy: ReferrerPolicy | None = None,
+) -> Generator[T_JSON_DICT, T_JSON_DICT, tuple[FrameId, network.LoaderId | None, str | None]]:
     """
     Navigates current page to the given URL.
 
@@ -1994,7 +2459,7 @@ def navigate(
 
 def navigate_to_history_entry(
     entry_id: int,
-) -> typing.Generator[T_JSON_DICT, T_JSON_DICT, None]:
+) -> Generator[T_JSON_DICT, T_JSON_DICT, None]:
     """
     Navigates current page to the given history entry.
 
@@ -2010,22 +2475,24 @@ def navigate_to_history_entry(
 
 
 def print_to_pdf(
-    landscape: typing.Optional[bool] = None,
-    display_header_footer: typing.Optional[bool] = None,
-    print_background: typing.Optional[bool] = None,
-    scale: typing.Optional[float] = None,
-    paper_width: typing.Optional[float] = None,
-    paper_height: typing.Optional[float] = None,
-    margin_top: typing.Optional[float] = None,
-    margin_bottom: typing.Optional[float] = None,
-    margin_left: typing.Optional[float] = None,
-    margin_right: typing.Optional[float] = None,
-    page_ranges: typing.Optional[str] = None,
-    header_template: typing.Optional[str] = None,
-    footer_template: typing.Optional[str] = None,
-    prefer_css_page_size: typing.Optional[bool] = None,
-    transfer_mode: typing.Optional[str] = None,
-) -> typing.Generator[T_JSON_DICT, T_JSON_DICT, typing.Tuple[str, typing.Optional[io.StreamHandle]]]:
+    landscape: bool | None = None,
+    display_header_footer: bool | None = None,
+    print_background: bool | None = None,
+    scale: float | None = None,
+    paper_width: float | None = None,
+    paper_height: float | None = None,
+    margin_top: float | None = None,
+    margin_bottom: float | None = None,
+    margin_left: float | None = None,
+    margin_right: float | None = None,
+    page_ranges: str | None = None,
+    header_template: str | None = None,
+    footer_template: str | None = None,
+    prefer_css_page_size: bool | None = None,
+    transfer_mode: str | None = None,
+    generate_tagged_pdf: bool | None = None,
+    generate_document_outline: bool | None = None,
+) -> Generator[T_JSON_DICT, T_JSON_DICT, tuple[str, io.StreamHandle | None]]:
     """
     Print page as PDF.
 
@@ -2044,6 +2511,8 @@ def print_to_pdf(
     :param footer_template: *(Optional)* HTML template for the print footer. Should use the same format as the ````headerTemplate````.
     :param prefer_css_page_size: *(Optional)* Whether or not to prefer page size as defined by css. Defaults to false, in which case the content will be scaled to fit the paper size.
     :param transfer_mode: **(EXPERIMENTAL)** *(Optional)* return as stream
+    :param generate_tagged_pdf: **(EXPERIMENTAL)** *(Optional)* Whether or not to generate tagged (accessible) PDF. Defaults to embedder choice.
+    :param generate_document_outline: **(EXPERIMENTAL)** *(Optional)* Whether or not to embed the document outline into the PDF.
     :returns: A tuple with the following items:
 
         0. **data** - Base64-encoded pdf data. Empty if `` returnAsStream` is specified. (Encoded as a base64 string when passed over JSON)
@@ -2080,6 +2549,10 @@ def print_to_pdf(
         params["preferCSSPageSize"] = prefer_css_page_size
     if transfer_mode is not None:
         params["transferMode"] = transfer_mode
+    if generate_tagged_pdf is not None:
+        params["generateTaggedPDF"] = generate_tagged_pdf
+    if generate_document_outline is not None:
+        params["generateDocumentOutline"] = generate_document_outline
     cmd_dict: T_JSON_DICT = {
         "method": "Page.printToPDF",
         "params": params,
@@ -2092,20 +2565,24 @@ def print_to_pdf(
 
 
 def reload(
-    ignore_cache: typing.Optional[bool] = None,
-    script_to_evaluate_on_load: typing.Optional[str] = None,
-) -> typing.Generator[T_JSON_DICT, T_JSON_DICT, None]:
+    ignore_cache: bool | None = None,
+    script_to_evaluate_on_load: str | None = None,
+    loader_id: network.LoaderId | None = None,
+) -> Generator[T_JSON_DICT, T_JSON_DICT, None]:
     """
     Reloads given page optionally ignoring the cache.
 
     :param ignore_cache: *(Optional)* If true, browser cache is ignored (as if the user pressed Shift+refresh).
     :param script_to_evaluate_on_load: *(Optional)* If set, the script will be injected into all frames of the inspected page after reload. Argument will be ignored if reloading dataURL origin.
+    :param loader_id: **(EXPERIMENTAL)** *(Optional)* If set, an error will be thrown if the target page's main frame's loader id does not match the provided id. This prevents accidentally reloading an unintended target in case there's a racing navigation.
     """
     params: T_JSON_DICT = {}
     if ignore_cache is not None:
         params["ignoreCache"] = ignore_cache
     if script_to_evaluate_on_load is not None:
         params["scriptToEvaluateOnLoad"] = script_to_evaluate_on_load
+    if loader_id is not None:
+        params["loaderId"] = loader_id.to_json()
     cmd_dict: T_JSON_DICT = {
         "method": "Page.reload",
         "params": params,
@@ -2115,7 +2592,7 @@ def reload(
 
 def remove_script_to_evaluate_on_load(
     identifier: ScriptIdentifier,
-) -> typing.Generator[T_JSON_DICT, T_JSON_DICT, None]:
+) -> Generator[T_JSON_DICT, T_JSON_DICT, None]:
     """
     Deprecated, please use removeScriptToEvaluateOnNewDocument instead.
 
@@ -2134,7 +2611,7 @@ def remove_script_to_evaluate_on_load(
 
 def remove_script_to_evaluate_on_new_document(
     identifier: ScriptIdentifier,
-) -> typing.Generator[T_JSON_DICT, T_JSON_DICT, None]:
+) -> Generator[T_JSON_DICT, T_JSON_DICT, None]:
     """
     Removes given script from the list.
 
@@ -2151,7 +2628,7 @@ def remove_script_to_evaluate_on_new_document(
 
 def screencast_frame_ack(
     session_id: int,
-) -> typing.Generator[T_JSON_DICT, T_JSON_DICT, None]:
+) -> Generator[T_JSON_DICT, T_JSON_DICT, None]:
     """
     Acknowledges that a screencast frame has been received by the frontend.
 
@@ -2172,9 +2649,9 @@ def search_in_resource(
     frame_id: FrameId,
     url: str,
     query: str,
-    case_sensitive: typing.Optional[bool] = None,
-    is_regex: typing.Optional[bool] = None,
-) -> typing.Generator[T_JSON_DICT, T_JSON_DICT, typing.List[debugger.SearchMatch]]:
+    case_sensitive: bool | None = None,
+    is_regex: bool | None = None,
+) -> Generator[T_JSON_DICT, T_JSON_DICT, list[debugger.SearchMatch]]:
     """
     Searches for given string in resource content.
 
@@ -2205,7 +2682,7 @@ def search_in_resource(
 
 def set_ad_blocking_enabled(
     enabled: bool,
-) -> typing.Generator[T_JSON_DICT, T_JSON_DICT, None]:
+) -> Generator[T_JSON_DICT, T_JSON_DICT, None]:
     """
     Enable Chrome's experimental ad filter on all sites.
 
@@ -2224,11 +2701,9 @@ def set_ad_blocking_enabled(
 
 def set_bypass_csp(
     enabled: bool,
-) -> typing.Generator[T_JSON_DICT, T_JSON_DICT, None]:
+) -> Generator[T_JSON_DICT, T_JSON_DICT, None]:
     """
     Enable page Content Security Policy by-passing.
-
-    **EXPERIMENTAL**
 
     :param enabled: Whether to bypass page CSP.
     """
@@ -2243,7 +2718,7 @@ def set_bypass_csp(
 
 def get_permissions_policy_state(
     frame_id: FrameId,
-) -> typing.Generator[T_JSON_DICT, T_JSON_DICT, typing.List[PermissionsPolicyFeatureState]]:
+) -> Generator[T_JSON_DICT, T_JSON_DICT, list[PermissionsPolicyFeatureState]]:
     """
     Get Permissions Policy state on given frame.
 
@@ -2264,7 +2739,7 @@ def get_permissions_policy_state(
 
 def get_origin_trials(
     frame_id: FrameId,
-) -> typing.Generator[T_JSON_DICT, T_JSON_DICT, typing.List[OriginTrial]]:
+) -> Generator[T_JSON_DICT, T_JSON_DICT, list[OriginTrial]]:
     """
     Get Origin Trials on given frame.
 
@@ -2288,15 +2763,15 @@ def set_device_metrics_override(
     height: int,
     device_scale_factor: float,
     mobile: bool,
-    scale: typing.Optional[float] = None,
-    screen_width: typing.Optional[int] = None,
-    screen_height: typing.Optional[int] = None,
-    position_x: typing.Optional[int] = None,
-    position_y: typing.Optional[int] = None,
-    dont_set_visible_size: typing.Optional[bool] = None,
-    screen_orientation: typing.Optional[emulation.ScreenOrientation] = None,
-    viewport: typing.Optional[Viewport] = None,
-) -> typing.Generator[T_JSON_DICT, T_JSON_DICT, None]:
+    scale: float | None = None,
+    screen_width: int | None = None,
+    screen_height: int | None = None,
+    position_x: int | None = None,
+    position_y: int | None = None,
+    dont_set_visible_size: bool | None = None,
+    screen_orientation: emulation.ScreenOrientation | None = None,
+    viewport: Viewport | None = None,
+) -> Generator[T_JSON_DICT, T_JSON_DICT, None]:
     """
     Overrides the values of device screen dimensions (window.screen.width, window.screen.height,
     window.innerWidth, window.innerHeight, and "device-width"/"device-height"-related CSS media
@@ -2349,7 +2824,7 @@ def set_device_orientation_override(
     alpha: float,
     beta: float,
     gamma: float,
-) -> typing.Generator[T_JSON_DICT, T_JSON_DICT, None]:
+) -> Generator[T_JSON_DICT, T_JSON_DICT, None]:
     """
     Overrides the Device Orientation.
 
@@ -2372,8 +2847,8 @@ def set_device_orientation_override(
 
 def set_font_families(
     font_families: FontFamilies,
-    for_scripts: typing.Optional[typing.List[ScriptFontFamilies]] = None,
-) -> typing.Generator[T_JSON_DICT, T_JSON_DICT, None]:
+    for_scripts: list[ScriptFontFamilies] | None = None,
+) -> Generator[T_JSON_DICT, T_JSON_DICT, None]:
     """
     Set generic font families.
 
@@ -2395,7 +2870,7 @@ def set_font_families(
 
 def set_font_sizes(
     font_sizes: FontSizes,
-) -> typing.Generator[T_JSON_DICT, T_JSON_DICT, None]:
+) -> Generator[T_JSON_DICT, T_JSON_DICT, None]:
     """
     Set default font sizes.
 
@@ -2415,7 +2890,7 @@ def set_font_sizes(
 def set_document_content(
     frame_id: FrameId,
     html: str,
-) -> typing.Generator[T_JSON_DICT, T_JSON_DICT, None]:
+) -> Generator[T_JSON_DICT, T_JSON_DICT, None]:
     """
     Sets given markup as the document's HTML.
 
@@ -2434,8 +2909,8 @@ def set_document_content(
 
 def set_download_behavior(
     behavior: str,
-    download_path: typing.Optional[str] = None,
-) -> typing.Generator[T_JSON_DICT, T_JSON_DICT, None]:
+    download_path: str | None = None,
+) -> Generator[T_JSON_DICT, T_JSON_DICT, None]:
     """
     Set the behavior when downloading a file.
 
@@ -2456,10 +2931,10 @@ def set_download_behavior(
 
 
 def set_geolocation_override(
-    latitude: typing.Optional[float] = None,
-    longitude: typing.Optional[float] = None,
-    accuracy: typing.Optional[float] = None,
-) -> typing.Generator[T_JSON_DICT, T_JSON_DICT, None]:
+    latitude: float | None = None,
+    longitude: float | None = None,
+    accuracy: float | None = None,
+) -> Generator[T_JSON_DICT, T_JSON_DICT, None]:
     """
     Overrides the Geolocation Position or Error. Omitting any of the parameters emulates position
     unavailable.
@@ -2484,11 +2959,9 @@ def set_geolocation_override(
 
 def set_lifecycle_events_enabled(
     enabled: bool,
-) -> typing.Generator[T_JSON_DICT, T_JSON_DICT, None]:
+) -> Generator[T_JSON_DICT, T_JSON_DICT, None]:
     """
     Controls whether page will emit lifecycle events.
-
-    **EXPERIMENTAL**
 
     :param enabled: If true, starts emitting lifecycle events.
     """
@@ -2503,8 +2976,8 @@ def set_lifecycle_events_enabled(
 
 def set_touch_emulation_enabled(
     enabled: bool,
-    configuration: typing.Optional[str] = None,
-) -> typing.Generator[T_JSON_DICT, T_JSON_DICT, None]:
+    configuration: str | None = None,
+) -> Generator[T_JSON_DICT, T_JSON_DICT, None]:
     """
     Toggles mouse event-based touch event emulation.
 
@@ -2525,12 +2998,12 @@ def set_touch_emulation_enabled(
 
 
 def start_screencast(
-    format_: typing.Optional[str] = None,
-    quality: typing.Optional[int] = None,
-    max_width: typing.Optional[int] = None,
-    max_height: typing.Optional[int] = None,
-    every_nth_frame: typing.Optional[int] = None,
-) -> typing.Generator[T_JSON_DICT, T_JSON_DICT, None]:
+    format_: str | None = None,
+    quality: int | None = None,
+    max_width: int | None = None,
+    max_height: int | None = None,
+    every_nth_frame: int | None = None,
+) -> Generator[T_JSON_DICT, T_JSON_DICT, None]:
     """
     Starts sending each frame using the ``screencastFrame`` event.
 
@@ -2560,7 +3033,7 @@ def start_screencast(
     yield cmd_dict
 
 
-def stop_loading() -> typing.Generator[T_JSON_DICT, T_JSON_DICT, None]:
+def stop_loading() -> Generator[T_JSON_DICT, T_JSON_DICT, None]:
     """
     Force the page stop all navigations and pending resource fetches.
     """
@@ -2570,7 +3043,7 @@ def stop_loading() -> typing.Generator[T_JSON_DICT, T_JSON_DICT, None]:
     yield cmd_dict
 
 
-def crash() -> typing.Generator[T_JSON_DICT, T_JSON_DICT, None]:
+def crash() -> Generator[T_JSON_DICT, T_JSON_DICT, None]:
     """
     Crashes renderer on the IO thread, generates minidumps.
 
@@ -2582,11 +3055,9 @@ def crash() -> typing.Generator[T_JSON_DICT, T_JSON_DICT, None]:
     yield cmd_dict
 
 
-def close() -> typing.Generator[T_JSON_DICT, T_JSON_DICT, None]:
+def close() -> Generator[T_JSON_DICT, T_JSON_DICT, None]:
     """
     Tries to close page, running its beforeunload hooks, if any.
-
-    **EXPERIMENTAL**
     """
     cmd_dict: T_JSON_DICT = {
         "method": "Page.close",
@@ -2596,7 +3067,7 @@ def close() -> typing.Generator[T_JSON_DICT, T_JSON_DICT, None]:
 
 def set_web_lifecycle_state(
     state: str,
-) -> typing.Generator[T_JSON_DICT, T_JSON_DICT, None]:
+) -> Generator[T_JSON_DICT, T_JSON_DICT, None]:
     """
     Tries to update the web lifecycle state of the page.
     It will transition the page to the given state according to:
@@ -2615,7 +3086,7 @@ def set_web_lifecycle_state(
     yield cmd_dict
 
 
-def stop_screencast() -> typing.Generator[T_JSON_DICT, T_JSON_DICT, None]:
+def stop_screencast() -> Generator[T_JSON_DICT, T_JSON_DICT, None]:
     """
     Stops sending each frame in the ``screencastFrame``.
 
@@ -2628,11 +3099,11 @@ def stop_screencast() -> typing.Generator[T_JSON_DICT, T_JSON_DICT, None]:
 
 
 def produce_compilation_cache(
-    scripts: typing.List[CompilationCacheParams],
-) -> typing.Generator[T_JSON_DICT, T_JSON_DICT, None]:
+    scripts: list[CompilationCacheParams],
+) -> Generator[T_JSON_DICT, T_JSON_DICT, None]:
     """
     Requests backend to produce compilation cache for the specified scripts.
-    ``scripts`` are appeneded to the list of scripts for which the cache
+    ``scripts`` are appended to the list of scripts for which the cache
     would be produced. The list may be reset during page navigation.
     When script with a matching URL is encountered, the cache is optionally
     produced upon backend discretion, based on internal heuristics.
@@ -2654,7 +3125,7 @@ def produce_compilation_cache(
 def add_compilation_cache(
     url: str,
     data: str,
-) -> typing.Generator[T_JSON_DICT, T_JSON_DICT, None]:
+) -> Generator[T_JSON_DICT, T_JSON_DICT, None]:
     """
     Seeds compilation cache for given url. Compilation cache does not survive
     cross-process navigation.
@@ -2674,7 +3145,7 @@ def add_compilation_cache(
     yield cmd_dict
 
 
-def clear_compilation_cache() -> typing.Generator[T_JSON_DICT, T_JSON_DICT, None]:
+def clear_compilation_cache() -> Generator[T_JSON_DICT, T_JSON_DICT, None]:
     """
     Clears seeded compilation cache.
 
@@ -2688,7 +3159,7 @@ def clear_compilation_cache() -> typing.Generator[T_JSON_DICT, T_JSON_DICT, None
 
 def set_spc_transaction_mode(
     mode: AutoResponseMode,
-) -> typing.Generator[T_JSON_DICT, T_JSON_DICT, None]:
+) -> Generator[T_JSON_DICT, T_JSON_DICT, None]:
     """
     Sets the Secure Payment Confirmation transaction mode.
     https://w3c.github.io/secure-payment-confirmation/#sctn-automation-set-spc-transaction-mode
@@ -2708,7 +3179,7 @@ def set_spc_transaction_mode(
 
 def set_rph_registration_mode(
     mode: AutoResponseMode,
-) -> typing.Generator[T_JSON_DICT, T_JSON_DICT, None]:
+) -> Generator[T_JSON_DICT, T_JSON_DICT, None]:
     """
     Extensions for Custom Handlers API:
     https://html.spec.whatwg.org/multipage/system-state.html#rph-automation
@@ -2728,8 +3199,8 @@ def set_rph_registration_mode(
 
 def generate_test_report(
     message: str,
-    group: typing.Optional[str] = None,
-) -> typing.Generator[T_JSON_DICT, T_JSON_DICT, None]:
+    group: str | None = None,
+) -> Generator[T_JSON_DICT, T_JSON_DICT, None]:
     """
     Generates a report for testing.
 
@@ -2749,7 +3220,7 @@ def generate_test_report(
     yield cmd_dict
 
 
-def wait_for_debugger() -> typing.Generator[T_JSON_DICT, T_JSON_DICT, None]:
+def wait_for_debugger() -> Generator[T_JSON_DICT, T_JSON_DICT, None]:
     """
     Pauses page execution. Can be resumed using generic Runtime.runIfWaitingForDebugger.
 
@@ -2763,13 +3234,11 @@ def wait_for_debugger() -> typing.Generator[T_JSON_DICT, T_JSON_DICT, None]:
 
 def set_intercept_file_chooser_dialog(
     enabled: bool,
-) -> typing.Generator[T_JSON_DICT, T_JSON_DICT, None]:
+) -> Generator[T_JSON_DICT, T_JSON_DICT, None]:
     """
     Intercept file chooser requests and transfer control to protocol clients.
     When file chooser interception is enabled, native file chooser dialog is not shown.
     Instead, a protocol event ``Page.fileChooserOpened`` is emitted.
-
-    **EXPERIMENTAL**
 
     :param enabled:
     """
@@ -2784,7 +3253,7 @@ def set_intercept_file_chooser_dialog(
 
 def set_prerendering_allowed(
     is_allowed: bool,
-) -> typing.Generator[T_JSON_DICT, T_JSON_DICT, None]:
+) -> Generator[T_JSON_DICT, T_JSON_DICT, None]:
     """
     Enable/disable prerendering manually.
 
@@ -2829,8 +3298,8 @@ class FileChooserOpened:
     frame_id: FrameId
     #: Input mode.
     mode: str
-    #: Input node id. Only present for file choosers opened via an <input type="file"> element.
-    backend_node_id: typing.Optional[dom.BackendNodeId]
+    #: Input node id. Only present for file choosers opened via an ``<input type="file">`` element.
+    backend_node_id: dom.BackendNodeId | None
 
     @classmethod
     def from_json(cls, json: T_JSON_DICT) -> FileChooserOpened:
@@ -2852,7 +3321,7 @@ class FrameAttached:
     #: Parent frame identifier.
     parent_frame_id: FrameId
     #: JavaScript stack trace of when frame was attached, only set if frame initiated from script.
-    stack: typing.Optional[runtime.StackTrace]
+    stack: runtime.StackTrace | None
 
     @classmethod
     def from_json(cls, json: T_JSON_DICT) -> FrameAttached:
@@ -2894,6 +3363,25 @@ class FrameDetached:
         return cls(
             frame_id=FrameId.from_json(json["frameId"]),
             reason=str(json["reason"]),
+        )
+
+
+@event_class("Page.frameSubtreeWillBeDetached")
+@dataclass
+class FrameSubtreeWillBeDetached:
+    """
+    **EXPERIMENTAL**
+
+    Fired before frame subtree is detached. Emitted before any frame of the
+    subtree is actually detached.
+    """
+    #: Id of the frame that is the root of the subtree that will be detached.
+    frame_id: FrameId
+
+    @classmethod
+    def from_json(cls, json: T_JSON_DICT) -> FrameSubtreeWillBeDetached:
+        return cls(
+            frame_id=FrameId.from_json(json["frameId"]),
         )
 
 
@@ -3164,7 +3652,7 @@ class JavascriptDialogOpening:
     #: the page execution. Execution can be resumed via calling Page.handleJavaScriptDialog.
     has_browser_handler: bool
     #: Default dialog prompt.
-    default_prompt: typing.Optional[str]
+    default_prompt: str | None
 
     @classmethod
     def from_json(cls, json: T_JSON_DICT) -> JavascriptDialogOpening:
@@ -3211,14 +3699,14 @@ class BackForwardCacheNotUsed:
     main-frame history navigation where the document changes (non-same-document navigations),
     when bfcache navigation fails.
     """
-    #: The loader id for the associated navgation.
+    #: The loader id for the associated navigation.
     loader_id: network.LoaderId
     #: The frame id of the associated frame.
     frame_id: FrameId
     #: Array of reasons why the page could not be cached. This must not be empty.
-    not_restored_explanations: typing.List[BackForwardCacheNotRestoredExplanation]
+    not_restored_explanations: list[BackForwardCacheNotRestoredExplanation]
     #: Tree structure of reasons why the page could not be cached for each frame.
-    not_restored_explanations_tree: typing.Optional[BackForwardCacheNotRestoredExplanationTree]
+    not_restored_explanations_tree: BackForwardCacheNotRestoredExplanationTree | None
 
     @classmethod
     def from_json(cls, json: T_JSON_DICT) -> BackForwardCacheNotUsed:
@@ -3254,12 +3742,15 @@ class NavigatedWithinDocument:
     frame_id: FrameId
     #: Frame's new url.
     url: str
+    #: Navigation type
+    navigation_type: str
 
     @classmethod
     def from_json(cls, json: T_JSON_DICT) -> NavigatedWithinDocument:
         return cls(
             frame_id=FrameId.from_json(json["frameId"]),
             url=str(json["url"]),
+            navigation_type=str(json["navigationType"]),
         )
 
 
@@ -3317,7 +3808,7 @@ class WindowOpen:
     #: Window name.
     window_name: str
     #: An array of enabled window features.
-    window_features: typing.List[str]
+    window_features: list[str]
     #: Whether or not it was triggered by user gesture.
     user_gesture: bool
 

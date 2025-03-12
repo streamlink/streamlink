@@ -3,14 +3,15 @@
 # This file is generated from the CDP specification. If you need to make
 # changes, edit the generator and regenerate all modules.
 #
-# CDP version: v0.0.1156692
+# CDP version: v0.0.1359167
 # CDP domain: IO
 
 from __future__ import annotations
 
 import enum
-import typing
+from collections.abc import Generator
 from dataclasses import dataclass
+from typing import Any
 
 import streamlink.webbrowser.cdp.devtools.runtime as runtime
 from streamlink.webbrowser.cdp.devtools.util import T_JSON_DICT, event_class
@@ -18,8 +19,8 @@ from streamlink.webbrowser.cdp.devtools.util import T_JSON_DICT, event_class
 
 class StreamHandle(str):
     """
-    This is either obtained from another method or specified as ``blob:&lt;uuid&gt;`` where
-    ``&lt;uuid&gt`` is an UUID of a Blob.
+    This is either obtained from another method or specified as ``blob:<uuid>`` where
+    ``<uuid>`` is an UUID of a Blob.
     """
     def to_json(self) -> str:
         return self
@@ -34,7 +35,7 @@ class StreamHandle(str):
 
 def close(
     handle: StreamHandle,
-) -> typing.Generator[T_JSON_DICT, T_JSON_DICT, None]:
+) -> Generator[T_JSON_DICT, T_JSON_DICT, None]:
     """
     Close the stream, discard any temporary backing storage.
 
@@ -51,14 +52,14 @@ def close(
 
 def read(
     handle: StreamHandle,
-    offset: typing.Optional[int] = None,
-    size: typing.Optional[int] = None,
-) -> typing.Generator[T_JSON_DICT, T_JSON_DICT, typing.Tuple[typing.Optional[bool], str, bool]]:
+    offset: int | None = None,
+    size: int | None = None,
+) -> Generator[T_JSON_DICT, T_JSON_DICT, tuple[bool | None, str, bool]]:
     """
     Read a chunk of the stream
 
     :param handle: Handle of the stream to read.
-    :param offset: *(Optional)* Seek to the specified offset before reading (if not specificed, proceed with offset following the last read). Some types of streams may only support sequential reads.
+    :param offset: *(Optional)* Seek to the specified offset before reading (if not specified, proceed with offset following the last read). Some types of streams may only support sequential reads.
     :param size: *(Optional)* Maximum number of bytes to read (left upon the agent discretion if not specified).
     :returns: A tuple with the following items:
 
@@ -86,7 +87,7 @@ def read(
 
 def resolve_blob(
     object_id: runtime.RemoteObjectId,
-) -> typing.Generator[T_JSON_DICT, T_JSON_DICT, str]:
+) -> Generator[T_JSON_DICT, T_JSON_DICT, str]:
     """
     Return UUID of Blob object specified by a remote object id.
 

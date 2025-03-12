@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<MPD
+  xmlns="urn:mpeg:dash:schema:mpd:2011"
+  type="dynamic"
+  profiles="urn:mpeg:dash:profile:isoff-live:2011"
+  availabilityStartTime="1970-01-01T00:00:00Z"
+  minimumUpdatePeriod="PT6.00S"
+  minBufferTime="PT2S"
+  timeShiftBufferDepth="PT259200S"
+  maxSegmentDuration="PT6.0S"
+>
+  <Period id="period" start="PT0S">
+    <AdaptationSet frameRate="25" mimeType="video/mp4" startWithSAP="1" id="1" contentType="video" segmentAlignment="true">
+      <SegmentTemplate timescale="90000" media="$RepresentationID$-$Time$.m4s">
+        <SegmentTimeline>
+          <S d="540000" t="155994767894430"/>
+          <S d="540000" r="7"/>
+        </SegmentTimeline>
+      </SegmentTemplate>
+      <Representation
+        width="1920"
+        height="1080"
+        codecs="avc1.640028"
+        id="video_1920x1080_avc1"
+        bandwidth="14652634"
+      />
+    </AdaptationSet>
+  </Period>
+  <UTCTiming schemeIdUri="urn:mpeg:dash:utc:direct:2014" value="2024-12-04T01:21:18.032097Z"/>
+</MPD>

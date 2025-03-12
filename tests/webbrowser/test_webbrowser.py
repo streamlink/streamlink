@@ -3,7 +3,6 @@ from __future__ import annotations
 from contextlib import AbstractContextManager, nullcontext
 from pathlib import Path
 from signal import SIGTERM
-from typing import List, Optional
 
 import pytest
 import trio
@@ -15,38 +14,42 @@ from streamlink.webbrowser.webbrowser import Webbrowser
 
 class _FakeWebbrowser(Webbrowser):
     @classmethod
-    def launch_args(cls) -> List[str]:
+    def launch_args(cls) -> list[str]:
         return ["foo", "bar"]
 
 
 class TestInit:
-    @pytest.mark.parametrize(("executable", "resolve_executable", "raises"), [
-        pytest.param(
-            None,
-            None,
-            pytest.raises(WebbrowserError, match="^Could not find web browser executable: Please set the path "),
-            id="Failure with unset path",
-        ),
-        pytest.param(
-            "custom",
-            None,
-            pytest.raises(WebbrowserError, match="^Invalid web browser executable: custom$"),
-            id="Failure with custom path",
-        ),
-        pytest.param(
-            None,
-            "default",
-            nullcontext(),
-            id="Success with default path",
-        ),
-        pytest.param(
-            "custom",
-            "custom",
-            nullcontext(),
-            id="Success with custom path",
-        ),
-    ], indirect=["resolve_executable"])
-    def test_resolve_executable(self, resolve_executable, executable: Optional[str], raises: nullcontext):
+    @pytest.mark.parametrize(
+        ("executable", "resolve_executable", "raises"),
+        [
+            pytest.param(
+                None,
+                None,
+                pytest.raises(WebbrowserError, match=r"^Could not find web browser executable: Please set the path "),
+                id="Failure with unset path",
+            ),
+            pytest.param(
+                "custom",
+                None,
+                pytest.raises(WebbrowserError, match=r"^Invalid web browser executable: custom$"),
+                id="Failure with custom path",
+            ),
+            pytest.param(
+                None,
+                "default",
+                nullcontext(),
+                id="Success with default path",
+            ),
+            pytest.param(
+                "custom",
+                "custom",
+                nullcontext(),
+                id="Success with custom path",
+            ),
+        ],
+        indirect=["resolve_executable"],
+    )
+    def test_resolve_executable(self, resolve_executable, executable: str | None, raises: nullcontext):
         with raises:
             Webbrowser(executable=executable)
 

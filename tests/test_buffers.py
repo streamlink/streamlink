@@ -83,10 +83,13 @@ class TestBuffer:
         assert buffer.read() == b"1" * 8192
         assert buffer.length == 0
 
-    @pytest.mark.parametrize("data", [
-        bytearray(b"0123456789"),
-        memoryview(bytearray(b"0123456789")),
-    ])
+    @pytest.mark.parametrize(
+        "data",
+        [
+            bytearray(b"0123456789"),
+            memoryview(bytearray(b"0123456789")),
+        ],
+    )
     def test_reuse_input(self, buffer: Buffer, data: bytearray):
         buffer.write(data)
         data[:] = b"9876543210"

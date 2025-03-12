@@ -1,6 +1,7 @@
+from __future__ import annotations
+
 import logging
 from pathlib import Path
-from typing import Dict, Type
 
 from setuptools import Command
 from setuptools.command.build_py import build_py
@@ -29,6 +30,6 @@ class StreamlinkBuildPyCommand(build_py, Command):
         self._build_plugins_json()
 
 
-cmdclass: Dict[str, Type[Command]] = {
+cmdclass: dict[str, type[Command]] = {
     "build_py": StreamlinkBuildPyCommand,
 }

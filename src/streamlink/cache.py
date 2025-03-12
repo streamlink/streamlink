@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import json
 import os
 import shutil
@@ -6,7 +8,7 @@ from contextlib import suppress
 from datetime import datetime
 from pathlib import Path
 from time import time
-from typing import Any, Dict, Optional, Union
+from typing import Any
 
 from streamlink.compat import is_win32
 
@@ -28,7 +30,7 @@ CACHE_DIR = Path(xdg_cache) / "streamlink"
 class Cache:
     def __init__(
         self,
-        filename: Union[str, Path],
+        filename: str | Path,
         key_prefix: str = "",
     ):
         """
@@ -41,7 +43,7 @@ class Cache:
         self.key_prefix = key_prefix
         self.filename = CACHE_DIR / Path(filename)
 
-        self._cache: Dict[str, Dict[str, Any]] = {}
+        self._cache: dict[str, dict[str, Any]] = {}
 
     def _load(self):
         self._cache = {}
@@ -88,7 +90,7 @@ class Cache:
         key: str,
         value: Any,
         expires: float = 60 * 60 * 24 * 7,
-        expires_at: Optional[datetime] = None,
+        expires_at: datetime | None = None,
     ) -> None:
         """
         Store the given value using the key name and expiration time.
@@ -121,7 +123,7 @@ class Cache:
     def get(
         self,
         key: str,
-        default: Optional[Any] = None,
+        default: Any | None = None,
     ) -> Any:
         """
         Attempt to retrieve the given key from the cache.
@@ -146,7 +148,7 @@ class Cache:
         else:
             return default
 
-    def get_all(self) -> Dict[str, Any]:
+    def get_all(self) -> dict[str, Any]:
         """
         Retrieve all cached key-value pairs.
 
@@ -167,7 +169,7 @@ class Cache:
             else:
                 prefix = ""
             if key.startswith(prefix):
-                okey = key[len(prefix):]
+                okey = key[len(prefix) :]
                 ret[okey] = value["value"]
 
         return ret

@@ -31,16 +31,10 @@ Please take a look at the documentation for different ways of installing Streaml
 
 # 👍 Features
 
-Streamlink is built on top of a plugin system which allows support for new services to be added easily.
+Streamlink is built on top of a plugin system which allows support for new services to be added easily.  
+Most of the popular streaming services are supported, such as [Twitch](https://www.twitch.tv), [YouTube](https://www.youtube.com), and many more.
 
-Most of the popular streaming services are supported, such as:
-
-- [Twitch](https://www.twitch.tv)
-- [YouTube](https://www.youtube.com)
-- [Livestream](https://livestream.com)
-- [Dailymotion](https://www.dailymotion.com)
-
-... and many more. A list of all plugins currently included can be found on the [plugins page][streamlink-plugins].
+A list of all plugins currently included can be found on the [plugins page][streamlink-plugins].
 
 
 # 💡 Quickstart
@@ -81,4 +75,4 @@ Your support is very much appreciated, thank you!
   [streamlink-plugins]: https://streamlink.github.io/plugins.html
   [player-vlc]: https://www.videolan.org/vlc/
   [contributing]: https://github.com/streamlink/streamlink/blob/master/CONTRIBUTING.md
-  [support]: https://streamlink.github.io/latest/donate.html
+  [support]: https://streamlink.github.io/latest/support.html

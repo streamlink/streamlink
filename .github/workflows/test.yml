@@ -22,18 +22,18 @@ jobs:
           - ubuntu-latest
           - windows-latest
         python-version:
-          - "3.8"
           - "3.9"
           - "3.10"
           - "3.11"
           - "3.12"
-        include:
-          - runs-on: ubuntu-latest
-            python-version: "3.13-dev"
-            continue: true
-          - runs-on: windows-latest
-            python-version: "3.13-dev"
-            continue: true
+          - "3.13"
+        # include:
+        #   - runs-on: ubuntu-latest
+        #     python-version: "3.14-dev"
+        #     continue: true
+        #   - runs-on: windows-latest
+        #     python-version: "3.14-dev"
+        #     continue: true
     runs-on: ${{ matrix.runs-on }}
     timeout-minutes: 60
     steps:
@@ -41,18 +41,24 @@ jobs:
         with:
           fetch-depth: 300
       - name: Fetch tags
-        run: git fetch --depth=300 origin +refs/tags/*:refs/tags/*
+        shell: bash
+        run: |
+          git ls-remote --tags --sort=version:refname 2>&- \
+            | awk 'END{printf "+%s:%s\n",$2,$2}' \
+            | git fetch origin --depth=300 \
+            || { ec=$?; [ $ec -eq 141 ] && true || (exit $ec); }
+          git fetch origin --depth=300 --update-shallow
+          git describe --tags --long --dirty
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
       - name: Install Python dependencies
         run: >
           python -m pip install -U
-          -e .
+          -e .[decompress]
           -r dev-requirements.txt
         continue-on-error: ${{ matrix.continue || false }}
       - name: Install optional Python dependencies
-        if: ${{ ! startsWith(matrix['python-version'], '3.13') }}
         run: >
           python -m pip install -U
           brotli
@@ -78,7 +84,10 @@ jobs:
         with:
           fetch-depth: 300
       - name: Fetch tags
-        run: git fetch --depth=300 origin +refs/tags/*:refs/tags/*
+        run: |
+          git ls-remote --tags --sort=version:refname 2>&- | awk 'END{printf "+%s:%s\n",$2,$2}' | git fetch origin --depth=300
+          git fetch origin --depth=300 --update-shallow
+          git describe --tags --long --dirty
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
@@ -113,7 +122,10 @@ jobs:
         with:
           fetch-depth: 300
       - name: Fetch tags
-        run: git fetch --depth=300 origin +refs/tags/*:refs/tags/*
+        run: |
+          git ls-remote --tags --sort=version:refname 2>&- | awk 'END{printf "+%s:%s\n",$2,$2}' | git fetch origin --depth=300
+          git fetch origin --depth=300 --update-shallow
+          git describe --tags --long --dirty
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"

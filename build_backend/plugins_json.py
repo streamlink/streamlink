@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import argparse
 import ast
 import json
@@ -6,7 +8,11 @@ import sys
 from dataclasses import asdict, dataclass, is_dataclass
 from pathlib import Path
 from textwrap import dedent
-from typing import Any, ClassVar, Dict, Generic, List, Optional, TextIO, Tuple, Type, TypeVar, Union
+from typing import TYPE_CHECKING, Any, ClassVar, Generic, TextIO, TypeVar
+
+
+if TYPE_CHECKING:
+    from typing_extensions import TypeAlias
 
 
 DEFAULT_PLUGINSPATH = Path(__file__).parents[1] / "src" / "streamlink" / "plugins"
@@ -18,9 +24,9 @@ PLUGINSJSON_COMMENTS = [
     "https://streamlink.github.io/",
 ]
 
-TListOfConstants = List[Union[None, bool, int, float, str]]
-TConstantOrListOfConstants = Union[None, bool, int, float, str, TListOfConstants]
-TMappingOfConstantOrListOfConstants = Dict[str, TConstantOrListOfConstants]
+TListOfConstants: TypeAlias = "list[bool | int | float | str | None]"
+TConstantOrListOfConstants: TypeAlias = "bool | int | float | str | TListOfConstants | None"
+TMappingOfConstantOrListOfConstants: TypeAlias = "dict[str, TConstantOrListOfConstants]"
 
 
 class ParseError(ValueError):
@@ -38,36 +44,36 @@ class PluginMatcher:
     HIGH_PRIORITY: ClassVar[int] = 30
 
     pattern: str
-    flags: Optional[int] = None
-    priority: Optional[int] = None
-    name: Optional[str] = None
+    flags: int | None = None
+    priority: int | None = None
+    name: str | None = None
 
 
 @dataclass
 class PluginArgument:
     name: str
-    action: Optional[str] = None
-    nargs: Optional[Union[int, str]] = None
+    action: str | None = None
+    nargs: int | str | None = None
     const: TConstantOrListOfConstants = None
     default: TConstantOrListOfConstants = None
-    type: Optional[str] = None
-    type_args: Optional[TListOfConstants] = None
-    type_kwargs: Optional[TMappingOfConstantOrListOfConstants] = None
-    choices: Optional[TListOfConstants] = None
-    required: Optional[bool] = None
-    help: Optional[str] = None
-    metavar: Optional[Union[str, List[str]]] = None
-    dest: Optional[str] = None
-    requires: Optional[Union[str, List[str]]] = None
-    prompt: Optional[str] = None
-    sensitive: Optional[bool] = None
-    argument_name: Optional[str] = None
+    type: str | None = None
+    type_args: TListOfConstants | None = None
+    type_kwargs: TMappingOfConstantOrListOfConstants | None = None
+    choices: TListOfConstants | None = None
+    required: bool | None = None
+    help: str | None = None
+    metavar: str | list[str] | None = None
+    dest: str | None = None
+    requires: str | list[str] | None = None
+    prompt: str | None = None
+    sensitive: bool | None = None
+    argument_name: str | None = None
 
 
 @dataclass
 class Plugin:
-    matchers: List[PluginMatcher]
-    arguments: List[PluginArgument]
+    matchers: list[PluginMatcher]
+    arguments: list[PluginArgument]
 
 
 _TParseResult = TypeVar("_TParseResult")
@@ -79,9 +85,9 @@ class Parser(ast.NodeVisitor, Generic[_TParseResult]):
 
 
 class ParseCall(ast.NodeVisitor):
-    _PARSERS: ClassVar[Dict[str, Type[ast.NodeVisitor]]] = {}
+    _PARSERS: ClassVar[dict[str, type[ast.NodeVisitor]]] = {}
 
-    def visit_Call(self, node: ast.Call) -> Dict[str, Any]:
+    def visit_Call(self, node: ast.Call) -> dict[str, Any]:
         parsers = self._PARSERS
 
         data = {}
@@ -104,7 +110,7 @@ class ParseCall(ast.NodeVisitor):
 
 class ParseConstant(ast.NodeVisitor):
     NAME: str = "constant"
-    TYPE: Union[Type, Tuple[Type, ...]] = str
+    TYPE: type | tuple[type, ...] = str
     REQUIRED: bool = False
 
     def generic_visit(self, node: ast.AST):
@@ -122,7 +128,7 @@ class ParseConstantOrSequenceOfConstants(ParseConstant):
         super().__init__()
         self._sequence = False
 
-    def _visit_sequence(self, node: Union[ast.List, ast.Tuple]):
+    def _visit_sequence(self, node: ast.List | ast.Tuple):
         if self._sequence:
             raise ParseError(f"Invalid {self.NAME} type", node)
 
@@ -150,7 +156,7 @@ class ParseMappingOfConstants(ParseConstantOrSequenceOfConstants):
         super().__init__()
         self._mapping = False
 
-    def _visit_sequence(self, node: Union[ast.List, ast.Tuple]):
+    def _visit_sequence(self, node: ast.List | ast.Tuple):
         if not self._mapping:
             raise ParseError(f"Invalid {self.NAME} type", node)
 
@@ -191,7 +197,7 @@ class ParsePluginMatcher(ParseCall, Parser[PluginMatcher]):
             REQUIRED = True
 
         class ParseFlags(ParseBinOpOr):
-            _ATTRIBUTES: ClassVar[Dict[str, int]] = {
+            _ATTRIBUTES: ClassVar[dict[str, int]] = {
                 "I": re.RegexFlag.IGNORECASE,
                 "IGNORECASE": re.RegexFlag.IGNORECASE,
                 "S": re.RegexFlag.DOTALL,
@@ -206,7 +212,7 @@ class ParsePluginMatcher(ParseCall, Parser[PluginMatcher]):
 
                 return self._ATTRIBUTES[node.attr]
 
-        _PARSERS: ClassVar[Dict[str, Type[ast.NodeVisitor]]] = {
+        _PARSERS: ClassVar[dict[str, type[ast.NodeVisitor]]] = {
             "pattern": ParsePattern,
             "flags": ParseFlags,
         }
@@ -240,7 +246,7 @@ class ParsePluginMatcher(ParseCall, Parser[PluginMatcher]):
         NAME = "@pluginmatcher priority"
         TYPE = int
 
-        _ATTRIBUTES: ClassVar[Dict[str, int]] = {
+        _ATTRIBUTES: ClassVar[dict[str, int]] = {
             "NO_PRIORITY": PluginMatcher.NO_PRIORITY,
             "LOW_PRIORITY": PluginMatcher.LOW_PRIORITY,
             "NORMAL_PRIORITY": PluginMatcher.NORMAL_PRIORITY,
@@ -256,7 +262,7 @@ class ParsePluginMatcher(ParseCall, Parser[PluginMatcher]):
     class ParseName(ParseConstant):
         NAME = "@pluginmatcher name"
 
-    _PARSERS: ClassVar[Dict[str, Type[ast.NodeVisitor]]] = {
+    _PARSERS: ClassVar[dict[str, type[ast.NodeVisitor]]] = {
         "pattern": ParseReCompile,
         "priority": ParsePriority,
         "name": ParseName,
@@ -350,7 +356,7 @@ class ParsePluginArgument(ParseCall, Parser[PluginArgument]):
     class ParseArgumentName(ParseConstant):
         NAME = "@pluginargument argument_name"
 
-    _PARSERS: ClassVar[Dict[str, Type[ast.NodeVisitor]]] = {
+    _PARSERS: ClassVar[dict[str, type[ast.NodeVisitor]]] = {
         "name": ParseName,
         "action": ParseAction,
         "nargs": ParseNArgs,
@@ -382,9 +388,9 @@ class ParsePluginArgument(ParseCall, Parser[PluginArgument]):
 class PluginVisitor(ast.NodeVisitor):
     def __init__(self) -> None:
         super().__init__()
-        self.name: Optional[str] = None
-        self.matchers: List[PluginMatcher] = []
-        self.arguments: List[PluginArgument] = []
+        self.name: str | None = None
+        self.matchers: list[PluginMatcher] = []
+        self.arguments: list[PluginArgument] = []
         self.exports: bool = False
 
     def generic_visit(self, node: ast.AST):
@@ -399,7 +405,7 @@ class PluginVisitor(ast.NodeVisitor):
             isinstance(node.value, ast.Name)
             and node.value.id == self.name
             and self.name is not None
-        ):
+        ):  # fmt: skip
             for target in node.targets:
                 if isinstance(target, ast.Name) and target.id == "__plugin__":  # pragma: no branch
                     self.exports = True
@@ -418,7 +424,7 @@ class PluginVisitor(ast.NodeVisitor):
             if (
                 not isinstance(decorator, ast.Call)
                 or not isinstance(decorator.func, ast.Name)
-            ):
+            ):  # fmt: skip
                 continue
 
             if decorator.func.id == "pluginmatcher":
@@ -429,16 +435,17 @@ class PluginVisitor(ast.NodeVisitor):
                 self.arguments.append(argument)
 
 
-Output = Dict[str, Plugin]
+Output: TypeAlias = "dict[str, Plugin]"
 
 
 class JSONEncoder(json.JSONEncoder):  # pragma: no cover
     @staticmethod
-    def _filter_dataclass_none_value(items: List[Tuple[str, Any]]) -> Dict[str, Any]:
+    def _filter_dataclass_none_value(items: list[tuple[str, Any]]) -> dict[str, Any]:
         return {key: val for key, val in items if val is not None}
 
     def default(self, o: Any) -> Any:
-        if is_dataclass(o):
+        # https://github.com/python/mypy/issues/17550
+        if is_dataclass(o) and not isinstance(o, type):
             return asdict(o, dict_factory=self._filter_dataclass_none_value)
 
         return super().default(o)
@@ -475,15 +482,16 @@ def build(pluginsdir: Path = DEFAULT_PLUGINSPATH) -> Output:
     return dict(sorted(data.items()))
 
 
-def to_json(data: Output, fd: Optional[TextIO] = None, comments: Optional[List[str]] = None, pretty: bool = False) -> None:
+def to_json(data: Output, fd: TextIO | None = None, comments: list[str] | None = None, pretty: bool = False) -> None:
     outputformat = {"separators": (",", ": "), "indent": 2} if pretty else {"separators": (",", ":")}
-    _fd: TextIO = fd or sys.stdout
-    for line in (PLUGINSJSON_COMMENTS if comments is None else comments):
-        _fd.write(f"// {line}\n")
-    json.dump(data, _fd, cls=JSONEncoder, **outputformat)  # type: ignore[arg-type]
+    textio: TextIO = fd or sys.stdout
+    for line in PLUGINSJSON_COMMENTS if comments is None else comments:
+        textio.write(f"// {line}\n")
+    json.dump(data, textio, cls=JSONEncoder, **outputformat)  # type: ignore[arg-type]
 
 
 if __name__ == "__main__":  # pragma: no cover
+
     def main():
         parser = argparse.ArgumentParser()
         parser.add_argument("dir", nargs="?", type=Path, default=DEFAULT_PLUGINSPATH)

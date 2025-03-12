@@ -1,6 +1,7 @@
+from __future__ import annotations
+
 from pathlib import Path
 from string import ascii_lowercase as alphabet
-from typing import Tuple
 
 import pytest
 
@@ -19,7 +20,7 @@ def test_replace_chars_posix(char: str):
 
 
 @pytest.mark.windows_only()
-@pytest.mark.parametrize("char", "\x7f\"*/:<>?\\|".split())
+@pytest.mark.parametrize("char", '\x7f"*/:<>?\\|'.split())
 def test_replace_chars_windows(char: str):
     assert replace_chars(f"foo{char}{char}bar") == "foo_bar", "Replaces multiple unsupported characters in a row"
 
@@ -31,25 +32,25 @@ def test_replace_chars_posix_all():
 
 @pytest.mark.windows_only()
 def test_replace_chars_windows_all():
-    assert replace_chars("".join(chr(i) for i in range(32)) + "\x7f\"*/:<>?\\|") == "_"
+    assert replace_chars("".join(chr(i) for i in range(32)) + '\x7f"*/:<>?\\|') == "_"
 
 
 @pytest.mark.posix_only()
 def test_replace_chars_posix_override():
-    all_chars = "".join(chr(i) for i in range(32)) + "\x7f\"*:/<>?\\|"
-    assert replace_chars(all_chars) == "_\x7f\"*:_<>?\\|"
-    assert replace_chars(all_chars, "posix") == "_\x7f\"*:_<>?\\|"
-    assert replace_chars(all_chars, "unix") == "_\x7f\"*:_<>?\\|"
+    all_chars = "".join(chr(i) for i in range(32)) + '\x7f"*:/<>?\\|'
+    assert replace_chars(all_chars) == '_\x7f"*:_<>?\\|'
+    assert replace_chars(all_chars, "posix") == '_\x7f"*:_<>?\\|'
+    assert replace_chars(all_chars, "unix") == '_\x7f"*:_<>?\\|'
     assert replace_chars(all_chars, "windows") == "_"
     assert replace_chars(all_chars, "win32") == "_"
 
 
 @pytest.mark.windows_only()
 def test_replace_chars_windows_override():
-    all_chars = "".join(chr(i) for i in range(32)) + "\x7f\"*:/<>?\\|"
+    all_chars = "".join(chr(i) for i in range(32)) + '\x7f"*:/<>?\\|'
     assert replace_chars(all_chars) == "_"
-    assert replace_chars(all_chars, "posix") == "_\x7f\"*:_<>?\\|"
-    assert replace_chars(all_chars, "unix") == "_\x7f\"*:_<>?\\|"
+    assert replace_chars(all_chars, "posix") == '_\x7f"*:_<>?\\|'
+    assert replace_chars(all_chars, "unix") == '_\x7f"*:_<>?\\|'
     assert replace_chars(all_chars, "windows") == "_"
     assert replace_chars(all_chars, "win32") == "_"
 
@@ -84,109 +85,112 @@ def test_replace_path_expanduser_windows(os_environ):
 bear = "🐻"  # Unicode character: "Bear Face" (U+1F43B)
 
 
-@pytest.mark.parametrize(("args", "expected"), [
-    pytest.param(
-        (alphabet, 255, True),
-        alphabet,
-        id="text - no truncation",
-    ),
-    pytest.param(
-        (alphabet * 10, 255, True),
-        (alphabet * 10)[:255],
-        id="text - truncate",
-    ),
-    pytest.param(
-        (alphabet * 10, 50, True),
-        (alphabet * 10)[:50],
-        id="text - truncate at 50",
-    ),
-    pytest.param(
-        (f"{alphabet}.ext", 255, True),
-        f"{alphabet}.ext",
-        id="text+ext1 - no truncation",
-    ),
-    pytest.param(
-        (f"{alphabet * 10}.ext", 255, True),
-        f"{(alphabet * 10)[:251]}.ext",
-        id="text+ext1 - truncate",
-    ),
-    pytest.param(
-        (f"{alphabet * 10}.ext", 50, True),
-        f"{(alphabet * 10)[:46]}.ext",
-        id="text+ext1 - truncate at 50",
-    ),
-    pytest.param(
-        (f"{alphabet * 10}.ext", 255, False),
-        (alphabet * 10)[:255],
-        id="text+ext1+nokeep - truncate",
-    ),
-    pytest.param(
-        (f"{alphabet * 10}.ext", 50, False),
-        (alphabet * 10)[:50],
-        id="text+ext1+nokeep - truncate at 50",
-    ),
-    pytest.param(
-        (f"{alphabet * 10}.notafilenameextension", 255, True),
-        (alphabet * 10)[:255],
-        id="text+ext2 - truncate",
-    ),
-    pytest.param(
-        (f"{alphabet * 10}.notafilenameextension", 50, True),
-        (alphabet * 10)[:50],
-        id="text+ext2 - truncate at 50",
-    ),
-    pytest.param(
-        (bear * 63, 255, True),
-        bear * 63,
-        id="bear - no truncation",
-    ),
-    pytest.param(
-        (bear * 64, 255, True),
-        bear * 63,
-        id="bear - truncate",
-    ),
-    pytest.param(
-        (bear * 64, 50, True),
-        bear * 12,
-        id="bear - truncate at 50",
-    ),
-    pytest.param(
-        (f"{bear}.ext", 255, True),
-        f"{bear}.ext",
-        id="bear+ext1 - no truncation",
-    ),
-    pytest.param(
-        (f"{bear * 64}.ext", 255, True),
-        f"{bear * 62}.ext",
-        id="bear+ext1 - truncate",
-    ),
-    pytest.param(
-        (f"{bear * 64}.ext", 50, True),
-        f"{bear * 11}.ext",
-        id="bear+ext1 - truncate at 50",
-    ),
-    pytest.param(
-        (f"{bear * 64}.ext", 255, False),
-        bear * 63,
-        id="bear+ext1+nokeep - truncate",
-    ),
-    pytest.param(
-        (f"{bear * 64}.ext", 50, False),
-        bear * 12,
-        id="bear+ext1+nokeep - truncate at 50",
-    ),
-    pytest.param(
-        (f"{bear * 64}.notafilenameextension", 255, True),
-        bear * 63,
-        id="bear+ext2 - truncate",
-    ),
-    pytest.param(
-        (f"{bear * 64}.notafilenameextension", 50, True),
-        bear * 12,
-        id="bear+ext2 - truncate at 50",
-    ),
-])
-def test_truncate_path(args: Tuple[str, int, bool], expected: str):
+@pytest.mark.parametrize(
+    ("args", "expected"),
+    [
+        pytest.param(
+            (alphabet, 255, True),
+            alphabet,
+            id="text - no truncation",
+        ),
+        pytest.param(
+            (alphabet * 10, 255, True),
+            (alphabet * 10)[:255],
+            id="text - truncate",
+        ),
+        pytest.param(
+            (alphabet * 10, 50, True),
+            (alphabet * 10)[:50],
+            id="text - truncate at 50",
+        ),
+        pytest.param(
+            (f"{alphabet}.ext", 255, True),
+            f"{alphabet}.ext",
+            id="text+ext1 - no truncation",
+        ),
+        pytest.param(
+            (f"{alphabet * 10}.ext", 255, True),
+            f"{(alphabet * 10)[:251]}.ext",
+            id="text+ext1 - truncate",
+        ),
+        pytest.param(
+            (f"{alphabet * 10}.ext", 50, True),
+            f"{(alphabet * 10)[:46]}.ext",
+            id="text+ext1 - truncate at 50",
+        ),
+        pytest.param(
+            (f"{alphabet * 10}.ext", 255, False),
+            (alphabet * 10)[:255],
+            id="text+ext1+nokeep - truncate",
+        ),
+        pytest.param(
+            (f"{alphabet * 10}.ext", 50, False),
+            (alphabet * 10)[:50],
+            id="text+ext1+nokeep - truncate at 50",
+        ),
+        pytest.param(
+            (f"{alphabet * 10}.notafilenameextension", 255, True),
+            (alphabet * 10)[:255],
+            id="text+ext2 - truncate",
+        ),
+        pytest.param(
+            (f"{alphabet * 10}.notafilenameextension", 50, True),
+            (alphabet * 10)[:50],
+            id="text+ext2 - truncate at 50",
+        ),
+        pytest.param(
+            (bear * 63, 255, True),
+            bear * 63,
+            id="bear - no truncation",
+        ),
+        pytest.param(
+            (bear * 64, 255, True),
+            bear * 63,
+            id="bear - truncate",
+        ),
+        pytest.param(
+            (bear * 64, 50, True),
+            bear * 12,
+            id="bear - truncate at 50",
+        ),
+        pytest.param(
+            (f"{bear}.ext", 255, True),
+            f"{bear}.ext",
+            id="bear+ext1 - no truncation",
+        ),
+        pytest.param(
+            (f"{bear * 64}.ext", 255, True),
+            f"{bear * 62}.ext",
+            id="bear+ext1 - truncate",
+        ),
+        pytest.param(
+            (f"{bear * 64}.ext", 50, True),
+            f"{bear * 11}.ext",
+            id="bear+ext1 - truncate at 50",
+        ),
+        pytest.param(
+            (f"{bear * 64}.ext", 255, False),
+            bear * 63,
+            id="bear+ext1+nokeep - truncate",
+        ),
+        pytest.param(
+            (f"{bear * 64}.ext", 50, False),
+            bear * 12,
+            id="bear+ext1+nokeep - truncate at 50",
+        ),
+        pytest.param(
+            (f"{bear * 64}.notafilenameextension", 255, True),
+            bear * 63,
+            id="bear+ext2 - truncate",
+        ),
+        pytest.param(
+            (f"{bear * 64}.notafilenameextension", 50, True),
+            bear * 12,
+            id="bear+ext2 - truncate at 50",
+        ),
+    ],
+)
+def test_truncate_path(args: tuple[str, int, bool], expected: str):
     path, length, keep_extension = args
     result = truncate_path(path, length, keep_extension)
     assert len(result.encode("utf-8")) <= length

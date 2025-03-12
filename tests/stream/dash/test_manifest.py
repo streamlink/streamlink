@@ -16,25 +16,31 @@ UTC = datetime.timezone.utc
 
 
 class TestSegment:
-    @pytest.mark.parametrize(("segmentdata", "expected"), [
-        ({"uri": "https://foo/bar", "num": 123, "duration": 0.0, "init": True, "content": False}, "initialization"),
-        ({"uri": "https://foo/bar", "num": 123, "duration": 0.0, "init": True, "content": True}, "123"),
-        ({"uri": "https://foo/bar", "num": -1, "duration": 0.0, "init": True, "content": True}, "bar"),
-        ({"uri": "https://foo/bar", "num": 123, "duration": 0.0}, "123"),
-        ({"uri": "https://foo/bar", "num": -1, "duration": 0.0}, "bar"),
-        ({"uri": "https://foo/bar/", "num": -1, "duration": 0.0}, "bar"),
-        ({"uri": "https://foo/bar/baz.qux", "num": -1, "duration": 0.0}, "baz.qux"),
-        ({"uri": "https://foo/bar/baz.qux?asdf", "num": -1, "duration": 0.0}, "baz.qux"),
-    ])
+    @pytest.mark.parametrize(
+        ("segmentdata", "expected"),
+        [
+            ({"uri": "https://foo/bar", "num": 123, "duration": 0.0, "init": True, "content": False}, "initialization"),
+            ({"uri": "https://foo/bar", "num": 123, "duration": 0.0, "init": True, "content": True}, "123"),
+            ({"uri": "https://foo/bar", "num": -1, "duration": 0.0, "init": True, "content": True}, "bar"),
+            ({"uri": "https://foo/bar", "num": 123, "duration": 0.0}, "123"),
+            ({"uri": "https://foo/bar", "num": -1, "duration": 0.0}, "bar"),
+            ({"uri": "https://foo/bar/", "num": -1, "duration": 0.0}, "bar"),
+            ({"uri": "https://foo/bar/baz.qux", "num": -1, "duration": 0.0}, "baz.qux"),
+            ({"uri": "https://foo/bar/baz.qux?asdf", "num": -1, "duration": 0.0}, "baz.qux"),
+        ],
+    )
     def test_name(self, segmentdata: dict, expected: str):
         segment = DASHSegment(**segmentdata)
         assert segment.name == expected
 
-    @pytest.mark.parametrize(("available_at", "expected"), [
-        (datetime.datetime(2000, 1, 2, 3, 4, 5, 123456, tzinfo=UTC), 1 * 86400 + 3 * 3600 + 4 * 60 + 5 + 0.123456),
-        (datetime.datetime(2000, 1, 1, 0, 0, 0, 0, tzinfo=UTC), 0.0),
-        (datetime.datetime(1999, 12, 31, 23, 59, 59, 999999, tzinfo=UTC), 0.0),
-    ])
+    @pytest.mark.parametrize(
+        ("available_at", "expected"),
+        [
+            (datetime.datetime(2000, 1, 2, 3, 4, 5, 123456, tzinfo=UTC), 1 * 86400 + 3 * 3600 + 4 * 60 + 5 + 0.123456),
+            (datetime.datetime(2000, 1, 1, 0, 0, 0, 0, tzinfo=UTC), 0.0),
+            (datetime.datetime(1999, 12, 31, 23, 59, 59, 999999, tzinfo=UTC), 0.0),
+        ],
+    )
     def test_available_in(self, available_at: datetime.datetime, expected: float):
         segment = DASHSegment(
             uri="foo",
@@ -112,10 +118,13 @@ class TestMPDParsers:
 
 
 class TestMPDParser:
-    @pytest.mark.parametrize(("min_buffer_time", "expected"), [
-        pytest.param("PT1S", 3.0, id="minBufferTime lower than suggestedPresentationDelay"),
-        pytest.param("PT5S", 5.0, id="minBufferTime greater than suggestedPresentationDelay"),
-    ])
+    @pytest.mark.parametrize(
+        ("min_buffer_time", "expected"),
+        [
+            pytest.param("PT1S", 3.0, id="minBufferTime lower than suggestedPresentationDelay"),
+            pytest.param("PT5S", 5.0, id="minBufferTime greater than suggestedPresentationDelay"),
+        ],
+    )
     def test_suggested_presentation_delay(self, min_buffer_time: str, expected: float):
         with xml("dash/test_suggested_presentation_delay.mpd") as mpd_xml:
             mpd_xml.attrib["minBufferTime"] = min_buffer_time
@@ -134,7 +143,8 @@ class TestMPDParser:
                         for segment in itertools.islice(representation.segments(), 100)
                     ],
                 }
-                for adaptationset in mpd.periods[0].adaptationSets for representation in adaptationset.representations
+                for adaptationset in mpd.periods[0].adaptationSets
+                for representation in adaptationset.representations
                 if representation.id in ("1", "5", "6")
             ]
         availability = datetime.datetime(1970, 1, 1, 0, 0, 0, tzinfo=UTC)
@@ -204,27 +214,26 @@ class TestMPDParser:
             ]
 
     # access manifest one hour after its availabilityStartTime
-    @pytest.mark.parametrize(("frozen_time", "timestamp"), [
-        pytest.param(
-            freeze_time("2000-01-01T01:00:00Z"),
-            None,
-            id="Without explicit timestamp",
-        ),
-        pytest.param(
-            nullcontext(),
-            datetime.datetime(2000, 1, 1, 1, 0, 0, 0, tzinfo=UTC),
-            id="With explicit timestamp",
-        ),
-    ])
+    @pytest.mark.parametrize(
+        ("frozen_time", "timestamp"),
+        [
+            pytest.param(
+                freeze_time("2000-01-01T01:00:00Z"),
+                None,
+                id="Without explicit timestamp",
+            ),
+            pytest.param(
+                nullcontext(),
+                datetime.datetime(2000, 1, 1, 1, 0, 0, 0, tzinfo=UTC),
+                id="With explicit timestamp",
+            ),
+        ],
+    )
     def test_segments_dynamic_number(self, frozen_time, timestamp):
-        with xml("dash/test_segments_dynamic_number.mpd") as mpd_xml, \
-             frozen_time:
+        with xml("dash/test_segments_dynamic_number.mpd") as mpd_xml, frozen_time:
             mpd = MPD(mpd_xml, base_url="http://test/", url="http://test/manifest.mpd")
             segments_iterator = mpd.periods[0].adaptationSets[0].representations[0].segments(timestamp=timestamp)
-            stream_urls = [
-                (segment.uri, segment.available_at)
-                for segment in itertools.islice(segments_iterator, 4)
-            ]
+            stream_urls = [(segment.uri, segment.available_at) for segment in itertools.islice(segments_iterator, 4)]
 
         assert stream_urls == [
             (
@@ -259,6 +268,32 @@ class TestMPDParser:
             ("http://test/dash/150633-video_eng=194000-0.dash", expected_availability),
             ("http://test/dash/150633-video_eng=194000-2000.dash", expected_availability),
             ("http://test/dash/150633-video_eng=194000-4000.dash", expected_availability),
+        ]
+
+    @pytest.mark.parametrize(
+        ("manifest", "expected_time"),
+        [
+            pytest.param("dash/test_dynamic_no_publish_time_timeline_with_start.mpd", "155994772214430", id="with-start"),
+            pytest.param("dash/test_dynamic_no_publish_time_timeline_without_start.mpd", "4320000", id="without-start"),
+        ],
+    )
+    def test_dynamic_no_publish_time_with_timeline(self, manifest: str, expected_time: str):
+        with xml(manifest) as mpd_xml:
+            mpd = MPD(mpd_xml, base_url="http://test/", url="http://test/manifest.mpd")
+
+        segments = [
+            (segment.uri, segment.num, segment.duration, segment.available_at, segment.init, segment.content)
+            for segment in itertools.islice(mpd.periods[0].adaptationSets[0].representations[0].segments(), 100)
+        ]
+        assert segments == [
+            (
+                f"http://test/video_1920x1080_avc1-{expected_time}.m4s",
+                9,
+                6.0,
+                datetime.datetime(1970, 1, 1, 0, 0, 0, tzinfo=UTC),
+                False,
+                True,
+            ),
         ]
 
     def test_segment_list(self):
@@ -394,17 +429,17 @@ class TestMPDParser:
             mpd_p1 = MPD(mpd_xml_p1, base_url="http://test/", url="http://test/manifest.mpd")
             iter_segment_p1 = mpd_p1.periods[0].adaptationSets[0].representations[0].segments()
             segments_p1 = [
-                (segment.uri, segment.num, segment.available_at)
+                (segment.uri, segment.num, segment.duration, segment.available_at)
                 for segment in itertools.islice(iter_segment_p1, 100)
-            ]
+            ]  # fmt: skip
 
         assert segments_p1 == [
-            ("http://test/video/init.mp4", -1, datetime.datetime(2018, 1, 1, 1, 0, 0, tzinfo=UTC)),
-            ("http://test/video/1006000.mp4", 7, datetime.datetime(2018, 1, 1, 12, 59, 56, tzinfo=UTC)),
-            ("http://test/video/1007000.mp4", 8, datetime.datetime(2018, 1, 1, 12, 59, 57, tzinfo=UTC)),
-            ("http://test/video/1008000.mp4", 9, datetime.datetime(2018, 1, 1, 12, 59, 58, tzinfo=UTC)),
-            ("http://test/video/1009000.mp4", 10, datetime.datetime(2018, 1, 1, 12, 59, 59, tzinfo=UTC)),
-            ("http://test/video/1010000.mp4", 11, datetime.datetime(2018, 1, 1, 13, 0, 0, tzinfo=UTC)),
+            ("http://test/video/init.mp4", -1, 0.0, datetime.datetime(2018, 1, 1, 1, 0, 0, tzinfo=UTC)),
+            ("http://test/video/1006000.mp4", 7, 1.0, datetime.datetime(2018, 1, 1, 12, 59, 56, tzinfo=UTC)),
+            ("http://test/video/1007000.mp4", 8, 1.0, datetime.datetime(2018, 1, 1, 12, 59, 57, tzinfo=UTC)),
+            ("http://test/video/1008000.mp4", 9, 1.0, datetime.datetime(2018, 1, 1, 12, 59, 58, tzinfo=UTC)),
+            ("http://test/video/1009000.mp4", 10, 1.0, datetime.datetime(2018, 1, 1, 12, 59, 59, tzinfo=UTC)),
+            ("http://test/video/1010000.mp4", 11, 1.0, datetime.datetime(2018, 1, 1, 13, 0, 0, tzinfo=UTC)),
         ]
 
         # continue with the next manifest
@@ -412,21 +447,21 @@ class TestMPDParser:
             mpd_p2 = MPD(mpd_xml_p2, base_url=mpd_p1.base_url, url=mpd_p1.url, timelines=mpd_p1.timelines)
             iter_segment_p2 = mpd_p2.periods[0].adaptationSets[0].representations[0].segments(init=False)
             segments_p2 = [
-                (segment.uri, segment.num, segment.available_at)
+                (segment.uri, segment.num, segment.duration, segment.available_at)
                 for segment in itertools.islice(iter_segment_p2, 100)
-            ]
+            ]  # fmt: skip
 
         assert segments_p2 == [
-            ("http://test/video/1011000.mp4", 7, datetime.datetime(2018, 1, 1, 13, 0, 1, tzinfo=UTC)),
-            ("http://test/video/1012000.mp4", 8, datetime.datetime(2018, 1, 1, 13, 0, 2, tzinfo=UTC)),
-            ("http://test/video/1013000.mp4", 9, datetime.datetime(2018, 1, 1, 13, 0, 3, tzinfo=UTC)),
-            ("http://test/video/1014000.mp4", 10, datetime.datetime(2018, 1, 1, 13, 0, 4, tzinfo=UTC)),
-            ("http://test/video/1015000.mp4", 11, datetime.datetime(2018, 1, 1, 13, 0, 5, tzinfo=UTC)),
+            ("http://test/video/1011000.mp4", 7, 1.0, datetime.datetime(2018, 1, 1, 13, 0, 1, tzinfo=UTC)),
+            ("http://test/video/1012000.mp4", 8, 1.0, datetime.datetime(2018, 1, 1, 13, 0, 2, tzinfo=UTC)),
+            ("http://test/video/1013000.mp4", 9, 1.0, datetime.datetime(2018, 1, 1, 13, 0, 3, tzinfo=UTC)),
+            ("http://test/video/1014000.mp4", 10, 1.0, datetime.datetime(2018, 1, 1, 13, 0, 4, tzinfo=UTC)),
+            ("http://test/video/1015000.mp4", 11, 1.0, datetime.datetime(2018, 1, 1, 13, 0, 5, tzinfo=UTC)),
         ]
 
     def test_tsegment_t_is_none_1895(self):
         """
-            Verify the fix for https://github.com/streamlink/streamlink/issues/1895
+        Verify the fix for https://github.com/streamlink/streamlink/issues/1895
         """
         with xml("dash/test_8.mpd") as mpd_xml:
             mpd = MPD(mpd_xml, base_url="http://test.se/", url="http://test.se/manifest.mpd")
@@ -470,7 +505,7 @@ class TestMPDParser:
 
     def test_duplicated_resolutions(self):
         """
-            Verify the fix for https://github.com/streamlink/streamlink/issues/3365
+        Verify the fix for https://github.com/streamlink/streamlink/issues/3365
         """
         with xml("dash/test_10.mpd") as mpd_xml:
             mpd = MPD(mpd_xml, base_url="http://test.se/", url="http://test.se/manifest.mpd")
@@ -484,7 +519,7 @@ class TestMPDParser:
 
     def test_segments_static_periods_duration(self):
         """
-            Verify the fix for https://github.com/streamlink/streamlink/issues/2873
+        Verify the fix for https://github.com/streamlink/streamlink/issues/2873
         """
         with xml("dash/test_11_static.mpd") as mpd_xml:
             mpd = MPD(mpd_xml, base_url="http://test.se/", url="http://test.se/manifest.mpd")
@@ -496,12 +531,9 @@ class TestMPDParser:
             mpd = MPD(mpd_xml, base_url="http://test/", url="http://test/manifest.mpd")
 
         segment_urls = [
-            [
-                (seg.uri, seg.init, seg.byterange)
-                for seg in adaptationset.representations[0].segments()
-            ]
+            [(seg.uri, seg.init, seg.byterange) for seg in adaptationset.representations[0].segments()]
             for adaptationset in mpd.periods[0].adaptationSets
-        ]
+        ]  # fmt: skip
 
         assert segment_urls == [
             [
@@ -520,13 +552,158 @@ class TestMPDParser:
             ],
         ]
 
-    def test_nested_baseurls(self):
-        with xml("dash/test_nested_baseurls.mpd") as mpd_xml:
+    def test_baseurl_urljoin_no_trailing_slash(self):
+        with xml("dash/test_baseurl_urljoin.mpd") as mpd_xml:
+            mpd = MPD(mpd_xml, base_url="https://foo/bar", url="https://test/manifest.mpd")
+
+        segment_urls = [
+            [
+                (period.id, adaptationset.id, segment.uri)
+                for segment in itertools.islice(representation.segments(), 2)
+            ]
+            for period in mpd.periods
+            for adaptationset in period.adaptationSets
+            for representation in adaptationset.representations
+        ]  # fmt: skip
+        assert segment_urls == [
+            [
+                ("empty-baseurl", "absolute-segments", "https://foo/absolute/init_video_5000kbps.m4s"),
+                ("empty-baseurl", "absolute-segments", "https://foo/absolute/media_video_5000kbps-1.m4s"),
+            ],
+            [
+                ("empty-baseurl", "relative-segments", "https://foo/relative/init_video_5000kbps.m4s"),
+                ("empty-baseurl", "relative-segments", "https://foo/relative/media_video_5000kbps-1.m4s"),
+            ],
+            [
+                ("baseurl-with-scheme", "absolute-segments", "https://host/absolute/init_video_5000kbps.m4s"),
+                ("baseurl-with-scheme", "absolute-segments", "https://host/absolute/media_video_5000kbps-1.m4s"),
+            ],
+            [
+                ("baseurl-with-scheme", "relative-segments", "https://host/path/relative/init_video_5000kbps.m4s"),
+                ("baseurl-with-scheme", "relative-segments", "https://host/path/relative/media_video_5000kbps-1.m4s"),
+            ],
+            [
+                ("absolute-baseurl", "absolute-segments", "https://foo/absolute/init_video_5000kbps.m4s"),
+                ("absolute-baseurl", "absolute-segments", "https://foo/absolute/media_video_5000kbps-1.m4s"),
+            ],
+            [
+                ("absolute-baseurl", "relative-segments", "https://foo/path/relative/init_video_5000kbps.m4s"),
+                ("absolute-baseurl", "relative-segments", "https://foo/path/relative/media_video_5000kbps-1.m4s"),
+            ],
+            [
+                ("relative-baseurl", "absolute-segments", "https://foo/absolute/init_video_5000kbps.m4s"),
+                ("relative-baseurl", "absolute-segments", "https://foo/absolute/media_video_5000kbps-1.m4s"),
+            ],
+            [
+                ("relative-baseurl", "relative-segments", "https://foo/path/relative/init_video_5000kbps.m4s"),
+                ("relative-baseurl", "relative-segments", "https://foo/path/relative/media_video_5000kbps-1.m4s"),
+            ],
+        ]
+
+    def test_baseurl_urljoin_with_trailing_slash(self):
+        with xml("dash/test_baseurl_urljoin.mpd") as mpd_xml:
+            mpd = MPD(mpd_xml, base_url="https://foo/bar/", url="https://test/manifest.mpd")
+
+        segment_urls = [
+            [
+                (period.id, adaptationset.id, segment.uri)
+                for segment in itertools.islice(representation.segments(), 2)
+            ]
+            for period in mpd.periods
+            for adaptationset in period.adaptationSets
+            for representation in adaptationset.representations
+        ]  # fmt: skip
+        assert segment_urls == [
+            [
+                ("empty-baseurl", "absolute-segments", "https://foo/absolute/init_video_5000kbps.m4s"),
+                ("empty-baseurl", "absolute-segments", "https://foo/absolute/media_video_5000kbps-1.m4s"),
+            ],
+            [
+                ("empty-baseurl", "relative-segments", "https://foo/bar/relative/init_video_5000kbps.m4s"),
+                ("empty-baseurl", "relative-segments", "https://foo/bar/relative/media_video_5000kbps-1.m4s"),
+            ],
+            [
+                ("baseurl-with-scheme", "absolute-segments", "https://host/absolute/init_video_5000kbps.m4s"),
+                ("baseurl-with-scheme", "absolute-segments", "https://host/absolute/media_video_5000kbps-1.m4s"),
+            ],
+            [
+                ("baseurl-with-scheme", "relative-segments", "https://host/path/relative/init_video_5000kbps.m4s"),
+                ("baseurl-with-scheme", "relative-segments", "https://host/path/relative/media_video_5000kbps-1.m4s"),
+            ],
+            [
+                ("absolute-baseurl", "absolute-segments", "https://foo/absolute/init_video_5000kbps.m4s"),
+                ("absolute-baseurl", "absolute-segments", "https://foo/absolute/media_video_5000kbps-1.m4s"),
+            ],
+            [
+                ("absolute-baseurl", "relative-segments", "https://foo/path/relative/init_video_5000kbps.m4s"),
+                ("absolute-baseurl", "relative-segments", "https://foo/path/relative/media_video_5000kbps-1.m4s"),
+            ],
+            [
+                ("relative-baseurl", "absolute-segments", "https://foo/absolute/init_video_5000kbps.m4s"),
+                ("relative-baseurl", "absolute-segments", "https://foo/absolute/media_video_5000kbps-1.m4s"),
+            ],
+            [
+                ("relative-baseurl", "relative-segments", "https://foo/bar/path/relative/init_video_5000kbps.m4s"),
+                ("relative-baseurl", "relative-segments", "https://foo/bar/path/relative/media_video_5000kbps-1.m4s"),
+            ],
+        ]
+
+    def test_baseurl_urljoin_empty(self):
+        with xml("dash/test_baseurl_urljoin.mpd") as mpd_xml:
+            mpd = MPD(mpd_xml, base_url="", url="https://test/manifest.mpd")
+
+        segment_urls = [
+            [
+                (period.id, adaptationset.id, segment.uri)
+                for segment in itertools.islice(representation.segments(), 2)
+            ]
+            for period in mpd.periods
+            for adaptationset in period.adaptationSets
+            for representation in adaptationset.representations
+        ]  # fmt: skip
+        assert segment_urls == [
+            [
+                ("empty-baseurl", "absolute-segments", "/absolute/init_video_5000kbps.m4s"),
+                ("empty-baseurl", "absolute-segments", "/absolute/media_video_5000kbps-1.m4s"),
+            ],
+            [
+                ("empty-baseurl", "relative-segments", "relative/init_video_5000kbps.m4s"),
+                ("empty-baseurl", "relative-segments", "relative/media_video_5000kbps-1.m4s"),
+            ],
+            [
+                ("baseurl-with-scheme", "absolute-segments", "https://host/absolute/init_video_5000kbps.m4s"),
+                ("baseurl-with-scheme", "absolute-segments", "https://host/absolute/media_video_5000kbps-1.m4s"),
+            ],
+            [
+                ("baseurl-with-scheme", "relative-segments", "https://host/path/relative/init_video_5000kbps.m4s"),
+                ("baseurl-with-scheme", "relative-segments", "https://host/path/relative/media_video_5000kbps-1.m4s"),
+            ],
+            [
+                ("absolute-baseurl", "absolute-segments", "/absolute/init_video_5000kbps.m4s"),
+                ("absolute-baseurl", "absolute-segments", "/absolute/media_video_5000kbps-1.m4s"),
+            ],
+            [
+                ("absolute-baseurl", "relative-segments", "/path/relative/init_video_5000kbps.m4s"),
+                ("absolute-baseurl", "relative-segments", "/path/relative/media_video_5000kbps-1.m4s"),
+            ],
+            [
+                ("relative-baseurl", "absolute-segments", "/absolute/init_video_5000kbps.m4s"),
+                ("relative-baseurl", "absolute-segments", "/absolute/media_video_5000kbps-1.m4s"),
+            ],
+            [
+                ("relative-baseurl", "relative-segments", "path/relative/init_video_5000kbps.m4s"),
+                ("relative-baseurl", "relative-segments", "path/relative/media_video_5000kbps-1.m4s"),
+            ],
+        ]
+
+    def test_baseurl_nested(self):
+        with xml("dash/test_baseurl_nested.mpd") as mpd_xml:
             mpd = MPD(mpd_xml, base_url="https://foo/", url="https://test/manifest.mpd")
 
         segment_urls = [
             [(segment.uri, segment.available_at) for segment in itertools.islice(representation.segments(), 2)]
-            for adaptationset in mpd.periods[0].adaptationSets for representation in adaptationset.representations
+            for adaptationset in mpd.periods[0].adaptationSets
+            for representation in adaptationset.representations
         ]
         # ignores period start time in static manifests
         expected_availability = datetime.datetime(2020, 1, 1, 0, 0, 0, tzinfo=UTC)
@@ -555,15 +732,12 @@ class TestMPDParser:
         ]
 
     def test_timeline_ids(self):
-        with xml("dash/test_timeline_ids.mpd") as mpd_xml, \
-             freeze_time("2000-01-01T00:00:00Z"):
+        with xml("dash/test_timeline_ids.mpd") as mpd_xml, freeze_time("2000-01-01T00:00:00Z"):
             mpd = MPD(mpd_xml, base_url="http://test/", url="http://test/manifest.mpd")
             segment_urls = [
-                [
-                    segment.uri
-                    for segment in itertools.islice(representation.segments(), 3)
-                ]
-                for adaptationset in mpd.periods[0].adaptationSets for representation in adaptationset.representations
+                [segment.uri for segment in itertools.islice(representation.segments(), 3)]
+                for adaptationset in mpd.periods[0].adaptationSets
+                for representation in adaptationset.representations
             ]
         assert segment_urls == [
             [

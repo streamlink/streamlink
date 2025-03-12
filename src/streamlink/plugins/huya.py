@@ -7,6 +7,8 @@ $metadata author
 $metadata title
 """
 
+from __future__ import annotations
+
 import base64
 import hashlib
 import logging
@@ -15,7 +17,6 @@ import re
 import sys
 import time
 from html import unescape as html_unescape
-from typing import Dict
 from urllib.parse import parse_qsl, unquote
 
 from streamlink.plugin import Plugin, pluginmatcher
@@ -33,7 +34,7 @@ log = logging.getLogger(__name__)
     ),
 )
 class Huya(Plugin):
-    QUALITY_WEIGHTS: Dict[str, int] = {}
+    QUALITY_WEIGHTS: dict[str, int] = {}
 
     _STREAM_URL_QUERYSTRING_PARAMS = "wsTime", "fm", "ctype", "fs"
 
@@ -150,7 +151,7 @@ class Huya(Plugin):
         timestamp = int(time.time() * 1000)
         seqid = uid + timestamp
         ws_secret_prefix = base64.b64decode(unquote(fm).encode()).decode().split("_")[0]
-        ws_secret_hash = hashlib.md5(f'{seqid}|{ctype}|{self._CONSTANTS["t"]}'.encode()).hexdigest()
+        ws_secret_hash = hashlib.md5(f"{seqid}|{ctype}|{self._CONSTANTS['t']}".encode()).hexdigest()
         ws_secret = hashlib.md5(
             f"{ws_secret_prefix}_{convert_uid}_{stream_name}_{ws_secret_hash}_{ws_time}".encode(),
         ).hexdigest()

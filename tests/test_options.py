@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import argparse
 
 import pytest
@@ -10,41 +12,68 @@ class TestOptions:
     @pytest.fixture()
     def options(self):
         return Options({
-            "a_default": "default",
-            "another-default": "default2",
+            "foo-bar": "1",
+            "baz_qux": "2",
         })
 
-    def test_empty(self):
-        options = Options()
-        assert not options.defaults
-        assert not options.options
+    def test_defaults(self, options: Options):
+        empty = Options()
+        assert empty == {}
+        assert empty.defaults == {}
 
-    def test_set(self, options: Options):
-        assert options.get("a_default") == "default"
+        assert options.defaults == {
+            "foo-bar": "1",
+            "baz-qux": "2",
+        }
+        assert options == options.defaults
+
+    def test_get_set(self, options: Options):
+        assert options.get("foo-bar") == "1"
+        assert options["foo-bar"] == "1"
+        assert options.get("baz_qux") == "2"
+        assert options["baz_qux"] == "2"
+
         assert options.get("non_existing") is None
+        assert options["non_existing"] is None
 
-        options.set("an_option", "option")
-        assert options.get("an_option") == "option"
+        options.set("abc-def", 3.14)
+        assert options.get("abc-def") == 3.14
+        assert options.get("abc-def") == 3.14
+
+        obj = object()
+        options["foo_bar"] = obj
+        assert options.get("foo-bar") is obj
+        assert options.get("foo_bar") is obj
+
+        assert list(options.items()) == [
+            ("foo-bar", obj),
+            ("baz-qux", "2"),
+            ("abc-def", 3.14),
+        ]
 
     def test_update(self, options: Options):
-        assert options.get("a_default") == "default"
+        assert options.get("foo-bar") == "1"
         assert options.get("non_existing") is None
 
-        options.update({"an_option": "option"})
-        assert options.get("an_option") == "option"
+        options.update({"foo-bar": "value"})
+        assert options.get("foo-bar") == "value"
 
-    def test_name_normalised(self, options: Options):
-        assert options.get("a_default") == "default"
-        assert options.get("a-default") == "default"
-        assert options.get("another-default") == "default2"
-        assert options.get("another_default") == "default2"
+        other = Options({"foo-bar": "VALUE"})
+        other.set("abc", "def")
+        options.update(other)
+
+        assert list(options.items()) == [
+            ("foo-bar", "VALUE"),
+            ("baz-qux", "2"),
+            ("abc", "def"),
+        ]
 
     def test_clear(self, options: Options):
-        assert options.get("a_default") == "default"
-        options.set("a_default", "other")
-        assert options.get("a_default") == "other"
+        assert options.get("foo-bar") == "1"
+        options.set("foo-bar", "other")
+        assert options.get("foo-bar") == "other"
         options.clear()
-        assert options.get("a_default") == "default"
+        assert options.get("foo-bar") == "1"
 
 
 class TestMappedOptions:
@@ -188,6 +217,12 @@ class TestArgument:
             "const": 123,
         }
 
+        # doesn't include the const keyword if action is store_true or store_false
+        assert Argument("test", action="store_true").options == {"action": "store_true", "default": False}
+        assert Argument("test", action="store_true", default=123).options == {"action": "store_true", "default": 123}
+        assert Argument("test", action="store_false").options == {"action": "store_false", "default": True}
+        assert Argument("test", action="store_false", default=123).options == {"action": "store_false", "default": 123}
+
     def test_equality(self):
         a1 = Argument(
             "test",
@@ -226,6 +261,20 @@ class TestArgument:
         assert a1 == a2
         assert a1 != a3
         assert a2 != a3
+
+    @pytest.mark.parametrize(
+        ("action", "default", "expected_const", "expected_default"),
+        [
+            pytest.param("store_true", None, True, False, id="store_true-no-default"),
+            pytest.param("store_true", "default", True, "default", id="store_true-with-default"),
+            pytest.param("store_false", None, False, True, id="store_false-no-default"),
+            pytest.param("store_false", "default", False, "default", id="store_false-with-default"),
+        ],
+    )
+    def test_store_true_false(self, action: str, default: str | None, expected_const: bool, expected_default: str | None):
+        arg = Argument("foo", action=action, default=default)
+        assert arg.const is expected_const
+        assert arg.default is expected_default
 
 
 class TestArguments:
@@ -283,29 +332,32 @@ class TestArguments:
             list(args.requires("test1"))
         assert cm.value.args[0] == "test2 is not a valid argument for this plugin"
 
-    @pytest.mark.parametrize("args", [
-        pytest.param(
-            Arguments(
-                Argument("test1", requires="test2"),
-                Argument("test2", requires="test1"),
+    @pytest.mark.parametrize(
+        "args",
+        [
+            pytest.param(
+                Arguments(
+                    Argument("test1", requires="test2"),
+                    Argument("test2", requires="test1"),
+                ),
+                id="Cycle",
             ),
-            id="Cycle",
-        ),
-        pytest.param(
-            Arguments(
-                Argument("test1", requires="test2"),
-                Argument("test2", requires="test3"),
-                Argument("test3", requires="test1"),
+            pytest.param(
+                Arguments(
+                    Argument("test1", requires="test2"),
+                    Argument("test2", requires="test3"),
+                    Argument("test3", requires="test1"),
+                ),
+                id="Cycle deep",
             ),
-            id="Cycle deep",
-        ),
-        pytest.param(
-            Arguments(
-                Argument("test1", requires="test1"),
+            pytest.param(
+                Arguments(
+                    Argument("test1", requires="test1"),
+                ),
+                id="Cycle self",
             ),
-            id="Cycle self",
-        ),
-    ])
+        ],
+    )
     def test_requires_cycle(self, args: Arguments):
         with pytest.raises(RuntimeError) as cm:
             list(args.requires("test1"))

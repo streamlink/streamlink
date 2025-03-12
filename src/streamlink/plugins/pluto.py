@@ -110,27 +110,35 @@ class Pluto(Plugin):
                 validate.transform(lambda obj: [("hls", obj["path"])]),
             ),
         )
-        schema_live = [{
-            "name": str,
-            "id": str,
-            "slug": str,
-            "stitched": schema_paths,
-        }]
-        schema_vod = [{
-            "name": str,
-            "id": str,
-            "slug": str,
-            "genre": str,
-            "stitched": validate.any(schema_paths, {}),
-            validate.optional("seasons"): [{
-                "episodes": [{
-                    "name": str,
-                    "_id": str,
-                    "slug": str,
-                    "stitched": schema_paths,
-                }],
-            }],
-        }]
+        schema_live = [
+            {
+                "name": str,
+                "id": str,
+                "slug": str,
+                "stitched": schema_paths,
+            },
+        ]
+        schema_vod = [
+            {
+                "name": str,
+                "id": str,
+                "slug": str,
+                "genre": str,
+                "stitched": validate.any(schema_paths, {}),
+                validate.optional("seasons"): [
+                    {
+                        "episodes": [
+                            {
+                                "name": str,
+                                "_id": str,
+                                "slug": str,
+                                "stitched": schema_paths,
+                            },
+                        ],
+                    },
+                ],
+            },
+        ]
 
         return self.session.http.get(
             "https://boot.pluto.tv/v4/start",

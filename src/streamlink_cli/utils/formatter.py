@@ -1,5 +1,6 @@
+from __future__ import annotations
+
 from pathlib import Path
-from typing import Optional
 
 from streamlink.utils.formatter import Formatter as _BaseFormatter
 from streamlink_cli.utils.path import replace_chars, replace_path, truncate_path
@@ -8,7 +9,7 @@ from streamlink_cli.utils.path import replace_chars, replace_path, truncate_path
 class Formatter(_BaseFormatter):
     title = _BaseFormatter.format
 
-    def path(self, pathlike: str, charmap: Optional[str] = None, max_filename_length: int = 255) -> Path:
+    def path(self, pathlike: str, charmap: str | None = None, max_filename_length: int = 255) -> Path:
         def mapper(s):
             return replace_chars(s, charmap)
 

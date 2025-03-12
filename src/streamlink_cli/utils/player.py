@@ -1,12 +1,14 @@
+from __future__ import annotations
+
+from collections.abc import Iterable
 from os import environ
 from pathlib import Path
 from shutil import which
-from typing import Iterable, Optional
 
 from streamlink.compat import is_darwin, is_win32
 
 
-def _resolve_executable(paths: Iterable[Path], *exes: str) -> Optional[Path]:
+def _resolve_executable(paths: Iterable[Path], *exes: str) -> Path | None:
     for exe in exes:
         resolved = which(exe)
         if resolved:
@@ -26,7 +28,7 @@ def _resolve_executable(paths: Iterable[Path], *exes: str) -> Optional[Path]:
     return None
 
 
-def _find_default_player_win32() -> Optional[Path]:
+def _find_default_player_win32() -> Path | None:
     envvars = "PROGRAMFILES", "PROGRAMFILES(X86)", "PROGRAMW6432"
     subpath = Path() / "VideoLAN" / "VLC"
 
@@ -37,10 +39,10 @@ def _find_default_player_win32() -> Optional[Path]:
             if p
         ),
         "vlc.exe",
-    )
+    )  # fmt: skip
 
 
-def _find_default_player_darwin() -> Optional[Path]:
+def _find_default_player_darwin() -> Path | None:
     subpath = Path() / "Applications" / "VLC.app" / "Contents" / "MacOS"
 
     return _resolve_executable(
@@ -53,14 +55,14 @@ def _find_default_player_darwin() -> Optional[Path]:
     )
 
 
-def _find_default_player_other() -> Optional[Path]:
+def _find_default_player_other() -> Path | None:
     return _resolve_executable(
         [],
         "vlc",
     )
 
 
-def find_default_player() -> Optional[Path]:
+def find_default_player() -> Path | None:
     if is_win32:
         return _find_default_player_win32()
     elif is_darwin:

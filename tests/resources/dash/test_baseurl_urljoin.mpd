@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<MPD
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xmlns:xlink="http://www.w3.org/1999/xlink"
+  xmlns="urn:mpeg:dash:schema:mpd:2011"
+  xsi:schemaLocation="urn:mpeg:DASH:schema:MPD:2011 http://standards.iso.org/ittf/PubliclyAvailableStandards/MPEG-DASH_schema_files/DASH-MPD.xsd"
+  profiles="urn:mpeg:dash:profile:isoff-live:2011"
+  type="static"
+  availabilityStartTime="2020-01-01T00:00:00Z"
+  mediaPresentationDuration="PT0H0M6.00S"
+  minBufferTime="PT6.0S"
+>
+  <Period id="empty-baseurl" start="PT12M34S">
+    <BaseURL/>
+    <AdaptationSet id="absolute-segments" mimeType="video/mp4">
+      <SegmentTemplate
+        initialization="/absolute/init_$RepresentationID$.m4s"
+        media="/absolute/media_$RepresentationID$-$Number$.m4s"
+        startNumber="1"
+        timescale="90000"
+        duration="540000"
+      />
+      <Representation id="video_5000kbps" codecs="avc1.640028" width="1920" height="1080" sar="1:1" bandwidth="5000000"/>
+    </AdaptationSet>
+    <AdaptationSet id="relative-segments" mimeType="video/mp4">
+      <SegmentTemplate
+        initialization="relative/init_$RepresentationID$.m4s"
+        media="relative/media_$RepresentationID$-$Number$.m4s"
+        startNumber="1"
+        timescale="90000"
+        duration="540000"
+      />
+      <Representation id="video_5000kbps" codecs="avc1.640028" width="1920" height="1080" sar="1:1" bandwidth="5000000"/>
+    </AdaptationSet>
+  </Period>
+  <Period id="baseurl-with-scheme" start="PT12M34S">
+    <BaseURL>https://host/path/subpath</BaseURL>
+    <AdaptationSet id="absolute-segments" mimeType="video/mp4">
+      <SegmentTemplate
+        initialization="/absolute/init_$RepresentationID$.m4s"
+        media="/absolute/media_$RepresentationID$-$Number$.m4s"
+        startNumber="1"
+        timescale="90000"
+        duration="540000"
+      />
+      <Representation id="video_5000kbps" codecs="avc1.640028" width="1920" height="1080" sar="1:1" bandwidth="5000000"/>
+    </AdaptationSet>
+    <AdaptationSet id="relative-segments" mimeType="video/mp4">
+      <SegmentTemplate
+        initialization="relative/init_$RepresentationID$.m4s"
+        media="relative/media_$RepresentationID$-$Number$.m4s"
+        startNumber="1"
+        timescale="90000"
+        duration="540000"
+      />
+      <Representation id="video_5000kbps" codecs="avc1.640028" width="1920" height="1080" sar="1:1" bandwidth="5000000"/>
+    </AdaptationSet>
+  </Period>
+  <Period id="absolute-baseurl" start="PT12M34S">
+    <BaseURL>/path/subpath</BaseURL>
+    <AdaptationSet id="absolute-segments" mimeType="video/mp4">
+      <SegmentTemplate
+        initialization="/absolute/init_$RepresentationID$.m4s"
+        media="/absolute/media_$RepresentationID$-$Number$.m4s"
+        startNumber="1"
+        timescale="90000"
+        duration="540000"
+      />
+      <Representation id="video_5000kbps" codecs="avc1.640028" width="1920" height="1080" sar="1:1" bandwidth="5000000"/>
+    </AdaptationSet>
+    <AdaptationSet id="relative-segments" mimeType="video/mp4">
+      <SegmentTemplate
+        initialization="relative/init_$RepresentationID$.m4s"
+        media="relative/media_$RepresentationID$-$Number$.m4s"
+        startNumber="1"
+        timescale="90000"
+        duration="540000"
+      />
+      <Representation id="video_5000kbps" codecs="avc1.640028" width="1920" height="1080" sar="1:1" bandwidth="5000000"/>
+    </AdaptationSet>
+  </Period>
+  <Period id="relative-baseurl" start="PT12M34S">
+    <BaseURL>path/subpath</BaseURL>
+    <AdaptationSet id="absolute-segments" mimeType="video/mp4">
+      <SegmentTemplate
+        initialization="/absolute/init_$RepresentationID$.m4s"
+        media="/absolute/media_$RepresentationID$-$Number$.m4s"
+        startNumber="1"
+        timescale="90000"
+        duration="540000"
+      />
+      <Representation id="video_5000kbps" codecs="avc1.640028" width="1920" height="1080" sar="1:1" bandwidth="5000000"/>
+    </AdaptationSet>
+    <AdaptationSet id="relative-segments" mimeType="video/mp4">
+      <SegmentTemplate
+        initialization="relative/init_$RepresentationID$.m4s"
+        media="relative/media_$RepresentationID$-$Number$.m4s"
+        startNumber="1"
+        timescale="90000"
+        duration="540000"
+      />
+      <Representation id="video_5000kbps" codecs="avc1.640028" width="1920" height="1080" sar="1:1" bandwidth="5000000"/>
+    </AdaptationSet>
+  </Period>
+</MPD>

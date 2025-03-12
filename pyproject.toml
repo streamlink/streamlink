@@ -35,11 +35,11 @@ classifiers = [
   "Operating System :: Microsoft :: Windows",
   "Programming Language :: Python :: 3",
   "Programming Language :: Python :: 3 :: Only",
-  "Programming Language :: Python :: 3.8",
   "Programming Language :: Python :: 3.9",
   "Programming Language :: Python :: 3.10",
   "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
   "Topic :: Internet :: WWW/HTTP",
   "Topic :: Multimedia :: Sound/Audio",
   "Topic :: Multimedia :: Video",
@@ -53,7 +53,7 @@ dynamic = [
   "gui-scripts",
 ]
 
-requires-python = ">=3.8"
+requires-python = ">=3.9"
 dependencies = [
   "certifi",
   "exceptiongroup ; python_version<'3.11'",
@@ -63,11 +63,18 @@ dependencies = [
   "pycryptodome >=3.4.3,<4",
   "PySocks >=1.5.6,!=1.5.7",
   "requests >=2.26.0,<3",
-  "trio >=0.22.0,<1",
+  "trio >=0.25.0,<1 ; python_version>='3.13'",
+  "trio >=0.22.0,<1 ; python_version<'3.13'",
   "trio-websocket >=0.9.0,<1",
-  "typing-extensions >=4.0.0",
   "urllib3 >=1.26.0,<3",
   "websocket-client >=1.2.1,<2",
+]
+
+[project.optional-dependencies]
+decompress = [
+  # don't define brotli or zstandard library versions here
+  # and instead rely on urllib3's version requirements
+  "urllib3[brotli,zstd] >=1.26.0,<3"
 ]
 
 [project.urls]
@@ -75,7 +82,7 @@ Homepage = "https://github.com/streamlink/streamlink"
 Documentation = "https://streamlink.github.io/"
 Tracker = "https://github.com/streamlink/streamlink/issues"
 Source = "https://github.com/streamlink/streamlink"
-Funding = "https://streamlink.github.io/latest/donate.html"
+Funding = "https://streamlink.github.io/latest/support.html"
 
 
 # https://setuptools.pypa.io/en/stable/userguide/pyproject_config.html
@@ -131,9 +138,6 @@ testpaths = [
 filterwarnings = [
   "always",
 ]
-# https://pytest-asyncio.readthedocs.io/en/v0.24.0/reference/configuration.html
-asyncio_mode = "strict"
-asyncio_default_fixture_loop_scope = "function"
 
 
 # https://coverage.readthedocs.io/en/latest/config.html
@@ -169,7 +173,7 @@ src = [
   "src",
   "tests",
 ]
-target-version = "py38"
+target-version = "py39"
 fix = false
 line-length = 128
 output-format = "full"
@@ -236,7 +240,7 @@ select = [
 ]
 ignore = [
   "A003",  # builtin-attribute-shadowing
-  "A005",  # builtin-module-shadowing
+  "A005",  # stdlib-module-shadowing
   "ASYNC109",  # async-function-with-timeout
   "C408",  # unnecessary-collection-call
   "ISC003",  # explicit-string-concatenation
@@ -287,13 +291,14 @@ allow-multiline = false
 
 # https://mypy.readthedocs.io/en/stable/config_file.html
 [tool.mypy]
-python_version = 3.8
+python_version = 3.9
 show_error_codes = true
 show_error_context = true
 show_column_numbers = true
 warn_no_return = false
 files = [
   "build_backend",
+  "script/",
   "src/streamlink/",
   "src/streamlink_cli/",
   "tests/",

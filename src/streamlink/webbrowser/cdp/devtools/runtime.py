@@ -3,14 +3,15 @@
 # This file is generated from the CDP specification. If you need to make
 # changes, edit the generator and regenerate all modules.
 #
-# CDP version: v0.0.1156692
+# CDP version: v0.0.1359167
 # CDP domain: Runtime
 
 from __future__ import annotations
 
 import enum
-import typing
+from collections.abc import Generator
 from dataclasses import dataclass
+from typing import Any
 
 from streamlink.webbrowser.cdp.devtools.util import T_JSON_DICT, event_class
 
@@ -33,19 +34,25 @@ class ScriptId(str):
 @dataclass
 class SerializationOptions:
     """
-    Represents options for serialization. Overrides ``generatePreview``, ``returnByValue`` and
-    ``generateWebDriverValue``.
+    Represents options for serialization. Overrides ``generatePreview`` and ``returnByValue``.
     """
     serialization: str
 
     #: Deep serialization depth. Default is full depth. Respected only in ``deep`` serialization mode.
-    max_depth: typing.Optional[int] = None
+    max_depth: int | None = None
+
+    #: Embedder-specific parameters. For example if connected to V8 in Chrome these control DOM
+    #: serialization via ``maxNodeDepth: integer`` and ``includeShadowTree: "none" `` "open" `` "all"``.
+    #: Values can be only of type string or integer.
+    additional_parameters: dict | None = None
 
     def to_json(self) -> T_JSON_DICT:
         json: T_JSON_DICT = {}
         json["serialization"] = self.serialization
         if self.max_depth is not None:
             json["maxDepth"] = self.max_depth
+        if self.additional_parameters is not None:
+            json["additionalParameters"] = self.additional_parameters
         return json
 
     @classmethod
@@ -53,6 +60,7 @@ class SerializationOptions:
         return cls(
             serialization=str(json["serialization"]),
             max_depth=int(json["maxDepth"]) if "maxDepth" in json else None,
+            additional_parameters=dict(json["additionalParameters"]) if "additionalParameters" in json else None,
         )
 
 
@@ -63,14 +71,14 @@ class DeepSerializedValue:
     """
     type_: str
 
-    value: typing.Optional[typing.Any] = None
+    value: Any | None = None
 
-    object_id: typing.Optional[str] = None
+    object_id: str | None = None
 
     #: Set if value reference met more then once during serialization. In such
     #: case, value is provided only to one of the serialized values. Unique
     #: per value in the scope of one CDP call.
-    weak_local_object_reference: typing.Optional[int] = None
+    weak_local_object_reference: int | None = None
 
     def to_json(self) -> T_JSON_DICT:
         json: T_JSON_DICT = {}
@@ -135,34 +143,31 @@ class RemoteObject:
     #: Object subtype hint. Specified for ``object`` type values only.
     #: NOTE: If you change anything here, make sure to also update
     #: ``subtype`` in ``ObjectPreview`` and ``PropertyPreview`` below.
-    subtype: typing.Optional[str] = None
+    subtype: str | None = None
 
     #: Object class (constructor) name. Specified for ``object`` type values only.
-    class_name: typing.Optional[str] = None
+    class_name: str | None = None
 
     #: Remote object value in case of primitive values or JSON values (if it was requested).
-    value: typing.Optional[typing.Any] = None
+    value: Any | None = None
 
     #: Primitive value which can not be JSON-stringified does not have ``value``, but gets this
     #: property.
-    unserializable_value: typing.Optional[UnserializableValue] = None
+    unserializable_value: UnserializableValue | None = None
 
     #: String representation of the object.
-    description: typing.Optional[str] = None
-
-    #: Deprecated. Use ``deepSerializedValue`` instead. WebDriver BiDi representation of the value.
-    web_driver_value: typing.Optional[DeepSerializedValue] = None
+    description: str | None = None
 
     #: Deep serialized value.
-    deep_serialized_value: typing.Optional[DeepSerializedValue] = None
+    deep_serialized_value: DeepSerializedValue | None = None
 
     #: Unique object identifier (for non-primitive values).
-    object_id: typing.Optional[RemoteObjectId] = None
+    object_id: RemoteObjectId | None = None
 
     #: Preview containing abbreviated property values. Specified for ``object`` type values only.
-    preview: typing.Optional[ObjectPreview] = None
+    preview: ObjectPreview | None = None
 
-    custom_preview: typing.Optional[CustomPreview] = None
+    custom_preview: CustomPreview | None = None
 
     def to_json(self) -> T_JSON_DICT:
         json: T_JSON_DICT = {}
@@ -177,8 +182,6 @@ class RemoteObject:
             json["unserializableValue"] = self.unserializable_value.to_json()
         if self.description is not None:
             json["description"] = self.description
-        if self.web_driver_value is not None:
-            json["webDriverValue"] = self.web_driver_value.to_json()
         if self.deep_serialized_value is not None:
             json["deepSerializedValue"] = self.deep_serialized_value.to_json()
         if self.object_id is not None:
@@ -198,7 +201,6 @@ class RemoteObject:
             value=json["value"] if "value" in json else None,
             unserializable_value=UnserializableValue.from_json(json["unserializableValue"]) if "unserializableValue" in json else None,
             description=str(json["description"]) if "description" in json else None,
-            web_driver_value=DeepSerializedValue.from_json(json["webDriverValue"]) if "webDriverValue" in json else None,
             deep_serialized_value=DeepSerializedValue.from_json(json["deepSerializedValue"]) if "deepSerializedValue" in json else None,
             object_id=RemoteObjectId.from_json(json["objectId"]) if "objectId" in json else None,
             preview=ObjectPreview.from_json(json["preview"]) if "preview" in json else None,
@@ -215,7 +217,7 @@ class CustomPreview:
     #: If formatter returns true as a result of formatter.hasBody call then bodyGetterId will
     #: contain RemoteObjectId for the function that returns result of formatter.body(object, config) call.
     #: The result value is json ML array.
-    body_getter_id: typing.Optional[RemoteObjectId] = None
+    body_getter_id: RemoteObjectId | None = None
 
     def to_json(self) -> T_JSON_DICT:
         json: T_JSON_DICT = {}
@@ -244,16 +246,16 @@ class ObjectPreview:
     overflow: bool
 
     #: List of the properties.
-    properties: typing.List[PropertyPreview]
+    properties: list[PropertyPreview]
 
     #: Object subtype hint. Specified for ``object`` type values only.
-    subtype: typing.Optional[str] = None
+    subtype: str | None = None
 
     #: String representation of the object.
-    description: typing.Optional[str] = None
+    description: str | None = None
 
     #: List of the entries. Specified for ``map`` and ``set`` subtype values only.
-    entries: typing.Optional[typing.List[EntryPreview]] = None
+    entries: list[EntryPreview] | None = None
 
     def to_json(self) -> T_JSON_DICT:
         json: T_JSON_DICT = {}
@@ -289,13 +291,13 @@ class PropertyPreview:
     type_: str
 
     #: User-friendly property value string.
-    value: typing.Optional[str] = None
+    value: str | None = None
 
     #: Nested value preview.
-    value_preview: typing.Optional[ObjectPreview] = None
+    value_preview: ObjectPreview | None = None
 
     #: Object subtype hint. Specified for ``object`` type values only.
-    subtype: typing.Optional[str] = None
+    subtype: str | None = None
 
     def to_json(self) -> T_JSON_DICT:
         json: T_JSON_DICT = {}
@@ -326,7 +328,7 @@ class EntryPreview:
     value: ObjectPreview
 
     #: Preview of the key. Specified for map-like collection entries.
-    key: typing.Optional[ObjectPreview] = None
+    key: ObjectPreview | None = None
 
     def to_json(self) -> T_JSON_DICT:
         json: T_JSON_DICT = {}
@@ -360,27 +362,27 @@ class PropertyDescriptor:
     enumerable: bool
 
     #: The value associated with the property.
-    value: typing.Optional[RemoteObject] = None
+    value: RemoteObject | None = None
 
     #: True if the value associated with the property may be changed (data descriptors only).
-    writable: typing.Optional[bool] = None
+    writable: bool | None = None
 
     #: A function which serves as a getter for the property, or ``undefined`` if there is no getter
     #: (accessor descriptors only).
-    get: typing.Optional[RemoteObject] = None
+    get: RemoteObject | None = None
 
     #: A function which serves as a setter for the property, or ``undefined`` if there is no setter
     #: (accessor descriptors only).
-    set_: typing.Optional[RemoteObject] = None
+    set_: RemoteObject | None = None
 
     #: True if the result was thrown during the evaluation.
-    was_thrown: typing.Optional[bool] = None
+    was_thrown: bool | None = None
 
     #: True if the property is owned for the object.
-    is_own: typing.Optional[bool] = None
+    is_own: bool | None = None
 
     #: Property symbol object, if the property is of the ``symbol`` type.
-    symbol: typing.Optional[RemoteObject] = None
+    symbol: RemoteObject | None = None
 
     def to_json(self) -> T_JSON_DICT:
         json: T_JSON_DICT = {}
@@ -428,7 +430,7 @@ class InternalPropertyDescriptor:
     name: str
 
     #: The value associated with the property.
-    value: typing.Optional[RemoteObject] = None
+    value: RemoteObject | None = None
 
     def to_json(self) -> T_JSON_DICT:
         json: T_JSON_DICT = {}
@@ -454,15 +456,15 @@ class PrivatePropertyDescriptor:
     name: str
 
     #: The value associated with the private property.
-    value: typing.Optional[RemoteObject] = None
+    value: RemoteObject | None = None
 
     #: A function which serves as a getter for the private property,
     #: or ``undefined`` if there is no getter (accessor descriptors only).
-    get: typing.Optional[RemoteObject] = None
+    get: RemoteObject | None = None
 
     #: A function which serves as a setter for the private property,
     #: or ``undefined`` if there is no setter (accessor descriptors only).
-    set_: typing.Optional[RemoteObject] = None
+    set_: RemoteObject | None = None
 
     def to_json(self) -> T_JSON_DICT:
         json: T_JSON_DICT = {}
@@ -492,13 +494,13 @@ class CallArgument:
     unserializable primitive value or neither of (for undefined) them should be specified.
     """
     #: Primitive value or serializable javascript object.
-    value: typing.Optional[typing.Any] = None
+    value: Any | None = None
 
     #: Primitive value which can not be JSON-stringified.
-    unserializable_value: typing.Optional[UnserializableValue] = None
+    unserializable_value: UnserializableValue | None = None
 
     #: Remote object handle.
-    object_id: typing.Optional[RemoteObjectId] = None
+    object_id: RemoteObjectId | None = None
 
     def to_json(self) -> T_JSON_DICT:
         json: T_JSON_DICT = {}
@@ -555,7 +557,7 @@ class ExecutionContextDescription:
     unique_id: str
 
     #: Embedder-specific auxiliary data likely matching {isDefault: boolean, type: 'default'``'isolated'``'worker', frameId: string}
-    aux_data: typing.Optional[dict] = None
+    aux_data: dict | None = None
 
     def to_json(self) -> T_JSON_DICT:
         json: T_JSON_DICT = {}
@@ -597,24 +599,24 @@ class ExceptionDetails:
     column_number: int
 
     #: Script ID of the exception location.
-    script_id: typing.Optional[ScriptId] = None
+    script_id: ScriptId | None = None
 
     #: URL of the exception location, to be used when the script was not reported.
-    url: typing.Optional[str] = None
+    url: str | None = None
 
     #: JavaScript stack trace if available.
-    stack_trace: typing.Optional[StackTrace] = None
+    stack_trace: StackTrace | None = None
 
     #: Exception object if available.
-    exception: typing.Optional[RemoteObject] = None
+    exception: RemoteObject | None = None
 
     #: Identifier of the context where exception happened.
-    execution_context_id: typing.Optional[ExecutionContextId] = None
+    execution_context_id: ExecutionContextId | None = None
 
     #: Dictionary with entries of meta data that the client associated
     #: with this exception, such as information about associated network
     #: requests, etc.
-    exception_meta_data: typing.Optional[dict] = None
+    exception_meta_data: dict | None = None
 
     def to_json(self) -> T_JSON_DICT:
         json: T_JSON_DICT = {}
@@ -728,17 +730,17 @@ class StackTrace:
     Call frames for assertions or error messages.
     """
     #: JavaScript function name.
-    call_frames: typing.List[CallFrame]
+    call_frames: list[CallFrame]
 
     #: String label of this stack trace. For async traces this may be a name of the function that
     #: initiated the async call.
-    description: typing.Optional[str] = None
+    description: str | None = None
 
     #: Asynchronous JavaScript stack trace that preceded this stack, if available.
-    parent: typing.Optional[StackTrace] = None
+    parent: StackTrace | None = None
 
     #: Asynchronous JavaScript stack trace that preceded this stack, if available.
-    parent_id: typing.Optional[StackTraceId] = None
+    parent_id: StackTraceId | None = None
 
     def to_json(self) -> T_JSON_DICT:
         json: T_JSON_DICT = {}
@@ -784,7 +786,7 @@ class StackTraceId:
     """
     id_: str
 
-    debugger_id: typing.Optional[UniqueDebuggerId] = None
+    debugger_id: UniqueDebuggerId | None = None
 
     def to_json(self) -> T_JSON_DICT:
         json: T_JSON_DICT = {}
@@ -803,9 +805,9 @@ class StackTraceId:
 
 def await_promise(
     promise_object_id: RemoteObjectId,
-    return_by_value: typing.Optional[bool] = None,
-    generate_preview: typing.Optional[bool] = None,
-) -> typing.Generator[T_JSON_DICT, T_JSON_DICT, typing.Tuple[RemoteObject, typing.Optional[ExceptionDetails]]]:
+    return_by_value: bool | None = None,
+    generate_preview: bool | None = None,
+) -> Generator[T_JSON_DICT, T_JSON_DICT, tuple[RemoteObject, ExceptionDetails | None]]:
     """
     Add handler to promise with given promise object id.
 
@@ -836,20 +838,19 @@ def await_promise(
 
 def call_function_on(
     function_declaration: str,
-    object_id: typing.Optional[RemoteObjectId] = None,
-    arguments: typing.Optional[typing.List[CallArgument]] = None,
-    silent: typing.Optional[bool] = None,
-    return_by_value: typing.Optional[bool] = None,
-    generate_preview: typing.Optional[bool] = None,
-    user_gesture: typing.Optional[bool] = None,
-    await_promise: typing.Optional[bool] = None,
-    execution_context_id: typing.Optional[ExecutionContextId] = None,
-    object_group: typing.Optional[str] = None,
-    throw_on_side_effect: typing.Optional[bool] = None,
-    unique_context_id: typing.Optional[str] = None,
-    generate_web_driver_value: typing.Optional[bool] = None,
-    serialization_options: typing.Optional[SerializationOptions] = None,
-) -> typing.Generator[T_JSON_DICT, T_JSON_DICT, typing.Tuple[RemoteObject, typing.Optional[ExceptionDetails]]]:
+    object_id: RemoteObjectId | None = None,
+    arguments: list[CallArgument] | None = None,
+    silent: bool | None = None,
+    return_by_value: bool | None = None,
+    generate_preview: bool | None = None,
+    user_gesture: bool | None = None,
+    await_promise: bool | None = None,
+    execution_context_id: ExecutionContextId | None = None,
+    object_group: str | None = None,
+    throw_on_side_effect: bool | None = None,
+    unique_context_id: str | None = None,
+    serialization_options: SerializationOptions | None = None,
+) -> Generator[T_JSON_DICT, T_JSON_DICT, tuple[RemoteObject, ExceptionDetails | None]]:
     """
     Calls function with given declaration on the given object. Object group of the result is
     inherited from the target object.
@@ -866,8 +867,7 @@ def call_function_on(
     :param object_group: *(Optional)* Symbolic group name that can be used to release multiple objects. If objectGroup is not specified and objectId is, objectGroup will be inherited from object.
     :param throw_on_side_effect: **(EXPERIMENTAL)** *(Optional)* Whether to throw an exception if side effect cannot be ruled out during evaluation.
     :param unique_context_id: **(EXPERIMENTAL)** *(Optional)* An alternative way to specify the execution context to call function on. Compared to contextId that may be reused across processes, this is guaranteed to be system-unique, so it can be used to prevent accidental function call in context different than intended (e.g. as a result of navigation across process boundaries). This is mutually exclusive with ````executionContextId````.
-    :param generate_web_driver_value: *(Optional)* Deprecated. Use ````serializationOptions: {serialization:"deep"}```` instead. Whether the result should contain ````webDriverValue````, serialized according to https://w3c.github.io/webdriver-bidi. This is mutually exclusive with ````returnByValue````, but resulting ````objectId```` is still provided.
-    :param serialization_options: **(EXPERIMENTAL)** *(Optional)* Specifies the result serialization. If provided, overrides ````generatePreview````, ````returnByValue```` and ````generateWebDriverValue```.
+    :param serialization_options: **(EXPERIMENTAL)** *(Optional)* Specifies the result serialization. If provided, overrides ````generatePreview```` and ````returnByValue```.
     :returns: A tuple with the following items:
 
         0. **result** - Call result.
@@ -897,8 +897,6 @@ def call_function_on(
         params["throwOnSideEffect"] = throw_on_side_effect
     if unique_context_id is not None:
         params["uniqueContextId"] = unique_context_id
-    if generate_web_driver_value is not None:
-        params["generateWebDriverValue"] = generate_web_driver_value
     if serialization_options is not None:
         params["serializationOptions"] = serialization_options.to_json()
     cmd_dict: T_JSON_DICT = {
@@ -916,8 +914,8 @@ def compile_script(
     expression: str,
     source_url: str,
     persist_script: bool,
-    execution_context_id: typing.Optional[ExecutionContextId] = None,
-) -> typing.Generator[T_JSON_DICT, T_JSON_DICT, typing.Tuple[typing.Optional[ScriptId], typing.Optional[ExceptionDetails]]]:
+    execution_context_id: ExecutionContextId | None = None,
+) -> Generator[T_JSON_DICT, T_JSON_DICT, tuple[ScriptId | None, ExceptionDetails | None]]:
     """
     Compiles expression.
 
@@ -947,7 +945,7 @@ def compile_script(
     )
 
 
-def disable() -> typing.Generator[T_JSON_DICT, T_JSON_DICT, None]:
+def disable() -> Generator[T_JSON_DICT, T_JSON_DICT, None]:
     """
     Disables reporting of execution contexts creation.
     """
@@ -957,7 +955,7 @@ def disable() -> typing.Generator[T_JSON_DICT, T_JSON_DICT, None]:
     yield cmd_dict
 
 
-def discard_console_entries() -> typing.Generator[T_JSON_DICT, T_JSON_DICT, None]:
+def discard_console_entries() -> Generator[T_JSON_DICT, T_JSON_DICT, None]:
     """
     Discards collected exceptions and console API calls.
     """
@@ -967,7 +965,7 @@ def discard_console_entries() -> typing.Generator[T_JSON_DICT, T_JSON_DICT, None
     yield cmd_dict
 
 
-def enable() -> typing.Generator[T_JSON_DICT, T_JSON_DICT, None]:
+def enable() -> Generator[T_JSON_DICT, T_JSON_DICT, None]:
     """
     Enables reporting of execution contexts creation by means of ``executionContextCreated`` event.
     When the reporting gets enabled the event will be sent immediately for each existing execution
@@ -981,23 +979,22 @@ def enable() -> typing.Generator[T_JSON_DICT, T_JSON_DICT, None]:
 
 def evaluate(
     expression: str,
-    object_group: typing.Optional[str] = None,
-    include_command_line_api: typing.Optional[bool] = None,
-    silent: typing.Optional[bool] = None,
-    context_id: typing.Optional[ExecutionContextId] = None,
-    return_by_value: typing.Optional[bool] = None,
-    generate_preview: typing.Optional[bool] = None,
-    user_gesture: typing.Optional[bool] = None,
-    await_promise: typing.Optional[bool] = None,
-    throw_on_side_effect: typing.Optional[bool] = None,
-    timeout: typing.Optional[TimeDelta] = None,
-    disable_breaks: typing.Optional[bool] = None,
-    repl_mode: typing.Optional[bool] = None,
-    allow_unsafe_eval_blocked_by_csp: typing.Optional[bool] = None,
-    unique_context_id: typing.Optional[str] = None,
-    generate_web_driver_value: typing.Optional[bool] = None,
-    serialization_options: typing.Optional[SerializationOptions] = None,
-) -> typing.Generator[T_JSON_DICT, T_JSON_DICT, typing.Tuple[RemoteObject, typing.Optional[ExceptionDetails]]]:
+    object_group: str | None = None,
+    include_command_line_api: bool | None = None,
+    silent: bool | None = None,
+    context_id: ExecutionContextId | None = None,
+    return_by_value: bool | None = None,
+    generate_preview: bool | None = None,
+    user_gesture: bool | None = None,
+    await_promise: bool | None = None,
+    throw_on_side_effect: bool | None = None,
+    timeout: TimeDelta | None = None,
+    disable_breaks: bool | None = None,
+    repl_mode: bool | None = None,
+    allow_unsafe_eval_blocked_by_csp: bool | None = None,
+    unique_context_id: str | None = None,
+    serialization_options: SerializationOptions | None = None,
+) -> Generator[T_JSON_DICT, T_JSON_DICT, tuple[RemoteObject, ExceptionDetails | None]]:
     """
     Evaluates expression on global object.
 
@@ -1016,8 +1013,7 @@ def evaluate(
     :param repl_mode: **(EXPERIMENTAL)** *(Optional)* Setting this flag to true enables ````let```` re-declaration and top-level ````await````. Note that ````let```` variables can only be re-declared if they originate from ````replMode```` themselves.
     :param allow_unsafe_eval_blocked_by_csp: **(EXPERIMENTAL)** *(Optional)* The Content Security Policy (CSP) for the target might block 'unsafe-eval' which includes eval(), Function(), setTimeout() and setInterval() when called with non-callable arguments. This flag bypasses CSP for this evaluation and allows unsafe-eval. Defaults to true.
     :param unique_context_id: **(EXPERIMENTAL)** *(Optional)* An alternative way to specify the execution context to evaluate in. Compared to contextId that may be reused across processes, this is guaranteed to be system-unique, so it can be used to prevent accidental evaluation of the expression in context different than intended (e.g. as a result of navigation across process boundaries). This is mutually exclusive with ````contextId````.
-    :param generate_web_driver_value: *(Optional)* Deprecated. Use ````serializationOptions: {serialization:"deep"}```` instead. Whether the result should contain ````webDriverValue````, serialized according to https://w3c.github.io/webdriver-bidi. This is mutually exclusive with ````returnByValue````, but resulting ````objectId```` is still provided.
-    :param serialization_options: **(EXPERIMENTAL)** *(Optional)* Specifies the result serialization. If provided, overrides ````generatePreview````, ````returnByValue```` and ````generateWebDriverValue```.
+    :param serialization_options: **(EXPERIMENTAL)** *(Optional)* Specifies the result serialization. If provided, overrides ````generatePreview```` and ````returnByValue```.
     :returns: A tuple with the following items:
 
         0. **result** - Evaluation result.
@@ -1053,8 +1049,6 @@ def evaluate(
         params["allowUnsafeEvalBlockedByCSP"] = allow_unsafe_eval_blocked_by_csp
     if unique_context_id is not None:
         params["uniqueContextId"] = unique_context_id
-    if generate_web_driver_value is not None:
-        params["generateWebDriverValue"] = generate_web_driver_value
     if serialization_options is not None:
         params["serializationOptions"] = serialization_options.to_json()
     cmd_dict: T_JSON_DICT = {
@@ -1068,7 +1062,7 @@ def evaluate(
     )
 
 
-def get_isolate_id() -> typing.Generator[T_JSON_DICT, T_JSON_DICT, str]:
+def get_isolate_id() -> Generator[T_JSON_DICT, T_JSON_DICT, str]:
     """
     Returns the isolate id.
 
@@ -1083,7 +1077,7 @@ def get_isolate_id() -> typing.Generator[T_JSON_DICT, T_JSON_DICT, str]:
     return str(json["id"])
 
 
-def get_heap_usage() -> typing.Generator[T_JSON_DICT, T_JSON_DICT, typing.Tuple[float, float]]:
+def get_heap_usage() -> Generator[T_JSON_DICT, T_JSON_DICT, tuple[float, float]]:
     """
     Returns the JavaScript heap usage.
     It is the total usage of the corresponding isolate not scoped to a particular Runtime.
@@ -1107,11 +1101,11 @@ def get_heap_usage() -> typing.Generator[T_JSON_DICT, T_JSON_DICT, typing.Tuple[
 
 def get_properties(
     object_id: RemoteObjectId,
-    own_properties: typing.Optional[bool] = None,
-    accessor_properties_only: typing.Optional[bool] = None,
-    generate_preview: typing.Optional[bool] = None,
-    non_indexed_properties_only: typing.Optional[bool] = None,
-) -> typing.Generator[T_JSON_DICT, T_JSON_DICT, typing.Tuple[typing.List[PropertyDescriptor], typing.Optional[typing.List[InternalPropertyDescriptor]], typing.Optional[typing.List[PrivatePropertyDescriptor]], typing.Optional[ExceptionDetails]]]:
+    own_properties: bool | None = None,
+    accessor_properties_only: bool | None = None,
+    generate_preview: bool | None = None,
+    non_indexed_properties_only: bool | None = None,
+) -> Generator[T_JSON_DICT, T_JSON_DICT, tuple[list[PropertyDescriptor], list[InternalPropertyDescriptor] | None, list[PrivatePropertyDescriptor] | None, ExceptionDetails | None]]:
     """
     Returns properties of a given object. Object group of the result is inherited from the target
     object.
@@ -1152,8 +1146,8 @@ def get_properties(
 
 
 def global_lexical_scope_names(
-    execution_context_id: typing.Optional[ExecutionContextId] = None,
-) -> typing.Generator[T_JSON_DICT, T_JSON_DICT, typing.List[str]]:
+    execution_context_id: ExecutionContextId | None = None,
+) -> Generator[T_JSON_DICT, T_JSON_DICT, list[str]]:
     """
     Returns all let, const and class variables from global scope.
 
@@ -1173,8 +1167,8 @@ def global_lexical_scope_names(
 
 def query_objects(
     prototype_object_id: RemoteObjectId,
-    object_group: typing.Optional[str] = None,
-) -> typing.Generator[T_JSON_DICT, T_JSON_DICT, RemoteObject]:
+    object_group: str | None = None,
+) -> Generator[T_JSON_DICT, T_JSON_DICT, RemoteObject]:
     """
     :param prototype_object_id: Identifier of the prototype to return objects for.
     :param object_group: *(Optional)* Symbolic group name that can be used to release the results.
@@ -1194,7 +1188,7 @@ def query_objects(
 
 def release_object(
     object_id: RemoteObjectId,
-) -> typing.Generator[T_JSON_DICT, T_JSON_DICT, None]:
+) -> Generator[T_JSON_DICT, T_JSON_DICT, None]:
     """
     Releases remote object with given id.
 
@@ -1211,7 +1205,7 @@ def release_object(
 
 def release_object_group(
     object_group: str,
-) -> typing.Generator[T_JSON_DICT, T_JSON_DICT, None]:
+) -> Generator[T_JSON_DICT, T_JSON_DICT, None]:
     """
     Releases all remote objects that belong to a given group.
 
@@ -1226,7 +1220,7 @@ def release_object_group(
     yield cmd_dict
 
 
-def run_if_waiting_for_debugger() -> typing.Generator[T_JSON_DICT, T_JSON_DICT, None]:
+def run_if_waiting_for_debugger() -> Generator[T_JSON_DICT, T_JSON_DICT, None]:
     """
     Tells inspected instance to run if it was waiting for debugger to attach.
     """
@@ -1238,14 +1232,14 @@ def run_if_waiting_for_debugger() -> typing.Generator[T_JSON_DICT, T_JSON_DICT, 
 
 def run_script(
     script_id: ScriptId,
-    execution_context_id: typing.Optional[ExecutionContextId] = None,
-    object_group: typing.Optional[str] = None,
-    silent: typing.Optional[bool] = None,
-    include_command_line_api: typing.Optional[bool] = None,
-    return_by_value: typing.Optional[bool] = None,
-    generate_preview: typing.Optional[bool] = None,
-    await_promise: typing.Optional[bool] = None,
-) -> typing.Generator[T_JSON_DICT, T_JSON_DICT, typing.Tuple[RemoteObject, typing.Optional[ExceptionDetails]]]:
+    execution_context_id: ExecutionContextId | None = None,
+    object_group: str | None = None,
+    silent: bool | None = None,
+    include_command_line_api: bool | None = None,
+    return_by_value: bool | None = None,
+    generate_preview: bool | None = None,
+    await_promise: bool | None = None,
+) -> Generator[T_JSON_DICT, T_JSON_DICT, tuple[RemoteObject, ExceptionDetails | None]]:
     """
     Runs script with given id in a given context.
 
@@ -1291,7 +1285,7 @@ def run_script(
 
 def set_async_call_stack_depth(
     max_depth: int,
-) -> typing.Generator[T_JSON_DICT, T_JSON_DICT, None]:
+) -> Generator[T_JSON_DICT, T_JSON_DICT, None]:
     """
     Enables or disables async call stacks tracking.
 
@@ -1308,7 +1302,7 @@ def set_async_call_stack_depth(
 
 def set_custom_object_formatter_enabled(
     enabled: bool,
-) -> typing.Generator[T_JSON_DICT, T_JSON_DICT, None]:
+) -> Generator[T_JSON_DICT, T_JSON_DICT, None]:
     """
 
 
@@ -1327,7 +1321,7 @@ def set_custom_object_formatter_enabled(
 
 def set_max_call_stack_size_to_capture(
     size: int,
-) -> typing.Generator[T_JSON_DICT, T_JSON_DICT, None]:
+) -> Generator[T_JSON_DICT, T_JSON_DICT, None]:
     """
 
 
@@ -1344,7 +1338,7 @@ def set_max_call_stack_size_to_capture(
     yield cmd_dict
 
 
-def terminate_execution() -> typing.Generator[T_JSON_DICT, T_JSON_DICT, None]:
+def terminate_execution() -> Generator[T_JSON_DICT, T_JSON_DICT, None]:
     """
     Terminate current or next JavaScript execution.
     Will cancel the termination when the outer-most script execution ends.
@@ -1359,9 +1353,9 @@ def terminate_execution() -> typing.Generator[T_JSON_DICT, T_JSON_DICT, None]:
 
 def add_binding(
     name: str,
-    execution_context_id: typing.Optional[ExecutionContextId] = None,
-    execution_context_name: typing.Optional[str] = None,
-) -> typing.Generator[T_JSON_DICT, T_JSON_DICT, None]:
+    execution_context_id: ExecutionContextId | None = None,
+    execution_context_name: str | None = None,
+) -> Generator[T_JSON_DICT, T_JSON_DICT, None]:
     """
     If executionContextId is empty, adds binding with the given name on the
     global objects of all inspected contexts, including those created later,
@@ -1370,11 +1364,9 @@ def add_binding(
     in case of any other input, function throws an exception.
     Each binding function call produces Runtime.bindingCalled notification.
 
-    **EXPERIMENTAL**
-
     :param name:
-    :param execution_context_id: *(Optional)* If specified, the binding would only be exposed to the specified execution context. If omitted and ```executionContextName```` is not set, the binding is exposed to all execution contexts of the target. This parameter is mutually exclusive with ````executionContextName````. Deprecated in favor of ````executionContextName```` due to an unclear use case and bugs in implementation (crbug.com/1169639). ````executionContextId```` will be removed in the future.
-    :param execution_context_name: **(EXPERIMENTAL)** *(Optional)* If specified, the binding is exposed to the executionContext with matching name, even for contexts created after the binding is added. See also ````ExecutionContext.name```` and ````worldName```` parameter to ````Page.addScriptToEvaluateOnNewDocument````. This parameter is mutually exclusive with ````executionContextId```.
+    :param execution_context_id: **(EXPERIMENTAL)** *(Optional)* If specified, the binding would only be exposed to the specified execution context. If omitted and ```executionContextName```` is not set, the binding is exposed to all execution contexts of the target. This parameter is mutually exclusive with ````executionContextName````. Deprecated in favor of ````executionContextName```` due to an unclear use case and bugs in implementation (crbug.com/1169639). ````executionContextId```` will be removed in the future.
+    :param execution_context_name: *(Optional)* If specified, the binding is exposed to the executionContext with matching name, even for contexts created after the binding is added. See also ````ExecutionContext.name```` and ````worldName```` parameter to ````Page.addScriptToEvaluateOnNewDocument````. This parameter is mutually exclusive with ````executionContextId```.
     """
     params: T_JSON_DICT = {}
     params["name"] = name
@@ -1391,12 +1383,10 @@ def add_binding(
 
 def remove_binding(
     name: str,
-) -> typing.Generator[T_JSON_DICT, T_JSON_DICT, None]:
+) -> Generator[T_JSON_DICT, T_JSON_DICT, None]:
     """
     This method does not remove binding function from global object but
     unsubscribes current runtime agent from Runtime.bindingCalled notifications.
-
-    **EXPERIMENTAL**
 
     :param name:
     """
@@ -1411,7 +1401,7 @@ def remove_binding(
 
 def get_exception_details(
     error_object_id: RemoteObjectId,
-) -> typing.Generator[T_JSON_DICT, T_JSON_DICT, typing.Optional[ExceptionDetails]]:
+) -> Generator[T_JSON_DICT, T_JSON_DICT, ExceptionDetails | None]:
     """
     This method tries to lookup and populate exception details for a
     JavaScript Error object.
@@ -1465,7 +1455,7 @@ class ConsoleAPICalled:
     #: Type of the call.
     type_: str
     #: Call arguments.
-    args: typing.List[RemoteObject]
+    args: list[RemoteObject]
     #: Identifier of the context where the call was made.
     execution_context_id: ExecutionContextId
     #: Call timestamp.
@@ -1473,11 +1463,11 @@ class ConsoleAPICalled:
     #: Stack trace captured when the call was made. The async stack chain is automatically reported for
     #: the following call types: ``assert``, ``error``, ``trace``, ``warning``. For other types the async call
     #: chain can be retrieved using ``Debugger.getStackTrace`` and ``stackTrace.parentId`` field.
-    stack_trace: typing.Optional[StackTrace]
+    stack_trace: StackTrace | None
     #: Console context descriptor for calls on non-default console context (not console.*):
     #: 'anonymous#unique-logger-id' for call on unnamed context, 'name#unique-logger-id' for call
     #: on named context.
-    context: typing.Optional[str]
+    context: str | None
 
     @classmethod
     def from_json(cls, json: T_JSON_DICT) -> ConsoleAPICalled:
@@ -1588,7 +1578,7 @@ class InspectRequested:
     object_: RemoteObject
     hints: dict
     #: Identifier of the context where the call was made.
-    execution_context_id: typing.Optional[ExecutionContextId]
+    execution_context_id: ExecutionContextId | None
 
     @classmethod
     def from_json(cls, json: T_JSON_DICT) -> InspectRequested:

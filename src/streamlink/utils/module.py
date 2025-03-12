@@ -1,13 +1,19 @@
-from importlib.abc import PathEntryFinder
+from __future__ import annotations
+
+import sys
 from importlib.machinery import FileFinder
 from importlib.util import module_from_spec
 from pathlib import Path
 from pkgutil import get_importer
 from types import ModuleType
-from typing import Union
+from typing import TYPE_CHECKING
 
 
-def get_finder(path: Union[Path, str]) -> PathEntryFinder:
+if TYPE_CHECKING:
+    from _typeshed.importlib import PathEntryFinderProtocol
+
+
+def get_finder(path: str | Path) -> PathEntryFinderProtocol:
     path = str(path)
     finder = get_importer(path)
     if not finder:
@@ -16,13 +22,13 @@ def get_finder(path: Union[Path, str]) -> PathEntryFinder:
     return finder
 
 
-def load_module(name: str, path: Union[Path, str]) -> ModuleType:
+def load_module(name: str, path: str | Path, override: bool = False) -> ModuleType:
     finder = get_finder(path)
 
-    return exec_module(finder, name)
+    return exec_module(finder, name, override)
 
 
-def exec_module(finder: PathEntryFinder, name: str) -> ModuleType:
+def exec_module(finder: PathEntryFinderProtocol, name: str, override: bool = False) -> ModuleType:
     spec = finder.find_spec(name)
     if not spec or not spec.loader:
         raise ImportError(
@@ -30,7 +36,12 @@ def exec_module(finder: PathEntryFinder, name: str) -> ModuleType:
             name=name,
             path=finder.path if isinstance(finder, FileFinder) else None,
         )
+
+    if not override and (mod := sys.modules.get(spec.name)):
+        return mod
+
     mod = module_from_spec(spec)
+    sys.modules[spec.name] = mod
     spec.loader.exec_module(mod)
 
     return mod

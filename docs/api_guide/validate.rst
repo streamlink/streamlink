@@ -16,6 +16,13 @@ Instead of verifying and extracting data programatically and having to perform e
 declarative validation schemas allow defining comprehensive validation and extraction rules which are easy to understand
 and which raise errors with meaningful messages upon extraction failure.
 
+.. admonition:: Public interface
+   :class: caution
+
+   While the internals are implemented in the ``streamlink.validate`` package,
+   :ref:`streamlink.plugin.api.validate <api/validate:Validation schemas>` provides the main public interface
+   for plugin implementors.
+
 
 Examples
 --------
@@ -81,13 +88,14 @@ Now let's have a look at validation errors.
       Type of 123.0 should be int, but is float
 
 The first :meth:`Schema.validate()` call passes ``123`` to ``schema_one``. ``schema_one`` however expects ``"123"``, so
-a :class:`ValidationError <_exception.ValidationError>` is raised because the input value is not equal to the schema.
-:meth:`Schema.validate()` catches the error and wraps it in a :class:`PluginError <streamlink.exceptions.PluginError>`
-with a specific validation message.
+a :class:`ValidationError <streamlink.validate._exception.ValidationError>` is raised because the input value is not equal to
+the schema. :meth:`Schema.validate()` catches the error and wraps it in
+a :class:`PluginError <streamlink.exceptions.PluginError>` with a specific validation message.
 
 The second validation also fails, but here, it's because of the input type. The first sub-schema explicitly checks for
 the type ``int``, and despite the following schema being ``123.0``, which is a ``float`` object that would obviously validate
-a ``123.0`` ``float`` input when comparing equality, a :class:`ValidationError <_exception.ValidationError>` is raised.
+a ``123.0`` ``float`` input when comparing equality, a :class:`ValidationError <streamlink.validate._exception.ValidationError>`
+is raised.
 
 Extracting JSON data
 ^^^^^^^^^^^^^^^^^^^^
@@ -149,7 +157,7 @@ that's valid. For our example, this means that the value of the ``status`` key i
 ``None`` (``null``) or an ``int``.
 
 If any of the schemas in a nested schema definition like that fails, then a validation error stack will be generated
-by :class:`ValidationError <_exception.ValidationError>`, as shown above.
+by :class:`ValidationError <streamlink.validate._exception.ValidationError>`, as shown above.
 
 The last of the four schemas in the outer :class:`validate.all <all>` schema collection is a :class:`validate.get <get>` schema.
 This schema works on any kind of input which implements :func:`__getitem__()`, for example :class:`dict` objects.
@@ -266,7 +274,8 @@ turns this into a single string return value, or ``None`` if no or an empty valu
 Since we now have two different paths for our overall validation schema, either no player data or still unvalidated player data,
 our next schema is a :class:`validate.none_or_all <none_or_all>` schema. This works similar to :class:`validate.all <all>`,
 except that ``None`` inputs are skipped and get returned immediately without validating any sub-schemas. This lets us handle
-cases where no player was found on the website, without raising a :class:`ValidationError <_exception.ValidationError>`.
+cases where no player was found on the website, without raising
+a :class:`ValidationError <streamlink.validate._exception.ValidationError>`.
 
 In the :class:`validate.none_or_all <none_or_all>` schema, we now attempt to parse JSON data, which was already shown
 previously, except for the fact that we don't need to validate the ``str`` input here, as the XPath query must have already
@@ -286,8 +295,8 @@ Lastly, we simply get the ``url`` key using :class:`validate.get <get>`. The ret
 key was included in the JSON data, or a ``str`` with a URL where its path ends with ``".m3u8"``.
 
 This means that the overall schema can only return ``None`` or said kind of URL string. If the ``url`` key is not a URL,
-or if its path does not end with ``".m3u8"``, then a :class:`ValidationError <_exception.ValidationError>` is raised,
-which is what we want. The ``None`` return value should then be checked accordingly by the plugin implementation.
+or if its path does not end with ``".m3u8"``, then a :class:`ValidationError <streamlink.validate._exception.ValidationError>`
+is raised, which is what we want. The ``None`` return value should then be checked accordingly by the plugin implementation.
 
 Validating HTTP responses
 ^^^^^^^^^^^^^^^^^^^^^^^^^

@@ -17,3 +17,9 @@ fcda5b681422718cc0a95b3de45d3fe2698d8e29
 778e48f289b705bfa1df587c1f5440bb206b4f2e
 # chore: use new py3 yield from syntax
 ae920e12a7912d4b93be0032b9a20b7cbaa323bf
+# chore: typing: PEP 563, PEP 585, PEP 604, PEP 613
+16a1d84386539c8c8e480b73a519e179fcb8703c
+# webbrowser.cdp.devtools: rebuild modules
+045166b52acb62af4d6e3e3635ffaf4bd23c0e31
+# chore: ruff format
+98991c15f3aa21b9e3ba8f5fe7650abf9e0434de

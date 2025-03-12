@@ -1,10 +1,11 @@
+from __future__ import annotations
+
 import errno
 import logging
 import sys
 from contextlib import suppress
 from pathlib import Path
 from threading import Event, Lock, Thread
-from typing import Optional
 
 from streamlink.stream.stream import StreamIO
 from streamlink_cli.output import FileOutput, HTTPOutput, Output, PlayerOutput
@@ -71,8 +72,8 @@ class PlayerPollThread(Thread):
 class StreamRunner:
     """Read data from a stream and write it to the output."""
 
-    playerpoller: Optional[PlayerPollThread] = None
-    progress: Optional[Progress] = None
+    playerpoller: PlayerPollThread | None = None
+    progress: Progress | None = None
 
     def __init__(
         self,
@@ -84,7 +85,7 @@ class StreamRunner:
         self.output = output
         self.is_http = isinstance(output, HTTPOutput)
 
-        filename: Optional[Path] = None
+        filename: Path | None = None
 
         if isinstance(output, PlayerOutput):
             self.playerpoller = PlayerPollThread(stream, output)
@@ -97,7 +98,7 @@ class StreamRunner:
             elif output.record:
                 filename = output.record.filename
 
-        if filename and show_progress:
+        if filename and show_progress and sys.stderr:
             self.progress = Progress(sys.stderr, filename)
 
     def run(

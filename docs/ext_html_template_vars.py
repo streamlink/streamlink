@@ -1,4 +1,6 @@
-from typing import Any, Dict
+from __future__ import annotations
+
+from typing import Any
 
 from sphinx.addnodes import document
 from sphinx.application import Sphinx
@@ -11,7 +13,7 @@ def update_context(
     app: Sphinx,
     pagename: str,
     templatename: str,
-    context: Dict[str, Any],
+    context: dict[str, Any],
     doctree: document,
 ) -> None:
     for k, v in getattr(app.config, _CONFIG_VAR).items():

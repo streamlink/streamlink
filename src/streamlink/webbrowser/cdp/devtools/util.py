@@ -3,23 +3,31 @@
 # This file is generated from the CDP specification. If you need to make
 # changes, edit the generator and regenerate all modules.
 #
-# CDP version: v0.0.1156692
+# CDP version: v0.0.1359167
 
-import typing
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, Any
 
 
-T_JSON_DICT = typing.Dict[str, typing.Any]
+if TYPE_CHECKING:
+    from typing_extensions import TypeAlias
+
+
+T_JSON_DICT: TypeAlias = "dict[str, Any]"
 _event_parsers = {}
 
 
 def event_class(method):
     """A decorator that registers a class as an event class."""
+
     def decorate(cls):
         _event_parsers[method] = cls
         return cls
+
     return decorate
 
 
-def parse_json_event(json: T_JSON_DICT) -> typing.Any:
+def parse_json_event(json: T_JSON_DICT) -> Any:
     """Parse a JSON dictionary into a CDP event."""
     return _event_parsers[json["method"]].from_json(json["params"])

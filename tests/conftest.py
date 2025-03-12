@@ -1,7 +1,10 @@
+from __future__ import annotations
+
 import os
 import sys
+from collections.abc import Callable, Mapping
 from functools import partial
-from typing import Any, Callable, Dict, List, Tuple, Union
+from typing import Any
 
 import pytest
 import requests_mock as rm
@@ -9,7 +12,7 @@ import requests_mock as rm
 from streamlink.session import Streamlink
 
 
-_TEST_CONDITION_MARKERS: Dict[str, Union[Tuple[bool, str], Callable[[Any], Tuple[bool, str]]]] = {
+_TEST_CONDITION_MARKERS: Mapping[str, tuple[bool, str] | Callable[[Any], tuple[bool, str]]] = {
     "posix_only": (os.name == "posix", "only applicable on a POSIX OS"),
     "windows_only": (os.name == "nt", "only applicable on Windows"),
     "python": lambda *ver, **_: (  # pragma: no cover
@@ -42,7 +45,7 @@ def pytest_runtest_setup(item: pytest.Item):
     _check_test_condition(item)
 
 
-def pytest_collection_modifyitems(items: List[pytest.Item]):  # pragma: no cover
+def pytest_collection_modifyitems(items: list[pytest.Item]):  # pragma: no cover
     default = next((idx for idx, string in enumerate(_TEST_PRIORITIES) if string is None), sys.maxsize)
     priorities = {
         item: next(
@@ -54,7 +57,7 @@ def pytest_collection_modifyitems(items: List[pytest.Item]):  # pragma: no cover
             default,
         )
         for item in items
-    }
+    }  # fmt: skip
     items.sort(key=lambda item: priorities.get(item, default))
 
 
@@ -106,7 +109,7 @@ def requests_mock(requests_mock: rm.Mocker) -> rm.Mocker:
 
 
 @pytest.fixture()
-def os_environ(request: pytest.FixtureRequest, monkeypatch: pytest.MonkeyPatch) -> Dict[str, str]:
+def os_environ(request: pytest.FixtureRequest, monkeypatch: pytest.MonkeyPatch) -> dict[str, str]:
     class FakeEnviron(dict):
         def __setitem__(self, key, value):
             if key == "PYTEST_CURRENT_TEST":
@@ -123,10 +126,10 @@ def os_environ(request: pytest.FixtureRequest, monkeypatch: pytest.MonkeyPatch) 
 def _patch_trio_run():
     import trio  # noqa: PLC0415
 
-    _trio_run = trio.run
+    trio_run = trio.run
     # `strict_exception_groups` changed from False to True in `trio==0.25`:
     # Patch `trio.run()` and make older versions of trio behave like `trio>=0.25`
     # as pytest-trio doesn't allow setting custom `trio.run()` args/kwargs
     trio.run = partial(trio.run, strict_exception_groups=True)
     yield
-    trio.run = _trio_run
+    trio.run = trio_run

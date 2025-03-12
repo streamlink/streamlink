@@ -7,10 +7,11 @@ $metadata author
 $metadata title
 """
 
+from __future__ import annotations
+
 import logging
 import re
 import uuid
-from typing import Dict
 
 from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.api import validate
@@ -29,7 +30,7 @@ log = logging.getLogger(__name__)
 class Douyin(Plugin):
     _STATUS_LIVE = 2
 
-    QUALITY_WEIGHTS: Dict[str, int] = {}
+    QUALITY_WEIGHTS: dict[str, int] = {}
 
     @classmethod
     def stream_weight(cls, key):

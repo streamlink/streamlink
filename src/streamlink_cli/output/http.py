@@ -1,8 +1,9 @@
+from __future__ import annotations
+
 import socket
 from contextlib import suppress
 from http.server import BaseHTTPRequestHandler
 from io import BytesIO
-from typing import Optional
 
 from streamlink_cli.output.abc import Output
 
@@ -23,11 +24,11 @@ class HTTPRequest(BaseHTTPRequestHandler):
 class HTTPOutput(Output):
     socket: socket.socket
 
-    def __init__(self, host: Optional[str] = "127.0.0.1", port: int = 0) -> None:
+    def __init__(self, host: str | None = "127.0.0.1", port: int = 0) -> None:
         super().__init__()
         self.host = host
         self.port = port
-        self.conn: Optional[socket.socket] = None
+        self.conn: socket.socket | None = None
 
     @property
     def addresses(self):

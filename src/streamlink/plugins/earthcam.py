@@ -22,31 +22,36 @@ from streamlink.utils.url import update_scheme
 log = logging.getLogger(__name__)
 
 
-@pluginmatcher(re.compile(
-    r"https?://(?:www\.)?earthcam\.com/",
-))
+@pluginmatcher(
+    re.compile(r"https?://(?:www\.)?earthcam\.com/"),
+)
 class EarthCam(Plugin):
     def _get_streams(self):
-        data = self.session.http.get(self.url, schema=validate.Schema(
-            re.compile(r"""var\s+json_base\s*=\s*(?P<json>{.*?});""", re.DOTALL),
-            validate.none_or_all(
-                validate.get("json"),
-                validate.parse_json(),
-                {"cam": {
-                    str: {
-                        "live_type": str,
-                        "html5_streamingdomain": str,
-                        "html5_streampath": str,
-                        "group": str,
-                        "location": str,
-                        "title": str,
-                        "liveon": str,
-                        "defaulttab": str,
+        data = self.session.http.get(
+            self.url,
+            schema=validate.Schema(
+                re.compile(r"""var\s+json_base\s*=\s*(?P<json>{.*?});""", re.DOTALL),
+                validate.none_or_all(
+                    validate.get("json"),
+                    validate.parse_json(),
+                    {
+                        "cam": {
+                            str: {
+                                "live_type": str,
+                                "html5_streamingdomain": str,
+                                "html5_streampath": str,
+                                "group": str,
+                                "location": str,
+                                "title": str,
+                                "liveon": str,
+                                "defaulttab": str,
+                            },
+                        },
                     },
-                }},
-                validate.get("cam"),
+                    validate.get("cam"),
+                ),
             ),
-        ))
+        )
         if not data:
             return
 

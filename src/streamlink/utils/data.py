@@ -1,7 +1,9 @@
-from typing import Any, Dict, List, Union
+from __future__ import annotations
+
+from typing import Any
 
 
-def search_dict(data: Union[Dict, List], key: Any):
+def search_dict(data: dict | list, key: Any):
     """
     Search for a key in a nested dict, or list of nested dicts, and return the values.
 

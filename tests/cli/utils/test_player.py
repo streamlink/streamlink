@@ -1,5 +1,6 @@
+from __future__ import annotations
+
 from pathlib import Path
-from typing import List, Optional
 from unittest.mock import Mock, call, patch
 
 import pytest
@@ -31,8 +32,8 @@ class TestFindDefaultPlayer:
         request: pytest.FixtureRequest,
         monkeypatch: pytest.MonkeyPatch,
         which: Mock,
-        lookups: List[str],
-        expected: Optional[str],
+        lookups: list[str],
+        expected: str | None,
     ):
         monkeypatch.setattr("streamlink_cli.utils.player.is_win32", "win32" in request.function.__name__)
         monkeypatch.setattr("streamlink_cli.utils.player.is_darwin", "darwin" in request.function.__name__)
@@ -41,116 +42,144 @@ class TestFindDefaultPlayer:
         assert which.call_args_list == [call(path) for path in lookups]
 
     @pytest.mark.windows_only()
-    @pytest.mark.parametrize("_environ", [{
-        "PROGRAMFILES": "C:\\Program Files",
-        "PROGRAMFILES(X86)": "C:\\Program Files (x86)",
-        "PROGRAMW6432": "C:\\Program Files",
-    }], indirect=True)
-    @pytest.mark.parametrize(("which", "lookups", "expected"), [
-        pytest.param(
-            {"vlc.exe": "C:\\Program Files\\VideoLAN\\VLC\\vlc.exe"},
-            ["vlc.exe"],
-            Path("C:\\Program Files\\VideoLAN\\VLC\\vlc.exe"),
-            id="PATH lookup success",
-        ),
-        pytest.param(
-            {"C:\\Program Files (x86)\\VideoLAN\\VLC\\vlc.exe": "C:\\Program Files (x86)\\VideoLAN\\VLC\\vlc.exe"},
-            [
-                "vlc.exe",
-                "C:\\Program Files\\VideoLAN\\VLC\\vlc.exe",
-                "C:\\Program Files (x86)\\VideoLAN\\VLC\\vlc.exe",
-            ],
-            Path("C:\\Program Files (x86)\\VideoLAN\\VLC\\vlc.exe"),
-            id="fallback paths lookup success",
-        ),
-        pytest.param(
-            {},
-            [
-                "vlc.exe",
-                "C:\\Program Files\\VideoLAN\\VLC\\vlc.exe",
-                "C:\\Program Files (x86)\\VideoLAN\\VLC\\vlc.exe",
-            ],
-            None,
-            id="lookup failure",
-        ),
-    ], indirect=["which"])
+    @pytest.mark.parametrize(
+        "_environ",
+        [
+            {
+                "PROGRAMFILES": "C:\\Program Files",
+                "PROGRAMFILES(X86)": "C:\\Program Files (x86)",
+                "PROGRAMW6432": "C:\\Program Files",
+            },
+        ],
+        indirect=True,
+    )
+    @pytest.mark.parametrize(
+        ("which", "lookups", "expected"),
+        [
+            pytest.param(
+                {"vlc.exe": "C:\\Program Files\\VideoLAN\\VLC\\vlc.exe"},
+                ["vlc.exe"],
+                Path("C:\\Program Files\\VideoLAN\\VLC\\vlc.exe"),
+                id="PATH lookup success",
+            ),
+            pytest.param(
+                {"C:\\Program Files (x86)\\VideoLAN\\VLC\\vlc.exe": "C:\\Program Files (x86)\\VideoLAN\\VLC\\vlc.exe"},
+                [
+                    "vlc.exe",
+                    "C:\\Program Files\\VideoLAN\\VLC\\vlc.exe",
+                    "C:\\Program Files (x86)\\VideoLAN\\VLC\\vlc.exe",
+                ],
+                Path("C:\\Program Files (x86)\\VideoLAN\\VLC\\vlc.exe"),
+                id="fallback paths lookup success",
+            ),
+            pytest.param(
+                {},
+                [
+                    "vlc.exe",
+                    "C:\\Program Files\\VideoLAN\\VLC\\vlc.exe",
+                    "C:\\Program Files (x86)\\VideoLAN\\VLC\\vlc.exe",
+                ],
+                None,
+                id="lookup failure",
+            ),
+        ],
+        indirect=["which"],
+    )
     def test_win32(self):
         pass
 
     @pytest.mark.windows_only()
-    @pytest.mark.parametrize("_environ", [{
-        "PROGRAMFILES": "",
-        "PROGRAMFILES(X86)": "",
-        "PROGRAMW6432": "",
-    }], indirect=True)
-    @pytest.mark.parametrize(("which", "lookups", "expected"), [
-        pytest.param(
-            {"vlc.exe": "C:\\Program Files\\VideoLAN\\VLC\\vlc.exe"},
-            ["vlc.exe"],
-            Path("C:\\Program Files\\VideoLAN\\VLC\\vlc.exe"),
-            id="PATH lookup success",
-        ),
-        pytest.param(
-            {},
-            ["vlc.exe"],
-            None,
-            id="no fallback paths",
-        ),
-    ], indirect=["which"])
+    @pytest.mark.parametrize(
+        "_environ",
+        [
+            {
+                "PROGRAMFILES": "",
+                "PROGRAMFILES(X86)": "",
+                "PROGRAMW6432": "",
+            },
+        ],
+        indirect=True,
+    )
+    @pytest.mark.parametrize(
+        ("which", "lookups", "expected"),
+        [
+            pytest.param(
+                {"vlc.exe": "C:\\Program Files\\VideoLAN\\VLC\\vlc.exe"},
+                ["vlc.exe"],
+                Path("C:\\Program Files\\VideoLAN\\VLC\\vlc.exe"),
+                id="PATH lookup success",
+            ),
+            pytest.param(
+                {},
+                ["vlc.exe"],
+                None,
+                id="no fallback paths",
+            ),
+        ],
+        indirect=["which"],
+    )
     def test_win32_no_env_vars(self):
         pass
 
     @pytest.mark.posix_only()
     @pytest.mark.usefixtures("_fakehome")
     @pytest.mark.parametrize("_fakehome", ["/Users/fake"], indirect=True)
-    @pytest.mark.parametrize(("which", "lookups", "expected"), [
-        pytest.param(
-            {"vlc": "/usr/bin/vlc"},
-            ["VLC", "vlc"],
-            Path("/usr/bin/vlc"),
-            id="PATH lookup success",
-        ),
-        pytest.param(
-            {"/Applications/VLC.app/Contents/MacOS/VLC": "/Applications/VLC.app/Contents/MacOS/VLC"},
-            [
-                "VLC",
-                "vlc",
-                "/Applications/VLC.app/Contents/MacOS/VLC",
-            ],
-            Path("/Applications/VLC.app/Contents/MacOS/VLC"),
-            id="fallback paths lookup success",
-        ),
-        pytest.param(
-            {},
-            [
-                "VLC",
-                "vlc",
-                "/Applications/VLC.app/Contents/MacOS/VLC",
-                "/Applications/VLC.app/Contents/MacOS/vlc",
-                "/Users/fake/Applications/VLC.app/Contents/MacOS/VLC",
-                "/Users/fake/Applications/VLC.app/Contents/MacOS/vlc",
-            ],
-            None,
-            id="lookup failure",
-        ),
-    ], indirect=["which"])
+    @pytest.mark.parametrize(
+        ("which", "lookups", "expected"),
+        [
+            pytest.param(
+                {"vlc": "/usr/bin/vlc"},
+                ["VLC", "vlc"],
+                Path("/usr/bin/vlc"),
+                id="PATH lookup success",
+            ),
+            pytest.param(
+                {"/Applications/VLC.app/Contents/MacOS/VLC": "/Applications/VLC.app/Contents/MacOS/VLC"},
+                [
+                    "VLC",
+                    "vlc",
+                    "/Applications/VLC.app/Contents/MacOS/VLC",
+                ],
+                Path("/Applications/VLC.app/Contents/MacOS/VLC"),
+                id="fallback paths lookup success",
+            ),
+            pytest.param(
+                {},
+                [
+                    "VLC",
+                    "vlc",
+                    "/Applications/VLC.app/Contents/MacOS/VLC",
+                    "/Applications/VLC.app/Contents/MacOS/vlc",
+                    "/Users/fake/Applications/VLC.app/Contents/MacOS/VLC",
+                    "/Users/fake/Applications/VLC.app/Contents/MacOS/vlc",
+                ],
+                None,
+                id="lookup failure",
+            ),
+        ],
+        indirect=["which"],
+    )
     def test_darwin(self):
         pass
 
     @pytest.mark.posix_only()
-    @pytest.mark.parametrize(("which", "lookups", "expected"), [
-        pytest.param(
-            {"vlc": "/usr/bin/vlc"},
-            ["vlc"],
-            Path("/usr/bin/vlc"),
-            id="lookup success",
-        ),
-        pytest.param(
-            {},
-            ["vlc"],
-            None,
-            id="lookup failure",
-        ),
-    ], indirect=["which"])
+    @pytest.mark.parametrize(
+        ("which", "lookups", "expected"),
+        [
+            pytest.param(
+                {"vlc": "/usr/bin/vlc"},
+                ["vlc"],
+                Path("/usr/bin/vlc"),
+                id="lookup success",
+            ),
+            pytest.param(
+                {},
+                ["vlc"],
+                None,
+                id="lookup failure",
+            ),
+        ],
+        indirect=["which"],
+    )
     def test_other(self):
         pass

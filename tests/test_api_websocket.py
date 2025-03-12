@@ -10,14 +10,17 @@ from streamlink.session.http_useragents import FIREFOX
 from tests.testutils.handshake import Handshake
 
 
-@pytest.mark.parametrize(("name", "value"), [
-    ("OPCODE_CONT", ABNF.OPCODE_CONT),
-    ("OPCODE_TEXT", ABNF.OPCODE_TEXT),
-    ("OPCODE_BINARY", ABNF.OPCODE_BINARY),
-    ("OPCODE_CLOSE", ABNF.OPCODE_CLOSE),
-    ("OPCODE_PING", ABNF.OPCODE_PING),
-    ("OPCODE_PONG", ABNF.OPCODE_PONG),
-])
+@pytest.mark.parametrize(
+    ("name", "value"),
+    [
+        ("OPCODE_CONT", ABNF.OPCODE_CONT),
+        ("OPCODE_TEXT", ABNF.OPCODE_TEXT),
+        ("OPCODE_BINARY", ABNF.OPCODE_BINARY),
+        ("OPCODE_CLOSE", ABNF.OPCODE_CLOSE),
+        ("OPCODE_PING", ABNF.OPCODE_PING),
+        ("OPCODE_PONG", ABNF.OPCODE_PONG),
+    ],
+)
 def test_opcode_export(name, value):
     assert getattr(WebsocketClient, name) == value
 
@@ -37,10 +40,13 @@ class TestWebsocketClient:
         with patch("streamlink.plugin.api.websocket.certify_where", side_effect=Mock(return_value="/path/to/cacert.pem")):
             yield WebsocketClient(session, "wss://localhost:0", **getattr(request, "param", {}))
 
-    @pytest.mark.parametrize(("level", "expected"), [
-        pytest.param(DEBUG, [], id="debug"),
-        pytest.param(TRACE, [call(True, handler=ANY)], id="trace"),
-    ])
+    @pytest.mark.parametrize(
+        ("level", "expected"),
+        [
+            pytest.param(DEBUG, [], id="debug"),
+            pytest.param(TRACE, [call(True, handler=ANY)], id="trace"),
+        ],
+    )
     def test_log(
         self,
         monkeypatch: pytest.MonkeyPatch,
@@ -55,33 +61,41 @@ class TestWebsocketClient:
         WebsocketClient(session, "wss://localhost:0")
         assert mock_enable_trace.call_args_list == expected
 
-    @pytest.mark.parametrize(("client", "expected"), [
-        pytest.param({}, FIREFOX, id="default"),
-        pytest.param({"header": ["User-Agent: foo"]}, "foo", id="header list"),
-        pytest.param({"header": {"User-Agent": "bar"}}, "bar", id="header dict"),
-    ], indirect=["client"])
+    @pytest.mark.parametrize(
+        ("client", "expected"),
+        [
+            pytest.param({}, FIREFOX, id="default"),
+            pytest.param({"header": ["User-Agent: foo"]}, "foo", id="header list"),
+            pytest.param({"header": {"User-Agent": "bar"}}, "bar", id="header dict"),
+        ],
+        indirect=["client"],
+    )
     def test_user_agent(self, client: FakeWebsocketClient, websocketapp: Mock, expected: str):
         assert [arg[1].get("header", []) for arg in websocketapp.call_args_list] == [[f"User-Agent: {expected}"]]
 
-    @pytest.mark.parametrize(("session", "client"), [
-        (
-            {
-                "http-proxy": "https://username:password@hostname:1234",
-            },
-            {
-                "subprotocols": ["sub1", "sub2"],
-                "cookie": "cookie",
-                "sockopt": ("sockopt1", "sockopt2"),
-                "sslopt": {"ssloptkey": "ssloptval"},
-                "host": "customhost",
-                "origin": "customorigin",
-                "suppress_origin": True,
-                "ping_interval": 30,
-                "ping_timeout": 4,
-                "ping_payload": "ping",
-            },
-        ),
-    ], indirect=["session", "client"])
+    @pytest.mark.parametrize(
+        ("session", "client"),
+        [
+            (
+                {
+                    "http-proxy": "https://username:password@hostname:1234",
+                },
+                {
+                    "subprotocols": ["sub1", "sub2"],
+                    "cookie": "cookie",
+                    "sockopt": ("sockopt1", "sockopt2"),
+                    "sslopt": {"ssloptkey": "ssloptval"},
+                    "host": "customhost",
+                    "origin": "customorigin",
+                    "suppress_origin": True,
+                    "ping_interval": 30,
+                    "ping_timeout": 4,
+                    "ping_payload": "ping",
+                },
+            ),
+        ],
+        indirect=["session", "client"],
+    )
     def test_args_and_proxy(self, session: Streamlink, client: FakeWebsocketClient, websocketapp: Mock):
         assert websocketapp.call_args_list == [
             call(
@@ -142,7 +156,7 @@ class TestWebsocketClient:
         assert mock_ws.send.call_args_list == [
             call("foo", ABNF.OPCODE_TEXT),
             call(b"foo", ABNF.OPCODE_BINARY),
-            call("{\"foo\":\"bar\",\"baz\":\"qux\"}", ABNF.OPCODE_TEXT),
+            call('{"foo":"bar","baz":"qux"}', ABNF.OPCODE_TEXT),
         ]
 
     def test_close(self, session: Streamlink):

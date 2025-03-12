@@ -1,7 +1,10 @@
+from __future__ import annotations
+
 import logging
 import warnings
+from collections.abc import Mapping
 from functools import lru_cache
-from typing import Any, Dict, Optional, Tuple, Type
+from typing import Any
 
 import streamlink.compat  # noqa: F401
 from streamlink import __version__
@@ -28,7 +31,7 @@ class Streamlink:
 
     def __init__(
         self,
-        options: Optional[Dict[str, Any]] = None,
+        options: Mapping[str, Any] | Options | None = None,
         *,
         plugins_builtin: bool = True,
         plugins_lazy: bool = True,
@@ -86,7 +89,7 @@ class Streamlink:
         self,
         url: str,
         follow_redirect: bool = True,
-    ) -> Tuple[str, Type[Plugin], str]:
+    ) -> tuple[str, type[Plugin], str]:
         """
         Attempts to find a plugin that can use this URL.
 
@@ -96,7 +99,8 @@ class Streamlink:
 
         :param url: a URL to match against loaded plugins
         :param follow_redirect: follow redirects
-        :raises NoPluginError: on plugin resolve failure
+        :raise NoPluginError: on plugin resolve failure
+        :return: A tuple of plugin name, plugin class and resolved URL
         """
 
         url = update_scheme("https://", url, force=False)
@@ -119,19 +123,20 @@ class Streamlink:
 
         raise NoPluginError
 
-    def resolve_url_no_redirect(self, url: str) -> Tuple[str, Type[Plugin], str]:
+    def resolve_url_no_redirect(self, url: str) -> tuple[str, type[Plugin], str]:
         """
         Attempts to find a plugin that can use this URL.
 
         The default protocol (https) will be prefixed to the URL if not specified.
 
         :param url: a URL to match against loaded plugins
-        :raises NoPluginError: on plugin resolve failure
+        :raise NoPluginError: on plugin resolve failure
+        :return: A tuple of plugin name, plugin class and resolved URL
         """
 
         return self.resolve_url(url, follow_redirect=False)
 
-    def streams(self, url: str, options: Optional[Options] = None, **params):
+    def streams(self, url: str, options: Options | None = None, **params):
         """
         Attempts to find a plugin and extracts streams from the *url* if a plugin was found.
 

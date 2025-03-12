@@ -165,9 +165,7 @@ class NicoLive(Plugin):
     STREAM_READY_TIMEOUT = 6
     LOGIN_URL = "https://account.nicovideo.jp/login/redirector"
     LOGIN_URL_PARAMS = {
-        "show_button_twitter": 1,
-        "show_button_facebook": 1,
-        "next_url": "/",
+        "site": "niconico",
     }
 
     wsclient: NicoLiveWsClient
@@ -220,12 +218,15 @@ class NicoLive(Plugin):
         return self.wsclient.hls_stream_url
 
     def get_data(self):
-        return self.session.http.get(self.url, schema=validate.Schema(
-            validate.parse_html(),
-            validate.xml_find(".//script[@id='embedded-data'][@data-props]"),
-            validate.get("data-props"),
-            validate.parse_json(),
-        ))
+        return self.session.http.get(
+            self.url,
+            schema=validate.Schema(
+                validate.parse_html(),
+                validate.xml_find(".//script[@id='embedded-data'][@data-props]"),
+                validate.get("data-props"),
+                validate.parse_json(),
+            ),
+        )
 
     @staticmethod
     def find_metadata(data):

@@ -18,9 +18,9 @@ from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.stream.hls import HLSStream
 
 
-@pluginmatcher(re.compile(
-    r"https?://radiko\.jp/(#!/)?(?P<state>live|ts)/(?P<station_id>[a-zA-Z0-9-]+)/?(?P<start_at>\d+)?",
-))
+@pluginmatcher(
+    re.compile(r"https?://radiko\.jp/(#!/)?(?P<state>live|ts)/(?P<station_id>[a-zA-Z0-9-]+)/?(?P<start_at>\d+)?"),
+)
 class Radiko(Plugin):
     _api_auth_1 = "https://radiko.jp/v2/api/auth1"
     _api_auth_2 = "https://radiko.jp/v2/api/auth2"
@@ -83,7 +83,7 @@ class Radiko(Plugin):
         token = r.headers.get("x-radiko-authtoken")
         offset = int(r.headers.get("x-radiko-keyoffset"))
         length = int(r.headers.get("x-radiko-keylength"))
-        partial_key = base64.b64encode(self._auth_key[offset:offset + length].encode("ascii")).decode("utf-8")
+        partial_key = base64.b64encode(self._auth_key[offset : offset + length].encode("ascii")).decode("utf-8")
         headers = {
             "x-radiko-authtoken": token,
             "x-radiko-device": "pc",

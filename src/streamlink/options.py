@@ -1,22 +1,11 @@
+from __future__ import annotations
+
 import argparse
-from typing import (
-    Any,
-    Callable,
-    ClassVar,
-    Dict,
-    Iterable,
-    Iterator,
-    List,
-    Literal,
-    Mapping,
-    Optional,
-    Tuple,
-    TypeVar,
-    Union,
-)
+from collections.abc import Callable, Iterable, Iterator, Mapping
+from typing import Any, ClassVar, Dict, Literal, TypeVar
 
 
-class Options:
+class Options(Dict[str, Any]):
     """
     For storing options to be used by the Streamlink session and plugins, with default values.
 
@@ -24,35 +13,37 @@ class Options:
           This means that the keys ``example_one`` and ``example-one`` are equivalent.
     """
 
+    #: Optional getter mapping for :class:`Options` subclasses
     _MAP_GETTERS: ClassVar[Mapping[str, Callable[[Any, str], Any]]] = {}
-    """Optional getter mapping for :class:`Options` subclasses"""
 
+    #: Optional setter mapping for :class:`Options` subclasses
     _MAP_SETTERS: ClassVar[Mapping[str, Callable[[Any, str, Any], None]]] = {}
-    """Optional setter mapping for :class:`Options` subclasses"""
 
-    def __init__(self, defaults: Optional[Mapping[str, Any]] = None):
-        if not defaults:
-            defaults = {}
-
-        self.defaults = self._normalize_dict(defaults)
-        self.options = self.defaults.copy()
+    def __init__(self, defaults: Mapping[str, Any] | None = None):
+        super().__init__()
+        self._defaults = self._normalize_dict(defaults or {})
+        super().update(self._defaults)
 
     @staticmethod
     def _normalize_key(name: str) -> str:
         return name.replace("_", "-")
 
     @classmethod
-    def _normalize_dict(cls, src: Mapping[str, Any]) -> Dict[str, Any]:
+    def _normalize_dict(cls, src: Mapping[str, Any]) -> dict[str, Any]:
         normalize_key = cls._normalize_key
         return {normalize_key(key): value for key, value in src.items()}
+
+    @property
+    def defaults(self):
+        return self._defaults
 
     def clear(self) -> None:
         """Restore default options"""
 
-        self.options.clear()
-        self.options.update(self.defaults.copy())
+        super().clear()
+        self.update(self._defaults)
 
-    def get(self, key: str) -> Any:
+    def get(self, key: str) -> Any:  # type: ignore[override]
         """Get the stored value of a specific key"""
 
         normalized = self._normalize_key(key)
@@ -60,13 +51,13 @@ class Options:
         if method is not None:
             return method(self, normalized)
         else:
-            return self.options.get(normalized)
+            return super().get(normalized)
 
     def get_explicit(self, key: str) -> Any:
         """Get the stored value of a specific key and ignore any get-mappings"""
 
         normalized = self._normalize_key(key)
-        return self.options.get(normalized)
+        return super().get(normalized)
 
     def set(self, key: str, value: Any) -> None:
         """Set the value for a specific key"""
@@ -76,43 +67,26 @@ class Options:
         if method is not None:
             method(self, normalized, value)
         else:
-            self.options[normalized] = value
+            super().__setitem__(normalized, value)
 
     def set_explicit(self, key: str, value: Any) -> None:
         """Set the value for a specific key and ignore any set-mappings"""
 
         normalized = self._normalize_key(key)
-        self.options[normalized] = value
+        super().__setitem__(normalized, value)
 
-    def update(self, options: Mapping[str, Any]) -> None:
+    # noinspection PyMethodOverriding
+    def update(self, options: Mapping[str, Any]) -> None:  # type: ignore[override]
         """Merge options"""
 
         for key, value in options.items():
             self.set(key, value)
-
-    def keys(self):
-        return self.options.keys()
-
-    def values(self):
-        return self.options.values()
-
-    def items(self):
-        return self.options.items()
 
     def __getitem__(self, item):
         return self.get(item)
 
     def __setitem__(self, item, value):
         return self.set(item, value)
-
-    def __contains__(self, item):
-        return self.options.__contains__(item)
-
-    def __len__(self):
-        return self.options.__len__()
-
-    def __iter__(self):
-        return self.options.__iter__()
 
 
 _TChoices = TypeVar("_TChoices", bound=Iterable)
@@ -124,21 +98,21 @@ class Argument:
         self,
         name: str,
         # `ArgumentParser.add_argument()` keywords
-        action: Optional[str] = None,
-        nargs: Optional[Union[int, Literal["?", "*", "+"]]] = None,
+        action: str | None = None,
+        nargs: int | Literal["?", "*", "+"] | None = None,
         const: Any = None,
         default: Any = None,
-        type: Optional[Callable[[Any], Union[_TChoices, Any]]] = None,  # noqa: A002
-        choices: Optional[_TChoices] = None,
+        type: Callable[[Any], _TChoices | Any] | None = None,  # noqa: A002
+        choices: _TChoices | None = None,
         required: bool = False,
-        help: Optional[str] = None,  # noqa: A002
-        metavar: Optional[Union[str, List[str], Tuple[str, ...]]] = None,
-        dest: Optional[str] = None,
+        help: str | None = None,  # noqa: A002
+        metavar: str | list[str] | tuple[str, ...] | None = None,
+        dest: str | None = None,
         # additional `Argument()` keywords
-        requires: Optional[Union[str, List[str], Tuple[str, ...]]] = None,
-        prompt: Optional[str] = None,
+        requires: str | list[str] | tuple[str, ...] | None = None,
+        prompt: str | None = None,
         sensitive: bool = False,
-        argument_name: Optional[str] = None,
+        argument_name: str | None = None,
     ):
         """
         Accepts most of the parameters accepted by :meth:`argparse.ArgumentParser.add_argument()`, except that
@@ -174,20 +148,20 @@ class Argument:
         self.nargs = nargs
         self.const = const
         self.type = type
-        self.choices: Optional[Tuple[Any, ...]] = tuple(choices) if choices else None
+        self.choices: tuple[Any, ...] | None = tuple(choices) if choices else None
         self.required = required
         # argparse compares the object identity of argparse.SUPPRESS
         self.help = argparse.SUPPRESS if help == argparse.SUPPRESS else help
-        self.metavar: Optional[Union[str, Tuple[str, ...]]] = (
+        self.metavar: str | tuple[str, ...] | None = (
             tuple(metavar)
             if metavar is not None and not isinstance(metavar, str)
             else metavar
-        )
+        )  # fmt: skip
 
         self._default = default
         self._dest = self._normalize_dest(dest) if dest else None
 
-        self.requires: Tuple[str, ...] = (
+        self.requires: tuple[str, ...] = (
             tuple(requires)
             if requires is not None and not isinstance(requires, str)
             else ((requires,) if requires is not None else ())
@@ -195,6 +169,14 @@ class Argument:
         self.prompt = prompt
         self.sensitive = sensitive
         self._argument_name = self._normalize_name(argument_name) if argument_name else None
+
+        # special cases for storing the default value to check whether a plugin argument was set or not
+        if action == "store_true":
+            self.const = True
+            self._default = False if default is None else default
+        elif action == "store_false":
+            self.const = False
+            self._default = True if default is None else default
 
     @staticmethod
     def _normalize_name(name: str) -> str:
@@ -214,7 +196,7 @@ class Argument:
         return self._normalize_dest(self._name(plugin))
 
     @property
-    def dest(self):
+    def dest(self) -> str:
         return self._dest or self._normalize_dest(self.name)
 
     @property
@@ -240,7 +222,11 @@ class Argument:
             name: getattr(self, attr)
             for name, attr in self._ARGPARSE_ARGUMENT_KEYWORDS.items()
             # don't pass keywords with ``None`` values to ``ArgumentParser.add_argument()``
-            if getattr(self, attr) is not None
+            if (
+                getattr(self, attr) is not None
+                # don't include the const option value if the action is store_true or store_false
+                and not (name == "const" and self.action in ("store_true", "store_false"))
+            )
         }
 
     def __hash__(self):
@@ -266,7 +252,7 @@ class Argument:
         return isinstance(other, self.__class__) and hash(self) == hash(other)
 
 
-class Arguments:
+class Arguments(Dict[str, Argument]):
     """
     A collection of :class:`Argument` instances for :class:`Plugin <streamlink.plugin.Plugin>` classes.
 
@@ -275,23 +261,23 @@ class Arguments:
 
     def __init__(self, *args):
         # keep the initial arguments of the constructor in reverse order (see __iter__())
-        self.arguments = {arg.name: arg for arg in reversed(args)}
+        super().__init__({arg.name: arg for arg in reversed(args)})
 
-    def __iter__(self) -> Iterator[Argument]:
+    def __iter__(self) -> Iterator[Argument]:  # type: ignore[override]
         # iterate in reverse order due to add() being called by multiple pluginargument decorators in reverse order
-        return reversed(self.arguments.values())
+        return reversed(self.values())
 
     def __hash__(self):
-        return hash(tuple(self.arguments.items()))
+        return hash(tuple(self.items()))
 
     def __eq__(self, other):
         return isinstance(other, self.__class__) and hash(self) == hash(other)
 
-    def add(self, argument: Argument) -> None:
-        self.arguments[argument.name] = argument
+    def __ne__(self, other):
+        return not self.__eq__(other)
 
-    def get(self, name: str) -> Optional[Argument]:
-        return self.arguments.get(name)
+    def add(self, argument: Argument) -> None:
+        self[argument.name] = argument
 
     def requires(self, name: str) -> Iterator[Argument]:
         """
@@ -300,7 +286,7 @@ class Arguments:
 
         results = {name}
         argument = self.get(name)
-        for reqname in (argument.requires if argument else []):
+        for reqname in argument.requires if argument else []:
             required = self.get(reqname)
             if not required:
                 raise KeyError(f"{reqname} is not a valid argument for this plugin")

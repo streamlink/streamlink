@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import logging
 import os
 import re
@@ -5,11 +7,12 @@ import shlex
 import subprocess
 import sys
 import warnings
+from collections.abc import Mapping, Sequence
 from contextlib import suppress
 from pathlib import Path
 from shutil import which
 from time import sleep
-from typing import ClassVar, Dict, List, Mapping, Optional, Sequence, TextIO, Tuple, Type, Union
+from typing import ClassVar, TextIO
 
 from streamlink.compat import is_win32
 from streamlink.exceptions import StreamlinkWarning
@@ -24,16 +27,16 @@ log = logging.getLogger("streamlink.cli.output")
 
 
 class PlayerArgs:
-    EXECUTABLES: ClassVar[List[re.Pattern]] = []
+    EXECUTABLES: ClassVar[list[re.Pattern]] = []
 
     def __init__(
         self,
         path: Path,
         args: str = "",
-        title: Optional[str] = None,
-        filename: Optional[str] = None,
-        namedpipe: Optional[NamedPipeBase] = None,
-        http: Optional[HTTPOutput] = None,
+        title: str | None = None,
+        filename: str | None = None,
+        namedpipe: NamedPipeBase | None = None,
+        http: HTTPOutput | None = None,
     ):
         self.path = path
         self.args = args
@@ -51,7 +54,7 @@ class PlayerArgs:
         else:
             self._input = self.get_stdin()
 
-    def build(self) -> List[str]:
+    def build(self) -> list[str]:
         args_title = []
         if self.title is not None:
             args_title.extend(self.get_title(self.title))
@@ -86,12 +89,12 @@ class PlayerArgs:
     def get_http(self, http: HTTPOutput) -> str:
         return http.url
 
-    def get_title(self, title: str) -> List[str]:
+    def get_title(self, title: str) -> list[str]:
         return []
 
 
 class PlayerArgsVLC(PlayerArgs):
-    EXECUTABLES: ClassVar[List[re.Pattern]] = [
+    EXECUTABLES: ClassVar[list[re.Pattern]] = [
         re.compile(r"^vlc$", re.IGNORECASE),
     ]
 
@@ -101,16 +104,14 @@ class PlayerArgsVLC(PlayerArgs):
 
         return super().get_namedpipe(namedpipe)
 
-    def get_title(self, title) -> List[str]:
-        # allow escaping with \$: see https://wiki.videolan.org/Documentation:Format_String/
-        # TODO: remove this feature
-        title = title.replace("$", "$$").replace(r"\$$", "$")
+    def get_title(self, title) -> list[str]:
+        title = title.replace("$", "$$")
 
         return ["--input-title-format", title]
 
 
 class PlayerArgsMPV(PlayerArgs):
-    EXECUTABLES: ClassVar[List[re.Pattern]] = [
+    EXECUTABLES: ClassVar[list[re.Pattern]] = [
         re.compile(r"^mpv$", re.IGNORECASE),
     ]
 
@@ -120,16 +121,16 @@ class PlayerArgsMPV(PlayerArgs):
 
         return super().get_namedpipe(namedpipe)
 
-    def get_title(self, title: str) -> List[str]:
+    def get_title(self, title: str) -> list[str]:
         return [f"--force-media-title={title}"]
 
 
 class PlayerArgsPotplayer(PlayerArgs):
-    EXECUTABLES: ClassVar[List[re.Pattern]] = [
+    EXECUTABLES: ClassVar[list[re.Pattern]] = [
         re.compile(r"^potplayer(?:mini(?:64)?)?$", re.IGNORECASE),
     ]
 
-    def get_title(self, title: str) -> List[str]:
+    def get_title(self, title: str) -> list[str]:
         if self._input != "-":
             # PotPlayer CLI help:
             # "You can specify titles for URLs by separating them with a backslash (\) at the end of URLs."
@@ -144,30 +145,30 @@ class PlayerOutput(Output):
     PLAYER_ARGS_INPUT = "playerinput"
     PLAYER_ARGS_TITLE = "playertitleargs"
 
-    PLAYERS: ClassVar[Dict[str, Type[PlayerArgs]]] = {
+    PLAYERS: ClassVar[Mapping[str, type[PlayerArgs]]] = {
         "vlc": PlayerArgsVLC,
         "mpv": PlayerArgsMPV,
         "potplayer": PlayerArgsPotplayer,
     }
 
     player: subprocess.Popen
-    stdin: Union[int, TextIO]
-    stdout: Union[int, TextIO]
-    stderr: Union[int, TextIO]
+    stdin: int | TextIO
+    stdout: int | TextIO
+    stderr: int | TextIO
 
     def __init__(
         self,
         path: Path,
         args: str = "",
-        env: Optional[Sequence[Tuple[str, str]]] = None,
+        env: Sequence[tuple[str, str]] | None = None,
         quiet: bool = True,
         kill: bool = True,
         call: bool = False,
-        filename: Optional[str] = None,
-        namedpipe: Optional[NamedPipeBase] = None,
-        http: Optional[HTTPOutput] = None,
-        record: Optional[FileOutput] = None,
-        title: Optional[str] = None,
+        filename: str | None = None,
+        namedpipe: NamedPipeBase | None = None,
+        http: HTTPOutput | None = None,
+        record: FileOutput | None = None,
+        title: str | None = None,
     ):
         super().__init__()
 
@@ -231,7 +232,7 @@ class PlayerOutput(Output):
         playerpath = args[0]
         args[0] = which(playerpath)
         if not args[0]:
-            if playerpath[:1] in ("\"", "'"):
+            if playerpath[:1] in ('"', "'"):
                 warnings.warn(
                     "\n".join([
                         "The --player argument has been changed and now only takes player path values:",
@@ -254,7 +255,7 @@ class PlayerOutput(Output):
         else:
             self._open_subprocess(args)
 
-    def _open_call(self, args: List[str]):
+    def _open_call(self, args: list[str]):
         log.debug(f"Calling: {args!r}{f', env: {self.env!r}' if self.env else ''}")
 
         environ = dict(os.environ)
@@ -267,7 +268,7 @@ class PlayerOutput(Output):
             stderr=self.stderr,
         )
 
-    def _open_subprocess(self, args: List[str]):
+    def _open_subprocess(self, args: list[str]):
         log.debug(f"Opening subprocess: {args!r}{f', env: {self.env!r}' if self.env else ''}")
 
         environ = dict(os.environ)

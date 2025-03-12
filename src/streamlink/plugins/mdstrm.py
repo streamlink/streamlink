@@ -7,6 +7,7 @@ $type live
 $metadata id
 $metadata title
 """
+
 import logging
 import re
 from urllib.parse import urlparse
@@ -20,23 +21,23 @@ from streamlink.utils.url import update_scheme
 log = logging.getLogger(__name__)
 
 
-@pluginmatcher(re.compile(
-    r"https://(?:www\.)?latina\.pe/tvenvivo",
-))
-@pluginmatcher(re.compile(
-    r"https://saltillo\.multimedios\.com/video",
-))
-@pluginmatcher(re.compile(
-    r"https://mdstrm\.com/live-stream/\w+",
-))
+@pluginmatcher(
+    re.compile(r"https://(?:www\.)?latina\.pe/tvenvivo"),
+)
+@pluginmatcher(
+    re.compile(r"https://saltillo\.multimedios\.com/video"),
+)
+@pluginmatcher(
+    re.compile(r"https://mdstrm\.com/live-stream/\w+"),
+)
 class MDStrm(Plugin):
     @staticmethod
     def get_script_str(root, search_string, custom_pattern=None, custom_schema=None):
         if custom_pattern:
             pattern = custom_pattern
         else:
-            pattern = fr"{search_string}\s*=\s*'([^']+)';"
-        _schema = validate.Schema(
+            pattern = rf"{search_string}\s*=\s*'([^']+)';"
+        schema = validate.Schema(
             validate.xml_xpath_string(
                 ".//script[@type='text/javascript'][contains(text(),$search_string)]/text()",
                 search_string=search_string,
@@ -46,15 +47,15 @@ class MDStrm(Plugin):
                 validate.none_or_all(validate.get(1)),
             ),
         )
-        _string = _schema.validate(root)
-        if not _string:
+        string = schema.validate(root)
+        if not string:
             log.debug(f"Failed to find {search_string}")
         if custom_schema:
             try:
-                _string = custom_schema.validate(_string)
+                string = custom_schema.validate(string)
             except ValueError:
                 pass
-        return _string
+        return string
 
     def _get_streams(self):
         p_netloc = urlparse(self.url).netloc

@@ -1,7 +1,9 @@
+from __future__ import annotations
+
 from contextlib import nullcontext
 from pathlib import Path, PurePosixPath, PureWindowsPath
 from signal import SIGTERM
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 import pytest
 import requests_mock as rm
@@ -16,33 +18,43 @@ from streamlink.webbrowser.exceptions import WebbrowserError
 
 
 class TestInit:
-    @pytest.mark.parametrize(("executable", "resolve_executable", "raises"), [
-        pytest.param(
-            None,
-            None,
-            pytest.raises(WebbrowserError, match="^Could not find Chromium-based web browser executable: Please set the path "),
-            id="Failure with unset path",
-        ),
-        pytest.param(
-            "custom",
-            None,
-            pytest.raises(WebbrowserError, match="^Invalid web browser executable: custom$"),
-            id="Failure with custom path",
-        ),
-        pytest.param(
-            None,
-            "default",
-            nullcontext(),
-            id="Success with default path",
-        ),
-        pytest.param(
-            "custom",
-            "custom",
-            nullcontext(),
-            id="Success with custom path",
-        ),
-    ], indirect=["resolve_executable"])
-    def test_resolve_executable(self, resolve_executable, executable: Optional[str], raises: nullcontext):
+    @pytest.mark.parametrize(
+        ("executable", "resolve_executable", "raises"),
+        [
+            pytest.param(
+                None,
+                None,
+                pytest.raises(
+                    WebbrowserError,
+                    match=r"^Could not find Chromium-based web browser executable: Please set the path ",
+                ),
+                id="Failure with unset path",
+            ),
+            pytest.param(
+                "custom",
+                None,
+                pytest.raises(
+                    WebbrowserError,
+                    match=r"^Invalid web browser executable: custom$",
+                ),
+                id="Failure with custom path",
+            ),
+            pytest.param(
+                None,
+                "default",
+                nullcontext(),
+                id="Success with default path",
+            ),
+            pytest.param(
+                "custom",
+                "custom",
+                nullcontext(),
+                id="Success with custom path",
+            ),
+        ],
+        indirect=["resolve_executable"],
+    )
+    def test_resolve_executable(self, resolve_executable, executable: str | None, raises: nullcontext):
         with raises:
             ChromiumWebbrowser(executable=executable)
 
@@ -52,11 +64,14 @@ class TestFallbacks:
         monkeypatch.setattr("streamlink.webbrowser.chromium.is_win32", True)
         monkeypatch.setattr("streamlink.webbrowser.chromium.is_darwin", False)
         monkeypatch.setattr("streamlink.webbrowser.chromium.Path", PureWindowsPath)
-        monkeypatch.setattr("os.getenv", {
-            "PROGRAMFILES": "C:\\Program Files",
-            "PROGRAMFILES(X86)": "C:\\Program Files (x86)",
-            "LOCALAPPDATA": "C:\\Users\\user\\AppData\\Local",
-        }.get)
+        monkeypatch.setattr(
+            "os.getenv",
+            {
+                "PROGRAMFILES": "C:\\Program Files",
+                "PROGRAMFILES(X86)": "C:\\Program Files (x86)",
+                "LOCALAPPDATA": "C:\\Users\\user\\AppData\\Local",
+            }.get,
+        )
         assert ChromiumWebbrowser.fallback_paths() == [
             "C:\\Program Files\\Microsoft\\Edge\\Application\\msedge.exe",
             "C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe",
@@ -112,7 +127,7 @@ async def test_launch(
     mock_clock,
     webbrowser_launch,
     host: str,
-    port: Optional[int],
+    port: int | None,
     headless: bool,
 ):
     async def fake_find_free_port(_):
@@ -136,7 +151,7 @@ async def test_launch(
         )
         assert param_user_data_dir is not None
 
-        user_data_dir = Path(param_user_data_dir[len("--user-data-dir="):])
+        user_data_dir = Path(param_user_data_dir[len("--user-data-dir=") :])
         assert user_data_dir.exists()
 
         # turn the 0.5s sleep() call at the end into a 0.5ms sleep() call
@@ -180,7 +195,7 @@ def test_get_websocket_address(
     raises: nullcontext,
 ):
     monkeypatch.setattr("time.sleep", lambda _: None)
-    _host = f"[{host}]" if ":" in host else host
+    hostaddr = f"[{host}]" if ":" in host else host
 
     payload = {
         "Browser": "Chrome/114.0.5735.133",
@@ -188,16 +203,16 @@ def test_get_websocket_address(
         "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36",
         "V8-Version": "11.4.183.23",
         "WebKit-Version": "537.36 (@fbfa2ce68d01b2201d8c667c2e73f648a61c4f4a)",
-        "webSocketDebuggerUrl": f"ws://{_host}:{port}/devtools/browser/some-uuid4",
+        "webSocketDebuggerUrl": f"ws://{hostaddr}:{port}/devtools/browser/some-uuid4",
     }
 
-    responses: List[Dict[str, Any]] = [{"exc": Timeout()} for _ in range(num)]
+    responses: list[dict[str, Any]] = [{"exc": Timeout()} for _ in range(num)]
     responses.append({"json": payload})
     mock = requests_mock.register_uri("GET", address, responses)
 
     webbrowser = ChromiumWebbrowser(host=host, port=port)
     with raises:
-        assert webbrowser.get_websocket_url(session) == f"ws://{_host}:{port}/devtools/browser/some-uuid4"
+        assert webbrowser.get_websocket_url(session) == f"ws://{hostaddr}:{port}/devtools/browser/some-uuid4"
         assert mock.called
         assert mock.last_request
         assert not mock.last_request.proxies.get("http")

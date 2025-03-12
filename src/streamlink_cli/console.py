@@ -1,7 +1,9 @@
+from __future__ import annotations
+
 import sys
 from getpass import getpass
 from json import dumps
-from typing import Any, Dict, List, Optional, TextIO, Union
+from typing import Any, TextIO
 
 from streamlink.user_input import UserInputRequester
 from streamlink_cli.utils import JSONEncoder
@@ -11,16 +13,17 @@ class ConsoleUserInputRequester(UserInputRequester):
     """
     Request input from the user on the console using the standard ask/askpass methods
     """
+
     def __init__(self, console):
         self.console = console
 
     def ask(self, prompt: str) -> str:
-        if not sys.stdin.isatty():
+        if not sys.stdin or not sys.stdin.isatty():
             raise OSError("no TTY available")
         return self.console.ask(f"{prompt.strip()}: ")
 
     def ask_password(self, prompt: str) -> str:
-        if not sys.stdin.isatty():
+        if not sys.stdin or not sys.stdin.isatty():
             raise OSError("no TTY available")
         return self.console.askpass(f"{prompt.strip()}: ")
 
@@ -30,8 +33,8 @@ class ConsoleOutput:
         self.json = json
         self.output = output
 
-    def ask(self, prompt: str) -> Optional[str]:
-        if not sys.stdin.isatty():
+    def ask(self, prompt: str) -> str | None:
+        if not sys.stdin or not sys.stdin.isatty():
             return None
 
         self.output.write(prompt)
@@ -42,8 +45,8 @@ class ConsoleOutput:
         except Exception:
             return None
 
-    def askpass(self, prompt: str) -> Optional[str]:
-        if not sys.stdin.isatty():
+    def askpass(self, prompt: str) -> str | None:
+        if not sys.stdin or not sys.stdin.isatty():
             return None
 
         return getpass(prompt, self.output)
@@ -57,7 +60,7 @@ class ConsoleOutput:
         if not self.json:
             return
 
-        out: Union[List, Dict]
+        out: list | dict
         if objs and isinstance(objs[0], list):
             out = []
             for obj in objs:

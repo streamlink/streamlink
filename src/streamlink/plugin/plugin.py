@@ -1,29 +1,15 @@
+from __future__ import annotations
+
 import ast
 import logging
 import operator
 import re
 import time
+from collections.abc import Callable, Iterable, Mapping
 from contextlib import suppress
 from functools import partial
 from http.cookiejar import Cookie
-from typing import (
-    TYPE_CHECKING,
-    Any,
-    Callable,
-    ClassVar,
-    Dict,
-    Iterable,
-    List,
-    Literal,
-    Match,
-    NamedTuple,
-    Optional,
-    Pattern,
-    Tuple,
-    Type,
-    TypeVar,
-    Union,
-)
+from typing import TYPE_CHECKING, Any, ClassVar, List, Literal, NamedTuple, Type, TypeVar, Union
 
 import requests.cookies
 
@@ -36,11 +22,11 @@ from streamlink.user_input import UserInputRequester
 
 
 if TYPE_CHECKING:  # pragma: no cover
-    from streamlink.session import Streamlink
+    from streamlink.session.session import Streamlink
 
 
 #: See the :func:`~.pluginargument` decorator
-_PLUGINARGUMENT_TYPE_REGISTRY: Dict[str, Callable[[Any], Any]] = {
+_PLUGINARGUMENT_TYPE_REGISTRY: Mapping[str, Callable[[Any], Any]] = {
     "int": int,
     "float": float,
     "bool": streamlink.utils.args.boolean,
@@ -92,8 +78,20 @@ NORMAL_PRIORITY = 20
 LOW_PRIORITY = 10
 NO_PRIORITY = 0
 
-_COOKIE_KEYS = \
-    "version", "name", "value", "port", "domain", "path", "secure", "expires", "discard", "comment", "comment_url", "rfc2109"
+_COOKIE_KEYS = (
+    "version",
+    "name",
+    "value",
+    "port",
+    "domain",
+    "path",
+    "secure",
+    "expires",
+    "discard",
+    "comment",
+    "comment_url",
+    "rfc2109",
+)
 
 
 def stream_weight(stream):
@@ -180,8 +178,8 @@ def stream_sorting_filter(expr, stream_weight):
     return func
 
 
-def parse_params(params: Optional[str] = None) -> Dict[str, Any]:
-    rval: Dict[str, Any] = {}
+def parse_params(params: str | None = None) -> dict[str, Any]:
+    rval: dict[str, Any] = {}
     if not params:
         return rval
 
@@ -196,34 +194,42 @@ def parse_params(params: Optional[str] = None) -> Dict[str, Any]:
 
 
 class Matcher(NamedTuple):
-    pattern: Pattern
+    pattern: re.Pattern
     priority: int
-    name: Optional[str] = None
+    name: str | None = None
 
 
 MType = TypeVar("MType")
 
 
 class _MCollection(List[MType]):
-    def __init__(self, **kwargs) -> None:
-        super().__init__(**kwargs)
-        self._names: Dict[str, MType] = {}
+    def __init__(self, *args, **kwargs) -> None:
+        super().__init__(*args, **kwargs)
+        self._names: dict[str, MType] = {}
 
     def __getitem__(self, item):
         return self._names[item] if isinstance(item, str) else super().__getitem__(item)
 
 
 class Matchers(_MCollection[Matcher]):
-    def register(self, matcher: Matcher) -> None:
+    def __init__(self, *matchers):
+        super().__init__(matchers)
+        for matcher in matchers:
+            self._add_named_matcher(matcher)
+
+    def add(self, matcher: Matcher) -> None:
         super().insert(0, matcher)
+        self._add_named_matcher(matcher)
+
+    def _add_named_matcher(self, matcher: Matcher) -> None:
         if matcher.name:
             if matcher.name in self._names:
                 raise ValueError(f"A matcher named '{matcher.name}' has already been registered")
             self._names[matcher.name] = matcher
 
 
-class Matches(_MCollection[Optional[Match]]):
-    def update(self, matchers: Matchers, value: str) -> Tuple[Optional[Pattern], Optional[Match]]:
+class Matches(_MCollection[Union[re.Match, None]]):
+    def update(self, matchers: Matchers, value: str) -> tuple[re.Pattern | None, re.Match | None]:
         matches = [(matcher, matcher.pattern.match(value)) for matcher in matchers]
 
         self.clear()
@@ -234,57 +240,61 @@ class Matches(_MCollection[Optional[Match]]):
         return next(((matcher.pattern, match) for matcher, match in matches if match is not None), (None, None))
 
 
-class Plugin:
+class PluginMeta(type):
+    def __init__(cls, name, bases, namespace, **kwargs):
+        super().__init__(name, bases, namespace, **kwargs)
+        cls.matchers = Matchers(*getattr(cls, "matchers", []))
+        cls.arguments = Arguments(*getattr(cls, "arguments", []))
+
+
+class Plugin(metaclass=PluginMeta):
     """
     Plugin base class for retrieving streams and metadata from the URL specified.
     """
 
-    matchers: ClassVar[Optional[Matchers]] = None
-    """
-    The list of plugin matchers (URL pattern + priority + optional name).
-    This list supports matcher lookups both by matcher index, as well as matcher name, if defined.
+    #: The Streamlink session which this plugin instance belongs to,
+    #: with access to its :attr:`HTTPSession <streamlink.session.Streamlink.http>`.
+    session: Streamlink
 
-    Use the :func:`pluginmatcher` decorator to initialize plugin matchers.
-    """
-
-    arguments: ClassVar[Optional[Arguments]] = None
-    """
-    The plugin's :class:`Arguments <streamlink.options.Arguments>` collection.
-
-    Use the :func:`pluginargument` decorator to initialize plugin arguments.
-    """
-
-    matches: Matches
-    """
-    A list of optional :class:`re.Match` results of all defined matchers.
-    This list supports match lookups both by the respective matcher index, as well as matcher name, if defined.
-    """
-
-    matcher: Optional[Pattern] = None
-    """A reference to the compiled :class:`re.Pattern` of the first matching matcher"""
-
-    match: Optional[Match] = None
-    """A reference to the :class:`re.Match` result of the first matching matcher"""
-
+    #: Plugin options, initialized with the user-set values of the plugin's arguments.
     options: Options
-    """Plugin options, initialized with the user-set values of the plugin's arguments"""
 
+    #: Plugin cache object, used to store plugin-specific data other than HTTP session cookies.
     cache: Cache
-    """Plugin cache object, used to store plugin-specific data other than HTTP session cookies"""
 
-    # plugin metadata attributes
-    id: Optional[str] = None
-    """Metadata 'id' attribute: unique stream ID, etc."""
-    title: Optional[str] = None
-    """Metadata 'title' attribute: the stream's short descriptive title"""
-    author: Optional[str] = None
-    """Metadata 'author' attribute: the channel or broadcaster name, etc."""
-    category: Optional[str] = None
-    """Metadata 'category' attribute: name of a game being played, a music genre, etc."""
+    #: The list of plugin matchers (URL pattern + priority + optional name).
+    #: Supports matcher lookups by the matcher index or the optional matcher name.
+    #:
+    #: Use the :func:`pluginmatcher` decorator to initialize plugin matchers.
+    matchers: ClassVar[Matchers]
+
+    #: The plugin's :class:`Arguments <streamlink.options.Arguments>` collection.
+    #:
+    #: Use the :func:`pluginargument` decorator to initialize plugin arguments.
+    arguments: ClassVar[Arguments]
+
+    #: A list of optional :class:`re.Match` results of all defined matchers.
+    #: Supports match lookups by the matcher index or the optional matcher name.
+    matches: Matches
+
+    #: A reference to the compiled :class:`re.Pattern` of the first matching matcher.
+    matcher: re.Pattern | None = None
+
+    #: A reference to the :class:`re.Match` result of the first matching matcher.
+    match: re.Match | None = None
+
+    #: Metadata 'id' attribute: unique stream ID, etc.
+    id: str | None = None
+    #: Metadata 'title' attribute: the stream's short descriptive title.
+    title: str | None = None
+    #: Metadata 'author' attribute: the channel or broadcaster name, etc.
+    author: str | None = None
+    #: Metadata 'category' attribute: name of a game being played, a music genre, etc.
+    category: str | None = None
 
     _url: str = ""
 
-    def __init__(self, session: "Streamlink", url: str, options: Optional[Options] = None):
+    def __init__(self, session: Streamlink, url: str, options: Mapping[str, Any] | Options | None = None):
         """
         :param session: The Streamlink session instance
         :param url: The input URL used for finding and resolving streams
@@ -294,15 +304,19 @@ class Plugin:
         modulename = self.__class__.__module__
         self.module = modulename.split(".")[-1]
         self.logger = logging.getLogger(modulename)
-        self.options = Options() if options is None else options
+
+        self.options = Options(options)
+
         self.cache = Cache(
             filename="plugin-cache.json",
             key_prefix=self.module,
         )
 
-        self.session: "Streamlink" = session
+        self.session: Streamlink = session
         self.matches = Matches()
         self.url: str = url
+        if self.matchers and not self.match:
+            raise PluginError("The input URL did not match any of this plugin's matchers")
 
         self.load_cookies()
 
@@ -403,9 +417,7 @@ class Plugin:
             stream_types = self.default_stream_types(ostreams)
 
         # Add streams depending on stream type and priorities
-        sorted_streams = sorted(iterate_streams(ostreams),
-                                key=partial(stream_type_priority,
-                                            stream_types))
+        sorted_streams = sorted(iterate_streams(ostreams), key=partial(stream_type_priority, stream_types))
 
         streams = {}
         for name, stream in sorted_streams:
@@ -417,7 +429,7 @@ class Plugin:
 
             # drop _alt from any stream names
             if name.endswith("_alt"):
-                name = name[:-len("_alt")]
+                name = name[: -len("_alt")]
 
             existing = streams.get(name)
             if existing:
@@ -436,7 +448,7 @@ class Plugin:
                         name = "{0}{1}".format(name, num_alts + 1)
 
             # Validate stream name and discard the stream if it's bad.
-            match = re.match("([A-z0-9_+]+)", name)
+            match = re.match(r"([A-z0-9_+]+)", name)
             if match:
                 name = match.group(1)
             else:
@@ -490,7 +502,7 @@ class Plugin:
 
         raise NotImplementedError
 
-    def get_metadata(self) -> Dict[str, Optional[str]]:
+    def get_metadata(self) -> Mapping[str, str | None]:
         return dict(
             id=self.get_id(),
             author=self.get_author(),
@@ -498,23 +510,23 @@ class Plugin:
             title=self.get_title(),
         )
 
-    def get_id(self) -> Optional[str]:
+    def get_id(self) -> str | None:
         return None if self.id is None else str(self.id).strip()
 
-    def get_title(self) -> Optional[str]:
+    def get_title(self) -> str | None:
         return None if self.title is None else str(self.title).strip()
 
-    def get_author(self) -> Optional[str]:
+    def get_author(self) -> str | None:
         return None if self.author is None else str(self.author).strip()
 
-    def get_category(self) -> Optional[str]:
+    def get_category(self) -> str | None:
         return None if self.category is None else str(self.category).strip()
 
     def save_cookies(
         self,
-        cookie_filter: Optional[Callable[[Cookie], bool]] = None,
+        cookie_filter: Callable[[Cookie], bool] | None = None,
         default_expires: int = 60 * 60 * 24 * 7,
-    ) -> List[str]:
+    ) -> list[str]:
         """
         Store the cookies from :attr:`session.http` in the plugin cache until they expire. The cookies can be filtered
         by supplying a filter method. e.g. ``lambda c: "auth" in c.name``. If no expiry date is given in the
@@ -528,7 +540,10 @@ class Plugin:
         cookie_filter = cookie_filter or (lambda c: True)
         saved = []
 
-        for cookie in filter(cookie_filter, self.session.http.cookies):
+        for cookie in self.session.http.cookies:
+            if not cookie_filter(cookie):
+                continue
+
             cookie_dict = {}
             for key in _COOKIE_KEYS:
                 cookie_dict[key] = getattr(cookie, key, None)
@@ -551,7 +566,7 @@ class Plugin:
 
         return saved
 
-    def load_cookies(self) -> List[str]:
+    def load_cookies(self) -> list[str]:
         """
         Load any stored cookies for the plugin that have not expired.
 
@@ -571,7 +586,7 @@ class Plugin:
 
         return restored
 
-    def clear_cookies(self, cookie_filter: Optional[Callable] = None) -> List[str]:
+    def clear_cookies(self, cookie_filter: Callable[[Cookie], bool] | None = None) -> list[str]:
         """
         Removes all saved cookies for this plugin. To filter the cookies that are deleted
         specify the ``cookie_filter`` argument (see :meth:`save_cookies`).
@@ -595,7 +610,7 @@ class Plugin:
         return removed
 
     def input_ask(self, prompt: str) -> str:
-        user_input_requester: Optional[UserInputRequester] = self.session.get_option("user-input-requester")
+        user_input_requester: UserInputRequester | None = self.session.get_option("user-input-requester")
         if user_input_requester:
             try:
                 return user_input_requester.ask(prompt)
@@ -604,7 +619,7 @@ class Plugin:
         raise FatalPluginError("This plugin requires user input, however it is not supported on this platform")
 
     def input_ask_password(self, prompt: str) -> str:
-        user_input_requester: Optional[UserInputRequester] = self.session.get_option("user-input-requester")
+        user_input_requester: UserInputRequester | None = self.session.get_option("user-input-requester")
         if user_input_requester:
             try:
                 return user_input_requester.ask_password(prompt)
@@ -614,10 +629,10 @@ class Plugin:
 
 
 def pluginmatcher(
-    pattern: Pattern,
+    pattern: re.Pattern,
     priority: int = NORMAL_PRIORITY,
-    name: Optional[str] = None,
-) -> Callable[[Type[Plugin]], Type[Plugin]]:
+    name: str | None = None,
+) -> Callable[[type[Plugin]], type[Plugin]]:
     """
     Decorator for plugin URL matchers.
 
@@ -655,12 +670,10 @@ def pluginmatcher(
 
     matcher = Matcher(pattern, priority, name)
 
-    def decorator(cls: Type[Plugin]) -> Type[Plugin]:
+    def decorator(cls: type[Plugin]) -> type[Plugin]:
         if not issubclass(cls, Plugin):
             raise TypeError(f"{cls.__name__} is not a Plugin")
-        if cls.matchers is None:
-            cls.matchers = Matchers()
-        cls.matchers.register(matcher)
+        cls.matchers.add(matcher)
 
         return cls
 
@@ -673,23 +686,23 @@ _TChoices = TypeVar("_TChoices", bound=Iterable)
 # noinspection GrazieInspection,PyShadowingBuiltins
 def pluginargument(
     name: str,
-    action: Optional[str] = None,
-    nargs: Optional[Union[int, Literal["?", "*", "+"]]] = None,
+    action: str | None = None,
+    nargs: int | Literal["?", "*", "+"] | None = None,
     const: Any = None,
     default: Any = None,
-    type: Optional[Union[str, Callable[[Any], Union[_TChoices, Any]]]] = None,  # noqa: A002
-    type_args: Optional[Union[list, tuple]] = None,
-    type_kwargs: Optional[Dict[str, Any]] = None,
-    choices: Optional[_TChoices] = None,
+    type: str | Callable[[Any], _TChoices | Any] | None = None,  # noqa: A002
+    type_args: list | tuple | None = None,
+    type_kwargs: Mapping[str, Any] | None = None,
+    choices: _TChoices | None = None,
     required: bool = False,
-    help: Optional[str] = None,  # noqa: A002
-    metavar: Optional[Union[str, List[str], Tuple[str, ...]]] = None,
-    dest: Optional[str] = None,
-    requires: Optional[Union[str, List[str], Tuple[str, ...]]] = None,
-    prompt: Optional[str] = None,
+    help: str | None = None,  # noqa: A002
+    metavar: str | list[str] | tuple[str, ...] | None = None,
+    dest: str | None = None,
+    requires: str | list[str] | tuple[str, ...] | None = None,
+    prompt: str | None = None,
     sensitive: bool = False,
-    argument_name: Optional[str] = None,
-) -> Callable[[Type[Plugin]], Type[Plugin]]:
+    argument_name: str | None = None,
+) -> Callable[[type[Plugin]], type[Plugin]]:
     """
     Decorator for plugin arguments. Takes the same arguments as :class:`Argument <streamlink.options.Argument>`.
 
@@ -725,15 +738,15 @@ def pluginargument(
     assuming the plugin's module name is ``myplugin``.
     """
 
-    _type: Optional[Callable[[Any], _TChoices]]
+    argument_type: Callable[[Any], _TChoices] | None
     if not isinstance(type, str):
-        _type = type
+        argument_type = type
     else:
         if type not in _PLUGINARGUMENT_TYPE_REGISTRY:
             raise TypeError(f"Invalid pluginargument type {type}")
-        _type = _PLUGINARGUMENT_TYPE_REGISTRY[type]
+        argument_type = _PLUGINARGUMENT_TYPE_REGISTRY[type]
         if type_args is not None or type_kwargs is not None:
-            _type = _type(*(type_args or ()), **(type_kwargs or {}))
+            argument_type = argument_type(*(type_args or ()), **(type_kwargs or {}))
 
     arg = Argument(
         name=name,
@@ -741,7 +754,7 @@ def pluginargument(
         nargs=nargs,
         const=const,
         default=default,
-        type=_type,
+        type=argument_type,
         choices=choices,
         required=required,
         help=help,
@@ -756,8 +769,6 @@ def pluginargument(
     def decorator(cls: Type[Plugin]) -> Type[Plugin]:
         if not issubclass(cls, Plugin):
             raise TypeError(f"{repr(cls)} is not a Plugin")  # noqa: RUF010  # builtins.repr gets monkeypatched in tests
-        if cls.arguments is None:
-            cls.arguments = Arguments()
         cls.arguments.add(arg)
 
         return cls
@@ -766,8 +777,12 @@ def pluginargument(
 
 
 __all__ = [
-    "HIGH_PRIORITY", "NORMAL_PRIORITY", "LOW_PRIORITY", "NO_PRIORITY",
+    "HIGH_PRIORITY",
+    "NORMAL_PRIORITY",
+    "LOW_PRIORITY",
+    "NO_PRIORITY",
     "Plugin",
-    "Matcher", "pluginmatcher",
+    "Matcher",
+    "pluginmatcher",
     "pluginargument",
 ]

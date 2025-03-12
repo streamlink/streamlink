@@ -1,7 +1,8 @@
+from __future__ import annotations
+
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
-from typing import Optional, Tuple
 from urllib.parse import urlparse
 
 from streamlink.stream.segmented.segment import Segment
@@ -24,7 +25,7 @@ class DASHSegment(Segment):
     available_at: datetime = EPOCH_START
     init: bool = False
     content: bool = True
-    byterange: Optional[Tuple[int, Optional[int]]] = None
+    byterange: tuple[int, int | None] | None = None
 
     @property
     def name(self) -> str:

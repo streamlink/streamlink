@@ -19,18 +19,18 @@ from streamlink.stream.hls import HLSStream
 log = logging.getLogger(__name__)
 
 
-@pluginmatcher(re.compile(r"""
-    https?://(?:www\.)?
-    (?:
-        tf1\.fr/(?:
-            (?P<live>[\w-]+)/direct/?
-            |
-            stream/(?P<stream>[\w-]+)
-        )
-        |
-        (?P<lci>tf1info|lci)\.fr/direct/?
-    )
-""", re.VERBOSE))
+@pluginmatcher(
+    name="live",
+    pattern=re.compile(r"https?://(?:www\.)?tf1\.fr/(?P<live>(?![\w-]+-\d+)[^/?#]+)/direct/?"),
+)
+@pluginmatcher(
+    name="stream",
+    pattern=re.compile(r"https?://(?:www\.)?tf1\.fr/(?P<stream>[\w-]+-\d+)/direct/?"),
+)
+@pluginmatcher(
+    name="lci",
+    pattern=re.compile(r"https?://(?:www\.)?(?:tf1info|lci)\.fr/direct/?"),
+)
 @pluginargument(
     "email",
     requires=["password"],
@@ -41,7 +41,7 @@ log = logging.getLogger(__name__)
     "password",
     sensitive=True,
     metavar="PASSWORD",
-    help="A tf1.fr account password to use with --tf1-username.",
+    help="A tf1.fr account password to use with --tf1-email.",
 )
 @pluginargument(
     "purge-credentials",
@@ -117,15 +117,15 @@ class TF1(Plugin):
         )
 
     def _get_channel(self):
-        if self.match["live"]:
+        if self.matches["live"]:
             channel = self.match["live"]
             channel_id = f"L_{channel.upper()}"
-        elif self.match["lci"]:
-            channel = "LCI"
-            channel_id = "L_LCI"
-        elif self.match["stream"]:
+        elif self.matches["stream"]:
             channel = self.match["stream"]
             channel_id = f"L_FAST_v2l-{channel}"
+        elif self.matches["lci"]:
+            channel = "LCI"
+            channel_id = "L_LCI"
         else:  # pragma: no cover
             raise PluginError("Invalid channel")
 
@@ -186,7 +186,7 @@ class TF1(Plugin):
             not user_token
             and (login_email := self.get_option("email"))
             and (login_password := self.get_option("password"))
-        ):
+        ):  # fmt: skip
             log.info("Acquiring new user-authentication token...")
             user_token = self._login(login_email, login_password)
             self.cache.set(self._CACHE_KEY_USER_TOKEN, user_token)

@@ -20,7 +20,7 @@ class TestPluginCanHandleUrlVinhLongTV(PluginCanHandleUrl):
 @freeze_time("2022-09-25T00:04:45Z")
 def test_headers():
     # noinspection PyUnresolvedReferences
-    assert VinhLongTV(Mock(), "")._get_headers() == {
+    assert VinhLongTV(Mock(), "https://www.thvli.vn/live/thvl1-hd")._get_headers() == {
         "X-SFD-Date": "20220925000445",
         "X-SFD-Key": "3507c190ae8befda3bfa8e2c00af3c7a",
     }

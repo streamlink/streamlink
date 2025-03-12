@@ -1,11 +1,37 @@
 Deprecations
 ============
 
+streamlink 7.0.0
+----------------
+
+--verbose-player
+^^^^^^^^^^^^^^^^
+
+The ``--verbose-player`` CLI argument has been deprecated in favor of :option:`--player-verbose`.
+
+--fifo
+^^^^^^
+
+The ``--fifo`` CLI argument has been deprecated in favor of :option:`--player-fifo`.
+
+
+streamlink 6.11.0
+-----------------
+
+-R/--record-and-pipe
+^^^^^^^^^^^^^^^^^^^^
+
+The ``-R``/``--record-and-pipe`` CLI argument has been deprecated in favor of using both
+:option:`--stdout` and :option:`--record` arguments at the same time.
+
+
 streamlink 6.8.0
 ----------------
 
 streamlink.plugins re-exports
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+:bdg-ref-danger:`Removed in 7.0.0 <migrations:streamlink.plugins re-exports>`
 
 Importing :class:`NoPluginError <streamlink.exceptions.NoPluginError>`,
 :class:`NoStreamsError <streamlink.exceptions.NoStreamsError>`, :class:`PluginError <streamlink.exceptions.PluginError>`,
@@ -30,6 +56,8 @@ streamlink 6.6.0
 
 HTTPSession and HTTPAdapters
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+:bdg-ref-danger:`Removed in 7.0.0 <migrations:HTTPSession and HTTPAdapters>`
 
 The module structure of the :class:`Streamlink <streamlink.session.Streamlink>` session implementation and related classes
 like the ``HTTPSession`` has been re-organized.
@@ -63,6 +91,8 @@ streamlink 5.4.0
 
 --force-progress
 ^^^^^^^^^^^^^^^^
+
+:bdg-ref-danger:`Removed in 7.0.0 <migrations:--force-progress>`
 
 The ``--force-progress`` CLI argument has been deprecated in favor of :option:`--progress=force`.
 
@@ -139,6 +169,8 @@ streamlink 2.4.0
 
 Stream-type related CLI arguments
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+:bdg-ref-danger:`Removed in 7.0.0 <migrations:Stream-type related CLI arguments>`
 
 :ref:`Stream-type related CLI arguments <cli:Stream transport options>` and the respective
 :ref:`Session options <api/session:Session>` have been deprecated in favor of existing generic arguments/options,
@@ -241,6 +273,8 @@ streamlink 2.2.0
 Config file paths
 ^^^^^^^^^^^^^^^^^
 
+:bdg-ref-danger:`Removed in 7.0.0 <migrations:Config file paths>`
+
 Streamlink's default config file paths got updated and corrected on Linux/BSD, macOS and Windows.
 Old and deprecated paths will be dropped in the future.
 
@@ -297,6 +331,8 @@ To resolve this, move the config file(s) to the correct location or copy the con
 
 Custom plugins sideloading paths
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+:bdg-ref-danger:`Removed in 7.0.0 <migrations:Custom plugins sideloading paths>`
 
 Streamlink's default custom plugins directory path got updated and corrected on Linux/BSD and macOS.
 Old and deprecated paths will be dropped in the future.

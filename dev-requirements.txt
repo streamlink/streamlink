@@ -5,20 +5,20 @@ versioningit >=2.0.0,<4  # required for being able to run editable installs
 
 # tests
 pytest >=8.0.0
-pytest-asyncio >=0.23.5
 pytest-trio
 requests-mock
-freezegun >=1.0.0
+freezegun >=1.5.0
 
 # code-coverage
 pytest-cov
 coverage[toml]
 
-# code-linting
-ruff ==0.6.0
+# code-linting / code-formatting
+ruff ==0.9.9
 
 # typing
-mypy ==1.10.1
+mypy[faster-cache] ==1.15.0
+typing-extensions >=4.0.0
 lxml-stubs
 trio-typing
 types-freezegun

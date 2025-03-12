@@ -10,8 +10,9 @@ $metadata title
 
 import logging
 import re
-from urllib.parse import unquote, urlparse
+from urllib.parse import unquote
 
+from streamlink.exceptions import NoStreamsError
 from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.api import validate
 from streamlink.stream.dash import DASHStream
@@ -52,38 +53,26 @@ class OKru(Plugin):
 
         return super().stream_weight(key)
 
-    def _get_streams_mobile(self):
-        data = self.session.http.get(self.url, schema=validate.Schema(
-            validate.parse_html(),
-            validate.xml_find(".//a[@data-video]"),
-            validate.get("data-video"),
-            validate.none_or_all(
-                str,
-                validate.parse_json(),
-                {
-                    "videoName": str,
-                    "videoSrc": validate.url(),
-                    "movieId": str,
-                },
-                validate.union_get("movieId", "videoName", "videoSrc"),
+    def _canonicalize_mobile_url(self):
+        url = self.session.http.get(
+            self.url,
+            schema=validate.Schema(
+                validate.parse_html(),
+                validate.xml_xpath_string(".//head/link[@rel='canonical'][@href][1]/@href"),
+                validate.none_or_all(
+                    validate.url(),
+                ),
             ),
-        ))
-        if not data:
-            return
-
-        self.id, self.title, url = data
-
-        stream_url = self.session.http.head(url).headers.get("Location")
-        if not stream_url:
-            return
-
-        return (
-            HLSStream.parse_variant_playlist(self.session, stream_url)
-            if urlparse(stream_url).path.endswith(".m3u8") else
-            {"vod": HTTPStream(self.session, stream_url)}
         )
+        if not url or not self.matchers["default"].pattern.match(url):
+            raise NoStreamsError
 
-    def _get_streams_default(self):
+        self.url = url
+
+    def _get_streams(self):
+        if self.matches["mobile"]:
+            self._canonicalize_mobile_url()
+
         schema_metadata = validate.Schema(
             validate.parse_json(),
             {
@@ -98,31 +87,38 @@ class OKru(Plugin):
                 validate.optional("hlsManifestUrl"): validate.url(),
                 validate.optional("hlsMasterPlaylistUrl"): validate.url(),
                 validate.optional("liveDashManifestUrl"): validate.url(),
-                validate.optional("videos"): [validate.all(
-                    {
-                        "name": str,
-                        "url": validate.url(),
-                    },
-                    validate.union_get("name", "url"),
-                )],
+                validate.optional("videos"): [
+                    validate.all(
+                        {
+                            "name": str,
+                            "url": validate.url(),
+                        },
+                        validate.union_get("name", "url"),
+                    ),
+                ],
             },
         )
 
-        metadata, metadata_url = self.session.http.get(self.url, schema=validate.Schema(
-            validate.parse_html(),
-            validate.xml_find(".//*[@data-options]"),
-            validate.get("data-options"),
-            validate.parse_json(),
-            {"flashvars": {
-                validate.optional("metadata"): str,
-                validate.optional("metadataUrl"): validate.all(
-                    validate.transform(unquote),
-                    validate.url(),
-                ),
-            }},
-            validate.get("flashvars"),
-            validate.union_get("metadata", "metadataUrl"),
-        ))
+        metadata, metadata_url = self.session.http.get(
+            self.url,
+            schema=validate.Schema(
+                validate.parse_html(),
+                validate.xml_find(".//*[@data-options]"),
+                validate.get("data-options"),
+                validate.parse_json(),
+                {
+                    "flashvars": {
+                        validate.optional("metadata"): str,
+                        validate.optional("metadataUrl"): validate.all(
+                            validate.transform(unquote),
+                            validate.url(),
+                        ),
+                    },
+                },
+                validate.get("flashvars"),
+                validate.union_get("metadata", "metadataUrl"),
+            ),
+        )
 
         self.session.http.headers.update({"Referer": self.url})
 
@@ -147,9 +143,6 @@ class OKru(Plugin):
             f"{self.QUALITY_WEIGHTS[name]}p" if name in self.QUALITY_WEIGHTS else name: HTTPStream(self.session, url)
             for name, url in data.get("videos", [])
         }
-
-    def _get_streams(self):
-        return self._get_streams_default() if self.matches["default"] else self._get_streams_mobile()
 
 
 __plugin__ = OKru

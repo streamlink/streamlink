@@ -19,12 +19,9 @@ from streamlink.utils.parse import parse_json
 log = logging.getLogger(__name__)
 
 
-@pluginmatcher(re.compile(r"""
-    https?://(?:www\.)?adultswim\.com
-    /(streams|videos)
-    (?:/([^/]+))?
-    (?:/([^/]+))?
-""", re.VERBOSE))
+@pluginmatcher(
+    re.compile(r"https?://(?:www\.)?adultswim\.com/(streams|videos)(?:/([^/]+))?(?:/([^/]+))?"),
+)
 class AdultSwim(Plugin):
     token_url = "https://token.ngtv.io/token/token_spe"
     video_data_url = "https://www.adultswim.com/api/shows/v1/media/{0}/desktop"
@@ -43,24 +40,34 @@ class AdultSwim(Plugin):
 
     truncate_url_re = re.compile(r"""(.*)/\w+/?""")
 
-    _api_schema = validate.Schema({
-        "media": {
-            "desktop": {
-                str: {
-                    "url": validate.url(),
+    _api_schema = validate.Schema(
+        {
+            "media": {
+                "desktop": {
+                    str: {
+                        "url": validate.url(),
+                    },
                 },
             },
-        }},
+        },
         validate.get("media"),
         validate.get("desktop"),
         validate.filter(lambda k, v: k in ["unprotected", "bulkaes"]),
     )
 
-    _stream_data_schema = validate.Schema({
-        "props": {"__REDUX_STATE__": {"streams": [{
-            "id": str,
-            "stream": str,
-        }]}}},
+    _stream_data_schema = validate.Schema(
+        {
+            "props": {
+                "__REDUX_STATE__": {
+                    "streams": [
+                        {
+                            "id": str,
+                            "stream": str,
+                        },
+                    ],
+                },
+            },
+        },
         validate.get("props"),
         validate.get("__REDUX_STATE__"),
         validate.get("streams"),
@@ -74,13 +81,19 @@ class AdultSwim(Plugin):
         validate.get("auth"),
     )
 
-    _video_data_schema = validate.Schema({
-        "props": {"pageProps": {"__APOLLO_STATE__": {
-            str: {
-                validate.optional("id"): str,
-                validate.optional("slug"): str,
+    _video_data_schema = validate.Schema(
+        {
+            "props": {
+                "pageProps": {
+                    "__APOLLO_STATE__": {
+                        str: {
+                            validate.optional("id"): str,
+                            validate.optional("slug"): str,
+                        },
+                    },
+                },
             },
-        }}}},
+        },
         validate.get("props"),
         validate.get("pageProps"),
         validate.get("__APOLLO_STATE__"),
@@ -133,11 +146,14 @@ class AdultSwim(Plugin):
             raise PluginError("Could not determine app_id")
         log.debug("app_id={0}".format(app_id))
 
-        res = self.session.http.get(self.token_url, params=dict(
-            format="json",
-            appId=app_id,
-            path=path,
-        ))
+        res = self.session.http.get(
+            self.token_url,
+            params=dict(
+                format="json",
+                appId=app_id,
+                path=path,
+            ),
+        )
 
         token_data = self.session.http.json(res, schema=self._token_schema)
         if "error" in token_data:
@@ -151,9 +167,7 @@ class AdultSwim(Plugin):
         if url_type == "streams" and not show_name:
             url_type = "live-stream"
         elif not show_name:
-            raise PluginError("Missing show_name for url_type: {0}".format(
-                url_type,
-            ))
+            raise PluginError(f"Missing show_name for url_type: {url_type}")
 
         log.debug("URL type={0}".format(url_type))
 

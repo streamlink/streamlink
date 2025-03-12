@@ -5,119 +5,104 @@ $type live, vod
 $region Iceland
 """
 
+import logging
 import re
+from textwrap import dedent
 
 from streamlink.plugin import Plugin, pluginmatcher
+from streamlink.plugin.api import validate
 from streamlink.stream.hls import HLSStream
+from streamlink.stream.http import HTTPStream
 
 
-# URL to the RUV LIVE API
-RUV_LIVE_API = """http://www.ruv.is/sites/all/themes/at_ruv/scripts/\
-ruv-stream.php?channel={0}&format=json"""
-
-_single_re = re.compile(r"""(?P<url>http://[0-9a-zA-Z\-\.]*/
-                            (lokad|opid)
-                            /
-                            ([0-9]+/[0-9][0-9]/[0-9][0-9]/)?
-                            ([A-Z0-9\$_]+\.mp4\.m3u8)
-                            )
-                         """, re.VERBOSE)
-
-_multi_re = re.compile(r"""(?P<base_url>http://[0-9a-zA-Z\-\.]*/
-                            (lokad|opid)
-                            /)
-                            manifest.m3u8\?tlm=hls&streams=
-                            (?P<streams>[0-9a-zA-Z\/\.\,:]+)
-                         """, re.VERBOSE)
+log = logging.getLogger(__name__)
 
 
-@pluginmatcher(re.compile(r"""
-    https?://(?:www\.)?ruv\.is/
-    (?P<stream_id>ruv|ruv2|ruv-2|ras1|ras2|rondo)
-    /?$
-""", re.VERBOSE))
-@pluginmatcher(re.compile(r"""
-    https?://(?:www\.)?ruv\.is/spila/
-    (?P<stream_id>ruv|ruv2|ruv-2|ruv-aukaras)
-    /[a-zA-Z0-9_-]+
-    /[0-9]+
-    /?
-""", re.VERBOSE))
+@pluginmatcher(
+    name="live",
+    pattern=re.compile(r"https?://(?:www\.)?ruv\.is/(?:sjonvarp|utvarp)/beint/(?P<channel>\w+)$"),
+)
+@pluginmatcher(
+    name="vod",
+    pattern=re.compile(r"https?://(?:www\.)?ruv\.is/(?:sjonvarp|utvarp)/spila/[^/]+/(?P<id>\d+)/(?P<episode>[^/]+)/?"),
+)
 class Ruv(Plugin):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    _URL_API_CHANNEL = "https://geo.spilari.ruv.is/channel/{channel}"
+    _URL_API_GQL = "https://spilari.nyr.ruv.is/gql/"
 
-        self.live = self.matches[0] is not None
-        if self.live:
-            # Remove dashes
-            self.stream_id = self.match.group("stream_id").replace("-", "")
+    def _get_live(self):
+        url = self.session.http.get(
+            self._URL_API_CHANNEL.format(channel=self.match["channel"]),
+            schema=validate.Schema(
+                validate.parse_json(),
+                {
+                    "url": validate.url(),
+                },
+                validate.get("url"),
+            ),
+        )
+        if self.session.http.head(url, raise_for_status=False).status_code >= 400:
+            log.error("The content is not available in your region")
+            return
 
-            # Rondo is identified as ras3
-            if self.stream_id == "rondo":
-                self.stream_id = "ras3"
+        return HLSStream.parse_variant_playlist(self.session, url)
 
-    def _get_live_streams(self):
-        # Get JSON API
-        res = self.session.http.get(RUV_LIVE_API.format(self.stream_id))
+    def _get_vod(self):
+        query = f"""
+            query getProgram($id: Int!) {{
+              Program(id: $id) {{
+                title
+                episodes(limit: 1, id: {{value: "{self.match["episode"]}"}}) {{
+                  title
+                  file
+                }}
+              }}
+            }}
+        """
 
-        # Parse the JSON API
-        json_res = self.session.http.json(res)
+        self.author, self.title, url = self.session.http.post(
+            self._URL_API_GQL,
+            json={
+                "operationName": "getProgram",
+                "query": dedent(query).strip(),
+                "variables": {
+                    "id": int(self.match["id"]),
+                },
+            },
+            schema=validate.Schema(
+                validate.parse_json(),
+                {
+                    "data": {
+                        "Program": {
+                            "episodes": validate.list(
+                                {
+                                    "file": validate.url(),
+                                    "title": str,
+                                },
+                            ),
+                            "title": str,
+                        },
+                    },
+                },
+                validate.get(("data", "Program")),
+                validate.union_get(
+                    "title",
+                    ("episodes", 0, "title"),
+                    ("episodes", 0, "file"),
+                ),
+            ),
+        )
 
-        for url in json_res["result"]:
-            if url.startswith("rtmp:"):
-                continue
-
-            # Get available streams
-            streams = HLSStream.parse_variant_playlist(self.session, url)
-
-            yield from streams.items()
-
-    def _get_sarpurinn_streams(self):
-        # Get HTML page
-        res = self.session.http.get(self.url).text
-        lines = "\n".join([line for line in res.split("\n") if "video.src" in line])
-        multi_stream_match = _multi_re.search(lines)
-
-        if multi_stream_match and multi_stream_match.group("streams"):
-            base_url = multi_stream_match.group("base_url")
-            streams = multi_stream_match.group("streams").split(",")
-
-            for stream in streams:
-                if stream.count(":") != 1:
-                    continue
-
-                [token, quality] = stream.split(":")
-                quality = int(quality)
-                key = ""
-
-                if quality <= 500:
-                    key = "240p"
-                elif quality <= 800:
-                    key = "360p"
-                elif quality <= 1200:
-                    key = "480p"
-                elif quality <= 2400:
-                    key = "720p"
-                else:
-                    key = "1080p"
-
-                yield key, HLSStream(
-                    self.session,
-                    base_url + token,
-                )
-
+        if not url.endswith(".m3u8"):
+            return {"vod": HTTPStream(self.session, url)}
         else:
-            single_stream_match = _single_re.search(lines)
-
-            if single_stream_match:
-                url = single_stream_match.group("url")
-                yield "576p", HLSStream(self.session, url)
+            return HLSStream.parse_variant_playlist(self.session, url)
 
     def _get_streams(self):
-        if self.live:
-            return self._get_live_streams()
+        if self.matches["live"]:
+            return self._get_live()
         else:
-            return self._get_sarpurinn_streams()
+            return self._get_vod()
 
 
 __plugin__ = Ruv

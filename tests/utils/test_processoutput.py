@@ -1,46 +1,34 @@
-import asyncio
-from collections import deque
-from typing import Iterable, Optional
-from unittest.mock import AsyncMock, Mock, call, patch
+from __future__ import annotations
 
-import freezegun
+import sys
+from collections.abc import Awaitable, Callable
+from unittest.mock import Mock, call
+
 import pytest
-import pytest_asyncio
+import trio
+from trio.testing import MockClock, wait_all_tasks_blocked
 
+from streamlink.compat import ExceptionGroup
 from streamlink.utils.processoutput import ProcessOutput
 
 
-class AsyncIterator:
-    def __init__(self, event_loop: asyncio.BaseEventLoop, iterable: Optional[Iterable] = None):
-        self._loop = event_loop
-        self._deque = deque(iterable or ())
-        self._newfuture()
+TIME_TEST_MAX = 10
 
-    def append(self, item):
-        self._deque.append(item)
-        self._setfutureresult()
+# language=python
+CODE = """
+import signal
+import sys
 
-    def extend(self, iterable: Iterable):
-        self._deque.extend(iterable)
-        self._setfutureresult()
+if sys.argv[-1] == "ignoresigterm":
+    signal.signal(signal.SIGTERM, signal.SIG_IGN)
 
-    def _newfuture(self):
-        self._future = self._loop.create_future()
-
-    def _setfutureresult(self):
-        if len(self._deque) and not self._future.done():
-            self._future.set_result(True)
-
-    def __aiter__(self):
-        return self
-
-    async def __anext__(self):
-        while True:
-            await self._future
-            try:
-                return self._deque.popleft()
-            except IndexError:
-                self._newfuture()
+while line := sys.stdin.readline():
+    if line[:5] == "exit:":
+        sys.exit(int(line[5:]))
+    stream = sys.stdout if line[:7] == "stdout:" else sys.stderr
+    stream.write(line[7:])
+    stream.flush()
+""".strip()
 
 
 class FakeProcessOutput(ProcessOutput):
@@ -48,201 +36,285 @@ class FakeProcessOutput(ProcessOutput):
     onstdout: Mock
     onstderr: Mock
 
+    onoutput_sender: trio.MemorySendChannel[tuple[str, str]]
+    onoutput_receiver: trio.MemoryReceiveChannel[tuple[str, str]]
+
+    def __init__(self, *args, ignoresigterm: bool = False, **kwargs):
+        command = [sys.executable, "-c", CODE]
+        if ignoresigterm:
+            command.append("ignoresigterm")
+        kwargs.setdefault("command", command)
+
+        super().__init__(*args, **kwargs)
+        self.onoutput_sender, self.onoutput_receiver = trio.open_memory_channel(10)
+
+        def _onoutput(channel, meth):
+            def _inner(*_args, **_kwargs):
+                res = meth(*_args, **_kwargs)
+                try:
+                    return res
+                finally:
+                    self.onoutput_sender.send_nowait((channel, res))
+
+            return _inner
+
+        self.onexit = Mock(side_effect=self.onexit)
+        self.onstdout = Mock(side_effect=_onoutput("stdout", self.onstdout))
+        self.onstderr = Mock(side_effect=_onoutput("stderr", self.onstderr))
+
 
 @pytest.fixture()
-def mock_process(event_loop: asyncio.BaseEventLoop):
-    process = Mock(asyncio.subprocess.Process)
-    process.stdout = AsyncIterator(event_loop)
-    process.stderr = AsyncIterator(event_loop)
+async def _max_test_time(nursery: trio.Nursery, mock_clock: MockClock):  # noqa: RUF029
+    async def timeout():  # pragma: no cover
+        await trio.sleep(TIME_TEST_MAX)
+        mock_clock.autojump_threshold = 0
+        pytest.fail("Test timed out")
 
-    return process
+    nursery.start_soon(timeout)
 
 
 @pytest.fixture()
-def processoutput(request, mock_process):
-    class MyProcessOutput(FakeProcessOutput):
-        def __init__(self, *args, **kwargs):
-            super().__init__(*args, **kwargs)
-            self.onexit = Mock(wraps=self.onexit)
-            self.onstdout = Mock(wraps=self.onstdout)
-            self.onstderr = Mock(wraps=self.onstderr)
+def get_process(monkeypatch: pytest.MonkeyPatch, _max_test_time) -> Callable[[], Awaitable[trio.Process]]:
+    trio_run_process = trio.run_process
 
-    with patch("asyncio.create_subprocess_exec", AsyncMock(return_value=mock_process)) as mock_create_subprocess_exec:
-        yield MyProcessOutput(["foo", "bar"], **getattr(request, "param", {}))
+    # use a memory channel, so we can wait until the process has launched
+    sender: trio.MemorySendChannel[trio.Process]
+    receiver: trio.MemoryReceiveChannel[trio.Process]
+    sender, receiver = trio.open_memory_channel(1)
 
-    mock_create_subprocess_exec.assert_awaited_once_with(
-        "foo",
-        "bar",
-        stdin=None,
-        stdout=asyncio.subprocess.PIPE,
-        stderr=asyncio.subprocess.PIPE,
-    )
+    async def get_process() -> trio.Process:
+        return await receiver.receive()
+
+    async def fake_trio_run_process(*args, task_status, **kwargs):
+        task_status_started = task_status.started
+
+        def fake_task_status_started(process: trio.Process):
+            task_status_started(process)
+            sender.send_nowait(process)
+
+        # intercept the task status report
+        task_status.started = fake_task_status_started
+
+        return await trio_run_process(*args, task_status=task_status, **kwargs)
+
+    monkeypatch.setattr("trio.run_process", fake_trio_run_process)
+
+    return get_process
 
 
-@pytest_asyncio.fixture(autouse=True)
-async def assert_tasks_cleanup():
-    event_loop = asyncio.get_running_loop()
-    yield
-    current_task = asyncio.current_task(event_loop)
-    assert not [task for task in asyncio.all_tasks(event_loop) if task is not current_task]
-    await event_loop.shutdown_asyncgens()
+@pytest.mark.trio()
+@pytest.mark.usefixtures("_max_test_time")
+async def test_ontimeout(mock_clock: MockClock) -> None:
+    po = FakeProcessOutput(timeout=2)
+    result = None
 
+    async def run():
+        nonlocal result
+        result = await po.arun()
 
-@pytest.mark.asyncio()
-@pytest.mark.parametrize("processoutput", [{"timeout": 1}], indirect=True)
-async def test_ontimeout(processoutput: FakeProcessOutput, mock_process: Mock):
-    event_loop = asyncio.get_running_loop()
-
-    with freezegun.freeze_time("2000-01-01T00:00:00.000Z") as frozen_time:
-        fut_process_wait = event_loop.create_future()
-        mock_process.wait = Mock(return_value=fut_process_wait)
-
-        async def advance_time():
-            # required for making the run-task await the "done" future
-            await asyncio.sleep(0)
-            frozen_time.tick(2)
-
-        task_run = asyncio.create_task(processoutput._run())
-        task_time = asyncio.create_task(advance_time())
-        await asyncio.wait({task_run, task_time}, return_when=asyncio.FIRST_COMPLETED)
-
-        assert mock_process.wait.called, "Has run the onexit callback and called process.wait()"
-        assert not mock_process.kill.called, "Has not killed the process yet"
-
-        result = await task_run
+    async with trio.open_nursery() as nursery:
+        nursery.start_soon(run)
+        await wait_all_tasks_blocked()
+        assert result is None
+        mock_clock.jump(4)
 
     assert result is False
-    assert not processoutput.onexit.called
-    assert not processoutput.onstdout.called
-    assert not processoutput.onstderr.called
-    assert fut_process_wait.cancelled()
-    assert mock_process.kill.called
+    assert po.onexit.call_args_list == []
+    assert po.onstdout.call_args_list == []
+    assert po.onstderr.call_args_list == []
 
 
-@pytest.mark.asyncio()
-@pytest.mark.parametrize("processoutput", [{"timeout": 1}], indirect=True)
-async def test_ontimeout_onexit(processoutput: FakeProcessOutput, mock_process: Mock):
-    event_loop = asyncio.get_running_loop()
+@pytest.mark.trio()
+@pytest.mark.parametrize(
+    ("exit_code", "expected"),
+    [
+        pytest.param(0, True, id="success"),
+        pytest.param(1, False, id="failure"),
+    ],
+)
+async def test_exit_code(get_process: Callable[[], Awaitable[trio.Process]], exit_code: int, expected: bool):
+    po = FakeProcessOutput(timeout=4)
+    result = None
 
-    fut_process_wait = event_loop.create_future()
-    mock_process.wait = Mock(return_value=fut_process_wait)
+    async def run():
+        nonlocal result
+        result = await po.arun()
 
-    with freezegun.freeze_time("2000-01-01T00:00:00.000Z") as frozen_time:
-        async def advance_time():
-            # required for making the run-task await the "done" future
-            await asyncio.sleep(0)
-            frozen_time.tick(0.5)
-
-        task_run = asyncio.create_task(processoutput._run())
-        task_time = asyncio.create_task(advance_time())
-        await asyncio.wait({task_run, task_time}, return_when=asyncio.FIRST_COMPLETED)
-
-        assert mock_process.wait.called, "Has run the onexit callback and called process.wait()"
-        assert not mock_process.kill.called, "Has not killed the process yet"
-
-        # make the process return code 0 while waiting for the timeout
-        fut_process_wait.set_result(0)
-
-        # advance time again (the "done" future will already have a result set and the timeout task be cancelled)
-        frozen_time.tick(1)  # type: ignore[arg-type]  # float/int are supported...
-
-        result = await task_run
-
-    assert result is True
-    assert processoutput.onexit.called
-    assert not processoutput.onstdout.called
-    assert not processoutput.onstderr.called
-    assert fut_process_wait.done()
-    assert mock_process.kill.called
-
-
-@pytest.mark.asyncio()
-@pytest.mark.parametrize(("code", "expected"), [(0, True), (1, False)])
-async def test_onexit(processoutput: FakeProcessOutput, mock_process: Mock, code, expected):
-    mock_process.wait = AsyncMock(return_value=code)
-
-    result = await processoutput._run()
+    async with trio.open_nursery() as nursery:
+        nursery.start_soon(run)
+        process = await get_process()
+        assert process.stdin
+        await process.stdin.send_all(f"exit:{exit_code}\n".encode())
 
     assert result is expected
-    assert processoutput.onexit.called
-    assert not processoutput.onstdout.called
-    assert not processoutput.onstderr.called
-    assert mock_process.kill.called
+    assert po.onexit.call_args_list == [call(exit_code)]
+    assert po.onstdout.call_args_list == []
+    assert po.onstderr.call_args_list == []
 
 
-@pytest.mark.asyncio()
-@pytest.mark.parametrize("returnvalue", [True, False])
-async def test_onoutput(processoutput: FakeProcessOutput, mock_process: Mock, returnvalue):
-    event_loop = asyncio.get_running_loop()
+@pytest.mark.trio()
+async def test_stdout_stderr(get_process: Callable[[], Awaitable[trio.Process]]):
+    po = FakeProcessOutput(timeout=4)
+    result = None
 
-    mock_process.wait = Mock(return_value=event_loop.create_future())
-    mock_process.stdout.extend([b"foo", b"bar", b"baz"])
+    async def run():
+        nonlocal result
+        result = await po.arun()
 
-    def onstdout(idx: int, line: str):
-        if idx < 3:
-            mock_process.stderr.append(line.upper().encode())
+    async with trio.open_nursery() as nursery:
+        nursery.start_soon(run)
+        process = await get_process()
+        assert process.stdin
+        assert po.onstdout.call_args_list == []
+        assert po.onstderr.call_args_list == []
 
-    def onstderr(idx: int, line: str):
-        mock_process.stdout.append(line[::-1].encode())
-        if idx == 1:
-            return returnvalue
+        await process.stdin.send_all(b"stdout:foo\n")
+        assert await po.onoutput_receiver.receive() == ("stdout", None)
+        assert po.onstdout.call_args_list == [call(0, "foo")]
+        assert po.onstderr.call_args_list == []
 
-    processoutput.onstdout = Mock(wraps=onstdout)
-    processoutput.onstderr = Mock(wraps=onstderr)
+        await process.stdin.send_all(b"stderr:bar\n")
+        assert await po.onoutput_receiver.receive() == ("stderr", None)
+        assert po.onstdout.call_args_list == [call(0, "foo")]
+        assert po.onstderr.call_args_list == [call(0, "bar")]
 
-    result = await processoutput._run()
+        # order of items in receive stream is not guaranteed
+        await process.stdin.send_all(b"stdout:123\nstderr:456\n")
+        received = []
+        for _ in range(2):
+            received.append(await po.onoutput_receiver.receive())
+        received.sort(key=lambda elem: elem[0])
+        assert received == [("stderr", None), ("stdout", None)]
 
-    assert result is returnvalue
-    assert not processoutput.onexit.called
-    assert processoutput.onstdout.call_args_list == [
-        call(0, "foo"),
-        call(1, "bar"),
-        call(2, "baz"),
-        call(3, "OOF"),
-        call(4, "RAB"),
-    ]
-    assert processoutput.onstderr.call_args_list == [
-        call(0, "FOO"),
-        call(1, "BAR"),
-    ]
-    assert mock_process.kill.called
-
-
-@pytest.mark.asyncio()
-async def test_onoutput_exception(processoutput: FakeProcessOutput, mock_process: Mock):
-    event_loop = asyncio.get_running_loop()
-
-    mock_process.wait = Mock(return_value=event_loop.create_future())
-    mock_process.stdout.extend([b"foo", b"bar", b"baz"])
-
-    error = ValueError("error")
-    processoutput.onstdout = Mock(side_effect=error)
-
-    with pytest.raises(ValueError) as cm:  # noqa: PT011
-        await processoutput._run()
-
-    assert cm.value is error
-    assert not processoutput.onexit.called
-    assert processoutput.onstdout.call_args_list == [call(0, "foo")]
-    assert processoutput.onstderr.call_args_list == []
-    assert mock_process.kill.called
-
-
-@pytest.mark.asyncio()
-async def test_exit_before_onoutput(processoutput: FakeProcessOutput, mock_process: Mock):
-    # resolve process.wait() in the onexit task immediately
-    mock_process.wait = AsyncMock(return_value=0)
-
-    # add some data to stdout, but don't actually interpret it in onstdout
-    mock_process.stdout.append(b"foo")
-    processoutput.onstdout.return_value = True
-
-    # the result of the `done` future should have already been set by the onoutput task
-    processoutput.onexit.return_value = False
-
-    result = await processoutput._run()
+        await process.stdin.send_all(b"exit:0\n")
 
     assert result is True
-    assert processoutput.onexit.called
-    assert processoutput.onstdout.called
-    assert mock_process.kill.called
+    assert po.onexit.call_args_list == [call(0)]
+    assert po.onstdout.call_args_list == [call(0, "foo"), call(1, "123")]
+    assert po.onstderr.call_args_list == [call(0, "bar"), call(1, "456")]
+
+
+@pytest.mark.trio()
+@pytest.mark.parametrize(
+    ("expected", "return_value"),
+    [
+        pytest.param("yes", True, id="success"),
+        pytest.param("no", False, id="failure"),
+    ],
+)
+@pytest.mark.parametrize("channel", ["stdout", "stderr"])
+async def test_output_callback(
+    get_process: Callable[[], Awaitable[trio.Process]],
+    expected: str,
+    return_value: bool,
+    channel: str,
+):
+    class CustomProcessOutput(ProcessOutput):
+        def onstdout(self, idx: int, line: str) -> bool:
+            return line == expected
+
+        def onstderr(self, idx: int, line: str) -> bool:
+            return line == expected
+
+    class CustomFakeProcessOutput(FakeProcessOutput, CustomProcessOutput):
+        pass
+
+    po = CustomFakeProcessOutput(timeout=4)
+    result = None
+
+    async def run():
+        nonlocal result
+        result = await po.arun()
+
+    async with trio.open_nursery() as nursery:
+        nursery.start_soon(run)
+        process = await get_process()
+        assert process.stdin
+
+        await process.stdin.send_all(f"{channel}:yes\n".encode())
+        assert await po.onoutput_receiver.receive() == (channel, return_value)
+
+        await process.stdin.send_all(b"exit:0\n")
+
+    assert result is return_value
+    assert po.onexit.call_args_list == []
+    assert po.onstdout.call_args_list == ([call(0, "yes")] if channel == "stdout" else [])
+    assert po.onstderr.call_args_list == ([call(0, "yes")] if channel == "stderr" else [])
+
+
+@pytest.mark.trio()
+async def test_output_exception(get_process: Callable[[], Awaitable[trio.Process]]):
+    class CustomProcessOutput(ProcessOutput):
+        def onstdout(self, idx: int, line: str) -> bool:
+            raise ZeroDivisionError()
+
+    class CustomFakeProcessOutput(FakeProcessOutput, CustomProcessOutput):
+        pass
+
+    po = CustomFakeProcessOutput(timeout=4)
+    # noinspection PyUnusedLocal
+    process: trio.Process | None = None
+
+    with pytest.raises(ExceptionGroup) as exc_info:  # noqa: PT012
+        async with trio.open_nursery() as nursery:
+            nursery.start_soon(po.arun)
+            process = await get_process()
+            assert process.stdin
+
+            await process.stdin.send_all(b"stdout:foo\n")
+            assert await po.onoutput_receiver.receive() == ("stdout", None)
+
+    assert process
+    assert process.poll() is not None
+    assert exc_info.group_contains(ZeroDivisionError)
+
+
+@pytest.mark.posix_only()
+@pytest.mark.trio()
+async def test_kill(monkeypatch: pytest.MonkeyPatch, mock_clock: MockClock, get_process: Callable[[], Awaitable[trio.Process]]):
+    po = FakeProcessOutput(timeout=2, wait_terminate=4, ignoresigterm=True)
+    result = None
+
+    async def run():
+        nonlocal result
+        result = await po.arun()
+
+    async with trio.open_nursery() as nursery:
+        nursery.start_soon(run)
+        process = await get_process()
+        assert process.poll() is None
+        assert process.stdin
+
+        # ensure that our Python subprocess has fully initialized and updated its SIGTERM signal handler
+        await process.stdin.send_all(b"stdout:OK\n")
+        assert await po.onoutput_receiver.receive() == ("stdout", None)
+        assert po.onstdout.call_args_list == [call(0, "OK")]
+        po.onstdout.call_args_list.clear()
+
+        mock_terminate = Mock(side_effect=process.terminate)
+        mock_kill = Mock(side_effect=process.kill)
+        monkeypatch.setattr(process, "terminate", mock_terminate)
+        monkeypatch.setattr(process, "kill", mock_kill)
+
+        mock_clock.jump(po.timeout)
+
+        await wait_all_tasks_blocked()
+        assert process.poll() is None
+
+        assert mock_terminate.call_count == 1
+        assert mock_kill.call_count == 0
+
+        await wait_all_tasks_blocked()
+        assert process.poll() is None
+
+        mock_clock.jump(po.wait_terminate)
+        await wait_all_tasks_blocked()
+        assert mock_terminate.call_count == 1
+        assert mock_kill.call_count == 1
+
+        mock_clock.rate = 1
+
+    assert result is False
+    assert po.onexit.call_args_list == []
+    assert po.onstdout.call_args_list == []
+    assert po.onstderr.call_args_list == []

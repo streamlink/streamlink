@@ -1,8 +1,9 @@
+from __future__ import annotations
+
 import unittest
 from binascii import hexlify
 from functools import partial
 from threading import Event, Thread
-from typing import List
 from unittest.mock import patch
 
 import requests_mock
@@ -53,7 +54,7 @@ class Tag(HLSItemBase):
 
     @classmethod
     def val_quoted_string(cls, value):
-        return "\"{0}\"".format(value)
+        return '"{0}"'.format(value)
 
     @classmethod
     def val_hex(cls, value):
@@ -138,13 +139,14 @@ class HLSStreamReadThread(Thread):
     """
     Run the reader on a separate thread, so that each read can be controlled from within the main thread
     """
+
     def __init__(self, session: Streamlink, stream: HLSStream, *args, **kwargs):
         super().__init__(*args, **kwargs, daemon=True)
 
         self.read_once = Event()
         self.handshake = Handshake()
         self.read_all = False
-        self.data: List[bytes] = []
+        self.data: list[bytes] = []
 
         self.session = session
         self.stream = stream

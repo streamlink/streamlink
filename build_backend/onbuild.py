@@ -1,14 +1,18 @@
+from __future__ import annotations
+
 import re
+from collections.abc import Generator
 from contextlib import contextmanager
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Dict, Generator, Generic, Optional, TypeVar, Union
+from typing import Any, Generic, TypeVar
 
 
 try:
     # noinspection PyProtectedMember
     from versioningit.onbuild import SetuptoolsFileProvider  # type: ignore[attr-defined]
 except ImportError:  # pragma: no cover
+
     @dataclass
     class SetuptoolsFileProvider:  # type: ignore[no-redef]
         build_dir: Path
@@ -18,11 +22,11 @@ except ImportError:  # pragma: no cover
 def onbuild(
     *,
     is_source: bool,
-    template_fields: Dict[str, Any],
-    params: Dict[str, Any],
+    template_fields: dict[str, Any],
+    params: dict[str, Any],
     # backward compatibility for `versioningit <3.0.0`
-    build_dir: Optional[Union[str, Path]] = None,
-    file_provider: Optional[SetuptoolsFileProvider] = None,
+    build_dir: str | Path | None = None,
+    file_provider: SetuptoolsFileProvider | None = None,
 ):
     """
     Remove the ``versioningit`` build-requirement from Streamlink's source distribution.
@@ -51,30 +55,34 @@ def onbuild(
     # Remove versioningit from ``build-system.requires`` in ``pyproject.toml``
     if is_source:
         with update_file(base_dir / "pyproject.toml") as cmproxy:
-            cmproxy.set(re.sub(
-                r"^(\s*)(\"versioningit\b.+?\",).*$",
-                "\\1# \\2",
-                cmproxy.get(),
-                flags=re.MULTILINE,
-                count=1,
-            ))
+            cmproxy.set(
+                re.sub(
+                    r"^(\s*)(\"versioningit\b.+?\",).*$",
+                    "\\1# \\2",
+                    cmproxy.get(),
+                    flags=re.MULTILINE,
+                    count=1,
+                ),
+            )
 
     # Set the static version string that gets passed directly to setuptools via ``setup.py``.
     # This is much easier compared to adding the ``project.version`` field and removing "version" from ``project.dynamic``
     # in ``pyproject.toml``.
     if is_source:
         with update_file(base_dir / "setup.py") as cmproxy:
-            cmproxy.set(re.sub(
-                r"^(\s*)# (version=\"\",).*$",
-                f"\\1version=\"{version}\",",
-                cmproxy.get(),
-                flags=re.MULTILINE,
-                count=1,
-            ))
+            cmproxy.set(
+                re.sub(
+                    r"^(\s*)# (version=\"\",).*$",
+                    f'\\1version="{version}",',
+                    cmproxy.get(),
+                    flags=re.MULTILINE,
+                    count=1,
+                ),
+            )
 
     # Overwrite the entire ``streamlink._version`` module
     with update_file(pkg_dir / "streamlink" / "_version.py") as cmproxy:
-        cmproxy.set(f"__version__ = \"{version}\"\n")
+        cmproxy.set(f'__version__ = "{version}"\n')
 
 
 TProxyItem = TypeVar("TProxyItem")

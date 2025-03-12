@@ -1,7 +1,9 @@
+from __future__ import annotations
+
 import json
 import logging
 from threading import RLock, Thread, current_thread
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any
 from urllib.parse import unquote_plus, urlparse
 
 from certifi import where as certify_where
@@ -30,16 +32,16 @@ class WebsocketClient(Thread):
         self,
         session: Streamlink,
         url: str,
-        subprotocols: Optional[List[str]] = None,
-        header: Optional[Union[List[str], Dict[str, str]]] = None,
-        cookie: Optional[str] = None,
-        sockopt: Optional[Tuple] = None,
-        sslopt: Optional[Dict] = None,
-        host: Optional[str] = None,
-        origin: Optional[str] = None,
+        subprotocols: list[str] | None = None,
+        header: list[str] | dict[str, str] | None = None,
+        cookie: str | None = None,
+        sockopt: tuple | None = None,
+        sslopt: dict | None = None,
+        host: str | None = None,
+        origin: str | None = None,
         suppress_origin: bool = False,
-        ping_interval: Union[int, float] = 0,
-        ping_timeout: Optional[Union[int, float]] = None,
+        ping_interval: int | float = 0,
+        ping_timeout: int | float | None = None,
         ping_payload: str = "",
     ):
         if rootlogger.level <= TRACE:
@@ -52,8 +54,8 @@ class WebsocketClient(Thread):
         if not any(True for h in header if h.startswith("User-Agent: ")):
             header.append(f"User-Agent: {session.http.headers['User-Agent']!s}")
 
-        proxy_options: Dict[str, Any] = {}
-        http_proxy: Optional[str] = session.get_option("http-proxy")
+        proxy_options: dict[str, Any] = {}
+        http_proxy: str | None = session.get_option("http-proxy")
         if http_proxy:
             p = urlparse(http_proxy)
             proxy_options["proxy_type"] = p.scheme
@@ -120,11 +122,11 @@ class WebsocketClient(Thread):
 
     def reconnect(
         self,
-        url: Optional[str] = None,
-        subprotocols: Optional[List[str]] = None,
-        header: Optional[Union[List, Dict]] = None,
-        cookie: Optional[str] = None,
-        closeopts: Optional[Dict] = None,
+        url: str | None = None,
+        subprotocols: list[str] | None = None,
+        header: list | dict | None = None,
+        cookie: str | None = None,
+        closeopts: dict | None = None,
     ) -> None:
         with self._reconnect_lock:
             # ws connection is not active (anymore)
@@ -140,14 +142,14 @@ class WebsocketClient(Thread):
                 cookie=self.ws.cookie if cookie is None else cookie,
             )
 
-    def close(self, status: int = STATUS_NORMAL, reason: Union[str, bytes] = "", timeout: int = 3) -> None:
+    def close(self, status: int = STATUS_NORMAL, reason: str | bytes = "", timeout: int = 3) -> None:
         if isinstance(reason, str):
             reason = bytes(reason, encoding="utf-8")
         self.ws.close(status=status, reason=reason, timeout=timeout)
         if self.is_alive() and current_thread() is not self:
             self.join()
 
-    def send(self, data: Union[str, bytes], opcode: int = ABNF.OPCODE_TEXT) -> None:
+    def send(self, data: str | bytes, opcode: int = ABNF.OPCODE_TEXT) -> None:
         return self.ws.send(data, opcode)
 
     def send_json(self, data: Any) -> None:
@@ -181,5 +183,5 @@ class WebsocketClient(Thread):
     def on_cont_message(self, wsapp: WebSocketApp, data: bytes, cont: Any) -> None:
         pass  # pragma: no cover
 
-    def on_data(self, wsapp: WebSocketApp, data: Union[bytes, str], data_type: int, cont: Any) -> None:
+    def on_data(self, wsapp: WebSocketApp, data: bytes | str, data_type: int, cont: Any) -> None:
         pass  # pragma: no cover

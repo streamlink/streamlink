@@ -1,14 +1,15 @@
-from asyncio import Future, get_event_loop
+from __future__ import annotations
+
+from collections.abc import Awaitable, Callable, Generator
 from contextlib import contextmanager
 from dataclasses import dataclass
 from functools import wraps
 from threading import Event
-from typing import Awaitable, Callable, Generator, Optional, Type
 
 
 @dataclass
 class _HandshakeContext:
-    error: Optional[Exception] = None
+    error: Exception | None = None
 
 
 class Handshake:
@@ -24,7 +25,7 @@ class Handshake:
         self._context = _HandshakeContext()
 
     @contextmanager
-    def __call__(self, exception: Optional[Type[Exception]] = None) -> Generator[_HandshakeContext, None, None]:
+    def __call__(self, exception: type[Exception] | None = None) -> Generator[_HandshakeContext, None, None]:
         """Execute application logic in this context manager and optionally capture exceptions."""
         try:
             self.ready()
@@ -53,11 +54,11 @@ class Handshake:
         """Allow producer thread to run."""
         self._go.set()
 
-    def wait_ready(self, timeout: Optional[float] = None) -> bool:
+    def wait_ready(self, timeout: float | None = None) -> bool:
         """Wait for producer thread to be ready and return whether it is ready or not."""
         return self._ready.wait(timeout=timeout)
 
-    def wait_done(self, timeout: Optional[float] = None) -> bool:
+    def wait_done(self, timeout: float | None = None) -> bool:
         """Wait for producer thread to be done and return whether it is done or not. If an exception was captured, raise it."""
         result = self._done.wait(timeout=timeout)
         self._done.clear()
@@ -69,33 +70,22 @@ class Handshake:
 
         return result
 
-    def step(self, timeout: Optional[float] = None) -> bool:
+    def step(self, timeout: float | None = None) -> bool:
         """Allow producer thread to run, wait for it to complete and return whether it has finished or not."""
         self.go()
         return self.wait_done(timeout=timeout)
 
-    is_ready: Callable[[Optional[float]], Awaitable[bool]]
-    is_done: Callable[[Optional[float]], Awaitable[bool]]
-    asyncstep: Callable[[Optional[float]], Awaitable[bool]]
+    is_ready: Callable[[float | None], Awaitable[bool]]
+    is_done: Callable[[float | None], Awaitable[bool]]
+    asyncstep: Callable[[float | None], Awaitable[bool]]
 
 
 def _sync2async(obj, name, method):
     meth = getattr(obj, method)
 
     @wraps(meth)
-    async def wrapper(*args, **kwargs):
-        async def task():  # noqa: RUF029
-            try:
-                value = meth(*args, **kwargs)
-            except Exception as err:
-                future.set_exception(err)
-            else:
-                future.set_result(value)
-
-        future = Future()
-        get_event_loop().create_task(task())
-
-        return await future
+    async def wrapper(*args, **kwargs):  # noqa: RUF029
+        return meth(*args, **kwargs)
 
     setattr(obj, name, wrapper)
 

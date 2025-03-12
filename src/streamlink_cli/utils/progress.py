@@ -1,37 +1,50 @@
+from __future__ import annotations
+
 import os
 from collections import deque
+from collections.abc import Callable, Iterable, Mapping
 from math import floor
 from pathlib import PurePath
 from shutil import get_terminal_size
 from string import Formatter as StringFormatter
 from threading import Event, RLock, Thread
 from time import time
-from typing import Callable, Deque, Dict, Iterable, List, Optional, TextIO, Tuple, Union
+from typing import TYPE_CHECKING, TextIO
 
 from streamlink.compat import is_win32
 
 
+if TYPE_CHECKING:
+    from typing_extensions import TypeAlias
+
+
 _stringformatter = StringFormatter()
-_TFormat = Iterable[Iterable[Tuple[str, Optional[str], Optional[str], Optional[str]]]]
+_TFormat: TypeAlias = "Iterable[Iterable[tuple[str, str | None, str | None, str | None]]]"
 
 
 class ProgressFormatter:
     # Store formats as a tuple of lists of parsed format strings,
     # so when iterating, we don't have to parse over and over again.
     # Reserve at least 15 characters for the path, so it can be truncated with enough useful information.
-    FORMATS: _TFormat = tuple(list(_stringformatter.parse(fmt)) for fmt in (
-        "[download] Written {written} to {path:15} ({elapsed} @ {speed})",
-        "[download] Written {written} ({elapsed} @ {speed})",
-        "[download] {written} ({elapsed} @ {speed})",
-        "[download] {written} ({elapsed})",
-        "[download] {written}",
-    ))
-    FORMATS_NOSPEED: _TFormat = tuple(list(_stringformatter.parse(fmt)) for fmt in (
-        "[download] Written {written} to {path:15} ({elapsed})",
-        "[download] Written {written} ({elapsed})",
-        "[download] {written} ({elapsed})",
-        "[download] {written}",
-    ))
+    FORMATS: _TFormat = tuple(
+        list(_stringformatter.parse(fmt))
+        for fmt in (
+            "[download] Written {written} to {path:15} ({elapsed} @ {speed})",
+            "[download] Written {written} ({elapsed} @ {speed})",
+            "[download] {written} ({elapsed} @ {speed})",
+            "[download] {written} ({elapsed})",
+            "[download] {written}",
+        )
+    )
+    FORMATS_NOSPEED: _TFormat = tuple(
+        list(_stringformatter.parse(fmt))
+        for fmt in (
+            "[download] Written {written} to {path:15} ({elapsed})",
+            "[download] Written {written} ({elapsed})",
+            "[download] {written} ({elapsed})",
+            "[download] {written}",
+        )
+    )
 
     # Use U+2026 (HORIZONTAL ELLIPSIS) to be able to distinguish between "." and ".." when truncating relative paths
     ELLIPSIS: str = "…"
@@ -39,7 +52,7 @@ class ProgressFormatter:
     # widths generated from
     # https://www.unicode.org/Public/4.0-Update/EastAsianWidth-4.0.0.txt
     # See https://github.com/streamlink/streamlink/pull/2032
-    WIDTHS: Iterable[Tuple[int, int]] = (
+    WIDTHS: Iterable[tuple[int, int]] = (
         (13, 1),
         (15, 0),
         (126, 1),
@@ -110,10 +123,10 @@ class ProgressFormatter:
         return current
 
     @classmethod
-    def format(cls, formats: _TFormat, params: Dict[str, Union[str, Callable[[int], str]]]) -> str:
+    def format(cls, formats: _TFormat, params: Mapping[str, str | Callable[[int], str]]) -> str:
         term_width = cls.term_width()
-        static: List[str] = []
-        variable: List[Tuple[int, Callable[[int], str], int]] = []
+        static: list[str] = []
+        variable: list[tuple[int, Callable[[int], str], int]] = []
 
         for fmt in formats:
             static.clear()
@@ -161,7 +174,7 @@ class ProgressFormatter:
 
     @staticmethod
     def _round(num: float, n: int = 2) -> float:
-        return floor(num * 10 ** n) / 10 ** n
+        return floor(num * 10**n) / 10**n
 
     @classmethod
     def format_filesize(cls, size: float, suffix: str = "") -> str:
@@ -232,7 +245,7 @@ class Progress(Thread):
         self.stream: TextIO = stream
         self.path: PurePath = path
         self.interval: float = interval
-        self.history: Deque[Tuple[float, int]] = deque(maxlen=int(history / interval))
+        self.history: deque[tuple[float, int]] = deque(maxlen=int(history / interval))
         self.threshold: int = int(threshold / interval)
 
         self.started: float = 0.0

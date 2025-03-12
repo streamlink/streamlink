@@ -18,22 +18,45 @@ log = logging.getLogger(__name__)
 
 
 @pluginmatcher(
-    re.compile(r"https?://(?:www\.)?pandalive\.co\.kr/live/play/[^/]+"),
+    re.compile(r"https?://(?:\w+\.)?pandalive\.co\.kr/(?:\w+/)?play/(?P<channel>[^/#?]+)"),
 )
 class Pandalive(Plugin):
+    _URL_API_MEMBER = "https://api.pandalive.co.kr/v1/member/bj"
+
     def _get_streams(self):
-        media_code = self.session.http.get(
-            self.url,
+        result, user_id = self.session.http.post(
+            self._URL_API_MEMBER,
+            data={"userId": self.match["channel"]},
+            raise_for_status=False,
             schema=validate.Schema(
-                re.compile(r"""routePath:\s*(?P<q>["'])(\\u002F|/)live(\\u002F|/)play(\\u002F|/)(?P<id>.+?)(?P=q)"""),
-                validate.any(None, validate.get("id")),
+                validate.parse_json(),
+                validate.any(
+                    validate.all(
+                        {
+                            "result": False,
+                            "message": str,
+                        },
+                        validate.union_get("result", "message"),
+                    ),
+                    validate.all(
+                        {
+                            "bjInfo": {
+                                "idx": int,
+                            },
+                        },
+                        validate.get(("bjInfo", "idx")),
+                        validate.transform(lambda data: (True, data)),
+                    ),
+                ),
             ),
         )
-
-        if not media_code:
+        if not result:
+            log.error(user_id or "Failed to get user ID")
+            return
+        if not user_id:
             return
 
-        log.debug(f"Media code: {media_code}")
+        log.debug(f"{user_id=}")
 
         json = self.session.http.post(
             "https://api.pandalive.co.kr/v1/live/play",
@@ -42,7 +65,7 @@ class Pandalive(Plugin):
             },
             data={
                 "action": "watch",
-                "userId": media_code,
+                "userId": user_id,
             },
             acceptable_status=(200, 400),
             schema=validate.Schema(
@@ -58,15 +81,21 @@ class Pandalive(Plugin):
                             "liveType": str,
                         },
                         "PlayList": {
-                            validate.optional("hls"): [{
-                                "url": validate.url(),
-                            }],
-                            validate.optional("hls2"): [{
-                                "url": validate.url(),
-                            }],
-                            validate.optional("hls3"): [{
-                                "url": validate.url(),
-                            }],
+                            validate.optional("hls"): [
+                                {
+                                    "url": validate.url(),
+                                },
+                            ],
+                            validate.optional("hls2"): [
+                                {
+                                    "url": validate.url(),
+                                },
+                            ],
+                            validate.optional("hls3"): [
+                                {
+                                    "url": validate.url(),
+                                },
+                            ],
                         },
                         "result": bool,
                         "message": str,

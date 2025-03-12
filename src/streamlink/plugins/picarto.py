@@ -20,18 +20,22 @@ from streamlink.stream.hls import HLSStream
 log = logging.getLogger(__name__)
 
 
-@pluginmatcher(re.compile(r"""
-    https?://(?:www\.)?picarto\.tv/
-    (?:
-        streampopout/(?P<po_user>[^/]+)/public
-    |
-        videopopout/(?P<po_vod_id>\d+)
-    |
-        [^/]+/videos/(?P<vod_id>\d+)
-    |
-        (?P<user>[^/?&]+)
-    )$
-""", re.VERBOSE))
+@pluginmatcher(
+    name="streampopout",
+    pattern=re.compile(r"https?://(?:www\.)?picarto\.tv/streampopout/(?P<po_user>[^/]+)/public$"),
+)
+@pluginmatcher(
+    name="videopopout",
+    pattern=re.compile(r"https?://(?:www\.)?picarto\.tv/videopopout/(?P<po_vod_id>\d+)$"),
+)
+@pluginmatcher(
+    name="vod",
+    pattern=re.compile(r"https?://(?:www\.)?picarto\.tv/[^/]+/videos/(?P<vod_id>\d+)$"),
+)
+@pluginmatcher(
+    name="user",
+    pattern=re.compile(r"https?://(?:www\.)?picarto\.tv/(?P<user>[^/?&]+)$"),
+)
 class Picarto(Plugin):
     API_URL_LIVE = "https://ptvintern.picarto.tv/api/channel/detail/{username}"
     API_URL_VOD = "https://ptvintern.picarto.tv/ptvapi"
@@ -43,23 +47,34 @@ class Picarto(Plugin):
             schema=validate.Schema(
                 validate.parse_json(),
                 {
-                    "channel": validate.any(None, {
-                        "stream_name": str,
-                        "title": str,
-                        "online": bool,
-                        "private": bool,
-                        "categories": [{"label": str}],
-                    }),
-                    "getMultiStreams": validate.any(None, {
-                        "multistream": bool,
-                        "streams": [{
-                            "name": str,
+                    "channel": validate.any(
+                        None,
+                        {
+                            "stream_name": str,
+                            "title": str,
                             "online": bool,
-                        }],
-                    }),
-                    "getLoadBalancerUrl": validate.any(None, {
-                        "url": validate.any(None, validate.transform(lambda url: urlparse(url).netloc)),
-                    }),
+                            "private": bool,
+                            "categories": [{"label": str}],
+                        },
+                    ),
+                    "getMultiStreams": validate.any(
+                        None,
+                        {
+                            "multistream": bool,
+                            "streams": [
+                                {
+                                    "name": str,
+                                    "online": bool,
+                                },
+                            ],
+                        },
+                    ),
+                    "getLoadBalancerUrl": validate.any(
+                        None,
+                        {
+                            "url": validate.any(None, validate.transform(lambda url: urlparse(url).netloc)),
+                        },
+                    ),
                 },
                 validate.union_get("channel", "getMultiStreams", "getLoadBalancerUrl"),
             ),
@@ -108,19 +123,28 @@ class Picarto(Plugin):
             """).lstrip(),
             "variables": {"videoId": vod_id},
         }
-        vod_data = self.session.http.post(self.API_URL_VOD, json=data, schema=validate.Schema(
-            validate.parse_json(),
-            {"data": {
-                "video": validate.any(None, {
-                    "id": int,
-                    "title": str,
-                    "file_name": str,
-                    "video_recording_image_url": str,
-                    "channel": {"name": str},
-                }),
-            }},
-            validate.get(("data", "video")),
-        ))
+        vod_data = self.session.http.post(
+            self.API_URL_VOD,
+            json=data,
+            schema=validate.Schema(
+                validate.parse_json(),
+                {
+                    "data": {
+                        "video": validate.any(
+                            None,
+                            {
+                                "id": int,
+                                "title": str,
+                                "file_name": str,
+                                "video_recording_image_url": str,
+                                "channel": {"name": str},
+                            },
+                        ),
+                    },
+                },
+                validate.get(("data", "video")),
+            ),
+        )
 
         if not vod_data:
             log.debug("Missing video data")
@@ -143,12 +167,12 @@ class Picarto(Plugin):
     def _get_streams(self):
         m = self.match.groupdict()
 
-        if m["po_vod_id"] or m["vod_id"]:
+        if m.get("po_vod_id") or m.get("vod_id"):
             log.debug("Type=VOD")
-            return self.get_vod(m["po_vod_id"] or m["vod_id"])
-        elif m["po_user"] or m["user"]:
+            return self.get_vod(m.get("po_vod_id") or m.get("vod_id"))
+        elif m.get("po_user") or m.get("user"):
             log.debug("Type=Live")
-            return self.get_live(m["po_user"] or m["user"])
+            return self.get_live(m.get("po_user") or m.get("user"))
 
 
 __plugin__ = Picarto

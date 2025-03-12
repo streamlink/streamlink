@@ -3,14 +3,15 @@
 # This file is generated from the CDP specification. If you need to make
 # changes, edit the generator and regenerate all modules.
 #
-# CDP version: v0.0.1156692
+# CDP version: v0.0.1359167
 # CDP domain: Target
 
 from __future__ import annotations
 
 import enum
-import typing
+from collections.abc import Generator
 from dataclasses import dataclass
+from typing import Any
 
 import streamlink.webbrowser.cdp.devtools.browser as browser
 import streamlink.webbrowser.cdp.devtools.page as page
@@ -48,6 +49,7 @@ class SessionID(str):
 class TargetInfo:
     target_id: TargetID
 
+    #: List of types: https://source.chromium.org/chromium/chromium/src/+/main:content/browser/devtools/devtools_agent_host_impl.cc?ss=chromium&q=f:devtools%20-f:out%20%22::kTypeTab%5B%5D%22
     type_: str
 
     title: str
@@ -61,16 +63,16 @@ class TargetInfo:
     can_access_opener: bool
 
     #: Opener target Id
-    opener_id: typing.Optional[TargetID] = None
+    opener_id: TargetID | None = None
 
     #: Frame id of originating window (is only set if target has an opener).
-    opener_frame_id: typing.Optional[page.FrameId] = None
+    opener_frame_id: page.FrameId | None = None
 
-    browser_context_id: typing.Optional[browser.BrowserContextID] = None
+    browser_context_id: browser.BrowserContextID | None = None
 
     #: Provides additional details for specific target types. For example, for
-    #: the type of "page", this may be set to "portal" or "prerender".
-    subtype: typing.Optional[str] = None
+    #: the type of "page", this may be set to "prerender".
+    subtype: str | None = None
 
     def to_json(self) -> T_JSON_DICT:
         json: T_JSON_DICT = {}
@@ -111,11 +113,11 @@ class FilterEntry:
     """
     A filter used by target query/discovery/auto-attach operations.
     """
-    #: If set, causes exclusion of mathcing targets from the list.
-    exclude: typing.Optional[bool] = None
+    #: If set, causes exclusion of matching targets from the list.
+    exclude: bool | None = None
 
     #: If not present, matches any type.
-    type_: typing.Optional[str] = None
+    type_: str | None = None
 
     def to_json(self) -> T_JSON_DICT:
         json: T_JSON_DICT = {}
@@ -142,11 +144,11 @@ class TargetFilter(list):
     [{type: "browser", exclude: true}, {type: "tab", exclude: true}, {}]
     (i.e. include everything but ``browser`` and ``tab``).
     """
-    def to_json(self) -> typing.List[FilterEntry]:
+    def to_json(self) -> list[FilterEntry]:
         return self
 
     @classmethod
-    def from_json(cls, json: typing.List[FilterEntry]) -> TargetFilter:
+    def from_json(cls, json: list[FilterEntry]) -> TargetFilter:
         return cls(json)
 
     def __repr__(self):
@@ -175,7 +177,7 @@ class RemoteLocation:
 
 def activate_target(
     target_id: TargetID,
-) -> typing.Generator[T_JSON_DICT, T_JSON_DICT, None]:
+) -> Generator[T_JSON_DICT, T_JSON_DICT, None]:
     """
     Activates (focuses) the target.
 
@@ -192,8 +194,8 @@ def activate_target(
 
 def attach_to_target(
     target_id: TargetID,
-    flatten: typing.Optional[bool] = None,
-) -> typing.Generator[T_JSON_DICT, T_JSON_DICT, SessionID]:
+    flatten: bool | None = None,
+) -> Generator[T_JSON_DICT, T_JSON_DICT, SessionID]:
     """
     Attaches to the target with given id.
 
@@ -213,7 +215,7 @@ def attach_to_target(
     return SessionID.from_json(json["sessionId"])
 
 
-def attach_to_browser_target() -> typing.Generator[T_JSON_DICT, T_JSON_DICT, SessionID]:
+def attach_to_browser_target() -> Generator[T_JSON_DICT, T_JSON_DICT, SessionID]:
     """
     Attaches to the browser target, only uses flat sessionId mode.
 
@@ -230,7 +232,7 @@ def attach_to_browser_target() -> typing.Generator[T_JSON_DICT, T_JSON_DICT, Ses
 
 def close_target(
     target_id: TargetID,
-) -> typing.Generator[T_JSON_DICT, T_JSON_DICT, bool]:
+) -> Generator[T_JSON_DICT, T_JSON_DICT, bool]:
     """
     Closes the target. If the target is a page that gets closed too.
 
@@ -249,15 +251,15 @@ def close_target(
 
 def expose_dev_tools_protocol(
     target_id: TargetID,
-    binding_name: typing.Optional[str] = None,
-) -> typing.Generator[T_JSON_DICT, T_JSON_DICT, None]:
+    binding_name: str | None = None,
+) -> Generator[T_JSON_DICT, T_JSON_DICT, None]:
     """
     Inject object to the target's main frame that provides a communication
     channel with browser target.
 
     Injected object will be available as ``window[bindingName]``.
 
-    The object has the follwing API:
+    The object has the following API:
     - ``binding.send(json)`` - a method to send messages over the remote debugging protocol
     - ``binding.onmessage = json => handleMessage(json)`` - a callback that will be called for the protocol notifications and command responses.
 
@@ -278,21 +280,19 @@ def expose_dev_tools_protocol(
 
 
 def create_browser_context(
-    dispose_on_detach: typing.Optional[bool] = None,
-    proxy_server: typing.Optional[str] = None,
-    proxy_bypass_list: typing.Optional[str] = None,
-    origins_with_universal_network_access: typing.Optional[typing.List[str]] = None,
-) -> typing.Generator[T_JSON_DICT, T_JSON_DICT, browser.BrowserContextID]:
+    dispose_on_detach: bool | None = None,
+    proxy_server: str | None = None,
+    proxy_bypass_list: str | None = None,
+    origins_with_universal_network_access: list[str] | None = None,
+) -> Generator[T_JSON_DICT, T_JSON_DICT, browser.BrowserContextID]:
     """
     Creates a new empty BrowserContext. Similar to an incognito profile but you can have more than
     one.
 
-    **EXPERIMENTAL**
-
-    :param dispose_on_detach: *(Optional)* If specified, disposes this context when debugging session disconnects.
-    :param proxy_server: *(Optional)* Proxy server, similar to the one passed to --proxy-server
-    :param proxy_bypass_list: *(Optional)* Proxy bypass list, similar to the one passed to --proxy-bypass-list
-    :param origins_with_universal_network_access: *(Optional)* An optional list of origins to grant unlimited cross-origin access to. Parts of the URL other than those constituting origin are ignored.
+    :param dispose_on_detach: **(EXPERIMENTAL)** *(Optional)* If specified, disposes this context when debugging session disconnects.
+    :param proxy_server: **(EXPERIMENTAL)** *(Optional)* Proxy server, similar to the one passed to --proxy-server
+    :param proxy_bypass_list: **(EXPERIMENTAL)** *(Optional)* Proxy bypass list, similar to the one passed to --proxy-bypass-list
+    :param origins_with_universal_network_access: **(EXPERIMENTAL)** *(Optional)* An optional list of origins to grant unlimited cross-origin access to. Parts of the URL other than those constituting origin are ignored.
     :returns: The id of the context created.
     """
     params: T_JSON_DICT = {}
@@ -312,11 +312,9 @@ def create_browser_context(
     return browser.BrowserContextID.from_json(json["browserContextId"])
 
 
-def get_browser_contexts() -> typing.Generator[T_JSON_DICT, T_JSON_DICT, typing.List[browser.BrowserContextID]]:
+def get_browser_contexts() -> Generator[T_JSON_DICT, T_JSON_DICT, list[browser.BrowserContextID]]:
     """
     Returns all browser contexts created with ``Target.createBrowserContext`` method.
-
-    **EXPERIMENTAL**
 
     :returns: An array of browser context ids.
     """
@@ -329,14 +327,14 @@ def get_browser_contexts() -> typing.Generator[T_JSON_DICT, T_JSON_DICT, typing.
 
 def create_target(
     url: str,
-    width: typing.Optional[int] = None,
-    height: typing.Optional[int] = None,
-    browser_context_id: typing.Optional[browser.BrowserContextID] = None,
-    enable_begin_frame_control: typing.Optional[bool] = None,
-    new_window: typing.Optional[bool] = None,
-    background: typing.Optional[bool] = None,
-    for_tab: typing.Optional[bool] = None,
-) -> typing.Generator[T_JSON_DICT, T_JSON_DICT, TargetID]:
+    width: int | None = None,
+    height: int | None = None,
+    browser_context_id: browser.BrowserContextID | None = None,
+    enable_begin_frame_control: bool | None = None,
+    new_window: bool | None = None,
+    background: bool | None = None,
+    for_tab: bool | None = None,
+) -> Generator[T_JSON_DICT, T_JSON_DICT, TargetID]:
     """
     Creates a new page.
 
@@ -375,9 +373,9 @@ def create_target(
 
 
 def detach_from_target(
-    session_id: typing.Optional[SessionID] = None,
-    target_id: typing.Optional[TargetID] = None,
-) -> typing.Generator[T_JSON_DICT, T_JSON_DICT, None]:
+    session_id: SessionID | None = None,
+    target_id: TargetID | None = None,
+) -> Generator[T_JSON_DICT, T_JSON_DICT, None]:
     """
     Detaches session with given id.
 
@@ -398,12 +396,10 @@ def detach_from_target(
 
 def dispose_browser_context(
     browser_context_id: browser.BrowserContextID,
-) -> typing.Generator[T_JSON_DICT, T_JSON_DICT, None]:
+) -> Generator[T_JSON_DICT, T_JSON_DICT, None]:
     """
     Deletes a BrowserContext. All the belonging pages will be closed without calling their
     beforeunload hooks.
-
-    **EXPERIMENTAL**
 
     :param browser_context_id:
     """
@@ -417,8 +413,8 @@ def dispose_browser_context(
 
 
 def get_target_info(
-    target_id: typing.Optional[TargetID] = None,
-) -> typing.Generator[T_JSON_DICT, T_JSON_DICT, TargetInfo]:
+    target_id: TargetID | None = None,
+) -> Generator[T_JSON_DICT, T_JSON_DICT, TargetInfo]:
     """
     Returns information about a target.
 
@@ -439,8 +435,8 @@ def get_target_info(
 
 
 def get_targets(
-    filter_: typing.Optional[TargetFilter] = None,
-) -> typing.Generator[T_JSON_DICT, T_JSON_DICT, typing.List[TargetInfo]]:
+    filter_: TargetFilter | None = None,
+) -> Generator[T_JSON_DICT, T_JSON_DICT, list[TargetInfo]]:
     """
     Retrieves a list of available targets.
 
@@ -460,9 +456,9 @@ def get_targets(
 
 def send_message_to_target(
     message: str,
-    session_id: typing.Optional[SessionID] = None,
-    target_id: typing.Optional[TargetID] = None,
-) -> typing.Generator[T_JSON_DICT, T_JSON_DICT, None]:
+    session_id: SessionID | None = None,
+    target_id: TargetID | None = None,
+) -> Generator[T_JSON_DICT, T_JSON_DICT, None]:
     """
     Sends protocol message over session with given id.
     Consider using flat mode instead; see commands attachToTarget, setAutoAttach,
@@ -488,9 +484,9 @@ def send_message_to_target(
 def set_auto_attach(
     auto_attach: bool,
     wait_for_debugger_on_start: bool,
-    flatten: typing.Optional[bool] = None,
-    filter_: typing.Optional[TargetFilter] = None,
-) -> typing.Generator[T_JSON_DICT, T_JSON_DICT, None]:
+    flatten: bool | None = None,
+    filter_: TargetFilter | None = None,
+) -> Generator[T_JSON_DICT, T_JSON_DICT, None]:
     """
     Controls whether to automatically attach to new targets which are considered to be related to
     this one. When turned on, attaches to all existing related targets as well. When turned off,
@@ -498,11 +494,9 @@ def set_auto_attach(
     This also clears all targets added by ``autoAttachRelated`` from the list of targets to watch
     for creation of related targets.
 
-    **EXPERIMENTAL**
-
     :param auto_attach: Whether to auto-attach to related targets.
     :param wait_for_debugger_on_start: Whether to pause new targets when attaching to them. Use ```Runtime.runIfWaitingForDebugger``` to run paused targets.
-    :param flatten: *(Optional)* Enables "flat" access to the session via specifying sessionId attribute in the commands. We plan to make this the default, deprecate non-flattened mode, and eventually retire it. See crbug.com/991325.
+    :param flatten: **(EXPERIMENTAL)** *(Optional)* Enables "flat" access to the session via specifying sessionId attribute in the commands. We plan to make this the default, deprecate non-flattened mode, and eventually retire it. See crbug.com/991325.
     :param filter_: **(EXPERIMENTAL)** *(Optional)* Only targets matching filter will be attached.
     """
     params: T_JSON_DICT = {}
@@ -522,8 +516,8 @@ def set_auto_attach(
 def auto_attach_related(
     target_id: TargetID,
     wait_for_debugger_on_start: bool,
-    filter_: typing.Optional[TargetFilter] = None,
-) -> typing.Generator[T_JSON_DICT, T_JSON_DICT, None]:
+    filter_: TargetFilter | None = None,
+) -> Generator[T_JSON_DICT, T_JSON_DICT, None]:
     """
     Adds the specified target to the list of targets that will be monitored for any related target
     creation (such as child frames, child workers and new versions of service worker) and reported
@@ -551,8 +545,8 @@ def auto_attach_related(
 
 def set_discover_targets(
     discover: bool,
-    filter_: typing.Optional[TargetFilter] = None,
-) -> typing.Generator[T_JSON_DICT, T_JSON_DICT, None]:
+    filter_: TargetFilter | None = None,
+) -> Generator[T_JSON_DICT, T_JSON_DICT, None]:
     """
     Controls whether to discover available targets and notify via
     ``targetCreated/targetInfoChanged/targetDestroyed`` events.
@@ -572,8 +566,8 @@ def set_discover_targets(
 
 
 def set_remote_locations(
-    locations: typing.List[RemoteLocation],
-) -> typing.Generator[T_JSON_DICT, T_JSON_DICT, None]:
+    locations: list[RemoteLocation],
+) -> Generator[T_JSON_DICT, T_JSON_DICT, None]:
     """
     Enables target discovery for the specified locations, when ``setDiscoverTargets`` was set to
     ``true``.
@@ -625,7 +619,7 @@ class DetachedFromTarget:
     #: Detached session identifier.
     session_id: SessionID
     #: Deprecated.
-    target_id: typing.Optional[TargetID]
+    target_id: TargetID | None
 
     @classmethod
     def from_json(cls, json: T_JSON_DICT) -> DetachedFromTarget:
@@ -646,7 +640,7 @@ class ReceivedMessageFromTarget:
     session_id: SessionID
     message: str
     #: Deprecated.
-    target_id: typing.Optional[TargetID]
+    target_id: TargetID | None
 
     @classmethod
     def from_json(cls, json: T_JSON_DICT) -> ReceivedMessageFromTarget:

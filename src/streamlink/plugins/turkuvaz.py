@@ -27,14 +27,42 @@ from streamlink.stream.hls import HLSStream
 log = logging.getLogger(__name__)
 
 
-@pluginmatcher(re.compile(r"""
-    https?://(?:www\.)?
-    (?:
-        atvavrupa\.tv
-        |
-        (?:a2tv|ahaber|anews|apara|aspor|atv|minikacocuk|minikago|vavtv)\.com\.tr
-    )
-""", re.VERBOSE))
+@pluginmatcher(
+    name="atvavrupa",
+    pattern=re.compile(r"https?://(?:www\.)?atvavrupa\.tv"),
+)
+@pluginmatcher(
+    name="ahaber",
+    pattern=re.compile(r"https?://(?:www\.)?ahaber\.com\.tr"),
+)
+@pluginmatcher(
+    name="anews",
+    pattern=re.compile(r"https?://(?:www\.)?anews\.com\.tr"),
+)
+@pluginmatcher(
+    name="apara",
+    pattern=re.compile(r"https?://(?:www\.)?apara\.com\.tr"),
+)
+@pluginmatcher(
+    name="aspor",
+    pattern=re.compile(r"https?://(?:www\.)?aspor\.com\.tr"),
+)
+@pluginmatcher(
+    name="atv",
+    pattern=re.compile(r"https?://(?:www\.)?atv\.com\.tr"),
+)
+@pluginmatcher(
+    name="minikacocuk",
+    pattern=re.compile(r"https?://(?:www\.)?minikacocuk\.com\.tr"),
+)
+@pluginmatcher(
+    name="minikago",
+    pattern=re.compile(r"https?://(?:www\.)?minikago\.com\.tr"),
+)
+@pluginmatcher(
+    name="vavtv",
+    pattern=re.compile(r"https?://(?:www\.)?vavtv\.com\.tr"),
+)
 class Turkuvaz(Plugin):
     _VIDEOID_LIVE = "00000000-0000-0000-0000-000000000000"
 
@@ -48,7 +76,7 @@ class Turkuvaz(Plugin):
     }
 
     def _get_streams(self):
-        _find_and_get_attrs = validate.all(
+        find_and_get_attrs = validate.all(
             validate.xml_find(".//div[@data-videoid][@data-websiteid]"),
             validate.union_get("data-videoid", "data-websiteid"),
         )
@@ -58,7 +86,7 @@ class Turkuvaz(Plugin):
             schema=validate.Schema(
                 validate.parse_html(),
                 validate.any(
-                    _find_and_get_attrs,
+                    find_and_get_attrs,
                     validate.all(
                         validate.xml_xpath_string(
                             ".//script[contains(text(),'data-videoid') and contains(text(),'data-websiteid')]/text()",
@@ -68,7 +96,7 @@ class Turkuvaz(Plugin):
                             validate.regex(re.compile(r"""var\s+tmdPlayer\s*=\s*(?P<q>["'])(.*?)(?P=q)""")),
                             validate.get(0),
                             validate.parse_html(),
-                            _find_and_get_attrs,
+                            find_and_get_attrs,
                         ),
                     ),
                 ),

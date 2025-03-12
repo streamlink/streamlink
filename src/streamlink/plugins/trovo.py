@@ -22,9 +22,9 @@ from streamlink.utils.url import update_scheme
 log = logging.getLogger(__name__)
 
 
-@pluginmatcher(re.compile(r"""
-    https?://(?:www\.)?trovo\.live/s/(?P<user>[^/?&]+)(?:/\d+\?vid=(?P<video_id>[^/?&]+))?
-""", re.VERBOSE))
+@pluginmatcher(
+    re.compile(r"https?://(?:www\.)?trovo\.live/s/(?P<user>[^/?&]+)(?:/\d+\?vid=(?P<video_id>[^/?&]+))?"),
+)
 class Trovo(Plugin):
     @classmethod
     def stream_weight(cls, stream):
@@ -39,46 +39,52 @@ class Trovo(Plugin):
     def get_vod(self, video_id):
         json = self.session.http.post(
             f"https://api-web.trovo.live/graphql?qid={self.generate_qid()}",
-            json=[{
-                "operationName": "vod_VodReaderService_BatchGetVodDetailInfo",
-                "variables": {
-                    "params": {
-                        "vids": [video_id],
+            json=[
+                {
+                    "operationName": "vod_VodReaderService_BatchGetVodDetailInfo",
+                    "variables": {
+                        "params": {
+                            "vids": [video_id],
+                        },
                     },
+                    "extensions": {},
                 },
-                "extensions": {},
-            }],
+            ],
             schema=validate.Schema(
                 validate.parse_json(),
-                [{
-                    "data": {
-                        "vod_VodReaderService_BatchGetVodDetailInfo": {
-                            "VodDetailInfos": validate.any(
-                                {
-                                    video_id: {
-                                        "streamerInfo": {
-                                            "userName": str,
-                                        },
-                                        "vodInfo": {
-                                            "playInfos": [{
-                                                "desc": validate.all(validate.transform(lambda s: s.lower()), str),
-                                                "playUrl": validate.url(),
-                                            }],
-                                            "vid": str,
-                                            "title": str,
-                                            "categoryName": str,
-                                            "playbackRights": {
-                                                "playbackRightsSetting": str,
-                                                "playbackRights": str,
+                [
+                    {
+                        "data": {
+                            "vod_VodReaderService_BatchGetVodDetailInfo": {
+                                "VodDetailInfos": validate.any(
+                                    {
+                                        video_id: {
+                                            "streamerInfo": {
+                                                "userName": str,
+                                            },
+                                            "vodInfo": {
+                                                "playInfos": [
+                                                    {
+                                                        "desc": validate.all(validate.transform(lambda s: s.lower()), str),
+                                                        "playUrl": validate.url(),
+                                                    },
+                                                ],
+                                                "vid": str,
+                                                "title": str,
+                                                "categoryName": str,
+                                                "playbackRights": {
+                                                    "playbackRightsSetting": str,
+                                                    "playbackRights": str,
+                                                },
                                             },
                                         },
                                     },
-                                },
-                                {},
-                            ),
+                                    {},
+                                ),
+                            },
                         },
                     },
-                }],
+                ],
                 validate.get((0, "data", "vod_VodReaderService_BatchGetVodDetailInfo", "VodDetailInfos", video_id)),
             ),
         )
@@ -102,43 +108,53 @@ class Trovo(Plugin):
     def get_live(self, user):
         json = self.session.http.post(
             f"https://api-web.trovo.live/graphql?qid={self.generate_qid()}",
-            json=[{
-                "operationName": "live_LiveReaderService_GetLiveInfo",
-                "variables": {
-                    "params": {
-                        "userName": user,
+            json=[
+                {
+                    "operationName": "live_LiveReaderService_GetLiveInfo",
+                    "variables": {
+                        "params": {
+                            "userName": user,
+                        },
                     },
                 },
-            }],
+            ],
             schema=validate.Schema(
                 validate.parse_json(),
                 validate.any(
-                    [{
-                        "data": {
-                            validate.optional("live_LiveReaderService_GetLiveInfo"): {
-                                "streamerInfo": {
-                                    "userName": str,
+                    [
+                        {
+                            "data": {
+                                validate.optional("live_LiveReaderService_GetLiveInfo"): {
+                                    "streamerInfo": {
+                                        "userName": str,
+                                    },
+                                    "programInfo": {
+                                        "id": str,
+                                        "title": str,
+                                        "streamInfo": [
+                                            {
+                                                "desc": validate.all(validate.transform(lambda s: s.lower()), str),
+                                                "playUrl": validate.transform(lambda s: s.replace(".flv?", ".m3u8?")),
+                                            },
+                                        ],
+                                    },
+                                    "categoryInfo": {
+                                        "shortName": str,
+                                    },
+                                    "isLive": int,
                                 },
-                                "programInfo": {
-                                    "id": str,
-                                    "title": str,
-                                    "streamInfo": [{
-                                        "desc": validate.all(validate.transform(lambda s: s.lower()), str),
-                                        "playUrl": validate.transform(lambda s: s.replace(".flv?", ".m3u8?")),
-                                    }],
-                                },
-                                "categoryInfo": {
-                                    "shortName": str,
-                                },
-                                "isLive": int,
                             },
                         },
-                    }],
-                    [{
-                        "errors": [{
-                            "message": validate.transform(lambda s: s.replace('\\"', '"')),
-                        }],
-                    }],
+                    ],
+                    [
+                        {
+                            "errors": [
+                                {
+                                    "message": validate.transform(lambda s: s.replace('\\"', '"')),
+                                },
+                            ],
+                        },
+                    ],
                 ),
                 validate.get(0),
             ),

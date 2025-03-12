@@ -1,6 +1,7 @@
+from __future__ import annotations
+
 import logging
 import time
-from typing import Optional
 from urllib.parse import urlparse
 
 import trio
@@ -28,8 +29,8 @@ class AWSWAF:
         self.session = session
 
     def acquire(self, url: str) -> bool:
-        send: trio.MemorySendChannel[Optional[str]]
-        receive: trio.MemoryReceiveChannel[Optional[str]]
+        send: trio.MemorySendChannel[str | None]
+        receive: trio.MemoryReceiveChannel[str | None]
 
         data = None
         send, receive = trio.open_memory_channel(1)

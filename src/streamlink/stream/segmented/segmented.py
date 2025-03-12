@@ -2,21 +2,22 @@ from __future__ import annotations
 
 import logging
 import queue
+from collections.abc import Generator
 from concurrent import futures
-from concurrent.futures import Future
+from concurrent.futures import Future, ThreadPoolExecutor
 from threading import Event, Thread, current_thread
-from typing import ClassVar, Generator, Generic, Optional, Tuple, Type, TypeVar
+from typing import TYPE_CHECKING, ClassVar, Generic, TypeVar
 
 from streamlink.buffers import RingBuffer
-from streamlink.stream.segmented.concurrent import ThreadPoolExecutor
 from streamlink.stream.segmented.segment import Segment
 from streamlink.stream.stream import Stream, StreamIO
 
 
-try:
-    from typing import TypeAlias  # type: ignore[attr-defined]
-except ImportError:  # pragma: no cover
-    from typing_extensions import TypeAlias
+if TYPE_CHECKING:
+    try:
+        from typing import TypeAlias  # type: ignore[attr-defined]
+    except ImportError:
+        from typing_extensions import TypeAlias
 
 
 log = logging.getLogger(".".join(__name__.split(".")[:-1]))
@@ -37,8 +38,8 @@ class AwaitableMixin:
 
 TSegment = TypeVar("TSegment", bound=Segment)
 TResult = TypeVar("TResult")
-TResultFuture: TypeAlias = "Future[Optional[TResult]]"
-TQueueItem: TypeAlias = Optional[Tuple[TSegment, TResultFuture, Tuple]]
+TResultFuture: TypeAlias = "Future[TResult | None]"
+TQueueItem: TypeAlias = "tuple[TSegment, TResultFuture, tuple]"
 
 
 class SegmentedStreamWriter(AwaitableMixin, Thread, Generic[TSegment, TResult]):
@@ -54,9 +55,9 @@ class SegmentedStreamWriter(AwaitableMixin, Thread, Generic[TSegment, TResult]):
         self,
         reader: SegmentedStreamReader,
         size: int = 20,
-        retries: Optional[int] = None,
-        threads: Optional[int] = None,
-        timeout: Optional[float] = None,
+        retries: int | None = None,
+        threads: int | None = None,
+        timeout: float | None = None,
     ) -> None:
         super().__init__(daemon=True, name=f"Thread-{self.__class__.__name__}")
 
@@ -89,7 +90,7 @@ class SegmentedStreamWriter(AwaitableMixin, Thread, Generic[TSegment, TResult]):
         self.reader.close()
         self.executor.shutdown(wait=True, cancel_futures=True)
 
-    def put(self, segment: Optional[TSegment]) -> None:
+    def put(self, segment: TSegment | None) -> None:
         """
         Adds a segment to the download pool and write queue.
         """
@@ -97,7 +98,7 @@ class SegmentedStreamWriter(AwaitableMixin, Thread, Generic[TSegment, TResult]):
         if self.closed:  # pragma: no cover
             return
 
-        future: Optional[TResultFuture]
+        future: TResultFuture | None
         if segment is None:
             future = None
         else:
@@ -105,7 +106,7 @@ class SegmentedStreamWriter(AwaitableMixin, Thread, Generic[TSegment, TResult]):
 
         self.queue(segment, future)
 
-    def queue(self, segment: Optional[TSegment], future: Optional[TResultFuture], *data) -> None:
+    def queue(self, segment: TSegment | None, future: TResultFuture | None, *data) -> None:
         """
         Puts values into a queue but aborts if this thread is closed.
         """
@@ -125,10 +126,10 @@ class SegmentedStreamWriter(AwaitableMixin, Thread, Generic[TSegment, TResult]):
         return self._queue.get(block=True, timeout=0.5)
 
     @staticmethod
-    def _future_result(future: TResultFuture) -> Optional[TResult]:
+    def _future_result(future: TResultFuture) -> TResult | None:
         return future.result(timeout=0.5)
 
-    def fetch(self, segment: TSegment) -> Optional[TResult]:
+    def fetch(self, segment: TSegment) -> TResult | None:
         """
         Fetches a segment.
         Should be overridden by the inheriting class.
@@ -223,8 +224,8 @@ class SegmentedStreamWorker(AwaitableMixin, Thread, Generic[TSegment, TResult]):
 
 
 class SegmentedStreamReader(StreamIO, Generic[TSegment, TResult]):
-    __worker__: ClassVar[Type[SegmentedStreamWorker]] = SegmentedStreamWorker
-    __writer__: ClassVar[Type[SegmentedStreamWriter]] = SegmentedStreamWriter
+    __worker__: ClassVar[type[SegmentedStreamWorker]] = SegmentedStreamWorker
+    __writer__: ClassVar[type[SegmentedStreamWriter]] = SegmentedStreamWriter
 
     worker: SegmentedStreamWorker[TSegment, TResult]
     writer: SegmentedStreamWriter[TSegment, TResult]
@@ -254,9 +255,9 @@ class SegmentedStreamReader(StreamIO, Generic[TSegment, TResult]):
         self.buffer.close()
 
         current = current_thread()
-        if current is not self.worker:  # pragma: no branch
+        if current is not self.worker and self.worker.is_alive():  # pragma: no branch
             self.worker.join(timeout=self.timeout)
-        if current is not self.writer:  # pragma: no branch
+        if current is not self.writer and self.writer.is_alive():  # pragma: no branch
             self.writer.join(timeout=self.timeout)
 
         super().close()

@@ -20,6 +20,18 @@ from streamlink.stream.hls import HLSStream
 log = logging.getLogger(__name__)
 
 
+class DLiveHLSStream(HLSStream):
+    URL_SIGN = "https://live.prd.dlive.tv/hls/sign/url"
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.args["url"] = self.session.http.post(
+            self.URL_SIGN,
+            json={"playlisturi": self.args["url"]},
+            schema=validate.Schema(validate.url()),
+        )
+
+
 @pluginmatcher(
     name="live",
     pattern=re.compile(
@@ -136,10 +148,11 @@ class DLive(Plugin):
             ),
         )
 
-        return HLSStream.parse_variant_playlist(self.session, self.URL_LIVE.format(username=username))
+        return DLiveHLSStream.parse_variant_playlist(self.session, self.URL_LIVE.format(username=username))
 
     def _get_streams(self):
         self.session.http.headers.update({
+            "Origin": "https://dlive.tv",
             "Referer": "https://dlive.tv/",
         })
 

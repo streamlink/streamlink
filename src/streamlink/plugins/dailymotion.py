@@ -1,6 +1,7 @@
 """
 $description Global live-streaming and video on-demand hosting platform.
 $url dailymotion.com
+$url lequipe.fr
 $type live, vod
 $metadata id
 $metadata author
@@ -19,21 +20,26 @@ from streamlink.stream.http import HTTPStream
 log = logging.getLogger(__name__)
 
 
-@pluginmatcher(re.compile(r"""
-    https?://(?:\w+\.)?dailymotion\.com
-    (?:
-        (/embed)?/(video|live)/(?P<media_id>[^_?/]+)
-        |
-        /(?P<user>[\w-]+)
-    )
-""", re.VERBOSE))
+@pluginmatcher(
+    name="user",
+    pattern=re.compile(r"https?://(?:\w+\.)?dailymotion\.com/(?P<user>(?!embed|video|live)[\w-]+)"),
+)
+@pluginmatcher(
+    name="media",
+    pattern=re.compile(r"https?://(?:\w+\.)?dailymotion\.com/(?:embed/)?(?:video|live)/(?P<media_id>[^_?/]+)"),
+)
+@pluginmatcher(
+    name="lequipe",
+    pattern=re.compile(r"https?://(?:\w+\.)?lequipe\.fr/tv/"),
+)
 class DailyMotion(Plugin):
     _URL_API_USER_VIDEO = "https://api.dailymotion.com/user/{user}/videos"
     _URL_STREAM_INFO = "https://www.dailymotion.com/player/metadata/video/{media_id}"
 
-    def _get_streams_from_media(self, media_id):
+    def _get_streams_from_media(self, media_id, params=None):
         media = self.session.http.get(
             self._URL_STREAM_INFO.format(media_id=media_id),
+            params=params,
             cookies={
                 "family_filter": "off",
                 "ff": "off",
@@ -53,10 +59,12 @@ class DailyMotion(Plugin):
                         },
                         "title": str,
                         "qualities": {
-                            str: [{
-                                "type": str,
-                                "url": validate.url(),
-                            }],
+                            str: [
+                                {
+                                    "type": str,
+                                    "url": validate.url(),
+                                },
+                            ],
                         },
                     },
                 ),
@@ -121,16 +129,46 @@ class DailyMotion(Plugin):
 
         return data["list"][0]["id"]
 
-    def _get_streams(self):
-        media_id = self.match.group("media_id")
-        user = self.match.group("user")
+    def _get_embedder_media_id(self):
+        return self.session.http.get(
+            self.url,
+            schema=validate.Schema(
+                validate.parse_html(),
+                validate.xml_xpath_string("""
+                    .//script
+                    [@type='application/ld+json']
+                    [contains(text(),'https://www.dailymotion.com/embed/video/')]
+                    [1]
+                    /text()
+                """),
+                validate.none_or_all(
+                    validate.parse_json(),
+                    {
+                        "@type": "VideoObject",
+                        "embedUrl": validate.url(
+                            netloc=validate.endswith("dailymotion.com"),
+                            path=validate.startswith("/embed/video/"),
+                        ),
+                    },
+                    validate.get("embedUrl"),
+                    validate.transform(lambda url: url.rsplit("/", 1)[-1]),
+                ),
+            ),
+        )
 
-        if not media_id and user:
-            media_id = self._get_media_id(user)
+    def _get_streams(self):
+        params = {}
+        if self.matches["media"]:
+            media_id = self.match["media_id"]
+        elif self.matches["user"]:
+            media_id = self._get_media_id(self.match["user"])
+        else:
+            media_id = self._get_embedder_media_id()
+            params["embedder"] = self.url
 
         if media_id:
             log.debug(f"Found media ID: {media_id}")
-            return self._get_streams_from_media(media_id)
+            return self._get_streams_from_media(media_id, params=params)
 
 
 __plugin__ = DailyMotion

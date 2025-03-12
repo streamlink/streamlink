@@ -1,6 +1,7 @@
+from __future__ import annotations
+
 import locale
 import logging
-from typing import Optional
 from warnings import catch_warnings
 
 from pycountry import countries, languages  # type: ignore[import]
@@ -152,12 +153,12 @@ class Localization:
             self._language_code = DEFAULT_LANGUAGE_CODE
         log.debug(f"Language code: {self._language_code}")
 
-    def equivalent(self, language: Optional[str] = None, country: Optional[str] = None) -> bool:
+    def equivalent(self, language: str | None = None, country: str | None = None) -> bool:
         try:
             return (
                 (not language or self.language == self.get_language(language))
                 and (not country or self.country == self.get_country(country))
-            )
+            )  # fmt: skip
         except LookupError:
             # if an unknown language/country code is given, they cannot be equivalent
             return False

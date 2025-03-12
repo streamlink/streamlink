@@ -3,14 +3,15 @@
 # This file is generated from the CDP specification. If you need to make
 # changes, edit the generator and regenerate all modules.
 #
-# CDP version: v0.0.1156692
+# CDP version: v0.0.1359167
 # CDP domain: Debugger
 
 from __future__ import annotations
 
 import enum
-import typing
+from collections.abc import Generator
 from dataclasses import dataclass
+from typing import Any
 
 import streamlink.webbrowser.cdp.devtools.runtime as runtime
 from streamlink.webbrowser.cdp.devtools.util import T_JSON_DICT, event_class
@@ -58,7 +59,7 @@ class Location:
     line_number: int
 
     #: Column number in the script (0-based).
-    column_number: typing.Optional[int] = None
+    column_number: int | None = None
 
     def to_json(self) -> T_JSON_DICT:
         json: T_JSON_DICT = {}
@@ -147,22 +148,22 @@ class CallFrame:
     url: str
 
     #: Scope chain for this call frame.
-    scope_chain: typing.List[Scope]
+    scope_chain: list[Scope]
 
     #: ``this`` object for this call frame.
     this: runtime.RemoteObject
 
     #: Location in the source code.
-    function_location: typing.Optional[Location] = None
+    function_location: Location | None = None
 
     #: The value being returned, if the function is at return point.
-    return_value: typing.Optional[runtime.RemoteObject] = None
+    return_value: runtime.RemoteObject | None = None
 
     #: Valid only while the VM is paused and indicates whether this frame
     #: can be restarted or not. Note that a ``true`` value here does not
     #: guarantee that Debugger#restartFrame with this CallFrameId will be
     #: successful, but it is very likely.
-    can_be_restarted: typing.Optional[bool] = None
+    can_be_restarted: bool | None = None
 
     def to_json(self) -> T_JSON_DICT:
         json: T_JSON_DICT = {}
@@ -208,13 +209,13 @@ class Scope:
     #: variables as its properties.
     object_: runtime.RemoteObject
 
-    name: typing.Optional[str] = None
+    name: str | None = None
 
     #: Location in the source code where scope starts
-    start_location: typing.Optional[Location] = None
+    start_location: Location | None = None
 
     #: Location in the source code where scope ends
-    end_location: typing.Optional[Location] = None
+    end_location: Location | None = None
 
     def to_json(self) -> T_JSON_DICT:
         json: T_JSON_DICT = {}
@@ -273,9 +274,9 @@ class BreakLocation:
     line_number: int
 
     #: Column number in the script (0-based).
-    column_number: typing.Optional[int] = None
+    column_number: int | None = None
 
-    type_: typing.Optional[str] = None
+    type_: str | None = None
 
     def to_json(self) -> T_JSON_DICT:
         json: T_JSON_DICT = {}
@@ -300,10 +301,10 @@ class BreakLocation:
 @dataclass
 class WasmDisassemblyChunk:
     #: The next chunk of disassembled lines.
-    lines: typing.List[str]
+    lines: list[str]
 
     #: The bytecode offsets describing the start of each line.
-    bytecode_offsets: typing.List[int]
+    bytecode_offsets: list[int]
 
     def to_json(self) -> T_JSON_DICT:
         json: T_JSON_DICT = {}
@@ -343,7 +344,7 @@ class DebugSymbols:
     type_: str
 
     #: URL of the external symbol source.
-    external_url: typing.Optional[str] = None
+    external_url: str | None = None
 
     def to_json(self) -> T_JSON_DICT:
         json: T_JSON_DICT = {}
@@ -362,8 +363,8 @@ class DebugSymbols:
 
 def continue_to_location(
     location: Location,
-    target_call_frames: typing.Optional[str] = None,
-) -> typing.Generator[T_JSON_DICT, T_JSON_DICT, None]:
+    target_call_frames: str | None = None,
+) -> Generator[T_JSON_DICT, T_JSON_DICT, None]:
     """
     Continues execution until specific location is reached.
 
@@ -381,7 +382,7 @@ def continue_to_location(
     yield cmd_dict
 
 
-def disable() -> typing.Generator[T_JSON_DICT, T_JSON_DICT, None]:
+def disable() -> Generator[T_JSON_DICT, T_JSON_DICT, None]:
     """
     Disables debugger for given page.
     """
@@ -392,8 +393,8 @@ def disable() -> typing.Generator[T_JSON_DICT, T_JSON_DICT, None]:
 
 
 def enable(
-    max_scripts_cache_size: typing.Optional[float] = None,
-) -> typing.Generator[T_JSON_DICT, T_JSON_DICT, runtime.UniqueDebuggerId]:
+    max_scripts_cache_size: float | None = None,
+) -> Generator[T_JSON_DICT, T_JSON_DICT, runtime.UniqueDebuggerId]:
     """
     Enables debugger for the given page. Clients should not assume that the debugging has been
     enabled until the result for this command is received.
@@ -415,14 +416,14 @@ def enable(
 def evaluate_on_call_frame(
     call_frame_id: CallFrameId,
     expression: str,
-    object_group: typing.Optional[str] = None,
-    include_command_line_api: typing.Optional[bool] = None,
-    silent: typing.Optional[bool] = None,
-    return_by_value: typing.Optional[bool] = None,
-    generate_preview: typing.Optional[bool] = None,
-    throw_on_side_effect: typing.Optional[bool] = None,
-    timeout: typing.Optional[runtime.TimeDelta] = None,
-) -> typing.Generator[T_JSON_DICT, T_JSON_DICT, typing.Tuple[runtime.RemoteObject, typing.Optional[runtime.ExceptionDetails]]]:
+    object_group: str | None = None,
+    include_command_line_api: bool | None = None,
+    silent: bool | None = None,
+    return_by_value: bool | None = None,
+    generate_preview: bool | None = None,
+    throw_on_side_effect: bool | None = None,
+    timeout: runtime.TimeDelta | None = None,
+) -> Generator[T_JSON_DICT, T_JSON_DICT, tuple[runtime.RemoteObject, runtime.ExceptionDetails | None]]:
     """
     Evaluates expression on a given call frame.
 
@@ -470,9 +471,9 @@ def evaluate_on_call_frame(
 
 def get_possible_breakpoints(
     start: Location,
-    end: typing.Optional[Location] = None,
-    restrict_to_function: typing.Optional[bool] = None,
-) -> typing.Generator[T_JSON_DICT, T_JSON_DICT, typing.List[BreakLocation]]:
+    end: Location | None = None,
+    restrict_to_function: bool | None = None,
+) -> Generator[T_JSON_DICT, T_JSON_DICT, list[BreakLocation]]:
     """
     Returns possible locations for breakpoint. scriptId in start and end range locations should be
     the same.
@@ -498,7 +499,7 @@ def get_possible_breakpoints(
 
 def get_script_source(
     script_id: runtime.ScriptId,
-) -> typing.Generator[T_JSON_DICT, T_JSON_DICT, typing.Tuple[str, typing.Optional[str]]]:
+) -> Generator[T_JSON_DICT, T_JSON_DICT, tuple[str, str | None]]:
     """
     Returns source for the script with given id.
 
@@ -523,7 +524,7 @@ def get_script_source(
 
 def disassemble_wasm_module(
     script_id: runtime.ScriptId,
-) -> typing.Generator[T_JSON_DICT, T_JSON_DICT, typing.Tuple[typing.Optional[str], int, typing.List[int], WasmDisassemblyChunk]]:
+) -> Generator[T_JSON_DICT, T_JSON_DICT, tuple[str | None, int, list[int], WasmDisassemblyChunk]]:
     """
 
 
@@ -554,7 +555,7 @@ def disassemble_wasm_module(
 
 def next_wasm_disassembly_chunk(
     stream_id: str,
-) -> typing.Generator[T_JSON_DICT, T_JSON_DICT, WasmDisassemblyChunk]:
+) -> Generator[T_JSON_DICT, T_JSON_DICT, WasmDisassemblyChunk]:
     """
     Disassemble the next chunk of lines for the module corresponding to the
     stream. If disassembly is complete, this API will invalidate the streamId
@@ -578,7 +579,7 @@ def next_wasm_disassembly_chunk(
 
 def get_wasm_bytecode(
     script_id: runtime.ScriptId,
-) -> typing.Generator[T_JSON_DICT, T_JSON_DICT, str]:
+) -> Generator[T_JSON_DICT, T_JSON_DICT, str]:
     """
     This command is deprecated. Use getScriptSource instead.
 
@@ -597,7 +598,7 @@ def get_wasm_bytecode(
 
 def get_stack_trace(
     stack_trace_id: runtime.StackTraceId,
-) -> typing.Generator[T_JSON_DICT, T_JSON_DICT, runtime.StackTrace]:
+) -> Generator[T_JSON_DICT, T_JSON_DICT, runtime.StackTrace]:
     """
     Returns stack trace with given ``stackTraceId``.
 
@@ -616,7 +617,7 @@ def get_stack_trace(
     return runtime.StackTrace.from_json(json["stackTrace"])
 
 
-def pause() -> typing.Generator[T_JSON_DICT, T_JSON_DICT, None]:
+def pause() -> Generator[T_JSON_DICT, T_JSON_DICT, None]:
     """
     Stops on the next JavaScript statement.
     """
@@ -628,7 +629,7 @@ def pause() -> typing.Generator[T_JSON_DICT, T_JSON_DICT, None]:
 
 def pause_on_async_call(
     parent_stack_trace_id: runtime.StackTraceId,
-) -> typing.Generator[T_JSON_DICT, T_JSON_DICT, None]:
+) -> Generator[T_JSON_DICT, T_JSON_DICT, None]:
     """
 
 
@@ -647,7 +648,7 @@ def pause_on_async_call(
 
 def remove_breakpoint(
     breakpoint_id: BreakpointId,
-) -> typing.Generator[T_JSON_DICT, T_JSON_DICT, None]:
+) -> Generator[T_JSON_DICT, T_JSON_DICT, None]:
     """
     Removes JavaScript breakpoint.
 
@@ -664,8 +665,8 @@ def remove_breakpoint(
 
 def restart_frame(
     call_frame_id: CallFrameId,
-    mode: typing.Optional[str] = None,
-) -> typing.Generator[T_JSON_DICT, T_JSON_DICT, typing.Tuple[typing.List[CallFrame], typing.Optional[runtime.StackTrace], typing.Optional[runtime.StackTraceId]]]:
+    mode: str | None = None,
+) -> Generator[T_JSON_DICT, T_JSON_DICT, tuple[list[CallFrame], runtime.StackTrace | None, runtime.StackTraceId | None]]:
     """
     Restarts particular call frame from the beginning. The old, deprecated
     behavior of ``restartFrame`` is to stay paused and allow further CDP commands
@@ -706,8 +707,8 @@ def restart_frame(
 
 
 def resume(
-    terminate_on_resume: typing.Optional[bool] = None,
-) -> typing.Generator[T_JSON_DICT, T_JSON_DICT, None]:
+    terminate_on_resume: bool | None = None,
+) -> Generator[T_JSON_DICT, T_JSON_DICT, None]:
     """
     Resumes JavaScript execution.
 
@@ -726,9 +727,9 @@ def resume(
 def search_in_content(
     script_id: runtime.ScriptId,
     query: str,
-    case_sensitive: typing.Optional[bool] = None,
-    is_regex: typing.Optional[bool] = None,
-) -> typing.Generator[T_JSON_DICT, T_JSON_DICT, typing.List[SearchMatch]]:
+    case_sensitive: bool | None = None,
+    is_regex: bool | None = None,
+) -> Generator[T_JSON_DICT, T_JSON_DICT, list[SearchMatch]]:
     """
     Searches for given string in script content.
 
@@ -755,7 +756,7 @@ def search_in_content(
 
 def set_async_call_stack_depth(
     max_depth: int,
-) -> typing.Generator[T_JSON_DICT, T_JSON_DICT, None]:
+) -> Generator[T_JSON_DICT, T_JSON_DICT, None]:
     """
     Enables or disables async call stacks tracking.
 
@@ -771,8 +772,8 @@ def set_async_call_stack_depth(
 
 
 def set_blackbox_patterns(
-    patterns: typing.List[str],
-) -> typing.Generator[T_JSON_DICT, T_JSON_DICT, None]:
+    patterns: list[str],
+) -> Generator[T_JSON_DICT, T_JSON_DICT, None]:
     """
     Replace previous blackbox patterns with passed ones. Forces backend to skip stepping/pausing in
     scripts with url matching one of the patterns. VM will try to leave blackboxed script by
@@ -793,8 +794,8 @@ def set_blackbox_patterns(
 
 def set_blackboxed_ranges(
     script_id: runtime.ScriptId,
-    positions: typing.List[ScriptPosition],
-) -> typing.Generator[T_JSON_DICT, T_JSON_DICT, None]:
+    positions: list[ScriptPosition],
+) -> Generator[T_JSON_DICT, T_JSON_DICT, None]:
     """
     Makes backend skip steps in the script in blackboxed ranges. VM will try leave blacklisted
     scripts by performing 'step in' several times, finally resorting to 'step out' if unsuccessful.
@@ -818,8 +819,8 @@ def set_blackboxed_ranges(
 
 def set_breakpoint(
     location: Location,
-    condition: typing.Optional[str] = None,
-) -> typing.Generator[T_JSON_DICT, T_JSON_DICT, typing.Tuple[BreakpointId, Location]]:
+    condition: str | None = None,
+) -> Generator[T_JSON_DICT, T_JSON_DICT, tuple[BreakpointId, Location]]:
     """
     Sets JavaScript breakpoint at a given location.
 
@@ -847,7 +848,7 @@ def set_breakpoint(
 
 def set_instrumentation_breakpoint(
     instrumentation: str,
-) -> typing.Generator[T_JSON_DICT, T_JSON_DICT, BreakpointId]:
+) -> Generator[T_JSON_DICT, T_JSON_DICT, BreakpointId]:
     """
     Sets instrumentation breakpoint.
 
@@ -866,12 +867,12 @@ def set_instrumentation_breakpoint(
 
 def set_breakpoint_by_url(
     line_number: int,
-    url: typing.Optional[str] = None,
-    url_regex: typing.Optional[str] = None,
-    script_hash: typing.Optional[str] = None,
-    column_number: typing.Optional[int] = None,
-    condition: typing.Optional[str] = None,
-) -> typing.Generator[T_JSON_DICT, T_JSON_DICT, typing.Tuple[BreakpointId, typing.List[Location]]]:
+    url: str | None = None,
+    url_regex: str | None = None,
+    script_hash: str | None = None,
+    column_number: int | None = None,
+    condition: str | None = None,
+) -> Generator[T_JSON_DICT, T_JSON_DICT, tuple[BreakpointId, list[Location]]]:
     """
     Sets JavaScript breakpoint at given location specified either by URL or URL regex. Once this
     command is issued, all existing parsed scripts will have breakpoints resolved and returned in
@@ -914,8 +915,8 @@ def set_breakpoint_by_url(
 
 def set_breakpoint_on_function_call(
     object_id: runtime.RemoteObjectId,
-    condition: typing.Optional[str] = None,
-) -> typing.Generator[T_JSON_DICT, T_JSON_DICT, BreakpointId]:
+    condition: str | None = None,
+) -> Generator[T_JSON_DICT, T_JSON_DICT, BreakpointId]:
     """
     Sets JavaScript breakpoint before each call to the given function.
     If another function was created from the same source as a given one,
@@ -941,7 +942,7 @@ def set_breakpoint_on_function_call(
 
 def set_breakpoints_active(
     active: bool,
-) -> typing.Generator[T_JSON_DICT, T_JSON_DICT, None]:
+) -> Generator[T_JSON_DICT, T_JSON_DICT, None]:
     """
     Activates / deactivates all breakpoints on the page.
 
@@ -958,7 +959,7 @@ def set_breakpoints_active(
 
 def set_pause_on_exceptions(
     state: str,
-) -> typing.Generator[T_JSON_DICT, T_JSON_DICT, None]:
+) -> Generator[T_JSON_DICT, T_JSON_DICT, None]:
     """
     Defines pause on exceptions state. Can be set to stop on all exceptions, uncaught exceptions,
     or caught exceptions, no exceptions. Initial pause on exceptions state is ``none``.
@@ -976,7 +977,7 @@ def set_pause_on_exceptions(
 
 def set_return_value(
     new_value: runtime.CallArgument,
-) -> typing.Generator[T_JSON_DICT, T_JSON_DICT, None]:
+) -> Generator[T_JSON_DICT, T_JSON_DICT, None]:
     """
     Changes return value in top frame. Available only at return break position.
 
@@ -996,9 +997,9 @@ def set_return_value(
 def set_script_source(
     script_id: runtime.ScriptId,
     script_source: str,
-    dry_run: typing.Optional[bool] = None,
-    allow_top_frame_editing: typing.Optional[bool] = None,
-) -> typing.Generator[T_JSON_DICT, T_JSON_DICT, typing.Tuple[typing.Optional[typing.List[CallFrame]], typing.Optional[bool], typing.Optional[runtime.StackTrace], typing.Optional[runtime.StackTraceId], str, typing.Optional[runtime.ExceptionDetails]]]:
+    dry_run: bool | None = None,
+    allow_top_frame_editing: bool | None = None,
+) -> Generator[T_JSON_DICT, T_JSON_DICT, tuple[list[CallFrame] | None, bool | None, runtime.StackTrace | None, runtime.StackTraceId | None, str, runtime.ExceptionDetails | None]]:
     """
     Edits JavaScript source live.
 
@@ -1045,7 +1046,7 @@ def set_script_source(
 
 def set_skip_all_pauses(
     skip: bool,
-) -> typing.Generator[T_JSON_DICT, T_JSON_DICT, None]:
+) -> Generator[T_JSON_DICT, T_JSON_DICT, None]:
     """
     Makes page not interrupt on any pauses (breakpoint, exception, dom exception etc).
 
@@ -1065,7 +1066,7 @@ def set_variable_value(
     variable_name: str,
     new_value: runtime.CallArgument,
     call_frame_id: CallFrameId,
-) -> typing.Generator[T_JSON_DICT, T_JSON_DICT, None]:
+) -> Generator[T_JSON_DICT, T_JSON_DICT, None]:
     """
     Changes value of variable in a callframe. Object-based scopes are not supported and must be
     mutated manually.
@@ -1088,9 +1089,9 @@ def set_variable_value(
 
 
 def step_into(
-    break_on_async_call: typing.Optional[bool] = None,
-    skip_list: typing.Optional[typing.List[LocationRange]] = None,
-) -> typing.Generator[T_JSON_DICT, T_JSON_DICT, None]:
+    break_on_async_call: bool | None = None,
+    skip_list: list[LocationRange] | None = None,
+) -> Generator[T_JSON_DICT, T_JSON_DICT, None]:
     """
     Steps into the function call.
 
@@ -1109,7 +1110,7 @@ def step_into(
     yield cmd_dict
 
 
-def step_out() -> typing.Generator[T_JSON_DICT, T_JSON_DICT, None]:
+def step_out() -> Generator[T_JSON_DICT, T_JSON_DICT, None]:
     """
     Steps out of the function call.
     """
@@ -1120,8 +1121,8 @@ def step_out() -> typing.Generator[T_JSON_DICT, T_JSON_DICT, None]:
 
 
 def step_over(
-    skip_list: typing.Optional[typing.List[LocationRange]] = None,
-) -> typing.Generator[T_JSON_DICT, T_JSON_DICT, None]:
+    skip_list: list[LocationRange] | None = None,
+) -> Generator[T_JSON_DICT, T_JSON_DICT, None]:
     """
     Steps over the statement.
 
@@ -1163,19 +1164,19 @@ class Paused:
     Fired when the virtual machine stopped on breakpoint or exception or any other stop criteria.
     """
     #: Call stack the virtual machine stopped on.
-    call_frames: typing.List[CallFrame]
+    call_frames: list[CallFrame]
     #: Pause reason.
     reason: str
     #: Object containing break-specific auxiliary properties.
-    data: typing.Optional[dict]
+    data: dict | None
     #: Hit breakpoints IDs
-    hit_breakpoints: typing.Optional[typing.List[str]]
+    hit_breakpoints: list[str] | None
     #: Async stack trace, if any.
-    async_stack_trace: typing.Optional[runtime.StackTrace]
+    async_stack_trace: runtime.StackTrace | None
     #: Async stack trace, if any.
-    async_stack_trace_id: typing.Optional[runtime.StackTraceId]
+    async_stack_trace_id: runtime.StackTraceId | None
     #: Never present, will be removed.
-    async_call_stack_trace_id: typing.Optional[runtime.StackTraceId]
+    async_call_stack_trace_id: runtime.StackTraceId | None
 
     @classmethod
     def from_json(cls, json: T_JSON_DICT) -> Paused:
@@ -1228,23 +1229,23 @@ class ScriptFailedToParse:
     #: Content hash of the script, SHA-256.
     hash_: str
     #: Embedder-specific auxiliary data likely matching {isDefault: boolean, type: 'default'``'isolated'``'worker', frameId: string}
-    execution_context_aux_data: typing.Optional[dict]
+    execution_context_aux_data: dict | None
     #: URL of source map associated with script (if any).
-    source_map_url: typing.Optional[str]
+    source_map_url: str | None
     #: True, if this script has sourceURL.
-    has_source_url: typing.Optional[bool]
+    has_source_url: bool | None
     #: True, if this script is ES6 module.
-    is_module: typing.Optional[bool]
+    is_module: bool | None
     #: This script length.
-    length: typing.Optional[int]
+    length: int | None
     #: JavaScript top stack frame of where the script parsed event was triggered if available.
-    stack_trace: typing.Optional[runtime.StackTrace]
+    stack_trace: runtime.StackTrace | None
     #: If the scriptLanguage is WebAssembly, the code section offset in the module.
-    code_offset: typing.Optional[int]
+    code_offset: int | None
     #: The language of the script.
-    script_language: typing.Optional[ScriptLanguage]
+    script_language: ScriptLanguage | None
     #: The name the embedder supplied for this script.
-    embedder_name: typing.Optional[str]
+    embedder_name: str | None
 
     @classmethod
     def from_json(cls, json: T_JSON_DICT) -> ScriptFailedToParse:
@@ -1293,27 +1294,27 @@ class ScriptParsed:
     #: Content hash of the script, SHA-256.
     hash_: str
     #: Embedder-specific auxiliary data likely matching {isDefault: boolean, type: 'default'``'isolated'``'worker', frameId: string}
-    execution_context_aux_data: typing.Optional[dict]
+    execution_context_aux_data: dict | None
     #: True, if this script is generated as a result of the live edit operation.
-    is_live_edit: typing.Optional[bool]
+    is_live_edit: bool | None
     #: URL of source map associated with script (if any).
-    source_map_url: typing.Optional[str]
+    source_map_url: str | None
     #: True, if this script has sourceURL.
-    has_source_url: typing.Optional[bool]
+    has_source_url: bool | None
     #: True, if this script is ES6 module.
-    is_module: typing.Optional[bool]
+    is_module: bool | None
     #: This script length.
-    length: typing.Optional[int]
+    length: int | None
     #: JavaScript top stack frame of where the script parsed event was triggered if available.
-    stack_trace: typing.Optional[runtime.StackTrace]
+    stack_trace: runtime.StackTrace | None
     #: If the scriptLanguage is WebAssembly, the code section offset in the module.
-    code_offset: typing.Optional[int]
+    code_offset: int | None
     #: The language of the script.
-    script_language: typing.Optional[ScriptLanguage]
-    #: If the scriptLanguage is WebASsembly, the source of debug symbols for the module.
-    debug_symbols: typing.Optional[DebugSymbols]
+    script_language: ScriptLanguage | None
+    #: If the scriptLanguage is WebAssembly, the source of debug symbols for the module.
+    debug_symbols: list[DebugSymbols] | None
     #: The name the embedder supplied for this script.
-    embedder_name: typing.Optional[str]
+    embedder_name: str | None
 
     @classmethod
     def from_json(cls, json: T_JSON_DICT) -> ScriptParsed:
@@ -1335,6 +1336,6 @@ class ScriptParsed:
             stack_trace=runtime.StackTrace.from_json(json["stackTrace"]) if "stackTrace" in json else None,
             code_offset=int(json["codeOffset"]) if "codeOffset" in json else None,
             script_language=ScriptLanguage.from_json(json["scriptLanguage"]) if "scriptLanguage" in json else None,
-            debug_symbols=DebugSymbols.from_json(json["debugSymbols"]) if "debugSymbols" in json else None,
+            debug_symbols=[DebugSymbols.from_json(i) for i in json["debugSymbols"]] if "debugSymbols" in json else None,
             embedder_name=str(json["embedderName"]) if "embedderName" in json else None,
         )
