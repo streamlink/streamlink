@@ -153,11 +153,23 @@ class Localization:
             self._language_code = DEFAULT_LANGUAGE_CODE
         log.debug(f"Language code: {self._language_code}")
 
-    def equivalent(self, language: str | None = None, country: str | None = None) -> bool:
+    def equivalent(
+        self,
+        language: Language | str | None = None,
+        country: Country | str | None = None,
+    ) -> bool:
         try:
             return (
-                (not language or self.language == self.get_language(language))
-                and (not country or self.country == self.get_country(country))
+                (
+                    not language
+                    or isinstance(language, Language) and self.language == language
+                    or self.language == self.get_language(language)
+                )
+                and (
+                    not country
+                    or isinstance(country, Country) and self.country == country
+                    or self.country == self.get_country(country)
+                )
             )  # fmt: skip
         except LookupError:
             # if an unknown language/country code is given, they cannot be equivalent

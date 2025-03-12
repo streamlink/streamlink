@@ -71,6 +71,17 @@ class TestLocalizationEquality:
         assert locale.equivalent(language, country)
 
     @pytest.mark.parametrize(
+        ("language", "country"),
+        [
+            ("en", "ca"),
+            ("English", "Canada"),
+        ],
+    )
+    def test_equivalent_language_country_objects(self, language, country):
+        locale = l10n.Localization("en_CA")
+        assert locale.equivalent(l10n.Language.get(language), l10n.Country.get(country))
+
+    @pytest.mark.parametrize(
         "language",
         [
             "fra",
