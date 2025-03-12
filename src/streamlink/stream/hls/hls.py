@@ -720,7 +720,8 @@ class HLSStream(HTTPStream):
         """
 
         locale = session.localization
-        audio_select = session.options.get("hls-audio-select")
+        hls_audio_select = session.options.get("hls-audio-select")
+        audio_select = [item.strip().lower() for item in hls_audio_select]
 
         request_args = session.http.valid_request_args(**kwargs)
         res = cls._fetch_variant_playlist(session, url, **request_args)

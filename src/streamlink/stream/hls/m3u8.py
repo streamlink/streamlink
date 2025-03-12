@@ -461,11 +461,14 @@ class M3U8Parser(Generic[TM3U8_co, THLSSegment_co, THLSPlaylist_co], metaclass=M
         if not mediatype or not group_id or not name:
             return
 
+        if language := attr.get("LANGUAGE"):
+            language = language.strip().lower()
+
         media = Media(
             type=mediatype,
             uri=self.uri(uri) if uri else None,
             group_id=group_id,
-            language=attr.get("LANGUAGE"),
+            language=language,
             name=name,
             default=self.parse_bool(attr.get("DEFAULT", "NO")),
             autoselect=self.parse_bool(attr.get("AUTOSELECT", "NO")),
