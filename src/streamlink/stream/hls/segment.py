@@ -1,10 +1,19 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+import logging
+import re
+from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from typing import NamedTuple
 
 from streamlink.stream.segmented.segment import Segment
+from streamlink.utils.l10n import Language
+
+
+log = logging.getLogger(".".join(__name__.split(".")[:-1]))
+
+
+_MEDIA_LANGUAGE_CODES_RESERVED_LOCAL = re.compile(r"^q[a-t][a-z]$")
 
 
 class Resolution(NamedTuple):
@@ -53,7 +62,8 @@ class Map(NamedTuple):
 
 
 # EXT-X-MEDIA
-class Media(NamedTuple):
+@dataclass
+class Media:
     uri: str | None
     type: str
     group_id: str
@@ -63,6 +73,23 @@ class Media(NamedTuple):
     autoselect: bool
     forced: bool
     characteristics: str | None
+
+    parsed_language: Language | None = field(init=False, default=None, repr=False, hash=False, compare=False)
+
+    def __post_init__(self):
+        # parse the media playlist language, so we can compare it with the user's input
+        self._parse_language()
+
+    def _parse_language(self):
+        if self.language is None or _MEDIA_LANGUAGE_CODES_RESERVED_LOCAL.match(self.language):
+            return
+
+        try:
+            self.parsed_language = Language.get(self.language)
+        except LookupError:
+            language = self.language
+            name = self.name
+            log.warning(f"Unrecognized language for media playlist: {language=!r} {name=!r}")
 
 
 # EXT-X-START
