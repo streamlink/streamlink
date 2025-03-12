@@ -773,7 +773,7 @@ class HLSStream(HTTPStream):
 
                 # if the media is "autoselect" and it better matches the users preferences, use that
                 # instead of default
-                if not default_audio and (media.autoselect and locale.equivalent(language=media.language)):
+                if not default_audio and (media.autoselect and locale.equivalent(language=media.parsed_language)):
                     default_audio = [media]
 
                 # select the first audio stream that matches the user's explict language selection
@@ -794,7 +794,7 @@ class HLSStream(HTTPStream):
                     or (
                         (not preferred_audio or media.default)
                         and locale.explicit
-                        and locale.equivalent(language=media.language)
+                        and locale.equivalent(language=media.parsed_language)
                     )
                 ):  # fmt: skip
                     preferred_audio.append(media)
