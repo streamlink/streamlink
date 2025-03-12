@@ -559,6 +559,7 @@ class MuxedHLSStream(MuxedStream["HLSStream"]):
         session: Streamlink,
         video: str,
         audio: str | list[str],
+        audio_lang: str | list[str],
         hlsstream: type[HLSStream] | None = None,
         url_master: str | None = None,
         multivariant: M3U8 | None = None,
@@ -591,7 +592,7 @@ class MuxedHLSStream(MuxedStream["HLSStream"]):
         substreams = [hlsstream(session, url, force_restart=force_restart, **kwargs) for url in tracks]
         ffmpeg_options = ffmpeg_options or {}
 
-        super().__init__(session, *substreams, format="mpegts", maps=maps, **ffmpeg_options)
+        super().__init__(session, *substreams, format="mpegts", maps=maps, audio_lang=audio_lang, **ffmpeg_options)
         self._url_master = url_master
         self.multivariant = multivariant if multivariant and multivariant.is_master else None
 
@@ -840,6 +841,7 @@ class HLSStream(HTTPStream):
                     session,
                     video=playlist.uri,
                     audio=[x.uri for x in external_audio if x.uri],
+                    audio_lang=[x.language for x in external_audio if x.language],
                     hlsstream=cls,
                     multivariant=multivariant,
                     force_restart=force_restart,

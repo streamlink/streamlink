@@ -188,6 +188,7 @@ class FFMPEGMuxer(StreamIO):
         audiocodec = session.options.get("ffmpeg-audio-transcode") or options.pop("acodec", self.DEFAULT_AUDIO_CODEC)
         metadata = options.pop("metadata", {})
         maps = options.pop("maps", [])
+        audio_lang = options.pop("audio_lang", [])
         copyts = session.options.get("ffmpeg-copyts") or options.pop("copyts", False)
         start_at_zero = session.options.get("ffmpeg-start-at-zero") or options.pop("start_at_zero", False)
 
@@ -207,6 +208,11 @@ class FFMPEGMuxer(StreamIO):
 
         for m in maps:
             self._cmd.extend(["-map", str(m)])
+
+        audio_count = 0
+        for a in audio_lang:
+            self._cmd.extend(["-metadata:s:a:" + str(audio_count) + " language=" + str(a)])
+            audio_count += 1
 
         if copyts:
             self._cmd.extend(["-copyts"])
