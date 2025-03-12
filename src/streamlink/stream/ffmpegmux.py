@@ -209,7 +209,7 @@ class FFMPEGMuxer(StreamIO):
         for m in maps:
             self._cmd.extend(["-map", str(m)])
 
-        audio_count = 0
+        audio_count = 1
         for a in audio_lang:
             self._cmd.extend(["-metadata:s:a:" + str(audio_count) + " language=" + str(a)])
             audio_count += 1
