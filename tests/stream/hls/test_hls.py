@@ -1148,7 +1148,7 @@ class TestHlsExtAudio:
     @pytest.mark.parametrize(
         ("session", "selection"),
         [
-            pytest.param({"hls-audio-select": ["en"]}, "http://mocked/path/en.m3u8", id="English"),
+            pytest.param({"hls-audio-select": ["EN"]}, "http://mocked/path/en.m3u8", id="English"),
             pytest.param({"hls-audio-select": ["es"]}, "http://mocked/path/es.m3u8", id="Spanish"),
         ],
         indirect=["session"],
