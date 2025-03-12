@@ -211,7 +211,7 @@ class FFMPEGMuxer(StreamIO):
 
         audio_count = 0
         for a in audio_lang:
-            self._cmd.extend(["-metadata:s:a:" + str(audio_count) , "language=" + str(a)])
+            self._cmd.extend(["-metadata:s:a:" + str(audio_count), "language=" + str(a)])
             audio_count += 1
 
         if copyts:
