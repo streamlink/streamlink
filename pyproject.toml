@@ -173,7 +173,6 @@ src = [
   "src",
   "tests",
 ]
-target-version = "py39"
 fix = false
 line-length = 128
 output-format = "full"
