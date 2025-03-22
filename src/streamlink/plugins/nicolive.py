@@ -9,6 +9,8 @@ $account Required by some streams
 $notes Timeshift is supported
 """
 
+from __future__ import annotations
+
 import logging
 import re
 from threading import Event
@@ -17,7 +19,7 @@ from urllib.parse import urljoin
 from streamlink.plugin import Plugin, pluginargument, pluginmatcher
 from streamlink.plugin.api import useragents, validate
 from streamlink.plugin.api.websocket import WebsocketClient
-from streamlink.stream.hls import HLSStream, HLSStreamReader
+from streamlink.stream.hls import HLSSegment, HLSStream, HLSStreamReader, HLSStreamWriter
 from streamlink.utils.parse import parse_json
 from streamlink.utils.url import update_qsd
 
@@ -125,8 +127,22 @@ class NicoLiveWsClient(WebsocketClient):
         self.send_json({"type": "keepSeat"})
 
 
+class NicoLiveHLSStreamWriter(HLSStreamWriter):
+    reader: NicoLiveHLSStreamReader
+    stream: NicoLiveHLSStream
+
+    def should_filter_segment(self, segment: HLSSegment) -> bool:
+        if "/blank/" in segment.uri:
+            return True
+
+        return super().should_filter_segment(segment)
+
+
 class NicoLiveHLSStreamReader(HLSStreamReader):
-    stream: "NicoLiveHLSStream"
+    __writer__ = NicoLiveHLSStreamWriter
+
+    writer: NicoLiveHLSStreamWriter
+    stream: NicoLiveHLSStream
 
     def open(self):
         self.stream.wsclient.opened.set()
