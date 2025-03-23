@@ -2,15 +2,17 @@ from __future__ import annotations
 
 from io import BytesIO, TextIOWrapper
 from textwrap import dedent
+from typing import TextIO
 from unittest.mock import Mock
 
 import pytest
 
+from streamlink_cli.console import ConsoleOutputStream
 from streamlink_cli.console.console import ConsoleOutput
 from streamlink_cli.console.user_input import ConsoleUserInputRequester
 
 
-def getvalue(output: TextIOWrapper | None, size: int = -1):
+def getvalue(output: TextIO | None, size: int = -1):
     if output is None:
         return None
 
@@ -19,15 +21,21 @@ def getvalue(output: TextIOWrapper | None, size: int = -1):
     return output.read(size)
 
 
-def build_textiowrapper(params):
+def build_stream(params: dict, wrap: bool = False):
     if not params.pop("exists", True):
         return None
 
     isatty = params.pop("isatty", True)
     params.setdefault("encoding", "utf-8")
     params.setdefault("errors", "backslashreplace")
-    stream = TextIOWrapper(BytesIO(), **params)
-    stream.isatty = lambda: isatty
+    stream: TextIO
+    orig = TextIOWrapper(BytesIO(), **params)
+    if wrap:
+        stream = ConsoleOutputStream(orig)
+    else:
+        stream = orig
+
+    setattr(stream, "isatty", lambda: isatty)  # noqa: B010
 
     return stream
 
@@ -35,7 +43,7 @@ def build_textiowrapper(params):
 @pytest.fixture(autouse=True)
 def stdin(request: pytest.FixtureRequest, monkeypatch: pytest.MonkeyPatch):
     params = getattr(request, "param", {})
-    stdin = build_textiowrapper(params)
+    stdin = build_stream(params)
     monkeypatch.setattr("sys.stdin", stdin)
 
     return stdin
@@ -43,12 +51,12 @@ def stdin(request: pytest.FixtureRequest, monkeypatch: pytest.MonkeyPatch):
 
 @pytest.fixture()
 def console_output(request: pytest.FixtureRequest):
-    return build_textiowrapper(getattr(request, "param", {}))
+    return build_stream(getattr(request, "param", {}), wrap=True)
 
 
 @pytest.fixture()
 def file_output(request: pytest.FixtureRequest):
-    return build_textiowrapper(getattr(request, "param", {}))
+    return build_stream(getattr(request, "param", {}), wrap=False)
 
 
 @pytest.mark.parametrize(
@@ -98,8 +106,8 @@ def file_output(request: pytest.FixtureRequest):
     indirect=["console_output", "file_output"],
 )
 def test_streams(
-    console_output: TextIOWrapper | None,
-    file_output: TextIOWrapper | None,
+    console_output: ConsoleOutputStream | None,
+    file_output: TextIO | None,
     has_file_output: bool,
     expected_console_output: str,
     expected_file_output: str,
@@ -121,14 +129,14 @@ def test_streams(
 
 
 @pytest.mark.parametrize("method_raises", ["write", "flush"])
-def test_broken_stream(monkeypatch: pytest.MonkeyPatch, console_output: TextIOWrapper, method_raises: str):
+def test_broken_stream(monkeypatch: pytest.MonkeyPatch, console_output: ConsoleOutputStream, method_raises: str):
     monkeypatch.setattr(console_output, method_raises, Mock(side_effect=BrokenPipeError))
     console = ConsoleOutput(console_output=console_output)
     console.msg("foo")
     console.msg("bar")
 
 
-def test_close(console_output: TextIOWrapper, file_output: TextIOWrapper):
+def test_close(console_output: ConsoleOutputStream, file_output: TextIO):
     console = ConsoleOutput(console_output=console_output, file_output=file_output)
     console.msg("foo")
     assert getvalue(console_output) == "foo\n"
@@ -162,8 +170,8 @@ class TestMessages:
     )
     def test_no_json(
         self,
-        console_output: TextIOWrapper,
-        file_output: TextIOWrapper,
+        console_output: ConsoleOutputStream,
+        file_output: TextIO,
         expected_console_output: str,
         expected_file_output: str,
     ):
@@ -193,8 +201,8 @@ class TestMessages:
     )
     def test_json(
         self,
-        console_output: TextIOWrapper,
-        file_output: TextIOWrapper,
+        console_output: ConsoleOutputStream,
+        file_output: TextIO,
         expected_console_output: str,
         expected_file_output: str,
     ):
@@ -204,18 +212,18 @@ class TestMessages:
         assert getvalue(console_output) == expected_console_output
         assert getvalue(file_output) == expected_file_output
 
-    def test_msg_json_object(self, console_output: TextIOWrapper):
+    def test_msg_json_object(self, console_output: ConsoleOutputStream):
         console = ConsoleOutput(console_output=console_output, json=True)
         console.msg_json(Mock(__json__=lambda: {"test": "Hello world, Γειά σου Κόσμε, こんにちは世界"}))  # noqa: RUF001
         assert getvalue(console_output) == '{\n  "test": "Hello world, Γειά σου Κόσμε, こんにちは世界"\n}\n'  # noqa: RUF001
 
-    def test_msg_json_list(self, console_output: TextIOWrapper):
+    def test_msg_json_list(self, console_output: ConsoleOutputStream):
         console = ConsoleOutput(console_output=console_output, json=True)
         test_list = ["Hello world, Γειά σου Κόσμε, こんにちは世界", '"🐻"']  # noqa: RUF001
         console.msg_json(test_list)
         assert getvalue(console_output) == '[\n  "Hello world, Γειά σου Κόσμε, こんにちは世界",\n  "\\"🐻\\""\n]\n'  # noqa: RUF001
 
-    def test_msg_json_merge_object(self, console_output: TextIOWrapper):
+    def test_msg_json_merge_object(self, console_output: ConsoleOutputStream):
         console = ConsoleOutput(console_output=console_output, json=True)
         test_obj1 = {"test": 1, "foo": "foo"}
         test_obj2 = Mock(__json__=Mock(return_value={"test": 2}))
@@ -232,7 +240,7 @@ class TestMessages:
         )
         assert list(test_obj1.items()) == [("test", 1), ("foo", "foo")]
 
-    def test_msg_json_merge_list(self, console_output: TextIOWrapper):
+    def test_msg_json_merge_list(self, console_output: ConsoleOutputStream):
         console = ConsoleOutput(console_output=console_output, json=True)
         test_list1 = ["foo", "bar"]
         test_list2 = Mock(__json__=Mock(return_value={"foo": "bar"}))
@@ -261,7 +269,7 @@ class TestMessages:
 
 
 class TestPrompts:
-    def test_prompt_exception(self, console_output: TextIOWrapper):
+    def test_prompt_exception(self, console_output: ConsoleOutputStream):
         console = ConsoleOutput(console_output=console_output)
         with pytest.raises(BaseException) as exc_info:  # noqa: PT011
             with console._prompt():
@@ -270,14 +278,14 @@ class TestPrompts:
         assert isinstance(exc_info.value.__cause__, EOFError)
 
     @pytest.mark.parametrize("exception", [OSError, KeyboardInterrupt])
-    def test_prompt_exception_passthrough(self, console_output: TextIOWrapper, exception: type[Exception]):
+    def test_prompt_exception_passthrough(self, console_output: ConsoleOutputStream, exception: type[Exception]):
         console = ConsoleOutput(console_output=console_output)
         with pytest.raises(BaseException) as exc_info:  # noqa: PT011
             with console._prompt():
                 raise exception
         assert isinstance(exc_info.value, exception)
 
-    def test_ask(self, monkeypatch: pytest.MonkeyPatch, console_output: TextIOWrapper, file_output: TextIOWrapper):
+    def test_ask(self, monkeypatch: pytest.MonkeyPatch, console_output: ConsoleOutputStream, file_output: TextIO):
         monkeypatch.setattr("builtins.input", Mock(return_value="hello"))
 
         console = ConsoleOutput(console_output=console_output, file_output=file_output)
@@ -299,8 +307,8 @@ class TestPrompts:
     def test_ask_failure(
         self,
         monkeypatch: pytest.MonkeyPatch,
-        stdin: TextIOWrapper,
-        console_output: TextIOWrapper,
+        stdin: TextIO,
+        console_output: ConsoleOutputStream,
         expected: str,
     ):
         mock_input = Mock()
@@ -312,7 +320,7 @@ class TestPrompts:
             user_input.ask("test")
         assert mock_input.call_args_list == []
 
-    def test_ask_password(self, monkeypatch: pytest.MonkeyPatch, console_output: TextIOWrapper):
+    def test_ask_password(self, monkeypatch: pytest.MonkeyPatch, console_output: ConsoleOutputStream):
         def getpass(prompt, stream):
             stream.write(prompt)
             return "hello"
@@ -337,8 +345,8 @@ class TestPrompts:
     def test_ask_password_failure(
         self,
         monkeypatch: pytest.MonkeyPatch,
-        stdin: TextIOWrapper,
-        console_output: TextIOWrapper,
+        stdin: TextIO,
+        console_output: ConsoleOutputStream,
         expected: str,
     ):
         mock_getpass = Mock()

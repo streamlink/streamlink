@@ -15,7 +15,7 @@ from contextlib import closing, suppress
 from gettext import gettext
 from pathlib import Path
 from time import sleep
-from typing import Any, TextIO
+from typing import Any
 
 import streamlink.logger as logger
 from streamlink import NoPluginError, PluginError, StreamError, Streamlink, __version__ as streamlink_version
@@ -32,7 +32,7 @@ from streamlink_cli.argparser import (
     setup_session_options,
 )
 from streamlink_cli.compat import stdout
-from streamlink_cli.console import ConsoleOutput, ConsoleUserInputRequester
+from streamlink_cli.console import ConsoleOutput, ConsoleOutputStream, ConsoleUserInputRequester
 from streamlink_cli.constants import CONFIG_FILES, DEFAULT_STREAM_METADATA, LOG_DIR, PLUGIN_DIRS, STREAM_SYNONYMS
 from streamlink_cli.exceptions import StreamlinkCLIError
 from streamlink_cli.output import FileOutput, HTTPOutput, PlayerOutput
@@ -852,14 +852,22 @@ def log_current_arguments(session: Streamlink, parser: argparse.ArgumentParser):
 def setup_console() -> None:
     global console
 
-    console_output: TextIO | None
-    if args.quiet:
+    console_output: ConsoleOutputStream | None
+    no_stdout = sys.stdout is None
+    no_stderr = sys.stderr is None
+    if no_stdout and no_stderr or args.quiet:
+        # Console output should be empty if
+        # - neither stdout nor stderr exist
+        # - `--quiet` is set
         console_output = None
-    elif args.stdout or args.output == "-" or args.record == "-" or args.record_and_pipe:
-        # Console output should be on stderr if we are outputting a stream to stdout
-        console_output = sys.stderr
+    elif no_stdout or args.stdout or args.output == "-" or args.record == "-" or args.record_and_pipe:
+        # Console output should be on stderr if
+        # - no stdout exists, but stderr does
+        # - we are outputting a stream to stdout
+        console_output = ConsoleOutputStream.wrap(sys, "stderr")
     else:
-        console_output = sys.stdout or sys.stderr
+        # Default console output is stdout (if it exists)
+        console_output = ConsoleOutputStream.wrap(sys, "stdout")
 
     console = ConsoleOutput(console_output=console_output, json=args.json)
 

@@ -6,6 +6,7 @@ from getpass import getpass
 from json import dumps
 from typing import Any, TextIO
 
+from streamlink_cli.console.stream import ConsoleOutputStream
 from streamlink_cli.utils import JSONEncoder
 
 
@@ -13,20 +14,20 @@ class ConsoleOutput:
     def __init__(
         self,
         *,
-        console_output: TextIO | None = None,
+        console_output: ConsoleOutputStream | None = None,
         file_output: TextIO | None = None,
         json: bool = False,
     ):
         self.json: bool = json
-        self._console_output: TextIO | None = console_output
+        self._console_output: ConsoleOutputStream | None = console_output
         self._file_output: TextIO | None = file_output
 
     @property
-    def console_output(self) -> TextIO | None:
+    def console_output(self) -> ConsoleOutputStream | None:
         return self._console_output
 
     @console_output.setter
-    def console_output(self, console_output: TextIO | None) -> None:
+    def console_output(self, console_output: ConsoleOutputStream | None) -> None:
         self._console_output = console_output
 
     @property
@@ -44,6 +45,7 @@ class ConsoleOutput:
         if self._console_output:  # pragma: no branch
             with suppress(OSError):
                 self._console_output.close()
+            self._console_output.restore()
         if self._file_output:  # pragma: no branch
             with suppress(OSError):
                 self._file_output.close()
