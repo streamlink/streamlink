@@ -8,8 +8,8 @@ from pathlib import Path
 from threading import Event, Lock, Thread
 
 from streamlink.stream.stream import StreamIO
+from streamlink_cli.console.progress import Progress
 from streamlink_cli.output import FileOutput, HTTPOutput, Output, PlayerOutput
-from streamlink_cli.utils.progress import Progress
 
 
 # Use the main Streamlink CLI module as logger
