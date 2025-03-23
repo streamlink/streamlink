@@ -7,7 +7,7 @@ from unittest.mock import Mock
 import freezegun
 import pytest
 
-from streamlink_cli.utils.progress import Progress, ProgressFormatter
+from streamlink_cli.console.progress import Progress, ProgressFormatter
 from tests.testutils.handshake import Handshake
 
 
@@ -24,7 +24,7 @@ class TestProgressFormatter:
     @pytest.fixture(autouse=True)
     def term_width(self, request: pytest.FixtureRequest, monkeypatch: pytest.MonkeyPatch):
         width = getattr(request, "param", 99)
-        monkeypatch.setattr("streamlink_cli.utils.progress.ProgressFormatter.term_width", lambda: width)
+        monkeypatch.setattr("streamlink_cli.console.progress.ProgressFormatter.term_width", lambda: width)
 
     @pytest.mark.parametrize(
         ("term_width", "expected"),
@@ -242,7 +242,7 @@ class TestPrint:
     @pytest.fixture(autouse=True)
     def _get_terminal_size(self, monkeypatch: pytest.MonkeyPatch):
         mock_get_terminal_size = Mock(return_value=Mock(columns=10))
-        monkeypatch.setattr("streamlink_cli.utils.progress.get_terminal_size", mock_get_terminal_size)
+        monkeypatch.setattr("streamlink_cli.console.progress.get_terminal_size", mock_get_terminal_size)
 
     @pytest.fixture()
     def stream(self):
@@ -279,7 +279,7 @@ class TestProgress:
     @pytest.fixture(autouse=True)
     def mock_width(self, monkeypatch: pytest.MonkeyPatch):
         mock = Mock(return_value=70)
-        monkeypatch.setattr("streamlink_cli.utils.progress.ProgressFormatter.term_width", mock)
+        monkeypatch.setattr("streamlink_cli.console.progress.ProgressFormatter.term_width", mock)
         return mock
 
     @pytest.fixture()
