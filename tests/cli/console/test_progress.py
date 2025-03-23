@@ -24,7 +24,7 @@ class TestProgressFormatter:
     @pytest.fixture(autouse=True)
     def term_width(self, request: pytest.FixtureRequest, monkeypatch: pytest.MonkeyPatch):
         width = getattr(request, "param", 99)
-        monkeypatch.setattr("streamlink_cli.console.progress.ProgressFormatter.term_width", lambda: width)
+        monkeypatch.setattr("streamlink_cli.console.progress.term_width", lambda: width)
 
     @pytest.mark.parametrize(
         ("term_width", "expected"),
@@ -214,35 +214,11 @@ class TestFormatPathWindowsUniversalNamingConvention(_TestFormatPath):
     pass
 
 
-class TestWidth:
-    @pytest.mark.parametrize(
-        ("chars", "expected"),
-        [
-            ("ABCDEFGHIJ", 10),
-            ("A你好世界こんにちは안녕하세요B", 30),
-            ("·「」『』【】-=！@#￥%……&×（）", 30),  # noqa: RUF001
-        ],
-    )
-    def test_width(self, chars, expected):
-        assert ProgressFormatter.width(chars) == expected
-
-    @pytest.mark.parametrize(
-        ("prefix", "max_len", "expected"),
-        [
-            ("你好世界こんにちは안녕하세요CD", 10, "녕하세요CD"),
-            ("你好世界こんにちは안녕하세요CD", 9, "하세요CD"),
-            ("你好世界こんにちは안녕하세요CD", 23, "こんにちは안녕하세요CD"),
-        ],
-    )
-    def test_cut(self, prefix, max_len, expected):
-        assert ProgressFormatter.cut(prefix, max_len) == expected
-
-
 class TestPrint:
     @pytest.fixture(autouse=True)
     def _get_terminal_size(self, monkeypatch: pytest.MonkeyPatch):
         mock_get_terminal_size = Mock(return_value=Mock(columns=10))
-        monkeypatch.setattr("streamlink_cli.console.progress.get_terminal_size", mock_get_terminal_size)
+        monkeypatch.setattr("streamlink_cli.console.terminal.get_terminal_size", mock_get_terminal_size)
 
     @pytest.fixture()
     def stream(self):
@@ -279,7 +255,7 @@ class TestProgress:
     @pytest.fixture(autouse=True)
     def mock_width(self, monkeypatch: pytest.MonkeyPatch):
         mock = Mock(return_value=70)
-        monkeypatch.setattr("streamlink_cli.console.progress.ProgressFormatter.term_width", mock)
+        monkeypatch.setattr("streamlink_cli.console.progress.term_width", mock)
         return mock
 
     @pytest.fixture()
