@@ -5,13 +5,12 @@ from collections import deque
 from collections.abc import Callable, Iterable, Mapping
 from math import floor
 from pathlib import PurePath
-from shutil import get_terminal_size
 from string import Formatter as StringFormatter
 from threading import Event, RLock, Thread
 from time import time
 from typing import TYPE_CHECKING, TextIO
 
-from streamlink.compat import is_win32
+from streamlink_cli.console.terminal import cut_text, term_width, text_width
 
 
 if TYPE_CHECKING:
@@ -49,82 +48,9 @@ class ProgressFormatter:
     # Use U+2026 (HORIZONTAL ELLIPSIS) to be able to distinguish between "." and ".." when truncating relative paths
     ELLIPSIS: str = "…"
 
-    # widths generated from
-    # https://www.unicode.org/Public/4.0-Update/EastAsianWidth-4.0.0.txt
-    # See https://github.com/streamlink/streamlink/pull/2032
-    WIDTHS: Iterable[tuple[int, int]] = (
-        (13, 1),
-        (15, 0),
-        (126, 1),
-        (159, 0),
-        (687, 1),
-        (710, 0),
-        (711, 1),
-        (727, 0),
-        (733, 1),
-        (879, 0),
-        (1154, 1),
-        (1161, 0),
-        (4347, 1),
-        (4447, 2),
-        (7467, 1),
-        (7521, 0),
-        (8369, 1),
-        (8426, 0),
-        (9000, 1),
-        (9002, 2),
-        (11021, 1),
-        (12350, 2),
-        (12351, 1),
-        (12438, 2),
-        (12442, 0),
-        (19893, 2),
-        (19967, 1),
-        (55203, 2),
-        (63743, 1),
-        (64106, 2),
-        (65039, 1),
-        (65059, 0),
-        (65131, 2),
-        (65279, 1),
-        (65376, 2),
-        (65500, 1),
-        (65510, 2),
-        (120831, 1),
-        (262141, 2),
-        (1114109, 1),
-    )
-
-    # On Windows, we need one less space, or we overflow the line for some reason.
-    gap = 1 if is_win32 else 0
-
-    @classmethod
-    def term_width(cls):
-        return get_terminal_size().columns - cls.gap
-
-    @classmethod
-    def _get_width(cls, ordinal: int) -> int:
-        """Return the width of a specific unicode character when it would be displayed."""
-        return next((width for unicode, width in cls.WIDTHS if ordinal <= unicode), 1)
-
-    @classmethod
-    def width(cls, value: str):
-        """Return the overall width of a string when it would be displayed."""
-        return sum(map(cls._get_width, map(ord, value)))
-
-    @classmethod
-    def cut(cls, value: str, max_width: int) -> str:
-        """Cut off the beginning of a string until its display width fits into the output size."""
-        current = value
-        for i in range(len(value)):  # pragma: no branch
-            current = value[i:]
-            if cls.width(current) <= max_width:
-                break
-        return current
-
     @classmethod
     def format(cls, formats: _TFormat, params: Mapping[str, str | Callable[[int], str]]) -> str:
-        term_width = cls.term_width()
+        width = term_width()
         static: list[str] = []
         variable: list[tuple[int, Callable[[int], str], int]] = []
 
@@ -151,13 +77,13 @@ class ProgressFormatter:
             else:
                 # No variable segments? Just check if the resulting string fits into the size constraints.
                 if not variable:
-                    if length > term_width:
+                    if length > width:
                         continue
                     else:
                         break
 
                 # Get the available space for each variable segment (share space equally and round down).
-                max_width = int((term_width - length) / len(variable))
+                max_width = int((width - length) / len(variable))
                 # If at least one variable segment doesn't fit, continue with the next format.
                 if max_width < 1 or any(max_width < min_width for _, __, min_width in variable):
                     continue
@@ -204,17 +130,17 @@ class ProgressFormatter:
     def format_path(cls, path: PurePath, max_width: int) -> str:
         # Quick check if the path fits
         string = str(path)
-        width = cls.width(string)
+        width = text_width(string)
         if width <= max_width:
             return string
 
         # Since the path doesn't fit, we always need to add an ellipsis.
         # On Windows, we also need to add the "drive" part (which is an empty string on PurePosixPath)
-        max_width -= cls.width(path.drive) + cls.width(cls.ELLIPSIS)
+        max_width -= text_width(path.drive) + text_width(cls.ELLIPSIS)
 
         # Ignore the path's first part, aka the "anchor" (drive + root)
         parts = os.path.sep.join(path.parts[1:] if path.drive else path.parts)
-        truncated = cls.cut(parts, max_width)
+        truncated = cut_text(parts, max_width)
 
         return f"{path.drive}{cls.ELLIPSIS}{truncated}"
 
@@ -300,8 +226,7 @@ class Progress(Thread):
 
     def print_inplace(self, msg: str):
         """Clears the previous line and prints a new one."""
-        term_width = self.formatter.term_width()
-        spacing = term_width - self.formatter.width(msg)
+        spacing = term_width() - text_width(msg)
 
         self.stream.write(f"\r{msg}{' ' * max(0, spacing)}")
         self.stream.flush()
