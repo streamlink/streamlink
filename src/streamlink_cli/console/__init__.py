@@ -1,0 +1,2 @@
+from streamlink_cli.console.console import ConsoleOutput
+from streamlink_cli.console.user_input import ConsoleUserInputRequester

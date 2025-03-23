@@ -6,7 +6,8 @@ from unittest.mock import Mock
 
 import pytest
 
-from streamlink_cli.console import ConsoleOutput, ConsoleUserInputRequester
+from streamlink_cli.console.console import ConsoleOutput
+from streamlink_cli.console.user_input import ConsoleUserInputRequester
 
 
 def getvalue(output: TextIOWrapper | None, size: int = -1):
@@ -303,7 +304,7 @@ class TestPrompts:
             stream.write(prompt)
             return "hello"
 
-        monkeypatch.setattr("streamlink_cli.console.getpass", getpass)
+        monkeypatch.setattr("streamlink_cli.console.console.getpass", getpass)
 
         console = ConsoleOutput(console_output=console_output)
         user_input = ConsoleUserInputRequester(console)
@@ -328,7 +329,7 @@ class TestPrompts:
         expected: str,
     ):
         mock_getpass = Mock()
-        monkeypatch.setattr("streamlink_cli.console.getpass", mock_getpass)
+        monkeypatch.setattr("streamlink_cli.console.console.getpass", mock_getpass)
 
         console = ConsoleOutput(console_output=console_output)
         user_input = ConsoleUserInputRequester(console)
