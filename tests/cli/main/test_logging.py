@@ -57,21 +57,23 @@ class TestStdoutStderr:
 
         rootlogger = logging.getLogger("streamlink")
         clilogger = streamlink_cli.main.log
-        streamobj = {
-            None: None,
-            "stdout": sys.stdout,
-            "stderr": sys.stderr,
-        }.get(stream)
-
-        assert streamlink_cli.main.console.console_output is streamobj
-        assert streamlink_cli.main.console.file_output is None
         assert clilogger.parent is rootlogger
+
         if stream is None:
+            assert not streamlink_cli.main.console.console_output
             assert not rootlogger.handlers
         else:
+            assert streamlink_cli.main.console.console_output
+            assert streamlink_cli.main.console.console_output._stream is {
+                "stdout": sys.stdout,
+                "stderr": sys.stderr,
+            }.get(stream)
+
             handler = rootlogger.handlers[0]
             assert isinstance(handler, logging.StreamHandler)
-            assert handler.stream is streamobj
+            assert handler.stream is streamlink_cli.main.console.console_output
+
+        assert not streamlink_cli.main.console.file_output
 
     @pytest.mark.parametrize(
         ("argv", "stdout", "stderr"),
@@ -505,24 +507,24 @@ class TestLogfile:
         mock_open = Mock()
         monkeypatch.setattr("builtins.open", mock_open)
 
-        streamobj = {
-            None: None,
-            "stdout": sys.stdout,
-            "stderr": sys.stderr,
-        }.get(stream)
-
         streamlink_cli.main.setup(parser)
-
-        assert streamlink_cli.main.console.console_output is streamobj
-        assert streamlink_cli.main.console.file_output is None
-
         rootlogger = logging.getLogger("streamlink")
+
         if stream is None:
+            assert not streamlink_cli.main.console.console_output
             assert not rootlogger.handlers
         else:
+            assert streamlink_cli.main.console.console_output
+            assert streamlink_cli.main.console.console_output._stream is {
+                "stdout": sys.stdout,
+                "stderr": sys.stderr,
+            }.get(stream)
+
             handler = rootlogger.handlers[0]
             assert isinstance(handler, logging.StreamHandler)
-            assert handler.stream is streamobj
+            assert handler.stream is streamlink_cli.main.console.console_output
+
+        assert not streamlink_cli.main.console.file_output
 
         streamlink_cli.main.log.info("a")
         streamlink_cli.main.console.msg("b")
