@@ -3,7 +3,7 @@
 # This file is generated from the CDP specification. If you need to make
 # changes, edit the generator and regenerate all modules.
 #
-# CDP version: v0.0.1359167
+# CDP version: v0.0.1438564
 # CDP domain: Fetch
 
 from __future__ import annotations
@@ -22,6 +22,8 @@ from streamlink.webbrowser.cdp.devtools.util import T_JSON_DICT, event_class
 class RequestId(str):
     """
     Unique request identifier.
+    Note that this does not identify individual HTTP requests that are part of
+    a network request.
     """
     def to_json(self) -> str:
         return self

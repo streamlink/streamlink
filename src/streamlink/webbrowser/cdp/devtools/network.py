@@ -3,7 +3,7 @@
 # This file is generated from the CDP specification. If you need to make
 # changes, edit the generator and regenerate all modules.
 #
-# CDP version: v0.0.1359167
+# CDP version: v0.0.1438564
 # CDP domain: Network
 
 from __future__ import annotations
@@ -70,7 +70,9 @@ class LoaderId(str):
 
 class RequestId(str):
     """
-    Unique request identifier.
+    Unique network request identifier.
+    Note that this does not identify individual HTTP requests that are part of
+    a network request.
     """
     def to_json(self) -> str:
         return self
@@ -681,6 +683,7 @@ class BlockedReason(enum.Enum):
     CORP_NOT_SAME_ORIGIN_AFTER_DEFAULTED_TO_SAME_ORIGIN_BY_DIP = "corp-not-same-origin-after-defaulted-to-same-origin-by-dip"
     CORP_NOT_SAME_ORIGIN_AFTER_DEFAULTED_TO_SAME_ORIGIN_BY_COEP_AND_DIP = "corp-not-same-origin-after-defaulted-to-same-origin-by-coep-and-dip"
     CORP_NOT_SAME_SITE = "corp-not-same-site"
+    SRI_MESSAGE_SIGNATURE_MISMATCH = "sri-message-signature-mismatch"
 
     def to_json(self) -> str:
         return self.value
@@ -728,6 +731,7 @@ class CorsError(enum.Enum):
     PREFLIGHT_MISSING_PRIVATE_NETWORK_ACCESS_NAME = "PreflightMissingPrivateNetworkAccessName"
     PRIVATE_NETWORK_ACCESS_PERMISSION_UNAVAILABLE = "PrivateNetworkAccessPermissionUnavailable"
     PRIVATE_NETWORK_ACCESS_PERMISSION_DENIED = "PrivateNetworkAccessPermissionDenied"
+    LOCAL_NETWORK_ACCESS_PERMISSION_DENIED = "LocalNetworkAccessPermissionDenied"
 
     def to_json(self) -> str:
         return self.value
@@ -1206,6 +1210,7 @@ class Initiator:
     type_: str
 
     #: Initiator JavaScript stack trace, set for Script only.
+    #: Requires the Debugger domain to be enabled.
     stack: runtime.StackTrace | None = None
 
     #: Initiator URL, set for Parser type or for Script type (when script is importing module) or for SignedExchange type.
@@ -1431,6 +1436,8 @@ class CookieBlockedReason(enum.Enum):
     SCHEMEFUL_SAME_SITE_UNSPECIFIED_TREATED_AS_LAX = "SchemefulSameSiteUnspecifiedTreatedAsLax"
     SAME_PARTY_FROM_CROSS_PARTY_CONTEXT = "SamePartyFromCrossPartyContext"
     NAME_VALUE_PAIR_EXCEEDS_MAX_SIZE = "NameValuePairExceedsMaxSize"
+    PORT_MISMATCH = "PortMismatch"
+    SCHEME_MISMATCH = "SchemeMismatch"
 
     def to_json(self) -> str:
         return self.value
@@ -1454,6 +1461,7 @@ class CookieExemptionReason(enum.Enum):
     STORAGE_ACCESS = "StorageAccess"
     TOP_LEVEL_STORAGE_ACCESS = "TopLevelStorageAccess"
     SCHEME = "Scheme"
+    SAME_SITE_NONE_COOKIES_IN_SANDBOX = "SameSiteNoneCookiesInSandbox"
 
     def to_json(self) -> str:
         return self.value
@@ -1994,12 +2002,66 @@ class ContentEncoding(enum.Enum):
         return cls(json)
 
 
+class DirectSocketDnsQueryType(enum.Enum):
+    IPV4 = "ipv4"
+    IPV6 = "ipv6"
+
+    def to_json(self) -> str:
+        return self.value
+
+    @classmethod
+    def from_json(cls, json: str) -> DirectSocketDnsQueryType:
+        return cls(json)
+
+
+@dataclass
+class DirectTCPSocketOptions:
+    #: TCP_NODELAY option
+    no_delay: bool
+
+    #: Expected to be unsigned integer.
+    keep_alive_delay: float | None = None
+
+    #: Expected to be unsigned integer.
+    send_buffer_size: float | None = None
+
+    #: Expected to be unsigned integer.
+    receive_buffer_size: float | None = None
+
+    dns_query_type: DirectSocketDnsQueryType | None = None
+
+    def to_json(self) -> T_JSON_DICT:
+        json: T_JSON_DICT = {}
+        json["noDelay"] = self.no_delay
+        if self.keep_alive_delay is not None:
+            json["keepAliveDelay"] = self.keep_alive_delay
+        if self.send_buffer_size is not None:
+            json["sendBufferSize"] = self.send_buffer_size
+        if self.receive_buffer_size is not None:
+            json["receiveBufferSize"] = self.receive_buffer_size
+        if self.dns_query_type is not None:
+            json["dnsQueryType"] = self.dns_query_type.to_json()
+        return json
+
+    @classmethod
+    def from_json(cls, json: T_JSON_DICT) -> DirectTCPSocketOptions:
+        return cls(
+            no_delay=bool(json["noDelay"]),
+            keep_alive_delay=float(json["keepAliveDelay"]) if "keepAliveDelay" in json else None,
+            send_buffer_size=float(json["sendBufferSize"]) if "sendBufferSize" in json else None,
+            receive_buffer_size=float(json["receiveBufferSize"]) if "receiveBufferSize" in json else None,
+            dns_query_type=DirectSocketDnsQueryType.from_json(json["dnsQueryType"]) if "dnsQueryType" in json else None,
+        )
+
+
 class PrivateNetworkRequestPolicy(enum.Enum):
     ALLOW = "Allow"
     BLOCK_FROM_INSECURE_TO_MORE_PRIVATE = "BlockFromInsecureToMorePrivate"
     WARN_FROM_INSECURE_TO_MORE_PRIVATE = "WarnFromInsecureToMorePrivate"
     PREFLIGHT_BLOCK = "PreflightBlock"
     PREFLIGHT_WARN = "PreflightWarn"
+    PERMISSION_BLOCK = "PermissionBlock"
+    PERMISSION_WARN = "PermissionWarn"
 
     def to_json(self) -> str:
         return self.value
@@ -3172,6 +3234,32 @@ def load_network_resource(
     return LoadNetworkResourcePageResult.from_json(json["resource"])
 
 
+def set_cookie_controls(
+    enable_third_party_cookie_restriction: bool,
+    disable_third_party_cookie_metadata: bool,
+    disable_third_party_cookie_heuristics: bool,
+) -> Generator[T_JSON_DICT, T_JSON_DICT, None]:
+    """
+    Sets Controls for third-party cookie access
+    Page reload is required before the new cookie bahavior will be observed
+
+    **EXPERIMENTAL**
+
+    :param enable_third_party_cookie_restriction: Whether 3pc restriction is enabled.
+    :param disable_third_party_cookie_metadata: Whether 3pc grace period exception should be enabled; false by default.
+    :param disable_third_party_cookie_heuristics: Whether 3pc heuristics exceptions should be enabled; false by default.
+    """
+    params: T_JSON_DICT = {}
+    params["enableThirdPartyCookieRestriction"] = enable_third_party_cookie_restriction
+    params["disableThirdPartyCookieMetadata"] = disable_third_party_cookie_metadata
+    params["disableThirdPartyCookieHeuristics"] = disable_third_party_cookie_heuristics
+    cmd_dict: T_JSON_DICT = {
+        "method": "Network.setCookieControls",
+        "params": params,
+    }
+    yield cmd_dict
+
+
 @event_class("Network.dataReceived")
 @dataclass
 class DataReceived:
@@ -3708,6 +3796,103 @@ class WebTransportClosed:
         )
 
 
+@event_class("Network.directTCPSocketCreated")
+@dataclass
+class DirectTCPSocketCreated:
+    """
+    **EXPERIMENTAL**
+
+    Fired upon direct_socket.TCPSocket creation.
+    """
+    identifier: RequestId
+    remote_addr: str
+    #: Unsigned int 16.
+    remote_port: int
+    options: DirectTCPSocketOptions
+    timestamp: MonotonicTime
+    initiator: Initiator | None
+
+    @classmethod
+    def from_json(cls, json: T_JSON_DICT) -> DirectTCPSocketCreated:
+        return cls(
+            identifier=RequestId.from_json(json["identifier"]),
+            remote_addr=str(json["remoteAddr"]),
+            remote_port=int(json["remotePort"]),
+            options=DirectTCPSocketOptions.from_json(json["options"]),
+            timestamp=MonotonicTime.from_json(json["timestamp"]),
+            initiator=Initiator.from_json(json["initiator"]) if "initiator" in json else None,
+        )
+
+
+@event_class("Network.directTCPSocketOpened")
+@dataclass
+class DirectTCPSocketOpened:
+    """
+    **EXPERIMENTAL**
+
+    Fired when direct_socket.TCPSocket connection is opened.
+    """
+    identifier: RequestId
+    remote_addr: str
+    #: Expected to be unsigned integer.
+    remote_port: int
+    timestamp: MonotonicTime
+    local_addr: str | None
+    #: Expected to be unsigned integer.
+    local_port: int | None
+
+    @classmethod
+    def from_json(cls, json: T_JSON_DICT) -> DirectTCPSocketOpened:
+        return cls(
+            identifier=RequestId.from_json(json["identifier"]),
+            remote_addr=str(json["remoteAddr"]),
+            remote_port=int(json["remotePort"]),
+            timestamp=MonotonicTime.from_json(json["timestamp"]),
+            local_addr=str(json["localAddr"]) if "localAddr" in json else None,
+            local_port=int(json["localPort"]) if "localPort" in json else None,
+        )
+
+
+@event_class("Network.directTCPSocketAborted")
+@dataclass
+class DirectTCPSocketAborted:
+    """
+    **EXPERIMENTAL**
+
+    Fired when direct_socket.TCPSocket is aborted.
+    """
+    identifier: RequestId
+    error_message: str
+    timestamp: MonotonicTime
+
+    @classmethod
+    def from_json(cls, json: T_JSON_DICT) -> DirectTCPSocketAborted:
+        return cls(
+            identifier=RequestId.from_json(json["identifier"]),
+            error_message=str(json["errorMessage"]),
+            timestamp=MonotonicTime.from_json(json["timestamp"]),
+        )
+
+
+@event_class("Network.directTCPSocketClosed")
+@dataclass
+class DirectTCPSocketClosed:
+    """
+    **EXPERIMENTAL**
+
+    Fired when direct_socket.TCPSocket is closed.
+    """
+    identifier: RequestId
+    timestamp: MonotonicTime
+
+    @classmethod
+    def from_json(cls, json: T_JSON_DICT) -> DirectTCPSocketClosed:
+        return cls(
+            identifier=RequestId.from_json(json["identifier"]),
+            timestamp=MonotonicTime.from_json(json["timestamp"]),
+        )
+
+
 @event_class("Network.requestWillBeSentExtraInfo")
 @dataclass
 class RequestWillBeSentExtraInfo:
@@ -3762,6 +3947,9 @@ class ResponseReceivedExtraInfo:
     #: are represented by the invalid cookie line string instead of a proper cookie.
     blocked_cookies: list[BlockedSetCookieWithReason]
     #: Raw response headers as they were received over the wire.
+    #: Duplicate headers in the response are represented as a single key with their values
+    #: concatentated using ``\n`` as the separator.
+    #: See also ``headersText`` that contains verbatim text for HTTP/1.*.
     headers: Headers
     #: The IP address space of the resource. The address space can only be determined once the transport
     #: established the connection, so we can't send it in ``requestWillBeSentExtraInfo``.
@@ -3810,6 +3998,9 @@ class ResponseReceivedEarlyHints:
     #: Request identifier. Used to match this information to another responseReceived event.
     request_id: RequestId
     #: Raw response headers as they were received over the wire.
+    #: Duplicate headers in the response are represented as a single key with their values
+    #: concatentated using ``\n`` as the separator.
+    #: See also ``headersText`` that contains verbatim text for HTTP/1.*.
     headers: Headers
 
     @classmethod
