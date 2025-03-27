@@ -790,6 +790,11 @@ class HLSStream(HTTPStream):
                         media.parsed_language is not None
                         and media.parsed_language in audio_select_langs
                     )
+                    # then compare media name attribute
+                    or (
+                        media.name
+                        and media.name.lower() in audio_select_codes
+                    )
                     # fallback: find first media playlist matching the user's locale
                     or (
                         (not preferred_audio or media.default)

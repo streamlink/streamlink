@@ -1150,10 +1150,14 @@ class TestHlsExtAudio:
     @pytest.mark.parametrize(
         ("session", "selection"),
         [
-            pytest.param({"hls-audio-select": ["EN"]}, "http://mocked/path/en.m3u8", id="English-language"),
+            pytest.param({"hls-audio-select": ["EN"]}, "http://mocked/path/en.m3u8", id="English-alpha2"),
+            pytest.param({"hls-audio-select": ["ENG"]}, "http://mocked/path/en.m3u8", id="English-alpha3"),
             pytest.param({"hls-audio-select": ["English"]}, "http://mocked/path/en.m3u8", id="English-name"),
-            pytest.param({"hls-audio-select": ["es"]}, "http://mocked/path/es.m3u8", id="Spanish-language"),
+            pytest.param({"hls-audio-select": ["English Language"]}, "http://mocked/path/en.m3u8", id="English-name-attr"),
+            pytest.param({"hls-audio-select": ["es"]}, "http://mocked/path/es.m3u8", id="Spanish-alpha2"),
+            pytest.param({"hls-audio-select": ["spa"]}, "http://mocked/path/es.m3u8", id="Spanish-alpha3"),
             pytest.param({"hls-audio-select": ["spanish"]}, "http://mocked/path/es.m3u8", id="Spanish-name"),
+            pytest.param({"hls-audio-select": ["spanish language"]}, "http://mocked/path/es.m3u8", id="Spanish-name-attr"),
         ],
         indirect=["session"],
     )
@@ -1167,8 +1171,10 @@ class TestHlsExtAudio:
     @pytest.mark.parametrize(
         "session",
         [
-            pytest.param({"hls-audio-select": ["*"]}, id="wildcard"),
-            pytest.param({"hls-audio-select": ["en", "es"]}, id="multiple locales"),
+            pytest.param({"hls-audio-select": ["en", "es"]}, id="alpha2"),
+            pytest.param({"hls-audio-select": ["eng", "spa"]}, id="alpha3"),
+            pytest.param({"hls-audio-select": ["English", "Spanish"]}, id="name"),
+            pytest.param({"hls-audio-select": ["English language", "Spanish language"]}, id="name-attr"),
         ],
         indirect=["session"],
     )
@@ -1181,12 +1187,33 @@ class TestHlsExtAudio:
         ]
 
     @pytest.mark.parametrize(
+        "session",
+        [
+            pytest.param({"hls-audio-select": ["*"]}, id="wildcard"),
+        ],
+        indirect=["session"],
+    )
+    def test_wildcard(self, session: Streamlink, stream: MuxedHLSStream):
+        assert isinstance(stream, MuxedHLSStream)
+        assert [substream.url for substream in stream.substreams] == [
+            "http://mocked/path/playlist.m3u8",
+            "http://mocked/path/en.m3u8",
+            "http://mocked/path/es.m3u8",
+            "http://mocked/path/de.m3u8",
+        ]
+
+    @pytest.mark.parametrize(
         ("session", "_playlist"),
         [
             pytest.param(
                 {"hls-audio-select": ["und", "qaa", "invalid"]},
                 {"playlist": "hls/test_media_language_special.m3u8"},
-                id="special-language-codes",
+                id="special-reserved-invalid",
+            ),
+            pytest.param(
+                {"hls-audio-select": ["Undetermined", "Reserved", "does NOT exist"]},
+                {"playlist": "hls/test_media_language_special.m3u8"},
+                id="name-attribute",
             ),
         ],
         indirect=["session", "_playlist"],
