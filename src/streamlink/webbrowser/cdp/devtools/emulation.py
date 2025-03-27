@@ -3,7 +3,7 @@
 # This file is generated from the CDP specification. If you need to make
 # changes, edit the generator and regenerate all modules.
 #
-# CDP version: v0.0.1359167
+# CDP version: v0.0.1438564
 # CDP domain: Emulation
 
 from __future__ import annotations
@@ -17,6 +17,66 @@ import streamlink.webbrowser.cdp.devtools.dom as dom
 import streamlink.webbrowser.cdp.devtools.network as network
 import streamlink.webbrowser.cdp.devtools.page as page
 from streamlink.webbrowser.cdp.devtools.util import T_JSON_DICT, event_class
+
+
+@dataclass
+class SafeAreaInsets:
+    #: Overrides safe-area-inset-top.
+    top: int | None = None
+
+    #: Overrides safe-area-max-inset-top.
+    top_max: int | None = None
+
+    #: Overrides safe-area-inset-left.
+    left: int | None = None
+
+    #: Overrides safe-area-max-inset-left.
+    left_max: int | None = None
+
+    #: Overrides safe-area-inset-bottom.
+    bottom: int | None = None
+
+    #: Overrides safe-area-max-inset-bottom.
+    bottom_max: int | None = None
+
+    #: Overrides safe-area-inset-right.
+    right: int | None = None
+
+    #: Overrides safe-area-max-inset-right.
+    right_max: int | None = None
+
+    def to_json(self) -> T_JSON_DICT:
+        json: T_JSON_DICT = {}
+        if self.top is not None:
+            json["top"] = self.top
+        if self.top_max is not None:
+            json["topMax"] = self.top_max
+        if self.left is not None:
+            json["left"] = self.left
+        if self.left_max is not None:
+            json["leftMax"] = self.left_max
+        if self.bottom is not None:
+            json["bottom"] = self.bottom
+        if self.bottom_max is not None:
+            json["bottomMax"] = self.bottom_max
+        if self.right is not None:
+            json["right"] = self.right
+        if self.right_max is not None:
+            json["rightMax"] = self.right_max
+        return json
+
+    @classmethod
+    def from_json(cls, json: T_JSON_DICT) -> SafeAreaInsets:
+        return cls(
+            top=int(json["top"]) if "top" in json else None,
+            top_max=int(json["topMax"]) if "topMax" in json else None,
+            left=int(json["left"]) if "left" in json else None,
+            left_max=int(json["leftMax"]) if "leftMax" in json else None,
+            bottom=int(json["bottom"]) if "bottom" in json else None,
+            bottom_max=int(json["bottomMax"]) if "bottomMax" in json else None,
+            right=int(json["right"]) if "right" in json else None,
+            right_max=int(json["rightMax"]) if "rightMax" in json else None,
+        )
 
 
 @dataclass
@@ -537,6 +597,26 @@ def set_default_background_color_override(
     yield cmd_dict
 
 
+def set_safe_area_insets_override(
+    insets: SafeAreaInsets,
+) -> Generator[T_JSON_DICT, T_JSON_DICT, None]:
+    """
+    Overrides the values for env(safe-area-inset-*) and env(safe-area-max-inset-*). Unset values will cause the
+    respective variables to be undefined, even if previously overridden.
+
+    **EXPERIMENTAL**
+
+    :param insets:
+    """
+    params: T_JSON_DICT = {}
+    params["insets"] = insets.to_json()
+    cmd_dict: T_JSON_DICT = {
+        "method": "Emulation.setSafeAreaInsetsOverride",
+        "params": params,
+    }
+    yield cmd_dict
+
+
 def set_device_metrics_override(
     width: int,
     height: int,
@@ -570,7 +650,7 @@ def set_device_metrics_override(
     :param dont_set_visible_size: **(EXPERIMENTAL)** *(Optional)* Do not set visible view size, rely upon explicit setVisibleSize call.
     :param screen_orientation: *(Optional)* Screen orientation override.
     :param viewport: **(EXPERIMENTAL)** *(Optional)* If set, the visible area of the page will be overridden to this viewport. This viewport change is not observed by the page, e.g. viewport-relative elements do not change positions.
-    :param display_feature: **(EXPERIMENTAL)** *(Optional)* If set, the display feature of a multi-segment screen. If not set, multi-segment support is turned-off.
+    :param display_feature: **(EXPERIMENTAL)** *(Optional)* If set, the display feature of a multi-segment screen. If not set, multi-segment support is turned-off. Deprecated, use Emulation.setDisplayFeaturesOverride.
     :param device_posture: **(EXPERIMENTAL)** *(Optional)* If set, the posture of a foldable device. If not set the posture is set to continuous. Deprecated, use Emulation.setDevicePostureOverride.
     """
     params: T_JSON_DICT = {}
@@ -636,6 +716,41 @@ def clear_device_posture_override() -> Generator[T_JSON_DICT, T_JSON_DICT, None]
     """
     cmd_dict: T_JSON_DICT = {
         "method": "Emulation.clearDevicePostureOverride",
+    }
+    yield cmd_dict
+
+
+def set_display_features_override(
+    features: list[DisplayFeature],
+) -> Generator[T_JSON_DICT, T_JSON_DICT, None]:
+    """
+    Start using the given display features to pupulate the Viewport Segments API.
+    This override can also be set in setDeviceMetricsOverride().
+
+    **EXPERIMENTAL**
+
+    :param features:
+    """
+    params: T_JSON_DICT = {}
+    params["features"] = [i.to_json() for i in features]
+    cmd_dict: T_JSON_DICT = {
+        "method": "Emulation.setDisplayFeaturesOverride",
+        "params": params,
+    }
+    yield cmd_dict
+
+
+def clear_display_features_override() -> Generator[T_JSON_DICT, T_JSON_DICT, None]:
+    """
+    Clears the display features override set with either setDeviceMetricsOverride()
+    or setDisplayFeaturesOverride() and starts using display features from the
+    platform again.
+    Does nothing if no override is set.
+
+    **EXPERIMENTAL**
+    """
+    cmd_dict: T_JSON_DICT = {
+        "method": "Emulation.clearDisplayFeaturesOverride",
     }
     yield cmd_dict
 

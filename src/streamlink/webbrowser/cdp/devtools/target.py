@@ -3,7 +3,7 @@
 # This file is generated from the CDP specification. If you need to make
 # changes, edit the generator and regenerate all modules.
 #
-# CDP version: v0.0.1359167
+# CDP version: v0.0.1438564
 # CDP domain: Target
 
 from __future__ import annotations
@@ -175,6 +175,23 @@ class RemoteLocation:
         )
 
 
+class WindowState(enum.Enum):
+    """
+    The state of the target window.
+    """
+    NORMAL = "normal"
+    MINIMIZED = "minimized"
+    MAXIMIZED = "maximized"
+    FULLSCREEN = "fullscreen"
+
+    def to_json(self) -> str:
+        return self.value
+
+    @classmethod
+    def from_json(cls, json: str) -> WindowState:
+        return cls(json)
+
+
 def activate_target(
     target_id: TargetID,
 ) -> Generator[T_JSON_DICT, T_JSON_DICT, None]:
@@ -252,6 +269,7 @@ def close_target(
 def expose_dev_tools_protocol(
     target_id: TargetID,
     binding_name: str | None = None,
+    inherit_permissions: bool | None = None,
 ) -> Generator[T_JSON_DICT, T_JSON_DICT, None]:
     """
     Inject object to the target's main frame that provides a communication
@@ -267,11 +285,14 @@ def expose_dev_tools_protocol(
 
     :param target_id:
     :param binding_name: *(Optional)* Binding name, 'cdp' if not specified.
+    :param inherit_permissions: *(Optional)* If true, inherits the current root session's permissions (default: false).
     """
     params: T_JSON_DICT = {}
     params["targetId"] = target_id.to_json()
     if binding_name is not None:
         params["bindingName"] = binding_name
+    if inherit_permissions is not None:
+        params["inheritPermissions"] = inherit_permissions
     cmd_dict: T_JSON_DICT = {
         "method": "Target.exposeDevToolsProtocol",
         "params": params,
@@ -327,8 +348,11 @@ def get_browser_contexts() -> Generator[T_JSON_DICT, T_JSON_DICT, list[browser.B
 
 def create_target(
     url: str,
+    left: int | None = None,
+    top: int | None = None,
     width: int | None = None,
     height: int | None = None,
+    window_state: WindowState | None = None,
     browser_context_id: browser.BrowserContextID | None = None,
     enable_begin_frame_control: bool | None = None,
     new_window: bool | None = None,
@@ -339,21 +363,30 @@ def create_target(
     Creates a new page.
 
     :param url: The initial URL the page will be navigated to. An empty string indicates about:blank.
-    :param width: *(Optional)* Frame width in DIP (headless chrome only).
-    :param height: *(Optional)* Frame height in DIP (headless chrome only).
+    :param left: **(EXPERIMENTAL)** *(Optional)* Frame left origin in DIP (requires newWindow to be true or headless shell).
+    :param top: **(EXPERIMENTAL)** *(Optional)* Frame top origin in DIP (requires newWindow to be true or headless shell).
+    :param width: *(Optional)* Frame width in DIP (requires newWindow to be true or headless shell).
+    :param height: *(Optional)* Frame height in DIP (requires newWindow to be true or headless shell).
+    :param window_state: *(Optional)* Frame window state (requires newWindow to be true or headless shell). Default is normal.
     :param browser_context_id: **(EXPERIMENTAL)** *(Optional)* The browser context to create the page in.
-    :param enable_begin_frame_control: **(EXPERIMENTAL)** *(Optional)* Whether BeginFrames for this target will be controlled via DevTools (headless chrome only, not supported on MacOS yet, false by default).
-    :param new_window: *(Optional)* Whether to create a new Window or Tab (chrome-only, false by default).
-    :param background: *(Optional)* Whether to create the target in background or foreground (chrome-only, false by default).
+    :param enable_begin_frame_control: **(EXPERIMENTAL)** *(Optional)* Whether BeginFrames for this target will be controlled via DevTools (headless shell only, not supported on MacOS yet, false by default).
+    :param new_window: *(Optional)* Whether to create a new Window or Tab (false by default, not supported by headless shell).
+    :param background: *(Optional)* Whether to create the target in background or foreground (false by default, not supported by headless shell).
     :param for_tab: **(EXPERIMENTAL)** *(Optional)* Whether to create the target of type "tab".
     :returns: The id of the page opened.
     """
     params: T_JSON_DICT = {}
     params["url"] = url
+    if left is not None:
+        params["left"] = left
+    if top is not None:
+        params["top"] = top
     if width is not None:
         params["width"] = width
     if height is not None:
         params["height"] = height
+    if window_state is not None:
+        params["windowState"] = window_state.to_json()
     if browser_context_id is not None:
         params["browserContextId"] = browser_context_id.to_json()
     if enable_begin_frame_control is not None:

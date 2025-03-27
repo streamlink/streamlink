@@ -452,7 +452,7 @@ class TestNavigate:
 
                 await wait_all_tasks_blocked()
                 assert websocket_connection.sent == [
-                    """{"id":0,"method":"Page.enable","sessionId":"56789"}""",
+                    """{"id":0,"method":"Page.enable","params":{},"sessionId":"56789"}""",
                 ]
 
                 await websocket_connection.sender.send(
@@ -460,7 +460,7 @@ class TestNavigate:
                 )
                 await wait_all_tasks_blocked()
                 assert websocket_connection.sent == [
-                    """{"id":0,"method":"Page.enable","sessionId":"56789"}""",
+                    """{"id":0,"method":"Page.enable","params":{},"sessionId":"56789"}""",
                     """{"id":1,"method":"Page.navigate","params":{"url":"https://foo"},"sessionId":"56789"}""",
                 ]
 
@@ -469,7 +469,7 @@ class TestNavigate:
                 )
                 await wait_all_tasks_blocked()
                 assert websocket_connection.sent == [
-                    """{"id":0,"method":"Page.enable","sessionId":"56789"}""",
+                    """{"id":0,"method":"Page.enable","params":{},"sessionId":"56789"}""",
                     """{"id":1,"method":"Page.navigate","params":{"url":"https://foo"},"sessionId":"56789"}""",
                     """{"id":2,"method":"Page.disable","sessionId":"56789"}""",
                 ]
@@ -503,7 +503,7 @@ class TestNavigate:
             """{"id":0,"method":"Runtime.evaluate","params":"""
             + """{"awaitPromise":false,"expression":"navigator.userAgent"},"sessionId":"56789"}""",
             """{"id":1,"method":"Network.setUserAgentOverride","params":{"userAgent":"A Chrome UA"},"sessionId":"56789"}""",
-            """{"id":2,"method":"Page.enable","sessionId":"56789"}""",
+            """{"id":2,"method":"Page.enable","params":{},"sessionId":"56789"}""",
             """{"id":3,"method":"Page.navigate","params":{"url":"https://foo"},"sessionId":"56789"}""",
             """{"id":4,"method":"Page.disable","sessionId":"56789"}""",
         ]
@@ -637,7 +637,7 @@ class TestNavigate:
         await wait_all_tasks_blocked()
         assert websocket_connection.sent == [
             """{"id":0,"method":"Fetch.enable","params":""" + fetch_enable_params + ""","sessionId":"56789"}""",
-            """{"id":1,"method":"Page.enable","sessionId":"56789"}""",
+            """{"id":1,"method":"Page.enable","params":{},"sessionId":"56789"}""",
         ]
         await websocket_connection.sender.send(
             """{"id":1,"result":{},"sessionId":"56789"}""",
@@ -646,7 +646,7 @@ class TestNavigate:
         await wait_all_tasks_blocked()
         assert websocket_connection.sent == [
             """{"id":0,"method":"Fetch.enable","params":""" + fetch_enable_params + ""","sessionId":"56789"}""",
-            """{"id":1,"method":"Page.enable","sessionId":"56789"}""",
+            """{"id":1,"method":"Page.enable","params":{},"sessionId":"56789"}""",
             """{"id":2,"method":"Page.navigate","params":{"url":"https://foo"},"sessionId":"56789"}""",
         ]
         await websocket_connection.sender.send(
@@ -656,7 +656,7 @@ class TestNavigate:
         await wait_all_tasks_blocked()
         assert websocket_connection.sent == [
             """{"id":0,"method":"Fetch.enable","params":""" + fetch_enable_params + ""","sessionId":"56789"}""",
-            """{"id":1,"method":"Page.enable","sessionId":"56789"}""",
+            """{"id":1,"method":"Page.enable","params":{},"sessionId":"56789"}""",
             """{"id":2,"method":"Page.navigate","params":{"url":"https://foo"},"sessionId":"56789"}""",
             """{"id":3,"method":"Page.disable","sessionId":"56789"}""",
         ]
@@ -667,7 +667,7 @@ class TestNavigate:
         await wait_all_tasks_blocked()
         assert websocket_connection.sent == [
             """{"id":0,"method":"Fetch.enable","params":""" + fetch_enable_params + ""","sessionId":"56789"}""",
-            """{"id":1,"method":"Page.enable","sessionId":"56789"}""",
+            """{"id":1,"method":"Page.enable","params":{},"sessionId":"56789"}""",
             """{"id":2,"method":"Page.navigate","params":{"url":"https://foo"},"sessionId":"56789"}""",
             """{"id":3,"method":"Page.disable","sessionId":"56789"}""",
             """{"id":4,"method":"Fetch.disable","sessionId":"56789"}""",

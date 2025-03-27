@@ -3,7 +3,7 @@
 # This file is generated from the CDP specification. If you need to make
 # changes, edit the generator and regenerate all modules.
 #
-# CDP version: v0.0.1359167
+# CDP version: v0.0.1438564
 # CDP domain: Runtime
 
 from __future__ import annotations
@@ -1077,7 +1077,7 @@ def get_isolate_id() -> Generator[T_JSON_DICT, T_JSON_DICT, str]:
     return str(json["id"])
 
 
-def get_heap_usage() -> Generator[T_JSON_DICT, T_JSON_DICT, tuple[float, float]]:
+def get_heap_usage() -> Generator[T_JSON_DICT, T_JSON_DICT, tuple[float, float, float, float]]:
     """
     Returns the JavaScript heap usage.
     It is the total usage of the corresponding isolate not scoped to a particular Runtime.
@@ -1086,8 +1086,10 @@ def get_heap_usage() -> Generator[T_JSON_DICT, T_JSON_DICT, tuple[float, float]]
 
     :returns: A tuple with the following items:
 
-        0. **usedSize** - Used heap size in bytes.
-        1. **totalSize** - Allocated heap size in bytes.
+        0. **usedSize** - Used JavaScript heap size in bytes.
+        1. **totalSize** - Allocated JavaScript heap size in bytes.
+        2. **embedderHeapUsedSize** - Used size in bytes in the embedder's garbage-collected heap.
+        3. **backingStorageSize** - Size in bytes of backing storage for array buffers and external strings.
     """
     cmd_dict: T_JSON_DICT = {
         "method": "Runtime.getHeapUsage",
@@ -1096,6 +1098,8 @@ def get_heap_usage() -> Generator[T_JSON_DICT, T_JSON_DICT, tuple[float, float]]
     return (
         float(json["usedSize"]),
         float(json["totalSize"]),
+        float(json["embedderHeapUsedSize"]),
+        float(json["backingStorageSize"]),
     )
 
 

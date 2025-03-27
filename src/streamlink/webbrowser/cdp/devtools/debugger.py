@@ -3,7 +3,7 @@
 # This file is generated from the CDP specification. If you need to make
 # changes, edit the generator and regenerate all modules.
 #
-# CDP version: v0.0.1359167
+# CDP version: v0.0.1438564
 # CDP domain: Debugger
 
 from __future__ import annotations
@@ -358,6 +358,28 @@ class DebugSymbols:
         return cls(
             type_=str(json["type"]),
             external_url=str(json["externalURL"]) if "externalURL" in json else None,
+        )
+
+
+@dataclass
+class ResolvedBreakpoint:
+    #: Breakpoint unique identifier.
+    breakpoint_id: BreakpointId
+
+    #: Actual breakpoint location.
+    location: Location
+
+    def to_json(self) -> T_JSON_DICT:
+        json: T_JSON_DICT = {}
+        json["breakpointId"] = self.breakpoint_id.to_json()
+        json["location"] = self.location.to_json()
+        return json
+
+    @classmethod
+    def from_json(cls, json: T_JSON_DICT) -> ResolvedBreakpoint:
+        return cls(
+            breakpoint_id=BreakpointId.from_json(json["breakpointId"]),
+            location=Location.from_json(json["location"]),
         )
 
 
@@ -771,8 +793,30 @@ def set_async_call_stack_depth(
     yield cmd_dict
 
 
+def set_blackbox_execution_contexts(
+    unique_ids: list[str],
+) -> Generator[T_JSON_DICT, T_JSON_DICT, None]:
+    """
+    Replace previous blackbox execution contexts with passed ones. Forces backend to skip
+    stepping/pausing in scripts in these execution contexts. VM will try to leave blackboxed script by
+    performing 'step in' several times, finally resorting to 'step out' if unsuccessful.
+
+    **EXPERIMENTAL**
+
+    :param unique_ids: Array of execution context unique ids for the debugger to ignore.
+    """
+    params: T_JSON_DICT = {}
+    params["uniqueIds"] = list(unique_ids)
+    cmd_dict: T_JSON_DICT = {
+        "method": "Debugger.setBlackboxExecutionContexts",
+        "params": params,
+    }
+    yield cmd_dict
+
+
 def set_blackbox_patterns(
     patterns: list[str],
+    skip_anonymous: bool | None = None,
 ) -> Generator[T_JSON_DICT, T_JSON_DICT, None]:
     """
     Replace previous blackbox patterns with passed ones. Forces backend to skip stepping/pausing in
@@ -782,9 +826,12 @@ def set_blackbox_patterns(
     **EXPERIMENTAL**
 
     :param patterns: Array of regexps that will be used to check script url for blackbox state.
+    :param skip_anonymous: *(Optional)* If true, also ignore scripts with no source url.
     """
     params: T_JSON_DICT = {}
     params["patterns"] = list(patterns)
+    if skip_anonymous is not None:
+        params["skipAnonymous"] = skip_anonymous
     cmd_dict: T_JSON_DICT = {
         "method": "Debugger.setBlackboxPatterns",
         "params": params,
@@ -1143,6 +1190,7 @@ def step_over(
 class BreakpointResolved:
     """
     Fired when breakpoint is resolved to an actual script and location.
+    Deprecated in favor of ``resolvedBreakpoints`` in the ``scriptParsed`` event.
     """
     #: Breakpoint unique identifier.
     breakpoint_id: BreakpointId
@@ -1228,6 +1276,8 @@ class ScriptFailedToParse:
     execution_context_id: runtime.ExecutionContextId
     #: Content hash of the script, SHA-256.
     hash_: str
+    #: For Wasm modules, the content of the ``build_id`` custom section.
+    build_id: str
     #: Embedder-specific auxiliary data likely matching {isDefault: boolean, type: 'default'``'isolated'``'worker', frameId: string}
     execution_context_aux_data: dict | None
     #: URL of source map associated with script (if any).
@@ -1258,6 +1308,7 @@ class ScriptFailedToParse:
             end_column=int(json["endColumn"]),
             execution_context_id=runtime.ExecutionContextId.from_json(json["executionContextId"]),
             hash_=str(json["hash"]),
+            build_id=str(json["buildId"]),
             execution_context_aux_data=dict(json["executionContextAuxData"]) if "executionContextAuxData" in json else None,
             source_map_url=str(json["sourceMapURL"]) if "sourceMapURL" in json else None,
             has_source_url=bool(json["hasSourceURL"]) if "hasSourceURL" in json else None,
@@ -1293,6 +1344,8 @@ class ScriptParsed:
     execution_context_id: runtime.ExecutionContextId
     #: Content hash of the script, SHA-256.
     hash_: str
+    #: For Wasm modules, the content of the ``build_id`` custom section.
+    build_id: str
     #: Embedder-specific auxiliary data likely matching {isDefault: boolean, type: 'default'``'isolated'``'worker', frameId: string}
     execution_context_aux_data: dict | None
     #: True, if this script is generated as a result of the live edit operation.
@@ -1315,6 +1368,10 @@ class ScriptParsed:
     debug_symbols: list[DebugSymbols] | None
     #: The name the embedder supplied for this script.
     embedder_name: str | None
+    #: The list of set breakpoints in this script if calls to ``setBreakpointByUrl``
+    #: matches this script's URL or hash. Clients that use this list can ignore the
+    #: ``breakpointResolved`` event. They are equivalent.
+    resolved_breakpoints: list[ResolvedBreakpoint] | None
 
     @classmethod
     def from_json(cls, json: T_JSON_DICT) -> ScriptParsed:
@@ -1327,6 +1384,7 @@ class ScriptParsed:
             end_column=int(json["endColumn"]),
             execution_context_id=runtime.ExecutionContextId.from_json(json["executionContextId"]),
             hash_=str(json["hash"]),
+            build_id=str(json["buildId"]),
             execution_context_aux_data=dict(json["executionContextAuxData"]) if "executionContextAuxData" in json else None,
             is_live_edit=bool(json["isLiveEdit"]) if "isLiveEdit" in json else None,
             source_map_url=str(json["sourceMapURL"]) if "sourceMapURL" in json else None,
@@ -1338,4 +1396,5 @@ class ScriptParsed:
             script_language=ScriptLanguage.from_json(json["scriptLanguage"]) if "scriptLanguage" in json else None,
             debug_symbols=[DebugSymbols.from_json(i) for i in json["debugSymbols"]] if "debugSymbols" in json else None,
             embedder_name=str(json["embedderName"]) if "embedderName" in json else None,
+            resolved_breakpoints=[ResolvedBreakpoint.from_json(i) for i in json["resolvedBreakpoints"]] if "resolvedBreakpoints" in json else None,
         )
