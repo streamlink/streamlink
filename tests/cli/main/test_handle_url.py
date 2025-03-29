@@ -87,12 +87,16 @@ def streams(request: pytest.FixtureRequest, session: Streamlink):
 def plugin(session: Streamlink, streams: Iterator[dict[str, FakeStream]]):
     @pluginmatcher(re.compile(r"https?://plugin"))
     class FakePlugin(Plugin):
-        __module__ = "plugin"
+        __module__ = "streamlink.plugins.plugin"
 
         id = "ID"
         author = "AUTHOR"
         category = "CATEGORY"
         title = "TITLE"
+
+        def __init__(self, *args, **kwargs):
+            super().__init__(*args, **kwargs)
+            self.logger.info("plugin log message")
 
         def _get_streams(self):
             item = next(streams, None)
@@ -119,7 +123,8 @@ def plugin(session: Streamlink, streams: Iterator[dict[str, FakeStream]]):
             {"exc": PluginError("Error while fetching streams")},
             1,
             (
-                "[cli][info] Found matching plugin plugin for URL plugin\n"  # formatter: keep separate lines
+                "[cli][info] Found matching plugin plugin for URL plugin\n"
+                + "[plugins.plugin][info] plugin log message\n"
                 + "error: Error while fetching streams\n"
             ),
             id="fetch-streams-exception",
@@ -130,6 +135,7 @@ def plugin(session: Streamlink, streams: Iterator[dict[str, FakeStream]]):
             1,
             (
                 "[cli][info] Found matching plugin plugin for URL plugin\n"
+                + "[plugins.plugin][info] plugin log message\n"
                 + "error: No playable streams found on this URL: plugin\n"
             ),
             id="no-streams",
@@ -140,6 +146,7 @@ def plugin(session: Streamlink, streams: Iterator[dict[str, FakeStream]]):
             0,
             (
                 "[cli][info] Found matching plugin plugin for URL plugin\n"
+                + "[plugins.plugin][info] plugin log message\n"
                 + "Available streams: audio, 720p (worst), 1080p (best)\n"
             ),
             id="streams-selection-none",
@@ -150,6 +157,7 @@ def plugin(session: Streamlink, streams: Iterator[dict[str, FakeStream]]):
             1,
             (
                 "[cli][info] Found matching plugin plugin for URL plugin\n"
+                + "[plugins.plugin][info] plugin log message\n"
                 + "error: The specified stream(s) 'one, two, three' could not be found.\n"
                 + "       Available streams: audio, 720p (worst), 1080p (best)\n"
             ),
@@ -161,6 +169,7 @@ def plugin(session: Streamlink, streams: Iterator[dict[str, FakeStream]]):
             0,
             (
                 "[cli][info] Found matching plugin plugin for URL plugin\n"
+                + "[plugins.plugin][info] plugin log message\n"
                 + "[cli][info] Available streams: audio, 720p (worst), 1080p (best)\n"
                 + "[cli][info] Opening stream: 1080p (fake)\n"
             ),
@@ -340,6 +349,7 @@ def test_handle_url_text_output(
             0,
             (
                 "[cli][info] Found matching plugin plugin for URL plugin\n"
+                + "[plugins.plugin][info] plugin log message\n"
                 + "error: No playable streams found on this URL: plugin\n"
             ),
             id="no-retries-implicit",
@@ -351,6 +361,7 @@ def test_handle_url_text_output(
             0,
             (
                 "[cli][info] Found matching plugin plugin for URL plugin\n"
+                + "[plugins.plugin][info] plugin log message\n"
                 + "error: No playable streams found on this URL: plugin\n"
             ),
             id="no-retries-explicit",
@@ -362,6 +373,7 @@ def test_handle_url_text_output(
             5,
             (
                 "[cli][info] Found matching plugin plugin for URL plugin\n"
+                + "[plugins.plugin][info] plugin log message\n"
                 + "[cli][info] Waiting for streams, retrying every 1 second(s)\n"
                 + "error: No playable streams found on this URL: plugin\n"
             ),
@@ -374,6 +386,7 @@ def test_handle_url_text_output(
             0,
             (
                 "[cli][info] Found matching plugin plugin for URL plugin\n"
+                + "[plugins.plugin][info] plugin log message\n"
                 + "[cli][info] Available streams: audio, 720p (worst), 1080p (best)\n"
                 + "[cli][info] Opening stream: 1080p (fake)\n"
             ),
@@ -386,6 +399,7 @@ def test_handle_url_text_output(
             2,
             (
                 "[cli][info] Found matching plugin plugin for URL plugin\n"
+                + "[plugins.plugin][info] plugin log message\n"
                 + "[cli][info] Waiting for streams, retrying every 3.0 second(s)\n"
                 + "[cli][info] Available streams: audio, 720p (worst), 1080p (best)\n"
                 + "[cli][info] Opening stream: 1080p (fake)\n"
@@ -399,6 +413,7 @@ def test_handle_url_text_output(
             1,
             (
                 "[cli][info] Found matching plugin plugin for URL plugin\n"
+                + "[plugins.plugin][info] plugin log message\n"
                 + "[cli][error] failure\n"
                 + "[cli][info] Waiting for streams, retrying every 3.0 second(s)\n"
                 + "[cli][info] Available streams: audio, 720p (worst), 1080p (best)\n"
@@ -413,6 +428,7 @@ def test_handle_url_text_output(
             2,
             (
                 "[cli][info] Found matching plugin plugin for URL plugin\n"
+                + "[plugins.plugin][info] plugin log message\n"
                 + "[cli][info] Waiting for streams, retrying every 3.0 second(s)\n"
                 + "[cli][error] failure\n"
                 + "[cli][info] Available streams: audio, 720p (worst), 1080p (best)\n"
@@ -427,6 +443,7 @@ def test_handle_url_text_output(
             20,
             (
                 "[cli][info] Found matching plugin plugin for URL plugin\n"
+                + "[plugins.plugin][info] plugin log message\n"
                 + "[cli][info] Waiting for streams, retrying every 3.0 second(s)\n"
                 + "[cli][info] Available streams: audio, 720p (worst), 1080p (best)\n"
                 + "[cli][info] Opening stream: 1080p (fake)\n"
@@ -440,6 +457,7 @@ def test_handle_url_text_output(
             0,
             (
                 "[cli][info] Found matching plugin plugin for URL plugin\n"
+                + "[plugins.plugin][info] plugin log message\n"
                 + "error: fatal\n"
             ),
             id="fatal-plugin-error-on-first-attempt",
@@ -451,6 +469,7 @@ def test_handle_url_text_output(
             1,
             (
                 "[cli][info] Found matching plugin plugin for URL plugin\n"
+                + "[plugins.plugin][info] plugin log message\n"
                 + "[cli][info] Waiting for streams, retrying every 1 second(s)\n"
                 + "error: fatal\n"
             ),
