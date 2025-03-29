@@ -585,9 +585,10 @@ def handle_url():
 
     try:
         pluginname, pluginclass, resolved_url = streamlink.resolve_url(args.url)
+        log.info(f"Found matching plugin {pluginname} for URL {args.url}")
+
         options = setup_plugin_options(streamlink, args, pluginname, pluginclass)
         plugin = pluginclass(streamlink, resolved_url, options)
-        log.info(f"Found matching plugin {pluginname} for URL {args.url}")
 
         if args.retry_max or args.retry_streams:
             retry_streams = 1
