@@ -11,9 +11,10 @@ $metadata title
 import re
 from ssl import OP_NO_TICKET
 
-from streamlink.plugin import Plugin, pluginmatcher
+from streamlink.plugin import Plugin, PluginError, pluginmatcher
 from streamlink.plugin.api import validate
 from streamlink.session.http import SSLContextAdapter
+from streamlink.session.http_useragents import CHROME
 from streamlink.stream.hls import HLSStream
 
 
@@ -38,7 +39,6 @@ class KickAdapter(SSLContextAdapter):
     pattern=re.compile(r"https?://(?:\w+\.)?kick\.com/(?!video/)(?P<channel>[^/?]+)\?clip=(?P<clip>[^&]+)$"),
 )
 class Kick(Plugin):
-    _URL_TOKEN = "https://kick.com/"
     _URL_API_LIVESTREAM = "https://kick.com/api/v2/channels/{channel}/livestream"
     _URL_API_VOD = "https://kick.com/api/v1/video/{vod}"
     _URL_API_CLIP = "https://kick.com/api/v2/clips/{clip}"
@@ -46,20 +46,35 @@ class Kick(Plugin):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.session.http.mount("https://kick.com/", KickAdapter())
-        self.session.http.headers.update({"Sec-Fetch-User": "?1"})
 
-    def _get_token(self):
-        res = self.session.http.get(self._URL_TOKEN, raise_for_status=False)
-        return res.cookies.get("XSRF-TOKEN", "")
+        m = re.search(r"Chrome/(?P<full>(?P<main>\d+)\S+)", CHROME)
+        if not m:
+            raise PluginError("Error while parsing Chromium User-Agent")
+        main = m["main"]
+        full = m["full"]
+
+        self.session.http.headers.update({
+            "User-Agent": CHROME,
+            "sec-ch-ua": f'"Not:A-Brand";v="24", "Chromium";v="{main}"',
+            "sec-ch-ua-arch": '"x86"',
+            "sec-ch-ua-bitness": '"64"',
+            "sec-ch-ua-full-version": f'"{full}"',
+            "sec-ch-ua-full-version-list": f'"Not:A-Brand";v="24.0.0.0", "Chromium";v="{full}"',
+            "sec-ch-ua-mobile": "?0",
+            "sec-ch-ua-model": '""',
+            "sec-ch-ua-platform": '"Windows"',
+            "sec-ch-ua-platform-version": '"6.14.0"',
+            "sec-fetch-dest": "empty",
+            "sec-fetch-mode": "cors",
+            "sec-fetch-site": "same-origin",
+            "sec-fetch-user": "?1",
+        })
 
     def _get_api_headers(self):
-        token = self._get_token()
-
         return {
             "Accept": "application/json",
             "Accept-Language": "en-US",
             "Referer": self.url,
-            "Authorization": f"Bearer {token}",
         }
 
     def _get_streams_live(self):
