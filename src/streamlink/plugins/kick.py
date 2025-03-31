@@ -11,8 +11,9 @@ $metadata title
 import re
 from ssl import OP_NO_TICKET
 
-from streamlink.plugin import Plugin, pluginmatcher
-from streamlink.plugin.api import validate
+from streamlink.exceptions import NoStreamsError
+from streamlink.plugin import Plugin, PluginError, pluginmatcher
+from streamlink.plugin.api import useragents, validate
 from streamlink.session.http import SSLContextAdapter
 from streamlink.stream.hls import HLSStream
 
@@ -35,10 +36,9 @@ class KickAdapter(SSLContextAdapter):
 )
 @pluginmatcher(
     name="clip",
-    pattern=re.compile(r"https?://(?:\w+\.)?kick\.com/(?!video/)(?P<channel>[^/?]+)\?clip=(?P<clip>[^&]+)$"),
+    pattern=re.compile(r"https?://(?:\w+\.)?kick\.com/(?!video/)(?P<channel>[^/?]+)(?:\?clip=|/clips/)(?P<clip>[^?&]+)"),
 )
 class Kick(Plugin):
-    _URL_TOKEN = "https://kick.com/"
     _URL_API_LIVESTREAM = "https://kick.com/api/v2/channels/{channel}/livestream"
     _URL_API_VOD = "https://kick.com/api/v1/video/{vod}"
     _URL_API_CLIP = "https://kick.com/api/v2/clips/{clip}"
@@ -46,106 +46,120 @@ class Kick(Plugin):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.session.http.mount("https://kick.com/", KickAdapter())
-        self.session.http.headers.update({"Sec-Fetch-User": "?1"})
+        self.session.http.headers.update({
+            "Referer": self.url,
+            "User-Agent": useragents.CHROME,
+        })
 
-    def _get_token(self):
-        res = self.session.http.get(self._URL_TOKEN, raise_for_status=False)
-        return res.cookies.get("XSRF-TOKEN", "")
-
-    def _get_api_headers(self):
-        token = self._get_token()
+    @staticmethod
+    def _get_api_headers():
+        if not (m := re.search(r"Chrome/(?P<full>(?P<main>\d+)\S+)", useragents.CHROME)):
+            raise PluginError("Error while parsing Chromium User-Agent")
 
         return {
             "Accept": "application/json",
             "Accept-Language": "en-US",
-            "Referer": self.url,
-            "Authorization": f"Bearer {token}",
+            "sec-ch-ua": f'"Not:A-Brand";v="24", "Chromium";v="{m["main"]}"',
+            "sec-ch-ua-arch": '"x86"',
+            "sec-ch-ua-bitness": '"64"',
+            "sec-ch-ua-full-version": f'"{m["full"]}"',
+            "sec-ch-ua-full-version-list": f'"Not:A-Brand";v="24.0.0.0", "Chromium";v="{m["full"]}"',
+            "sec-ch-ua-mobile": "?0",
+            "sec-ch-ua-model": '""',
+            "sec-ch-ua-platform": '"Windows"',
+            "sec-ch-ua-platform-version": '"6.14.0"',
+            "sec-fetch-dest": "empty",
+            "sec-fetch-mode": "cors",
+            "sec-fetch-site": "same-origin",
+            "sec-fetch-user": "?1",
         }
+
+    def _query_api(self, url, schema):
+        schema = validate.Schema(
+            validate.parse_json(),
+            validate.any(
+                validate.all(
+                    {"message": str},
+                    validate.transform(lambda obj: ("error", obj["message"])),
+                ),
+                validate.all(
+                    {"data": None},
+                    validate.transform(lambda _: ("data", None)),
+                ),
+                validate.all(
+                    schema,
+                    validate.transform(lambda obj: ("data", obj)),
+                ),
+            ),
+        )
+
+        res = self.session.http.get(
+            url,
+            headers=self._get_api_headers(),
+            raise_for_status=False,
+        )
+        if res.status_code == 403:
+            raise PluginError("Error while accessing Kick API: status code 403")
+
+        restype, data = schema.validate(res.text)
+
+        if restype == "error":
+            raise PluginError(f"Error while querying Kick API: {data or 'unknown error'}")
+        if not data:
+            raise NoStreamsError
+
+        return data
 
     def _get_streams_live(self):
         self.author = self.match["channel"]
 
-        data = self.session.http.get(
+        hls_url, self.id, self.category, self.title = self._query_api(
             self._URL_API_LIVESTREAM.format(channel=self.author),
-            acceptable_status=(200, 404),
-            headers=self._get_api_headers(),
             schema=validate.Schema(
-                validate.parse_json(),
-                validate.any(
-                    validate.all(
-                        {"message": str},
-                        validate.transform(lambda _: None),
-                    ),
-                    validate.all(
-                        {"data": None},
-                        validate.transform(lambda _: None),
-                    ),
-                    validate.all(
-                        {
-                            "data": {
-                                "playback_url": validate.url(path=validate.endswith(".m3u8")),
-                                "id": int,
-                                "category": {"name": str},
-                                "session_title": str,
-                            },
-                        },
-                        validate.get("data"),
-                        validate.union_get(
-                            "playback_url",
-                            "id",
-                            ("category", "name"),
-                            "session_title",
-                        ),
-                    ),
+                {
+                    "data": {
+                        "playback_url": validate.url(path=validate.endswith(".m3u8")),
+                        "id": int,
+                        "category": {"name": str},
+                        "session_title": str,
+                    },
+                },
+                validate.get("data"),
+                validate.union_get(
+                    "playback_url",
+                    "id",
+                    ("category", "name"),
+                    "session_title",
                 ),
             ),
         )
-        if not data:
-            return
-
-        hls_url, self.id, self.category, self.title = data
 
         return HLSStream.parse_variant_playlist(self.session, hls_url)
 
     def _get_streams_vod(self):
         self.id = self.match["vod"]
 
-        data = self.session.http.get(
+        hls_url, self.author, self.title = self._query_api(
             self._URL_API_VOD.format(vod=self.id),
-            acceptable_status=(200, 404),
-            headers=self._get_api_headers(),
             schema=validate.Schema(
-                validate.parse_json(),
-                validate.any(
-                    validate.all(
-                        {"message": str},
-                        validate.transform(lambda _: None),
-                    ),
-                    validate.all(
-                        {
-                            "source": validate.url(path=validate.endswith(".m3u8")),
-                            "livestream": {
-                                "session_title": str,
-                                "channel": {
-                                    "user": {
-                                        "username": str,
-                                    },
-                                },
+                {
+                    "source": validate.url(path=validate.endswith(".m3u8")),
+                    "livestream": {
+                        "session_title": str,
+                        "channel": {
+                            "user": {
+                                "username": str,
                             },
                         },
-                        validate.union_get(
-                            "source",
-                            ("livestream", "channel", "user", "username"),
-                            ("livestream", "session_title"),
-                        ),
-                    ),
+                    },
+                },
+                validate.union_get(
+                    "source",
+                    ("livestream", "channel", "user", "username"),
+                    ("livestream", "session_title"),
                 ),
             ),
         )
-        if not data:
-            return
-
-        hls_url, self.author, self.title = data
 
         return HLSStream.parse_variant_playlist(self.session, hls_url)
 
@@ -153,43 +167,24 @@ class Kick(Plugin):
         self.id = self.match["clip"]
         self.author = self.match["channel"]
 
-        data = self.session.http.get(
+        hls_url, self.category, self.title = self._query_api(
             self._URL_API_CLIP.format(clip=self.id),
-            acceptable_status=(200, 404),
-            headers=self._get_api_headers(),
             schema=validate.Schema(
-                validate.parse_json(),
-                validate.any(
-                    validate.all(
-                        {"message": str},
-                        validate.transform(lambda _: None),
-                    ),
-                    validate.all(
-                        {"clip": None},
-                        validate.transform(lambda _: None),
-                    ),
-                    validate.all(
-                        {
-                            "clip": {
-                                "clip_url": validate.url(path=validate.endswith(".m3u8")),
-                                "category": {"name": str},
-                                "title": str,
-                            },
-                        },
-                        validate.get("clip"),
-                        validate.union_get(
-                            "clip_url",
-                            ("category", "name"),
-                            "title",
-                        ),
-                    ),
+                {
+                    "clip": {
+                        "clip_url": validate.url(path=validate.endswith(".m3u8")),
+                        "category": {"name": str},
+                        "title": str,
+                    },
+                },
+                validate.get("clip"),
+                validate.union_get(
+                    "clip_url",
+                    ("category", "name"),
+                    "title",
                 ),
             ),
         )
-        if not data:
-            return
-
-        hls_url, self.category, self.title = data
 
         return {"clip": HLSStream(self.session, hls_url)}
 
