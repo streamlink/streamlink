@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import logging
 import sys
-from errno import EINVAL, EPIPE
 from io import StringIO
 from pathlib import Path
 from textwrap import dedent
@@ -88,6 +87,7 @@ class TestStdoutStderr:
         self,
         monkeypatch: pytest.MonkeyPatch,
         capsys: pytest.CaptureFixture,
+        mock_console_output_close: Mock,
         argv: list,
         stdout: str,
         stderr: str,
@@ -107,6 +107,7 @@ class TestStdoutStderr:
         out, err = capsys.readouterr()
         assert out == stdout
         assert err == stderr
+        assert mock_console_output_close.call_count == 1
 
     @pytest.mark.parametrize(
         ("missing_stdio", "expected_stdout", "expected_stderr"),
@@ -163,36 +164,13 @@ class TestStdoutStderr:
         assert out == expected_stdout
         assert err == expected_stderr
 
-    @pytest.mark.parametrize(
-        "errno",
-        [
-            pytest.param(EPIPE, id="EPIPE", marks=pytest.mark.posix_only),
-            pytest.param(EINVAL, id="EINVAL", marks=pytest.mark.windows_only),
-        ],
-    )
-    @pytest.mark.parametrize(
-        "code",
-        [0, 1],
-    )
-    def test_brokenpipeerror(self, monkeypatch: pytest.MonkeyPatch, errno: int, code: int):
-        def run(*_, **__):
-            def flush(*_, **__):
-                try:
-                    exception = OSError()
-                    exception.errno = errno
-                    raise exception
-                finally:
-                    monkeypatch.undo()
-
-            monkeypatch.setattr("sys.stdout.flush", flush)
-
-            return code
-
-        monkeypatch.setattr("streamlink_cli.main.run", run)
+    def test_brokenpipeerror(self, monkeypatch: pytest.MonkeyPatch):
+        monkeypatch.setattr("streamlink_cli.main.run", Mock(return_value=0))
 
         with pytest.raises(SystemExit) as excinfo:
             streamlink_cli.main.main()
-        assert excinfo.value.code == code
+        assert excinfo.value.code == 0
+        assert not hasattr(sys, "stdout")
 
     def test_setup_uncaught_exceptions(self, monkeypatch: pytest.MonkeyPatch):
         exception = Exception()

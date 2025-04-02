@@ -128,6 +128,19 @@ def test_broken_stream(monkeypatch: pytest.MonkeyPatch, console_output: TextIOWr
     console.msg("bar")
 
 
+def test_close(console_output: TextIOWrapper, file_output: TextIOWrapper):
+    console = ConsoleOutput(console_output=console_output, file_output=file_output)
+    console.msg("foo")
+    assert getvalue(console_output) == "foo\n"
+    assert getvalue(file_output) == "foo\n"
+    assert not console_output.closed
+    assert not file_output.closed
+
+    console.close()
+    assert console_output.closed
+    assert file_output.closed
+
+
 class TestMessages:
     @pytest.mark.parametrize(
         ("console_output", "expected_console_output", "expected_file_output"),
