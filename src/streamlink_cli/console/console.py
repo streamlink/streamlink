@@ -40,6 +40,14 @@ class ConsoleOutput:
         else:
             self._file_output = file_output
 
+    def close(self):
+        if self._console_output:  # pragma: no branch
+            with suppress(OSError):
+                self._console_output.close()
+        if self._file_output:  # pragma: no branch
+            with suppress(OSError):
+                self._file_output.close()
+
     @staticmethod
     def _write(stream: TextIO, msg: str):
         with suppress(OSError):
