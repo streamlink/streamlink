@@ -981,10 +981,11 @@ def main():
             else:
                 console.msg(f"error: {msg}")
 
+    # flush+close console and file streams, and remove stream wrapper
+    console.close()
+
     # https://docs.python.org/3/library/signal.html#note-on-sigpipe
-    try:
-        sys.stdout.flush()
-    except (AttributeError, OSError):
-        del sys.stdout
+    # Prevent BrokenPipeError: unset sys.stdout, so Python doesn't attempt a flush() on exit
+    del sys.stdout
 
     sys.exit(exit_code)
