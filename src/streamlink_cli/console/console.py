@@ -6,43 +6,28 @@ from getpass import getpass
 from json import dumps
 from typing import Any, TextIO
 
-from streamlink.user_input import UserInputRequester
+from streamlink_cli.console.stream import ConsoleOutputStream
 from streamlink_cli.utils import JSONEncoder
-
-
-class ConsoleUserInputRequester(UserInputRequester):
-    """
-    Request input from the user on the console using the standard ask/askpass methods
-    """
-
-    def __init__(self, console: ConsoleOutput):
-        self.console = console
-
-    def ask(self, prompt: str) -> str:
-        return self.console.ask(f"{prompt.strip()}: ")
-
-    def ask_password(self, prompt: str) -> str:
-        return self.console.ask_password(f"{prompt.strip()}: ")
 
 
 class ConsoleOutput:
     def __init__(
         self,
         *,
-        console_output: TextIO | None = None,
+        console_output: ConsoleOutputStream | None = None,
         file_output: TextIO | None = None,
         json: bool = False,
     ):
         self.json: bool = json
-        self._console_output: TextIO | None = console_output
+        self._console_output: ConsoleOutputStream | None = console_output
         self._file_output: TextIO | None = file_output
 
     @property
-    def console_output(self) -> TextIO | None:
+    def console_output(self) -> ConsoleOutputStream | None:
         return self._console_output
 
     @console_output.setter
-    def console_output(self, console_output: TextIO | None) -> None:
+    def console_output(self, console_output: ConsoleOutputStream | None) -> None:
         self._console_output = console_output
 
     @property
@@ -56,13 +41,30 @@ class ConsoleOutput:
         else:
             self._file_output = file_output
 
+    def close(self):
+        if self._console_output:  # pragma: no branch
+            with suppress(OSError):
+                self._console_output.close()
+            self._console_output.restore()
+        if self._file_output:  # pragma: no branch
+            with suppress(OSError):
+                self._file_output.close()
+
     @staticmethod
-    def _write(stream: TextIO | None, msg: str):
-        if stream is None:
-            return
+    def _write(stream: TextIO, msg: str):
         with suppress(OSError):
             stream.write(msg)
             stream.flush()
+
+    def _write_console(self, msg: str):
+        if self._console_output is None:
+            return
+        self._write(self._console_output, msg)
+
+    def _write_file(self, msg: str):
+        if self._file_output is None:
+            return
+        self._write(self._file_output, msg)
 
     @contextmanager
     def _prompt(self):
@@ -80,7 +82,7 @@ class ConsoleOutput:
 
     def ask(self, prompt: str) -> str:
         with self._prompt():
-            self._write(self._console_output, prompt)
+            self._write_console(prompt)
             return input().strip()
 
     def ask_password(self, prompt: str) -> str:
@@ -91,8 +93,8 @@ class ConsoleOutput:
         if self.json:
             return
         msg = f"{msg}\n"
-        self._write(self._console_output, msg)
-        self._write(self._file_output, msg)
+        self._write_console(msg)
+        self._write_file(msg)
 
     def msg_json(self, *objs: Any, **keywords: Any) -> None:
         if not self.json:
@@ -124,11 +126,8 @@ class ConsoleOutput:
             # don't escape Unicode characters outside the ASCII range if the output encoding is UTF-8
             ensure_ascii = self._console_output.encoding != "utf-8"
             msg = dumps(out, cls=JSONEncoder, ensure_ascii=ensure_ascii, indent=2)
-            self._write(self._console_output, f"{msg}\n")
+            self._write_console(f"{msg}\n")
 
         if self._file_output is not None:
             msg = dumps(out, cls=JSONEncoder, ensure_ascii=False, indent=2)
             self._write(self._file_output, f"{msg}\n")
-
-
-__all__ = ["ConsoleOutput", "ConsoleUserInputRequester"]

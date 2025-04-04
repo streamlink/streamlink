@@ -11,9 +11,9 @@ from unittest.mock import Mock, patch
 import pytest
 
 from streamlink.stream.stream import StreamIO
+from streamlink_cli.console.progress import Progress
 from streamlink_cli.output import FileOutput, HTTPOutput, PlayerOutput
 from streamlink_cli.streamrunner import PlayerPollThread, StreamRunner, log as streamrunnerlogger
-from streamlink_cli.utils.progress import Progress
 from tests.testutils.handshake import Handshake
 
 
