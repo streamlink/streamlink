@@ -5,7 +5,9 @@ from io import TextIOWrapper
 from threading import RLock
 from typing import Iterable, Iterator
 
+from streamlink.compat import is_win32
 from streamlink_cli.console.stream_wrapper import StreamWrapper
+from streamlink_cli.console.windows import WindowsConsole
 
 
 class ConsoleStatusMessage(str):
@@ -15,6 +17,15 @@ class ConsoleStatusMessage(str):
 class ConsoleOutputStream(StreamWrapper):
     def __new__(cls, stream: TextIOWrapper) -> ConsoleOutputStream:
         if stream.isatty():
+            if (
+                is_win32
+                and (windows_console := WindowsConsole(stream))
+                and not windows_console.supports_virtual_terminal_processing()
+            ):
+                console_output_stream_windows = super().__new__(ConsoleOutputStreamWindows)
+                console_output_stream_windows.windows_console = windows_console
+                return console_output_stream_windows
+
             if os.environ.get("TERM", "").lower() not in ("dumb", "unknown"):
                 return super().__new__(ConsoleOutputStreamANSI)
 
@@ -141,3 +152,12 @@ class ConsoleOutputStreamANSI(_ConsoleOutputStreamWithStatusMessages):
 
     def clear_line(self, s: str) -> str:
         return f"{self._CR_CLREOL}{s}"
+
+
+class ConsoleOutputStreamWindows(_ConsoleOutputStreamWithStatusMessages):
+    windows_console: WindowsConsole
+
+    def clear_line(self, s: str) -> str:
+        self.windows_console.clear_line()
+
+        return s

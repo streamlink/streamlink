@@ -3,12 +3,14 @@ from __future__ import annotations
 from io import BytesIO, TextIOWrapper
 from os import linesep
 from typing import TYPE_CHECKING
+from unittest.mock import Mock
 
 import pytest
 
 from streamlink_cli.console.stream import (
     ConsoleOutputStream,
     ConsoleOutputStreamANSI,
+    ConsoleOutputStreamWindows,
     ConsoleStatusMessage,
 )
 
@@ -37,6 +39,17 @@ def console_output_stream(stream: TextIOWrapper):
 
 
 class TestConsoleOutputStreamFeatureDetection:
+    @pytest.fixture(autouse=True)
+    def _mock_is_win32(self, request: pytest.FixtureRequest, monkeypatch: pytest.MonkeyPatch):
+        monkeypatch.setattr("streamlink_cli.console.stream.is_win32", getattr(request, "param", False))
+
+    @pytest.fixture(autouse=True)
+    def _mock_windows_console(self, request: pytest.FixtureRequest, monkeypatch: pytest.MonkeyPatch):
+        value = getattr(request, "param", None)
+        mock_windows_console = Mock(supports_virtual_terminal_processing=Mock(return_value=value))
+        MockWindowsConsole = Mock(return_value=mock_windows_console if value is not None else None)
+        monkeypatch.setattr("streamlink_cli.console.stream.WindowsConsole", MockWindowsConsole)
+
     @pytest.fixture()
     def stream(self, request: pytest.FixtureRequest, monkeypatch: pytest.MonkeyPatch, stream: TextIOWrapper):
         isatty = getattr(request, "param", True)
@@ -46,14 +59,18 @@ class TestConsoleOutputStreamFeatureDetection:
 
     # noinspection PyTestParametrized
     @pytest.mark.parametrize(
-        ("stream", "os_environ", "expected"),
+        ("_mock_is_win32", "stream", "os_environ", "_mock_windows_console", "expected"),
         [
-            pytest.param(False, {}, ConsoleOutputStream, id="posix-notatty"),
-            pytest.param(True, {}, ConsoleOutputStreamANSI, id="posix-isatty"),
-            pytest.param(True, {"TERM": "dumb"}, ConsoleOutputStream, id="posix-TERM=dumb"),
-            pytest.param(True, {"TERM": "unknown"}, ConsoleOutputStream, id="posix-TERM=unknown"),
+            pytest.param(False, False, {}, None, ConsoleOutputStream, id="posix-notatty"),
+            pytest.param(False, True, {}, None, ConsoleOutputStreamANSI, id="posix-isatty"),
+            pytest.param(False, True, {"TERM": "dumb"}, None, ConsoleOutputStream, id="posix-TERM=dumb"),
+            pytest.param(False, True, {"TERM": "unknown"}, None, ConsoleOutputStream, id="posix-TERM=unknown"),
+            pytest.param(True, False, {}, None, ConsoleOutputStream, id="win32-notatty"),
+            pytest.param(True, True, {}, None, ConsoleOutputStreamANSI, id="win32-nowindowsconsole"),
+            pytest.param(True, True, {}, True, ConsoleOutputStreamANSI, id="win32-windowsconsole-virtprocessing"),
+            pytest.param(True, True, {}, False, ConsoleOutputStreamWindows, id="win32-windowsconsole-novirtprocessing"),
         ],
-        indirect=["os_environ", "stream"],
+        indirect=["_mock_is_win32", "os_environ", "stream", "_mock_windows_console"],
     )
     def test_class_type(self, os_environ: dict, console_output_stream: ConsoleOutputStream, expected: ConsoleOutputStream):
         assert type(console_output_stream) is expected
@@ -307,3 +324,63 @@ class TestConsoleOutputStreamANSI:
         assert console_output_stream.closed
 
         console_output_stream.close()  # noop - does not raise
+
+
+class TestConsoleOutputStreamWindows:
+    @pytest.fixture(autouse=True)
+    def _mock_new(self, monkeypatch: pytest.MonkeyPatch):
+        monkeypatch.setattr(ConsoleOutputStream, "__new__", lambda *_, **__: object.__new__(ConsoleOutputStreamWindows))
+
+    @pytest.fixture(autouse=True)
+    def mock_windows_console(self, monkeypatch: pytest.MonkeyPatch):
+        mock_windows_console = Mock()
+        monkeypatch.setattr(ConsoleOutputStreamWindows, "windows_console", mock_windows_console, raising=False)
+
+        return mock_windows_console
+
+    def test_supports_status_messages(self) -> None:
+        writer = ConsoleOutputStream(TextIOWrapper(BytesIO(), encoding="utf-8"))
+        assert writer.supports_status_messages()
+
+    def test_write(self, buffer: BytesIO, console_output_stream: ConsoleOutputStreamWindows, mock_windows_console: Mock):
+        assert console_output_stream.write("foo") == 0
+        assert buffer.getvalue() == b""
+        assert console_output_stream._line_buffer == ["foo"]
+        assert console_output_stream._last_status == ""
+        assert mock_windows_console.clear_line.call_count == 0
+
+        assert console_output_stream.write("bar\n") == 3 + 4
+        assert buffer.getvalue() == b"foobar" + nl
+        assert console_output_stream._line_buffer == []
+        assert console_output_stream._last_status == ""
+        assert mock_windows_console.clear_line.call_count == 0
+
+        assert console_output_stream.write(ConsoleStatusMessage("123\n")) == 3
+        assert buffer.getvalue() == b"foobar" + nl + b"123"
+        assert console_output_stream._line_buffer == []
+        assert console_output_stream._last_status == "123"
+        assert mock_windows_console.clear_line.call_count == 0
+
+        assert console_output_stream.write(ConsoleStatusMessage("456\n")) == 3
+        assert buffer.getvalue() == b"foobar" + nl + b"123456"
+        assert console_output_stream._line_buffer == []
+        assert console_output_stream._last_status == "456"
+        assert mock_windows_console.clear_line.call_count == 1
+
+        assert console_output_stream.write("abc") == 0
+        assert buffer.getvalue() == b"foobar" + nl + b"123456"
+        assert console_output_stream._line_buffer == ["abc"]
+        assert console_output_stream._last_status == "456"
+        assert mock_windows_console.clear_line.call_count == 1
+
+        assert console_output_stream.write(ConsoleStatusMessage("789\n")) == 3
+        assert buffer.getvalue() == b"foobar" + nl + b"123456789"
+        assert console_output_stream._line_buffer == ["abc"]
+        assert console_output_stream._last_status == "789"
+        assert mock_windows_console.clear_line.call_count == 2
+
+        assert console_output_stream.write("def\n") == 3 + 4 + len(console_output_stream._last_status)
+        assert buffer.getvalue() == b"foobar" + nl + b"123456789abcdef" + nl + b"789"
+        assert console_output_stream._line_buffer == []
+        assert console_output_stream._last_status == "789"
+        assert mock_windows_console.clear_line.call_count == 3
