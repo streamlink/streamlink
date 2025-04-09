@@ -1,5 +1,6 @@
+from __future__ import annotations
+
 import sys
-from io import StringIO
 from pathlib import PurePath, PurePosixPath, PureWindowsPath
 from time import time
 from unittest.mock import Mock
@@ -214,39 +215,6 @@ class TestFormatPathWindowsUniversalNamingConvention(_TestFormatPath):
     pass
 
 
-class TestPrint:
-    @pytest.fixture(autouse=True)
-    def _get_terminal_size(self, monkeypatch: pytest.MonkeyPatch):
-        mock_get_terminal_size = Mock(return_value=Mock(columns=10))
-        monkeypatch.setattr("streamlink_cli.console.terminal.get_terminal_size", mock_get_terminal_size)
-
-    @pytest.fixture()
-    def stream(self):
-        return StringIO()
-
-    @pytest.fixture()
-    def progress(self, stream: StringIO):
-        return Progress(stream, Mock())
-
-    @pytest.mark.posix_only()
-    def test_print_posix(self, progress: Progress, stream: StringIO):
-        progress.print_inplace("foo")
-        progress.print_inplace("barbaz")
-        progress.print_inplace("0123456789")
-        progress.print_inplace("abcdefghijk")
-        progress.print_end()
-        assert stream.getvalue() == "\rfoo       \rbarbaz    \r0123456789\rabcdefghijk\n"
-
-    @pytest.mark.windows_only()
-    def test_print_windows(self, progress: Progress, stream: StringIO):
-        progress.print_inplace("foo")
-        progress.print_inplace("barbaz")
-        progress.print_inplace("0123456789")
-        progress.print_inplace("abcdefghijk")
-        progress.print_end()
-        assert stream.getvalue() == "\rfoo      \rbarbaz   \r0123456789\rabcdefghijk\n"
-
-
 class TestProgress:
     @pytest.fixture(autouse=True)
     def _setup(self, monkeypatch: pytest.MonkeyPatch):
@@ -265,9 +233,10 @@ class TestProgress:
 
     def test_download_speed(self, mock_width: Mock, frozen_time):
         kib = b"\x00" * 1024
-        stream = StringIO()
+        messages: list[str] = []
+        console = Mock(msg_status=Mock(side_effect=messages.append))
         progress = Progress(
-            stream=stream,
+            console=console,
             path=PurePosixPath("../../the/path/where/we/write/to"),
             interval=1,
             history=3,
@@ -275,46 +244,46 @@ class TestProgress:
         )
 
         progress.started = time()
-        assert stream.getvalue() == ""
+        assert messages == []
 
         progress.update()
-        assert stream.getvalue().split("\r")[-1] == "[download] Written 0 bytes to ../../the/path/where/we/write/to (0s)   "
+        assert messages.pop() == "[download] Written 0 bytes to ../../the/path/where/we/write/to (0s)"
 
         progress.update()
-        assert stream.getvalue().split("\r")[-1] == "[download] Written 0 bytes to ../../the/path/where/we/write/to (0s)   "
+        assert messages.pop() == "[download] Written 0 bytes to ../../the/path/where/we/write/to (0s)"
 
         frozen_time.tick()
         progress.write(kib * 1)
         progress.update()
-        assert stream.getvalue().split("\r")[-1] == "[download] Written 1.00 KiB to …th/where/we/write/to (1s @ 1.00 KiB/s)"
+        assert messages.pop() == "[download] Written 1.00 KiB to …th/where/we/write/to (1s @ 1.00 KiB/s)"
 
         frozen_time.tick()
         mock_width.return_value = 65
         progress.write(kib * 3)
         progress.update()
-        assert stream.getvalue().split("\r")[-1] == "[download] Written 4.00 KiB to …ere/we/write/to (2s @ 2.00 KiB/s)"
+        assert messages.pop() == "[download] Written 4.00 KiB to …ere/we/write/to (2s @ 2.00 KiB/s)"
 
         frozen_time.tick()
         mock_width.return_value = 60
         progress.write(kib * 5)
         progress.update()
-        assert stream.getvalue().split("\r")[-1] == "[download] Written 9.00 KiB (3s @ 4.50 KiB/s)               "
+        assert messages.pop() == "[download] Written 9.00 KiB (3s @ 4.50 KiB/s)"
 
         frozen_time.tick()
         progress.write(kib * 7)
         progress.update()
-        assert stream.getvalue().split("\r")[-1] == "[download] Written 16.00 KiB (4s @ 7.50 KiB/s)              "
+        assert messages.pop() == "[download] Written 16.00 KiB (4s @ 7.50 KiB/s)"
 
         frozen_time.tick()
         progress.write(kib * 5)
         progress.update()
-        assert stream.getvalue().split("\r")[-1] == "[download] Written 21.00 KiB (5s @ 8.50 KiB/s)              "
+        assert messages.pop() == "[download] Written 21.00 KiB (5s @ 8.50 KiB/s)"
 
         frozen_time.tick()
         progress.update()
-        assert stream.getvalue().split("\r")[-1] == "[download] Written 21.00 KiB (6s @ 6.00 KiB/s)              "
+        assert messages.pop() == "[download] Written 21.00 KiB (6s @ 6.00 KiB/s)"
 
-    def test_update(self):
+    def test_update(self) -> None:
         handshake = Handshake()
 
         class _Progress(Progress):
@@ -322,8 +291,9 @@ class TestProgress:
                 with handshake():
                     return super().update()
 
-        stream = StringIO()
-        thread = _Progress(stream=stream, path=PurePath())
+        messages: list[str] = []
+        console = Mock(msg_status=Mock(side_effect=messages.append))
+        thread = _Progress(console=console, path=PurePath())
         # override the thread's polling time after initializing the deque of the rolling average download speed:
         # the interval constructor keyword is used to set the deque size
         thread.interval = 0
@@ -333,23 +303,23 @@ class TestProgress:
         assert handshake.wait_ready(1)
         thread.write(b"123")
         assert handshake.step(1)
-        assert stream.getvalue().split("\r")[-1].startswith("[download] Written 3 bytes")
+        assert messages.pop().startswith("[download] Written 3 bytes")
 
         # second tick
         assert handshake.wait_ready(1)
         thread.write(b"465")
         assert handshake.step(1)
-        assert stream.getvalue().split("\r")[-1].startswith("[download] Written 6 bytes")
+        assert messages.pop().startswith("[download] Written 6 bytes")
 
         # close progress thread
         assert handshake.wait_ready(1)
         thread.close()
         assert handshake.step(1)
-        assert stream.getvalue().split("\r")[-1].startswith("[download] Written 6 bytes")
+        assert messages.pop().startswith("[download] Written 6 bytes")
 
         # write data right after closing the thread, but before it has halted
         thread.write(b"789")
         handshake.go()
         thread.join(1)
         assert not thread.is_alive()
-        assert stream.getvalue().split("\r")[-1].startswith("[download] Written 9 bytes")
+        assert messages.pop().startswith("[download] Written 9 bytes")

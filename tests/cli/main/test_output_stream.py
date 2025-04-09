@@ -1,5 +1,8 @@
+from __future__ import annotations
+
 from io import BytesIO
-from unittest.mock import Mock, call
+from pathlib import Path
+from unittest.mock import Mock, call, sentinel
 
 import pytest
 
@@ -8,6 +11,7 @@ from streamlink.exceptions import StreamError
 from streamlink.stream.stream import Stream
 from streamlink_cli.exceptions import StreamlinkCLIError
 from streamlink_cli.main import build_parser, setup_args
+from streamlink_cli.output import FileOutput, PlayerOutput
 
 
 @pytest.fixture(autouse=True)
@@ -25,10 +29,11 @@ def caplog(caplog: pytest.LogCaptureFixture):
 
 
 @pytest.fixture(autouse=True)
-def output(monkeypatch: pytest.MonkeyPatch):
-    output = Mock()
+def output(request: pytest.FixtureRequest, monkeypatch: pytest.MonkeyPatch):
+    output = getattr(request, "param", Mock())
     monkeypatch.setattr(streamlink_cli.main, "output", output)
     monkeypatch.setattr(streamlink_cli.main, "create_output", Mock(return_value=output))
+    monkeypatch.setattr(output, "open", Mock())
 
     return output
 
@@ -66,32 +71,24 @@ def test_stream_failure_no_output_open(
     assert exc_info.value.code == 1
 
 
-@pytest.mark.parametrize(
-    ("argv", "isatty", "expected"),
-    [
-        pytest.param(["--retry-open=1", "--progress=yes"], True, True, id="progress-tty"),
-        pytest.param(["--retry-open=1", "--progress=no"], True, False, id="no-progress-tty"),
-        pytest.param(["--retry-open=1", "--progress=yes"], False, False, id="progress-no-tty"),
-        pytest.param(["--retry-open=1", "--progress=no"], False, False, id="no-progress-no-tty"),
-        pytest.param(["--retry-open=1", "--progress=force"], False, True, id="force-progress-no-tty"),
-    ],
-    indirect=["argv"],
-)
-def test_show_progress(
+@pytest.mark.parametrize("argv", [["--retry-open=1"]], indirect=True)
+@pytest.mark.parametrize("has_progress", [True, False])
+def test_stream_runner_with_progress(
     monkeypatch: pytest.MonkeyPatch,
     caplog: pytest.LogCaptureFixture,
     argv: list,
-    output: Mock,
     stream: Stream,
-    isatty: bool,
-    expected: bool,
+    output: PlayerOutput | FileOutput,
+    has_progress: bool,
 ):
     streamio = BytesIO(b"0" * 8192 * 2)
     monkeypatch.setattr(stream, "open", Mock(return_value=streamio))
-    monkeypatch.setattr("sys.stderr.isatty", Mock(return_value=isatty))
 
     mock_streamrunner = Mock()
     monkeypatch.setattr(streamlink_cli.main, "StreamRunner", mock_streamrunner)
+
+    progress = sentinel.progress if has_progress else None
+    monkeypatch.setattr(streamlink_cli.main, "get_output_progress", Mock(return_value=progress))
 
     assert streamlink_cli.main.output_stream(stream, Mock())
 
@@ -99,4 +96,101 @@ def test_show_progress(
         ("debug", "main", "Pre-buffering 8192 bytes"),
         ("debug", "main", "Writing stream to output"),
     ]
-    assert mock_streamrunner.call_args_list == [call(streamio, output, show_progress=expected)]
+    assert mock_streamrunner.call_args_list == [call(streamio, output, progress=progress)]
+
+
+filename = Path("filename")
+file_output = FileOutput(filename)
+file_recording = FileOutput(record=file_output)
+player_output = PlayerOutput(Path("player"))
+player_recording = PlayerOutput(Path("player"), record=file_output)
+
+
+@pytest.mark.parametrize(
+    ("argv", "supports_status_messages", "output", "expected"),
+    [
+        pytest.param(
+            ["--progress=yes"],
+            True,
+            player_recording,
+            {"path": filename},
+            id="progress-status-messages-playeroutput-recording",
+        ),
+        pytest.param(
+            ["--progress=yes"],
+            True,
+            file_output,
+            {"path": filename},
+            id="progress-status-messages-fileoutput",
+        ),
+        pytest.param(
+            ["--progress=yes"],
+            True,
+            file_recording,
+            {"path": filename},
+            id="progress-status-messages-fileoutput-recording",
+        ),
+        pytest.param(
+            ["--progress=yes"],
+            True,
+            player_output,
+            {},
+            id="progress-playeroutput-no-recording",
+        ),
+        pytest.param(
+            ["--progress=yes"],
+            True,
+            file_output,
+            {"path": filename},
+            id="progress-fileoutput-no-recording",
+        ),
+        pytest.param(
+            ["--progress=no"],
+            True,
+            file_output,
+            {},
+            id="no-progress-status-messages",
+        ),
+        pytest.param(
+            ["--progress=yes"],
+            False,
+            file_output,
+            {},
+            id="progress-no-status-messages",
+        ),
+        pytest.param(
+            ["--progress=no"],
+            False,
+            file_output,
+            {},
+            id="no-progress-no-status-messages",
+        ),
+        pytest.param(
+            ["--progress=force"],
+            False,
+            file_output,
+            {"path": filename},
+            id="force-progress-no-status-messages",
+        ),
+    ],
+    indirect=["argv", "output"],
+)
+def test_get_output_progress(
+    monkeypatch: pytest.MonkeyPatch,
+    argv: list,
+    output: PlayerOutput | FileOutput,
+    supports_status_messages: bool,
+    expected: dict,
+):
+    mock_progress = Mock(return_value=sentinel.progress if expected else None)
+    monkeypatch.setattr(streamlink_cli.main, "Progress", mock_progress)
+
+    mock_console = Mock(supports_status_messages=Mock(return_value=supports_status_messages))
+    monkeypatch.setattr(streamlink_cli.main, "console", mock_console)
+
+    result = streamlink_cli.main.get_output_progress(output)
+    if not expected:
+        assert result is None
+    else:
+        assert result is sentinel.progress
+        assert mock_progress.call_args_list == [call(mock_console, **expected)]
