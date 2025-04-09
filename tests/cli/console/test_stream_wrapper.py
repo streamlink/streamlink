@@ -6,6 +6,11 @@ import pytest
 from streamlink_cli.console.stream import ConsoleOutputStream
 
 
+@pytest.fixture(autouse=True)
+def _console_output_stream(monkeypatch: pytest.MonkeyPatch):
+    monkeypatch.setattr(ConsoleOutputStream, "__new__", lambda *_, **__: object.__new__(ConsoleOutputStream))
+
+
 def test_wrap_error():
     with pytest.raises(AttributeError):
         ConsoleOutputStream.wrap(sys, "version")

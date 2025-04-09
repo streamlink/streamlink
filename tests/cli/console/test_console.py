@@ -49,6 +49,11 @@ def stdin(request: pytest.FixtureRequest, monkeypatch: pytest.MonkeyPatch):
     return stdin
 
 
+@pytest.fixture(autouse=True)
+def _console_output_stream(monkeypatch: pytest.MonkeyPatch):
+    monkeypatch.setattr(ConsoleOutputStream, "__new__", lambda *_, **__: object.__new__(ConsoleOutputStream))
+
+
 @pytest.fixture()
 def console_output(request: pytest.FixtureRequest):
     return build_stream(getattr(request, "param", {}), wrap=True)
@@ -267,6 +272,32 @@ class TestMessages:
         )
         assert test_list1 == ["foo", "bar"]
 
+    @pytest.mark.parametrize(
+        ("json", "supports_status_messages", "expected"),
+        [
+            pytest.param(True, False, [], id="json-no-status-messages"),
+            pytest.param(True, True, [], id="json-status-messages"),
+            pytest.param(False, False, [], id="no-json-no-status-messages"),
+            pytest.param(False, True, ["foo"], id="no-json-status-messages"),
+        ],
+    )
+    def test_msg_status(
+        self,
+        monkeypatch: pytest.MonkeyPatch,
+        console_output: ConsoleOutputStream,
+        json: bool,
+        supports_status_messages: bool,
+        expected: list[str],
+    ):
+        writes: list[str] = []
+        monkeypatch.setattr(console_output, "supports_status_messages", Mock(return_value=supports_status_messages))
+        monkeypatch.setattr(console_output, "write", writes.append)
+
+        console = ConsoleOutput(console_output=console_output, json=json)
+        assert console.supports_status_messages() == supports_status_messages
+        console.msg_status("foo")
+        assert writes == expected
+
 
 class TestPrompts:
     def test_prompt_exception(self, console_output: ConsoleOutputStream):
@@ -323,6 +354,8 @@ class TestPrompts:
     def test_ask_password(self, monkeypatch: pytest.MonkeyPatch, console_output: ConsoleOutputStream):
         def getpass(prompt, stream):
             stream.write(prompt)
+            stream.flush()
+
             return "hello"
 
         monkeypatch.setattr("streamlink_cli.console.console.getpass", getpass)

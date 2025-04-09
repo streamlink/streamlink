@@ -6,7 +6,7 @@ from getpass import getpass
 from json import dumps
 from typing import Any, TextIO
 
-from streamlink_cli.console.stream import ConsoleOutputStream
+from streamlink_cli.console.stream import ConsoleOutputStream, ConsoleStatusMessage
 from streamlink_cli.utils import JSONEncoder
 
 
@@ -20,6 +20,7 @@ class ConsoleOutput:
     ):
         self.json: bool = json
         self._console_output: ConsoleOutputStream | None = console_output
+        self._supports_status_messages: bool = console_output is not None and console_output.supports_status_messages()
         self._file_output: TextIO | None = file_output
 
     @property
@@ -29,6 +30,7 @@ class ConsoleOutput:
     @console_output.setter
     def console_output(self, console_output: ConsoleOutputStream | None) -> None:
         self._console_output = console_output
+        self._supports_status_messages = console_output is not None and console_output.supports_status_messages()
 
     @property
     def file_output(self) -> TextIO | None:
@@ -40,6 +42,9 @@ class ConsoleOutput:
             self._file_output = None
         else:
             self._file_output = file_output
+
+    def supports_status_messages(self) -> bool:
+        return self._supports_status_messages
 
     def close(self):
         if self._console_output:  # pragma: no branch
@@ -95,6 +100,11 @@ class ConsoleOutput:
         msg = f"{msg}\n"
         self._write_console(msg)
         self._write_file(msg)
+
+    def msg_status(self, msg: str) -> None:
+        if self.json or not self._supports_status_messages:
+            return
+        self._write_console(ConsoleStatusMessage(msg))
 
     def msg_json(self, *objs: Any, **keywords: Any) -> None:
         if not self.json:
