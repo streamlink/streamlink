@@ -2,14 +2,12 @@ from __future__ import annotations
 
 import errno
 import logging
-import sys
 from contextlib import suppress
-from pathlib import Path
 from threading import Event, Lock, Thread
 
 from streamlink.stream.stream import StreamIO
 from streamlink_cli.console.progress import Progress
-from streamlink_cli.output import FileOutput, HTTPOutput, Output, PlayerOutput
+from streamlink_cli.output import HTTPOutput, Output, PlayerOutput
 
 
 # Use the main Streamlink CLI module as logger
@@ -73,33 +71,19 @@ class StreamRunner:
     """Read data from a stream and write it to the output."""
 
     playerpoller: PlayerPollThread | None = None
-    progress: Progress | None = None
 
     def __init__(
         self,
         stream: StreamIO,
         output: Output,
-        show_progress: bool = False,
+        progress: Progress | None = None,
     ):
         self.stream = stream
         self.output = output
-        self.is_http = isinstance(output, HTTPOutput)
-
-        filename: Path | None = None
+        self.progress = progress
 
         if isinstance(output, PlayerOutput):
             self.playerpoller = PlayerPollThread(stream, output)
-            if output.record:
-                filename = output.record.filename
-
-        elif isinstance(output, FileOutput):
-            if output.filename:
-                filename = output.filename
-            elif output.record:
-                filename = output.record.filename
-
-        if filename and show_progress and sys.stderr:
-            self.progress = Progress(sys.stderr, filename)
 
     def run(
         self,
@@ -108,12 +92,13 @@ class StreamRunner:
     ) -> None:
         read = self.stream.read
         write = self.output.write
-        progress = self.progress.write if self.progress else _noop
+        progress = _noop
 
         if self.playerpoller:
             self.playerpoller.start()
         if self.progress:
             self.progress.start()
+            progress = self.progress.write
 
         # TODO: Fix error messages (s/when/while/) and only log "Stream ended" when it ended on its own (data == b"").
         #       These are considered breaking changes of the CLI output, which is parsed by 3rd party tools.
@@ -140,7 +125,7 @@ class StreamRunner:
         except OSError as err:
             if self.playerpoller and err.errno in ACCEPTABLE_ERRNO:
                 self.playerpoller.playerclosed()
-            elif self.is_http and err.errno in ACCEPTABLE_ERRNO:
+            elif isinstance(self.output, HTTPOutput) and err.errno in ACCEPTABLE_ERRNO:
                 log.info("HTTP connection closed")
             else:
                 raise OSError(f"Error when writing to output: {err}, exiting") from err
