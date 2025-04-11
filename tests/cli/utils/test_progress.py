@@ -304,6 +304,9 @@ class TestProgress:
         progress.update()
         assert stream.getvalue().split("\r")[-1] == "[download] Written 0 bytes to ../../the/path/where/we/write/to (0s)   "
 
+        progress.update()
+        assert stream.getvalue().split("\r")[-1] == "[download] Written 0 bytes to ../../the/path/where/we/write/to (0s)   "
+
         frozen_time.tick()
         progress.write(kib * 1)
         progress.update()
