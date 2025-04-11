@@ -15,6 +15,8 @@ DEFAULT_STREAM_METADATA = {
     "game": "No Game/Category",
 }
 
+PROGRESS_INTERVAL_NO_STATUS = 2
+
 CONFIG_FILES: list[Path]
 PLUGIN_DIRS: list[Path]
 LOG_DIR: Path
@@ -58,6 +60,7 @@ __all__ = [
     "DEFAULT_STREAM_METADATA",
     "LOG_DIR",
     "PLUGIN_DIRS",
+    "PROGRESS_INTERVAL_NO_STATUS",
     "STREAM_PASSTHROUGH",
     "STREAM_SYNONYMS",
 ]
