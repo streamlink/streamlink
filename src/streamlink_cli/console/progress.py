@@ -154,6 +154,7 @@ class Progress(Thread):
         interval: float = 0.25,
         history: int = 20,
         threshold: int = 2,
+        status: bool = True,
     ):
         """
         :param console: The console output
@@ -177,6 +178,7 @@ class Progress(Thread):
         self.started: float = 0.0
         self.overall: int = 0
         self.written: int = 0
+        self.status: bool = status
 
     def close(self):
         self._wait.set()
@@ -220,4 +222,7 @@ class Progress(Thread):
             )
 
             status = formatter.format(formats, params)
-            self.console.msg_status(status)
+            if self.status:
+                self.console.msg_status(status)
+            else:
+                self.console.msg(status)

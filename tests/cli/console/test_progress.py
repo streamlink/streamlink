@@ -283,7 +283,14 @@ class TestProgress:
         progress.update()
         assert messages.pop() == "[download] Written 21.00 KiB (6s @ 6.00 KiB/s)"
 
-    def test_update(self) -> None:
+    @pytest.mark.parametrize(
+        "status",
+        [
+            pytest.param(True, id="status"),
+            pytest.param(False, id="no-status"),
+        ],
+    )
+    def test_update(self, status: bool):
         handshake = Handshake()
 
         class _Progress(Progress):
@@ -291,35 +298,46 @@ class TestProgress:
                 with handshake():
                     return super().update()
 
-        messages: list[str] = []
-        console = Mock(msg_status=Mock(side_effect=messages.append))
-        thread = _Progress(console=console, path=PurePath())
+        messages_status: list[str] = []
+        messages_default: list[str] = []
+        console = Mock(
+            msg_status=Mock(side_effect=messages_status.append),
+            msg=Mock(side_effect=messages_default.append),
+        )
+        thread = _Progress(console=console, path=PurePath(), status=status)
         # override the thread's polling time after initializing the deque of the rolling average download speed:
         # the interval constructor keyword is used to set the deque size
         thread.interval = 0
         thread.start()
 
+        target = messages_status if status else messages_default
+        other = messages_default if status else messages_status
+
         # first tick
         assert handshake.wait_ready(1)
         thread.write(b"123")
         assert handshake.step(1)
-        assert messages.pop().startswith("[download] Written 3 bytes")
+        assert target.pop().startswith("[download] Written 3 bytes")
+        assert other == []
 
         # second tick
         assert handshake.wait_ready(1)
         thread.write(b"465")
         assert handshake.step(1)
-        assert messages.pop().startswith("[download] Written 6 bytes")
+        assert target.pop().startswith("[download] Written 6 bytes")
+        assert other == []
 
         # close progress thread
         assert handshake.wait_ready(1)
         thread.close()
         assert handshake.step(1)
-        assert messages.pop().startswith("[download] Written 6 bytes")
+        assert target.pop().startswith("[download] Written 6 bytes")
+        assert other == []
 
         # write data right after closing the thread, but before it has halted
         thread.write(b"789")
         handshake.go()
         thread.join(1)
         assert not thread.is_alive()
-        assert messages.pop().startswith("[download] Written 9 bytes")
+        assert target.pop().startswith("[download] Written 9 bytes")
+        assert other == []

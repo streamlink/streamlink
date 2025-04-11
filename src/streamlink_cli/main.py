@@ -34,7 +34,14 @@ from streamlink_cli.argparser import (
 from streamlink_cli.compat import stdout
 from streamlink_cli.console import ConsoleOutput, ConsoleOutputStream, ConsoleUserInputRequester
 from streamlink_cli.console.progress import Progress
-from streamlink_cli.constants import CONFIG_FILES, DEFAULT_STREAM_METADATA, LOG_DIR, PLUGIN_DIRS, STREAM_SYNONYMS
+from streamlink_cli.constants import (
+    CONFIG_FILES,
+    DEFAULT_STREAM_METADATA,
+    LOG_DIR,
+    PLUGIN_DIRS,
+    PROGRESS_INTERVAL_NO_STATUS,
+    STREAM_SYNONYMS,
+)
 from streamlink_cli.exceptions import StreamlinkCLIError
 from streamlink_cli.output import FileOutput, HTTPOutput, PlayerOutput
 from streamlink_cli.show_matchers import show_matchers
@@ -360,16 +367,23 @@ def open_stream(stream):
 
 # noinspection PyShadowingNames
 def get_output_progress(output: FileOutput | PlayerOutput) -> Progress | None:
-    # TODO: if args.progress=="force", make Progress call console.msg() instead of console.msg_status()
-    if args.progress == "force" or args.progress == "yes" and console.supports_status_messages():
+    if (force := args.progress == "force") or args.progress == "yes" and console.supports_status_messages():
+        options: dict[str, Any] = {}
+        # on non-interactive stdio, write progress status messages as regular messages in a slower interval
+        if force and not console.supports_status_messages():
+            options |= {
+                "interval": PROGRESS_INTERVAL_NO_STATUS,
+                "status": False,
+            }
+
         if isinstance(output, PlayerOutput):
             if output.record and output.record.filename:
-                return Progress(console, path=output.record.filename)
+                return Progress(console, path=output.record.filename, **options)
         elif isinstance(output, FileOutput):  # pragma: no branch
             if output.filename:
-                return Progress(console, path=output.filename)
+                return Progress(console, path=output.filename, **options)
             elif output.record and output.record.filename:  # pragma: no branch
-                return Progress(console, path=output.record.filename)
+                return Progress(console, path=output.record.filename, **options)
 
     return None
 

@@ -9,6 +9,7 @@ import pytest
 import streamlink_cli.main
 from streamlink.exceptions import StreamError
 from streamlink.stream.stream import Stream
+from streamlink_cli.constants import PROGRESS_INTERVAL_NO_STATUS
 from streamlink_cli.exceptions import StreamlinkCLIError
 from streamlink_cli.main import build_parser, setup_args
 from streamlink_cli.output import FileOutput, PlayerOutput
@@ -169,7 +170,7 @@ player_recording = PlayerOutput(Path("player"), record=file_output)
             ["--progress=force"],
             False,
             file_output,
-            {"path": filename},
+            {"path": filename, "interval": PROGRESS_INTERVAL_NO_STATUS, "status": False},
             id="force-progress-no-status-messages",
         ),
     ],
