@@ -280,7 +280,7 @@ class Progress(Thread):
             self.written = 0
 
             has_history = len(history) >= self.threshold
-            if not has_history:
+            if not has_history or now == history[0][0]:
                 formats = formatter.FORMATS_NOSPEED
                 speed = ""
             else:
