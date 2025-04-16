@@ -1,4 +1,4 @@
-# ruff: noqa: A001, A004, I001
+# ruff: noqa: A004, I001
 # order the module members logically (autodoc_member_order == "bysource")
 
 from streamlink.validate._validate import (
