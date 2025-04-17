@@ -2,12 +2,16 @@
 $description Global live-streaming and video hosting social platform owned by Kick Streaming Pty Ltd.
 $url kick.com
 $type live, vod
+$webbrowser Required for solving a JS challenge that allows access to the Kick API
 $metadata id
 $metadata author
 $metadata category
 $metadata title
 """
 
+from __future__ import annotations
+
+import logging
 import re
 from ssl import OP_NO_TICKET
 
@@ -16,6 +20,9 @@ from streamlink.plugin import Plugin, PluginError, pluginmatcher
 from streamlink.plugin.api import useragents, validate
 from streamlink.session.http import SSLContextAdapter
 from streamlink.stream.hls import HLSStream
+
+
+log = logging.getLogger(__name__)
 
 
 class KickAdapter(SSLContextAdapter):
@@ -39,6 +46,9 @@ class KickAdapter(SSLContextAdapter):
     pattern=re.compile(r"https?://(?:\w+\.)?kick\.com/(?!video/)(?P<channel>[^/?]+)(?:\?clip=|/clips/)(?P<clip>[^?&]+)"),
 )
 class Kick(Plugin):
+    _CACHE_HEADERS = "headers"
+    _CACHE_EXPIRATION = 3600 * 24 * 30
+
     _URL_API_LIVESTREAM = "https://kick.com/api/v2/channels/{channel}/livestream"
     _URL_API_VOD = "https://kick.com/api/v1/video/{vod}"
     _URL_API_CLIP = "https://kick.com/api/v2/clips/{clip}"
@@ -46,14 +56,62 @@ class Kick(Plugin):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.session.http.mount("https://kick.com/", KickAdapter())
+        self.session.http.headers.update(self.cache.get(self._CACHE_HEADERS, {}))
         self.session.http.headers.update({
             "Referer": self.url,
-            "User-Agent": useragents.CHROME,
         })
 
-    @staticmethod
-    def _get_api_headers():
-        if not (m := re.search(r"Chrome/(?P<full>(?P<main>\d+)\S+)", useragents.CHROME)):
+    def _get_cookies_from_webbrowser(self) -> bool:
+        from streamlink.compat import BaseExceptionGroup  # noqa: PLC0415
+        from streamlink.webbrowser.cdp import CDPClient, CDPClientSession  # noqa: PLC0415
+        from streamlink.webbrowser.cdp.devtools import fetch, network  # noqa: PLC0415
+
+        async def on_main(client_session: CDPClientSession, request: fetch.RequestPaused):
+            # get Chromium's request headers, update HTTP session headers and also cache them
+            self.session.http.headers.update(request.request.headers)
+            self.cache.set(self._CACHE_HEADERS, request.request.headers, expires=self._CACHE_EXPIRATION)
+            await client_session.continue_request(request)
+
+        async def get_challenge_cookies(client: CDPClient):
+            client_session: CDPClientSession
+            async with client.session() as client_session:
+                client_session.add_request_handler(on_main, url_pattern=self.url, on_request=True)
+                async with client_session.navigate(self.url) as frame_id:
+                    await client_session.loaded(frame_id)
+                    return await client_session.cdp_session.send(network.get_cookies())
+
+        log.info("Solving JS challenge")
+
+        try:
+            cookies: list[network.Cookie] = CDPClient.launch(self.session, get_challenge_cookies)
+        except BaseExceptionGroup:
+            log.exception("Failed solving JS challenge")
+        except Exception as err:
+            log.error(err)
+        else:
+            for cookie in cookies:
+                self.session.http.cookies.set(
+                    name=cookie.name,
+                    value=cookie.value,
+                    domain=cookie.domain,
+                    path=cookie.path,
+                    expires=cookie.expires,
+                )
+
+            log.info("JS challenge solved, storing cookies")
+            self.save_cookies()
+
+            return True
+
+        return False
+
+    def _get_api_headers(self):
+        # _get_cookies() from above updates the session headers with Chromium's initial request headers
+        ua = self.session.http.headers.get("User-Agent", useragents.CHROME)
+        if "Chrome/" not in ua:
+            ua = useragents.CHROME
+
+        if not (m := re.search(r"Chrome/(?P<full>(?P<main>\d+)\S+)", ua)):
             raise PluginError("Error while parsing Chromium User-Agent")
 
         return {
@@ -74,8 +132,22 @@ class Kick(Plugin):
             "sec-fetch-user": "?1",
         }
 
-    def _query_api(self, url, schema):
-        schema = validate.Schema(
+    def _query_api(self, url, schema, secondary_attempt=False):
+        res = self.session.http.get(
+            url,
+            headers=self._get_api_headers(),
+            raise_for_status=False,
+        )
+        if res.status_code == 403 and not secondary_attempt and self._get_cookies_from_webbrowser():
+            # re-attempt API query after getting (new) cookies
+            return self._query_api(url, schema, secondary_attempt=True)
+
+        try:
+            res.raise_for_status()
+        except Exception as err:
+            raise PluginError(f"Error while querying Kick API: {err or '403 status response'}") from err
+
+        main_schema = validate.Schema(
             validate.parse_json(),
             validate.any(
                 validate.all(
@@ -92,16 +164,7 @@ class Kick(Plugin):
                 ),
             ),
         )
-
-        res = self.session.http.get(
-            url,
-            headers=self._get_api_headers(),
-            raise_for_status=False,
-        )
-        if res.status_code == 403:
-            raise PluginError("Error while accessing Kick API: status code 403")
-
-        restype, data = schema.validate(res.text)
+        restype, data = main_schema.validate(res.text)
 
         if restype == "error":
             raise PluginError(f"Error while querying Kick API: {data or 'unknown error'}")
