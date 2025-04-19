@@ -1,6 +1,6 @@
 [build-system]
 requires = [
-  "setuptools >=65.6",
+  "setuptools >=77",
   "wheel",
   # The versioningit build-requirement gets removed from the source distribution,
   # as the version string is already built into it (see the onbuild versioningit hook):
@@ -20,14 +20,14 @@ description = """\
 Streamlink is a command-line utility that extracts streams from various services and pipes them into a video player of choice.\
 """
 readme = "README.md"
-license = { text = "Simplified BSD" }
+license = "BSD-2-Clause"
+license-files = ["LICENSE"]
 authors = [
   { name = "Streamlink" },
   { email = "streamlink@protonmail.com" }
 ]
 classifiers = [
   "Development Status :: 5 - Production/Stable",
-  "License :: OSI Approved :: BSD License",
   "Environment :: Console",
   "Intended Audience :: End Users/Desktop",
   "Operating System :: POSIX",
@@ -88,9 +88,6 @@ Funding = "https://streamlink.github.io/latest/support.html"
 # https://setuptools.pypa.io/en/stable/userguide/pyproject_config.html
 # https://setuptools.pypa.io/en/stable/userguide/package_discovery.html
 # https://setuptools.pypa.io/en/stable/userguide/datafiles.html
-[tool.setuptools]
-license-files = ["LICENSE"]
-
 [tool.setuptools.packages.find]
 where = ["src"]
 namespaces = false
