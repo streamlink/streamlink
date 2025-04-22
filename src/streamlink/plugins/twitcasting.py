@@ -129,7 +129,11 @@ class TwitCasting(Plugin):
         if websocket:
             yield from self._get_streams_websocket(websocket)
         if hls:
-            yield from self._get_streams_hls(hls)
+            try:
+                yield from self._get_streams_hls(hls)
+            except OSError:
+                if not websocket:
+                    raise
 
 
 class TwitCastingWsClient(WebsocketClient):
