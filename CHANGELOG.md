@@ -1,5 +1,15 @@
 # Changelog
 
+## streamlink 7.3.0 (2025-04-26)
+
+- Changed: download progress to use the console output stream rather than always `stderr`, which previously caused log and progress messages to be interweaved ([#6497](https://github.com/streamlink/streamlink/pull/6497), [#6496](https://github.com/streamlink/streamlink/pull/6496))
+- Changed: download progress output to be a status message line at the bottom of the console output, unless `--progress=force` is set in non-interactive or unsupported environments, in which case less frequent regular progress messages are written ([#6497](https://github.com/streamlink/streamlink/pull/6497), [#6496](https://github.com/streamlink/streamlink/pull/6496))
+- Fixed: potential division by zero error when formatting progress output ([#6498](https://github.com/streamlink/streamlink/pull/6498))
+- Build: bumped `setuptools` requirement from `>=65.6` to `>=77` and switched to PEP 639 project license metadata format ([#6502](https://github.com/streamlink/streamlink/pull/6502))
+
+[Full changelog](https://github.com/streamlink/streamlink/compare/7.2.0...7.3.0)
+
+
 ## streamlink 7.2.0 (2025-04-04)
 
 - Added: `decompress` extras marker to Streamlink's optional dependencies for installing `brotli` and `zstandard`, which were previously implied optional dependencies via the transitive dependency `urllib3` ([#6451](https://github.com/streamlink/streamlink/pull/6451))
