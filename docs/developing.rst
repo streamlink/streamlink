@@ -122,7 +122,7 @@ performing these checks locally avoids unnecessary build failures.
 Code style
 ----------
 
-Streamlink uses `Ruff`_ as primary code `linting <Ruff-linter>`_ and `formatting <Ruff-formatter>`_ tool.
+Streamlink uses `Ruff`_ as primary code `linting <Ruff-linter_>`_ and `formatting <Ruff-formatter_>`_ tool.
 
 The project aims to use best practices for achieving great code readability with minimal git diffs,
 as detailed in :pep:`8` and implemented in related linting and formatting tools, such as `Black`_.
