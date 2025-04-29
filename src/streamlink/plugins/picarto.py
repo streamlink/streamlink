@@ -50,21 +50,22 @@ class Picarto(Plugin):
                     "channel": validate.any(
                         None,
                         {
-                            "stream_name": str,
+                            "id": int,
                             "title": str,
-                            "online": bool,
                             "private": bool,
-                            "categories": [{"label": str}],
+                            "categories": [{"name": str}],
                         },
                     ),
                     "getMultiStreams": validate.any(
                         None,
                         {
-                            "multistream": bool,
                             "streams": [
                                 {
+                                    "id": int,
+                                    "channelId": int,
                                     "name": str,
                                     "online": bool,
+                                    "stream_name": str,
                                 },
                             ],
                         },
@@ -80,28 +81,24 @@ class Picarto(Plugin):
             ),
         )
         if not channel or not multistreams or not loadbalancer:
-            log.debug("Missing channel or streaming data")
-            return
-
-        log.trace(f"loadbalancer={loadbalancer!r}")
-        log.trace(f"channel={channel!r}")
-        log.trace(f"multistreams={multistreams!r}")
-
-        if not channel["online"]:
-            log.error("User is not online")
             return
 
         if channel["private"]:
-            log.info("This is a private stream")
+            log.error("This is a private stream")
+            return
+
+        user_id = channel["id"]
+        if not (stream := next((stream for stream in multistreams["streams"] if stream["channelId"] == user_id), None)):
+            log.error("No available stream found in 'multistreams' data")
             return
 
         self.author = username
-        self.category = channel["categories"][0]["label"]
+        self.category = next(iter(channel["categories"]), {}).get("name")
         self.title = channel["title"]
 
         hls_url = self.HLS_URL.format(
             netloc=loadbalancer["url"],
-            file_name=channel["stream_name"],
+            file_name=stream["stream_name"],
         )
 
         return HLSStream.parse_variant_playlist(self.session, hls_url)
@@ -145,12 +142,8 @@ class Picarto(Plugin):
                 validate.get(("data", "video")),
             ),
         )
-
         if not vod_data:
-            log.debug("Missing video data")
             return
-
-        log.trace(f"vod_data={vod_data!r}")
 
         self.author = vod_data["channel"]["name"]
         self.category = "VOD"
