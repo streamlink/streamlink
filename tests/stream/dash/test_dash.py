@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from contextlib import nullcontext
 from datetime import datetime, timezone
 from unittest.mock import ANY, Mock, call
 
@@ -14,6 +15,9 @@ from streamlink.stream.dash import MPD, DASHStream, DASHStreamWorker, MPDParsing
 from streamlink.stream.dash.dash import log
 from streamlink.utils.parse import parse_xml as original_parse_xml
 from tests.resources import text, xml
+
+
+does_not_raise = nullcontext()
 
 
 @pytest.fixture()
@@ -324,6 +328,25 @@ class TestDASHStreamParseManifest:
         streams = DASHStream.parse_manifest(session, "http://test/manifest.mpd")
         assert mpd.call_args_list == [call(ANY, url="http://test/manifest.mpd", base_url="http://test/manifest.mpd")]
         assert list(streams.keys()) == ["480p"]
+
+    @pytest.mark.parametrize(
+        ("period", "raises"),
+        [
+            pytest.param(0, does_not_raise, id="index-0"),
+            pytest.param(1, does_not_raise, id="index-1"),
+            pytest.param("p1", does_not_raise, id="id-p1"),
+            pytest.param("p2", does_not_raise, id="id-p2"),
+            pytest.param(2, pytest.raises(PluginError, match=r"^DASH period 2 not found\."), id="error-index"),
+            pytest.param("p3", pytest.raises(PluginError, match=r"^DASH period 'p3' not found\."), id="error-id"),
+        ],
+    )
+    def test_period_selection(self, session: Streamlink, mpd: Mock, period: int | str, raises: nullcontext):
+        with xml("dash/test_period_selection.mpd") as mpd_xml:
+            mpd.return_value = MPD(mpd_xml, base_url="http://test/manifest.mpd", url="http://test/manifest.mpd")
+
+        with raises:
+            streams = DASHStream.parse_manifest(session, "http://test/manifest.mpd", period=period)
+            assert streams
 
 
 class TestDASHStreamOpen:
