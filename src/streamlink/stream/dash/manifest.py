@@ -365,6 +365,7 @@ class MPD(MPDNode):
 
         self.baseURLs = self.children(BaseURL)
         self.periods = self.children(Period, minimum=1)
+        self.periods_map = {period.id: period for period in self.periods if period.id is not None}
         self.programInformation = self.children(ProgramInformation)
 
     def get_representation(self, ident: TTimelineIdent) -> Representation | None:
