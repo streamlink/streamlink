@@ -292,6 +292,9 @@ class DASHStream(Stream):
         video: list[Representation | None] = [None] if with_audio_only else []
         audio: list[Representation | None] = [None] if with_video_only else []
 
+        available_periods = [f"{idx}{f' (id={p.id!r})' if p.id is not None else ''}" for idx, p in enumerate(mpd.periods)]
+        log.debug(f"Available DASH periods: {', '.join(available_periods)}")
+
         try:
             if isinstance(period, int):
                 period_selection = mpd.periods[period]
