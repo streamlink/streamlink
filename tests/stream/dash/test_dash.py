@@ -334,19 +334,32 @@ class TestDASHStreamParseManifest:
         [
             pytest.param(0, does_not_raise, id="index-0"),
             pytest.param(1, does_not_raise, id="index-1"),
+            pytest.param(2, does_not_raise, id="index-2"),
             pytest.param("p1", does_not_raise, id="id-p1"),
             pytest.param("p2", does_not_raise, id="id-p2"),
-            pytest.param(2, pytest.raises(PluginError, match=r"^DASH period 2 not found\."), id="error-index"),
+            pytest.param(3, pytest.raises(PluginError, match=r"^DASH period 3 not found\."), id="error-index"),
             pytest.param("p3", pytest.raises(PluginError, match=r"^DASH period 'p3' not found\."), id="error-id"),
         ],
     )
-    def test_period_selection(self, session: Streamlink, mpd: Mock, period: int | str, raises: nullcontext):
+    def test_period_selection(
+        self,
+        caplog: pytest.LogCaptureFixture,
+        session: Streamlink,
+        mpd: Mock,
+        period: int | str,
+        raises: nullcontext,
+    ):
+        caplog.set_level(1, "streamlink")
+
         with xml("dash/test_period_selection.mpd") as mpd_xml:
             mpd.return_value = MPD(mpd_xml, base_url="http://test/manifest.mpd", url="http://test/manifest.mpd")
 
         with raises:
             streams = DASHStream.parse_manifest(session, "http://test/manifest.mpd", period=period)
             assert streams
+
+        records = [(record.name, record.levelname, record.message) for record in caplog.records]
+        assert ("streamlink.stream.dash", "debug", "Available DASH periods: 0, 1 (id='p1'), 2 (id='p2')") in records
 
 
 class TestDASHStreamOpen:
