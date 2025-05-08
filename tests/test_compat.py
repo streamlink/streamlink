@@ -1,4 +1,4 @@
-import importlib.abc
+import importlib.machinery
 import importlib.util
 from contextlib import nullcontext
 from textwrap import dedent
@@ -10,16 +10,16 @@ from streamlink.exceptions import StreamlinkDeprecationWarning
 
 
 class TestDeprecated:
-    class _Loader(importlib.abc.SourceLoader):
+    class _Loader(importlib.machinery.SourceFileLoader):
         def __init__(self, filename: str, content: str):
-            super().__init__()
+            super().__init__(filename, "/")
             self._filename = filename
             self._content = content
 
-        def get_filename(self, fullname):
+        def get_filename(self, *_, **__):
             return self._filename
 
-        def get_data(self, path):
+        def get_data(self, *_, **__):
             return self._content
 
     @pytest.fixture()
