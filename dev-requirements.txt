@@ -17,7 +17,8 @@ coverage[toml]
 ruff ==0.11.8
 
 # typing
-mypy[faster-cache] ==1.15.0
+mypy[faster-cache] ==1.15.0 ; python_version<'3.14'
+mypy ==1.15.0 ; python_version>='3.14'  # orjson (faster-cache mypy extra) currently fails building on 3.14
 typing-extensions >=4.0.0
 lxml-stubs
 trio-typing
