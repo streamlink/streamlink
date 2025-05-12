@@ -73,6 +73,13 @@ Windows
             choco install streamlink
 
         `Installing Chocolatey packages`_
+    * - :octicon:`package` `MSYS2`_
+      - .. code-block:: bat
+
+            pacman -Ss streamlink
+            pacman -S mingw-w64-x86_64-streamlink
+
+        `Installing MSYS2 packages`_
     * - :octicon:`package-dependents` `Scoop`_
       - .. code-block::
 
@@ -88,9 +95,11 @@ Windows
         `Installing Winget packages`_
 
 .. _Chocolatey: https://chocolatey.org/packages/streamlink
+.. _MSYS2: https://packages.msys2.org/base/mingw-w64-streamlink
 .. _Scoop: https://scoop.sh/#/apps?q=streamlink&s=0&d=1&o=true
 .. _Windows Package Manager: https://github.com/microsoft/winget-pkgs/tree/master/manifests/s/Streamlink/Streamlink
 .. _Installing Chocolatey packages: https://chocolatey.org
+.. _Installing MSYS2 packages: https://www.msys2.org
 .. _Installing Scoop packages: https://scoop.sh
 .. _Installing Winget packages: https://docs.microsoft.com/en-us/windows/package-manager/
 
