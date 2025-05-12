@@ -244,47 +244,6 @@ Linux and BSD
 .. _NixOS channel: https://search.nixos.org/packages?show=streamlink&query=streamlink
 
 
-Package maintainers
--------------------
-
-.. list-table::
-    :header-rows: 1
-    :class: table-custom-layout
-
-    * - Distribution / Platform
-      - Maintainer
-    * - Alpine Linux
-      - Hoang Nguyen <folliekazetani at protonmail.com>
-    * - ALT Linux
-      - Vitaly Lipatov <lav at altlinux.ru>
-    * - Arch
-      - Giancarlo Razzolini <grazzolini at archlinux.org>
-    * - Arch (aur, git)
-      - Josip Ponjavic <josipponjavic at gmail.com>
-    * - Chocolatey
-      - Scott Walters <me at scowalt.com>
-    * - Debian
-      - Alexis Murzeau <amubtdx at gmail.com>
-    * - Fedora
-      - Mohamed El Morabity <melmorabity at fedoraproject.org>
-    * - FreeBSD
-      - Takefu <takefu at airport.fm>
-    * - Gentoo
-      - soredake <fdsfgs at krutt.org>
-    * - NixOS
-      - Tuomas Tynkkynen <tuomas.tynkkynen at iki.fi>
-    * - openSUSE
-      - Simon Puchert <simonpuchert at alice.de>
-    * - Solus
-      - Joey Riches <josephriches at gmail.com>
-    * - Void
-      - Tom Strausbaugh <tstrausbaugh at straustech.net>
-    * - Windows binaries
-      - Sebastian Meyer <mail at bastimeyer.de>
-    * - Linux AppImages
-      - Sebastian Meyer <mail at bastimeyer.de>
-
-
 Package availability
 --------------------
 
