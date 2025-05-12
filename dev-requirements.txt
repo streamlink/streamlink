@@ -14,7 +14,7 @@ pytest-cov
 coverage[toml]
 
 # code-linting / code-formatting
-ruff ==0.11.8
+ruff ==0.11.9
 
 # typing
 mypy[faster-cache] ==1.15.0 ; python_version<'3.14'
