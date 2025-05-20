@@ -1,8 +1,6 @@
 """
 $description Live TV channels and VODs from TVP, a Polish public, state-owned broadcaster.
-$url stream.tvp.pl
 $url vod.tvp.pl
-$url tvpstream.vod.tvp.pl
 $url tvp.info
 $url sport.tvp.pl
 $type live, vod
@@ -28,15 +26,15 @@ log = logging.getLogger(__name__)
 
 
 @pluginmatcher(
-    name="default",
+    name="live",
     pattern=re.compile(
-        r"https?://(?:stream|tvpstream\.vod)\.tvp\.pl(?:/(?:\?channel_id=(?P<channel_id>\d+))?)?$",
+        r"https?://vod\.tvp\.pl/live,\d+/[^,]+,(?P<channel_id>\d+)(?:/.+,(?P<show_id>\d+)$)?",
     ),
 )
 @pluginmatcher(
     name="vod",
     pattern=re.compile(
-        r"https?://vod\.tvp\.pl/[^/]+/.+,(?P<vod_id>\d+)$",
+        r"https?://vod\.tvp\.pl/(?!live,)[^/]+/.+,(?P<vod_id>\d+)$",
     ),
 )
 @pluginmatcher(
@@ -55,6 +53,8 @@ class TVP(Plugin):
     _URL_VOD = "https://vod.tvp.pl/api/products/{vod_id}/videos/playlist"
     _URL_INFO_API_TOKEN = "https://api.tvp.pl/tokenizer/token/{token}"
     _URL_INFO_API_NEWS = "https://www.tvp.info/api/info/news?device=www&id={id}"
+    _URL_INFO_API_BLOCK = "https://www.tvp.info/api/info/block?device=www&id={id}"
+    _URL_INFO_API_BLOCK_LIST = "https://www.tvp.info/api/info/block/list?device=www&id={id}"
 
     def _get_formats_from_api(self, token):
         is_geo_blocked, self.title, formats = self.session.http.get(
@@ -88,68 +88,18 @@ class TVP(Plugin):
             if mime_type == "application/dash+xml":
                 yield from DASHStream.parse_manifest(self.session, url).items()
 
-    def _get_video_id(self, channel_id: str | None):
-        items: list[tuple[int, int]] = self.session.http.get(
-            self.url,
-            headers={
-                # required, otherwise the next request for retrieving the HLS URL will be aborted by the server
-                "Connection": "close",
-            },
-            schema=validate.Schema(
-                validate.regex(re.compile(r"window\.__channels\s*=\s*(?P<json>\[.+?])\s*;", re.DOTALL)),
-                validate.none_or_all(
-                    validate.get("json"),
-                    validate.parse_json(),
-                    [
-                        validate.all(
-                            {
-                                "id": int,
-                                "items": validate.none_or_all(
-                                    [
-                                        {
-                                            "video_id": int,
-                                        },
-                                    ],
-                                    validate.get((0, "video_id")),
-                                ),
-                            },
-                            validate.union_get("id", "items"),
-                        ),
-                    ],
-                ),
-            ),
-        )
-
-        if channel_id is not None:
-            channel_id_number = int(channel_id)
-            try:
-                return next(item[1] for item in items if item[0] == channel_id_number)
-            except StopIteration:
-                pass
-
-        return items[0][1] if items else None
-
-    def _get_live(self, channel_id: str | None):
-        self.id = self._get_video_id(channel_id)
-        if not self.id:
-            log.error("Could not find video ID")
-            return
-
-        log.debug(f"video ID: {self.id}")
-        yield from self._get_formats_from_api(self.id)
-
-    def _get_vod(self, vod_id):
+    def _get_vod(self, vod_id: str, video_type: str = "MOVIE"):
         data = self.session.http.get(
             self._URL_VOD.format(vod_id=vod_id),
             params={
                 "platform": "BROWSER",
-                "videoType": "MOVIE",
+                "videoType": video_type,
             },
             acceptable_status=(200, 403),
             schema=validate.Schema(
                 validate.parse_json(),
                 validate.any(
-                    {"code": "GEOIP_FILTER_FAILED"},
+                    {"code": str},
                     validate.all(
                         {
                             "sources": {
@@ -170,10 +120,14 @@ class TVP(Plugin):
             log.error("The content is not available in your region")
             return
 
+        if data.get("code") == "ITEM_NOT_PAID":
+            log.error("The content is not accessible")
+            return
+
         if data.get("HLS"):
             return HLSStream.parse_variant_playlist(self.session, data["HLS"][0]["src"])
 
-    def _get_tvp_info_vod(self):
+    def _get_tvp_info(self):
         data = self.session.http.get(
             self.url,
             schema=validate.Schema(
@@ -185,7 +139,7 @@ class TVP(Plugin):
                     validate.get("json"),
                     validate.parse_json(),
                     {
-                        "type": validate.any("VIDEO", "NEWS"),
+                        "type": str,
                         "id": int,
                     },
                     validate.union_get("type", "id"),
@@ -213,17 +167,69 @@ class TVP(Plugin):
                     validate.union_get("_id", "title"),
                 ),
             )
+        elif vod_type == "SG":
+            self.id = self.session.http.get(
+                self._URL_INFO_API_BLOCK_LIST.format(id=self.id),
+                schema=validate.Schema(
+                    validate.parse_json(),
+                    {
+                        "data": {
+                            "items": validate.all(
+                                [
+                                    {
+                                        "_id": int,
+                                        "type": str,
+                                    },
+                                ],
+                                validate.filter(lambda obj: obj["type"] == "LIVE"),
+                                validate.get(0),
+                                validate.none_or_all(validate.get("_id")),
+                            ),
+                        },
+                    },
+                    validate.get(("data", "items")),
+                ),
+            )
+            if not self.id:
+                return
+            self.id = self.session.http.get(
+                self._URL_INFO_API_BLOCK.format(id=self.id),
+                schema=validate.Schema(
+                    validate.parse_json(),
+                    {
+                        "data": {
+                            "live_items": validate.all(
+                                [
+                                    {
+                                        "_id": int,
+                                        "type": str,
+                                    },
+                                ],
+                                validate.filter(lambda obj: obj["type"] == "VIDEO"),
+                                validate.get(0),
+                                validate.none_or_all(validate.get("_id")),
+                            ),
+                        },
+                    },
+                    validate.get(("data", "live_items")),
+                ),
+            )
+            if not self.id:
+                return
 
         yield from self._get_formats_from_api(self.id)
 
     def _get_streams(self):
-        if self.matches["tvp_info"]:
-            return self._get_tvp_info_vod()
+        if self.matches["live"]:
+            return self._get_vod(self.match["channel_id"], "LIVE")
         if self.matches["vod"]:
-            return self._get_vod(self.match["vod_id"])
+            return self._get_vod(self.match["vod_id"], "MOVIE")
+        if self.matches["tvp_info"]:
+            return self._get_tvp_info()
         if self.matches["tvp_sport"]:
             return self._get_formats_from_api(self.match["stream_id"])
-        return self._get_live(self.match["channel_id"])
+
+        return None
 
 
 __plugin__ = TVP

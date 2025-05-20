@@ -7,30 +7,40 @@ class TestPluginCanHandleUrlTVP(PluginCanHandleUrl):
 
     should_match_groups = [
         # live
-        (("default", "https://stream.tvp.pl"), {}),
-        (("default", "https://stream.tvp.pl/"), {}),
-        (("default", "https://stream.tvp.pl/?channel_id=1455"), {"channel_id": "1455"}),  # TVP info
-        (("default", "https://stream.tvp.pl/?channel_id=51656487"), {"channel_id": "51656487"}),  # TVP world
-        # old live URLs
-        (("default", "https://tvpstream.vod.tvp.pl"), {}),
-        (("default", "https://tvpstream.vod.tvp.pl/"), {}),
-        (("default", "https://tvpstream.vod.tvp.pl/?channel_id=1455"), {"channel_id": "1455"}),
-        (("default", "https://tvpstream.vod.tvp.pl/?channel_id=51656487"), {"channel_id": "51656487"}),
+        (
+            ("live", "https://vod.tvp.pl/live,1/tvp-info,399699/2025-05-20/serwis-info-dzien,2086908"),
+            {"channel_id": "399699", "show_id": "2086908"},
+        ),
+        (
+            ("live", "https://vod.tvp.pl/live,1/tvp-world,399731/2025-05-20/interview-from-vilnius---ep-146,2088070"),
+            {"channel_id": "399731", "show_id": "2088070"},
+        ),
         # VOD
         (
-            ("vod", "https://vod.tvp.pl/filmy-dokumentalne,163/krolowa-wladczyni-i-matka,284734"),
-            {"vod_id": "284734"},
+            ("vod", "https://vod.tvp.pl/filmy-fabularne,136/podroz-ksiecia,852411"),
+            {"vod_id": "852411"},
+        ),
+        (
+            ("vod", "https://vod.tvp.pl/filmy-fabularne,136/bambi-opowiesc-lesna,2053604"),
+            {"vod_id": "2053604"},
         ),
         # VOD episode
         (
-            ("vod", "https://vod.tvp.pl/programy,88/eurowizja-odcinki,276170/odcinek-4,S05E04,1302944"),
-            {"vod_id": "1302944"},
+            ("vod", "https://vod.tvp.pl/seriale,18/dzikie-korytarze-odcinki,2092682/odcinek-1,S01E01,2092684"),
+            {"vod_id": "2092684"},
         ),
         # tvp.info
         (
             (
                 "tvp_info",
-                "https://www.tvp.info/78213165/euro-2024-polska-holandia-12-bartosz-salamon-czuje-sie-winny-za-te-porazke-wideo",
+                "https://www.tvp.info/ogladaj-na-zywo",
+            ),
+            {},
+        ),
+        (
+            (
+                "tvp_info",
+                "https://www.tvp.info/86792059/kot-przemytnik-utknal-na-wieziennym-ogrodzeniu",
             ),
             {},
         ),
@@ -38,13 +48,15 @@ class TestPluginCanHandleUrlTVP(PluginCanHandleUrl):
         (
             (
                 "tvp_sport",
-                "https://sport.tvp.pl/79514191/paryz-2024-magda-linette-mirra-andriejewa-1-runda-na-zywo-transmisja-online-live-stream-igrzyska-olimpijskie-2872024",
+                "https://sport.tvp.pl/86453177/snooker-polska-liga-snookera-top16-polfinal-i-final-zapis",
             ),
-            {"stream_id": "79514191"},
+            {"stream_id": "86453177"},
         ),
     ]
 
     should_not_match = [
         "https://tvp.pl/",
+        "https://stream.tvp.pl/",
         "https://vod.tvp.pl/",
+        "https://tvpstream.vod.tvp.pl/",
     ]
