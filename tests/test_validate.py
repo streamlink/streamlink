@@ -11,8 +11,13 @@ from streamlink.exceptions import PluginError
 from streamlink.validate._exception import ValidationError  # noqa: PLC2701
 
 
-def assert_validationerror(exception, expected):
-    assert str(exception) == dedent(expected).strip("\n")
+def assert_validationerror(exception: Exception, expected: str, regex: bool = False):
+    exceptionstr = str(exception)
+    expected = dedent(expected).strip("\n")
+    if not regex:
+        assert exceptionstr == expected
+    else:
+        assert re.compile(expected).search(exceptionstr) is not None
 
 
 class TestSchema:
@@ -1525,10 +1530,11 @@ class TestParseHtmlValidator:
             validate.validate(validate.parse_html(), None)
         assert_validationerror(
             cm.value,
-            """
+            r"""
                 ValidationError:
-                  Unable to parse HTML: can only parse strings (None)
+                  Unable to parse HTML: (?:can only parse strings|memoryview: a bytes-like object is required, not).+
             """,
+            regex=True,
         )
 
 
@@ -1547,10 +1553,11 @@ class TestParseXmlValidator:
             validate.validate(validate.parse_xml(), None)
         assert_validationerror(
             cm.value,
-            """
+            r"""
                 ValidationError:
-                  Unable to parse XML: can only parse strings (None)
+                  Unable to parse XML: (?:can only parse strings|memoryview: a bytes-like object is required, not).+
             """,
+            regex=True,
         )
 
 
