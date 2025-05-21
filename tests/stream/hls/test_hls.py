@@ -434,6 +434,14 @@ class TestHLSStreamWorker(TestMixinStreamHLS, unittest.TestCase):
             self.await_playlist_wait(1)
             self.await_playlist_reload(1)
 
+            # FIXME: NO-GIL
+            #   Closing only the worker thread when no new segments were queued keeps the writer thread and buffer still open,
+            #   which is why the test's reader thread keeps running until the test teardown,
+            #   but this somehow breaks the assertion down below, so close everything manually...
+            #   These tests will have to be rewritten eventually in pytest-style, without having to mock log calls.
+            self.thread.close()
+            self.thread.join(1)
+
             assert mock_log.warning.call_args_list == [call("No new segments in playlist for more than 5.00s. Stopping...")]
 
     def test_playlist_reload_offset(self) -> None:
