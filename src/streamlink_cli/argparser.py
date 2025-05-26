@@ -1249,11 +1249,45 @@ def build_parser():
     http = parser.add_argument_group("HTTP options")
     http.add_argument(
         "--http-proxy",
-        metavar="HTTP_PROXY",
+        metavar="[MATCHER ]*[PROXY-SERVER] | no_proxy host1[,hostN]*",
+        action="append",
         help="""
-            An HTTP proxy to use for all HTTP and HTTPS requests, including WebSocket connections.
+            Apply a proxy server configuration to Streamlink's HTTP session that will be evaluated when making requests.
+            This argument can be repeated multiple times to extend or override the configuration.
 
-            Example: --http-proxy "http://hostname:port/"
+            `MATCHER` is an optional, space-separated list of either protocol names or URLs consisting of
+            a protocol and a host with an optional port number, e.g. `https` or `https://host`.
+            The default is `http https` if no `MATCHER` list is given, meaning the proxy server will be used
+            for all HTTP and HTTPS requests.
+
+            `PROXY-SERVER` is the URL of the proxy server to be used for the selected matcher(s). Supported proxy servers are
+            `http://`, `https://`, `socks4://`, `socks4a://`, `socks5://`, or `socks5h://`
+            (`socks4a` and `socks5h` perform remote DNS lookups). Defaults to `https://` if no protocol is specified.
+            If `PROXY-SERVER` is set to `-` (dash), then the selected matchers will be removed from the configuration.
+
+            When looking up the proxy server for HTTP session requests, matchers will be tested with different priorities:
+
+            1. Matcher URLs with a specific protocol and host, e.g. `https://host`
+            2. Specific protocol names, e.g. `https`
+            3. URLs with the generic `all` protocol and a host, e.g. `all://host`
+            4. The generic `all` protocol name, `all`
+
+            The single `MATCHER` value of `no_proxy` is treated specially: the `PROXY-SERVER` value must be
+            a comma-separated list of hosts which will be ignored when selecting a proxy server for any HTTP session request.
+
+            Unless --http-ignore-env is set, the `HTTP_PROXY`, `HTTPS_PROXY`, `ALL_PROXY` and `NO_PROXY` environment variables
+            set the default values for the respective protocol name in the `MATCHER` list.
+
+            Examples:
+
+              # Use socks5h://proxy for all http and https requests
+              --http-proxy "socks5h://proxy"
+              # Same as above, with explicit protocol names
+              --http-proxy "http https socks5h://proxy"
+              # Use socks5h://proxy only for requests made to https://host1 or https://host2
+              --http-proxy "https://host1 https://host2 socks5h://proxy"
+              # Don't use any proxy servers for host1 or host2
+              --http-proxy "no_proxy host1,host2"
         """,
     )
     http.add_argument("--https-proxy", help=argparse.SUPPRESS)

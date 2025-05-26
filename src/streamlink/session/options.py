@@ -77,13 +77,15 @@ class StreamlinkOptions(Options):
           - ``False``
           - Resolve address names to IPv6 only, overrides ``ipv4``
         * - http-proxy
-          - ``str | None``
+          - ``Mapping[str, str] | list[str] | str | None``
           - ``None``
-          - Proxy address for all HTTP/HTTPS requests
+          - A mapping of matcher->proxy, or a list of proxy URLs with an optional space-separated list of matchers
+            at the beginning of each string. A matcher is either a protocol name or a URL that must match a request URL.
+            Example: ``["http https https://proxy"]``
         * - https-proxy *(deprecated)*
-          - ``str | None``
+          - ``Mapping[str, str] | list[str] | str | None``
           - ``None``
-          - Proxy address for all HTTP/HTTPS requests
+          - Deprecated alias of ``http-proxy``
         * - http-cookies
           - ``dict[str, str] | str``
           - ``{}``
@@ -369,10 +371,41 @@ class StreamlinkOptions(Options):
             self.set_explicit("ipv4", False)
             urllib3_util_connection.allowed_gai_family = lambda: AF_INET6  # type: ignore[attr-defined]
 
-    def _set_http_proxy(self, key, value):
-        self.session.http.proxies["http"] \
-            = self.session.http.proxies["https"] \
-            = update_scheme("https://", value, force=False)  # fmt: skip
+    def _set_http_proxy(self, key: str, value: Mapping[str, str] | list[str] | str) -> None:
+        if isinstance(value, Mapping):
+            value = [f"{key} {value}" for key, value in value.items() if key and value]
+        elif not isinstance(value, list):
+            value = [value]
+
+        for proxy in value:
+            proxy = proxy.strip()
+            if not proxy:
+                continue
+
+            if " " in proxy:
+                *matchers, proxy = proxy.split(" ")
+                matchers = [matcher.strip().lower() for matcher in matchers]
+                matchers = [matcher for matcher in matchers if matcher]
+            else:
+                matchers = ["http", "https"]
+
+            if proxy == "-":
+                for matcher in matchers:
+                    self.session.http.proxies.pop(matcher, None)
+
+            elif len(matchers) > 1 and "no_proxy" in matchers:
+                raise ValueError("'no_proxy' matcher cannot be used with multiple matchers")
+
+            elif len(matchers) == 1 and matchers[0] == "no_proxy":
+                hosts = self.session.http.proxies.get("no_proxy", "").split(",")
+                hosts += proxy.split(",")
+                self.session.http.proxies["no_proxy"] = ",".join(p for p in hosts if p)
+
+            else:
+                proxy = update_scheme("https://", proxy, force=False)
+                for matcher in matchers:
+                    self.session.http.proxies[matcher] = proxy
+
         self._deprecate_https_proxy(key)
 
     def _set_http_attr(self, key, value):

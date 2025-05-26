@@ -266,6 +266,50 @@ class TestOptionsHttpProxy:
         # The DeprecationWarning's origin must point to this call, even without the set_option() wrapper
         session.options.set("https-proxy", "https://foo")
 
+    def test_multiple_with_matchers(self, session: Streamlink):
+        session.set_option(
+            "http-proxy",
+            [
+                "   HTTP HTTPS    testproxy1   ",
+                "",
+                "http testproxy2",
+                "no_proxy foo.bar,abc.def",
+                "no_proxy 127.0.0.1,::1",
+            ],
+        )
+        assert session.http.proxies == {
+            "http": "https://testproxy2",
+            "https": "https://testproxy1",
+            "no_proxy": "foo.bar,abc.def,127.0.0.1,::1",
+        }
+
+        session.set_option(
+            "http-proxy",
+            {
+                "": "foo",
+                "foo": "",
+                "https": "testproxy3",
+                "no_proxy": "asdf",
+            },
+        )
+        assert session.http.proxies == {
+            "http": "https://testproxy2",
+            "https": "https://testproxy3",
+            "no_proxy": "foo.bar,abc.def,127.0.0.1,::1,asdf",
+        }
+
+        session.set_option(
+            "http-proxy",
+            "http all -",
+        )
+        assert session.http.proxies == {
+            "https": "https://testproxy3",
+            "no_proxy": "foo.bar,abc.def,127.0.0.1,::1,asdf",
+        }
+
+        with pytest.raises(ValueError, match=r"^'no_proxy' matcher cannot be used with multiple matchers$"):
+            session.set_option("http-proxy", "http no_proxy foo")
+
 
 class TestOptionsKeyEqualsValue:
     @pytest.fixture()
