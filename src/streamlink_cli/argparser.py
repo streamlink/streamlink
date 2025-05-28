@@ -1255,10 +1255,14 @@ def build_parser():
             Apply a proxy server configuration to Streamlink's HTTP session that will be evaluated when making requests.
             This argument can be repeated multiple times to extend or override the configuration.
 
-            `MATCHER` is an optional, space-separated list of either protocol names or URLs consisting of
-            a protocol and a host with an optional port number, e.g. `https` or `https://host`.
+            `MATCHER` is an optional, space-separated list of either the `http`, `https` or `all` protocol names,
+            or URLs consisting of an optional protocol and a host with an optional port number, e.g. `host` or `https://host`.
             The default is `http https` if no `MATCHER` list is given, meaning the proxy server will be used
-            for all HTTP and HTTPS requests.
+            for all HTTP and HTTPS requests. URL matchers without a protocol match any protocol. See matching priorities below.
+
+            Wildcard URL matchers are supported, limited to subdomain matching. If a hostname is prefixed with a `*`,
+            then URLs with the same hostname as well as its subdomains will be matched. Hostnames prefixed with a `*.`
+            on the other hand only match subdomains. An empty hostname or a value equal to `*` matches any hostname.
 
             `PROXY-SERVER` is the URL of the proxy server to be used for the selected matcher(s). Supported proxy servers are
             `http://`, `https://`, `socks4://`, `socks4a://`, `socks5://`, or `socks5h://`
@@ -1286,6 +1290,8 @@ def build_parser():
               --http-proxy "http https socks5h://proxy"
               # Use socks5h://proxy only for requests made to https://host1 or https://host2
               --http-proxy "https://host1 https://host2 socks5h://proxy"
+              # Use socks5h://proxy for requests made to https://host or https://sub.host
+              --http-proxy "https://*host socks5h://proxy"
               # Don't use any proxy servers for host1 or host2
               --http-proxy "no_proxy host1,host2"
         """,

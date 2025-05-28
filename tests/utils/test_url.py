@@ -1,8 +1,166 @@
+from __future__ import annotations
+
 from urllib.parse import quote
 
 import pytest
 
-from streamlink.utils.url import absolute_url, prepend_www, update_qsd, update_scheme, url_concat, url_equal
+# noinspection PyProtectedMember
+from streamlink.utils.url import (
+    _proxymatcher_to_prio_and_pattern,  # noqa: PLC2701
+    absolute_url,
+    prepend_www,
+    select_proxy,
+    update_qsd,
+    update_scheme,
+    url_concat,
+    url_equal,
+)
+
+
+class TestProxyMatcher:
+    @pytest.fixture(autouse=True)
+    def _reset_cache(self):
+        yield
+        _proxymatcher_to_prio_and_pattern.cache_clear()
+
+    @pytest.mark.parametrize(
+        ("matcher", "url", "expected"),
+        [
+            # empty
+            pytest.param("", "http://host", True, id="empty-matches-http"),
+            pytest.param("", "https://host", True, id="empty-matches-https"),
+            # "all" matcher, no netloc
+            pytest.param("all", "http://host", True, id="all-scheme-matches-http"),
+            pytest.param("all", "https://host", True, id="all-scheme-matches-https"),
+            # specific scheme, no netloc
+            pytest.param("http", "http://host", True, id="http-matches-http"),
+            pytest.param("http", "https://host", False, id="http-does-not-match-https"),
+            pytest.param("https", "https://host", True, id="https-matches-https"),
+            pytest.param("https", "http://host", False, id="https-does-not-match-http"),
+            # no scheme, host
+            pytest.param("host", "http://host", True, id="no-scheme-matches-http"),
+            pytest.param("host", "https://host", True, id="no-scheme-matches-https"),
+            pytest.param("host", "https://other", False, id="no-scheme-other-host"),
+            pytest.param("host:80", "http://host:80", True, id="no-scheme-host-port"),
+            pytest.param("host", "http://host:80", False, id="no-scheme-host-no-implicit-port"),
+            # scheme, host and port
+            pytest.param("http://host", "http://host", True, id="scheme-host"),
+            pytest.param("http://host/foo", "http://host/bar", True, id="ignore-path"),
+            pytest.param("HTTP://HOST", "http://host", True, id="case-insensitive"),
+            pytest.param("http://host:80", "http://host:80", True, id="scheme-host-port"),
+            pytest.param("http://127.0.0.1", "http://127.0.0.1", True, id="scheme-ipv4"),
+            pytest.param("http://127.0.0.1:80", "http://127.0.0.1:80", True, id="scheme-ipv4-port"),
+            pytest.param("http://[::1]", "http://[::1]", True, id="scheme-ipv6"),
+            pytest.param("http://[::1]:80", "http://[::1]:80", True, id="scheme-ipv6-port"),
+            pytest.param("http://:80", "http://host:80", True, id="only-port"),
+            pytest.param("http://host", "https://host", False, id="other-scheme"),
+            pytest.param("http://host", "http://other", False, id="other-host"),
+            pytest.param("http://host:80", "http://other:8080", False, id="other-port"),
+            pytest.param("http://127.0.0.1", "http://0.0.0.0", False, id="other-ipv4"),
+            pytest.param("http://[::1]", "http://[::0]", False, id="other-ipv6"),
+            pytest.param("http://host", "http://host:80", True, id="http-implicit-port"),
+            pytest.param("https://host", "https://host:443", True, id="https-implicit-port"),
+            # wildcards
+            pytest.param("http://*", "http://foo.bar.baz", True, id="wildcard-any"),
+            pytest.param("http://*:80", "http://foo.bar.baz:80", True, id="wildcard-any-with-port"),
+            pytest.param("http://*:80", "http://foo.bar.baz:8080", False, id="wildcard-any-with-port-no-match"),
+            pytest.param("http://:80", "http://foo.bar.baz:80", True, id="wildcard-no-host-port"),
+            pytest.param("http://*foo", "http://foo", True, id="wildcard"),
+            pytest.param("http://*foo", "http://bar.foo", True, id="wildcard-opt-subdomain"),
+            pytest.param("http://*foo:80", "http://foo:80", True, id="wildcard-with-port"),
+            pytest.param("http://*foo", "http://barfoo", False, id="wildcard-no-match"),
+            pytest.param("http://*.foo", "http://bar.foo", True, id="wildcard-subdomain"),
+            pytest.param("http://*.foo", "http://foo", False, id="wildcard-subdomain-no-match"),
+            pytest.param("http://foo*baz", "http://foobarbaz", False, id="wildcard-invalid"),
+            # invalid
+            pytest.param("http://[foo]", "http://foo", False, id="invalid-not-an-ipv6"),
+            pytest.param("http://foo:bar", "http://foo", False, id="invalid-not-a-port"),
+        ],
+    )
+    def test_matcher(self, matcher: str, url: str, expected: bool):
+        assert (select_proxy(url, {matcher: "proxy"}) == "proxy") is expected
+
+    @pytest.mark.parametrize(
+        ("proxies", "expected"),
+        [
+            pytest.param(
+                {},
+                None,
+            ),
+            pytest.param(
+                {
+                    "all": "four",
+                    "foo.bar": "three",
+                    "https": "two",
+                    "https://foo.bar": "one",
+                },
+                "one",
+            ),
+            pytest.param(
+                {
+                    "all": "four",
+                    "foo.bar": "three",
+                    "https": "two",
+                    "https://asdf": "one",
+                },
+                "two",
+            ),
+            pytest.param(
+                {
+                    "all": "four",
+                    "foo.bar": "three",
+                    "http": "two",
+                    "https://asdf": "one",
+                },
+                "three",
+            ),
+            pytest.param(
+                {
+                    "all": "four",
+                    "asdf": "three",
+                    "http": "two",
+                    "https://asdf": "one",
+                },
+                "four",
+            ),
+            pytest.param(
+                {
+                    "asdf": "three",
+                    "http": "two",
+                    "https://asdf": "one",
+                },
+                None,
+            ),
+        ],
+    )
+    def test_priority(self, proxies: dict[str, str], expected: str | None):
+        assert select_proxy("https://foo.bar/baz", proxies) == expected
+
+    @pytest.mark.parametrize(
+        ("proxies", "expected"),
+        [
+            pytest.param(
+                {},
+                None,
+            ),
+            pytest.param(
+                {
+                    "all": "two",
+                    "https": "one",
+                },
+                "one",
+            ),
+            pytest.param(
+                {
+                    "all": "two",
+                    "http": "one",
+                },
+                "two",
+            ),
+        ],
+    )
+    def test_no_hostname(self, proxies: dict[str, str], expected: str | None):
+        assert select_proxy("https://", proxies) == expected
 
 
 @pytest.mark.parametrize(

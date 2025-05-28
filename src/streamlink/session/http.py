@@ -15,6 +15,7 @@ import streamlink.session.http_useragents as useragents
 from streamlink.exceptions import PluginError, StreamlinkDeprecationWarning
 from streamlink.packages.requests_file import FileAdapter
 from streamlink.utils.parse import parse_json, parse_xml
+from streamlink.utils.url import select_proxy
 
 
 try:
@@ -79,6 +80,10 @@ class Urllib3UtilUrlPercentReOverride:
 
 # urllib3>=2.0.0: _PERCENT_RE, urllib3<2.0.0: PERCENT_RE
 urllib3.util.url._PERCENT_RE = urllib3.util.url.PERCENT_RE = Urllib3UtilUrlPercentReOverride  # type: ignore[attr-defined]
+
+
+requests.utils.select_proxy = select_proxy  # type: ignore[assignment]
+requests.adapters.select_proxy = select_proxy  # type: ignore[attr-defined]
 
 
 # requests.Request.__init__ keywords, except for "hooks"
