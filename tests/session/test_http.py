@@ -6,6 +6,7 @@ from unittest.mock import Mock, PropertyMock, call
 
 import pytest
 import requests
+import requests_mock as rm
 from requests.adapters import HTTPAdapter
 from urllib3.response import HTTPResponse
 
@@ -148,6 +149,76 @@ class TestHTTPSession:
         res.encoding = override
 
         assert HTTPSession.json(res) == {"test": "Α and Ω"}  # noqa: RUF001
+
+    @pytest.mark.parametrize(
+        ("content_type", "encoding", "content", "expected"),
+        [
+            pytest.param(
+                "text/html",
+                None,
+                b"B\xe4r",
+                "ISO-8859-1",
+                id="default-iso-8859-1-charset-for-text",
+            ),
+            pytest.param(
+                "application/json",
+                None,
+                b"B\xc3\xa4r",
+                "utf-8",
+                id="default-utf-8-charset-for-json",
+            ),
+            pytest.param(
+                'text/html; charset="ISO-8859-1"',
+                None,
+                b"B\xe4r",
+                "ISO-8859-1",
+                id="declared-iso-8859-1-charset",
+            ),
+            pytest.param(
+                'text/html; charset="utf-8"',
+                None,
+                b"B\xc3\xa4r",
+                "utf-8",
+                id="declared-utf-8-charset",
+            ),
+            pytest.param(
+                "text/html",
+                "utf-8",
+                b"B\xc3\xa4r",
+                "utf-8",
+                id="override-missing-charset",
+            ),
+            pytest.param(
+                'text/html; charset="ISO-8859-1"',
+                "utf-8",
+                b"B\xc3\xa4r",
+                "utf-8",
+                id="override-incorrect-charset",
+            ),
+            pytest.param(
+                'text/html; charset="utf-8"',
+                "utf-8",
+                b"B\xc3\xa4r",
+                "utf-8",
+                id="override-same-charset",
+            ),
+        ],
+    )
+    @pytest.mark.parametrize("method", ["get", "post", "head", "put", "patch", "delete"])
+    def test_encoding_override(
+        self,
+        requests_mock: rm.Mocker,
+        method: str,
+        content_type: str,
+        encoding: str,
+        content: bytes,
+        expected: str,
+    ):
+        requests_mock.register_uri(rm.ANY, "http://mocked", headers={"Content-Type": content_type}, content=content)
+        httpsession = HTTPSession()
+        res = getattr(httpsession, method)("http://mocked", encoding=encoding)
+        assert res.encoding == expected
+        assert res.text == "Bär"
 
 
 class TestHTTPAdapters:
