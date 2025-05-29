@@ -616,7 +616,7 @@ class HLSStream(HTTPStream):
     """
 
     __shortname__ = "hls"
-    __reader__ = HLSStreamReader
+    __reader__: ClassVar[type[HLSStreamReader]] = HLSStreamReader
     __parser__: ClassVar[type[M3U8Parser[M3U8[HLSSegment, HLSPlaylist], HLSSegment, HLSPlaylist]]] = M3U8Parser
 
     def __init__(

@@ -20,11 +20,10 @@ def cache_dir(tmp_path: Path):
 @pytest.fixture()
 def cache(request: pytest.FixtureRequest, cache_dir: Path):
     param = getattr(request, "param", {})
-    filename = param.get("filename", "cache.json")
-    key_prefix = param.get("key_prefix", None)
+    param.setdefault("filename", "cache.json")
 
-    cache = Cache(filename, key_prefix=key_prefix)
-    assert cache.filename == cache_dir / filename
+    cache = Cache(**param)
+    assert cache.filename == cache_dir / param["filename"]
     # noinspection PyProtectedMember
     assert not cache._cache
 
