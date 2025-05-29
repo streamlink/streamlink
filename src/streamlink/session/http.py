@@ -155,6 +155,7 @@ class HTTPSession(Session):
 
     def request(self, method, url, *args, **kwargs):
         acceptable_status = kwargs.pop("acceptable_status", [])
+        encoding = kwargs.pop("encoding", None)
         exception = kwargs.pop("exception", PluginError)
         headers = kwargs.pop("headers", {})
         params = kwargs.pop("params", {})
@@ -198,6 +199,9 @@ class HTTPSession(Session):
                 # back off retrying, but only to a maximum sleep time
                 delay = min(retry_max_backoff, retry_backoff * (2 ** (retries - 1)))
                 time.sleep(delay)
+
+        if encoding is not None:
+            res.encoding = encoding
 
         if schema:
             res = schema.validate(res.text, name="response text", exception=PluginError)
