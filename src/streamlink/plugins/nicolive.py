@@ -269,6 +269,7 @@ class NicoLive(Plugin):
     def get_data(self):
         return self.session.http.get(
             self.url,
+            encoding="utf-8",
             schema=validate.Schema(
                 validate.parse_html(),
                 validate.xml_find(".//script[@id='embedded-data'][@data-props]"),
