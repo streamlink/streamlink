@@ -1,5 +1,24 @@
 # Changelog
 
+## streamlink 7.4.0 (2025-06-08)
+
+- Added: `encoding` keyword to all HTTP request methods to override the response content encoding ([#6544](https://github.com/streamlink/streamlink/pull/6544))
+- Added: debug log message for the available DASH periods (id or index) ([#6521](https://github.com/streamlink/streamlink/pull/6521))
+- Fixed: `LookupError` when selecting an invalid DASH period ([#6518](https://github.com/streamlink/streamlink/pull/6518))
+- Updated plugins:
+  - blasttv: new plugin ([#6547](https://github.com/streamlink/streamlink/pull/6547))
+  - kick: fixed 403 API responses by solving the JS challenge using the webbrowser API ([#6500](https://github.com/streamlink/streamlink/pull/6500))
+  - nicolive: fixed plugin metadata by forcing UTF-8 encoding ([#6544](https://github.com/streamlink/streamlink/pull/6544))
+  - picarto: fixed validation schema and fixed multi-stream selection ([#6512](https://github.com/streamlink/streamlink/pull/6512))
+  - tvp: rewritten and fixed plugin ([#6535](https://github.com/streamlink/streamlink/pull/6535))
+  - twitcasting: fixed plugin by switching to new websocket+HLS streams ([#6540](https://github.com/streamlink/streamlink/pull/6540))
+  - vtvgo: removed plugin ([#6516](https://github.com/streamlink/streamlink/pull/6516))
+- Tests: fixed py314 test failures ([#6527](https://github.com/streamlink/streamlink/pull/6527))
+- Tests: fixed some HLS tests failing in rare cases ([#6536](https://github.com/streamlink/streamlink/pull/6536))
+
+[Full changelog](https://github.com/streamlink/streamlink/compare/7.3.0...7.4.0)
+
+
 ## streamlink 7.3.0 (2025-04-26)
 
 - Changed: download progress to use the console output stream rather than always `stderr`, which previously caused log and progress messages to be interweaved ([#6497](https://github.com/streamlink/streamlink/pull/6497), [#6496](https://github.com/streamlink/streamlink/pull/6496))
