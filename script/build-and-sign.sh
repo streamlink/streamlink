@@ -15,15 +15,15 @@ SIGNING_KEY_FILE="${SIGNING_KEY_FILE:-"${ROOT}/signing.key.enc"}"
 
 
 log() {
-    echo >&2 "build: ${@}"
+    echo >&2 "build:" "${@}"
 }
 
 warn() {
-    log "WARNING: ${@}"
+    log "WARNING:" "${@}"
 }
 
 err() {
-    log "ERROR: ${@}"
+    log "ERROR:" "${@}"
     exit 1
 }
 
@@ -65,7 +65,9 @@ sign() {
     [[ -z "${SIGNING_KEY_PASSPHRASE}" ]] && { warn "Empty SIGNING_KEY_PASSPHRASE, not signing built files"; exit; }
     [[ -z "${SIGNING_KEY_ID}" ]] && err "Missing SIGNING_KEY_ID"
 
-    local tmp=$(mktemp -d) && trap "rm -rf ${tmp}" EXIT || exit 255
+    local tmp
+    # shellcheck disable=SC2064
+    tmp=$(mktemp -d) && trap "rm -rf '${tmp}'" EXIT || exit 255
 
     log "Decrypting signing key"
     gpg --quiet \
@@ -78,7 +80,7 @@ sign() {
         <<< "${SIGNING_KEY_PASSPHRASE}"
 
     log "Signing sdist and wheel files"
-    gpg --homedir "${tmp}" --import "${tmp}/signing.key" 2>&1 >/dev/null
+    gpg --homedir "${tmp}" --import "${tmp}/signing.key" >/dev/null 2>&1
     for file in "${DIST}"/streamlink-"${VERSION}"{.tar.gz,-*.whl}; do
         gpg --homedir "${tmp}" \
             --trust-model always \
