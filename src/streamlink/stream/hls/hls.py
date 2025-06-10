@@ -6,7 +6,7 @@ import struct
 from collections.abc import Mapping
 from concurrent.futures import Future
 from datetime import datetime, timedelta
-from typing import Any, ClassVar, TypeVar
+from typing import TYPE_CHECKING, Any, ClassVar, TypeVar
 from urllib.parse import urlparse
 
 from requests import Response
@@ -26,6 +26,13 @@ from streamlink.utils.crypto import AES, unpad
 from streamlink.utils.formatter import Formatter
 from streamlink.utils.l10n import Language
 from streamlink.utils.times import now
+
+
+if TYPE_CHECKING:
+    try:
+        from typing import Self  # type: ignore[attr-defined]
+    except ImportError:
+        from typing_extensions import Self
 
 
 log = logging.getLogger(".".join(__name__.split(".")[:-1]))
@@ -707,7 +714,7 @@ class HLSStream(HTTPStream):
         start_offset: float = 0,
         duration: float | None = None,
         **kwargs,
-    ) -> dict[str, HLSStream | MuxedHLSStream]:
+    ) -> dict[str, Self | MuxedHLSStream[Self]]:
         """
         Parse a variant playlist and return its streams.
 
