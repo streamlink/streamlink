@@ -24,10 +24,10 @@ log = logging.getLogger(__name__)
 _lock_resolve_command = threading.Lock()
 
 
-TSubstreams = TypeVar("TSubstreams", bound=Stream)
+TSubstreams_co = TypeVar("TSubstreams_co", bound=Stream, covariant=True)
 
 
-class MuxedStream(Stream, Generic[TSubstreams]):
+class MuxedStream(Stream, Generic[TSubstreams_co]):
     """
     Muxes multiple streams into one output stream.
     """
@@ -37,7 +37,7 @@ class MuxedStream(Stream, Generic[TSubstreams]):
     def __init__(
         self,
         session,
-        *substreams: TSubstreams,
+        *substreams: TSubstreams_co,
         **options,
     ):
         """
@@ -48,7 +48,7 @@ class MuxedStream(Stream, Generic[TSubstreams]):
         """
 
         super().__init__(session)
-        self.substreams: Sequence[TSubstreams] = substreams
+        self.substreams: Sequence[TSubstreams_co] = substreams
         self.subtitles: dict[str, Stream] = options.pop("subtitles", {})
         self.options: dict[str, Any] = options
 
