@@ -544,7 +544,7 @@ class HLSStreamReader(FilteredStream, SegmentedStreamReader[HLSSegment, Response
     stream: HLSStream
     buffer: RingBuffer
 
-    def __init__(self, stream: HLSStream):
+    def __init__(self, stream: HLSStream, name: str | None = None):
         self.request_params = dict(stream.args)
         # These params are reserved for internal use
         self.request_params.pop("exception", None)
@@ -552,7 +552,7 @@ class HLSStreamReader(FilteredStream, SegmentedStreamReader[HLSSegment, Response
         self.request_params.pop("timeout", None)
         self.request_params.pop("url", None)
 
-        super().__init__(stream)
+        super().__init__(stream, name=name)
 
 
 TMuxedHLSStream_co = TypeVar("TMuxedHLSStream_co", bound="HLSStream", covariant=True)
@@ -600,7 +600,10 @@ class MuxedHLSStream(MuxedStream[TMuxedHLSStream_co]):
 
         # https://github.com/python/mypy/issues/18017
         TStream: type[TMuxedHLSStream_co] = hlsstream if hlsstream is not None else HLSStream  # type: ignore[assignment]
-        substreams = [TStream(session, url, force_restart=force_restart, **kwargs) for url in tracks]
+        substreams = [
+            TStream(session, url, force_restart=force_restart, name=None if idx == 0 else "audio", **kwargs)
+            for idx, url in enumerate(tracks)
+        ]
         ffmpeg_options = ffmpeg_options or {}
 
         super().__init__(session, *substreams, format="mpegts", maps=maps, **ffmpeg_options)
@@ -636,6 +639,7 @@ class HLSStream(HTTPStream):
         url: str,
         url_master: str | None = None,
         multivariant: M3U8 | None = None,
+        name: str | None = None,
         force_restart: bool = False,
         start_offset: float = 0,
         duration: float | None = None,
@@ -646,6 +650,7 @@ class HLSStream(HTTPStream):
         :param url: The URL of the HLS playlist
         :param url_master: The URL of the HLS playlist's multivariant playlist (deprecated)
         :param multivariant: The parsed multivariant playlist
+        :param name: Optional name suffix for the stream's worker and writer threads
         :param force_restart: Start from the beginning after reaching the playlist's end
         :param start_offset: Number of seconds to be skipped from the beginning
         :param duration: Number of seconds until ending the stream
@@ -655,6 +660,7 @@ class HLSStream(HTTPStream):
         super().__init__(session, url, **kwargs)
         self._url_master = url_master
         self.multivariant = multivariant if multivariant and multivariant.is_master else None
+        self.name = name
         self.force_restart = force_restart
         self.start_offset = start_offset
         self.duration = duration
@@ -689,7 +695,7 @@ class HLSStream(HTTPStream):
         return self.session.http.prepare_new_request(**args).url
 
     def open(self):
-        reader = self.__reader__(self)
+        reader = self.__reader__(self, name=self.name)
         reader.open()
 
         return reader

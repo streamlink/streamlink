@@ -11,6 +11,9 @@ import requests_mock as rm
 
 from streamlink.session import Streamlink
 
+# noinspection PyProtectedMember
+from streamlink.utils.thread import _threadname_counters  # noqa: PLC2701
+
 
 _TEST_CONDITION_MARKERS: Mapping[str, tuple[bool, str] | Callable[[Any], tuple[bool, str]]] = {
     "posix_only": (os.name == "posix", "only applicable on a POSIX OS"),
@@ -133,3 +136,9 @@ def _patch_trio_run():
     trio.run = partial(trio.run, strict_exception_groups=True)
     yield
     trio.run = trio_run
+
+
+@pytest.fixture(autouse=True)
+def _clear_threadname_counters():
+    yield
+    _threadname_counters.clear()
