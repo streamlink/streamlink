@@ -357,7 +357,7 @@ def build_parser():
 
             For verbose levels (`trace` and `all`):
 
-            Default is "[{asctime}][{name}][{levelname}] {message}".
+            Default is "[{asctime}][{threadName}][{name}][{levelname}] {message}".
 
             Otherwise:
 
