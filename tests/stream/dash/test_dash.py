@@ -381,7 +381,7 @@ class TestDASHStreamOpen:
         stream = DASHStream(session, Mock(), rep_video)
         stream.open()
 
-        assert reader.call_args_list == [call(stream, rep_video, timestamp)]
+        assert reader.call_args_list == [call(stream, rep_video, timestamp, name="video")]
         assert reader().open.call_count == 1
         assert muxer.call_args_list == []
 
@@ -392,12 +392,15 @@ class TestDASHStreamOpen:
         mock_reader_video = Mock()
         mock_reader_audio = Mock()
         readers = {rep_video: mock_reader_video, rep_audio: mock_reader_audio}
-        reader.side_effect = lambda _stream, _representation, _timestamp: readers[_representation]
+        reader.side_effect = lambda _stream, _representation, _timestamp, *_, **__: readers[_representation]
 
         stream = DASHStream(session, Mock(), rep_video, rep_audio)
         stream.open()
 
-        assert reader.call_args_list == [call(stream, rep_video, timestamp), call(stream, rep_audio, timestamp)]
+        assert reader.call_args_list == [
+            call(stream, rep_video, timestamp, name="video"),
+            call(stream, rep_audio, timestamp, name="audio"),
+        ]
         assert mock_reader_video.open.call_count == 1
         assert mock_reader_audio.open.call_count == 1
         assert muxer.call_args_list == [call(session, mock_reader_video, mock_reader_audio, copyts=True)]

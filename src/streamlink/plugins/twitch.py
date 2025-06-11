@@ -236,7 +236,7 @@ class TwitchHLSStreamReader(HLSStreamReader):
     writer: TwitchHLSStreamWriter
     stream: TwitchHLSStream
 
-    def __init__(self, stream: TwitchHLSStream):
+    def __init__(self, stream: TwitchHLSStream, **kwargs):
         if stream.disable_ads:
             log.info("Will skip ad segments")
         if stream.low_latency:
@@ -244,7 +244,8 @@ class TwitchHLSStreamReader(HLSStreamReader):
             stream.session.options.set("hls-live-edge", live_edge)
             stream.session.options.set("hls-segment-stream-data", True)
             log.info(f"Low latency streaming (HLS live edge: {live_edge})")
-        super().__init__(stream)
+
+        super().__init__(stream, **kwargs)
 
 
 class TwitchHLSStream(HLSStream):

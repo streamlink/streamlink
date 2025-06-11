@@ -183,8 +183,9 @@ class DASHStreamReader(SegmentedStreamReader[DASHSegment, Response]):
         stream: DASHStream,
         representation: Representation,
         timestamp: datetime,
+        name: str | None = None,
     ):
-        super().__init__(stream)
+        super().__init__(stream, name=name)
         self.ident = representation.ident
         self.mime_type = representation.mimeType
         self.timestamp = timestamp
@@ -397,11 +398,11 @@ class DASHStream(Stream):
         timestamp = now()
 
         if rep_video:
-            video = DASHStreamReader(self, rep_video, timestamp)
+            video = DASHStreamReader(self, rep_video, timestamp, name="video")
             log.debug(f"Opening DASH reader for: {rep_video.ident!r} - {rep_video.mimeType}")
 
         if rep_audio:
-            audio = DASHStreamReader(self, rep_audio, timestamp)
+            audio = DASHStreamReader(self, rep_audio, timestamp, name="audio")
             log.debug(f"Opening DASH reader for: {rep_audio.ident!r} - {rep_audio.mimeType}")
 
         if video and audio and FFMPEGMuxer.is_usable(self.session):

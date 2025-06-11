@@ -5,12 +5,13 @@ import queue
 from collections.abc import Generator
 from concurrent import futures
 from concurrent.futures import Future, ThreadPoolExecutor
-from threading import Event, Thread, current_thread
+from threading import Event, current_thread
 from typing import TYPE_CHECKING, ClassVar, Generic, TypeVar
 
 from streamlink.buffers import RingBuffer
 from streamlink.stream.segmented.segment import Segment
 from streamlink.stream.stream import Stream, StreamIO
+from streamlink.utils.thread import NamedThread
 
 
 if TYPE_CHECKING:
@@ -42,7 +43,7 @@ TResultFuture: TypeAlias = "Future[TResult | None]"
 TQueueItem: TypeAlias = "tuple[TSegment, TResultFuture, tuple]"
 
 
-class SegmentedStreamWriter(AwaitableMixin, Thread, Generic[TSegment, TResult]):
+class SegmentedStreamWriter(AwaitableMixin, NamedThread, Generic[TSegment, TResult]):
     """
     The base writer thread.
     This thread is responsible for fetching segments, processing them and finally writing the data to the buffer.
@@ -58,8 +59,9 @@ class SegmentedStreamWriter(AwaitableMixin, Thread, Generic[TSegment, TResult]):
         retries: int | None = None,
         threads: int | None = None,
         timeout: float | None = None,
+        name: str | None = None,
     ) -> None:
-        super().__init__(daemon=True, name=f"Thread-{self.__class__.__name__}")
+        super().__init__(daemon=True, name=name)
 
         self.closed = False
 
@@ -71,7 +73,7 @@ class SegmentedStreamWriter(AwaitableMixin, Thread, Generic[TSegment, TResult]):
         self.threads = threads or self.session.options.get("stream-segment-threads")
         self.timeout = timeout or self.session.options.get("stream-segment-timeout")
 
-        self.executor = ThreadPoolExecutor(max_workers=self.threads)
+        self.executor = ThreadPoolExecutor(max_workers=self.threads, thread_name_prefix=f"{self.name}-executor")
         self._queue: queue.Queue[TQueueItem] = queue.Queue(size)
 
     def close(self) -> None:
@@ -169,7 +171,7 @@ class SegmentedStreamWriter(AwaitableMixin, Thread, Generic[TSegment, TResult]):
         self.close()
 
 
-class SegmentedStreamWorker(AwaitableMixin, Thread, Generic[TSegment, TResult]):
+class SegmentedStreamWorker(AwaitableMixin, NamedThread, Generic[TSegment, TResult]):
     """
     The base worker thread.
     This thread is responsible for queueing up segments in the writer thread.
@@ -179,8 +181,8 @@ class SegmentedStreamWorker(AwaitableMixin, Thread, Generic[TSegment, TResult]):
     writer: SegmentedStreamWriter[TSegment, TResult]
     stream: Stream
 
-    def __init__(self, reader: SegmentedStreamReader, **kwargs) -> None:
-        super().__init__(daemon=True, name=f"Thread-{self.__class__.__name__}")
+    def __init__(self, reader: SegmentedStreamReader, name: str | None = None, **kwargs) -> None:
+        super().__init__(daemon=True, name=name)
 
         self.closed = False
 
@@ -231,7 +233,7 @@ class SegmentedStreamReader(StreamIO, Generic[TSegment, TResult]):
     writer: SegmentedStreamWriter[TSegment, TResult]
     stream: Stream
 
-    def __init__(self, stream: Stream) -> None:
+    def __init__(self, stream: Stream, name: str | None = None) -> None:
         super().__init__()
 
         self.stream = stream
@@ -242,8 +244,8 @@ class SegmentedStreamReader(StreamIO, Generic[TSegment, TResult]):
         buffer_size = self.session.get_option("ringbuffer-size")
         self.buffer = RingBuffer(buffer_size)
 
-        self.writer = self.__writer__(self)
-        self.worker = self.__worker__(self)
+        self.writer = self.__writer__(self, name=name)
+        self.worker = self.__worker__(self, name=name)
 
     def open(self) -> None:
         self.writer.start()
