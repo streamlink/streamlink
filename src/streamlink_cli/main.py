@@ -909,7 +909,7 @@ def setup_logger() -> None:
     verbose = level in (logging.getLevelName(logger.TRACE), logging.getLevelName(logger.ALL))
     if not fmt:
         if verbose:
-            fmt = "[{asctime}][{name}][{levelname}] {message}"
+            fmt = "[{asctime}][{threadName}][{name}][{levelname}] {message}"
         else:
             fmt = "[{name}][{levelname}] {message}"
     if not datefmt:

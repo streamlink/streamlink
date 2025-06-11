@@ -408,14 +408,14 @@ class TestInfos:
         pytest.param(
             ["--loglevel", "trace"],
             TRACE,
-            "[{asctime}][{name}][{levelname}] {message}",
+            "[{asctime}][{threadName}][{name}][{levelname}] {message}",
             "%H:%M:%S.%f",
             id="loglevel=trace",
         ),
         pytest.param(
             ["--loglevel", "all"],
             ALL,
-            "[{asctime}][{name}][{levelname}] {message}",
+            "[{asctime}][{threadName}][{name}][{levelname}] {message}",
             "%H:%M:%S.%f",
             id="loglevel=all",
         ),
@@ -429,7 +429,7 @@ class TestInfos:
         pytest.param(
             ["--loglevel", "all", "--logdateformat", "%Y-%m-%dT%H:%M:%S.%f"],
             ALL,
-            "[{asctime}][{name}][{levelname}] {message}",
+            "[{asctime}][{threadName}][{name}][{levelname}] {message}",
             "%Y-%m-%dT%H:%M:%S.%f",
             id="logdateformat",
         ),
