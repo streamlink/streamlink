@@ -95,6 +95,8 @@ class FFMPEGMuxer(StreamIO):
 
     errorlog: int | TextIO
 
+    process: subprocess.Popen | None
+
     @classmethod
     def is_usable(cls, session):
         return cls.command(session) is not None
@@ -138,11 +140,12 @@ class FFMPEGMuxer(StreamIO):
         return resolved
 
     @staticmethod
-    def copy_to_pipe(stream: StreamIO, pipe: NamedPipeBase):
+    def copy_to_pipe(muxer: FFMPEGMuxer, stream: StreamIO, pipe: NamedPipeBase):
         log.debug(f"Starting copy to pipe: {pipe.path}")
         # TODO: catch OSError when creating/opening pipe fails and close entire output stream
         pipe.open()
 
+        data = b""
         while True:
             try:
                 data = stream.read(8192)
@@ -157,6 +160,9 @@ class FFMPEGMuxer(StreamIO):
             try:
                 pipe.write(data)
             except OSError as err:
+                if stream.closed or not muxer.process or not muxer.process.poll():
+                    log.debug(f"Pipe copy complete: {pipe.path}")
+                    break
                 log.error(f"Error while writing to pipe {pipe.path}: {err}")
                 break
 
@@ -176,7 +182,7 @@ class FFMPEGMuxer(StreamIO):
         self.pipe_threads = [
             threading.Thread(
                 target=self.copy_to_pipe,
-                args=(stream, np),
+                args=(self, stream, np),
             )
             for stream, np in zip(self.streams, self.pipes)
         ]
