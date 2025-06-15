@@ -14,6 +14,7 @@ from streamlink import Streamlink
 from streamlink.exceptions import NoStreamsError, PluginError
 from streamlink.options import Options
 from streamlink.plugins.twitch import Twitch, TwitchAPI, TwitchHLSStream, TwitchHLSStreamReader, TwitchHLSStreamWriter
+from streamlink.stream.hls import MuxedHLSStream
 from tests.mixins.stream_hls import EventedHLSStreamWriter, Playlist, Segment as _Segment, Tag, TestMixinStreamHLS
 from tests.plugins import PluginCanHandleUrl
 from tests.resources import text
@@ -693,6 +694,80 @@ class TestUsherService:
         assert qs.get("sig")
 
         assert [(r.name, r.levelname, r.message) for r in caplog.get_records(when="setup")] == logs
+
+    @pytest.mark.parametrize(
+        "endpoint",
+        [
+            pytest.param({"service": "channel"}, id="channel"),
+            pytest.param({"service": "video"}, id="video"),
+        ],
+        indirect=True,
+    )
+    @pytest.mark.parametrize(
+        ("plugin", "expected"),
+        [
+            pytest.param({}, "h264", id="unset"),
+            pytest.param({"supported_codecs": []}, "h264", id="empty"),
+            pytest.param({"supported_codecs": ["h264"]}, "h264", id="h264"),
+            pytest.param({"supported_codecs": ["av1", "h264"]}, "av1,h264", id="av1,h264"),
+            pytest.param({"supported_codecs": ["av1", "h264", "h265"]}, "av1,h264,h265", id="av1,h264,h265"),
+        ],
+        indirect=["plugin"],
+    )
+    def test_supported_codecs(self, plugin: Twitch, endpoint: str, expected: str):
+        qs = dict(parse_qsl(urlparse(endpoint).query))
+        assert qs.get("supported_codecs") == expected
+
+
+class TestTwitchMuxedHLSStream:
+    @pytest.fixture(autouse=True)
+    def _mock_request(self, requests_mock: rm.Mocker):
+        with text("hls/test_multivariant_codecs.m3u8") as fh:
+            playlist = fh.read()
+        requests_mock.request("GET", "https://mocked/multivariant.m3u8", text=playlist)
+
+    @pytest.fixture(autouse=True)
+    def has_ffmpeg(self, request: pytest.FixtureRequest, monkeypatch: pytest.MonkeyPatch):
+        mock = Mock(return_value=getattr(request, "param", True))
+        monkeypatch.setattr("streamlink.stream.ffmpegmux.FFMPEGMuxer.is_usable", mock)
+        yield
+        assert mock.call_count == 1
+
+    @pytest.mark.parametrize(
+        ("has_ffmpeg", "expected"),
+        [
+            pytest.param(
+                True,
+                {
+                    "160p": TwitchHLSStream,
+                    "360p": TwitchHLSStream,
+                    "480p": TwitchHLSStream,
+                    "720p60": TwitchHLSStream,
+                    "1080p60": TwitchHLSStream,
+                    "1440p60": MuxedHLSStream,
+                    "2160p60": MuxedHLSStream,
+                },
+                id="has-ffmpeg",
+            ),
+            pytest.param(
+                False,
+                {
+                    "160p": TwitchHLSStream,
+                    "360p": TwitchHLSStream,
+                    "480p": TwitchHLSStream,
+                    "720p60": TwitchHLSStream,
+                    "1080p60": TwitchHLSStream,
+                    "1440p60": TwitchHLSStream,
+                    "2160p60": TwitchHLSStream,
+                },
+                id="no-ffmpeg",
+            ),
+        ],
+        indirect=["has_ffmpeg"],
+    )
+    def test_muxed(self, session: Streamlink, has_ffmpeg: bool, expected: dict):
+        streams = TwitchHLSStream.parse_variant_playlist(session, "https://mocked/multivariant.m3u8")
+        assert {key: type(stream) for key, stream in streams.items()} == expected
 
 
 class TestTwitchAPIAccessToken:
