@@ -27,10 +27,10 @@ jobs:
           - "3.11"
           - "3.12"
           - "3.13"
-        include:
-          - runs-on: ubuntu-latest
-            python-version: "3.14-dev"
-            continue: true
+        # include:
+        #   - runs-on: ubuntu-latest
+        #     python-version: "3.14-dev"
+        #     continue: true
         #   - runs-on: windows-latest
         #     python-version: "3.14-dev"
         #     continue: true
