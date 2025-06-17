@@ -10,6 +10,7 @@ import signal
 import ssl
 import sys
 import warnings
+from atexit import register as _atexit_register
 from collections.abc import Mapping
 from contextlib import closing, suppress
 from gettext import gettext
@@ -899,6 +900,9 @@ def setup_console() -> None:
 
     console = ConsoleOutput(console_output=console_output, json=args.json)
 
+    # flush+close console and file streams on exit, and remove stream wrapper
+    _atexit_register(console.close)
+
 
 def setup_logger() -> None:
     level: str = args.loglevel if not args.silent_log else logging.getLevelName(logger.NONE)
@@ -1016,9 +1020,6 @@ def main():
                 console.msg_json({"error": msg})
             else:
                 console.msg(f"error: {msg}")
-
-    # flush+close console and file streams, and remove stream wrapper
-    console.close()
 
     # https://docs.python.org/3/library/signal.html#note-on-sigpipe
     # Prevent BrokenPipeError: unset sys.stdout, so Python doesn't attempt a flush() on exit
