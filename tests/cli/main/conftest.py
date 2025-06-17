@@ -16,6 +16,26 @@ def argv(request: pytest.FixtureRequest, monkeypatch: pytest.MonkeyPatch):
 
 
 @pytest.fixture(autouse=True)
+def _atexit_register(monkeypatch: pytest.MonkeyPatch):
+    mock_atexit_register = Mock()
+    original_main = streamlink_cli.main.main
+
+    # Instead of executing the registered atexit functions in the test's teardown phase,
+    # execute them after the main() function call, so it's easier for tests to make assertions about mocked function calls.
+    # Otherwise, test scope, fixture dependencies and autouse flags would need to be taken into account.
+    def _main():
+        # noinspection PyUnreachableCode
+        try:
+            return original_main()
+        finally:
+            for call_args in mock_atexit_register.call_args_list:
+                call_args.args[0](*call_args.args[1:], **call_args.kwargs)
+
+    monkeypatch.setattr("streamlink_cli.main.main", _main)
+    monkeypatch.setattr("streamlink_cli.main._atexit_register", mock_atexit_register)
+
+
+@pytest.fixture(autouse=True)
 def _console_output_stream(monkeypatch: pytest.MonkeyPatch):
     # don't wrap stdout/stderr in CLI integration tests, as we're capturing the output
     monkeypatch.setattr("streamlink_cli.console.stream_wrapper.StreamWrapper._wrap", Mock())
