@@ -1,12 +1,16 @@
 from __future__ import annotations
 
 import json
+import logging
 import os
 import shutil
 import tempfile
+from atexit import register as _atexit_register
 from contextlib import suppress
+from copy import deepcopy
 from datetime import datetime
 from pathlib import Path
+from threading import Timer
 from time import time
 from typing import Any
 
@@ -20,6 +24,11 @@ else:
 
 # TODO: fix macOS path and deprecate old one (with fallback logic)
 CACHE_DIR = Path(xdg_cache) / "streamlink"
+
+WRITE_DEBOUNCE_TIME = 3.0
+
+
+log = logging.getLogger(__name__)
 
 
 # TODO: rewrite data structure
@@ -43,15 +52,38 @@ class Cache:
         self.key_prefix = key_prefix
         self.filename = CACHE_DIR / Path(filename)
 
+        self._cache_orig: dict[str, dict[str, Any]] = {}
         self._cache: dict[str, dict[str, Any]] = {}
 
+        self._loaded = False
+        self._timer: Timer | None = None
+
+        _atexit_register(self._save)
+
+    @property
+    def _dirty(self):
+        return self._cache != self._cache_orig
+
     def _load(self):
-        self._cache = {}
-        if self.filename.exists():
-            with suppress(Exception):
-                with self.filename.open("r") as fd:
-                    data = json.load(fd)
-                    self._cache.update(**data)
+        if self._loaded:
+            return
+
+        self._loaded = True
+        self._cache_orig.clear()
+        self._cache.clear()
+
+        # noinspection PyUnresolvedReferences
+        log.trace(f"Loading cache file: {self.filename}")
+
+        try:
+            with self.filename.open("r", encoding="utf-8") as fd:
+                data = json.load(fd)
+                self._cache_orig.update(**data)
+                self._cache.update(**data)
+        except FileNotFoundError:
+            pass
+        except Exception as err:
+            log.warning(f"Failed loading cache file, continuing without cache: {err}")
 
     def _prune(self):
         now = time()
@@ -67,23 +99,44 @@ class Cache:
 
         return len(pruned) > 0
 
-    def _save(self):
-        fd, tempname = tempfile.mkstemp()
-        fd = os.fdopen(fd, "w")
-        try:
-            json.dump(self._cache, fd, indent=2, separators=(",", ": "))
-        except Exception:
-            raise
-        finally:
-            fd.close()
+    def _schedule_save(self):
+        if self._timer:
+            self._timer.cancel()
+        if not self._dirty:
+            return
 
-        # Silently ignore errors
+        # noinspection PyUnresolvedReferences
+        log.trace(f"Scheduling write to cache file: {WRITE_DEBOUNCE_TIME:.1f}s")
+        self._timer = Timer(WRITE_DEBOUNCE_TIME, self._save)
+        self._timer.daemon = True
+        self._timer.name = "CacheSaveThread"
+        self._timer.start()
+
+    def _save(self):
+        if self._timer:
+            self._timer.cancel()
+        if not self._dirty:
+            return
+
+        # noinspection PyUnresolvedReferences
+        log.trace(f"Writing to cache file: {self.filename}")
+
+        fd = None
         try:
             self.filename.parent.mkdir(exist_ok=True, parents=True)
-            shutil.move(tempname, str(self.filename))
-        except OSError:
-            with suppress(Exception):
-                os.remove(tempname)
+            # TODO: py311 support end: set delete_on_close=False and move file in the context manager
+            with tempfile.NamedTemporaryFile(mode="w+", encoding="utf-8", delete=False) as fd:
+                json.dump(self._cache, fd, indent=2, separators=(",", ": "))
+                fd.flush()
+            shutil.move(fd.name, self.filename)
+        except Exception as err:
+            if fd:
+                with suppress(OSError):
+                    os.unlink(fd.name)
+            log.error(f"Error while writing to cache file: {err}")
+        else:
+            self._cache_orig.clear()
+            self._cache_orig.update(**deepcopy(self._cache))
 
     def set(
         self,
@@ -118,7 +171,7 @@ class Cache:
                 expires = 0
 
         self._cache[key] = dict(value=value, expires=expires)
-        self._save()
+        self._schedule_save()
 
     def get(
         self,
@@ -136,9 +189,8 @@ class Cache:
         """
 
         self._load()
-
-        if self._prune():
-            self._save()
+        self._prune()
+        self._schedule_save()
 
         if self.key_prefix:
             key = f"{self.key_prefix}:{key}"
@@ -158,10 +210,10 @@ class Cache:
         """
 
         ret = {}
-        self._load()
 
-        if self._prune():
-            self._save()
+        self._load()
+        self._prune()
+        self._schedule_save()
 
         for key, value in self._cache.items():
             if self.key_prefix:
