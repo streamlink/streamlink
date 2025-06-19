@@ -1,63 +1,136 @@
 from __future__ import annotations
 
+import json
 from datetime import datetime, timedelta, timezone
+from io import BytesIO, TextIOWrapper
 from json import JSONDecodeError
 from pathlib import Path
-from unittest.mock import Mock, patch
+from threading import Condition, Timer
+from typing import Callable
+from unittest.mock import Mock
 
 import freezegun
 import pytest
 
-from streamlink.cache import Cache
+# noinspection PyProtectedMember
+from streamlink.cache import WRITE_DEBOUNCE_TIME, Cache
 
 
 @pytest.fixture(autouse=True)
-def cache_dir(tmp_path: Path):
-    with patch("streamlink.cache.CACHE_DIR", tmp_path):
-        yield tmp_path
+def caplog(caplog: pytest.LogCaptureFixture):
+    caplog.set_level(1, "streamlink")
+    return caplog
 
 
 @pytest.fixture()
-def cache(request: pytest.FixtureRequest, cache_dir: Path):
+def mock_load(monkeypatch: pytest.MonkeyPatch):
+    mock = Mock()
+    monkeypatch.setattr("streamlink.cache.Cache._load", mock)
+    return mock
+
+
+@pytest.fixture()
+def mock_schedule_save(monkeypatch: pytest.MonkeyPatch):
+    mock = Mock()
+    monkeypatch.setattr("streamlink.cache.Cache._schedule_save", mock)
+    return mock
+
+
+@pytest.fixture()
+def mock_save(monkeypatch: pytest.MonkeyPatch):
+    mock = Mock()
+    monkeypatch.setattr("streamlink.cache.Cache._save", mock)
+    return mock
+
+
+@pytest.fixture()
+def no_io(mock_load: Mock, mock_schedule_save: Mock, mock_save: Mock):
+    return mock_load, mock_schedule_save, mock_save
+
+
+@pytest.fixture(autouse=True)
+def atexit(monkeypatch: pytest.MonkeyPatch):
+    stack = []
+
+    def register(func: Callable, *args, **kwargs) -> None:
+        stack.append((func, args, kwargs))
+
+    monkeypatch.setattr("streamlink.cache._atexit_register", register)
+
+    return stack
+
+
+@pytest.fixture(autouse=True)
+def mock_json_load(request: pytest.FixtureRequest, monkeypatch: pytest.MonkeyPatch):
+    side_effect: Callable | Exception = getattr(request, "param", None) or json.load
+    mock = Mock(side_effect=side_effect)
+    monkeypatch.setattr("json.load", mock)
+    return mock
+
+
+@pytest.fixture(autouse=True)
+def cache_dir(monkeypatch: pytest.MonkeyPatch, tmp_path: Path):
+    monkeypatch.setattr("streamlink.cache.CACHE_DIR", tmp_path)
+    return tmp_path
+
+
+# noinspection PyProtectedMember
+@pytest.fixture()
+def cache(request: pytest.FixtureRequest, cache_dir: Path, atexit: list):
     param = getattr(request, "param", {})
     param.setdefault("filename", "cache.json")
 
     cache = Cache(**param)
     assert cache.filename == cache_dir / param["filename"]
-    # noinspection PyProtectedMember
-    assert not cache._cache
+    assert cache._cache_orig == {}
+    assert cache._cache == {}
+    assert cache._cache_orig is not cache._cache
+    assert not cache._loaded
+    assert not cache._dirty
+    assert not cache._timer
+    assert atexit == [(cache._save, (), {})]
 
-    return cache
+    yield cache
 
-
-class TestPathlibAndStr:
-    @pytest.mark.parametrize(
-        "filename",
-        [
-            pytest.param("foo", id="str"),
-            pytest.param(Path("foo"), id="Path"),
-        ],
-    )
-    def test_constructor(self, cache_dir: Path, filename: str | Path):
-        cache = Cache(filename)
-        assert cache.filename == cache_dir / Path(filename)
+    assert cache._cache_orig is not cache._cache
+    assert not cache._timer or not cache._timer.is_alive()
 
 
+@pytest.mark.usefixtures("no_io")
+@pytest.mark.parametrize(
+    "filename",
+    [
+        pytest.param("foo", id="str"),
+        pytest.param(Path("foo"), id="Path"),
+    ],
+)
+def test_pathlib_and_str(cache_dir: Path, filename: str | Path):
+    cache = Cache(filename)
+    assert cache.filename == cache_dir / Path(filename)
+
+
+@pytest.mark.usefixtures("no_io")
 class TestGetterSetter:
-    def test_get(self, cache: Cache):
+    def test_get(self, cache: Cache, mock_schedule_save: Mock):
+        assert not mock_schedule_save.called
         assert cache.get("missing-value") is None
         assert cache.get("missing-value", default="default") == "default"
+        assert not cache._dirty
+        assert mock_schedule_save.call_count == 2
 
     def test_set(self, cache: Cache):
         assert cache.get("value") is None
         cache.set("value", 1)
         assert cache.get("value") == 1
-        assert cache._cache
+        assert list(cache._cache.keys()) == ["value"]
+        assert cache._dirty
 
-    def test_get_all(self, cache: Cache):
+    def test_get_all(self, cache: Cache, mock_schedule_save: Mock):
+        assert not mock_schedule_save.called
         cache.set("test1", 1)
         cache.set("test2", 2)
         assert cache.get_all() == {"test1": 1, "test2": 2}
+        assert mock_schedule_save.call_count == 3
 
     def test_get_all_prune(self, cache: Cache):
         cache.set("test1", 1)
@@ -65,6 +138,7 @@ class TestGetterSetter:
         assert cache.get_all() == {"test1": 1}
 
 
+@pytest.mark.usefixtures("no_io")
 class TestPrefix:
     @pytest.mark.parametrize("cache", [{"key_prefix": "test"}], indirect=["cache"])
     def test_key_prefix(self, cache: Cache):
@@ -82,6 +156,7 @@ class TestPrefix:
         assert cache.get_all() == {"test3": 3, "test4": 4}
 
 
+@pytest.mark.usefixtures("no_io")
 class TestExpiration:
     @pytest.mark.parametrize(
         ("expires", "expected"),
@@ -120,50 +195,234 @@ class TestExpiration:
             assert cache.get("key") is None
 
 
+class TestScheduleSave:
+    def test_not_dirty(self, caplog: pytest.LogCaptureFixture, cache: Cache, mock_save: Mock):
+        assert not cache._dirty
+        cache._schedule_save()
+        assert not cache._timer
+        assert mock_save.call_count == 0
+        assert caplog.records == []
+
+    def test_cancel_timer(self, caplog: pytest.LogCaptureFixture, cache: Cache, mock_save: Mock):
+        assert not cache._dirty
+        cache._timer = Timer(WRITE_DEBOUNCE_TIME, mock_save)
+        cache._timer.daemon = True
+        cache._timer.start()
+        assert cache._timer.is_alive()
+        cache._schedule_save()
+        cache._timer.join(timeout=1)
+        assert not cache._timer.is_alive()
+        assert mock_save.call_count == 0
+        assert caplog.records == []
+
+    def test_schedule_save(
+        self,
+        monkeypatch: pytest.MonkeyPatch,
+        caplog: pytest.LogCaptureFixture,
+        cache: Cache,
+        mock_save: Mock,
+    ):
+        cache._cache = {"key": {"value": "foo"}}
+        assert cache._dirty
+        assert not cache._timer
+
+        cache._schedule_save()
+        assert mock_save.call_count == 0
+        assert cache._timer
+        assert cache._timer.is_alive()
+
+        # unblock the Timer's Event.wait() call without setting its inner flag to True (Event.set())
+        timer_event_condition: Condition = cache._timer.finished._cond  # type: ignore[attr-defined]
+        with timer_event_condition:
+            timer_event_condition.notify_all()
+        cache._timer.join(timeout=1)
+        assert not cache._timer.is_alive()
+        assert mock_save.call_count == 1
+
+        assert [(record.name, record.levelname, record.message) for record in caplog.records] == [
+            ("streamlink.cache", "trace", "Scheduling write to cache file: 3.0s"),
+        ]
+
+
 class TestIO:
-    @pytest.mark.parametrize(
-        ("mockpath", "side_effect"),
-        [
-            ("pathlib.Path.open", OSError),
-            ("json.load", JSONDecodeError),
-        ],
-    )
-    def test_load_fail(self, cache: Cache, mockpath: str, side_effect: type[Exception]):
-        with patch("pathlib.Path.exists", return_value=True):
-            with patch(mockpath, side_effect=side_effect):
-                cache._load()
-        assert not cache._cache
+    @pytest.fixture()
+    def mock_cache_file(self, request: pytest.FixtureRequest, monkeypatch: pytest.MonkeyPatch):
+        content: bytes | Exception = getattr(request, "param", None) or b"{}"
+        if not isinstance(content, bytes):
+            mock = Mock(side_effect=content)
+        else:
+            stream = TextIOWrapper(BytesIO(content), encoding="utf-8")
+            mock = Mock(return_value=stream)
+        monkeypatch.setattr("pathlib.Path.open", mock)
+
+        return mock
 
     @pytest.mark.parametrize(
-        "side_effect",
+        ("mock_cache_file", "mock_json_load", "log"),
         [
-            RecursionError,
-            TypeError,
-            ValueError,
+            pytest.param(
+                FileNotFoundError("File not found"),
+                None,
+                [],
+                id="file-not-found-error",
+            ),
+            pytest.param(
+                PermissionError("Permission denied"),
+                None,
+                [
+                    (
+                        "streamlink.cache",
+                        "warning",
+                        "Failed loading cache file, continuing without cache: Permission denied",
+                    ),
+                ],
+                id="os-error",
+            ),
+            pytest.param(
+                None,
+                JSONDecodeError("cache-file.json", "", 0),
+                [
+                    (
+                        "streamlink.cache",
+                        "warning",
+                        "Failed loading cache file, continuing without cache: cache-file.json: line 1 column 1 (char 0)",
+                    ),
+                ],
+                id="json-decode-error",
+            ),
+        ],
+        indirect=["mock_cache_file", "mock_json_load"],
+    )
+    def test_load(self, caplog: pytest.LogCaptureFixture, cache: Cache, mock_cache_file: Mock, mock_json_load: Mock, log: list):
+        cache._load()
+        assert cache._loaded, "Failed load attempts also set the loaded state to True"
+        assert not cache._dirty
+        assert cache._cache == {}
+        assert [(record.name, record.levelname, record.message) for record in caplog.records] == [
+            ("streamlink.cache", "trace", f"Loading cache file: {cache.filename}"),
+            *log,
+        ]
+        assert mock_cache_file.call_count == 1
+
+        cache._load()
+        assert mock_cache_file.call_count == 1
+
+    @pytest.mark.usefixtures("mock_schedule_save", "mock_save")
+    @pytest.mark.parametrize(
+        ("mock_cache_file", "expected", "dirty"),
+        [
+            pytest.param(
+                b"""{"foo": {"value": "\\ud83d\\udc3b", "expires": 946684801}}""",
+                "🐻",
+                False,
+                id="load-no-expiration",
+            ),
+            pytest.param(
+                b"""{"foo": {"value": "\\ud83d\\udc3b", "expires": 946684800}}""",
+                None,
+                True,
+                id="load-with-expiration",
+            ),
+        ],
+        indirect=["mock_cache_file"],
+    )
+    def test_load_data(self, mock_cache_file: Mock, expected: str | None, dirty: bool):
+        with freezegun.freeze_time("2000-01-01T00:00:00Z"):
+            cache = Cache("mocked-io")
+            assert not cache._loaded
+            assert not cache._dirty
+            assert cache.get("foo") == expected
+            assert cache._loaded
+            assert cache._dirty is dirty
+
+    @pytest.mark.parametrize(
+        ("patch", "side_effect"),
+        [
+            pytest.param(
+                "pathlib.Path.mkdir",
+                PermissionError("Permission denied"),
+                id="pathlib-path-mkdir",
+            ),
+            pytest.param(
+                "tempfile.NamedTemporaryFile",
+                PermissionError("Permission denied"),
+                id="tempfile-namedtemporaryfile",
+            ),
+            pytest.param(
+                "json.dump",
+                ValueError(),
+                id="json-dump",
+            ),
+            pytest.param(
+                "shutil.move",
+                PermissionError("Permission denied"),
+                id="shutil-move",
+            ),
         ],
     )
-    def test_save_fail_jsondump(self, cache: Cache, side_effect: type[Exception]):
-        with patch("json.dump", side_effect=side_effect):
-            with pytest.raises(side_effect):
-                cache.set("key", "value")
+    def test_save_fail(
+        self,
+        monkeypatch: pytest.MonkeyPatch,
+        caplog: pytest.LogCaptureFixture,
+        cache: Cache,
+        patch: str,
+        side_effect: Exception,
+    ):
+        mock = Mock(side_effect=side_effect)
+        monkeypatch.setattr(patch, mock)
+
+        cache._cache_orig = {"foo": {"value": 1}}
+        cache._cache = {"foo": {"value": 2}}
+        assert cache._dirty
+
+        cache._save()
+        assert mock.call_count == 1
+        assert cache._dirty
+        assert cache._cache_orig == {"foo": {"value": 1}}
+        assert cache._cache == {"foo": {"value": 2}}
         assert not cache.filename.exists()
+        assert [(record.name, record.levelname, record.message) for record in caplog.records] == [
+            ("streamlink.cache", "trace", f"Writing to cache file: {cache.filename}"),
+            ("streamlink.cache", "error", f"Error while writing to cache file: {side_effect}"),
+        ]
 
+    @pytest.mark.parametrize("cache", [pytest.param({"filename": Path("foo") / "bar" / "cache.json"})], indirect=True)
+    def test_save_success(self, caplog: pytest.LogCaptureFixture, cache: Cache):
+        cache._loaded = True
+        cache._cache_orig = {"foo": {"value": "bear", "expires": 946684801}}
+        cache._cache = {"foo": {"value": "🐻", "expires": 946684801}}
+        assert cache._dirty
 
-class TestCreateDirectory:
-    filepath = Path("dir1", "dir2", "cache.json")
+        cache._save()
+        assert not cache._dirty
+        assert cache._cache_orig == {"foo": {"value": "🐻", "expires": 946684801}}
+        assert cache._cache == cache._cache_orig
+        assert cache._cache["foo"] is not cache._cache_orig["foo"]
+        assert cache.filename.exists()
+        assert (
+            cache.filename.read_text(encoding="utf-8")
+            == """{\n  "foo": {\n    "value": "\\ud83d\\udc3b",\n    "expires": 946684801\n  }\n}"""
+        )
+        assert [(record.name, record.levelname, record.message) for record in caplog.records] == [
+            ("streamlink.cache", "trace", f"Writing to cache file: {cache.filename}"),
+        ]
+        with freezegun.freeze_time("2000-01-01T00:00:00Z"):
+            assert cache.get("foo") == "🐻"
 
-    def test_success(self, cache_dir: Path):
-        expected = cache_dir / self.filepath
-        cache = Cache(self.filepath)
-        assert not expected.exists()
-        cache.set("key", "value")
-        assert expected.exists()
+    def test_save_not_dirty(self, caplog: pytest.LogCaptureFixture, cache: Cache):
+        assert not cache._dirty
+        cache._save()
+        assert not cache.filename.exists()
+        assert caplog.records == []
 
-    def test_failure(self, cache_dir: Path):
-        with patch("pathlib.Path.mkdir", side_effect=OSError):
-            expected = cache_dir / self.filepath
-            cache = Cache(self.filepath)
-            assert not expected.exists()
-            cache.set("key", "value")
-            assert not expected.exists()
-            assert not list(cache_dir.iterdir())
+    def test_save_cancel_timer(self, cache: Cache):
+        callback = Mock()
+        cache._timer = Timer(10, callback)
+        cache._timer.daemon = True
+        cache._timer.start()
+        assert cache._timer.is_alive()
+        cache._save()
+        cache._timer.join(timeout=1)
+        assert not cache._timer.is_alive()
+        assert callback.call_count == 0
+        assert not cache.filename.exists()
