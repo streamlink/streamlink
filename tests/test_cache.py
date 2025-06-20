@@ -5,7 +5,7 @@ from datetime import datetime, timedelta, timezone
 from io import BytesIO, TextIOWrapper
 from json import JSONDecodeError
 from pathlib import Path
-from threading import Condition, Timer
+from threading import Condition, Thread, Timer
 from typing import Callable
 from unittest.mock import Mock
 
@@ -14,6 +14,7 @@ import pytest
 
 # noinspection PyProtectedMember
 from streamlink.cache import WRITE_DEBOUNCE_TIME, Cache
+from tests.testutils.handshake import Handshake
 
 
 @pytest.fixture(autouse=True)
@@ -136,6 +137,87 @@ class TestGetterSetter:
         cache.set("test1", 1)
         cache.set("test2", 2, -1)
         assert cache.get_all() == {"test1": 1}
+
+
+@pytest.mark.usefixtures("no_io")
+def test_atomicity(monkeypatch: pytest.MonkeyPatch, cache: Cache):
+    hs_contains = Handshake()  # block inner Cache.get()
+    hs_items = Handshake()  # block inner Cache.get_all()
+    hs_setitem = Handshake()  # block inner Cache.set()
+    hs_getter = Handshake()
+    hs_setter = Handshake()
+    hs_getall = Handshake()
+    result = None
+
+    class BlockingDict(dict):
+        def __contains__(self, key):
+            with hs_contains():
+                return super().__contains__(key)
+
+        def items(self):
+            with hs_items():
+                return super().items()
+
+        def __setitem__(self, *args, **kwargs):
+            with hs_setitem():
+                return super().__setitem__(*args, **kwargs)
+
+    monkeypatch.setattr(cache, "_prune", Mock())
+    monkeypatch.setattr(cache, "_cache", BlockingDict(foo={"value": "foo"}))
+
+    def getter_thread():
+        nonlocal result
+        with hs_getter():
+            result = cache.get("foo", "default")
+
+    def setter_thread():
+        with hs_setter():
+            cache.set("foo", "bar")
+
+    def getall_thread():
+        nonlocal result
+        with hs_getall():
+            result = cache.get_all()
+
+    t_getter = Thread(daemon=True, target=getter_thread)
+    t_setter = Thread(daemon=True, target=setter_thread)
+    t_getall = Thread(daemon=True, target=getall_thread)
+
+    t_getter.start()
+    assert hs_getter.wait_ready(timeout=1), "Getter thread is ready"
+    assert not hs_contains.wait_ready(timeout=0), "Getter thread had not yet reached inner get()"
+
+    t_setter.start()
+    assert hs_setter.wait_ready(timeout=1), "Setter thread is ready"
+    assert not hs_setitem.wait_ready(timeout=0), "Setter thread has not yet reached inner set()"
+
+    # 1. `result = cache.get("foo")`
+    hs_getter.go()  # Let getter thread make get() call
+    assert hs_contains.wait_ready(timeout=1), "Getter thread has reached inner get()"
+
+    # 2. `cache.set("foo", "bar")` while get() hasn't finished yet
+    hs_setter.go()  # Let setter thread make set() call
+    assert not hs_setitem.wait_ready(timeout=0.05), "Setter thread won't reach inner set()"
+
+    assert result is None
+    assert hs_contains.step(timeout=1), "Let __contains__() return"
+    assert result == "foo"
+
+    assert hs_setitem.wait_ready(timeout=1), "Setter thread has reached inner set() after get() completed"
+
+    t_getall.start()
+    assert hs_getall.wait_ready(timeout=1), "Getall thread is ready"
+    assert not hs_items.wait_ready(timeout=0), "Getall thread had not yet reached inner get_all()"
+
+    # 3. `result = cache.get_all()` while set() hasn't finished yet
+    hs_getall.go()  # Let getall thread make get_all() call
+    assert not hs_items.wait_ready(timeout=0.05), "Getall thread won't reach inner get_all()"
+
+    assert hs_setitem.step(timeout=1), "Let __setitem__() return"
+
+    assert hs_items.wait_ready(timeout=1), "Getall thread has reached inner get_all()"
+    assert hs_items.step(timeout=1), "Let items() return"
+    assert result == {"foo": "bar"}
 
 
 @pytest.mark.usefixtures("no_io")

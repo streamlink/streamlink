@@ -9,8 +9,9 @@ from atexit import register as _atexit_register
 from contextlib import suppress
 from copy import deepcopy
 from datetime import datetime
+from functools import wraps
 from pathlib import Path
-from threading import Timer
+from threading import RLock, Timer
 from time import time
 from typing import Any
 
@@ -29,6 +30,15 @@ WRITE_DEBOUNCE_TIME = 3.0
 
 
 log = logging.getLogger(__name__)
+
+
+def _atomic(fn):
+    @wraps(fn)
+    def inner(self, *args, **kwargs):
+        with self._lock:
+            return fn(self, *args, **kwargs)
+
+    return inner
 
 
 # TODO: rewrite data structure
@@ -56,6 +66,7 @@ class Cache:
         self._cache: dict[str, dict[str, Any]] = {}
 
         self._loaded = False
+        self._lock = RLock()
         self._timer: Timer | None = None
 
         _atexit_register(self._save)
@@ -112,6 +123,7 @@ class Cache:
         self._timer.name = "CacheSaveThread"
         self._timer.start()
 
+    @_atomic
     def _save(self):
         if self._timer:
             self._timer.cancel()
@@ -138,6 +150,7 @@ class Cache:
             self._cache_orig.clear()
             self._cache_orig.update(**deepcopy(self._cache))
 
+    @_atomic
     def set(
         self,
         key: str,
@@ -173,6 +186,7 @@ class Cache:
         self._cache[key] = dict(value=value, expires=expires)
         self._schedule_save()
 
+    @_atomic
     def get(
         self,
         key: str,
@@ -200,6 +214,7 @@ class Cache:
         else:
             return default
 
+    @_atomic
     def get_all(self) -> dict[str, Any]:
         """
         Retrieve all cached key-value pairs.
