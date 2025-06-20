@@ -560,35 +560,38 @@ class TwitchAPI:
             schema=validate.all(
                 {
                     "data": {
-                        "clip": {
-                            "playbackAccessToken": {
-                                "signature": str,
-                                "value": str,
-                            },
-                            "videoQualities": [
-                                validate.all(
-                                    {
-                                        "frameRate": validate.transform(int),
-                                        "quality": str,
-                                        "sourceURL": validate.url(),
-                                    },
-                                    validate.transform(
-                                        lambda q: (
-                                            f"{q['quality']}p{q['frameRate']}",
-                                            q["sourceURL"],
+                        "clip": validate.none_or_all(
+                            {
+                                "playbackAccessToken": {
+                                    "signature": str,
+                                    "value": str,
+                                },
+                                "videoQualities": validate.all(
+                                    [
+                                        {
+                                            "frameRate": validate.transform(int),
+                                            "quality": str,
+                                            "sourceURL": validate.any("", validate.url()),
+                                        },
+                                    ],
+                                    validate.filter(lambda clip: clip["sourceURL"]),
+                                    validate.map(
+                                        lambda clip: (
+                                            f"{clip['quality']}p{clip['frameRate']}",
+                                            clip["sourceURL"],
                                         ),
                                     ),
                                 ),
-                            ],
-                        },
+                            },
+                            validate.union_get(
+                                ("playbackAccessToken", "signature"),
+                                ("playbackAccessToken", "value"),
+                                "videoQualities",
+                            ),
+                        ),
                     },
                 },
                 validate.get(("data", "clip")),
-                validate.union_get(
-                    ("playbackAccessToken", "signature"),
-                    ("playbackAccessToken", "value"),
-                    "videoQualities",
-                ),
             ),
         )
 
@@ -970,11 +973,10 @@ class Twitch(Plugin):
         return streams
 
     def _get_clips(self):
-        try:
-            sig, token, streams = self.api.clips(self.clip_id)
-        except (PluginError, TypeError):
+        data = self.api.clips(self.clip_id)
+        if not data:
             return
-
+        sig, token, streams = data
         for quality, stream in streams:
             yield quality, HTTPStream(self.session, update_qsd(stream, {"sig": sig, "token": token}))
 

@@ -90,6 +90,12 @@ class TestPluginCanHandleUrlTwitch(PluginCanHandleUrl):
             },
         ),
         (
+            ("clip", "https://twitch.tv/papaplatte/clip/SmellyDeadMomBloodTrail-WWr5gMxd0pe0BAge"),
+            {
+                "clip_id": "SmellyDeadMomBloodTrail-WWr5gMxd0pe0BAge",
+            },
+        ),
+        (
             ("player", "https://player.twitch.tv/?parent=twitch.tv&channel=CHANNELNAME"),
             {},
         ),
