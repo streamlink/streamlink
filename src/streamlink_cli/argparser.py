@@ -737,6 +737,7 @@ def build_parser():
     )
     output.add_argument(
         "--fs-safe-rules",
+        metavar="{POSIX,Windows}",
         choices=["POSIX", "Windows"],
         type=str,
         help="""
