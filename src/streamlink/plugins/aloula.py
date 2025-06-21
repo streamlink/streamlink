@@ -1,5 +1,6 @@
 """
 $description Live TV channels and video on-demand service from the SBA, a Saudi, state-owned broadcaster.
+$url aloula.sba.sa
 $url aloula.sa
 $type live, vod
 $metadata id
@@ -21,11 +22,11 @@ log = logging.getLogger(__name__)
 
 @pluginmatcher(
     name="live",
-    pattern=re.compile(r"https?://(?:www\.)?aloula\.sa/(?:\w{2}/)?live/(?P<live_slug>[^/?&]+)"),
+    pattern=re.compile(r"https?://(?:aloula\.sba\.sa|(?:www\.)?aloula\.sa)/(?:\w{2}/)?live/(?P<live_slug>[^/?&]+)"),
 )
 @pluginmatcher(
     name="vod",
-    pattern=re.compile(r"https?://(?:www\.)?aloula\.sa/(?:\w{2}/)?episode/(?P<vod_id>\d+)"),
+    pattern=re.compile(r"https?://(?:aloula\.sba\.sa|(?:www\.)?aloula\.sa)/(?:\w{2}/)?episode/(?P<vod_id>\d+)"),
 )
 class Aloula(Plugin):
     def get_live(self, live_slug):
