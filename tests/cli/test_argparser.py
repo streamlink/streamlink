@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 import gettext
-from argparse import SUPPRESS, ArgumentError, Namespace
+
+# noinspection PyProtectedMember
+from argparse import SUPPRESS, Action, ArgumentError, Namespace, _StoreConstAction, _VersionAction  # noqa: PLC2701
 from pathlib import Path
 from typing import Any
 from unittest.mock import Mock, call
@@ -23,9 +25,32 @@ from streamlink_cli.exceptions import StreamlinkCLIError
 from streamlink_cli.main import main as streamlink_cli_main
 
 
+def pytest_generate_tests(metafunc: pytest.Metafunc):
+    if "action" in metafunc.fixturenames:
+        # noinspection PyProtectedMember
+        metafunc.parametrize(
+            "action",
+            [
+                pytest.param(
+                    action,
+                    id=next((opt for opt in action.option_strings if opt.startswith("--")), action.dest),
+                )
+                for action in build_parser()._actions
+                if action.help != SUPPRESS
+            ],
+        )
+
+
 @pytest.fixture(scope="module")
 def parser():
     return build_parser()
+
+
+def test_metavar_or_noargumentvalue(action: Action):
+    assert (
+        action.metavar  # has an explicit metavar description
+        or isinstance(action, (_StoreConstAction, _VersionAction))  # doesn't expect a value
+    )
 
 
 class TestConfigFileArguments:
