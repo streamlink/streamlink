@@ -35,7 +35,7 @@ from requests.exceptions import HTTPError
 from streamlink.exceptions import NoStreamsError, PluginError
 from streamlink.plugin import Plugin, pluginargument, pluginmatcher
 from streamlink.plugin.api import validate
-from streamlink.session import Streamlink
+from streamlink.session import Streamlink, http_useragents
 from streamlink.stream.hls import (
     M3U8,
     DateRange,
@@ -510,7 +510,10 @@ class TwitchAPI:
             validate.union_get("signature", "value"),
         )
 
-        headers = {}
+        headers = {
+            # https://github.com/streamlink/streamlink/issues/6574
+            "User-Agent": http_useragents.DEFAULT,
+        }
         if client_integrity:
             headers["Device-Id"], headers["Client-Integrity"] = client_integrity
 

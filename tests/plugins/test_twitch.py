@@ -13,6 +13,7 @@ import requests_mock as rm
 from streamlink import Streamlink
 from streamlink.exceptions import NoStreamsError, PluginError
 from streamlink.options import Options
+from streamlink.plugin.api import useragents
 from streamlink.plugins.twitch import Twitch, TwitchAPI, TwitchHLSStream, TwitchHLSStreamReader, TwitchHLSStreamWriter
 from tests.mixins.stream_hls import EventedHLSStreamWriter, Playlist, Segment as _Segment, Tag, TestMixinStreamHLS
 from tests.plugins import PluginCanHandleUrl
@@ -801,6 +802,27 @@ class TestTwitchAPIAccessToken:
         del requestheaders["Content-Length"]
         assert requestheaders == exp_headers
         assert mock.last_request.json().get("variables") == exp_variables  # type: ignore[union-attr]
+
+    @pytest.mark.parametrize(
+        ("session", "mock"),
+        [
+            pytest.param(
+                {},
+                {"json": {"data": {"streamPlaybackAccessToken": {"value": '{"channel":"foo"}', "signature": "sig"}}}},
+                id="no-custom-user-agent",
+            ),
+            pytest.param(
+                {"http-headers": {"User-Agent": "foo"}},
+                {"json": {"data": {"streamPlaybackAccessToken": {"value": '{"channel":"foo"}', "signature": "sig"}}}},
+                id="custom-user-agent",
+            ),
+        ],
+        indirect=True,
+    )
+    def test_user_agent(self, plugin: Twitch, mock: rm.Mocker):
+        plugin._access_token(True, "channelname")
+        assert len(mock.request_history) > 0
+        assert mock.request_history[0]._request.headers["User-Agent"] == useragents.DEFAULT
 
     @pytest.mark.usefixtures("_assert_live")
     @pytest.mark.parametrize(
