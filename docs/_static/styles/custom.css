@@ -288,6 +288,10 @@ table.table-custom-layout.table-custom-layout-dependencies tbody td {
   font-family: var(--font-stack--monospace);
 }
 
+details.sd-dropdown .sd-summary-content {
+  cursor: auto;
+}
+
 /*
   Content
 */
