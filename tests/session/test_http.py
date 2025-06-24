@@ -13,7 +13,7 @@ from urllib3.response import HTTPResponse
 from streamlink import Streamlink
 from streamlink.exceptions import PluginError, StreamlinkDeprecationWarning
 from streamlink.session.http import HTTPSession, SSLContextAdapter, TLSNoDHAdapter, TLSSecLevel1Adapter
-from streamlink.session.http_useragents import FIREFOX
+from streamlink.session.http_useragents import DEFAULT
 
 
 class TestUrllib3Overrides:
@@ -90,7 +90,7 @@ class TestUrllib3Overrides:
 class TestHTTPSession:
     def test_session_init(self):
         session = HTTPSession()
-        assert session.headers.get("User-Agent") == FIREFOX
+        assert session.headers.get("User-Agent") == DEFAULT
         assert session.timeout == 20.0
         assert "file://" in session.adapters.keys()
 
