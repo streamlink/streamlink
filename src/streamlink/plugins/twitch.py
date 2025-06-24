@@ -193,7 +193,7 @@ class TwitchHLSStreamWorker(HLSStreamWorker):
                 log.info("This is not a low latency stream")
 
         # show pre-roll ads message only on the first playlist containing ads
-        if self.stream.disable_ads and self.playlist_sequence == -1 and not self.had_content:
+        if self.playlist_sequence == -1 and not self.had_content:
             log.info("Waiting for pre-roll ads to finish, be patient")
 
         # log the duration of whole advertisement breaks
@@ -225,7 +225,7 @@ class TwitchHLSStreamWriter(HLSStreamWriter):
     stream: TwitchHLSStream
 
     def should_filter_segment(self, segment: TwitchHLSSegment) -> bool:  # type: ignore[override]
-        return self.stream.disable_ads and segment.ad
+        return segment.ad
 
 
 class TwitchHLSStreamReader(HLSStreamReader):
@@ -237,8 +237,7 @@ class TwitchHLSStreamReader(HLSStreamReader):
     stream: TwitchHLSStream
 
     def __init__(self, stream: TwitchHLSStream, **kwargs):
-        if stream.disable_ads:
-            log.info("Will skip ad segments")
+        log.info("Will skip ad segments")
         if stream.low_latency:
             live_edge = max(1, min(LOW_LATENCY_MAX_LIVE_EDGE, stream.session.options.get("hls-live-edge")))
             stream.session.options.set("hls-live-edge", live_edge)
@@ -252,9 +251,8 @@ class TwitchHLSStream(HLSStream):
     __reader__ = TwitchHLSStreamReader
     __parser__ = TwitchM3U8Parser
 
-    def __init__(self, *args, disable_ads: bool = False, low_latency: bool = False, **kwargs):
+    def __init__(self, *args, low_latency: bool = False, **kwargs):
         super().__init__(*args, **kwargs)
-        self.disable_ads = disable_ads
         self.low_latency = low_latency
 
 
@@ -724,10 +722,7 @@ class TwitchClientIntegrity:
 @pluginargument(
     "disable-ads",
     action="store_true",
-    help="""
-        Skip embedded advertisement segments at the beginning or during a stream.
-        Will cause these segments to be missing from the output.
-    """,
+    help=argparse.SUPPRESS,
 )
 @pluginargument(
     "disable-hosting",
@@ -942,7 +937,6 @@ class Twitch(Plugin):
                 # This is a workaround for checking the GQL API for the channel's live status,
                 # which can be delayed by up to a minute.
                 check_streams=True,
-                disable_ads=self.get_option("disable-ads"),
                 low_latency=self.get_option("low-latency"),
                 **extra_params,
             )
