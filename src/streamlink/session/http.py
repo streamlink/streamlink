@@ -91,7 +91,7 @@ class HTTPSession(Session):
     def __init__(self):
         super().__init__()
 
-        self.headers["User-Agent"] = useragents.FIREFOX
+        self.headers["User-Agent"] = useragents.DEFAULT
         self.timeout = 20.0
 
         self.mount("file://", FileAdapter())
