@@ -10,6 +10,7 @@ $metadata title
 
 import logging
 import re
+import sys
 from urllib.parse import parse_qsl, urlparse
 
 from streamlink.exceptions import NoStreamsError, PluginError
@@ -36,13 +37,17 @@ log = logging.getLogger(__name__)
 @pluginmatcher(
     name="player",
     pattern=re.compile(
-        r"https?://(?:www\.)?goodgame\.ru/player\?(?P<id>\d+)$",
+        r"https?://(?:www\.)?goodgame\.ru/player\?(?P<channel>[^&#]+)$",
     ),
 )
 class GoodGame(Plugin):
-    _API_STREAMS_ID = "https://goodgame.ru/api/4/streams/2/id/{id}"
     _API_STREAMS_CHANNEL = "https://goodgame.ru/api/4/streams/2/channel/{channel}"
-    _URL_HLS = "https://hls.goodgame.ru/manifest/{id}_master.m3u8"
+
+    @classmethod
+    def stream_weight(cls, stream):
+        if stream == "source":
+            return sys.maxsize, stream
+        return super().stream_weight(stream)
 
     def _get_channel_key(self):
         return self.session.http.get(
@@ -70,7 +75,7 @@ class GoodGame(Plugin):
             return self._API_STREAMS_CHANNEL.format(channel=self.match["channel"])
 
         elif self.matches["player"]:
-            return self._API_STREAMS_ID.format(id=self.match["id"])
+            return self._API_STREAMS_CHANNEL.format(channel=self.match["channel"])
 
         raise PluginError("Invalid matcher")
 
@@ -94,7 +99,9 @@ class GoodGame(Plugin):
                             "streamer": {
                                 "username": str,
                             },
-                            "streamKey": str,
+                            "sources": {
+                                str: validate.url(),
+                            },
                             "game": {
                                 "title": validate.none_or_all(str),
                             },
@@ -126,7 +133,7 @@ class GoodGame(Plugin):
                             ("streamer", "username"),
                             ("game", "title"),
                             "title",
-                            "streamKey",
+                            "sources",
                             "players",
                         ),
                         validate.transform(lambda data: ("data", *data)),
@@ -144,19 +151,27 @@ class GoodGame(Plugin):
             log.error(data[0] or "Unknown error")
             return
 
-        online, self.id, self.author, self.category, self.title, stream_key, players = data
-        hls_url = self._URL_HLS.format(id=stream_key)
+        online, self.id, self.author, self.category, self.title, sources, players = data
 
-        if online and self.session.http.get(hls_url, raise_for_status=False).status_code < 400:
-            return HLSStream.parse_variant_playlist(self.session, hls_url)
+        if not online:
+            log.debug("Channel is offline, checking for embedded players...")
+            for p_title, p_online, p_url in players:
+                if p_title == "Twitch" and p_online:
+                    channel = dict(parse_qsl(p_url.query)).get("channel")
+                    if channel:
+                        log.debug(f"Redirecting to Twitch: {channel=}")
+                        return self.session.streams(f"twitch.tv/{channel}")
+            return
 
-        log.debug("Channel is offline, checking for embedded players...")
-        for p_title, p_online, p_url in players:
-            if p_title == "Twitch" and p_online:
-                channel = dict(parse_qsl(p_url.query)).get("channel")
-                if channel:
-                    log.debug(f"Redirecting to Twitch: {channel=}")
-                    return self.session.streams(f"twitch.tv/{channel}")
+        streams = {}
+        for name, hls_url in sources.items():
+            if str.isnumeric(name):
+                name = f"{name}p"
+            elif name != "source":
+                continue
+            streams[name] = HLSStream(self.session, hls_url)
+
+        return streams
 
 
 __plugin__ = GoodGame
