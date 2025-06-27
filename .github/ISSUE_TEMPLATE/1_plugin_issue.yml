@@ -9,18 +9,20 @@ body:
       value: |
         # Thanks for reporting a plugin issue!
 
-        ## What is a plugin issue?
+        > [!IMPORTANT]
+        > **What is a plugin issue?**
+        > Plugin issues describe broken functionality within a plugin's code base, e.g. the streaming site has made breaking changes, streams don't get resolved correctly, or authentication has stopped working, etc.
+        >
+        > Use the [bug report template](https://github.com/streamlink/streamlink/issues/new/choose) if your report is about an otherwise generic bug.
+        > [See the list of the available plugins here.](https://streamlink.github.io/plugins.html)
 
-        Plugin issues describe broken functionality within a plugin's code base, e.g. the streaming site has made breaking changes, streams don't get resolved correctly, or authentication has stopped working, etc.
-        [See the list of the available plugins here.](https://streamlink.github.io/plugins.html)
-
-        ## DON'T IGNORE this template
-
-        **Please fill in all the required details and don't skip any parts.**
-        **Issues that don't adhere to our request will be closed and ignored immediately.**
-
-        This is because analyzing bugs, issues or requests without proper details and log output is harder than necessary.
-        Low quality and low effort issues are noise and steal the time of the maintainers and contributors.
+        > [!CAUTION]
+        > **DO NOT IGNORE this template**
+        > Please fill in all the required details and don't skip any parts.
+        > Issues that don't adhere to our request will be closed and ignored immediately.
+        >
+        > This is because analyzing bugs, issues or requests without proper details and log output is harder than necessary.
+        > Low quality and low effort issues are noise and steal the time of the maintainers and contributors.
   - type: checkboxes
     attributes:
       label: Checklist
@@ -87,11 +89,12 @@ body:
   - type: markdown
     attributes:
       value: |
-        ### Before submitting
-
-        Make sure that you have
-        - [ ] properly filled in the title of this plugin issue (at the very top of this page)
-        - [ ] checked the rendered text previews to avoid unnecessary formatting errors
+        > [!NOTE]
+        > **Before submitting**
+        >
+        > Make sure that you have
+        > - [ ] properly filled in the title of this plugin issue (at the very top of this page)
+        > - [ ] checked the rendered text previews to avoid unnecessary formatting errors
 
         ----
 

@@ -9,20 +9,20 @@ body:
       value: |
         # Thanks for filing a feature request!
 
-        ## What is a feature request?
+        > [!IMPORTANT]
+        > **What is a feature request?**
+        > Feature requests are meant for improvements of the core functionality of Streamlink.
+        >
+        > THEY ARE NOT MEANT FOR PLUGIN REQUESTS!
+        > Use the [plugin request template](https://github.com/streamlink/streamlink/issues/new/choose) if you're requesting a new [plugin](https://streamlink.github.io/plugins.html) instead of a new feature.
 
-        Feature requests are meant for improvements of the core functionality of Streamlink.
-
-        THEY ARE NOT MEANT FOR PLUGIN REQUESTS!
-        Use the [plugin request template](https://github.com/streamlink/streamlink/issues/new/choose) if you're requesting a new [plugin](https://streamlink.github.io/plugins.html) instead of a new feature.
-
-        ## DON'T IGNORE this template
-
-        **Please fill in all the required details and don't skip any parts.**
-        **Issues that don't adhere to our request will be closed and ignored immediately.**
-
-        This is because analyzing bugs, issues or requests without proper details and log output is harder than necessary.
-        Low quality and low effort issues are noise and steal the time of the maintainers and contributors.
+        > [!CAUTION]
+        > **DO NOT IGNORE this template**
+        > Please fill in all the required details and don't skip any parts.
+        > Issues that don't adhere to our request will be closed and ignored immediately.
+        >
+        > This is because analyzing bugs, issues or requests without proper details and log output is harder than necessary.
+        > Low quality and low effort issues are noise and steal the time of the maintainers and contributors.
   - type: checkboxes
     attributes:
       label: Checklist
@@ -58,11 +58,12 @@ body:
   - type: markdown
     attributes:
       value: |
-        ### Before submitting
-
-        Make sure that you have
-        - [ ] properly filled in the title of this feature request (at the very top of this page)
-        - [ ] checked the rendered text previews to avoid unnecessary formatting errors
+        > [!NOTE]
+        > **Before submitting**
+        >
+        > Make sure that you have
+        > - [ ] properly filled in the title of this feature request (at the very top of this page)
+        > - [ ] checked the rendered text previews to avoid unnecessary formatting errors
 
         ----
 

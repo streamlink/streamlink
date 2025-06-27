@@ -9,21 +9,21 @@ body:
       value: |
         # Thanks for reporting a bug!
 
-        ## What is a bug report?
+        > [!IMPORTANT]
+        > **What is a bug report?**
+        > Bugs are the result of broken functionality within Streamlink's main code base.
+        > This can be a bug in the command-line interface, the various streaming protocol implementations, or the core Streamlink APIs, etc.
+        >
+        > Use the [plugin issue template](https://github.com/streamlink/streamlink/issues/new/choose) if your report is about a broken plugin.
+        > [See the list of the available plugins here.](https://streamlink.github.io/plugins.html)
 
-        Bugs are the result of broken functionality within Streamlink's main code base.
-        This can be a bug in the command-line interface, the various streaming protocol implementations, or the core Streamlink APIs, etc.
-
-        **Use the [plugin issue template](https://github.com/streamlink/streamlink/issues/new/choose) if your report is about a broken plugin.**
-        [See the list of the available plugins here.](https://streamlink.github.io/plugins.html)
-
-        ## DON'T IGNORE this template
-
-        **Please fill in all the required details and don't skip any parts.**
-        **Issues that don't adhere to our request will be closed and ignored immediately.**
-
-        This is because analyzing bugs, issues or requests without proper details and log output is harder than necessary.
-        Low quality and low effort issues are noise and steal the time of the maintainers and contributors.
+        > [!CAUTION]
+        > **DO NOT IGNORE this template**
+        > Please fill in all the required details and don't skip any parts.
+        > Issues that don't adhere to our request will be closed and ignored immediately.
+        >
+        > This is because analyzing bugs, issues or requests without proper details and log output is harder than necessary.
+        > Low quality and low effort issues are noise and steal the time of the maintainers and contributors.
   - type: checkboxes
     attributes:
       label: Checklist
@@ -89,11 +89,12 @@ body:
   - type: markdown
     attributes:
       value: |
-        ### Before submitting
-
-        Make sure that you have
-        - [ ] properly filled in the title of this bug report (at the very top of this page)
-        - [ ] checked the rendered text previews to avoid unnecessary formatting errors
+        > [!NOTE]
+        > **Before submitting**
+        >
+        > Make sure that you have
+        > - [ ] properly filled in the title of this bug report (at the very top of this page)
+        > - [ ] checked the rendered text previews to avoid unnecessary formatting errors
 
         ----
 

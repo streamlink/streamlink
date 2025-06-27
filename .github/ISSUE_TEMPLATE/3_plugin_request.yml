@@ -9,20 +9,20 @@ body:
       value: |
         # Thanks for filing a plugin request!
 
-        ## What is a plugin request?
+        > [!IMPORTANT]
+        > **What is a plugin request?**
+        > The purpose of Streamlink's plugins is to translate input URLs from certain websites to specific stream URLs with optionally required parameters, access tokens, etc.
+        > [READ THE PLUGIN REQUEST REQUIREMENTS IN THE CONTRIBUTION GUIDELINES BEFORE REQUESTING A PLUGIN!](https://github.com/streamlink/streamlink/blob/master/CONTRIBUTING.md#plugin-requests)
+        >
+        > [See the list of already available plugins here.](https://streamlink.github.io/plugins.html)
 
-        The purpose of Streamlink's plugins is to translate input URLs from certain websites to specific stream URLs with optionally required parameters, access tokens, etc.
-        [READ THE PLUGIN REQUEST REQUIREMENTS IN THE CONTRIBUTION GUIDELINES BEFORE REQUESTING A PLUGIN!](https://github.com/streamlink/streamlink/blob/master/CONTRIBUTING.md#plugin-requests)
-
-        [See the list of already available plugins here.](https://streamlink.github.io/plugins.html)
-
-        ## DON'T IGNORE this template
-
-        **Please fill in all the required details and don't skip any parts.**
-        **Issues that don't adhere to our request will be closed and ignored immediately.**
-
-        This is because analyzing bugs, issues or requests without proper details and log output is harder than necessary.
-        Low quality and low effort issues are noise and steal the time of the maintainers and contributors.
+        > [!CAUTION]
+        > **DO NOT IGNORE this template**
+        > Please fill in all the required details and don't skip any parts.
+        > Issues that don't adhere to our request will be closed and ignored immediately.
+        >
+        > This is because analyzing bugs, issues or requests without proper details and log output is harder than necessary.
+        > Low quality and low effort issues are noise and steal the time of the maintainers and contributors.
   - type: checkboxes
     attributes:
       label: Checklist
@@ -83,11 +83,12 @@ body:
   - type: markdown
     attributes:
       value: |
-        ### Before submitting
-
-        Make sure that you have
-        - [ ] properly filled in the title of this plugin request (at the very top of this page)
-        - [ ] checked the rendered text previews to avoid unnecessary formatting errors
+        > [!NOTE]
+        > **Before submitting**
+        >
+        > Make sure that you have
+        > - [ ] properly filled in the title of this plugin request (at the very top of this page)
+        > - [ ] checked the rendered text previews to avoid unnecessary formatting errors
 
         ----
 
