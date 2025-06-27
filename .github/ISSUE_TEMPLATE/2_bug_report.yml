@@ -53,7 +53,7 @@ body:
 
         Before you continue, check the [list of recent releases](https://streamlink.github.io/changelog.html) or run `streamlink --no-config --version-check`.
 
-        The mandatory debug log down below still needs to include the explicit version string.
+        The mandatory debug/trace log down below still needs to include the explicit version string.
     validations:
       required: true
   - type: textarea
@@ -68,15 +68,15 @@ body:
       required: true
   - type: textarea
     attributes:
-      label: Debug log
+      label: Debug/trace log
       description: |
-        **DEBUG LOG OUTPUT IS REQUIRED for bug reports!**
+        **DEBUG/TRACE LOG OUTPUT IS REQUIRED for bug reports!**
 
-        INCLUDE THE ENTIRE COMMAND LINE and make sure to **remove sensitive data like usernames, passwords, cookies, etc!**
-        Issues that don't include a **full debug log** will be closed and ignored immediately.
+        INCLUDE THE ENTIRE COMMAND LINE and make sure to **remove all sensitive data from the entire log output, like usernames, passwords, cookies, etc!**
+        Issues that don't include a **full debug/trace log** will be closed and ignored immediately.
 
-        Use the [`--loglevel=debug`](https://streamlink.github.io/latest/cli.html#cmdoption-loglevel) parameter and avoid using parameters which suppress log output.
-        Debug log includes important details about the used Python environment. **Don't remove it.**
+        Use the [`--loglevel=debug` / `--loglevel=trace`](https://streamlink.github.io/latest/cli.html#cmdoption-loglevel) parameter and avoid using parameters which suppress log output.
+        Debug/trace log includes important details about the used Python environment. **Don't remove it.**
 
         If the log output is too long and repetitive parts can't be truncated, or if you have multiple log outputs to share, then please post a link to a [GitHub gist](https://gist.github.com/) with the log output instead.
 
