@@ -380,15 +380,16 @@ class TestPluginArguments:
             namespace = parser.parse_args(args)
             assert namespace.myplugin_foo == expected
 
-    def test_decorator_typeerror(self):
-        with patch("builtins.repr", Mock(side_effect=lambda obj: obj.__name__)):
-            with pytest.raises(TypeError) as cm:
-                # noinspection PyUnusedLocal
-                @pluginargument("foo")
-                class Foo:
-                    pass
+    def test_decorator_typeerror(self, monkeypatch: pytest.MonkeyPatch):
+        class NotAPluginMeta(type):
+            def __repr__(self) -> str:
+                return self.__name__
 
-        assert str(cm.value) == "Foo is not a Plugin"
+        with pytest.raises(TypeError, match=r"^NotAPlugin is not a Plugin$"):
+            # noinspection PyUnusedLocal
+            @pluginargument("foo")  # type: ignore[arg-type]
+            class NotAPlugin(metaclass=NotAPluginMeta):
+                pass
 
     def test_empty(self):
         assert FakePlugin.arguments is not None
