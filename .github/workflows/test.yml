@@ -27,13 +27,13 @@ jobs:
           - "3.11"
           - "3.12"
           - "3.13"
-        # include:
-        #   - runs-on: ubuntu-latest
-        #     python-version: "3.14-dev"
-        #     continue: true
-        #   - runs-on: windows-latest
-        #     python-version: "3.14-dev"
-        #     continue: true
+        include:
+          - runs-on: ubuntu-latest
+            python-version: "3.14-dev"
+            continue: true
+          - runs-on: windows-latest
+            python-version: "3.14-dev"
+            continue: true
     runs-on: ${{ matrix.runs-on }}
     timeout-minutes: 60
     steps:
@@ -55,11 +55,13 @@ jobs:
       - name: Install temp dependency wheels
         shell: bash
         run: |
-          if [[ "$(uname)" == Linux && "$(python -V)" =~ 3.14. ]]; then
+          if [[ "$(python -V)" =~ 3.14. ]]; then
+            base=https://github.com/streamlink/temp-dependency-builds-DO-NOT-USE/releases/download
+            [[ "$(uname)" == Linux ]] && platform=linux_x86_64 || platform=win_amd64
             python -m pip install -U \
-              https://github.com/streamlink/temp-dependency-builds-DO-NOT-USE/releases/download/lxml-20250509-1/lxml-5.4.0-cp314-cp314-linux_x86_64.whl \
-              https://github.com/streamlink/temp-dependency-builds-DO-NOT-USE/releases/download/brotli-20250509-1/brotli-1.1.0-cp314-cp314-linux_x86_64.whl \
-              https://github.com/streamlink/temp-dependency-builds-DO-NOT-USE/releases/download/zstandard-20250509-1/zstandard-0.23.0-cp314-cp314-linux_x86_64.whl
+              "${base}/lxml-20250627-1/lxml-6.0.0-cp314-cp314-${platform}.whl" \
+              "${base}/brotli-20250627-1/brotli-1.1.0-cp314-cp314-${platform}.whl" \
+              "${base}/zstandard-20250627-1/zstandard-0.23.0-cp314-cp314-${platform}.whl"
           fi
       - name: Install Python dependencies
         run: >
