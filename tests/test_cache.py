@@ -201,6 +201,7 @@ def test_atomicity(monkeypatch: pytest.MonkeyPatch, cache: Cache):
 
     assert result is None
     assert hs_contains.step(timeout=1), "Let __contains__() return"
+    assert hs_getter.wait_done(timeout=1), "Wait for getter thread to finish"
     assert result == "foo"
 
     assert hs_setitem.wait_ready(timeout=1), "Setter thread has reached inner set() after get() completed"
@@ -217,6 +218,7 @@ def test_atomicity(monkeypatch: pytest.MonkeyPatch, cache: Cache):
 
     assert hs_items.wait_ready(timeout=1), "Getall thread has reached inner get_all()"
     assert hs_items.step(timeout=1), "Let items() return"
+    assert hs_getall.wait_done(timeout=1), "Wait for getall thread to finish"
     assert result == {"foo": "bar"}
 
 
