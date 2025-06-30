@@ -55,15 +55,7 @@ jobs:
           python-version: ${{ matrix.python-version }}
       - name: Install temp dependency wheels
         shell: bash
-        run: |
-          if [[ "$(python -V)" =~ 3.14. ]]; then
-            base=https://github.com/streamlink/temp-dependency-builds-DO-NOT-USE/releases/download
-            [[ "$(uname)" == Linux ]] && platform=linux_x86_64 || platform=win_amd64
-            python -m pip install -U \
-              "${base}/lxml-20250627-1/lxml-6.0.0-cp314-cp314-${platform}.whl" \
-              "${base}/brotli-20250627-1/brotli-1.1.0-cp314-cp314-${platform}.whl" \
-              "${base}/zstandard-20250627-1/zstandard-0.23.0-cp314-cp314-${platform}.whl"
-          fi
+        run: ./.github/workflows/install-temp-dependencies.sh
       - name: Install Python dependencies
         run: >
           python -m pip install -U
