@@ -154,8 +154,7 @@ class TwitchM3U8Parser(M3U8Parser[TwitchM3U8, TwitchHLSSegment, HLSPlaylist]):
         return (
             daterange.classname == "twitch-stitched-ad"
             or str(daterange.id or "").startswith("stitched-ad-")
-            or any(attr_key.startswith("X-TV-TWITCH-AD-") for attr_key in daterange.x.keys())
-        )
+        )  # fmt: skip
 
 
 class TwitchHLSStreamWorker(HLSStreamWorker):
