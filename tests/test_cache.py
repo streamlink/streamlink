@@ -5,7 +5,7 @@ from datetime import datetime, timedelta, timezone
 from io import BytesIO, TextIOWrapper
 from json import JSONDecodeError
 from pathlib import Path
-from threading import Condition, Thread, Timer
+from threading import Thread, Timer
 from typing import Callable
 from unittest.mock import Mock
 
@@ -315,10 +315,10 @@ class TestScheduleSave:
         assert cache._timer
         assert cache._timer.is_alive()
 
-        # unblock the Timer's Event.wait() call without setting its inner flag to True (Event.set())
-        timer_event_condition: Condition = cache._timer.finished._cond  # type: ignore[attr-defined]
-        with timer_event_condition:
-            timer_event_condition.notify_all()
+        # Let the timer "expire" by monkeypatching the is_set() method and then setting the inner threading.Event flag.
+        # This depends on the implementation details of threading.Timer.
+        monkeypatch.setattr(cache._timer.finished, "is_set", lambda: False)
+        cache._timer.finished.set()  # same as cancel(), but is_set() will return False, so the callback will be executed
         cache._timer.join(timeout=1)
         assert not cache._timer.is_alive()
         assert mock_save.call_count == 1
