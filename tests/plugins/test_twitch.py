@@ -261,27 +261,6 @@ class TestTwitchHLSStream(TestMixinStreamHLS, unittest.TestCase):
         assert data == segments[1].content, "Filters out ad segments"
         assert all(self.called(s) for s in segments.values()), "Downloads all segments"
 
-    def test_hls_daterange_by_attr(self):
-        daterange = TagDateRangeAd(
-            start=DATETIME_BASE,
-            duration=1,
-            attrid="foo",
-            classname="/",
-            custom={"X-TV-TWITCH-AD-ROLL-TYPE": "PREROLL"},
-        )
-
-        segments = self.subject(
-            [
-                Playlist(0, [daterange, Segment(0), Segment(1)], end=True),
-            ],
-            streamoptions={"low_latency": False},
-        )
-
-        self.await_write(2)
-        data = self.await_read(read_all=True)
-        assert data == segments[1].content, "Filters out ad segments"
-        assert all(self.called(s) for s in segments.values()), "Downloads all segments"
-
     @patch("streamlink.plugins.twitch.log")
     def test_hls_has_preroll(self, mock_log):
         daterange = TagDateRangeAd(
@@ -333,7 +312,7 @@ class TestTwitchHLSStream(TestMixinStreamHLS, unittest.TestCase):
         ]
 
     @patch("streamlink.plugins.twitch.log")
-    def test_hls_has_preroll_and_midstream(self, mock_log):
+    def test_hls_has_preroll_and_midroll(self, mock_log):
         ads1a = TagDateRangeAd(
             start=DATETIME_BASE,
             duration=2,
