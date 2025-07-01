@@ -191,7 +191,7 @@ class TestThreadedRingBuffer:
                 read = buffer.read(block=True, timeout=self.TIMEOUT)
 
         read = None
-        runnerthread = Thread(target=runner)
+        runnerthread = Thread(daemon=True, target=runner)
         runnerthread.start()
 
         buffer.write(b"0123")
@@ -220,7 +220,7 @@ class TestThreadedRingBuffer:
             with handshake():
                 buffer.write(b"01234567")
 
-        runnerthread = Thread(target=runner)
+        runnerthread = Thread(daemon=True, target=runner)
         runnerthread.start()
 
         handshake.go()
@@ -245,7 +245,7 @@ class TestThreadedRingBuffer:
             with handshake():
                 buffer.write(b"01234567")
 
-        runnerthread = Thread(target=runner)
+        runnerthread = Thread(daemon=True, target=runner)
         runnerthread.start()
 
         handshake.go()
