@@ -2,7 +2,6 @@ include AUTHORS
 include CHANGELOG.md
 include README.md
 include LICENSE*
-include *requirements.txt
 include icon.svg
 
 recursive-include build_backend *

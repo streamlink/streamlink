@@ -28,7 +28,7 @@ jobs:
         run: >
           python -m pip install -U
           -e .
-          -r docs-requirements.txt
+          --group docs
       - name: Build
         run: make --directory=docs html
       - name: Deploy

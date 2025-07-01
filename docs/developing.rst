@@ -79,12 +79,14 @@ be installed separately.
 
 .. code-block:: bash
 
-    # install additional dependencies
-    pip install -U -r dev-requirements.txt
-    pip install -U -r docs-requirements.txt
+    # upgrade to the latest version of pip
+    python -m pip install -U pip
 
     # install Streamlink in "editable" mode
-    pip install -e .
+    python -m pip install -U --upgrade-strategy=eager -e .
+
+    # install additional dependencies (see pyproject.toml for individual dependency groups)
+    python -m pip install -U --upgrade-strategy=eager --group all
 
     # validate that Streamlink is working
     streamlink --loglevel=debug

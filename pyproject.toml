@@ -85,6 +85,67 @@ Source = "https://github.com/streamlink/streamlink"
 Funding = "https://streamlink.github.io/latest/support.html"
 
 
+# https://peps.python.org/pep-0735/
+[dependency-groups]
+dev = [
+  # required for being able to run "editable installs" from git
+  # or for reading the version string from git when building the documentation / man-pages
+  "setuptools >=77.0.0",
+  "versioningit >=2.0.0,<4",
+]
+test = [
+  { include-group = "dev" },
+  "pytest >=8.0.0",
+  "pytest-trio",
+  "freezegun >=1.5.0",
+  "requests-mock",
+  "coverage[toml]",
+  "pytest-cov",
+]
+lint = [
+  "ruff ==0.12.1",
+]
+typing = [
+  { include-group = "test" },
+  { include-group = "docs" },
+  "mypy ==1.16.1",
+  "typing-extensions >=4.0.0",
+  "lxml-stubs",
+  "trio-typing",
+  "types-freezegun",
+  "types-requests",
+  "types-setuptools",
+  "types-urllib3",
+  "docutils-stubs",
+]
+docs = [
+  { include-group = "dev" },
+  "sphinx >=6.0.0,<9",
+  "furo ==2024.08.06",
+  "myst-parser >=1.0.0,<5",
+  "sphinx-design >=0.5.0,<=0.6.1",
+]
+build = [
+  { include-group = "dev" },
+  "shtab",
+  "build",
+  "wheel",
+]
+script = [
+  "inflection",
+  "jinja2",
+  "requests",
+]
+all = [
+  { include-group = "test" },
+  { include-group = "lint" },
+  { include-group = "typing" },
+  { include-group = "docs" },
+  { include-group = "build" },
+  { include-group = "script" },
+]
+
+
 # https://setuptools.pypa.io/en/stable/userguide/pyproject_config.html
 # https://setuptools.pypa.io/en/stable/userguide/package_discovery.html
 # https://setuptools.pypa.io/en/stable/userguide/datafiles.html
