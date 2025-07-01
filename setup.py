@@ -63,13 +63,13 @@ if is_wheel_for_windows(sys.argv):
 
 # optional data files
 data_files = [
-    # shell completions
-    #  requires pre-built completion files via shtab (dev-requirements.txt)
+    # shell completions:
+    #  requires pre-built completion files via shtab ("build" dependency group)
     #  `./script/build-shell-completions.sh`
     ("share/bash-completion/completions", ["completions/bash/streamlink"]),
     ("share/zsh/site-functions", ["completions/zsh/_streamlink"]),
-    # man page
-    #  requires pre-built man page file via sphinx (docs-requirements.txt)
+    # man page:
+    #  requires the pre-built man page file via sphinx ("docs" dependency group)
     #  `make --directory=docs clean man`
     ("share/man/man1", ["docs/_build/man/streamlink.1"]),
 ]

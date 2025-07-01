@@ -28,10 +28,8 @@ jobs:
         run: >
           python -m pip install -U
           -e .
-          -r docs-requirements.txt
-          shtab
-          build
-          wheel
+          --group build
+          --group docs
       - name: Build man page
         run: make --directory=docs man
       - name: Build shell completions
@@ -70,8 +68,7 @@ jobs:
       - name: Install Python dependencies
         run: >
           python -m pip install -U
-          jinja2
-          requests
+          --group script
       - uses: actions/download-artifact@v4
         with:
           name: dist
