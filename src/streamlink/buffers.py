@@ -85,15 +85,15 @@ class RingBuffer(Buffer):
         self.event_used = Event()
 
     def _check_events(self):
-        if self.length > 0:
-            self.event_used.set()
-        else:
-            self.event_used.clear()
-
         if self.is_full:
             self.event_free.clear()
         else:
             self.event_free.set()
+
+        if self.length > 0:
+            self.event_used.set()
+        else:
+            self.event_used.clear()
 
     def _read(self, size=-1):
         with self.buffer_lock:
