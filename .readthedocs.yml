@@ -3,7 +3,7 @@ version: 2
 build:
   os: ubuntu-lts-latest
   tools:
-    python: "3.12"
+    python: "3.13"
   jobs:
     post_checkout:
       - "[ ${READTHEDOCS_VERSION_TYPE} = external ] || exit 183"
