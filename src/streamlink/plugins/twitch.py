@@ -127,6 +127,7 @@ class TwitchM3U8Parser(M3U8Parser[TwitchM3U8, TwitchHLSSegment, HLSPlaylist]):
         daterange = self.m3u8.dateranges[-1]
         if self._is_daterange_ad(daterange):
             self.m3u8.dateranges_ads.append(daterange)
+            log.trace(f"Ad daterange: {daterange!r}")  # type: ignore[attr-defined]
 
     def get_segment(self, uri: str, **data) -> TwitchHLSSegment:
         ad = self._is_segment_ad(self._date, self._extinf.title if self._extinf else None)
@@ -154,8 +155,7 @@ class TwitchM3U8Parser(M3U8Parser[TwitchM3U8, TwitchHLSSegment, HLSPlaylist]):
         return (
             daterange.classname == "twitch-stitched-ad"
             or str(daterange.id or "").startswith("stitched-ad-")
-            or any(attr_key.startswith("X-TV-TWITCH-AD-") for attr_key in daterange.x.keys())
-        )
+        )  # fmt: skip
 
 
 class TwitchHLSStreamWorker(HLSStreamWorker):
@@ -193,7 +193,7 @@ class TwitchHLSStreamWorker(HLSStreamWorker):
                 log.info("This is not a low latency stream")
 
         # show pre-roll ads message only on the first playlist containing ads
-        if self.stream.disable_ads and self.playlist_sequence == -1 and not self.had_content:
+        if self.playlist_sequence == -1 and not self.had_content:
             log.info("Waiting for pre-roll ads to finish, be patient")
 
         # log the duration of whole advertisement breaks
@@ -225,7 +225,10 @@ class TwitchHLSStreamWriter(HLSStreamWriter):
     stream: TwitchHLSStream
 
     def should_filter_segment(self, segment: TwitchHLSSegment) -> bool:  # type: ignore[override]
-        return self.stream.disable_ads and segment.ad
+        if segment.ad:
+            log.trace(f"Filtering out segment: {segment.num=} {segment.title=} {segment.date=}")  # type: ignore[attr-defined]
+            return True
+        return False
 
 
 class TwitchHLSStreamReader(HLSStreamReader):
@@ -237,8 +240,7 @@ class TwitchHLSStreamReader(HLSStreamReader):
     stream: TwitchHLSStream
 
     def __init__(self, stream: TwitchHLSStream, **kwargs):
-        if stream.disable_ads:
-            log.info("Will skip ad segments")
+        log.info("Will skip ad segments")
         if stream.low_latency:
             live_edge = max(1, min(LOW_LATENCY_MAX_LIVE_EDGE, stream.session.options.get("hls-live-edge")))
             stream.session.options.set("hls-live-edge", live_edge)
@@ -252,9 +254,8 @@ class TwitchHLSStream(HLSStream):
     __reader__ = TwitchHLSStreamReader
     __parser__ = TwitchM3U8Parser
 
-    def __init__(self, *args, disable_ads: bool = False, low_latency: bool = False, **kwargs):
+    def __init__(self, *args, low_latency: bool = False, **kwargs):
         super().__init__(*args, **kwargs)
-        self.disable_ads = disable_ads
         self.low_latency = low_latency
 
 
@@ -724,10 +725,7 @@ class TwitchClientIntegrity:
 @pluginargument(
     "disable-ads",
     action="store_true",
-    help="""
-        Skip embedded advertisement segments at the beginning or during a stream.
-        Will cause these segments to be missing from the output.
-    """,
+    help=argparse.SUPPRESS,
 )
 @pluginargument(
     "disable-hosting",
@@ -942,7 +940,6 @@ class Twitch(Plugin):
                 # This is a workaround for checking the GQL API for the channel's live status,
                 # which can be delayed by up to a minute.
                 check_streams=True,
-                disable_ads=self.get_option("disable-ads"),
                 low_latency=self.get_option("low-latency"),
                 **extra_params,
             )
