@@ -14,12 +14,25 @@ from streamlink.buffers import RingBuffer
 from streamlink.plugin import Plugin, pluginargument, pluginmatcher
 from streamlink.plugin.api import validate
 from streamlink.plugin.api.websocket import WebsocketClient
-from streamlink.stream.hls import HLSStream
+from streamlink.stream.hls import HLSStream, HLSStreamReader, HLSStreamWriter
 from streamlink.stream.stream import Stream, StreamIO
 from streamlink.utils.url import update_qsd
 
 
 log = logging.getLogger(__name__)
+
+
+class TwitCastingHLSStreamWriter(HLSStreamWriter):
+    def should_filter_segment(self, segment):
+        return "preroll-" in segment.uri or super().should_filter_segment(segment)
+
+
+class TwitCastingHLSStreamReader(HLSStreamReader):
+    __writer__ = TwitCastingHLSStreamWriter
+
+
+class TwitCastingHLSStream(HLSStream):
+    __reader__ = TwitCastingHLSStreamReader
 
 
 @pluginmatcher(
@@ -80,7 +93,7 @@ class TwitCasting(Plugin):
 
     def _get_streams_hls(self, streams, params=None):
         for name, url in streams.items():
-            yield f"hls_{name}", HLSStream(self.session, url, params=params)
+            yield f"hls_{name}", TwitCastingHLSStream(self.session, url, params=params)
 
     def _get_streams_websocket(self, streams, params=None):
         for name, url in streams.items():
