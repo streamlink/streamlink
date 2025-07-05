@@ -69,9 +69,9 @@ def session(session: Streamlink, user_input_requester: Mock):
 @pytest.fixture(autouse=True)
 def _setup(monkeypatch: pytest.MonkeyPatch, requests_mock: Mock, session: Streamlink):
     monkeypatch.setattr("streamlink_cli.main.CONFIG_FILES", [])
+    monkeypatch.setattr("streamlink_cli.main.PLUGIN_DIRS", [])
     monkeypatch.setattr("streamlink_cli.main.streamlink", session)
     monkeypatch.setattr("streamlink_cli.main.setup_streamlink", Mock())
-    monkeypatch.setattr("streamlink_cli.main.setup_plugins", Mock())
     monkeypatch.setattr("streamlink_cli.main.setup_signals", Mock())
     monkeypatch.setattr("streamlink_cli.argparser.find_default_player", Mock(return_value=None))
 
