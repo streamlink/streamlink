@@ -250,12 +250,21 @@ def build_parser():
         """,
     )
     general.add_argument(
+        "--no-plugin-sideloading",
+        action="store_true",
+        help="""
+            Disable automatic sideloading of third-party plugins from the default location.
+
+            See the plugin-sideloading documentation for where third-party plugins are loaded from.
+        """,
+    )
+    general.add_argument(
         "--plugin-dir",
         dest="plugin_dirs",
         metavar="DIRECTORY",
         action="append",
         help="""
-            Load plugins from this directory.
+            Load additional plugins from this directory.
 
             Can be set multiple times to load plugins from multiple directories.
         """,
@@ -266,7 +275,7 @@ def build_parser():
         type=comma_list,
         action="extend",
         help="""
-            Load plugins from a list of comma-separated directories. (deprecated)
+            Load additional plugins from a list of comma-separated directories. (deprecated)
         """,
     )
     general.add_argument(

@@ -712,11 +712,11 @@ def can_handle_url() -> int:
         return 128 + signal.SIGINT
 
 
-def load_plugins(dirs: list[Path], showwarning: bool = True):
+def load_plugins(session: Streamlink, dirs: list[Path], showwarning: bool = True):
     """Attempts to load plugins from a list of directories."""
     for directory in dirs:
         if directory.is_dir():
-            streamlink.plugins.load_path(directory)
+            session.plugins.load_path(directory)
         elif showwarning:
             log.warning(f"Plugin path {directory} does not exist or is not a directory!")
 
@@ -791,12 +791,13 @@ def setup_signals():
     signal.signal(signal.SIGTERM, signal.default_int_handler)
 
 
-def setup_plugins(extra_plugin_dir=None):
+def setup_plugins(session: Streamlink, sideloading: bool = True, extra_plugin_dir: list[str] | None = None):
     """Loads any additional plugins."""
-    load_plugins(PLUGIN_DIRS, showwarning=False)
+    if sideloading:
+        load_plugins(session, PLUGIN_DIRS, showwarning=False)
 
     if extra_plugin_dir:
-        load_plugins([Path(path).expanduser() for path in extra_plugin_dir])
+        load_plugins(session, [Path(path).expanduser() for path in extra_plugin_dir])
 
 
 def setup_streamlink():
@@ -959,7 +960,7 @@ def setup(parser: ArgumentParser) -> None:
 
     setup_streamlink()
     # load additional plugins
-    setup_plugins(args.plugin_dirs)
+    setup_plugins(streamlink, not args.no_plugin_sideloading, args.plugin_dirs)
     setup_plugin_args(streamlink, parser)
     # call setup args again once the plugin specific args have been added
     setup_args(parser)
