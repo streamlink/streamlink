@@ -249,7 +249,7 @@ def test_setup_session_options_default_values(monkeypatch: pytest.MonkeyPatch, p
     args = parser.parse_args([])
     setup_session_options(session, args)
     assert session.options == session.options.defaults
-    assert not mock_set_option.called, "Value of unset session-option arg must be None and must not call set_option()"
+    assert mock_set_option.call_args_list == [], "Value of unset session-option arg must be None and must not call set_option()"
 
 
 @pytest.mark.parametrize(
