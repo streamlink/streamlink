@@ -310,6 +310,7 @@ class Plugin(metaclass=PluginMeta):
         self.cache = Cache(
             filename="plugin-cache.json",
             key_prefix=self.module,
+            disabled=session.options.get("no-plugin-cache"),
         )
 
         self.session: Streamlink = session

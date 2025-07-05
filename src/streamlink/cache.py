@@ -51,6 +51,7 @@ class Cache:
         self,
         filename: str | Path,
         key_prefix: str = "",
+        disabled: bool = False,
     ):
         """
         Caches Python values as JSON and prunes expired entries.
@@ -65,7 +66,7 @@ class Cache:
         self._cache_orig: dict[str, dict[str, Any]] = {}
         self._cache: dict[str, dict[str, Any]] = {}
 
-        self._loaded = False
+        self._loaded = self._disabled = bool(disabled)
         self._lock = RLock()
         self._timer: Timer | None = None
 
@@ -113,7 +114,7 @@ class Cache:
     def _schedule_save(self):
         if self._timer:
             self._timer.cancel()
-        if not self._dirty:
+        if self._disabled or not self._dirty:
             return
 
         # noinspection PyUnresolvedReferences
@@ -127,7 +128,7 @@ class Cache:
     def _save(self):
         if self._timer:
             self._timer.cancel()
-        if not self._dirty:
+        if self._disabled or not self._dirty:
             return
 
         # noinspection PyUnresolvedReferences
