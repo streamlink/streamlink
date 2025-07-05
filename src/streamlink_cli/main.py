@@ -791,9 +791,10 @@ def setup_signals():
     signal.signal(signal.SIGTERM, signal.default_int_handler)
 
 
-def setup_plugins(extra_plugin_dir=None):
+def setup_plugins(sideloading: bool = True, extra_plugin_dir: list[str] | None = None):
     """Loads any additional plugins."""
-    load_plugins(PLUGIN_DIRS, showwarning=False)
+    if sideloading:
+        load_plugins(PLUGIN_DIRS, showwarning=False)
 
     if extra_plugin_dir:
         load_plugins([Path(path).expanduser() for path in extra_plugin_dir])
@@ -959,7 +960,7 @@ def setup(parser: ArgumentParser) -> None:
 
     setup_streamlink()
     # load additional plugins
-    setup_plugins(args.plugin_dirs)
+    setup_plugins(not args.no_plugin_sideloading, args.plugin_dirs)
     setup_plugin_args(streamlink, parser)
     # call setup args again once the plugin specific args have been added
     setup_args(parser)
