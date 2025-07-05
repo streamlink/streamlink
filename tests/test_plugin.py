@@ -66,13 +66,21 @@ class TestPlugin:
             (CustomConstructorTwoPlugin, "test_plugin", "tests.test_plugin"),
         ],
     )
-    def test_constructor(self, caplog: pytest.LogCaptureFixture, pluginclass: type[Plugin], module: str, logger: str):
-        session = Mock()
-        with (
-            patch("streamlink.plugin.plugin.Cache") as mock_cache,
-            patch.object(pluginclass, "load_cookies") as mock_load_cookies,
-        ):
-            plugin = pluginclass(session, "http://localhost")
+    def test_constructor(
+        self,
+        monkeypatch: pytest.MonkeyPatch,
+        caplog: pytest.LogCaptureFixture,
+        pluginclass: type[Plugin],
+        module: str,
+        logger: str,
+        session: Streamlink,
+    ):
+        mock_cache = Mock()
+        mock_load_cookies = Mock()
+        monkeypatch.setattr("streamlink.plugin.plugin.Cache", mock_cache)
+        monkeypatch.setattr(pluginclass, "load_cookies", mock_load_cookies)
+
+        plugin = pluginclass(session, "http://localhost")
 
         assert not caplog.records
 
@@ -84,7 +92,7 @@ class TestPlugin:
         assert isinstance(plugin.logger, logging.Logger)
         assert plugin.logger.name == logger
 
-        assert mock_cache.call_args_list == [call(filename="plugin-cache.json", key_prefix=module)]
+        assert mock_cache.call_args_list == [call(filename="plugin-cache.json", key_prefix=module, disabled=False)]
         assert plugin.cache == mock_cache()
 
         assert mock_load_cookies.call_args_list == [call()]
@@ -98,6 +106,19 @@ class TestPlugin:
         one.set_option("key", "other")
         assert one.get_option("key") == "other"
         assert two.get_option("key") is None
+
+    @pytest.mark.parametrize(
+        ("session", "expected"),
+        [
+            pytest.param({}, False, id="default"),
+            pytest.param({"no-plugin-cache": False}, False, id="not-disabled"),
+            pytest.param({"no-plugin-cache": True}, True, id="disabled"),
+        ],
+        indirect=["session"],
+    )
+    def test_disabled_cache(self, session: Streamlink, expected: bool):
+        plugin = FakePlugin(session, "https://mocked")
+        assert plugin.cache._disabled is expected
 
 
 class TestPluginMatcher:

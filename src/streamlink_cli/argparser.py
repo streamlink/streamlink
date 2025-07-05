@@ -250,6 +250,15 @@ def build_parser():
         """,
     )
     general.add_argument(
+        "--no-plugin-sideloading",
+        action="store_true",
+        help="""
+            Disable sideloading of third-party plugins from the default location.
+
+            See the plugin-sideloading documentation for where third-party plugins are loaded from.
+        """,
+    )
+    general.add_argument(
         "--plugin-dir",
         dest="plugin_dirs",
         metavar="DIRECTORY",
@@ -312,6 +321,17 @@ def build_parser():
         action="store_true",
         help="""
             Disable loading any default or custom config files.
+        """,
+    )
+    general.add_argument(
+        "--no-plugin-cache",
+        action="store_true",
+        default=None,
+        help="""
+            Disable the plugin key-value store.
+
+            If disabled, plugins won't be able to load or store data like cookies, authentication data, etc.
+            The data which is loaded or stored depends on each plugin implementation.
         """,
     )
     general.add_argument(
@@ -1434,6 +1454,7 @@ def build_parser():
 # NOTE: arguments with `action=store_{true,false}` must set `default=None`
 _ARGUMENT_TO_SESSIONOPTION: list[tuple[str, str, Callable[[Any], Any] | None]] = [
     # generic arguments
+    ("no_plugin_cache", "no-plugin-cache", None),
     ("locale", "locale", None),
     # network arguments
     ("interface", "interface", None),

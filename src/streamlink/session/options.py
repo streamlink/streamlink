@@ -59,6 +59,10 @@ class StreamlinkOptions(Options):
           - ``UserInputRequester | None``
           - ``None``
           - Instance of ``UserInputRequester`` to collect input from the user at runtime
+        * - no-plugin-cache
+          - ``bool``
+          - ``False``
+          - Disable the plugin key-value store
         * - locale
           - ``str``
           - *system locale*
@@ -274,6 +278,7 @@ class StreamlinkOptions(Options):
     def __init__(self, session: Streamlink) -> None:
         super().__init__({
             "user-input-requester": None,
+            "no-plugin-cache": False,
             "locale": None,
             "interface": None,
             "ipv4": False,
