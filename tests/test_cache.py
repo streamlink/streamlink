@@ -510,3 +510,36 @@ class TestIO:
         assert not cache._timer.is_alive()
         assert callback.call_count == 0
         assert not cache.filename.exists()
+
+    @pytest.mark.parametrize(
+        "mock_cache_file",
+        [
+            pytest.param(
+                b"""{"foo": {"value": "foo", "expires": 946684801}}""",
+                id="disabled",
+            ),
+        ],
+        indirect=True,
+    )
+    def test_disabled(self, caplog: pytest.LogCaptureFixture, mock_cache_file: Mock):
+        with freezegun.freeze_time("2000-01-01T00:00:00Z"):
+            cache = Cache("mocked-io", disabled=True)
+            assert cache._disabled
+            assert cache._loaded
+            assert cache._cache == {}
+            assert cache._cache_orig == {}
+            assert mock_cache_file.call_args_list == []
+
+            assert cache.get("foo") is None
+            assert not cache._dirty
+
+            cache.set("foo", "bar")
+            assert cache._dirty
+            assert cache._timer is None
+
+            assert cache.get("foo") == "bar"
+
+            cache._save()
+            assert not cache.filename.exists()
+
+        assert [(record.name, record.levelname, record.message) for record in caplog.records] == []
