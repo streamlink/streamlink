@@ -362,7 +362,10 @@ class TestSetupPluginArgsAndOptions:
         return session
 
     def test_setup_arguments(self, session: Streamlink, parser: ArgumentParser, plugin: type[Plugin]):
-        group_plugins = next((grp for grp in parser._action_groups if grp.title == "Plugin options"), None)  # pragma: no branch
+        group_plugins = next(
+            (grp for grp in parser._action_groups if grp.title == "Plugin-specific options"),
+            None,
+        )  # pragma: no branch
         assert group_plugins is not None, "Adds the 'Plugin options' arguments group"
         assert group_plugins in parser.NESTED_ARGUMENT_GROUPS[None], "Adds the 'Plugin options' arguments group"
 

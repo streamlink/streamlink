@@ -243,69 +243,6 @@ def build_parser():
         """,
     )
     general.add_argument(
-        "--plugins",
-        action="store_true",
-        help="""
-            Print a list of all currently installed plugins.
-        """,
-    )
-    general.add_argument(
-        "--no-plugin-sideloading",
-        action="store_true",
-        help="""
-            Disable automatic sideloading of third-party plugins from the default location.
-
-            See the plugin-sideloading documentation for where third-party plugins are loaded from.
-        """,
-    )
-    general.add_argument(
-        "--plugin-dir",
-        dest="plugin_dirs",
-        metavar="DIRECTORY",
-        action="append",
-        help="""
-            Load additional plugins from this directory.
-
-            Can be set multiple times to load plugins from multiple directories.
-        """,
-    )
-    general.add_argument(
-        "--plugin-dirs",
-        metavar="DIRECTORY",
-        type=comma_list,
-        action="extend",
-        help="""
-            Load additional plugins from a list of comma-separated directories. (deprecated)
-        """,
-    )
-    general.add_argument(
-        "--show-matchers",
-        metavar="PLUGIN",
-        help="""
-            Show the list of matchers of a specific plugin (URL regex pattern with opt. priority and opt. name).
-
-            The output is a human-readable pseudo YAML format. Please use --json when reading matcher data programmatically.
-        """,
-    )
-    general.add_argument(
-        "--can-handle-url",
-        metavar="URL",
-        help="""
-            Check if Streamlink has a plugin that can handle the specified URL.
-
-            Status code is `0` on success, `1` on failure.
-
-            Useful for external scripting.
-        """,
-    )
-    general.add_argument(
-        "--can-handle-url-no-redirect",
-        metavar="URL",
-        help="""
-            Same as --can-handle-url, but without following redirects when looking up the URL.
-        """,
-    )
-    general.add_argument(
         "--config",
         action="append",
         metavar="FILENAME",
@@ -321,17 +258,6 @@ def build_parser():
         action="store_true",
         help="""
             Disable loading any default or custom config files.
-        """,
-    )
-    general.add_argument(
-        "--no-plugin-cache",
-        action="store_true",
-        default=None,
-        help="""
-            Disable I/O of the plugin key-value store.
-
-            If disabled, plugins won't be able to load or store data like cookies, authentication data, etc.
-            The data which is loaded or stored depends on each plugin implementation.
         """,
     )
     general.add_argument(
@@ -443,6 +369,82 @@ def build_parser():
             Output JSON representations instead of the normal text output.
 
             Useful for external scripting.
+        """,
+    )
+
+    plugin = parser.add_argument_group("Plugin options")
+    plugin.add_argument(
+        "--plugins",
+        action="store_true",
+        help="""
+            Print a list of all currently installed plugins.
+        """,
+    )
+    plugin.add_argument(
+        "--show-matchers",
+        metavar="PLUGIN",
+        help="""
+            Show the list of matchers of a specific plugin (URL regex pattern with opt. priority and opt. name).
+
+            The output is a human-readable pseudo YAML format. Please use --json when reading matcher data programmatically.
+        """,
+    )
+    plugin.add_argument(
+        "--can-handle-url",
+        metavar="URL",
+        help="""
+            Check if Streamlink has a plugin that can handle the specified URL.
+
+            Status code is `0` on success, `1` on failure.
+
+            Useful for external scripting.
+        """,
+    )
+    plugin.add_argument(
+        "--can-handle-url-no-redirect",
+        metavar="URL",
+        help="""
+            Same as --can-handle-url, but without following redirects when looking up the URL.
+        """,
+    )
+    plugin.add_argument(
+        "--no-plugin-cache",
+        action="store_true",
+        default=None,
+        help="""
+            Disable I/O of the plugin key-value store.
+
+            If disabled, plugins won't be able to load or store data like cookies, authentication data, etc.
+            The data which is loaded or stored depends on each plugin implementation.
+        """,
+    )
+    plugin.add_argument(
+        "--no-plugin-sideloading",
+        action="store_true",
+        help="""
+            Disable automatic sideloading of third-party plugins from the default location.
+
+            See the plugin-sideloading documentation for where third-party plugins are loaded from.
+        """,
+    )
+    plugin.add_argument(
+        "--plugin-dir",
+        dest="plugin_dirs",
+        metavar="DIRECTORY",
+        action="append",
+        help="""
+            Load additional plugins from this directory.
+
+            Can be set multiple times to load plugins from multiple directories.
+        """,
+    )
+    plugin.add_argument(
+        "--plugin-dirs",
+        metavar="DIRECTORY",
+        type=comma_list,
+        action="extend",
+        help="""
+            Load additional plugins from a list of comma-separated directories. (deprecated)
         """,
     )
 
@@ -1524,7 +1526,7 @@ def setup_session_options(session: Streamlink, args: argparse.Namespace):
 def setup_plugin_args(session: Streamlink, parser: ArgumentParser):
     """Adds plugin argument data to the argument parser."""
 
-    plugin_args = parser.add_argument_group("Plugin options")
+    plugin_args = parser.add_argument_group("Plugin-specific options")
     for pname, arguments in session.plugins.iter_arguments():
         group = parser.add_argument_group(pname.capitalize(), parent=plugin_args)
 
