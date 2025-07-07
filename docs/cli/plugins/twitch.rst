@@ -87,7 +87,7 @@ of such loop-holes. See :option:`--twitch-api-header` and :option:`--twitch-acce
     stream discontinuities in certain cases.
 
     Prior releases between :ref:`streamlink 1.1.0 <changelog:streamlink 1.1.0 (2019-03-31)>` (March 2019)
-    and :ref:`streamlink 7.5.0 <changelog:Changelog>` (July 2025) required the ``--twitch-disable-ads``
+    and :ref:`streamlink 7.5.0 <changelog:streamlink 7.5.0 (2025-07-08)>` (July 2025) required the ``--twitch-disable-ads``
     plugin argument, as filtering out ads was deemed optional. Ad filtering became mandatory when Twitch changed the stream's
     format from MPEG-TS to MPEG-4, to prevent playback issues during stream discontinuities between the stream and ads.
 
