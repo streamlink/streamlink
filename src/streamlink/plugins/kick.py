@@ -41,12 +41,11 @@ LOW_LATENCY_MAX_LIVE_EDGE = 2
 
 @dataclass
 class KickHLSSegment(HLSSegment):
-    prefetch: bool
+    prefetch: bool = False
 
 
 class KickM3U8(M3U8[KickHLSSegment, HLSPlaylist]):
-    def __init__(self, *args, **kwargs) -> None:
-        super().__init__(*args, **kwargs)
+    pass
 
 
 class KickM3U8Parser(M3U8Parser[KickM3U8, KickHLSSegment, HLSPlaylist]):
@@ -54,7 +53,7 @@ class KickM3U8Parser(M3U8Parser[KickM3U8, KickHLSSegment, HLSPlaylist]):
     __segment__: ClassVar[type[KickHLSSegment]] = KickHLSSegment
 
     @parse_tag("EXT-X-PREFETCH")
-    def parse_tag_ext_x_kick_prefetch(self, value):
+    def parse_tag_ext_x_prefetch(self, value):
         segments = self.m3u8.segments
         if not segments:  # pragma: no cover
             return
@@ -74,17 +73,11 @@ class KickM3U8Parser(M3U8Parser[KickM3U8, KickHLSSegment, HLSPlaylist]):
         )
         segments.append(segment)
 
-    def get_segment(self, uri: str, **data) -> KickHLSSegment:
-        return super().get_segment(uri, prefetch=False)  # type: ignore[return-value]
-
 
 class KickHLSStreamWorker(HLSStreamWorker):
     reader: KickHLSStreamReader
     writer: KickHLSStreamWriter
     stream: KickHLSStream
-
-    def __init__(self, reader, *args, **kwargs) -> None:
-        super().__init__(reader, *args, **kwargs)
 
     def _playlist_reload_time(self, playlist: KickM3U8):  # type: ignore[override]
         if self.stream.low_latency and playlist.segments:
