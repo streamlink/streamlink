@@ -13,16 +13,123 @@ from __future__ import annotations
 
 import logging
 import re
+from dataclasses import dataclass, replace as dataclass_replace
 from ssl import OP_NO_TICKET
+from typing import ClassVar
 
 from streamlink.exceptions import NoStreamsError
-from streamlink.plugin import Plugin, PluginError, pluginmatcher
+from streamlink.plugin import Plugin, PluginError, pluginargument, pluginmatcher
 from streamlink.plugin.api import useragents, validate
 from streamlink.session.http import SSLContextAdapter
-from streamlink.stream.hls import HLSStream
+from streamlink.stream.hls import (
+    M3U8,
+    HLSPlaylist,
+    HLSSegment,
+    HLSStream,
+    HLSStreamReader,
+    HLSStreamWorker,
+    HLSStreamWriter,
+    M3U8Parser,
+    parse_tag,
+)
 
 
 log = logging.getLogger(__name__)
+
+LOW_LATENCY_MAX_LIVE_EDGE = 2
+
+
+@dataclass
+class KickHLSSegment(HLSSegment):
+    prefetch: bool
+
+
+class KickM3U8(M3U8[KickHLSSegment, HLSPlaylist]):
+    def __init__(self, *args, **kwargs) -> None:
+        super().__init__(*args, **kwargs)
+
+
+class KickM3U8Parser(M3U8Parser[KickM3U8, KickHLSSegment, HLSPlaylist]):
+    __m3u8__: ClassVar[type[KickM3U8]] = KickM3U8
+    __segment__: ClassVar[type[KickHLSSegment]] = KickHLSSegment
+
+    @parse_tag("EXT-X-PREFETCH")
+    def parse_tag_ext_x_kick_prefetch(self, value):
+        segments = self.m3u8.segments
+        if not segments:  # pragma: no cover
+            return
+        last = segments[-1]
+
+        # Use the average duration of all regular segments for the duration of prefetch segments.
+        # This is better than using the duration of the last segment when regular segment durations vary a lot.
+        # In low latency mode, the playlist reload time is the duration of the last segment.
+        duration = last.duration if last.prefetch else sum(segment.duration for segment in segments) / float(len(segments))
+
+        segment = dataclass_replace(
+            last,
+            uri=self.uri(value),
+            duration=duration,
+            title=None,
+            prefetch=True,
+        )
+        segments.append(segment)
+
+    def get_segment(self, uri: str, **data) -> KickHLSSegment:
+        return super().get_segment(uri, prefetch=False)  # type: ignore[return-value]
+
+
+class KickHLSStreamWorker(HLSStreamWorker):
+    reader: KickHLSStreamReader
+    writer: KickHLSStreamWriter
+    stream: KickHLSStream
+
+    def __init__(self, reader, *args, **kwargs) -> None:
+        super().__init__(reader, *args, **kwargs)
+
+    def _playlist_reload_time(self, playlist: KickM3U8):  # type: ignore[override]
+        if self.stream.low_latency and playlist.segments:
+            return playlist.segments[-1].duration
+
+        return super()._playlist_reload_time(playlist)
+
+    def process_segments(self, playlist: KickM3U8):  # type: ignore[override]
+        # ignore prefetch segments if not LL streaming
+        if not self.stream.low_latency:
+            playlist.segments = [segment for segment in playlist.segments if not segment.prefetch]
+
+        return super().process_segments(playlist)
+
+
+class KickHLSStreamWriter(HLSStreamWriter):
+    reader: KickHLSStreamReader
+    stream: KickHLSStream
+
+
+class KickHLSStreamReader(HLSStreamReader):
+    __worker__ = KickHLSStreamWorker
+    __writer__ = KickHLSStreamWriter
+
+    worker: KickHLSStreamWorker
+    writer: KickHLSStreamWriter
+    stream: KickHLSStream
+
+    def __init__(self, stream: KickHLSStream, **kwargs):
+        if stream.low_latency:
+            live_edge = max(1, min(LOW_LATENCY_MAX_LIVE_EDGE, stream.session.options.get("hls-live-edge")))
+            stream.session.options.set("hls-live-edge", live_edge)
+            stream.session.options.set("hls-segment-stream-data", True)
+            log.info(f"Low latency streaming (HLS live edge: {live_edge})")
+
+        super().__init__(stream, **kwargs)
+
+
+class KickHLSStream(HLSStream):
+    __reader__ = KickHLSStreamReader
+    __parser__ = KickM3U8Parser
+
+    def __init__(self, *args, low_latency: bool = False, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.low_latency = low_latency
 
 
 class KickAdapter(SSLContextAdapter):
@@ -44,6 +151,23 @@ class KickAdapter(SSLContextAdapter):
 @pluginmatcher(
     name="clip",
     pattern=re.compile(r"https?://(?:\w+\.)?kick\.com/(?!video/)(?P<channel>[^/?]+)(?:\?clip=|/clips/)(?P<clip>[^?&]+)"),
+)
+@pluginargument(
+    "low-latency",
+    action="store_true",
+    help="""
+        Enables low latency streaming by prefetching HLS segments.
+        Sets --hls-segment-stream-data to true and --hls-live-edge to 2, if it is higher.
+        Reducing --hls-live-edge to `1` will result in the lowest latency possible, but will most likely cause buffering.
+
+        In order to achieve true low latency streaming during playback, the player's caching/buffering settings will
+        need to be adjusted and reduced to a value as low as possible, but still high enough to not cause any buffering.
+        This depends on the stream's bitrate and the quality of the connection to Kick's servers. Please refer to the
+        player's own documentation for the required configuration. Player parameters can be set via --player-args.
+
+        Note: Low latency streams have to be enabled by the broadcasters on Kick themselves.
+        Regular streams can cause buffering issues with this option enabled due to the reduced --hls-live-edge value.
+    """,
 )
 class Kick(Plugin):
     _CACHE_HEADERS = "headers"
@@ -197,7 +321,7 @@ class Kick(Plugin):
             ),
         )
 
-        return HLSStream.parse_variant_playlist(self.session, hls_url)
+        return KickHLSStream.parse_variant_playlist(self.session, hls_url, low_latency=self.get_option("low-latency"))
 
     def _get_streams_vod(self):
         self.id = self.match["vod"]
