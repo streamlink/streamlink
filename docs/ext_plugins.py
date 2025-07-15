@@ -146,21 +146,27 @@ class PluginArguments(ast.NodeVisitor, IDatalistItem):
                 continue
 
             custom_name = next(
-                (kw.value.value for kw in decorator.keywords if kw.arg == "argument_name" and type(kw.value) is ast.Constant),
+                (
+                    str(kw.value.value)
+                    for kw in decorator.keywords
+                    if kw.arg == "argument_name" and type(kw.value) is ast.Constant
+                ),
                 None,
-            )
+            )  # fmt: skip
             if custom_name:
                 self.arguments.append(custom_name)
                 continue
 
             name = next(
-                (kw.value.value for kw in decorator.keywords if kw.arg == "name" and type(kw.value) is ast.Constant),
+                (
+                    str(kw.value.value)
+                    for kw in decorator.keywords
+                    if kw.arg == "name" and type(kw.value) is ast.Constant
+                ),
                 None,
-            ) or (
-                decorator.args
-                and type(decorator.args[0]) is ast.Constant
-                and decorator.args[0].value
             )  # fmt: skip
+            if not name and decorator.args and type(decorator.args[0]) is ast.Constant:
+                name = str(decorator.args[0].value)
             if name:
                 self.arguments.append(f"{self.pluginname}-{name}")
 
