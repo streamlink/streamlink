@@ -95,12 +95,14 @@ dev = [
 ]
 test = [
   { include-group = "dev" },
-  "pytest >=8.0.0",
-  "pytest-trio",
-  "freezegun >=1.5.0",
-  "requests-mock",
-  "coverage[toml]",
+  # pytest and plugins
+  "pytest >=8.4.0",
   "pytest-cov",
+  "pytest-trio",
+  "requests-mock",
+  # other
+  "coverage[toml]",
+  "freezegun >=1.5.0",
 ]
 lint = [
   "ruff ==0.12.3",
@@ -189,6 +191,13 @@ method = { module = "build_backend.onbuild", value = "onbuild" }
 # https://docs.pytest.org/en/latest/reference/customize.html#configuration
 # https://docs.pytest.org/en/latest/reference/reference.html#ini-options-ref
 [tool.pytest.ini_options]
+minversion = "8.4.0"
+addopts = """
+--disable-plugin-autoload
+-p pytest_cov
+-p trio
+-p requests_mock
+"""
 testpaths = [
   "build_backend",
   "tests",
