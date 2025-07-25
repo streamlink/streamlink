@@ -54,7 +54,7 @@ def main(api_key: str, file: Path):
     if not file.is_file():
         raise ValueError("Missing user agents file")
 
-    contents = file.read_text()
+    contents = file.read_text(encoding="utf-8")
 
     try:
         response = requests.request(
@@ -94,7 +94,7 @@ def main(api_key: str, file: Path):
             count=1,
         )
 
-    file.write_text(contents)
+    file.write_text(contents, encoding="utf-8")
 
 
 if __name__ == "__main__":

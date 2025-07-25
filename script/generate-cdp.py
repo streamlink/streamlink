@@ -933,7 +933,7 @@ def parse(schema: dict) -> list[CdpDomain]:
 
 def generate_init(init_path: Path, ref: str, package: str, domains: list[CdpDomain]):
     """Generate an ``__init__.py`` that exports the specified modules."""
-    with init_path.open("w") as init_file:
+    with init_path.open("w", encoding="utf-8") as init_file:
         init_file.write(INIT_HEADER.format(ref=ref))
         for module in sorted([domain.module for domain in domains] + ["util"]):
             init_file.write(f"import {package}.{module} as {module}\n")
@@ -941,7 +941,7 @@ def generate_init(init_path: Path, ref: str, package: str, domains: list[CdpDoma
 
 def generate_util(util_path: Path, ref: str):
     """Generate a ``util.py`` that is imported by the domain module files."""
-    with util_path.open("w") as util_file:
+    with util_path.open("w", encoding="utf-8") as util_file:
         util_file.write(UTIL.format(ref=ref))
 
 
