@@ -230,7 +230,7 @@ class PluginFinder:
                 yield pluginmetadata
 
     def _parse_plugin(self, pluginname: str, pluginfile: Path) -> PluginMetadata | None:
-        with pluginfile.open() as handle:
+        with pluginfile.open("r", encoding="utf-8") as handle:
             # read until the first token has been parsed
             for tokeninfo in tokenize.generate_tokens(handle.readline):
                 # the very first token needs to be a string / block comment with the metadata
