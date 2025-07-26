@@ -122,7 +122,7 @@ typing = [
 docs = [
   { include-group = "dev" },
   "sphinx >=6.0.0,<9",
-  "furo ==2024.08.06",
+  "furo ==2025.07.19",
   "myst-parser >=1.0.0,<5",
   "sphinx-design >=0.5.0,<=0.6.1",
 ]
