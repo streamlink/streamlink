@@ -200,6 +200,21 @@ class StreamlinkOptions(Options):
           - ``[]``
           - Select a specific audio source or sources when multiple audio sources are available,
             by language code or name, or ``"*"`` (asterisk)
+        * - decryption_key
+          - ``str``
+          - ``None``
+          - Use a CENC decryption key to decrypt media streams received by FFmpeg from DASH streaming.
+          If only one key is provided, it will be used for both video and audio tracks.
+          Use a hexadecimal string as the key.
+          Example: ``-decryption_key "<hex key>"``
+
+        * - decryption_key_2
+          - ``str``
+          - ``None``
+          - An optional second CENC decryption key to be used specifically for the second media track
+          (typically audio) during DASH streaming playback via FFmpeg.
+          Example: ``-decryption_key_2 "<hex key>"``
+
         * - dash-manifest-reload-attempts
           - ``int``
           - ``3``
@@ -300,6 +315,8 @@ class StreamlinkOptions(Options):
             "hls-segment-ignore-names": [],
             "hls-segment-key-uri": None,
             "hls-audio-select": [],
+            "decryption_key" : None,
+            "decryption_key_2": None,
             "dash-manifest-reload-attempts": 3,
             "ffmpeg-ffmpeg": None,
             "ffmpeg-no-validation": False,
