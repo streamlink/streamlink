@@ -15,7 +15,7 @@ from textwrap import dedent
 from docutils import nodes
 from docutils.parsers.rst import Directive
 from docutils.parsers.rst.directives import unchanged
-from docutils.statemachine import ViewList
+from docutils.statemachine import StringList
 from sphinx.errors import ExtensionError
 from sphinx.util.nodes import nested_parse_with_titles
 
@@ -175,13 +175,10 @@ class ArgparseDirective(Directive):
             # positional parameters have an empty option_strings list
             self._available_options += action.option_strings or [action.dest]
 
-        node = nodes.section()
-        node.document = self.state.document
-        result = ViewList()
-        for line in self.generate_parser_rst(parser):
-            result.append(line, "argparse")
-
+        node = nodes.Element(document=self.state.document)
+        result = StringList(list(self.generate_parser_rst(parser)), "argparse")
         nested_parse_with_titles(self.state, result, node)
+
         return node.children
 
 

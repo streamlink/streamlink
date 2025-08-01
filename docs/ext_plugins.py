@@ -11,7 +11,7 @@ from typing import Any
 
 from docutils import nodes
 from docutils.parsers.rst import Directive
-from docutils.statemachine import ViewList
+from docutils.statemachine import StringList
 from sphinx.errors import ExtensionError
 from sphinx.util.nodes import nested_parse_with_titles
 
@@ -257,17 +257,18 @@ class PluginFinder:
 
 
 class PluginsDirective(Directive):
-    def run(self):
+    # noinspection PyMethodMayBeStatic
+    def generate(self):
         pluginfinder = PluginFinder()
 
-        node = nodes.section()
-        node.document = self.state.document
-        result = ViewList()
         for pluginmetadata in pluginfinder.get_plugins():
-            for line in pluginmetadata.generate():
-                result.append(line, "plugins")
+            yield from pluginmetadata.generate()
 
+    def run(self):
+        node = nodes.Element(document=self.state.document)
+        result = StringList(list(self.generate()), "plugins")
         nested_parse_with_titles(self.state, result, node)
+
         return node.children
 
 
