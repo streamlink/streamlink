@@ -736,8 +736,11 @@ def setup_args(
 
     args, unknown = parser.parse_known_args(configs + arglist)
     if unknown and not ignore_unknown:
-        msg = gettext("unrecognized arguments: %s")
-        parser.error(msg % " ".join(unknown))
+        # output the same text as parser.error(), but raise a StreamlinkCLIError
+        usage = parser.format_usage()
+        msg = gettext("unrecognized arguments: %s") % " ".join(unknown)
+        error = f"{parser.prog}: error: {msg}"
+        raise StreamlinkCLIError(f"{usage}{error}", code=2)
 
     # Force lowercase to allow case-insensitive lookup
     if args.stream:
@@ -1010,7 +1013,7 @@ def main():
         setup(parser)
     except StreamlinkCLIError as err:
         sys.stderr.write(f"{err}\n")
-        raise SystemExit(1) from None
+        raise SystemExit(err.code) from None
 
     try:
         exit_code = run(parser)
