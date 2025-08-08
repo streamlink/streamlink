@@ -223,6 +223,36 @@ class TestStdoutStderr:
         assert err == msg
 
 
+class TestSetupArgs:
+    @pytest.mark.parametrize(
+        ("argv", "msg"),
+        [
+            pytest.param(
+                ["--doesnotexist=foo", "--doesalsonotexist=bar", "--player=player"],
+                "\n".join([
+                    "usage: streamlink [OPTIONS] <URL> [STREAM]",
+                    "streamlink: error: unrecognized arguments: --doesnotexist=foo --doesalsonotexist=bar",
+                    "",
+                ]),
+                id="does-not-exist",
+            ),
+        ],
+        indirect=["argv"],
+    )
+    def test_unknown(self, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str], argv: list, msg: str):
+        mock_run = Mock()
+        monkeypatch.setattr("streamlink_cli.main.run", mock_run)
+
+        with pytest.raises(SystemExit) as excinfo:
+            streamlink_cli.main.main()
+        assert excinfo.value.code == 2
+        assert not mock_run.called
+
+        out, err = capsys.readouterr()
+        assert out == ""
+        assert err == msg
+
+
 class TestInfos:
     # noinspection PyTestParametrized
     @pytest.mark.posix_only()
