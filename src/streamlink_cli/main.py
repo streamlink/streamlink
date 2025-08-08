@@ -1010,7 +1010,7 @@ def main():
         setup(parser)
     except StreamlinkCLIError as err:
         sys.stderr.write(f"{err}\n")
-        sys.exit(1)
+        raise SystemExit(1) from None
 
     try:
         exit_code = run(parser)
@@ -1026,4 +1026,4 @@ def main():
     # Prevent BrokenPipeError: unset sys.stdout, so Python doesn't attempt a flush() on exit
     del sys.stdout
 
-    sys.exit(exit_code)
+    raise SystemExit(exit_code)
