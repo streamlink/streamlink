@@ -2,6 +2,7 @@
 $description Live TV channels from MTVA, a Hungarian public, state-owned broadcaster.
 $url mediaklikk.hu
 $url m4sport.hu
+$url hirado.hu
 $type live
 $region Hungary
 """
@@ -20,7 +21,7 @@ log = logging.getLogger(__name__)
 
 
 @pluginmatcher(
-    re.compile(r"https?://(?:www\.)?(?:mediaklikk|m4sport|hirado|petofilive)\.hu/"),
+    re.compile(r"https?://(?:www\.)?(?:mediaklikk|m4sport|hirado)\.hu/"),
 )
 class Mediaklikk(Plugin):
     PLAYER_URL = "https://player.mediaklikk.hu/playernew/player.php"
@@ -31,10 +32,10 @@ class Mediaklikk(Plugin):
             schema=validate.Schema(
                 re.compile(
                     r"""
-                        mtva_player_manager\.player\s*\(\s*
-                            document\.getElementById\(\s*"\w+"\s*\)\s*,\s*
+                        loadPlayer\s*\(\s*
+                            (?P<q>['"]).+?(?P=q)\s*,\s*
                             (?P<json>{.*?})\s*
-                        \)\s*;
+                        \)
                     """,
                     re.VERBOSE | re.DOTALL,
                 ),
@@ -51,7 +52,7 @@ class Mediaklikk(Plugin):
             ),
         )
         if not params:
-            log.error("Could not find player manager data")
+            log.error("Could not find player data")
             return
 
         params.update({
