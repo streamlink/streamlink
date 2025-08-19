@@ -786,6 +786,15 @@ def build_parser():
         """,
     )
     output.add_argument(
+        "--skip",
+        action="store_true",
+        help="""
+            When using --output or --record, never write to file if it already exists (don't prompt).
+
+            Takes precedence over --force.
+        """,
+    )
+    output.add_argument(
         "--progress",
         metavar="{yes,force,no}",
         choices=("yes", "force", "no"),

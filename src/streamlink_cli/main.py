@@ -82,26 +82,31 @@ def get_formatter(plugin: Plugin):
     )
 
 
-def check_file_output(path: Path, force: bool) -> Path:
+def check_file_output(path: Path, skip: bool, force: bool) -> Path:
     """
-    Checks if path already exists and asks the user if it should be overwritten if it does.
+    Checks if `path` already exists and asks the user if it should be overwritten if it does.
     """
 
-    # rewrap path and resolve using `os.path.realpath` instead of `path.resolve()`
+    # rewrap `path` and resolve using `os.path.realpath` instead of `path.resolve()`
     # to avoid a pathlib issues on py39 and below
     realpath = Path(os.path.realpath(path))
 
     log.info(f"Writing output to\n{realpath}")
     log.debug("Checking file output")
 
-    if realpath.is_file() and not force:
-        try:
-            answer = console.ask(f"File {path} already exists! Overwrite it? [y/N] ")
-        except OSError:
-            log.error(f"File {path} already exists, use --force to overwrite it.")
-            raise StreamlinkCLIError() from None
-        if not answer or answer.lower() != "y":
+    if realpath.is_file():
+        if skip:
+            log.error(f"File {path} already exists")
             raise StreamlinkCLIError()
+
+        if not force:
+            try:
+                answer = console.ask(f"File {path} already exists! Overwrite it? [y/N] ")
+            except OSError:
+                log.error(f"File {path} already exists, use --force to overwrite it or --skip this prompt")
+                raise StreamlinkCLIError() from None
+            if not answer or answer.lower() != "y":
+                raise StreamlinkCLIError()
 
     return realpath
 
@@ -126,7 +131,7 @@ def create_output(formatter: Formatter) -> FileOutput | PlayerOutput:
         if args.output == "-":
             return FileOutput(fd=stdout)
         else:
-            filename = check_file_output(formatter.path(args.output, args.fs_safe_rules), args.force)
+            filename = check_file_output(formatter.path(args.output, args.fs_safe_rules), args.skip, args.force)
             return FileOutput(filename=filename)
 
     elif args.stdout:
@@ -136,7 +141,7 @@ def create_output(formatter: Formatter) -> FileOutput | PlayerOutput:
         if not args.record or args.record == "-":
             return FileOutput(fd=stdout)
         else:
-            filename = check_file_output(formatter.path(args.record, args.fs_safe_rules), args.force)
+            filename = check_file_output(formatter.path(args.record, args.fs_safe_rules), args.skip, args.force)
             return FileOutput(fd=stdout, record=FileOutput(filename=filename))
 
     elif args.record_and_pipe:
@@ -145,7 +150,7 @@ def create_output(formatter: Formatter) -> FileOutput | PlayerOutput:
             StreamlinkDeprecationWarning,
             stacklevel=1,
         )
-        filename = check_file_output(formatter.path(args.record_and_pipe, args.fs_safe_rules), args.force)
+        filename = check_file_output(formatter.path(args.record_and_pipe, args.fs_safe_rules), args.skip, args.force)
         return FileOutput(fd=stdout, record=FileOutput(filename=filename))
 
     elif args.player:
@@ -163,7 +168,7 @@ def create_output(formatter: Formatter) -> FileOutput | PlayerOutput:
             if args.record == "-":
                 record = FileOutput(fd=stdout)
             else:
-                filename = check_file_output(formatter.path(args.record, args.fs_safe_rules), args.force)
+                filename = check_file_output(formatter.path(args.record, args.fs_safe_rules), args.skip, args.force)
                 record = FileOutput(filename=filename)
 
         log.info(f"Starting player: {args.player}")
