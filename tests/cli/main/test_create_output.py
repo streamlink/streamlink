@@ -43,7 +43,7 @@ def formatter():
 
 @pytest.fixture()
 def check_file_output(monkeypatch: pytest.MonkeyPatch):
-    mock_check_file_output = Mock(side_effect=lambda path, force: path)
+    mock_check_file_output = Mock(side_effect=lambda path, skip, force: path)
     monkeypatch.setattr("streamlink_cli.main.check_file_output", mock_check_file_output)
 
     return mock_check_file_output
@@ -76,32 +76,42 @@ def test_player(argv: list, formatter: Formatter, title: str):
 
 
 @pytest.mark.parametrize(
-    ("argv", "force", "title"),
+    ("argv", "skip", "force", "title"),
     [
         pytest.param(
             ["--record=foo", "--player=mpv", *ARGS_PLAYER_ENV, "URL"],
             False,
+            False,
             "URL",
-            id="no-force-title-default",
+            id="title-default",
         ),
         pytest.param(
             ["--record=foo", "--player=mpv", *ARGS_PLAYER_ENV, "--title={author} - {title}", "URL"],
+            False,
             False,
             "foo - bar",
             id="title-custom",
         ),
         pytest.param(
             ["--record=foo", "--force", "--player=mpv", *ARGS_PLAYER_ENV, "URL"],
+            False,
             True,
             "URL",
             id="force",
         ),
+        pytest.param(
+            ["--record=foo", "--skip", "--player=mpv", *ARGS_PLAYER_ENV, "URL"],
+            True,
+            False,
+            "URL",
+            id="skip",
+        ),
     ],
     indirect=["argv"],
 )
-def test_player_record(check_file_output: Mock, formatter: Formatter, argv: list, force: bool, title: str):
+def test_player_record(check_file_output: Mock, formatter: Formatter, argv: list, skip: bool, force: bool, title: str):
     output = create_output(formatter)
-    assert check_file_output.call_args_list == [call(Path("foo"), force)]
+    assert check_file_output.call_args_list == [call(Path("foo"), skip, force)]
     assert isinstance(output, PlayerOutput)
     assert output.playerargs.title == title
     assert output.env == {"VAR1": "abc", "VAR2": "def"}
@@ -128,16 +138,17 @@ def test_player_record_stdout(formatter: Formatter, argv: list):
 
 
 @pytest.mark.parametrize(
-    ("argv", "force"),
+    ("argv", "skip", "force"),
     [
-        pytest.param(["--output=foo"], False, id="no-force"),
-        pytest.param(["--output=foo", "--force"], True, id="force"),
+        pytest.param(["--output=foo"], False, False, id="default"),
+        pytest.param(["--output=foo", "--force"], False, True, id="force"),
+        pytest.param(["--output=foo", "--skip"], True, False, id="force"),
     ],
     indirect=["argv"],
 )
-def test_output(check_file_output: Mock, formatter: Formatter, argv: list, force: bool):
+def test_output(check_file_output: Mock, formatter: Formatter, argv: list, skip: bool, force: bool):
     output = create_output(formatter)
-    assert check_file_output.call_args_list == [call(Path("foo"), force)]
+    assert check_file_output.call_args_list == [call(Path("foo"), skip, force)]
     assert isinstance(output, FileOutput)
     assert output.filename == Path("foo")
     assert output.fd is None
@@ -162,31 +173,49 @@ def test_stdout(formatter: Formatter, argv: list):
 
 
 @pytest.mark.parametrize(
-    ("argv", "force", "warnings"),
+    ("argv", "skip", "force", "warnings"),
     [
         pytest.param(
             ["--stdout", "--record=foo"],
             False,
+            False,
             [],
-            id="no-force",
+            id="default",
         ),
         pytest.param(
             ["--stdout", "--record=foo", "--force"],
+            False,
             True,
             [],
             id="force",
         ),
         pytest.param(
+            ["--stdout", "--record=foo", "--skip"],
+            True,
+            False,
+            [],
+            id="skip",
+        ),
+        pytest.param(
             ["--record-and-pipe=foo"],
+            False,
             False,
             [(StreamlinkDeprecationWarning, "-R/--record-and-pipe=... has been deprecated in favor of --stdout --record=...")],
             id="record-and-pipe-no-force",
         ),
         pytest.param(
             ["--record-and-pipe=foo", "--force"],
+            False,
             True,
             [(StreamlinkDeprecationWarning, "-R/--record-and-pipe=... has been deprecated in favor of --stdout --record=...")],
             id="record-and-pipe-force",
+        ),
+        pytest.param(
+            ["--record-and-pipe=foo", "--skip"],
+            True,
+            False,
+            [(StreamlinkDeprecationWarning, "-R/--record-and-pipe=... has been deprecated in favor of --stdout --record=...")],
+            id="record-and-pipe-skip",
         ),
     ],
     indirect=["argv"],
@@ -196,11 +225,12 @@ def test_stdout_record(
     check_file_output: Mock,
     formatter: Formatter,
     argv: list,
+    skip: bool,
     force: bool,
     warnings: list,
 ):
     output = create_output(formatter)
-    assert check_file_output.call_args_list == [call(Path("foo"), force)]
+    assert check_file_output.call_args_list == [call(Path("foo"), skip, force)]
     assert isinstance(output, FileOutput)
     assert output.filename is None
     assert output.fd is stdout
