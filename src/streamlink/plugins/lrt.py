@@ -20,6 +20,7 @@ from streamlink.stream.hls import HLSStream
 class LRT(Plugin):
     def _get_streams(self):
         path = urlparse(self.url).path
+        schema_get_live_url = validate.url(path=validate.endswith("/get_live_url.php"))
         channels = self.session.http.get(
             self.url,
             schema=validate.Schema(
@@ -40,7 +41,9 @@ class LRT(Plugin):
                                 "href": str,
                                 "channel": str,
                                 "title": str,
-                                "stream_url": validate.url(path=validate.endswith("/get_live_url.php")),
+                                # keep `stream_url` as a fallback
+                                validate.optional("stream_url"): schema_get_live_url,
+                                validate.optional("get_streams_url"): schema_get_live_url,
                             },
                         ],
                     },
@@ -54,11 +57,14 @@ class LRT(Plugin):
         else:
             return
 
+        if not (get_live_url := channel.get("get_streams_url", channel.get("stream_url", ""))):
+            return
+
         self.id = channel["channel"]
         self.title = channel["title"]
 
         hls_url = self.session.http.get(
-            channel["stream_url"],
+            get_live_url,
             schema=validate.Schema(
                 validate.parse_json(),
                 {
