@@ -157,12 +157,15 @@ Linux and BSD
       - .. code-block:: bash
 
             sudo pacman -S streamlink
-    * - :octicon:`package-dependents` `Arch Linux (aur, git)`_
+    * - :octicon:`package-dependents` `Arch Linux (AUR, git)`_
       - .. code-block:: bash
 
             git clone https://aur.archlinux.org/streamlink-git.git
             cd streamlink-git
             makepkg -si
+
+            # alternatively, get the PKGBUILD from the AUR mirror on GitHub
+            git clone --single-branch --branch streamlink-git https://github.com/archlinux/aur.git streamlink-git
 
         `Installing AUR packages`_
     * - :octicon:`package-dependents` `Debian (sid, testing)`_
@@ -226,7 +229,7 @@ Linux and BSD
 .. _Alpine Linux (edge): https://pkgs.alpinelinux.org/packages?name=streamlink
 .. _ALT Linux (Sisyphus): https://packages.altlinux.org/en/sisyphus/srpms/streamlink/
 .. _Arch Linux: https://archlinux.org/packages/extra/any/streamlink/
-.. _Arch Linux (aur, git): https://aur.archlinux.org/packages/streamlink-git/
+.. _Arch Linux (AUR, git): https://aur.archlinux.org/packages/streamlink-git/
 .. _Debian (sid, testing): https://packages.debian.org/sid/streamlink
 .. _Debian (stable): https://packages.debian.org/bookworm-backports/streamlink
 .. _Fedora: https://src.fedoraproject.org/rpms/python-streamlink
