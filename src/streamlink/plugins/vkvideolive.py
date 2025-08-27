@@ -29,6 +29,8 @@ class VKvideolive(Plugin):
     API_URL = "https://api.live.vkvideo.ru/v1"
 
     _WEIGHTS = {
+        "quad_hd": 5,
+        "full_hd": 4,
         "high": 3,
         "medium": 2,
         "low": 1,
@@ -132,7 +134,7 @@ class VKvideolive(Plugin):
                     yield from HLSStream.parse_variant_playlist(self.session, streamurl).items()
         else:
             for streamtype, streamurl in streams:
-                if streamurl and streamtype in ("high", "medium", "low"):
+                if streamurl and streamtype in self._WEIGHTS:
                     yield streamtype, HTTPStream(self.session, streamurl)
 
 
