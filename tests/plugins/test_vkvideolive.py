@@ -1,9 +1,9 @@
-from streamlink.plugins.vkvideo import VKvideo
+from streamlink.plugins.vkvideolive import VKvideolive
 from tests.plugins import PluginCanHandleUrl
 
 
-class TestPluginCanHandleUrlVKvideo(PluginCanHandleUrl):
-    __plugin__ = VKvideo
+class TestPluginCanHandleUrlVKvideolive(PluginCanHandleUrl):
+    __plugin__ = VKvideolive
 
     should_match = [
         # live

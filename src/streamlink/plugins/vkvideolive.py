@@ -25,7 +25,7 @@ log = logging.getLogger(__name__)
 @pluginmatcher(
     re.compile(r"https?://(?:live\.vk(?:video|play)\.ru|vkplay\.live)/(?P<channel_name>\w+)(?:/?$|(?P<vod>/record/[^?#]+))"),
 )
-class VKvideo(Plugin):
+class VKvideolive(Plugin):
     API_URL = "https://api.live.vkvideo.ru/v1"
 
     _WEIGHTS = {
@@ -37,7 +37,7 @@ class VKvideo(Plugin):
     @classmethod
     def stream_weight(cls, stream):
         if stream in cls._WEIGHTS:
-            return cls._WEIGHTS[stream], "vkvideo"
+            return cls._WEIGHTS[stream], "vkvideolive"
 
         return super().stream_weight(stream)
 
@@ -136,4 +136,4 @@ class VKvideo(Plugin):
                     yield streamtype, HTTPStream(self.session, streamurl)
 
 
-__plugin__ = VKvideo
+__plugin__ = VKvideolive
