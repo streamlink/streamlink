@@ -1,11 +1,5 @@
-#!/usr/bin/env python
 import sys
-from pathlib import Path
 from textwrap import dedent
-
-
-def format_msg(text, *args, **kwargs):
-    return dedent(text).strip(" \n").format(*args, **kwargs)
 
 
 CURRENT_PYTHON = sys.version_info[:2]
@@ -13,32 +7,26 @@ REQUIRED_PYTHON = (3, 9)
 
 # This check and everything above must remain compatible with older Python versions
 if CURRENT_PYTHON < REQUIRED_PYTHON:
-    sys.exit(
-        format_msg(
+    raise SystemExit(
+        dedent(
             """
                 ========================================================
                                Unsupported Python version
                 ========================================================
-                This version of Streamlink requires at least Python {}.{},
+                Streamlink requires at least Python {}.{},
                 but you're trying to install it on Python {}.{}.
 
                 This may be because you are using a version of pip that
                 doesn't understand the python_requires classifier.
                 Make sure you have pip >= 9.0 and setuptools >= 24.2
             """,
-            *(REQUIRED_PYTHON + CURRENT_PYTHON),
-        ),
+        )
+        .strip(" \n")
+        .format(*REQUIRED_PYTHON, *CURRENT_PYTHON),
     )
 
-# Explicitly disable running tests via setuptools
-if "test" in sys.argv:
-    sys.exit(
-        format_msg("""
-            Running `python setup.py test` has been deprecated since setuptools 41.5.0.
-            Streamlink requires pytest for collecting and running tests, via one of these commands:
-            `pytest` or `python -m pytest` (see the pytest docs for more infos about this)
-        """),
-    )
+
+from pathlib import Path  # noqa: E402
 
 
 def is_wheel_for_windows(argv):
