@@ -14,7 +14,7 @@ def releaseref_role(name, rawtext, text, lineno, inliner, options=None, content=
 
     has_explicit_title, title, target = split_explicit_title(text)
     if not has_explicit_title:
-        title = os.path.basename(target)
+        title = os.path.basename(target)  # noqa: PTH119
 
     node = nodes.reference(rawtext, title, refuri=target, **(options or {}))
 

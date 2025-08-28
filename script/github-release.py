@@ -379,7 +379,7 @@ class Release:
 
     @staticmethod
     def _read_file(path: Path):
-        with open(path, "r", encoding="utf-8") as fh:
+        with path.open("r", encoding="utf-8") as fh:
             contents = fh.read()
 
         if not contents:
@@ -421,7 +421,7 @@ class Release:
                 if not asset.is_file():
                     continue
                 log.info(f"Found release asset '{asset.name}'")
-                handles[asset.name] = open(asset, "rb")
+                handles[asset.name] = asset.open("rb")
             yield handles
         finally:
             for handle in handles.values():

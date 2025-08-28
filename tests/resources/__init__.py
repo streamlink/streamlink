@@ -1,11 +1,11 @@
-import os.path
 from contextlib import contextmanager
 from io import BytesIO
+from pathlib import Path
 
 from lxml.etree import iterparse
 
 
-__here__ = os.path.abspath(os.path.dirname(__file__))
+__HERE__ = Path(__file__).parent.absolute()
 
 
 def _parse_xml(data, strip_ns=False):
@@ -27,11 +27,11 @@ def _parse_xml(data, strip_ns=False):
 
 @contextmanager
 def text(path, encoding="utf8"):
-    with open(os.path.join(__here__, path), "r", encoding=encoding) as resource_fh:
+    with __HERE__.joinpath(path).open("r", encoding=encoding) as resource_fh:
         yield resource_fh
 
 
 @contextmanager
 def xml(path, encoding="utf8"):
-    with open(os.path.join(__here__, path), "r", encoding=encoding) as resource_fh:
+    with __HERE__.joinpath(path).open("r", encoding=encoding) as resource_fh:
         yield _parse_xml(resource_fh.read(), strip_ns=True)
