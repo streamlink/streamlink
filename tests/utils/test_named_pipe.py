@@ -19,7 +19,7 @@ OPEN_EXISTING = 3
 class ReadNamedPipeThread(threading.Thread):
     def __init__(self, pipe: NamedPipeBase):
         super().__init__(daemon=True)
-        self.path = str(pipe.path)
+        self.path = pipe.path
         self.error = None
         self.data = b""
         self.done = threading.Event()
@@ -37,7 +37,7 @@ class ReadNamedPipeThread(threading.Thread):
 
 class ReadNamedPipeThreadPosix(ReadNamedPipeThread):
     def read(self):
-        with open(self.path, "rb") as file:
+        with self.path.open("rb") as file:
             while True:
                 data = file.read(-1)
                 if len(data) == 0:
@@ -47,7 +47,7 @@ class ReadNamedPipeThreadPosix(ReadNamedPipeThread):
 
 class ReadNamedPipeThreadWindows(ReadNamedPipeThread):
     def read(self):
-        handle = windll.kernel32.CreateFileW(self.path, GENERIC_READ, 0, None, OPEN_EXISTING, 0, None)
+        handle = windll.kernel32.CreateFileW(str(self.path), GENERIC_READ, 0, None, OPEN_EXISTING, 0, None)
         try:
             while True:
                 data = create_string_buffer(NamedPipeWindows.bufsize)
@@ -101,7 +101,7 @@ class TestNamedPipePosix:
     def test_close_error(self, monkeypatch: pytest.MonkeyPatch):
         mock_fd_close = Mock(side_effect=OSError)
         mock_fd = Mock(close=mock_fd_close)
-        monkeypatch.setattr("builtins.open", Mock(return_value=mock_fd))
+        monkeypatch.setattr("pathlib.Path.open", Mock(return_value=mock_fd))
 
         pipe = NamedPipePosix()
         assert pipe.path.is_fifo()

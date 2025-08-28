@@ -32,8 +32,8 @@ def output(request: pytest.FixtureRequest):
 
 
 @pytest.fixture()
-def logfile(tmp_path: Path) -> str:
-    return str(tmp_path / "log.txt")
+def logfile(tmp_path: Path) -> Path:
+    return tmp_path / "log.txt"
 
 
 @pytest.fixture()
@@ -311,11 +311,11 @@ class TestLogging:
         assert not out
         assert not err
 
-    def test_logfile(self, logfile: str, log: logging.Logger, output: TextIOWrapper):
+    def test_logfile(self, logfile: Path, log: logging.Logger, output: TextIOWrapper):
         log.setLevel("info")
         log.info("Hello world, Γειά σου Κόσμε, こんにちは世界")  # noqa: RUF001
         log.handlers[0].flush()
-        with open(logfile, "r", encoding="utf-8") as fh:
+        with logfile.open("r", encoding="utf-8") as fh:
             assert fh.read() == "[test][info] Hello world, Γειά σου Κόσμε, こんにちは世界\n"  # noqa: RUF001
 
 

@@ -289,6 +289,8 @@ select = [
   "T20",
   # flake8-pytest-style
   "PT",
+  # flake8-use-pathlib
+  "PTH",
   # flake8-quotes
   "Q",
   # flake8-tidy-imports

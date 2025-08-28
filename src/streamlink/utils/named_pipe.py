@@ -62,7 +62,7 @@ class NamedPipePosix(NamedPipeBase):
         os.mkfifo(self.path, self.permissions)
 
     def open(self):
-        self.fifo = open(self.path, self.mode)
+        self.fifo = self.path.open(self.mode)
 
     def write(self, data):
         return self.fifo.write(data)

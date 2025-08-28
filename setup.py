@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 import sys
-from os import path
+from pathlib import Path
 from textwrap import dedent
 
 
@@ -74,13 +74,13 @@ data_files = [
     ("share/man/man1", ["docs/_build/man/streamlink.1"]),
 ]
 data_files = [
-    (destdir, [file for file in srcfiles if path.exists(file)])
+    (destdir, [file for file in srcfiles if Path(file).exists()])
     for destdir, srcfiles in data_files
 ]  # fmt: skip
 
 
 if __name__ == "__main__":
-    sys.path.insert(0, path.dirname(__file__))
+    sys.path.insert(0, str(Path(__file__).parent))
 
     from build_backend.commands import cmdclass
     from setuptools import setup

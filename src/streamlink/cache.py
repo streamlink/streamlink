@@ -19,12 +19,12 @@ from streamlink.compat import is_win32
 
 
 if is_win32:
-    xdg_cache = os.environ.get("APPDATA", os.path.expanduser("~"))
+    xdg_cache = Path(os.environ.get("APPDATA") or Path.home())
 else:
-    xdg_cache = os.environ.get("XDG_CACHE_HOME", os.path.expanduser("~/.cache"))
+    xdg_cache = Path(os.environ.get("XDG_CACHE_HOME") or Path.home() / ".cache")
 
-# TODO: fix macOS path and deprecate old one (with fallback logic)
-CACHE_DIR = Path(xdg_cache) / "streamlink"
+# TODO: fix Windows and macOS paths, and deprecate old one (with fallback logic)
+CACHE_DIR = xdg_cache / "streamlink"
 
 WRITE_DEBOUNCE_TIME = 3.0
 
@@ -145,7 +145,7 @@ class Cache:
         except Exception as err:
             if fd:
                 with suppress(OSError):
-                    os.unlink(fd.name)
+                    Path(fd.name).unlink()
             log.error(f"Error while writing to cache file: {err}")
         else:
             self._cache_orig.clear()

@@ -509,7 +509,7 @@ if __name__ == "__main__":  # pragma: no cover
         if args.output == "-":
             to_json(data, **options)
         else:
-            with open(args.output, "w", encoding="utf-8") as fd:
+            with Path(args.output).open("w", encoding="utf-8") as fd:
                 to_json(data, fd, **options)
 
     main()
