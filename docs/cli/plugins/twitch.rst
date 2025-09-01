@@ -32,6 +32,13 @@ The entire argument can optionally be added to Streamlink's (Twitch plugin speci
 
     twitch-api-header=Authorization=OAuth abcdefghijklmnopqrstuvwxyz0123
 
+.. caution::
+
+    **OAuth tokens from Twitch's website grant full access your account, so make sure to keep them secret**.
+
+    Logging out does not revoke any tokens. In order to do that, either change your password,
+    or go to Twitch's `Security and Privacy <twitch-settings_>`_ settings menu and click "Sign Out Everywhere".
+
 .. dropdown:: Changelog
     :animate: fade-in-slide-down
     :chevron: right-down
@@ -53,6 +60,7 @@ The entire argument can optionally be added to Streamlink's (Twitch plugin speci
     can't be automated easily by applications like Streamlink, so a new authentication feature was never implemented.
 
 .. _restrictive changes: https://github.com/streamlink/streamlink/issues/2680#issuecomment-557605851
+.. _twitch-settings: https://www.twitch.tv/settings/security
 
 
 Embedded ads
