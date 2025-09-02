@@ -181,7 +181,7 @@ class Kick(Plugin):
     def _get_cookies_from_webbrowser(self) -> bool:
         from streamlink.compat import BaseExceptionGroup  # noqa: PLC0415
         from streamlink.webbrowser.cdp import CDPClient, CDPClientSession  # noqa: PLC0415
-        from streamlink.webbrowser.cdp.devtools import fetch, network  # noqa: PLC0415
+        from streamlink.webbrowser.cdp.devtools import fetch  # noqa: PLC0415
 
         async def on_main(client_session: CDPClientSession, request: fetch.RequestPaused):
             # get Chromium's request headers, update HTTP session headers and also cache them
@@ -195,26 +195,17 @@ class Kick(Plugin):
                 client_session.add_request_handler(on_main, url_pattern=self.url, on_request=True)
                 async with client_session.navigate(self.url) as frame_id:
                     await client_session.loaded(frame_id)
-                    return await client_session.cdp_session.send(network.get_cookies())
+                    await client_session.retrieve_cookies()
 
         log.info("Solving JS challenge")
 
         try:
-            cookies: list[network.Cookie] = CDPClient.launch(self.session, get_challenge_cookies)
+            CDPClient.launch(self.session, get_challenge_cookies)
         except BaseExceptionGroup:
             log.exception("Failed solving JS challenge")
         except Exception as err:
             log.error(err)
         else:
-            for cookie in cookies:
-                self.session.http.cookies.set(
-                    name=cookie.name,
-                    value=cookie.value,
-                    domain=cookie.domain,
-                    path=cookie.path,
-                    expires=cookie.expires,
-                )
-
             log.info("JS challenge solved, storing cookies")
             self.save_cookies()
 
@@ -223,7 +214,7 @@ class Kick(Plugin):
         return False
 
     def _get_api_headers(self):
-        # _get_cookies() from above updates the session headers with Chromium's initial request headers
+        # _get_cookies_from_webbrowser() from above updates the session headers with Chromium's initial request headers
         ua = self.session.http.headers.get("User-Agent", useragents.CHROME)
         if "Chrome/" not in ua:
             ua = useragents.CHROME
