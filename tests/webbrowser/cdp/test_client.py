@@ -998,3 +998,122 @@ class TestOnFetchRequestPaused:
         assert isinstance(handler_bar.call_args_list[0][0][1], RequestPaused)
         assert mock_fail_request.call_args_list == []
         assert mock_continue_request.call_args_list == []
+
+
+class TestCookies:
+    @pytest.fixture(autouse=True)
+    def _assert_cookiejar(self, session: Streamlink):
+        yield
+        assert [
+            {
+                "name": cookie.name,
+                "value": cookie.value,
+                "domain": cookie.domain,
+                "path": cookie.path,
+                "expires": cookie.expires,
+                "secure": cookie.secure,
+            }
+            for cookie in session.http.cookies
+        ] == [
+            {
+                "name": "foo",
+                "value": "bar",
+                "domain": ".mock",
+                "path": "/path",
+                "expires": 123456789.0,
+                "secure": True,
+            },
+            {
+                "name": "one",
+                "value": "two",
+                "domain": ".other",
+                "path": "/",
+                "expires": None,
+                "secure": False,
+            },
+        ]
+
+    @pytest.mark.trio()
+    async def test_apply_cookies(
+        self,
+        session: Streamlink,
+        cdp_client_session: CDPClientSession,
+        websocket_connection: FakeWebsocketConnection,
+        nursery: trio.Nursery,
+    ):
+        session.http.cookies.set("foo", "bar", domain=".mock", path="/path", expires=123456789, secure=True)
+        session.http.cookies.set("one", "two", domain=".other", path="/", expires=None, secure=False)
+        assert dict(session.http.cookies.items()) == {"foo": "bar", "one": "two"}
+
+        nursery.start_soon(cdp_client_session.apply_cookies)
+        await wait_all_tasks_blocked()
+
+        assert websocket_connection.sent == [
+            """{"id":0,"method":"Network.setCookies","params":{"cookies":["""
+            + """{"domain":".mock","expires":123456789.0,"name":"foo","path":"/path","secure":true,"value":"bar"},"""
+            + """{"domain":".other","name":"one","path":"/","secure":false,"value":"two"}"""
+            + """]},"sessionId":"56789"}""",
+        ]
+        await websocket_connection.sender.send("""{"id":0,"result":{},"sessionId":"56789"}""")
+        await wait_all_tasks_blocked()
+
+    @pytest.mark.trio()
+    async def test_retrieve_cookies(
+        self,
+        session: Streamlink,
+        cdp_client_session: CDPClientSession,
+        websocket_connection: FakeWebsocketConnection,
+        nursery: trio.Nursery,
+    ):
+        assert dict(session.http.cookies.items()) == {}
+
+        nursery.start_soon(cdp_client_session.retrieve_cookies)
+        await wait_all_tasks_blocked()
+
+        assert websocket_connection.sent == [
+            """{"id":0,"method":"Network.getCookies","params":{},"sessionId":"56789"}""",
+        ]
+        # language=json
+        await websocket_connection.sender.send("""
+            {
+                "id": 0,
+                "result": {
+                    "cookies": [
+                        {
+                            "name": "foo",
+                            "value": "bar",
+                            "domain": ".mock",
+                            "path": "/path",
+                            "expires": 123456789.0,
+                            "size": 9999,
+                            "httpOnly": true,
+                            "secure": true,
+                            "session": false,
+                            "sameSite": "Lax",
+                            "priority": "Medium",
+                            "sameParty": false,
+                            "sourceScheme": "Secure",
+                            "sourcePort": 443
+                        },
+                        {
+                            "name": "one",
+                            "value": "two",
+                            "domain": ".other",
+                            "path": "/",
+                            "expires": -1,
+                            "size": 9999,
+                            "httpOnly": true,
+                            "secure": false,
+                            "session": false,
+                            "sameSite": "Lax",
+                            "priority": "Medium",
+                            "sameParty": false,
+                            "sourceScheme": "Secure",
+                            "sourcePort": 443
+                        }
+                    ]
+                },
+                "sessionId": "56789"
+            }
+        """)
+        await wait_all_tasks_blocked()
