@@ -90,7 +90,8 @@ class CDPClient:
     ``streamlink.webbrowser.cdp.devtools`` package, but be aware that only a subset of the available domains is supported.
     """
 
-    def __init__(self, cdp_connection: CDPConnection, nursery: trio.Nursery, headless: bool):
+    def __init__(self, session: Streamlink, cdp_connection: CDPConnection, nursery: trio.Nursery, headless: bool):
+        self.streamlink = session
         self.cdp_connection = cdp_connection
         self.nursery = nursery
         self.headless = headless
@@ -191,7 +192,7 @@ class CDPClient:
             websocket_url = webbrowser.get_websocket_url(session)
             cdp_connection: CDPConnection
             async with CDPConnection.create(websocket_url, timeout=cdp_timeout) as cdp_connection:
-                yield cls(cdp_connection, nursery, headless)
+                yield cls(session, cdp_connection, nursery, headless)
 
     @asynccontextmanager
     async def session(
@@ -449,3 +450,39 @@ class CDPClientSession:
             raise CDPError("Could not read navigator.userAgent value")
         user_agent = re.sub(r"Headless", "", user_agent, flags=re.IGNORECASE)
         await self.cdp_session.send(network.set_user_agent_override(user_agent=user_agent))
+
+    async def apply_cookies(self) -> None:
+        """
+        Copy all cookies from Streamlink's HTTP session to the CDP session.
+        """
+        cookies = [
+            network.CookieParam(
+                name=cookie.name,
+                value=cookie.value or "",
+                domain=cookie.domain,
+                path=cookie.path,
+                expires=network.TimeSinceEpoch(cookie.expires) if cookie.expires is not None else None,
+                secure=cookie.secure,
+            )
+            for cookie in self.cdp_client.streamlink.http.cookies
+        ]
+        await self.cdp_session.send(
+            network.set_cookies(cookies=cookies),
+        )
+
+    async def retrieve_cookies(self) -> None:
+        """
+        Copy all cookies from the CDP session to Streamlink's HTTP session.
+        """
+        cookies = await self.cdp_session.send(
+            network.get_cookies(),
+        )
+        for cookie in cookies:
+            self.cdp_client.streamlink.http.cookies.set(
+                name=cookie.name,
+                value=cookie.value,
+                domain=cookie.domain,
+                path=cookie.path,
+                expires=None if cookie.expires == -1 else cookie.expires,
+                secure=cookie.secure,
+            )
