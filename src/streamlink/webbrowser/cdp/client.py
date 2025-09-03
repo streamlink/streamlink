@@ -291,7 +291,9 @@ class CDPClientSession:
             await self.cdp_session.send(page.enable())
 
             try:
-                frame_id, _loader_id, error = await self.cdp_session.send(page.navigate(url=url, referrer=referrer))
+                frame_id, _loader_id, error, _is_download = await self.cdp_session.send(
+                    page.navigate(url=url, referrer=referrer),
+                )
                 if error:
                     raise CDPError(f"Navigation error: {error}")
 
