@@ -3,7 +3,7 @@
 # This file is generated from the CDP specification. If you need to make
 # changes, edit the generator and regenerate all modules.
 #
-# CDP version: v0.0.1438564
+# CDP version: v0.0.1510116
 # CDP domain: Fetch
 
 from __future__ import annotations

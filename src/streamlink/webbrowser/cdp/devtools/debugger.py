@@ -3,7 +3,7 @@
 # This file is generated from the CDP specification. If you need to make
 # changes, edit the generator and regenerate all modules.
 #
-# CDP version: v0.0.1438564
+# CDP version: v0.0.1510116
 # CDP domain: Debugger
 
 from __future__ import annotations
@@ -1276,7 +1276,7 @@ class ScriptFailedToParse:
     execution_context_id: runtime.ExecutionContextId
     #: Content hash of the script, SHA-256.
     hash_: str
-    #: For Wasm modules, the content of the ``build_id`` custom section.
+    #: For Wasm modules, the content of the ``build_id`` custom section. For JavaScript the ``debugId`` magic comment.
     build_id: str
     #: Embedder-specific auxiliary data likely matching {isDefault: boolean, type: 'default'``'isolated'``'worker', frameId: string}
     execution_context_aux_data: dict | None
@@ -1344,7 +1344,7 @@ class ScriptParsed:
     execution_context_id: runtime.ExecutionContextId
     #: Content hash of the script, SHA-256.
     hash_: str
-    #: For Wasm modules, the content of the ``build_id`` custom section.
+    #: For Wasm modules, the content of the ``build_id`` custom section. For JavaScript the ``debugId`` magic comment.
     build_id: str
     #: Embedder-specific auxiliary data likely matching {isDefault: boolean, type: 'default'``'isolated'``'worker', frameId: string}
     execution_context_aux_data: dict | None

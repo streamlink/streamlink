@@ -3,7 +3,7 @@
 # This file is generated from the CDP specification. If you need to make
 # changes, edit the generator and regenerate all modules.
 #
-# CDP version: v0.0.1438564
+# CDP version: v0.0.1510116
 # CDP domain: DOM
 
 from __future__ import annotations
@@ -88,6 +88,7 @@ class PseudoType(enum.Enum):
     BEFORE = "before"
     AFTER = "after"
     PICKER_ICON = "picker-icon"
+    INTEREST_HINT = "interest-hint"
     MARKER = "marker"
     BACKDROP = "backdrop"
     COLUMN = "column"
@@ -112,12 +113,14 @@ class PseudoType(enum.Enum):
     VIEW_TRANSITION = "view-transition"
     VIEW_TRANSITION_GROUP = "view-transition-group"
     VIEW_TRANSITION_IMAGE_PAIR = "view-transition-image-pair"
+    VIEW_TRANSITION_GROUP_CHILDREN = "view-transition-group-children"
     VIEW_TRANSITION_OLD = "view-transition-old"
     VIEW_TRANSITION_NEW = "view-transition-new"
     PLACEHOLDER = "placeholder"
     FILE_SELECTOR_BUTTON = "file-selector-button"
     DETAILS_CONTENT = "details-content"
     PICKER = "picker"
+    PERMISSION_ICON = "permission-icon"
 
     def to_json(self) -> str:
         return self.value
@@ -1015,6 +1018,7 @@ def get_outer_html(
     node_id: NodeId | None = None,
     backend_node_id: BackendNodeId | None = None,
     object_id: runtime.RemoteObjectId | None = None,
+    include_shadow_dom: bool | None = None,
 ) -> Generator[T_JSON_DICT, T_JSON_DICT, str]:
     """
     Returns node's HTML markup.
@@ -1022,6 +1026,7 @@ def get_outer_html(
     :param node_id: *(Optional)* Identifier of the node.
     :param backend_node_id: *(Optional)* Identifier of the backend node.
     :param object_id: *(Optional)* JavaScript object id of the node wrapper.
+    :param include_shadow_dom: **(EXPERIMENTAL)** *(Optional)* Include all shadow roots. Equals to false if not specified.
     :returns: Outer HTML markup.
     """
     params: T_JSON_DICT = {}
@@ -1031,6 +1036,8 @@ def get_outer_html(
         params["backendNodeId"] = backend_node_id.to_json()
     if object_id is not None:
         params["objectId"] = object_id.to_json()
+    if include_shadow_dom is not None:
+        params["includeShadowDOM"] = include_shadow_dom
     cmd_dict: T_JSON_DICT = {
         "method": "DOM.getOuterHTML",
         "params": params,
@@ -1725,13 +1732,14 @@ def get_container_for_node(
     physical_axes: PhysicalAxes | None = None,
     logical_axes: LogicalAxes | None = None,
     queries_scroll_state: bool | None = None,
+    queries_anchored: bool | None = None,
 ) -> Generator[T_JSON_DICT, T_JSON_DICT, NodeId | None]:
     """
     Returns the query container of the given node based on container query
     conditions: containerName, physical and logical axes, and whether it queries
-    scroll-state. If no axes are provided and queriesScrollState is false, the
-    style container is returned, which is the direct parent or the closest
-    element with a matching container-name.
+    scroll-state or anchored elements. If no axes are provided and
+    queriesScrollState is false, the style container is returned, which is the
+    direct parent or the closest element with a matching container-name.
 
     **EXPERIMENTAL**
 
@@ -1740,6 +1748,7 @@ def get_container_for_node(
     :param physical_axes: *(Optional)*
     :param logical_axes: *(Optional)*
     :param queries_scroll_state: *(Optional)*
+    :param queries_anchored: *(Optional)*
     :returns: *(Optional)* The container node for the given node, or null if not found.
     """
     params: T_JSON_DICT = {}
@@ -1752,6 +1761,8 @@ def get_container_for_node(
         params["logicalAxes"] = logical_axes.to_json()
     if queries_scroll_state is not None:
         params["queriesScrollState"] = queries_scroll_state
+    if queries_anchored is not None:
+        params["queriesAnchored"] = queries_anchored
     cmd_dict: T_JSON_DICT = {
         "method": "DOM.getContainerForNode",
         "params": params,
@@ -1806,6 +1817,31 @@ def get_anchor_element(
     }
     json = yield cmd_dict
     return NodeId.from_json(json["nodeId"])
+
+
+def force_show_popover(
+    node_id: NodeId,
+    enable: bool,
+) -> Generator[T_JSON_DICT, T_JSON_DICT, list[NodeId]]:
+    """
+    When enabling, this API force-opens the popover identified by nodeId
+    and keeps it open until disabled.
+
+    **EXPERIMENTAL**
+
+    :param node_id: Id of the popover HTMLElement
+    :param enable: If true, opens the popover and keeps it open. If false, closes the popover if it was previously force-opened.
+    :returns: List of popovers that were closed in order to respect popover stacking order.
+    """
+    params: T_JSON_DICT = {}
+    params["nodeId"] = node_id.to_json()
+    params["enable"] = enable
+    cmd_dict: T_JSON_DICT = {
+        "method": "DOM.forceShowPopover",
+        "params": params,
+    }
+    json = yield cmd_dict
+    return [NodeId.from_json(i) for i in json["nodeIds"]]
 
 
 @event_class("DOM.attributeModified")

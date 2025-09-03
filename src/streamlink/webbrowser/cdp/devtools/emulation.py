@@ -3,7 +3,7 @@
 # This file is generated from the CDP specification. If you need to make
 # changes, edit the generator and regenerate all modules.
 #
-# CDP version: v0.0.1438564
+# CDP version: v0.0.1510116
 # CDP domain: Emulation
 
 from __future__ import annotations
@@ -241,6 +241,10 @@ class UserAgentMetadata:
 
     wow64: bool | None = None
 
+    #: Used to specify User Agent form-factor values.
+    #: See https://wicg.github.io/ua-client-hints/#sec-ch-ua-form-factors
+    form_factors: list[str] | None = None
+
     def to_json(self) -> T_JSON_DICT:
         json: T_JSON_DICT = {}
         json["platform"] = self.platform
@@ -258,6 +262,8 @@ class UserAgentMetadata:
             json["bitness"] = self.bitness
         if self.wow64 is not None:
             json["wow64"] = self.wow64
+        if self.form_factors is not None:
+            json["formFactors"] = list(self.form_factors)
         return json
 
     @classmethod
@@ -273,6 +279,7 @@ class UserAgentMetadata:
             full_version=str(json["fullVersion"]) if "fullVersion" in json else None,
             bitness=str(json["bitness"]) if "bitness" in json else None,
             wow64=bool(json["wow64"]) if "wow64" in json else None,
+            form_factors=[str(i) for i in json["formFactors"]] if "formFactors" in json else None,
         )
 
 
@@ -459,6 +466,150 @@ class PressureMetadata:
     def from_json(cls, json: T_JSON_DICT) -> PressureMetadata:
         return cls(
             available=bool(json["available"]) if "available" in json else None,
+        )
+
+
+@dataclass
+class WorkAreaInsets:
+    #: Work area top inset in pixels. Default is 0;
+    top: int | None = None
+
+    #: Work area left inset in pixels. Default is 0;
+    left: int | None = None
+
+    #: Work area bottom inset in pixels. Default is 0;
+    bottom: int | None = None
+
+    #: Work area right inset in pixels. Default is 0;
+    right: int | None = None
+
+    def to_json(self) -> T_JSON_DICT:
+        json: T_JSON_DICT = {}
+        if self.top is not None:
+            json["top"] = self.top
+        if self.left is not None:
+            json["left"] = self.left
+        if self.bottom is not None:
+            json["bottom"] = self.bottom
+        if self.right is not None:
+            json["right"] = self.right
+        return json
+
+    @classmethod
+    def from_json(cls, json: T_JSON_DICT) -> WorkAreaInsets:
+        return cls(
+            top=int(json["top"]) if "top" in json else None,
+            left=int(json["left"]) if "left" in json else None,
+            bottom=int(json["bottom"]) if "bottom" in json else None,
+            right=int(json["right"]) if "right" in json else None,
+        )
+
+
+class ScreenId(str):
+    def to_json(self) -> str:
+        return self
+
+    @classmethod
+    def from_json(cls, json: str) -> ScreenId:
+        return cls(json)
+
+    def __repr__(self):
+        return f"ScreenId({super().__repr__()})"
+
+
+@dataclass
+class ScreenInfo:
+    """
+    Screen information similar to the one returned by window.getScreenDetails() method,
+    see https://w3c.github.io/window-management/#screendetailed.
+    """
+    #: Offset of the left edge of the screen.
+    left: int
+
+    #: Offset of the top edge of the screen.
+    top: int
+
+    #: Width of the screen.
+    width: int
+
+    #: Height of the screen.
+    height: int
+
+    #: Offset of the left edge of the available screen area.
+    avail_left: int
+
+    #: Offset of the top edge of the available screen area.
+    avail_top: int
+
+    #: Width of the available screen area.
+    avail_width: int
+
+    #: Height of the available screen area.
+    avail_height: int
+
+    #: Specifies the screen's device pixel ratio.
+    device_pixel_ratio: float
+
+    #: Specifies the screen's orientation.
+    orientation: ScreenOrientation
+
+    #: Specifies the screen's color depth in bits.
+    color_depth: int
+
+    #: Indicates whether the device has multiple screens.
+    is_extended: bool
+
+    #: Indicates whether the screen is internal to the device or external, attached to the device.
+    is_internal: bool
+
+    #: Indicates whether the screen is set as the the operating system primary screen.
+    is_primary: bool
+
+    #: Specifies the descriptive label for the screen.
+    label: str
+
+    #: Specifies the unique identifier of the screen.
+    id_: ScreenId
+
+    def to_json(self) -> T_JSON_DICT:
+        json: T_JSON_DICT = {}
+        json["left"] = self.left
+        json["top"] = self.top
+        json["width"] = self.width
+        json["height"] = self.height
+        json["availLeft"] = self.avail_left
+        json["availTop"] = self.avail_top
+        json["availWidth"] = self.avail_width
+        json["availHeight"] = self.avail_height
+        json["devicePixelRatio"] = self.device_pixel_ratio
+        json["orientation"] = self.orientation.to_json()
+        json["colorDepth"] = self.color_depth
+        json["isExtended"] = self.is_extended
+        json["isInternal"] = self.is_internal
+        json["isPrimary"] = self.is_primary
+        json["label"] = self.label
+        json["id"] = self.id_.to_json()
+        return json
+
+    @classmethod
+    def from_json(cls, json: T_JSON_DICT) -> ScreenInfo:
+        return cls(
+            left=int(json["left"]),
+            top=int(json["top"]),
+            width=int(json["width"]),
+            height=int(json["height"]),
+            avail_left=int(json["availLeft"]),
+            avail_top=int(json["availTop"]),
+            avail_width=int(json["availWidth"]),
+            avail_height=int(json["availHeight"]),
+            device_pixel_ratio=float(json["devicePixelRatio"]),
+            orientation=ScreenOrientation.from_json(json["orientation"]),
+            color_depth=int(json["colorDepth"]),
+            is_extended=bool(json["isExtended"]),
+            is_internal=bool(json["isInternal"]),
+            is_primary=bool(json["isPrimary"]),
+            label=str(json["label"]),
+            id_=ScreenId.from_json(json["id"]),
         )
 
 
@@ -855,18 +1006,44 @@ def set_emulated_vision_deficiency(
     yield cmd_dict
 
 
+def set_emulated_os_text_scale(
+    scale: float | None = None,
+) -> Generator[T_JSON_DICT, T_JSON_DICT, None]:
+    """
+    Emulates the given OS text scale.
+
+    :param scale: *(Optional)*
+    """
+    params: T_JSON_DICT = {}
+    if scale is not None:
+        params["scale"] = scale
+    cmd_dict: T_JSON_DICT = {
+        "method": "Emulation.setEmulatedOSTextScale",
+        "params": params,
+    }
+    yield cmd_dict
+
+
 def set_geolocation_override(
     latitude: float | None = None,
     longitude: float | None = None,
     accuracy: float | None = None,
+    altitude: float | None = None,
+    altitude_accuracy: float | None = None,
+    heading: float | None = None,
+    speed: float | None = None,
 ) -> Generator[T_JSON_DICT, T_JSON_DICT, None]:
     """
-    Overrides the Geolocation Position or Error. Omitting any of the parameters emulates position
-    unavailable.
+    Overrides the Geolocation Position or Error. Omitting latitude, longitude or
+    accuracy emulates position unavailable.
 
     :param latitude: *(Optional)* Mock latitude
     :param longitude: *(Optional)* Mock longitude
     :param accuracy: *(Optional)* Mock accuracy
+    :param altitude: *(Optional)* Mock altitude
+    :param altitude_accuracy: *(Optional)* Mock altitudeAccuracy
+    :param heading: *(Optional)* Mock heading
+    :param speed: *(Optional)* Mock speed
     """
     params: T_JSON_DICT = {}
     if latitude is not None:
@@ -875,6 +1052,14 @@ def set_geolocation_override(
         params["longitude"] = longitude
     if accuracy is not None:
         params["accuracy"] = accuracy
+    if altitude is not None:
+        params["altitude"] = altitude
+    if altitude_accuracy is not None:
+        params["altitudeAccuracy"] = altitude_accuracy
+    if heading is not None:
+        params["heading"] = heading
+    if speed is not None:
+        params["speed"] = speed
     cmd_dict: T_JSON_DICT = {
         "method": "Emulation.setGeolocationOverride",
         "params": params,
@@ -990,6 +1175,7 @@ def set_pressure_state_override(
     state: PressureState,
 ) -> Generator[T_JSON_DICT, T_JSON_DICT, None]:
     """
+    TODO: OBSOLETE: To remove when setPressureDataOverride is merged.
     Provides a given pressure state that will be processed and eventually be
     delivered to PressureObserver users. ``source`` must have been previously
     overridden by setPressureSourceOverrideEnabled.
@@ -1004,6 +1190,34 @@ def set_pressure_state_override(
     params["state"] = state.to_json()
     cmd_dict: T_JSON_DICT = {
         "method": "Emulation.setPressureStateOverride",
+        "params": params,
+    }
+    yield cmd_dict
+
+
+def set_pressure_data_override(
+    source: PressureSource,
+    state: PressureState,
+    own_contribution_estimate: float | None = None,
+) -> Generator[T_JSON_DICT, T_JSON_DICT, None]:
+    """
+    Provides a given pressure data set that will be processed and eventually be
+    delivered to PressureObserver users. ``source`` must have been previously
+    overridden by setPressureSourceOverrideEnabled.
+
+    **EXPERIMENTAL**
+
+    :param source:
+    :param state:
+    :param own_contribution_estimate: *(Optional)*
+    """
+    params: T_JSON_DICT = {}
+    params["source"] = source.to_json()
+    params["state"] = state.to_json()
+    if own_contribution_estimate is not None:
+        params["ownContributionEstimate"] = own_contribution_estimate
+    cmd_dict: T_JSON_DICT = {
+        "method": "Emulation.setPressureDataOverride",
         "params": params,
     }
     yield cmd_dict
@@ -1229,6 +1443,26 @@ def set_disabled_image_types(
     yield cmd_dict
 
 
+def set_data_saver_override(
+    data_saver_enabled: bool | None = None,
+) -> Generator[T_JSON_DICT, T_JSON_DICT, None]:
+    """
+    Override the value of navigator.connection.saveData
+
+    **EXPERIMENTAL**
+
+    :param data_saver_enabled: *(Optional)* Override value. Omitting the parameter disables the override.
+    """
+    params: T_JSON_DICT = {}
+    if data_saver_enabled is not None:
+        params["dataSaverEnabled"] = data_saver_enabled
+    cmd_dict: T_JSON_DICT = {
+        "method": "Emulation.setDataSaverOverride",
+        "params": params,
+    }
+    yield cmd_dict
+
+
 def set_hardware_concurrency_override(
     hardware_concurrency: int,
 ) -> Generator[T_JSON_DICT, T_JSON_DICT, None]:
@@ -1292,6 +1526,114 @@ def set_automation_override(
     params["enabled"] = enabled
     cmd_dict: T_JSON_DICT = {
         "method": "Emulation.setAutomationOverride",
+        "params": params,
+    }
+    yield cmd_dict
+
+
+def set_small_viewport_height_difference_override(
+    difference: int,
+) -> Generator[T_JSON_DICT, T_JSON_DICT, None]:
+    """
+    Allows overriding the difference between the small and large viewport sizes, which determine the
+    value of the ``svh`` and ``lvh`` unit, respectively. Only supported for top-level frames.
+
+    **EXPERIMENTAL**
+
+    :param difference: This will cause an element of size 100svh to be ```difference``` pixels smaller than an element of size 100lvh.
+    """
+    params: T_JSON_DICT = {}
+    params["difference"] = difference
+    cmd_dict: T_JSON_DICT = {
+        "method": "Emulation.setSmallViewportHeightDifferenceOverride",
+        "params": params,
+    }
+    yield cmd_dict
+
+
+def get_screen_infos() -> Generator[T_JSON_DICT, T_JSON_DICT, list[ScreenInfo]]:
+    """
+    Returns device's screen configuration.
+
+    **EXPERIMENTAL**
+
+    :returns:
+    """
+    cmd_dict: T_JSON_DICT = {
+        "method": "Emulation.getScreenInfos",
+    }
+    json = yield cmd_dict
+    return [ScreenInfo.from_json(i) for i in json["screenInfos"]]
+
+
+def add_screen(
+    left: int,
+    top: int,
+    width: int,
+    height: int,
+    work_area_insets: WorkAreaInsets | None = None,
+    device_pixel_ratio: float | None = None,
+    rotation: int | None = None,
+    color_depth: int | None = None,
+    label: str | None = None,
+    is_internal: bool | None = None,
+) -> Generator[T_JSON_DICT, T_JSON_DICT, ScreenInfo]:
+    """
+    Add a new screen to the device. Only supported in headless mode.
+
+    **EXPERIMENTAL**
+
+    :param left: Offset of the left edge of the screen in pixels.
+    :param top: Offset of the top edge of the screen in pixels.
+    :param width: The width of the screen in pixels.
+    :param height: The height of the screen in pixels.
+    :param work_area_insets: *(Optional)* Specifies the screen's work area. Default is entire screen.
+    :param device_pixel_ratio: *(Optional)* Specifies the screen's device pixel ratio. Default is 1.
+    :param rotation: *(Optional)* Specifies the screen's rotation angle. Available values are 0, 90, 180 and 270. Default is 0.
+    :param color_depth: *(Optional)* Specifies the screen's color depth in bits. Default is 24.
+    :param label: *(Optional)* Specifies the descriptive label for the screen. Default is none.
+    :param is_internal: *(Optional)* Indicates whether the screen is internal to the device or external, attached to the device. Default is false.
+    :returns:
+    """
+    params: T_JSON_DICT = {}
+    params["left"] = left
+    params["top"] = top
+    params["width"] = width
+    params["height"] = height
+    if work_area_insets is not None:
+        params["workAreaInsets"] = work_area_insets.to_json()
+    if device_pixel_ratio is not None:
+        params["devicePixelRatio"] = device_pixel_ratio
+    if rotation is not None:
+        params["rotation"] = rotation
+    if color_depth is not None:
+        params["colorDepth"] = color_depth
+    if label is not None:
+        params["label"] = label
+    if is_internal is not None:
+        params["isInternal"] = is_internal
+    cmd_dict: T_JSON_DICT = {
+        "method": "Emulation.addScreen",
+        "params": params,
+    }
+    json = yield cmd_dict
+    return ScreenInfo.from_json(json["screenInfo"])
+
+
+def remove_screen(
+    screen_id: ScreenId,
+) -> Generator[T_JSON_DICT, T_JSON_DICT, None]:
+    """
+    Remove screen from the device. Only supported in headless mode.
+
+    **EXPERIMENTAL**
+
+    :param screen_id:
+    """
+    params: T_JSON_DICT = {}
+    params["screenId"] = screen_id.to_json()
+    cmd_dict: T_JSON_DICT = {
+        "method": "Emulation.removeScreen",
         "params": params,
     }
     yield cmd_dict
