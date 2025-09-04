@@ -10,18 +10,57 @@ $metadata title
 
 import logging
 import re
+from urllib.parse import parse_qsl, urlparse
 
 from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.api import validate
 from streamlink.stream.dash import DASHStream
-from streamlink.stream.hls import HLSStream
+from streamlink.stream.hls import HLSStream, HLSStreamReader, HLSStreamWorker
+from streamlink.utils.url import update_qsd
 
 
 log = logging.getLogger(__name__)
 
 
+class ChzzkHLSStreamWorker(HLSStreamWorker):
+    """Custom HLS stream worker that adds __bgda__ query parameter to segment URLs"""
+
+    reader: "ChzzkHLSStreamReader"
+    stream: "ChzzkHLSStream"
+
+    def process_segments(self, playlist):
+        """Override process_segments to add __bgda__ parameter to segment URIs"""
+
+        # Only modify segments if we have bgda_param
+        if hasattr(self.stream, "bgda_param") and self.stream.bgda_param:
+            for segment in playlist.segments:
+                # Only modify .m4v segments and if __bgda__ parameter doesn't already exist
+                if ".m4v" in segment.uri and "__bgda__" not in segment.uri:
+                    segment.uri = update_qsd(segment.uri, {"__bgda__": self.stream.bgda_param}, safe="=")
+
+        return super().process_segments(playlist)
+
+
+class ChzzkHLSStreamReader(HLSStreamReader):
+    __worker__ = ChzzkHLSStreamWorker
+
+    worker: "ChzzkHLSStreamWorker"
+    stream: "ChzzkHLSStream"
+
+
+class ChzzkHLSStream(HLSStream):
+    """Custom HLS stream that adds __bgda__ query parameter to segment URLs"""
+
+    __reader__ = ChzzkHLSStreamReader
+
+    def __init__(self, session, url, bgda_param=None, **kwargs):
+        self.bgda_param = bgda_param
+        super().__init__(session, url, **kwargs)
+
+
 class ChzzkAPI:
     _CHANNELS_LIVE_DETAIL_URL = "https://api.chzzk.naver.com/service/v2/channels/{channel_id}/live-detail"
+    _CHANNELS_LIVE_PLAYBACK_URL = "https://api.chzzk.naver.com/service/v1/channels/{channel_id}/live-playback-json"
     _VIDEOS_URL = "https://api.chzzk.naver.com/service/v2/videos/{video_id}"
     _CLIP_URL = "https://api.chzzk.naver.com/service/v1/play-info/clip/{clip_id}"
 
@@ -96,6 +135,7 @@ class ChzzkAPI:
                     },
                     validate.get("media"),
                 ),
+                "timeMachineActive": bool,
             },
             validate.union_get(
                 "livePlaybackJson",
@@ -105,6 +145,38 @@ class ChzzkAPI:
                 "liveCategory",
                 "liveTitle",
                 "adult",
+                "timeMachineActive",
+            ),
+        )
+
+    def get_live_playback(self, channel_id):
+        return self._query_api(
+            self._CHANNELS_LIVE_PLAYBACK_URL.format(channel_id=channel_id),
+            {
+                "playbackJson": validate.none_or_all(
+                    str,
+                    validate.parse_json(),
+                    {
+                        "media": [
+                            validate.all(
+                                {
+                                    "mediaId": str,
+                                    "protocol": str,
+                                    "path": validate.url(),
+                                },
+                                validate.union_get(
+                                    "mediaId",
+                                    "protocol",
+                                    "path",
+                                ),
+                            ),
+                        ],
+                    },
+                    validate.get("media"),
+                ),
+            },
+            validate.get(
+                "playbackJson",
             ),
         )
 
@@ -195,7 +267,7 @@ class Chzzk(Plugin):
         if data is None:
             return
 
-        media, status, self.id, self.author, self.category, self.title, adult = data
+        media, status, self.id, self.author, self.category, self.title, adult, timeMachineActive = data
         if status != self._STATUS_OPEN:
             log.error("The stream is unavailable")
             return
@@ -203,12 +275,27 @@ class Chzzk(Plugin):
             log.error(f"This stream is {'for adults only' if adult else 'unavailable'}")
             return
 
+        if timeMachineActive:
+            log.info("Time machine is active, attempting to get playback streams")
+            datatype_playback, data_playback = self._api.get_live_playback(channel_id)
+            if datatype_playback != "error" and data_playback is not None:
+                for media_id, media_protocol, media_path in data_playback:
+                    if media_protocol == "HLS" and media_id == "HLS":
+                        # Extract __bgda__ parameter from the media path URL
+                        parsed_url = urlparse(media_path)
+                        bgda_param = dict(parse_qsl(parsed_url.query)).get("hdnts")
+                        return ChzzkHLSStream.parse_variant_playlist(
+                            self.session,
+                            media_path,
+                            bgda_param=bgda_param,
+                            ffmpeg_options={"copyts": True},
+                        )
+
         for media_id, media_protocol, media_path in media:
             if media_protocol == "HLS" and media_id == "HLS":
                 return HLSStream.parse_variant_playlist(
                     self.session,
                     media_path,
-                    channel_id=channel_id,
                     ffmpeg_options={"copyts": True},
                 )
 
