@@ -1,5 +1,22 @@
 # Changelog
 
+## streamlink 7.6.0 (2025-09-08)
+
+- Added: official support for Python 3.14 ([#6617](https://github.com/streamlink/streamlink/pull/6617))
+- Added: `--skip` for stopping on existing file outputs without user prompts ([#6633](https://github.com/streamlink/streamlink/pull/6633))
+- Added: `CDPClientSession.{apply,retrieve}_cookies()` for copying cookies between Streamlink's HTTP session and the web browser ([#6650](https://github.com/streamlink/streamlink/pull/6650))
+- Updated plugins:
+  - chzzk: added support for live streams with a wider content availability window ([#6652](https://github.com/streamlink/streamlink/pull/6652))
+  - indihometv: removed plugin ([#6615](https://github.com/streamlink/streamlink/pull/6615))
+  - kick: added `--kick-low-latency` ([#6605](https://github.com/streamlink/streamlink/pull/6605))
+  - lrt: fixed plugin ([#6608](https://github.com/streamlink/streamlink/pull/6608), [#6637](https://github.com/streamlink/streamlink/pull/6637))
+  - mediaklikk: fixed plugin ([#6629](https://github.com/streamlink/streamlink/pull/6629))
+  - vkvideo: renamed to vkvideolive, added VOD support ([#6640](https://github.com/streamlink/streamlink/pull/6640), [#6642](https://github.com/streamlink/streamlink/pull/6642))
+- Docs: fixed compatibility with `docutils>=0.22` (transitive dependency) ([#6625](https://github.com/streamlink/streamlink/pull/6625))
+
+[Full changelog](https://github.com/streamlink/streamlink/compare/7.5.0...7.6.0)
+
+
 ## streamlink 7.5.0 (2025-07-08)
 
 - Added: `--no-plugin-sideloading` for disabling plugin sideloading from the default location ([#6602](https://github.com/streamlink/streamlink/pull/6602))
