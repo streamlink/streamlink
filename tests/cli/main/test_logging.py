@@ -5,6 +5,7 @@ import sys
 from io import StringIO
 from pathlib import Path
 from textwrap import dedent
+from typing import TYPE_CHECKING
 from unittest.mock import Mock, call
 
 import pytest
@@ -12,10 +13,13 @@ import pytest
 import streamlink_cli.main
 import tests
 from streamlink.logger import ALL, TRACE, StringFormatter
-from streamlink.session import Streamlink
-from streamlink_cli.argparser import ArgumentParser
 from streamlink_cli.exceptions import StreamlinkCLIError
 from streamlink_cli.main import build_parser
+
+
+if TYPE_CHECKING:
+    from streamlink.session import Streamlink
+    from streamlink_cli.argparser import ArgumentParser
 
 
 @pytest.fixture(autouse=True)

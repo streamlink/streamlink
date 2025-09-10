@@ -2,21 +2,25 @@ from __future__ import annotations
 
 import logging
 import warnings
-from collections.abc import Mapping
 from functools import lru_cache
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import streamlink.compat  # noqa: F401
 from streamlink import __version__
 from streamlink.exceptions import NoPluginError, PluginError, StreamlinkDeprecationWarning
 from streamlink.logger import StreamlinkLogger
-from streamlink.options import Options
-from streamlink.plugin.plugin import Plugin
 from streamlink.session.http import HTTPSession
 from streamlink.session.options import StreamlinkOptions
 from streamlink.session.plugins import StreamlinkPlugins
 from streamlink.utils.l10n import Localization
 from streamlink.utils.url import update_scheme
+
+
+if TYPE_CHECKING:
+    from collections.abc import Mapping
+
+    from streamlink.options import Options
+    from streamlink.plugin.plugin import Plugin
 
 
 # Ensure that the Logger class returned is Streamslink's for using the API (for backwards compatibility)

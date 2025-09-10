@@ -594,7 +594,7 @@ class TestMatchURLLoadLazy:
 
     @pytest.fixture()
     def _loaded_matchers(self, session: Streamlink):
-        matchers = cast(Matchers, _TestPlugin.matchers)
+        matchers = cast("Matchers", _TestPlugin.matchers)
         session.plugins._matchers.update({"testplugin": matchers})
         assert session.plugins.get_loaded() == {}
         assert session.plugins.get_names() == ["testplugin"]

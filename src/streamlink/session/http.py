@@ -4,11 +4,11 @@ import re
 import ssl
 import time
 import warnings
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import requests.adapters
 import urllib3
-from requests import PreparedRequest, Request, Session
+from requests import Request, Session
 from requests.adapters import HTTPAdapter
 
 import streamlink.session.http_useragents as useragents
@@ -22,6 +22,10 @@ try:
 except ImportError:  # pragma: no cover
     # urllib3 <2.0.0 compat import
     from urllib3.util.ssl_ import create_urllib3_context
+
+
+if TYPE_CHECKING:
+    from requests import PreparedRequest
 
 
 # urllib3>=2.0.0: enforce_content_length now defaults to True (keep the override for backwards compatibility)

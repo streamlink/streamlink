@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import argparse
 import importlib.metadata
 import logging
 import os
@@ -11,22 +10,18 @@ import ssl
 import sys
 import warnings
 from atexit import register as _atexit_register
-from collections.abc import Mapping
 from contextlib import closing, suppress
 from gettext import gettext
 from pathlib import Path
 from time import sleep
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import streamlink.logger as logger
 from streamlink import NoPluginError, PluginError, StreamError, Streamlink, __version__ as streamlink_version
 from streamlink.exceptions import FatalPluginError, StreamlinkDeprecationWarning
-from streamlink.plugin import Plugin
-from streamlink.stream.stream import Stream, StreamIO
 from streamlink.utils.named_pipe import NamedPipe
 from streamlink.utils.times import LOCAL as LOCALTIMEZONE
 from streamlink_cli.argparser import (
-    ArgumentParser,
     build_parser,
     setup_plugin_args,
     setup_plugin_options,
@@ -49,6 +44,15 @@ from streamlink_cli.show_matchers import show_matchers
 from streamlink_cli.streamrunner import StreamRunner
 from streamlink_cli.utils import Formatter, datetime
 from streamlink_cli.utils.versioncheck import check_version
+
+
+if TYPE_CHECKING:
+    import argparse
+    from collections.abc import Mapping
+
+    from streamlink.plugin import Plugin
+    from streamlink.stream.stream import Stream, StreamIO
+    from streamlink_cli.argparser import ArgumentParser
 
 
 QUIET_OPTIONS = ("json", "stream_url", "quiet")

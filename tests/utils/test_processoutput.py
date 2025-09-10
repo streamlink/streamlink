@@ -1,15 +1,21 @@
 from __future__ import annotations
 
 import sys
-from collections.abc import Awaitable, Callable
+from typing import TYPE_CHECKING
 from unittest.mock import Mock, call
 
 import pytest
 import trio
-from trio.testing import MockClock, wait_all_tasks_blocked
+from trio.testing import wait_all_tasks_blocked
 
 from streamlink.compat import ExceptionGroup
 from streamlink.utils.processoutput import ProcessOutput
+
+
+if TYPE_CHECKING:
+    from collections.abc import Awaitable, Callable
+
+    from trio.testing import MockClock
 
 
 TIME_TEST_MAX = 10

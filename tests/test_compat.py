@@ -1,12 +1,18 @@
+from __future__ import annotations
+
 import importlib.machinery
 import importlib.util
 from contextlib import nullcontext
 from textwrap import dedent
-from types import ModuleType
+from typing import TYPE_CHECKING
 
 import pytest
 
 from streamlink.exceptions import StreamlinkDeprecationWarning
+
+
+if TYPE_CHECKING:
+    from types import ModuleType
 
 
 class TestDeprecated:

@@ -1,13 +1,16 @@
 from __future__ import annotations
 
 import os
-from io import TextIOWrapper
 from threading import RLock
-from typing import Iterable, Iterator
+from typing import TYPE_CHECKING, Iterable, Iterator
 
 from streamlink.compat import is_win32
 from streamlink_cli.console.stream_wrapper import StreamWrapper
 from streamlink_cli.console.windows import WindowsConsole
+
+
+if TYPE_CHECKING:
+    from io import TextIOWrapper
 
 
 class ConsoleStatusMessage(str):

@@ -1,12 +1,16 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import datetime
 from pathlib import Path
+from typing import TYPE_CHECKING
 from urllib.parse import urlparse
 
 from streamlink.stream.segmented.segment import Segment
 from streamlink.utils.times import fromtimestamp, now
+
+
+if TYPE_CHECKING:
+    from datetime import datetime
 
 
 EPOCH_START = fromtimestamp(0)

@@ -1,10 +1,16 @@
+from __future__ import annotations
+
 from io import BytesIO
+from typing import TYPE_CHECKING
 from unittest.mock import Mock, call
 
 import pytest
 
-from streamlink import Streamlink
 from streamlink.stream.file import FileStream
+
+
+if TYPE_CHECKING:
+    from streamlink import Streamlink
 
 
 class TestFileStream:

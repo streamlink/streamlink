@@ -3,13 +3,14 @@ from __future__ import annotations
 import sys
 from importlib.machinery import FileFinder
 from importlib.util import module_from_spec
-from pathlib import Path
 from pkgutil import get_importer
-from types import ModuleType
 from typing import TYPE_CHECKING
 
 
 if TYPE_CHECKING:
+    from pathlib import Path
+    from types import ModuleType
+
     from _typeshed.importlib import PathEntryFinderProtocol
 
 

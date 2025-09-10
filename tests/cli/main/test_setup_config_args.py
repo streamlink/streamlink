@@ -2,14 +2,18 @@ from __future__ import annotations
 
 from argparse import Namespace
 from pathlib import Path
+from typing import TYPE_CHECKING
 from unittest.mock import Mock, call
 
 import pytest
 
 import tests.resources
-from streamlink import Streamlink
 from streamlink.exceptions import NoPluginError
 from streamlink_cli.main import setup_config_args
+
+
+if TYPE_CHECKING:
+    from streamlink import Streamlink
 
 
 CONFIGDIR = Path(tests.resources.__path__[0], "cli", "config")

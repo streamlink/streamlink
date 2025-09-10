@@ -1,8 +1,14 @@
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
 from unittest.mock import ANY, MagicMock
 
-from streamlink import Streamlink
 from streamlink.plugins.ustreamtv import UStreamTV
 from tests.plugins import PluginCanHandleUrl
+
+
+if TYPE_CHECKING:
+    from streamlink import Streamlink
 
 
 class TestPluginCanHandleUrlUStreamTV(PluginCanHandleUrl):

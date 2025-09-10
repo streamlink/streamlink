@@ -3,14 +3,17 @@ from __future__ import annotations
 import json
 import logging
 from threading import RLock, Thread, current_thread
-from typing import Any
+from typing import TYPE_CHECKING, Any
 from urllib.parse import unquote_plus, urlparse
 
 from certifi import where as certify_where
 from websocket import ABNF, STATUS_NORMAL, WebSocketApp, enableTrace  # type: ignore[attr-defined,import]
 
 from streamlink.logger import TRACE, root as rootlogger
-from streamlink.session import Streamlink
+
+
+if TYPE_CHECKING:
+    from streamlink.session import Streamlink
 
 
 log = logging.getLogger(__name__)

@@ -5,24 +5,28 @@ import logging as _logging
 import numbers
 import re
 import warnings
-from collections.abc import Callable
 from pathlib import Path
 from string import printable
 from textwrap import dedent
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from streamlink import __version__ as streamlink_version, logger
 from streamlink.exceptions import StreamlinkDeprecationWarning
 from streamlink.options import Options
-from streamlink.plugin import Plugin
-from streamlink.session import Streamlink
-from streamlink.user_input import UserInputRequester
 from streamlink.utils.args import boolean, comma_list, comma_list_filter, filesize, keyvalue, num
 from streamlink.utils.times import hours_minutes_seconds_float
 from streamlink_cli.constants import STREAM_PASSTHROUGH
 from streamlink_cli.exceptions import StreamlinkCLIError
 from streamlink_cli.output.player import PlayerOutput
 from streamlink_cli.utils import find_default_player
+
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    from streamlink.plugin import Plugin
+    from streamlink.session import Streamlink
+    from streamlink.user_input import UserInputRequester
 
 
 log = _logging.getLogger(__name__)

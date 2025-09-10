@@ -1,11 +1,15 @@
 from __future__ import annotations
 
-from collections.abc import Iterable
 from os import environ
 from pathlib import Path
 from shutil import which
+from typing import TYPE_CHECKING
 
 from streamlink.compat import is_darwin, is_win32
+
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable
 
 
 def _resolve_executable(paths: Iterable[Path], *exes: str) -> Path | None:

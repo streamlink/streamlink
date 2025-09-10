@@ -6,7 +6,7 @@ import re
 import time
 from contextlib import nullcontext
 from operator import eq, gt, lt
-from typing import Any
+from typing import TYPE_CHECKING, Any
 from unittest.mock import Mock, call, patch
 
 import freezegun
@@ -33,7 +33,10 @@ from streamlink.plugin.plugin import (
     parse_params,
     stream_weight,
 )
-from streamlink.session import Streamlink
+
+
+if TYPE_CHECKING:
+    from streamlink.session import Streamlink
 
 
 class FakePlugin(Plugin):

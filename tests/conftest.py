@@ -2,9 +2,8 @@ from __future__ import annotations
 
 import os
 import sys
-from collections.abc import Callable, Mapping
 from functools import partial
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import pytest
 import requests_mock as rm
@@ -13,6 +12,10 @@ from streamlink.session import Streamlink
 
 # noinspection PyProtectedMember
 from streamlink.utils.thread import _threadname_counters  # noqa: PLC2701
+
+
+if TYPE_CHECKING:
+    from collections.abc import Callable, Mapping
 
 
 _TEST_CONDITION_MARKERS: Mapping[str, tuple[bool, str] | Callable[[Any], tuple[bool, str]]] = {

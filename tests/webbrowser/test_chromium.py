@@ -3,18 +3,22 @@ from __future__ import annotations
 from contextlib import nullcontext
 from pathlib import Path, PurePosixPath, PureWindowsPath
 from signal import SIGTERM
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import pytest
-import requests_mock as rm
 import trio
 from requests import Timeout
 
 from streamlink.compat import is_win32
 from streamlink.exceptions import PluginError
-from streamlink.session import Streamlink
 from streamlink.webbrowser.chromium import ChromiumWebbrowser
 from streamlink.webbrowser.exceptions import WebbrowserError
+
+
+if TYPE_CHECKING:
+    import requests_mock as rm
+
+    from streamlink.session import Streamlink
 
 
 class TestInit:

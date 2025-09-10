@@ -4,13 +4,12 @@ import json
 import unittest
 from contextlib import nullcontext
 from datetime import datetime, timedelta, timezone
+from typing import TYPE_CHECKING
 from unittest.mock import MagicMock, Mock, call, patch
 from urllib.parse import parse_qsl, urlparse
 
 import pytest
-import requests_mock as rm
 
-from streamlink import Streamlink
 from streamlink.exceptions import NoStreamsError, PluginError
 from streamlink.options import Options
 from streamlink.plugin.api import useragents
@@ -18,6 +17,12 @@ from streamlink.plugins.twitch import Twitch, TwitchAPI, TwitchHLSStream, Twitch
 from tests.mixins.stream_hls import EventedHLSStreamWriter, Playlist, Segment as _Segment, Tag, TestMixinStreamHLS
 from tests.plugins import PluginCanHandleUrl
 from tests.resources import text
+
+
+if TYPE_CHECKING:
+    import requests_mock as rm
+
+    from streamlink import Streamlink
 
 
 class TestPluginCanHandleUrlTwitch(PluginCanHandleUrl):

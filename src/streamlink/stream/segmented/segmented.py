@@ -2,19 +2,23 @@ from __future__ import annotations
 
 import logging
 import queue
-from collections.abc import Generator
 from concurrent import futures
-from concurrent.futures import Future, ThreadPoolExecutor
+from concurrent.futures import ThreadPoolExecutor
 from threading import Event, current_thread
 from typing import TYPE_CHECKING, ClassVar, Generic, TypeVar
 
 from streamlink.buffers import RingBuffer
 from streamlink.stream.segmented.segment import Segment
-from streamlink.stream.stream import Stream, StreamIO
+from streamlink.stream.stream import StreamIO
 from streamlink.utils.thread import NamedThread
 
 
 if TYPE_CHECKING:
+    from collections.abc import Generator
+    from concurrent.futures import Future
+
+    from streamlink.stream.stream import Stream
+
     try:
         from typing import TypeAlias  # type: ignore[attr-defined]
     except ImportError:

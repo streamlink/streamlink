@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import warnings
-from collections.abc import Callable, Iterator, Mapping
 from pathlib import Path
 from socket import AF_INET, AF_INET6
 from typing import TYPE_CHECKING, Any, ClassVar
@@ -16,6 +15,8 @@ from streamlink.utils.url import update_scheme
 
 
 if TYPE_CHECKING:
+    from collections.abc import Callable, Iterator, Mapping
+
     from streamlink.session import Streamlink
 
 

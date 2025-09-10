@@ -1,17 +1,24 @@
+from __future__ import annotations
+
 import re
 from pathlib import Path
+from typing import TYPE_CHECKING
 from unittest.mock import Mock
 
 import pytest
-import requests_mock as rm
 
 import tests.plugin
 from streamlink.exceptions import NoPluginError, StreamlinkDeprecationWarning
 from streamlink.options import Options
 from streamlink.plugin import Plugin, pluginmatcher
-from streamlink.session import Streamlink
 from streamlink.stream.hls import HLSStream
 from streamlink.stream.http import HTTPStream
+
+
+if TYPE_CHECKING:
+    import requests_mock as rm
+
+    from streamlink.session import Streamlink
 
 
 PATH_TESTPLUGINS = Path(tests.plugin.__path__[0])

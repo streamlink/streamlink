@@ -5,12 +5,15 @@ from __future__ import annotations
 import argparse
 import re
 import sys
-from collections.abc import Mapping, Sequence
 from os import getenv
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import requests
+
+
+if TYPE_CHECKING:
+    from collections.abc import Mapping, Sequence
 
 
 ROOT = Path(__file__).parents[1].resolve()

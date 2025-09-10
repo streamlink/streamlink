@@ -1,10 +1,14 @@
 from __future__ import annotations
 
 import re
-from collections.abc import Callable
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 from streamlink.compat import is_win32
+
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 
 REPLACEMENT = "_"

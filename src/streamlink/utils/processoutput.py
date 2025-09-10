@@ -1,13 +1,16 @@
 from __future__ import annotations
 
 import math
-from collections.abc import Callable
 from contextlib import suppress
 from functools import partial
 from subprocess import PIPE
-from typing import BinaryIO
+from typing import TYPE_CHECKING, BinaryIO
 
 import trio
+
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 
 class ProcessOutput:

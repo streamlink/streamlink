@@ -1,11 +1,17 @@
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
 from unittest.mock import Mock, call
 
 import pytest
 
 from streamlink.exceptions import FatalPluginError
-from streamlink.session import Streamlink
 from streamlink_cli.console import ConsoleUserInputRequester
 from tests.plugin.testplugin import TestPlugin as _TestPlugin
+
+
+if TYPE_CHECKING:
+    from streamlink.session import Streamlink
 
 
 @pytest.fixture()

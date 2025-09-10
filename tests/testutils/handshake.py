@@ -1,10 +1,14 @@
 from __future__ import annotations
 
-from collections.abc import Awaitable, Callable, Generator
 from contextlib import contextmanager
 from dataclasses import dataclass
 from functools import wraps
 from threading import Event
+from typing import TYPE_CHECKING
+
+
+if TYPE_CHECKING:
+    from collections.abc import Awaitable, Callable, Generator
 
 
 @dataclass

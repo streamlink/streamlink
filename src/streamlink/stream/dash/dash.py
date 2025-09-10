@@ -4,17 +4,14 @@ import copy
 import itertools
 import logging
 from collections import defaultdict
-from collections.abc import Mapping
 from contextlib import contextmanager, suppress
-from datetime import datetime
 from time import time
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from requests import Response
 
 from streamlink.exceptions import PluginError, StreamError
-from streamlink.session import Streamlink
-from streamlink.stream.dash.manifest import MPD, Representation, freeze_timeline
+from streamlink.stream.dash.manifest import MPD, freeze_timeline
 from streamlink.stream.dash.segment import DASHSegment
 from streamlink.stream.ffmpegmux import FFMPEGMuxer
 from streamlink.stream.segmented import SegmentedStreamReader, SegmentedStreamWorker, SegmentedStreamWriter
@@ -22,6 +19,14 @@ from streamlink.stream.stream import Stream
 from streamlink.utils.l10n import Language
 from streamlink.utils.parse import parse_xml
 from streamlink.utils.times import now
+
+
+if TYPE_CHECKING:
+    from collections.abc import Mapping
+    from datetime import datetime
+
+    from streamlink.session import Streamlink
+    from streamlink.stream.dash.manifest import Representation
 
 
 log = logging.getLogger(".".join(__name__.split(".")[:-1]))

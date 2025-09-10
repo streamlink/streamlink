@@ -3,17 +3,22 @@ from __future__ import annotations
 import logging
 import sys
 import tempfile
-from collections.abc import AsyncGenerator, Generator
-from contextlib import AbstractAsyncContextManager, asynccontextmanager, contextmanager
+from contextlib import asynccontextmanager, contextmanager
 from functools import partial
-from pathlib import Path
 from subprocess import DEVNULL
+from typing import TYPE_CHECKING
 
 import trio
 
 from streamlink.compat import BaseExceptionGroup
 from streamlink.utils.path import resolve_executable
 from streamlink.webbrowser.exceptions import WebbrowserError
+
+
+if TYPE_CHECKING:
+    from collections.abc import AsyncGenerator, Generator
+    from contextlib import AbstractAsyncContextManager
+    from pathlib import Path
 
 
 log = logging.getLogger(__name__)

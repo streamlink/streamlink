@@ -1,11 +1,17 @@
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
 from unittest.mock import Mock, call
 
 import pytest
 
 from streamlink.plugin.plugin import BIT_RATE_WEIGHT_RATIO, LOW_PRIORITY, NO_PRIORITY, NORMAL_PRIORITY
 from streamlink.plugins.dash import MPEGDASH
-from streamlink.session import Streamlink
 from tests.plugins import PluginCanHandleUrl
+
+
+if TYPE_CHECKING:
+    from streamlink.session import Streamlink
 
 
 class TestPluginCanHandleUrlMPEGDASH(PluginCanHandleUrl):

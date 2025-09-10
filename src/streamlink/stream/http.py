@@ -1,9 +1,14 @@
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from streamlink.exceptions import StreamError
-from streamlink.session import Streamlink
 from streamlink.stream.stream import Stream
 from streamlink.stream.wrappers import StreamIOIterWrapper, StreamIOThreadWrapper
+
+
+if TYPE_CHECKING:
+    from streamlink.session import Streamlink
 
 
 class HTTPStream(Stream):

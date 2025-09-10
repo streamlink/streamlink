@@ -2,18 +2,22 @@ from __future__ import annotations
 
 import logging
 import warnings
-from collections.abc import Iterable
 from datetime import timezone
 from errno import EINVAL, EPIPE
 from inspect import currentframe, getframeinfo
 from io import BytesIO, TextIOWrapper
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import freezegun
 import pytest
 
 from streamlink import logger
 from streamlink.exceptions import StreamlinkDeprecationWarning, StreamlinkWarning
+
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable
 
 
 def getvalue(output: TextIOWrapper, size: int = -1):

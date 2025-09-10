@@ -10,7 +10,7 @@ from __future__ import annotations
 import logging
 import re
 import time
-from collections.abc import Iterator
+from typing import TYPE_CHECKING
 from urllib.parse import urlparse, urlunparse
 
 from streamlink.exceptions import PluginError, StreamError
@@ -19,6 +19,10 @@ from streamlink.plugin.api import validate
 from streamlink.session.http import TLSSecLevel1Adapter
 from streamlink.stream.hls import HLSStream, HLSStreamReader, HLSStreamWorker
 from streamlink.stream.http import HTTPStream
+
+
+if TYPE_CHECKING:
+    from collections.abc import Iterator
 
 
 log = logging.getLogger(__name__)

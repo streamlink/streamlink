@@ -1,8 +1,8 @@
 from __future__ import annotations
 
 import operator
-from collections.abc import Callable, Container, Mapping
-from typing import Any, Literal
+from collections.abc import Container
+from typing import TYPE_CHECKING, Any, Literal
 from urllib.parse import urlparse
 
 from lxml.etree import XPathError, iselement
@@ -16,6 +16,10 @@ from streamlink.utils.parse import (
 from streamlink.validate._exception import ValidationError
 from streamlink.validate._schemas import AllSchema, AnySchema, TransformSchema
 from streamlink.validate._validate import validate
+
+
+if TYPE_CHECKING:
+    from collections.abc import Callable, Mapping
 
 
 # String related validators

@@ -1,11 +1,17 @@
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
 from unittest.mock import Mock, call
 
 import pytest
 
 from streamlink.plugins.http import HTTPStreamPlugin
-from streamlink.session import Streamlink
 from streamlink.stream.http import HTTPStream
 from tests.plugins import PluginCanHandleUrl
+
+
+if TYPE_CHECKING:
+    from streamlink.session import Streamlink
 
 
 class TestPluginCanHandleUrlHTTPStreamPlugin(PluginCanHandleUrl):

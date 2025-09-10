@@ -2,28 +2,30 @@ from __future__ import annotations
 
 import base64
 import re
-from collections.abc import AsyncGenerator, Awaitable, Callable, Coroutine, Mapping
 from contextlib import asynccontextmanager
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any
 
 import trio
 
-from streamlink.session import Streamlink
-from streamlink.webbrowser.cdp.connection import CDPConnection, CDPSession
+from streamlink.webbrowser.cdp.connection import CDPConnection
 from streamlink.webbrowser.cdp.devtools import fetch, network, page, runtime, target
 from streamlink.webbrowser.cdp.exceptions import CDPError
 from streamlink.webbrowser.chromium import ChromiumWebbrowser
 
 
 if TYPE_CHECKING:
+    from collections.abc import AsyncGenerator, Awaitable, Callable, Coroutine, Mapping
+
+    from streamlink.session import Streamlink
+    from streamlink.webbrowser.cdp.connection import CDPSession
+
     try:
         from typing import Self, TypeAlias  # type: ignore[attr-defined]
     except ImportError:
         from typing_extensions import Self, TypeAlias
 
-
-TRequestHandlerCallable: TypeAlias = "Callable[[CDPClientSession, fetch.RequestPaused], Awaitable]"
+    TRequestHandlerCallable: TypeAlias = "Callable[[CDPClientSession, fetch.RequestPaused], Awaitable]"
 
 
 _re_url_pattern_wildcard = re.compile(r"(.+?)?(\\+)?([*?])")

@@ -2,11 +2,16 @@ from __future__ import annotations
 
 import re
 from textwrap import dedent, indent
+from typing import TYPE_CHECKING
 
-from streamlink.plugin.plugin import HIGH_PRIORITY, LOW_PRIORITY, NO_PRIORITY, NORMAL_PRIORITY, Matchers
-from streamlink.session import Streamlink
-from streamlink_cli.console import ConsoleOutput
+from streamlink.plugin.plugin import HIGH_PRIORITY, LOW_PRIORITY, NO_PRIORITY, NORMAL_PRIORITY
 from streamlink_cli.exceptions import StreamlinkCLIError
+
+
+if TYPE_CHECKING:
+    from streamlink.plugin.plugin import Matchers
+    from streamlink.session import Streamlink
+    from streamlink_cli.console import ConsoleOutput
 
 
 PRIORITY_NAMES = {

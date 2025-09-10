@@ -1,11 +1,15 @@
 from __future__ import annotations
 
-from collections.abc import Sequence
 from contextlib import nullcontext
+from typing import TYPE_CHECKING
 
 import pytest
 
 from streamlink.utils.args import boolean, comma_list, comma_list_filter, filesize, keyvalue, num
+
+
+if TYPE_CHECKING:
+    from collections.abc import Sequence
 
 
 does_not_raise = nullcontext()

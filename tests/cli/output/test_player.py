@@ -1,9 +1,9 @@
 from __future__ import annotations
 
 import subprocess
-from collections.abc import Mapping, Sequence
-from contextlib import AbstractContextManager, nullcontext
+from contextlib import nullcontext
 from pathlib import Path
+from typing import TYPE_CHECKING
 from unittest.mock import Mock, call, patch
 
 import pytest
@@ -16,6 +16,11 @@ from streamlink_cli.output.player import (
     PlayerArgsVLC,
     PlayerOutput,
 )
+
+
+if TYPE_CHECKING:
+    from collections.abc import Mapping, Sequence
+    from contextlib import AbstractContextManager
 
 
 class TestPlayerArgs:

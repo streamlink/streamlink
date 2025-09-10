@@ -1,9 +1,16 @@
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 import pytest
 
 from streamlink.options import Options
 from streamlink.plugins.soop import Soop
-from streamlink.session import Streamlink
 from tests.plugins import PluginCanHandleUrl
+
+
+if TYPE_CHECKING:
+    from streamlink.session import Streamlink
 
 
 class TestPluginCanHandleUrlSoop(PluginCanHandleUrl):

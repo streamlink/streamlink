@@ -1,8 +1,8 @@
 from __future__ import annotations
 
 from collections import defaultdict
-from collections.abc import Iterator, Sequence
 from itertools import count
+from typing import TYPE_CHECKING
 
 import pytest
 
@@ -16,6 +16,10 @@ from streamlink.utils.random import (
     CHOICES_NUM,
     random_token,
 )
+
+
+if TYPE_CHECKING:
+    from collections.abc import Iterator, Sequence
 
 
 @pytest.fixture()

@@ -2,9 +2,9 @@ from __future__ import annotations
 
 import errno
 from collections import deque
-from collections.abc import Callable
 from pathlib import Path
 from threading import Thread
+from typing import TYPE_CHECKING
 from unittest.mock import Mock, patch
 
 import pytest
@@ -14,6 +14,10 @@ from streamlink_cli.console.progress import Progress
 from streamlink_cli.output import FileOutput, HTTPOutput, PlayerOutput
 from streamlink_cli.streamrunner import PlayerPollThread, StreamRunner, log as streamrunnerlogger
 from tests.testutils.handshake import Handshake
+
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 
 TIMEOUT_AWAIT_HANDSHAKE = 1

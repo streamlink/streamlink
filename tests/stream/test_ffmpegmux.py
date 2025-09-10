@@ -1,12 +1,18 @@
 from __future__ import annotations
 
 import subprocess
-from unittest.mock import Mock, call, patch
+from typing import TYPE_CHECKING
+from unittest.mock import call, patch
 
 import pytest
 
-from streamlink import Streamlink
 from streamlink.stream.ffmpegmux import FFMPEGMuxer, FFmpegVersionOutput
+
+
+if TYPE_CHECKING:
+    from unittest.mock import Mock
+
+    from streamlink import Streamlink
 
 
 # noinspection PyProtectedMember

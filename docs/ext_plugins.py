@@ -5,9 +5,8 @@ import ast
 import pkgutil
 import re
 import tokenize
-from collections.abc import Iterator
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from docutils import nodes
 from docutils.parsers.rst import Directive
@@ -16,6 +15,10 @@ from sphinx.errors import ExtensionError
 from sphinx.util.nodes import nested_parse_with_titles
 
 from streamlink import plugins as streamlink_plugins
+
+
+if TYPE_CHECKING:
+    from collections.abc import Iterator
 
 
 class IDatalistItem(abc.ABC):

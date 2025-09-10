@@ -4,10 +4,15 @@ import errno
 import logging
 from contextlib import suppress
 from threading import Event, Lock, Thread
+from typing import TYPE_CHECKING
 
-from streamlink.stream.stream import StreamIO
-from streamlink_cli.console.progress import Progress
-from streamlink_cli.output import HTTPOutput, Output, PlayerOutput
+from streamlink_cli.output import HTTPOutput, PlayerOutput
+
+
+if TYPE_CHECKING:
+    from streamlink.stream.stream import StreamIO
+    from streamlink_cli.console.progress import Progress
+    from streamlink_cli.output import Output
 
 
 # Use the main Streamlink CLI module as logger

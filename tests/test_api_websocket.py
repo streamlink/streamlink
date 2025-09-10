@@ -1,3 +1,6 @@
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
 from unittest.mock import ANY, Mock, call, patch
 
 import pytest
@@ -5,9 +8,12 @@ from websocket import ABNF, STATUS_NORMAL  # type: ignore[import]
 
 from streamlink.logger import DEBUG, TRACE
 from streamlink.plugin.api.websocket import WebsocketClient
-from streamlink.session import Streamlink
 from streamlink.session.http_useragents import FIREFOX
 from tests.testutils.handshake import Handshake
+
+
+if TYPE_CHECKING:
+    from streamlink.session import Streamlink
 
 
 @pytest.mark.parametrize(

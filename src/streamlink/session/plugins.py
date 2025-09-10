@@ -7,10 +7,8 @@ import json
 import logging
 import pkgutil
 import re
-from collections.abc import Iterator, Mapping
 from contextlib import suppress
 from pathlib import Path
-from types import ModuleType
 from typing import TYPE_CHECKING, Literal, TypedDict
 
 import streamlink.plugins
@@ -22,6 +20,9 @@ from streamlink.utils.module import exec_module, get_finder
 
 
 if TYPE_CHECKING:
+    from collections.abc import Iterator, Mapping
+    from types import ModuleType
+
     try:
         from typing import TypeAlias  # type: ignore[attr-defined]
     except ImportError:

@@ -3,8 +3,11 @@ from __future__ import annotations
 import io
 import json
 import logging
+from typing import TYPE_CHECKING
 
-from streamlink.session import Streamlink
+
+if TYPE_CHECKING:
+    from streamlink.session import Streamlink
 
 
 log = logging.getLogger(__name__)

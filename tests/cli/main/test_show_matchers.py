@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import re
 from textwrap import dedent
+from typing import TYPE_CHECKING
 
 import pytest
 
@@ -9,7 +10,10 @@ import streamlink_cli.main
 
 # noinspection PyProtectedMember
 from streamlink.plugin.plugin import HIGH_PRIORITY, NORMAL_PRIORITY, Matcher, Matchers, Plugin, pluginmatcher
-from streamlink.session import Streamlink
+
+
+if TYPE_CHECKING:
+    from streamlink.session import Streamlink
 
 
 @pytest.fixture(autouse=True)

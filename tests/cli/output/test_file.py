@@ -1,13 +1,17 @@
 from __future__ import annotations
 
-from collections.abc import Iterator
 from contextlib import contextmanager
 from io import BufferedRandom, BufferedWriter
-from pathlib import Path
+from typing import TYPE_CHECKING
 
 import pytest
 
 from streamlink_cli.output import FileOutput
+
+
+if TYPE_CHECKING:
+    from collections.abc import Iterator
+    from pathlib import Path
 
 
 @contextmanager

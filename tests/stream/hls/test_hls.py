@@ -6,15 +6,13 @@ import os
 import unittest
 from datetime import datetime, timedelta, timezone
 from threading import Event
-from typing import NamedTuple
+from typing import TYPE_CHECKING, NamedTuple
 from unittest.mock import Mock, call, patch
 
 import freezegun
 import pytest
-import requests_mock as rm
 from requests.exceptions import InvalidSchema
 
-from streamlink.session import Streamlink
 from streamlink.stream.hls import (
     M3U8,
     HLSPlaylist,
@@ -28,6 +26,12 @@ from streamlink.stream.hls.hls import log
 from streamlink.utils.crypto import AES, pad
 from tests.mixins.stream_hls import EventedHLSStreamWorker, EventedHLSStreamWriter, Playlist, Segment, Tag, TestMixinStreamHLS
 from tests.resources import text
+
+
+if TYPE_CHECKING:
+    import requests_mock as rm
+
+    from streamlink.session import Streamlink
 
 
 EPOCH = datetime(2000, 1, 1, 0, 0, 0, 0, tzinfo=timezone.utc)

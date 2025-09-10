@@ -1,11 +1,15 @@
 from __future__ import annotations
 
 import re
-from collections.abc import Callable
-from datetime import datetime, timezone, tzinfo
-from typing import Generic, TypeVar
+from datetime import datetime, timezone
+from typing import TYPE_CHECKING, Generic, TypeVar
 
 from isodate import LOCAL, parse_datetime  # type: ignore[import]
+
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+    from datetime import tzinfo
 
 
 UTC = timezone.utc
