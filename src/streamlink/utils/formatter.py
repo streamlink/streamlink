@@ -1,8 +1,11 @@
 from __future__ import annotations
 
-from collections.abc import Callable
 from string import Formatter as StringFormatter
-from typing import Any
+from typing import TYPE_CHECKING, Any
+
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 
 # we only need string.Formatter for calling its parse() method, which returns `_string.formatter_parser(string)`.

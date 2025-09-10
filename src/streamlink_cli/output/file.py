@@ -1,7 +1,6 @@
 from __future__ import annotations
 
-from pathlib import Path
-from typing import BinaryIO
+from typing import TYPE_CHECKING, BinaryIO
 
 from streamlink.compat import is_win32
 from streamlink_cli.compat import stdout
@@ -11,6 +10,10 @@ from streamlink_cli.output.abc import Output
 if is_win32:
     import msvcrt
     from os import O_BINARY  # type: ignore[attr-defined]
+
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 
 class FileOutput(Output):

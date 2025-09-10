@@ -1,10 +1,14 @@
 from __future__ import annotations
 
-from pathlib import Path
+from typing import TYPE_CHECKING
 
 import pytest
 
 from streamlink.utils.path import resolve_executable
+
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 
 RESOLVE_EXECUTABLE_LOOKUPS = {

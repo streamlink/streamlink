@@ -1,8 +1,12 @@
 from __future__ import annotations
 
 import argparse
-from collections.abc import Callable, Iterable, Iterator, Mapping
-from typing import Any, ClassVar, Dict, Literal, TypeVar
+from collections.abc import Iterable
+from typing import TYPE_CHECKING, Any, ClassVar, Dict, Literal, TypeVar
+
+
+if TYPE_CHECKING:
+    from collections.abc import Callable, Iterator, Mapping
 
 
 class Options(Dict[str, Any]):

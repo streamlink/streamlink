@@ -1,10 +1,18 @@
-import pytest
-from requests_mock import Mocker
+from __future__ import annotations
 
-from streamlink import Streamlink
+from typing import TYPE_CHECKING
+
+import pytest
+
 from streamlink.plugins.rtpplay import RTPPlay
 from tests.plugins import PluginCanHandleUrl
 from tests.resources import text
+
+
+if TYPE_CHECKING:
+    from requests_mock import Mocker
+
+    from streamlink import Streamlink
 
 
 class TestPluginCanHandleUrlRTPPlay(PluginCanHandleUrl):

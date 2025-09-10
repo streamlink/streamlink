@@ -287,6 +287,8 @@ select = [
   "PIE",
   # flake8-print
   "T20",
+  # flake8-type-checking
+  "TC",
   # flake8-pytest-style
   "PT",
   # flake8-use-pathlib
@@ -311,6 +313,7 @@ ignore = [
   "RUF022",  # unsorted-dunder-all
   "RUF027",  # missing-f-string-syntax
 ]
+future-annotations = true
 
 [tool.ruff.lint.per-file-ignores]
 "__init__.py" = ["F401"]
@@ -320,7 +323,7 @@ ignore = [
 "src/streamlink/_version.py" = ["I"]
 "src/streamlink/plugins/*" = ["RUF012"]
 "src/streamlink/session/http_useragents.py" = ["E501"]
-"src/streamlink/webbrowser/cdp/devtools/*" = ["E303", "E501", "F401"]
+"src/streamlink/webbrowser/cdp/devtools/*" = ["E303", "E501", "F401", "TC"]
 "src/streamlink_cli/main.py" = ["PLW0603"]
 "tests/**" = ["RUF012"]
 

@@ -1,9 +1,15 @@
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
 from unittest.mock import Mock, call
 
 import pytest
-import requests_mock as rm
 
 from streamlink_cli.utils.versioncheck import check_version, get_latest, log
+
+
+if TYPE_CHECKING:
+    import requests_mock as rm
 
 
 @pytest.fixture(autouse=True)

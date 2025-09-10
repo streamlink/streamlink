@@ -1,9 +1,13 @@
 from __future__ import annotations
 
-from pathlib import Path
+from typing import TYPE_CHECKING
 
 from streamlink.utils.formatter import Formatter as _BaseFormatter
 from streamlink_cli.utils.path import replace_chars, replace_path, truncate_path
+
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 
 class Formatter(_BaseFormatter):

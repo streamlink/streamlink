@@ -3,7 +3,6 @@ from __future__ import annotations
 import logging
 import sys
 import warnings
-from collections.abc import Iterator
 from logging import CRITICAL, DEBUG, ERROR, INFO, WARNING
 from pathlib import Path
 from sys import version_info
@@ -15,6 +14,10 @@ from warnings import WarningMessage
 
 from streamlink.exceptions import StreamlinkWarning
 from streamlink.utils.times import fromlocaltimestamp
+
+
+if TYPE_CHECKING:
+    from collections.abc import Iterator
 
 
 if TYPE_CHECKING:

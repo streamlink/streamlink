@@ -3,9 +3,8 @@ from __future__ import annotations
 import ast
 import re
 from contextlib import nullcontext, suppress
-from pathlib import Path
 from textwrap import dedent
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import pytest
 
@@ -20,6 +19,10 @@ from build_backend.plugins_json import (
     build,
     to_json,
 )
+
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 
 does_not_raise = nullcontext()

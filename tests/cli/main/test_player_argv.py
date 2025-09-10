@@ -1,11 +1,17 @@
+from __future__ import annotations
+
 from pathlib import Path
+from typing import TYPE_CHECKING
 from unittest.mock import ANY, Mock, call
 
 import pytest
 
 import streamlink_cli.main
 import tests
-from streamlink import Streamlink
+
+
+if TYPE_CHECKING:
+    from streamlink import Streamlink
 
 
 @pytest.fixture(autouse=True)

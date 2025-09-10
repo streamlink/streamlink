@@ -5,20 +5,26 @@ import itertools
 import json
 import logging
 from collections import defaultdict
-from collections.abc import AsyncGenerator, Generator
 from contextlib import asynccontextmanager
 from typing import TYPE_CHECKING, Generic, TypeVar, cast
 
 import trio
-from trio_websocket import ConnectionClosed, WebSocketConnection, connect_websocket_url  # type: ignore[import]
+from trio_websocket import ConnectionClosed, connect_websocket_url  # type: ignore[import]
 
 from streamlink.logger import ALL, ERROR, WARNING
-from streamlink.webbrowser.cdp.devtools.target import SessionID, TargetID, attach_to_target, create_target
-from streamlink.webbrowser.cdp.devtools.util import T_JSON_DICT, parse_json_event
+from streamlink.webbrowser.cdp.devtools.target import SessionID, attach_to_target, create_target
+from streamlink.webbrowser.cdp.devtools.util import parse_json_event
 from streamlink.webbrowser.cdp.exceptions import CDPError
 
 
 if TYPE_CHECKING:
+    from collections.abc import AsyncGenerator, Generator
+
+    from trio_websocket import WebSocketConnection
+
+    from streamlink.webbrowser.cdp.devtools.target import TargetID
+    from streamlink.webbrowser.cdp.devtools.util import T_JSON_DICT
+
     try:
         from typing import Self, TypeAlias  # type: ignore[attr-defined]
     except ImportError:
@@ -198,7 +204,7 @@ class CDPBase:
             self.cmd_buffers.pop(cmd_id, None)
             raise CDPError("Sending CDP message and receiving its response timed out")
 
-        response = cast(TCmdResponse, cmd_buffer.response)
+        response = cast("TCmdResponse", cmd_buffer.response)
         self.cmd_buffers.pop(cmd_id, None)
 
         if isinstance(response, Exception):

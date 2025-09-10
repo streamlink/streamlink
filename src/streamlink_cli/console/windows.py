@@ -1,8 +1,7 @@
 from __future__ import annotations
 
 import sys
-from collections.abc import Sequence
-from ctypes import CDLL, POINTER, Structure, byref
+from ctypes import POINTER, Structure, byref
 from ctypes.wintypes import (
     BOOL,
     DWORD,
@@ -12,8 +11,13 @@ from ctypes.wintypes import (
     WCHAR,
     WORD,
 )
-from io import TextIOWrapper
-from typing import Callable, ClassVar
+from typing import TYPE_CHECKING, Callable, ClassVar
+
+
+if TYPE_CHECKING:
+    from collections.abc import Sequence
+    from ctypes import CDLL
+    from io import TextIOWrapper
 
 
 # https://learn.microsoft.com/en-us/windows/console/coord-str

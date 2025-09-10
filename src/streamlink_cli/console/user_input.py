@@ -1,5 +1,12 @@
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 from streamlink.user_input import UserInputRequester
-from streamlink_cli.console.console import ConsoleOutput
+
+
+if TYPE_CHECKING:
+    from streamlink_cli.console.console import ConsoleOutput
 
 
 class ConsoleUserInputRequester(UserInputRequester):

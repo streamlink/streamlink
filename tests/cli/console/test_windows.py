@@ -5,14 +5,17 @@ import sys
 # noinspection PyProtectedMember
 from ctypes import Structure, _SimpleCData  # noqa: PLC2701
 from ctypes.wintypes import DWORD, WCHAR, WORD
-from io import TextIOWrapper
 from types import ModuleType
-from typing import ClassVar, Generic, TypeVar
+from typing import TYPE_CHECKING, ClassVar, Generic, TypeVar
 from unittest.mock import ANY, Mock, call
 
 import pytest
 
 from streamlink_cli.console.windows import COORD, WindowsConsole
+
+
+if TYPE_CHECKING:
+    from io import TextIOWrapper
 
 
 _TCTypesType = TypeVar("_TCTypesType")

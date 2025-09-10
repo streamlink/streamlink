@@ -3,22 +3,18 @@ from __future__ import annotations
 import logging
 import re
 import struct
-from collections.abc import Mapping
-from concurrent.futures import Future
-from datetime import datetime, timedelta
+from datetime import timedelta
 from typing import TYPE_CHECKING, Any, ClassVar, TypeVar
 from urllib.parse import urlparse
 
 from requests import Response
 from requests.exceptions import ChunkedEncodingError, ConnectionError, ContentDecodingError, InvalidSchema  # noqa: A004
 
-from streamlink.buffers import RingBuffer
 from streamlink.exceptions import StreamError
-from streamlink.session import Streamlink
 from streamlink.stream.ffmpegmux import FFMPEGMuxer, MuxedStream
 from streamlink.stream.filtered import FilteredStream
-from streamlink.stream.hls.m3u8 import M3U8, M3U8Parser, parse_m3u8
-from streamlink.stream.hls.segment import ByteRange, HLSPlaylist, HLSSegment, Key, Map, Media
+from streamlink.stream.hls.m3u8 import M3U8Parser, parse_m3u8
+from streamlink.stream.hls.segment import HLSSegment
 from streamlink.stream.http import HTTPStream
 from streamlink.stream.segmented import SegmentedStreamReader, SegmentedStreamWorker, SegmentedStreamWriter
 from streamlink.utils.cache import LRUCache
@@ -29,6 +25,15 @@ from streamlink.utils.times import now
 
 
 if TYPE_CHECKING:
+    from collections.abc import Mapping
+    from concurrent.futures import Future
+    from datetime import datetime
+
+    from streamlink.buffers import RingBuffer
+    from streamlink.session import Streamlink
+    from streamlink.stream.hls.m3u8 import M3U8
+    from streamlink.stream.hls.segment import ByteRange, HLSPlaylist, Key, Map, Media
+
     try:
         from typing import Self  # type: ignore[attr-defined]
     except ImportError:

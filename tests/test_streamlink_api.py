@@ -1,8 +1,15 @@
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 import pytest
 
 import tests.plugin
-from streamlink import Streamlink
 from streamlink.api import streams
+
+
+if TYPE_CHECKING:
+    from streamlink import Streamlink
 
 
 class TestStreamlinkAPI:

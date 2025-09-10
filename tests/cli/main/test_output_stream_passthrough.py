@@ -1,11 +1,17 @@
+from __future__ import annotations
+
 import re
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import pytest
 
 import streamlink_cli.main
 import tests
-from streamlink.session import Streamlink
+
+
+if TYPE_CHECKING:
+    from streamlink.session import Streamlink
 
 
 @pytest.fixture(autouse=True)

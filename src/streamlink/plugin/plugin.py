@@ -5,10 +5,9 @@ import logging
 import operator
 import re
 import time
-from collections.abc import Callable, Iterable, Mapping
+from collections.abc import Iterable
 from contextlib import suppress
 from functools import partial
-from http.cookiejar import Cookie
 from typing import TYPE_CHECKING, Any, ClassVar, List, Literal, NamedTuple, Type, TypeVar, Union
 
 import requests.cookies
@@ -18,11 +17,14 @@ import streamlink.utils.times
 from streamlink.cache import Cache
 from streamlink.exceptions import FatalPluginError, NoStreamsError, PluginError
 from streamlink.options import Argument, Arguments, Options
-from streamlink.user_input import UserInputRequester
 
 
-if TYPE_CHECKING:  # pragma: no cover
+if TYPE_CHECKING:
+    from collections.abc import Callable, Mapping
+    from http.cookiejar import Cookie
+
     from streamlink.session.session import Streamlink
+    from streamlink.user_input import UserInputRequester
 
 
 #: See the :func:`~.pluginargument` decorator

@@ -1,11 +1,16 @@
 from __future__ import annotations
 
 from pathlib import Path
-from unittest.mock import Mock, call, patch
+from typing import TYPE_CHECKING
+from unittest.mock import call, patch
 
 import pytest
 
 from streamlink_cli.utils.player import find_default_player
+
+
+if TYPE_CHECKING:
+    from unittest.mock import Mock
 
 
 # noinspection PyTestParametrized

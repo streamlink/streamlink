@@ -1,15 +1,22 @@
+from __future__ import annotations
+
 import threading
+from typing import TYPE_CHECKING
 from unittest.mock import Mock, call
 
 import pytest
 
-from streamlink.utils.named_pipe import NamedPipe, NamedPipeBase, NamedPipePosix, NamedPipeWindows
+from streamlink.utils.named_pipe import NamedPipe, NamedPipePosix, NamedPipeWindows
 
 
 try:
     from ctypes import byref, c_ulong, create_string_buffer, windll  # type: ignore[attr-defined]
 except ImportError:
     pass
+
+
+if TYPE_CHECKING:
+    from streamlink.utils.named_pipe import NamedPipeBase
 
 
 GENERIC_READ = 0x80000000

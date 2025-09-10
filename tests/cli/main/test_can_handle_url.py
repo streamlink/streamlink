@@ -1,11 +1,17 @@
+from __future__ import annotations
+
 import re
+from typing import TYPE_CHECKING
 
 import pytest
 import requests_mock as rm
 
 import streamlink_cli.main
 from streamlink.plugin import Plugin, pluginmatcher
-from streamlink.session import Streamlink
+
+
+if TYPE_CHECKING:
+    from streamlink.session import Streamlink
 
 
 @pytest.fixture(autouse=True)

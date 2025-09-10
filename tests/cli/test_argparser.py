@@ -3,16 +3,14 @@ from __future__ import annotations
 import gettext
 
 # noinspection PyProtectedMember
-from argparse import SUPPRESS, Action, ArgumentError, Namespace, _StoreConstAction, _VersionAction  # noqa: PLC2701
-from pathlib import Path
-from typing import Any
+from argparse import SUPPRESS, ArgumentError, Namespace, _StoreConstAction, _VersionAction  # noqa: PLC2701
+from typing import TYPE_CHECKING, Any
 from unittest.mock import Mock, call
 
 import pytest
 
 from streamlink.exceptions import StreamlinkDeprecationWarning as SDW
 from streamlink.plugin import Plugin, pluginargument
-from streamlink.session import Streamlink
 from streamlink_cli.argparser import (
     ArgumentParser,
     build_parser,
@@ -23,6 +21,13 @@ from streamlink_cli.argparser import (
 from streamlink_cli.console import ConsoleUserInputRequester
 from streamlink_cli.exceptions import StreamlinkCLIError
 from streamlink_cli.main import main as streamlink_cli_main
+
+
+if TYPE_CHECKING:
+    from argparse import Action
+    from pathlib import Path
+
+    from streamlink.session import Streamlink
 
 
 def pytest_generate_tests(metafunc: pytest.Metafunc):

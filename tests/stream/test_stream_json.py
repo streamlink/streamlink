@@ -1,3 +1,6 @@
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
 from unittest.mock import Mock
 
 import pytest
@@ -5,12 +8,15 @@ import pytest
 # noinspection PyUnresolvedReferences
 from requests.utils import DEFAULT_ACCEPT_ENCODING  # type: ignore[attr-defined]
 
-from streamlink import Streamlink
 from streamlink.stream.dash import DASHStream
 from streamlink.stream.file import FileStream
 from streamlink.stream.hls import HLSStream
 from streamlink.stream.http import HTTPStream
 from streamlink.stream.stream import Stream
+
+
+if TYPE_CHECKING:
+    from streamlink import Streamlink
 
 
 @pytest.fixture()

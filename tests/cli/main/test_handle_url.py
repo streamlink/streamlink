@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import json
 import re
-from typing import Iterator
+from typing import TYPE_CHECKING, Iterator
 from unittest.mock import Mock
 
 import pytest
@@ -10,8 +10,11 @@ import pytest
 import streamlink_cli.main
 from streamlink.exceptions import FatalPluginError, PluginError
 from streamlink.plugin import Plugin, pluginmatcher
-from streamlink.session import Streamlink
 from streamlink.stream.stream import Stream
+
+
+if TYPE_CHECKING:
+    from streamlink.session import Streamlink
 
 
 STREAMS = {

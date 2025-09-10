@@ -1,12 +1,18 @@
+from __future__ import annotations
+
 from datetime import datetime, timezone
+from typing import TYPE_CHECKING
 from unittest.mock import patch
 
 import freezegun
 import pytest
 
-from streamlink import Streamlink
 from streamlink.plugins.filmon import Filmon, FilmOnAPI, FilmOnHLS
 from tests.plugins import PluginCanHandleUrl
+
+
+if TYPE_CHECKING:
+    from streamlink import Streamlink
 
 
 class TestPluginCanHandleUrlFilmon(PluginCanHandleUrl):

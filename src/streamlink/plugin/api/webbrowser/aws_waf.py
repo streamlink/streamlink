@@ -2,14 +2,19 @@ from __future__ import annotations
 
 import logging
 import time
+from typing import TYPE_CHECKING
 from urllib.parse import urlparse
 
 import trio
 from requests.cookies import RequestsCookieJar
 
 from streamlink.compat import BaseExceptionGroup
-from streamlink.session import Streamlink
-from streamlink.webbrowser.cdp import CDPClient, CDPClientSession, devtools
+from streamlink.webbrowser.cdp import CDPClient
+
+
+if TYPE_CHECKING:
+    from streamlink.session import Streamlink
+    from streamlink.webbrowser.cdp import CDPClientSession, devtools
 
 
 log = logging.getLogger(__name__)

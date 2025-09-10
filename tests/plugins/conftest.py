@@ -1,11 +1,16 @@
 from __future__ import annotations
 
-from collections.abc import Callable
+from typing import TYPE_CHECKING
 
-import pytest
-
-from streamlink.plugin.plugin import Matcher
 from tests.plugins import PluginCanHandleUrl
+
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    import pytest
+
+    from streamlink.plugin.plugin import Matcher
 
 
 def pytest_collection_modifyitems(items: list[pytest.Item]):  # pragma: no cover

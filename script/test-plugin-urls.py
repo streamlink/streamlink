@@ -7,8 +7,8 @@ import importlib
 import logging
 import re
 import sys
-from collections.abc import Iterator
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 from streamlink import Streamlink
 from streamlink.logger import basicConfig
@@ -18,7 +18,13 @@ from streamlink.logger import basicConfig
 sys.path.append(str(Path(__file__).parent.parent))
 
 
-from tests.plugins import PluginCanHandleUrl, TUrlOrNamedUrl
+from tests.plugins import PluginCanHandleUrl
+
+
+if TYPE_CHECKING:
+    from collections.abc import Iterator
+
+    from tests.plugins import TUrlOrNamedUrl
 
 
 def parse_arguments() -> argparse.Namespace:

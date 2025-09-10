@@ -4,10 +4,14 @@ import sys
 from contextlib import contextmanager, suppress
 from getpass import getpass
 from json import dumps
-from typing import Any, TextIO
+from typing import TYPE_CHECKING, Any, TextIO
 
-from streamlink_cli.console.stream import ConsoleOutputStream, ConsoleStatusMessage
+from streamlink_cli.console.stream import ConsoleStatusMessage
 from streamlink_cli.utils import JSONEncoder
+
+
+if TYPE_CHECKING:
+    from streamlink_cli.console.stream import ConsoleOutputStream
 
 
 class ConsoleOutput:

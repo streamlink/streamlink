@@ -11,8 +11,8 @@ from __future__ import annotations
 import logging
 import re
 from base64 import b64decode
-from collections.abc import Iterator, Sequence
 from io import BytesIO
+from typing import TYPE_CHECKING
 from urllib.parse import urlparse
 
 from streamlink.plugin import Plugin, PluginError, pluginmatcher
@@ -21,6 +21,10 @@ from streamlink.stream.ffmpegmux import MuxedStream
 from streamlink.stream.hls import HLSStream
 from streamlink.stream.http import HTTPStream
 from streamlink.utils.url import update_scheme
+
+
+if TYPE_CHECKING:
+    from collections.abc import Iterator, Sequence
 
 
 log = logging.getLogger(__name__)

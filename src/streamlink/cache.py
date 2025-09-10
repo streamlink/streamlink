@@ -8,14 +8,17 @@ import tempfile
 from atexit import register as _atexit_register
 from contextlib import suppress
 from copy import deepcopy
-from datetime import datetime
 from functools import wraps
 from pathlib import Path
 from threading import RLock, Timer
 from time import time
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from streamlink.compat import is_win32
+
+
+if TYPE_CHECKING:
+    from datetime import datetime
 
 
 if is_win32:

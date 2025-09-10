@@ -7,20 +7,24 @@ import shlex
 import subprocess
 import sys
 import warnings
-from collections.abc import Mapping, Sequence
 from contextlib import suppress
-from pathlib import Path
 from shutil import which
 from time import sleep
-from typing import ClassVar, TextIO
+from typing import TYPE_CHECKING, ClassVar, TextIO
 
 from streamlink.compat import is_win32
 from streamlink.exceptions import StreamlinkWarning
-from streamlink.utils.named_pipe import NamedPipeBase
 from streamlink_cli.output.abc import Output
-from streamlink_cli.output.file import FileOutput
-from streamlink_cli.output.http import HTTPOutput
 from streamlink_cli.utils import Formatter
+
+
+if TYPE_CHECKING:
+    from collections.abc import Mapping, Sequence
+    from pathlib import Path
+
+    from streamlink.utils.named_pipe import NamedPipeBase
+    from streamlink_cli.output.file import FileOutput
+    from streamlink_cli.output.http import HTTPOutput
 
 
 log = logging.getLogger("streamlink.cli.output")

@@ -14,14 +14,19 @@ from __future__ import annotations
 import logging
 import re
 from threading import Event
+from typing import TYPE_CHECKING
 from urllib.parse import urljoin
 
 from streamlink.plugin import Plugin, pluginargument, pluginmatcher
 from streamlink.plugin.api import useragents, validate
 from streamlink.plugin.api.websocket import WebsocketClient
-from streamlink.stream.hls import HLSSegment, HLSStream, HLSStreamReader, HLSStreamWriter
+from streamlink.stream.hls import HLSStream, HLSStreamReader, HLSStreamWriter
 from streamlink.utils.parse import parse_json
 from streamlink.utils.url import update_qsd
+
+
+if TYPE_CHECKING:
+    from streamlink.stream.hls import HLSSegment
 
 
 log = logging.getLogger(__name__)

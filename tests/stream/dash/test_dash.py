@@ -2,19 +2,24 @@ from __future__ import annotations
 
 from contextlib import nullcontext
 from datetime import datetime, timezone
+from typing import TYPE_CHECKING
 from unittest.mock import ANY, Mock, call
 
 import freezegun
 import pytest
-import requests_mock as rm
 from lxml.etree import ParseError
 
 from streamlink.exceptions import PluginError
-from streamlink.session import Streamlink
 from streamlink.stream.dash import MPD, DASHStream, DASHStreamWorker, MPDParsingError
 from streamlink.stream.dash.dash import log
 from streamlink.utils.parse import parse_xml as original_parse_xml
 from tests.resources import text, xml
+
+
+if TYPE_CHECKING:
+    import requests_mock as rm
+
+    from streamlink.session import Streamlink
 
 
 does_not_raise = nullcontext()

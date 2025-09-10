@@ -1,9 +1,11 @@
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from sphinx.addnodes import document
-from sphinx.application import Sphinx
+
+if TYPE_CHECKING:
+    from sphinx.addnodes import document
+    from sphinx.application import Sphinx
 
 
 _CONFIG_VAR = "html_template_vars"

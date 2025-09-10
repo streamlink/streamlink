@@ -1,11 +1,16 @@
+from __future__ import annotations
+
 import importlib.util
 from io import BufferedWriter
 from os import devnull
+from typing import TYPE_CHECKING
 from unittest.mock import Mock, call
 
-import pytest
-
 import streamlink_cli.compat
+
+
+if TYPE_CHECKING:
+    import pytest
 
 
 def test_no_stdout(monkeypatch: pytest.MonkeyPatch):

@@ -2,18 +2,23 @@ from __future__ import annotations
 
 import ssl
 from ssl import SSLContext
+from typing import TYPE_CHECKING
 from unittest.mock import Mock, PropertyMock, call
 
 import pytest
 import requests
 import requests_mock as rm
-from requests.adapters import HTTPAdapter
 from urllib3.response import HTTPResponse
 
-from streamlink import Streamlink
 from streamlink.exceptions import PluginError, StreamlinkDeprecationWarning
 from streamlink.session.http import HTTPSession, SSLContextAdapter, TLSNoDHAdapter, TLSSecLevel1Adapter
 from streamlink.session.http_useragents import DEFAULT
+
+
+if TYPE_CHECKING:
+    from requests.adapters import HTTPAdapter
+
+    from streamlink import Streamlink
 
 
 class TestUrllib3Overrides:

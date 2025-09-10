@@ -1,12 +1,18 @@
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
 from unittest.mock import Mock, call
 
 import pytest
 
 from streamlink.plugin.plugin import LOW_PRIORITY, NO_PRIORITY, NORMAL_PRIORITY
 from streamlink.plugins.hls import HLSPlugin
-from streamlink.session import Streamlink
 from streamlink.stream.hls import HLSStream
 from tests.plugins import PluginCanHandleUrl
+
+
+if TYPE_CHECKING:
+    from streamlink.session import Streamlink
 
 
 class TestPluginCanHandleUrlHLSPlugin(PluginCanHandleUrl):

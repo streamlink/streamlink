@@ -35,15 +35,18 @@ import logging
 import operator
 import re
 import sys
-from collections.abc import Iterator
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
 from textwrap import dedent, indent as tw_indent
-from typing import cast
+from typing import TYPE_CHECKING, cast
 
 import inflection  # type: ignore[import]
 import requests
+
+
+if TYPE_CHECKING:
+    from collections.abc import Iterator
 
 
 URL_API_NPMJS_LATEST = "https://registry.npmjs.org/devtools-protocol/latest"
@@ -291,7 +294,7 @@ class CdpProperty:
                 py_ref = ref_to_python(self.ref, self.domain)
                 ann = py_ref
             else:
-                ann = CdpPrimitiveType.get_annotation(cast(str, self.type))
+                ann = CdpPrimitiveType.get_annotation(cast("str", self.type))
         if self.optional:
             ann = f"{ann} | None"
         return ann
@@ -560,7 +563,7 @@ class CdpParameter(CdpProperty):
             if self.ref:
                 py_type = f"{ref_to_python(self.ref, self.domain)}"
             else:
-                py_type = CdpPrimitiveType.get_annotation(cast(str, self.type))
+                py_type = CdpPrimitiveType.get_annotation(cast("str", self.type))
         if self.optional:
             py_type = f"{py_type} | None"
         code = f"{self.py_name}: {py_type}"
@@ -665,8 +668,8 @@ class CdpCommand:
             command.get("description"),
             command.get("experimental", False),
             command.get("deprecated", False),
-            [cast(CdpParameter, CdpParameter.from_json(p, domain)) for p in parameters],
-            [cast(CdpReturn, CdpReturn.from_json(r, domain)) for r in returns],
+            [cast("CdpParameter", CdpParameter.from_json(p, domain)) for p in parameters],
+            [cast("CdpReturn", CdpReturn.from_json(r, domain)) for r in returns],
             domain,
         )
 
@@ -784,7 +787,7 @@ class CdpEvent:
             json_.get("description"),
             json_.get("deprecated", False),
             json_.get("experimental", False),
-            [cast(CdpParameter, CdpParameter.from_json(p, domain)) for p in json_.get("parameters", [])],
+            [cast("CdpParameter", CdpParameter.from_json(p, domain)) for p in json_.get("parameters", [])],
             domain,
         )
 

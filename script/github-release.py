@@ -7,17 +7,20 @@ import logging
 import re
 import subprocess
 import sys
-from collections.abc import Callable, Generator, Mapping
 from contextlib import contextmanager
 from dataclasses import dataclass
 from os import getenv
 from pathlib import Path
 from pprint import pformat
-from typing import IO, Any, Literal, NewType
+from typing import IO, TYPE_CHECKING, Any, Literal, NewType
 
 # noinspection PyPackageRequirements
 import jinja2
 import requests
+
+
+if TYPE_CHECKING:
+    from collections.abc import Callable, Generator, Mapping
 
 
 log = logging.getLogger(__name__)

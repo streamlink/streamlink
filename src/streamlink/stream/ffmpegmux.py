@@ -6,17 +6,22 @@ import re
 import subprocess
 import sys
 import threading
-from collections.abc import Sequence
 from contextlib import suppress
 from functools import lru_cache
 from pathlib import Path
 from shutil import which
-from typing import Any, ClassVar, Generic, TextIO, TypeVar
+from typing import TYPE_CHECKING, Any, ClassVar, Generic, TextIO, TypeVar
 
 from streamlink import StreamError
 from streamlink.stream.stream import Stream, StreamIO
-from streamlink.utils.named_pipe import NamedPipe, NamedPipeBase
+from streamlink.utils.named_pipe import NamedPipe
 from streamlink.utils.processoutput import ProcessOutput
+
+
+if TYPE_CHECKING:
+    from collections.abc import Sequence
+
+    from streamlink.utils.named_pipe import NamedPipeBase
 
 
 log = logging.getLogger(__name__)

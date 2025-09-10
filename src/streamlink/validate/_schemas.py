@@ -1,8 +1,11 @@
 from __future__ import annotations
 
-from collections.abc import Callable, Sequence
-from re import Pattern
-from typing import Any, Literal
+from typing import TYPE_CHECKING, Any, Literal
+
+
+if TYPE_CHECKING:
+    from collections.abc import Callable, Sequence
+    from re import Pattern
 
 
 class SchemaContainer:

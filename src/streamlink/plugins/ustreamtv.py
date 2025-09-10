@@ -10,12 +10,11 @@ from __future__ import annotations
 import logging
 import re
 from collections import deque
-from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from random import randint
 from threading import Event, RLock
-from typing import Any
+from typing import TYPE_CHECKING, Any
 from urllib.parse import urljoin, urlunparse
 
 from requests import Response
@@ -28,6 +27,10 @@ from streamlink.stream.ffmpegmux import MuxedStream
 from streamlink.stream.segmented import Segment, SegmentedStreamReader, SegmentedStreamWorker, SegmentedStreamWriter
 from streamlink.stream.stream import Stream
 from streamlink.utils.parse import parse_json
+
+
+if TYPE_CHECKING:
+    from collections.abc import Callable, Mapping
 
 
 log = logging.getLogger(__name__)
