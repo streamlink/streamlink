@@ -60,7 +60,7 @@ _Params: TypeAlias = (
 )
 _TextMapping: TypeAlias = MutableMapping[str, str]
 _HeadersUpdateMapping: TypeAlias = Mapping[str, str | bytes | None]
-_Timeout: TypeAlias = float | tuple[float, float] | tuple[float, None]
+_Timeout: TypeAlias = float | tuple[float | None, float | None]
 _Verify: TypeAlias = bool | str
 
 # END: borrowed from typeshed / types-requests
