@@ -29,9 +29,14 @@ log = logging.getLogger(__name__)
     pattern=re.compile(r"https?://(?:aloula\.sba\.sa|(?:www\.)?aloula\.sa)/(?:\w{2}/)?episode/(?P<vod_id>\d+)"),
 )
 class Aloula(Plugin):
+    _URL_API_CHANNELS = "https://aloula.faulio.com/api/v1/channels"
+    _URL_API_CHANNELS_PLAYER = "https://aloula.faulio.com/api/v1.1/channels/{channel}/player"
+    _URL_API_VIDEO = "https://aloula.faulio.com/api/v1/video/{vod_id}"
+    _URL_API_VIDEO_PLAYER = "https://aloula.faulio.com/api/v1/video/{vod_id}/player"
+
     def get_live(self, live_slug):
         live_data = self.session.http.get(
-            "https://aloula.faulio.com/api/v1/channels",
+            self._URL_API_CHANNELS,
             schema=validate.Schema(
                 validate.parse_json(),
                 [
@@ -41,9 +46,6 @@ class Aloula(Plugin):
                         "title": str,
                         "has_live": bool,
                         "has_vod": bool,
-                        "streams": {
-                            "hls": validate.url(),
-                        },
                     },
                 ],
                 validate.filter(lambda k: k["url"] == live_slug),
@@ -51,6 +53,7 @@ class Aloula(Plugin):
         )
         if not live_data:
             return
+
         live_data = live_data[0]
         log.trace(f"{live_data!r}")
 
@@ -62,11 +65,20 @@ class Aloula(Plugin):
         self.author = "SBA"
         self.title = live_data["title"]
         self.category = "Live"
-        return HLSStream.parse_variant_playlist(self.session, live_data["streams"]["hls"])
+
+        hls_url = self.session.http.get(
+            self._URL_API_CHANNELS_PLAYER.format(channel=self.id),
+            schema=validate.Schema(
+                validate.parse_json(),
+                {"streams": {"hls": validate.url()}},
+                validate.get(("streams", "hls")),
+            ),
+        )
+        return HLSStream.parse_variant_playlist(self.session, hls_url)
 
     def get_vod(self, vod_id):
         vod_data = self.session.http.get(
-            f"https://aloula.faulio.com/api/v1/video/{vod_id}",
+            self._URL_API_VIDEO.format(vod_id=vod_id),
             acceptable_status=(200, 401),
             schema=validate.Schema(
                 validate.parse_json(),
@@ -91,19 +103,22 @@ class Aloula(Plugin):
         )
 
         log.trace(f"{vod_data!r}")
+
         if "cms_error" in vod_data and vod_data["cms_error"] == "auth":
             log.error("This stream requires a login; specify appropriate Authorization and profile HTTP headers")
             return
+
         if "cms_error" in vod_data:
             log.error(f"API error: {vod_data['cms_error']} ({vod_data['message']})")
             return
+
         self.id = vod_data["id"]
         self.author = vod_data["program_title"]
         self.title = vod_data["title"]
         self.category = f"S{vod_data['season_number']}E{vod_data['episode']}"
 
         hls_url = self.session.http.get(
-            f"https://aloula.faulio.com/api/v1/video/{vod_id}/player",
+            self._URL_API_VIDEO_PLAYER.format(vod_id=vod_id),
             schema=validate.Schema(
                 validate.parse_json(),
                 {"settings": {"protocols": {"hls": validate.url()}}},
