@@ -9,7 +9,7 @@ from pathlib import Path
 from streamlink import __version__ as streamlink_version
 
 
-sys.path.insert(0, str(Path(__file__).resolve().parent))
+sys.path.insert(0, str(Path(__file__).resolve().parent / "sphinxext"))
 
 
 # -- Project information -------------------------------------------------------
@@ -79,13 +79,13 @@ intersphinx_timeout = 60
 
 
 # -- Options for ext_github ----------------------------------------------------
-# file://./ext_github.py
+# file://./sphinxext/ext_github.py
 
 github_project = "streamlink/streamlink"
 
 
 # -- Options for ext_html_template_vars ----------------------------------------
-# file://./ext_html_template_vars.py
+# file://./sphinxext/ext_html_template_vars.py
 
 html_template_vars = {
     "oneliner": (
