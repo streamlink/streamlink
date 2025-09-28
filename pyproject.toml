@@ -316,7 +316,7 @@ future-annotations = true
 
 [tool.ruff.lint.per-file-ignores]
 "__init__.py" = ["F401"]
-"docs/**" = ["INP", "RUF012"]
+"docs/**" = ["INP"]
 "script/**" = ["INP"]
 "src/streamlink/__init__.py" = ["I"]
 "src/streamlink/_version.py" = ["I"]

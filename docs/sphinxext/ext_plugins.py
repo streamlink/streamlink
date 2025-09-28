@@ -6,7 +6,7 @@ import pkgutil
 import re
 import tokenize
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, ClassVar
 
 from docutils import nodes
 from docutils.parsers.rst import Directive
@@ -212,7 +212,7 @@ class PluginMetadata:
 class PluginFinder:
     _re_metadata_item = re.compile(r"\n\$(\w+) (.+)(?=\n\$|$)", re.MULTILINE)
 
-    protocol_plugins = [
+    protocol_plugins: ClassVar[list[str]] = [
         "http",
         "hls",
         "dash",

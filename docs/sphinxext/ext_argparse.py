@@ -7,10 +7,13 @@ Inspired by sphinxcontrib.autoprogram but with a few differences:
   the Sphinx version a bit prettier.
 """
 
+from __future__ import annotations
+
 import argparse
 import re
 from importlib import import_module
 from textwrap import dedent
+from typing import Any, Callable, ClassVar
 
 from docutils import nodes
 from docutils.parsers.rst import Directive
@@ -38,12 +41,13 @@ def indent(value, length=4):
 
 class ArgparseDirective(Directive):
     has_content = True
-    option_spec = {
+    # noinspection PyClassVar
+    option_spec: ClassVar[dict[str, Callable[[str], Any]]] = {  # type: ignore[misc]
         "module": unchanged,
         "attr": unchanged,
     }
 
-    _headlines = ["^", "~"]
+    _headlines: ClassVar[list[str]] = ["^", "~"]
 
     _DEFAULT_MODULE = "streamlink_cli._parser"
     _DEFAULT_ATTR = "get_parser"
