@@ -237,7 +237,6 @@ line-length = 128
 output-format = "full"
 preview = true
 extend-exclude = [
-  "docs/conf.py",
   "src/streamlink/packages/",
   "src/streamlink_cli/packages/",
 ]
