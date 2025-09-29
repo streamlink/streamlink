@@ -296,6 +296,10 @@ details.sd-dropdown .sd-summary-content {
   Content
 */
 
+.acknowledgements img {
+  max-width: 8rem;
+}
+
 .installation-grid .fab {
   font-size: 5em;
 }
