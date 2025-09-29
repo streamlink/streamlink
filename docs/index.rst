@@ -61,11 +61,10 @@ User guide
 Streamlink is made up of two parts, a :ref:`cli <cli:Command-Line Interface>` and a library :ref:`API <api:API Reference>`.
 See their respective sections for more information on how to use them.
 
-Thank you
----------
 
-- `Github <https://github.com/>`_, for hosting the git repo, docs, release assets and providing CI tools
-- `Whatismybrowser <https://whatismybrowser.com>`_, for the access to their user-agents API in our CI workflows
+.. only:: not no_acknowledgements
+
+    .. include:: acknowledgements.rst
 
 
 Table of contents
