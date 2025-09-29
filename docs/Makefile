@@ -12,6 +12,8 @@ BUILDDIR      = _build
 NO_ACKNOWLEDGEMENTS =
 # Set to a non-empty value to disable the "Intersphinx" extension
 NO_INTERSPHINX =
+# Set to a non-empty value to disable the embedded GitHub buttons in the HTML output's sidebar
+NO_GITHUB_BUTTONS =
 
 # Internal variables.
 PAPEROPT_a4     = -D latex_paper_size=a4
@@ -19,6 +21,7 @@ PAPEROPT_letter = -D latex_paper_size=letter
 SPHINXTAGS      =
 SPHINXTAGS      += $(if $(NO_ACKNOWLEDGEMENTS), -t no_acknowledgements)
 SPHINXTAGS      += $(if $(NO_INTERSPHINX), -t no_intersphinx)
+SPHINXTAGS      += $(if $(NO_GITHUB_BUTTONS), -t no_github_buttons)
 ALLSPHINXOPTS   = -d $(BUILDDIR)/doctrees $(PAPEROPT_$(PAPER)) $(SPHINXOPTS) $(SPHINXTAGS)
 # the i18n builder cannot share the environment and doctrees with the others
 I18NSPHINXOPTS  = $(PAPEROPT_$(PAPER)) $(SPHINXOPTS)
