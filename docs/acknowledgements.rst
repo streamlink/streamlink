@@ -19,6 +19,23 @@ Thank you
     for hosting the git repo, docs, release assets, and for providing CI tools
 
 .. card::
+    :link: https://jetbrains.com/
+    :class-card: acknowledgements
+
+    .. |JetBrains-logo-dark| image:: _static/jetbrains-mono-black.svg
+        :alt: JetBrains logo mono-black
+        :class: only-light
+
+    .. |JetBrains-logo-light| image:: _static/jetbrains-mono-white.svg
+        :alt: JetBrains logo mono-white
+        :class: only-dark
+
+    |JetBrains-logo-dark| |JetBrains-logo-light|
+
+    **JetBrains**,
+    for sponsoring an open-source license for their IDEs
+
+.. card::
     :link: https://whatismybrowser.com/
     :class-card: acknowledgements
 
