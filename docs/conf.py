@@ -129,6 +129,8 @@ html_sidebars = {
         "sidebar/scroll-end.html",
     ],
 }
+if "no_github_buttons" in tags:  # type: ignore[name-defined]  # noqa: F821
+    html_sidebars.get("**", []).remove("sidebar/github-buttons.html")
 
 html_domain_indices = False
 html_show_sourcelink = False
