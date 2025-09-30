@@ -156,14 +156,14 @@ async def test_launch(
         assert param_user_data_dir is not None
 
         user_data_dir = Path(param_user_data_dir[len("--user-data-dir=") :])
-        assert user_data_dir.exists()
+        assert user_data_dir.exists()  # noqa: ASYNC240
 
         # turn the 0.5s sleep() call at the end into a 0.5ms sleep() call
         # autojump_clock=0 would trigger the process's kill() fallback immediately and raise a warning
         mock_clock.rate = 1000
 
     assert process.poll() == (1 if is_win32 else -SIGTERM), "Process has been terminated"
-    assert not user_data_dir.exists()
+    assert not user_data_dir.exists()  # noqa: ASYNC240
 
 
 @pytest.mark.parametrize(
