@@ -3,7 +3,7 @@ from textwrap import dedent
 
 
 CURRENT_PYTHON = sys.version_info[:2]
-REQUIRED_PYTHON = (3, 9)
+REQUIRED_PYTHON = (3, 10)
 
 # This check and everything above must remain compatible with older Python versions
 if CURRENT_PYTHON < REQUIRED_PYTHON:
