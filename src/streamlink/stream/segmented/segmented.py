@@ -43,8 +43,10 @@ class AwaitableMixin:
 
 TSegment = TypeVar("TSegment", bound=Segment)
 TResult = TypeVar("TResult")
-TResultFuture: TypeAlias = "Future[TResult | None]"
-TQueueItem: TypeAlias = "tuple[TSegment, TResultFuture, tuple]"
+
+if TYPE_CHECKING:
+    TResultFuture: TypeAlias = Future[TResult | None]
+    TQueueItem: TypeAlias = tuple[TSegment, TResultFuture, tuple]
 
 
 class SegmentedStreamWriter(AwaitableMixin, NamedThread, Generic[TSegment, TResult]):
