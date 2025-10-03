@@ -19,7 +19,7 @@ if TYPE_CHECKING:
 
     from streamlink_cli.console.console import ConsoleOutput
 
-    _TFormat: TypeAlias = "Iterable[Iterable[tuple[str, str | None, str | None, str | None]]]"
+    _TFormat: TypeAlias = Iterable[Iterable[tuple[str, str | None, str | None, str | None]]]
 
 
 _stringformatter = StringFormatter()

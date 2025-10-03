@@ -18,8 +18,8 @@ if TYPE_CHECKING:
     TUrl: TypeAlias = str
     TName: TypeAlias = str
     TUrlNamed: TypeAlias = tuple[TName, TUrl]
-    TUrlOrNamedUrl: TypeAlias = "TUrl | TUrlNamed"
-    TMatchGroup: TypeAlias = "dict[str, str] | Sequence[str | None]"
+    TUrlOrNamedUrl: TypeAlias = TUrl | TUrlNamed
+    TMatchGroup: TypeAlias = dict[str, str] | Sequence[str | None]
 
 
 generic_negative_matches = [
