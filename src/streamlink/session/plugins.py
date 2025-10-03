@@ -210,9 +210,10 @@ class StreamlinkPlugins:
 
 _RE_STRIP_JSON_COMMENTS = re.compile(rb"^(?:\s*//[^\n]*\n+)+")
 
-_TListOfConstants: TypeAlias = "list[bool | int | float | str | None]"
-_TConstantOrListOfConstants: TypeAlias = "bool | int | float | str | _TListOfConstants | None"
-_TMappingOfConstantOrListOfConstants: TypeAlias = "dict[str, _TConstantOrListOfConstants]"
+if TYPE_CHECKING:
+    _TListOfConstants: TypeAlias = list[bool | int | float | str | None]
+    _TConstantOrListOfConstants: TypeAlias = bool | int | float | str | _TListOfConstants | None
+    _TMappingOfConstantOrListOfConstants: TypeAlias = dict[str, _TConstantOrListOfConstants]
 
 
 class _TPluginMatcherData(TypedDict):

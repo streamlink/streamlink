@@ -24,7 +24,7 @@ if TYPE_CHECKING:
     from streamlink.session import Streamlink
     from tests.webbrowser.cdp import FakeWebsocketConnection
 
-    TAsyncHandler: TypeAlias = "AsyncMock | Callable[[CDPClientSession, RequestPaused], Awaitable]"
+    TAsyncHandler: TypeAlias = AsyncMock | Callable[[CDPClientSession, RequestPaused], Awaitable]
 
 
 def async_handler(*args, **kwargs):
