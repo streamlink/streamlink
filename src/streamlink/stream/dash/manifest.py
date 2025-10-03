@@ -909,7 +909,7 @@ class SegmentTemplate(_MultipleSegmentBaseType):
                 ]),
             )
 
-        yield from zip(number_iter, available_iter)
+        yield from zip(number_iter, available_iter, strict=False)
 
     def segment_timeline(self, ident: TTimelineIdent) -> Iterator[tuple[int, TimelineSegment, datetime]]:
         if not self.segmentTimeline:  # pragma: no cover

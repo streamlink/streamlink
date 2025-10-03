@@ -189,7 +189,7 @@ class FFMPEGMuxer(StreamIO):
                 target=self.copy_to_pipe,
                 args=(self, stream, np),
             )
-            for stream, np in zip(self.streams, self.pipes)
+            for stream, np in zip(self.streams, self.pipes, strict=True)
         ]
 
         loglevel = session.options.get("ffmpeg-loglevel") or options.pop("loglevel", self.DEFAULT_LOGLEVEL)
