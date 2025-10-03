@@ -194,6 +194,27 @@ class ChzzkAPI:
                     {"channelName": str},
                     validate.get("channelName"),
                 ),
+                "liveRewindPlaybackJson": validate.none_or_all(
+                    str,
+                    validate.parse_json(),
+                    {
+                        "media": [
+                            validate.all(
+                                {
+                                    "mediaId": str,
+                                    "protocol": str,
+                                    "path": validate.url(),
+                                },
+                                validate.union_get(
+                                    "mediaId",
+                                    "protocol",
+                                    "path",
+                                ),
+                            ),
+                        ],
+                    },
+                    validate.get("media"),
+                ),
             },
             validate.union_get(
                 "adult",
@@ -203,6 +224,7 @@ class ChzzkAPI:
                 "channel",
                 "videoTitle",
                 "videoCategory",
+                "liveRewindPlaybackJson",
             ),
         )
 
@@ -304,21 +326,39 @@ class Chzzk(Plugin):
             log.error(data)
             return
 
-        adult, in_key, vod_id, *metadata = data
+        adult, in_key, vod_id, *metadata, live_rewind_playback_json = data
 
-        if in_key is None or vod_id is None:
-            log.error(f"This stream is {'for adults only' if adult else 'unavailable'}")
+        if in_key is not None and vod_id is not None:
+            self.id, self.author, self.title, self.category = metadata
+
+            for name, stream in DASHStream.parse_manifest(
+                self.session,
+                self._API_VOD_PLAYBACK_URL.format(video_id=vod_id, in_key=in_key),
+                headers={"Accept": "application/dash+xml"},
+            ).items():
+                if stream.video_representation.mimeType == "video/mp2t":
+                    yield name, stream
             return
 
-        self.id, self.author, self.title, self.category = metadata
+        if live_rewind_playback_json is not None:
+            log.info("The video might not be fully encoded, attempting to get playback streams")
+            self.id, self.author, self.title, self.category = metadata
+            for media_id, media_protocol, media_path in live_rewind_playback_json:
+                if media_protocol == "HLS" and media_id == "HLS":
+                    # Extract __bgda__ parameter from the media path URL
+                    parsed_url = urlparse(media_path)
+                    bgda_param = dict(parse_qsl(parsed_url.query)).get("hdnts")
+                    for name, stream in ChzzkHLSStream.parse_variant_playlist(
+                        self.session,
+                        media_path,
+                        bgda_param=bgda_param,
+                        ffmpeg_options={"copyts": True},
+                    ).items():
+                        yield name, stream
+            return
 
-        for name, stream in DASHStream.parse_manifest(
-            self.session,
-            self._API_VOD_PLAYBACK_URL.format(video_id=vod_id, in_key=in_key),
-            headers={"Accept": "application/dash+xml"},
-        ).items():
-            if stream.video_representation.mimeType == "video/mp2t":
-                yield name, stream
+        log.error(f"This stream is {'for adults only' if adult else 'unavailable'}")
+        return
 
     def _get_video(self, video_id):
         return self._get_vod_playback(
