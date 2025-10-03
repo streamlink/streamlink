@@ -174,7 +174,7 @@ class ParseMappingOfConstants(ParseConstantOrSequenceOfConstants):
 
         self._mapping = True
 
-        return {self.visit(k): self.visit(v) for k, v in zip(node.keys, node.values) if k}
+        return {self.visit(k): self.visit(v) for k, v in zip(node.keys, node.values, strict=True) if k}
 
 
 class ParseBinOpOr(ast.NodeVisitor):
