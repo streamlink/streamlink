@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, TypeAlias
 
 import pytest
 
@@ -11,15 +11,13 @@ if TYPE_CHECKING:
     from collections.abc import Sequence
     from re import Match
 
-    from typing_extensions import TypeAlias
-
     from streamlink.plugin.plugin import Matcher
 
     TUrl: TypeAlias = str
     TName: TypeAlias = str
     TUrlNamed: TypeAlias = tuple[TName, TUrl]
-    TUrlOrNamedUrl: TypeAlias = "TUrl | TUrlNamed"
-    TMatchGroup: TypeAlias = "dict[str, str] | Sequence[str | None]"
+    TUrlOrNamedUrl: TypeAlias = TUrl | TUrlNamed
+    TMatchGroup: TypeAlias = dict[str, str] | Sequence[str | None]
 
 
 generic_negative_matches = [

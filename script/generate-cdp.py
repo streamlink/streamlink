@@ -101,14 +101,10 @@ UTIL = f"""{SHARED_HEADER}
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import Any, TypeAlias
 
 
-if TYPE_CHECKING:
-    from typing_extensions import TypeAlias
-
-
-T_JSON_DICT: TypeAlias = "dict[str, Any]"
+T_JSON_DICT: TypeAlias = dict[str, Any]
 _event_parsers = {{{{}}}}
 
 

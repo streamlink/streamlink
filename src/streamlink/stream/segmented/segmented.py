@@ -5,7 +5,7 @@ import queue
 from concurrent import futures
 from concurrent.futures import ThreadPoolExecutor
 from threading import Event, current_thread
-from typing import TYPE_CHECKING, ClassVar, Generic, TypeVar
+from typing import TYPE_CHECKING, ClassVar, Generic, TypeAlias, TypeVar
 
 from streamlink.buffers import RingBuffer
 from streamlink.stream.segmented.segment import Segment
@@ -18,11 +18,6 @@ if TYPE_CHECKING:
     from concurrent.futures import Future
 
     from streamlink.stream.stream import Stream
-
-    try:
-        from typing import TypeAlias  # type: ignore[attr-defined]
-    except ImportError:
-        from typing_extensions import TypeAlias
 
 
 log = logging.getLogger(".".join(__name__.split(".")[:-1]))
@@ -43,8 +38,10 @@ class AwaitableMixin:
 
 TSegment = TypeVar("TSegment", bound=Segment)
 TResult = TypeVar("TResult")
-TResultFuture: TypeAlias = "Future[TResult | None]"
-TQueueItem: TypeAlias = "tuple[TSegment, TResultFuture, tuple]"
+
+if TYPE_CHECKING:
+    TResultFuture: TypeAlias = Future[TResult | None]
+    TQueueItem: TypeAlias = tuple[TSegment, TResultFuture, tuple]
 
 
 class SegmentedStreamWriter(AwaitableMixin, NamedThread, Generic[TSegment, TResult]):

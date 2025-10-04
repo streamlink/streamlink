@@ -8,7 +8,7 @@ from collections import defaultdict
 from contextlib import contextmanager
 from datetime import timedelta
 from itertools import count, repeat
-from typing import TYPE_CHECKING, Any, ClassVar, Literal, TypeVar, overload
+from typing import TYPE_CHECKING, Any, ClassVar, Literal, TypeAlias, TypeVar, overload
 from urllib.parse import urljoin, urlparse, urlunparse
 
 from isodate import Duration, parse_datetime, parse_duration  # type: ignore[import]
@@ -23,7 +23,6 @@ if TYPE_CHECKING:
 
     # noinspection PyProtectedMember
     from lxml.etree import _Attrib, _Element
-    from typing_extensions import TypeAlias
 
 
 log = logging.getLogger(__name__)
@@ -909,7 +908,7 @@ class SegmentTemplate(_MultipleSegmentBaseType):
                 ]),
             )
 
-        yield from zip(number_iter, available_iter)
+        yield from zip(number_iter, available_iter, strict=False)
 
     def segment_timeline(self, ident: TTimelineIdent) -> Iterator[tuple[int, TimelineSegment, datetime]]:
         if not self.segmentTimeline:  # pragma: no cover
