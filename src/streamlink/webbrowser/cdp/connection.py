@@ -6,7 +6,7 @@ import json
 import logging
 from collections import defaultdict
 from contextlib import asynccontextmanager
-from typing import TYPE_CHECKING, Generic, TypeVar, cast
+from typing import TYPE_CHECKING, Generic, TypeAlias, TypeVar, cast
 
 import trio
 from trio_websocket import ConnectionClosed, connect_websocket_url  # type: ignore[import]
@@ -26,9 +26,9 @@ if TYPE_CHECKING:
     from streamlink.webbrowser.cdp.devtools.util import T_JSON_DICT
 
     try:
-        from typing import Self, TypeAlias  # type: ignore[attr-defined]
+        from typing import Self  # type: ignore[attr-defined]
     except ImportError:
-        from typing_extensions import Self, TypeAlias
+        from typing_extensions import Self
 
 
 log = logging.getLogger(__name__)

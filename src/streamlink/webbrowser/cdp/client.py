@@ -4,7 +4,7 @@ import base64
 import re
 from contextlib import asynccontextmanager
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, TypeAlias
 
 import trio
 
@@ -21,9 +21,9 @@ if TYPE_CHECKING:
     from streamlink.webbrowser.cdp.connection import CDPSession
 
     try:
-        from typing import Self, TypeAlias  # type: ignore[attr-defined]
+        from typing import Self  # type: ignore[attr-defined]
     except ImportError:
-        from typing_extensions import Self, TypeAlias
+        from typing_extensions import Self
 
     TRequestHandlerCallable: TypeAlias = "Callable[[CDPClientSession, fetch.RequestPaused], Awaitable]"
 
