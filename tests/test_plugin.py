@@ -459,9 +459,6 @@ class TestCookies:
             rfc2109=False,
         )
 
-    # TODO: py39 support end: remove explicit dummy context binding of static method
-    _create_cookie_dict = create_cookie_dict.__get__(object)
-
     @pytest.fixture()
     def pluginclass(self):
         class MyPlugin(FakePlugin):
@@ -501,8 +498,8 @@ class TestCookies:
         "plugincache",
         [
             {
-                "__cookie:test-name1:test.se:80:/": _create_cookie_dict("test-name1", "test-value1"),
-                "__cookie:test-name2:test.se:80:/": _create_cookie_dict("test-name2", "test-value2"),
+                "__cookie:test-name1:test.se:80:/": create_cookie_dict("test-name1", "test-value1"),
+                "__cookie:test-name2:test.se:80:/": create_cookie_dict("test-name2", "test-value2"),
                 "unrelated": "data",
             },
         ],
@@ -557,8 +554,8 @@ class TestCookies:
         "plugincache",
         [
             {
-                "__cookie:test-name1:test.se:80:/": _create_cookie_dict("test-name1", "test-value1", None),
-                "__cookie:test-name2:test.se:80:/": _create_cookie_dict("test-name2", "test-value2", None),
+                "__cookie:test-name1:test.se:80:/": create_cookie_dict("test-name1", "test-value1", None),
+                "__cookie:test-name2:test.se:80:/": create_cookie_dict("test-name2", "test-value2", None),
                 "unrelated": "data",
             },
         ],
@@ -576,8 +573,8 @@ class TestCookies:
         "plugincache",
         [
             {
-                "__cookie:test-name1:test.se:80:/": _create_cookie_dict("test-name1", "test-value1", None),
-                "__cookie:test-name2:test.se:80:/": _create_cookie_dict("test-name2", "test-value2", None),
+                "__cookie:test-name1:test.se:80:/": create_cookie_dict("test-name1", "test-value1", None),
+                "__cookie:test-name2:test.se:80:/": create_cookie_dict("test-name2", "test-value2", None),
                 "unrelated": "data",
             },
         ],
