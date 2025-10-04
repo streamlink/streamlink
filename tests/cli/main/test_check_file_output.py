@@ -39,8 +39,7 @@ def path(monkeypatch: pytest.MonkeyPatch, request: pytest.FixtureRequest):
     realpath = param.get("realpath", "/path/to/file")
     exists = param.get("exists", False)
 
-    monkeypatch.setattr("os.path.realpath", Mock(return_value=realpath))
-    monkeypatch.setattr("streamlink_cli.main.Path", _FakePath)
+    monkeypatch.setattr(Path, "resolve", Mock(return_value=_FakePath(realpath)))
     monkeypatch.setattr(_FakePath, "is_file", Mock(return_value=exists))
 
     return Path(file)
