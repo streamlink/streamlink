@@ -29,67 +29,77 @@ def test_prepend_www(url, expected):
 
 
 @pytest.mark.parametrize(
-    ("assertion", "args", "expected"),
+    ("args", "expected"),
     [
-        (
-            "current scheme overrides target scheme (https)",
+        pytest.param(
             ("https://other.com/bar", "http://example.com/foo"),
             "https://example.com/foo",
+            id="override-target-http-scheme",
         ),
-        (
-            "current scheme overrides target scheme (http)",
+        pytest.param(
             ("http://other.com/bar", "https://example.com/foo"),
             "http://example.com/foo",
+            id="override-target-https-scheme",
         ),
-        (
-            "current scheme does not override target scheme if force is False (https)",
+        pytest.param(
             ("http://other.com/bar", "https://example.com/foo", False),
             "https://example.com/foo",
+            id="keep-target-https-scheme-no-force",
         ),
-        (
-            "current scheme does not override target scheme if force is False (http)",
+        pytest.param(
             ("https://other.com/bar", "http://example.com/foo", False),
             "http://example.com/foo",
+            id="keep-target-http-scheme-no-force",
         ),
-        (
-            "current scheme gets applied to scheme-less target",
+        pytest.param(
             ("https://other.com/bar", "//example.com/foo"),
             "https://example.com/foo",
+            id="add-current-scheme-to-schemeless-target",
         ),
-        (
-            "current scheme gets applied to scheme-less target, even if force is False",
+        pytest.param(
             ("https://other.com/bar", "//example.com/foo", False),
             "https://example.com/foo",
+            id="add-current-scheme-to-schemeless-target-no-force",
         ),
-        (
-            "current scheme gets added to target string",
+        pytest.param(
             ("https://other.com/bar", "example.com/foo"),
             "https://example.com/foo",
+            id="add-current-scheme-to-target-string",
         ),
-        (
-            "current scheme gets added to target string, even if force is False",
+        pytest.param(
             ("https://other.com/bar", "example.com/foo", False),
             "https://example.com/foo",
+            id="add-current-scheme-to-target-string-no-force",
         ),
-        (
-            "implicit scheme with IPv4+port",
-            ("http://", "127.0.0.1:1234/foo"),
-            "http://127.0.0.1:1234/foo",
+        pytest.param(
+            ("http://", "127.0.0.1:1234"),
+            "http://127.0.0.1:1234",
+            id="implicit-scheme-with-ipv4-port",
         ),
-        (
-            "implicit scheme with hostname+port",
-            ("http://", "foo.bar:1234/foo"),
-            "http://foo.bar:1234/foo",
+        pytest.param(
+            ("http://", "foo.bar:1234"),
+            "http://foo.bar:1234",
+            id="implicit-scheme-with-hostname-port",
         ),
-        (
-            "correctly parses all kinds of schemes",
+        pytest.param(
             ("foo.1+2-bar://baz", "FOO.1+2-BAR://qux"),
             "foo.1+2-bar://qux",
+            id="weird-schemes",
+        ),
+        pytest.param(
+            ("https://", "file://./foo", False),
+            "file://./foo",
+            id="keep-target",
+        ),
+        pytest.param(
+            ("https://", "file:///foo", False),
+            "file:///foo",
+            id="keep-target-no-netloc",
         ),
     ],
 )
-def test_update_scheme(assertion, args, expected):
-    assert update_scheme(*args) == expected, assertion
+def test_update_scheme(args, expected):
+    assert update_scheme(*args) == expected
 
 
 def test_url_equal():
