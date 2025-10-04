@@ -9,7 +9,7 @@ import pkgutil
 import re
 from contextlib import suppress
 from pathlib import Path
-from typing import TYPE_CHECKING, Literal, TypedDict
+from typing import TYPE_CHECKING, Literal, TypeAlias, TypedDict
 
 import streamlink.plugins
 from streamlink.options import Argument, Arguments
@@ -22,11 +22,6 @@ from streamlink.utils.module import exec_module, get_finder
 if TYPE_CHECKING:
     from collections.abc import Iterator, Mapping
     from types import ModuleType
-
-    try:
-        from typing import TypeAlias  # type: ignore[attr-defined]
-    except ImportError:
-        from typing_extensions import TypeAlias
 
     from _typeshed.importlib import PathEntryFinderProtocol
 

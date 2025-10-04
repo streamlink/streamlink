@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from contextlib import nullcontext
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING, TypeAlias, cast
 from unittest.mock import ANY, AsyncMock, Mock, call
 
 import pytest
@@ -18,8 +18,6 @@ from streamlink.webbrowser.cdp.exceptions import CDPError
 
 if TYPE_CHECKING:
     from collections.abc import Awaitable, Callable
-
-    from typing_extensions import TypeAlias
 
     from streamlink.session import Streamlink
     from tests.webbrowser.cdp import FakeWebsocketConnection

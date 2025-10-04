@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, TypeAlias
 
 import pytest
 
@@ -10,8 +10,6 @@ from streamlink.plugin.plugin import Plugin
 if TYPE_CHECKING:
     from collections.abc import Sequence
     from re import Match
-
-    from typing_extensions import TypeAlias
 
     from streamlink.plugin.plugin import Matcher
 
