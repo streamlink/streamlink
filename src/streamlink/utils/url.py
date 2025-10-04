@@ -1,4 +1,3 @@
-import re
 from urllib.parse import parse_qsl, quote_plus, urlencode, urljoin, urlparse, urlunparse
 
 
@@ -19,9 +18,6 @@ def prepend_www(url):
     return parsed.geturl()
 
 
-_re_uri_implicit_scheme = re.compile(r"""^[a-z0-9][a-z0-9.+-]*://""", re.IGNORECASE)
-
-
 def update_scheme(current: str, target: str, force: bool = True) -> str:
     """
     Take the scheme from the current URL and apply it to the target URL if it is missing
@@ -33,12 +29,17 @@ def update_scheme(current: str, target: str, force: bool = True) -> str:
     target_p = urlparse(target)
 
     if (
-        # target URLs with implicit scheme and netloc including a port: ("http://", "foo.bar:1234") -> "http://foo.bar:1234"
-        # urllib.parse.urlparse has incorrect behavior in py<3.9, so we'll have to use a regex here
-        # py>=3.9: urlparse("127.0.0.1:1234") == ParseResult(scheme='127.0.0.1', netloc='', path='1234', ...)
-        # py<3.9 : urlparse("127.0.0.1:1234") == ParseResult(scheme='', netloc='', path='127.0.0.1:1234', ...)
-        not _re_uri_implicit_scheme.search(target) and not target.startswith("//")
-        # target URLs without scheme and without netloc: ("http://", "foo.bar/foo") -> "http://foo.bar/foo"
+        # target URLs with a missing scheme and a netloc including a port (host is parsed as scheme):
+        #   ("http://", "foo.bar:1234/foo") -> "http://foo.bar:1234"
+        #   urlparse("127.0.0.1:1234") == ParseResult(scheme='127.0.0.1', netloc='', path='1234/foo', ...)
+        #
+        # ignore target URLs with a scheme but without a netloc whose path starts with "/":
+        #   ("http://", "file:///foo") -> "http://foo.bar:1234"
+        #   urlparse("file:///foo") == ParseResult(scheme='file', netloc='', path='/foo', ...)
+        target_p.scheme and not target_p.netloc and target_p.path and target_p.path[0] != "/"
+        # target URLs without a scheme and without a netloc:
+        #   ("http://", "foo.bar/foo") -> "http://foo.bar/foo"
+        #   urlparse("foo.bar/foo") == ParseResult(scheme='', netloc='', path='foo.bar/foo', ...)
         or not target_p.scheme and not target_p.netloc
     ):  # fmt: skip
         return f"{urlparse(current).scheme}://{urlunparse(target_p)}"
