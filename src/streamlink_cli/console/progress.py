@@ -6,7 +6,7 @@ from math import floor
 from string import Formatter as StringFormatter
 from threading import Event, RLock, Thread
 from time import time
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, TypeAlias
 
 from streamlink_cli.console.terminal import cut_text, term_width, text_width
 
@@ -14,8 +14,6 @@ from streamlink_cli.console.terminal import cut_text, term_width, text_width
 if TYPE_CHECKING:
     from collections.abc import Callable, Iterable, Mapping
     from pathlib import PurePath
-
-    from typing_extensions import TypeAlias
 
     from streamlink_cli.console.console import ConsoleOutput
 

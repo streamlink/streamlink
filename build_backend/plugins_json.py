@@ -8,12 +8,10 @@ import sys
 from dataclasses import asdict, dataclass, is_dataclass
 from pathlib import Path
 from textwrap import dedent
-from typing import TYPE_CHECKING, Any, ClassVar, Generic, TextIO, TypeVar
+from typing import TYPE_CHECKING, Any, ClassVar, Generic, TextIO, TypeAlias, TypeVar
 
 
 if TYPE_CHECKING:
-    from typing_extensions import TypeAlias
-
     TListOfConstants: TypeAlias = list[bool | int | float | str | None]
     TConstantOrListOfConstants: TypeAlias = bool | int | float | str | TListOfConstants | None
     TMappingOfConstantOrListOfConstants: TypeAlias = dict[str, TConstantOrListOfConstants]
