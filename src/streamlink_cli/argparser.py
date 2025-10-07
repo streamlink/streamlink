@@ -41,6 +41,7 @@ class ArgumentParser(argparse.ArgumentParser):
 
     def __init__(self, *args, **kwargs):
         self.NESTED_ARGUMENT_GROUPS = {}
+        self.color = True  # pre 3.14 compat
         super().__init__(*args, **kwargs)
 
     # noinspection PyUnresolvedReferences,PyProtectedMember
@@ -108,6 +109,15 @@ class ArgumentParser(argparse.ArgumentParser):
 
         # return the number of arguments matched
         return len(match.group(1))
+
+    # disable color output for the "usage" text
+    def format_usage(self):
+        color = self.color
+        self.color = False
+        try:
+            return super().format_usage()
+        finally:
+            self.color = color
 
     # fix `--help` not including nested argument groups
     def format_help(self):
