@@ -27,14 +27,15 @@ jobs:
           - "3.11"
           - "3.12"
           - "3.13"
-          - "3.13t"
-        include:
-          - runs-on: ubuntu-latest
-            python-version: "3.14-dev"
-            continue: true
-          - runs-on: windows-latest
-            python-version: "3.14-dev"
-            continue: true
+          - "3.14"
+          - "3.14t"
+        # include:
+        #   - runs-on: ubuntu-latest
+        #     python-version: "3.15-dev"
+        #     continue: true
+        #   - runs-on: windows-latest
+        #     python-version: "3.15-dev"
+        #     continue: true
     runs-on: ${{ matrix.runs-on }}
     timeout-minutes: 60
     steps:
