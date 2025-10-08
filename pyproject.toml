@@ -74,7 +74,8 @@ dependencies = [
 decompress = [
   # don't define brotli or zstandard library versions here
   # and instead rely on urllib3's version requirements
-  "urllib3[brotli,zstd] >=2.0.0,<3"
+  "urllib3[brotli     ] >=2.0.0,<3 ; python_version>='3.14'",
+  "urllib3[brotli,zstd] >=2.0.0,<3 ; python_version<'3.14'",
 ]
 
 [project.urls]
