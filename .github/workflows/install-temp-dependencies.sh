@@ -10,7 +10,6 @@ PY=$(python -c 'import platform,sysconfig;v="".join(platform.python_version_tupl
 BASE=https://github.com/streamlink/temp-dependency-builds-DO-NOT-USE/releases/download
 DEPS=(
     'brotli-20251007-1/brotli-1.2.0'
-    'zstandard-20251007-1/zstandard-0.25.0'
 )
 
 if [[ "${PLATFORM}" == linux_x86_64 ]]; then
