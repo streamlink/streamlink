@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import re
 import ssl
 import time
 import warnings
@@ -18,12 +17,13 @@ from streamlink.utils.parse import parse_json, parse_xml
 
 
 if TYPE_CHECKING:
+    import re
+
     from requests import PreparedRequest
 
 
-# Never convert percent-encoded characters to uppercase in urllib3>=1.25.8.
+# Never convert percent-encoded characters to uppercase in urllib3>=2.0.0.
 # This is required for sites which compare request URLs byte by byte and return different responses depending on that.
-# Older versions of urllib3 are not compatible with this override and will always convert to uppercase characters.
 #
 # https://datatracker.ietf.org/doc/html/rfc3986#section-2.1
 # > The uppercase hexadecimal digits 'A' through 'F' are equivalent to
@@ -33,22 +33,17 @@ if TYPE_CHECKING:
 # > normalizers should use uppercase hexadecimal digits for all percent-
 # > encodings.
 class Urllib3UtilUrlPercentReOverride:
-    # urllib3>=2.0.0: _PERCENT_RE, urllib3<2.0.0: PERCENT_RE
-    _re_percent_encoding: re.Pattern = getattr(
-        urllib3.util.url,
-        "_PERCENT_RE",
-        getattr(urllib3.util.url, "PERCENT_RE", re.compile(r"%[a-fA-F0-9]{2}")),
-    )
+    # noinspection PyProtectedMember
+    _re_percent_encoding: re.Pattern = urllib3.util.url._PERCENT_RE  # type: ignore[attr-defined]
 
-    # urllib3>=1.25.8
-    # https://github.com/urllib3/urllib3/blame/1.25.8/src/urllib3/util/url.py#L219-L227
+    # noinspection PyUnusedLocal
+    # https://github.com/urllib3/urllib3/blob/2.0.0/src/urllib3/util/url.py#L241-L243
     @classmethod
     def subn(cls, repl: Any, string: str, count: Any = None) -> tuple[str, int]:
         return string, len(cls._re_percent_encoding.findall(string))
 
 
-# urllib3>=2.0.0: _PERCENT_RE, urllib3<2.0.0: PERCENT_RE
-urllib3.util.url._PERCENT_RE = urllib3.util.url.PERCENT_RE = Urllib3UtilUrlPercentReOverride  # type: ignore[attr-defined]
+urllib3.util.url._PERCENT_RE = Urllib3UtilUrlPercentReOverride  # type: ignore[attr-defined]
 
 
 # requests.Request.__init__ keywords, except for "hooks"
