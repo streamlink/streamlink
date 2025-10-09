@@ -63,11 +63,11 @@ dependencies = [
   "pycountry",
   "pycryptodome >=3.4.3,<4",
   "PySocks >=1.5.6,!=1.5.7",
-  "requests >=2.26.0,<3",
+  "requests >=2.30.0,<3",
   "trio >=0.25.0,<1 ; python_version>='3.13'",
   "trio >=0.22.0,<1 ; python_version<'3.13'",
   "trio-websocket >=0.9.0,<1",
-  "urllib3 >=1.26.0,<3",
+  "urllib3 >=2.0.0,<3",
   "websocket-client >=1.2.1,<2",
 ]
 
@@ -75,7 +75,7 @@ dependencies = [
 decompress = [
   # don't define brotli or zstandard library versions here
   # and instead rely on urllib3's version requirements
-  "urllib3[brotli,zstd] >=1.26.0,<3"
+  "urllib3[brotli,zstd] >=2.0.0,<3"
 ]
 
 [project.urls]
