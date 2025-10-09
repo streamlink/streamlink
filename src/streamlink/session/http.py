@@ -9,18 +9,12 @@ from typing import TYPE_CHECKING, Any
 import urllib3
 from requests import Request, Session
 from requests.adapters import HTTPAdapter
+from urllib3.util import create_urllib3_context  # type: ignore[attr-defined]
 
 import streamlink.session.http_useragents as useragents
 from streamlink.exceptions import PluginError, StreamlinkDeprecationWarning
 from streamlink.packages.requests_file import FileAdapter
 from streamlink.utils.parse import parse_json, parse_xml
-
-
-try:
-    from urllib3.util import create_urllib3_context  # type: ignore[attr-defined]
-except ImportError:  # pragma: no cover
-    # urllib3 <2.0.0 compat import
-    from urllib3.util.ssl_ import create_urllib3_context
 
 
 if TYPE_CHECKING:
