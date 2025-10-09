@@ -6,7 +6,6 @@ import time
 import warnings
 from typing import TYPE_CHECKING, Any
 
-import requests.adapters
 import urllib3
 from requests import Request, Session
 from requests.adapters import HTTPAdapter
@@ -26,33 +25,6 @@ except ImportError:  # pragma: no cover
 
 if TYPE_CHECKING:
     from requests import PreparedRequest
-
-
-# urllib3>=2.0.0: enforce_content_length now defaults to True (keep the override for backwards compatibility)
-class _HTTPResponse(urllib3.response.HTTPResponse):
-    def __init__(self, *args, **kwargs):
-        # Always enforce content length validation!
-        # This fixes a bug in requests which doesn't raise errors on HTTP responses where
-        # the "Content-Length" header doesn't match the response's body length.
-        # https://github.com/psf/requests/issues/4956#issuecomment-573325001
-        #
-        # Summary:
-        # This bug is related to urllib3.response.HTTPResponse.stream() which calls urllib3.response.HTTPResponse.read() as
-        # a wrapper for http.client.HTTPResponse.read(amt=...), where no http.client.IncompleteRead exception gets raised
-        # due to "backwards compatiblity" of an old bug if a specific amount is attempted to be read on an incomplete response.
-        #
-        # urllib3.response.HTTPResponse.read() however has an additional check implemented via the enforce_content_length
-        # parameter, but it doesn't check by default and requests doesn't set the parameter for enabling it either.
-        #
-        # Fix this by overriding urllib3.response.HTTPResponse's constructor and always setting enforce_content_length to True,
-        # as there is no way to make requests set this parameter on its own.
-        kwargs["enforce_content_length"] = True
-        super().__init__(*args, **kwargs)
-
-
-# override all urllib3.response.HTTPResponse references in requests.adapters.HTTPAdapter.send
-urllib3.connectionpool.HTTPConnectionPool.ResponseCls = _HTTPResponse  # type: ignore[attr-defined]
-requests.adapters.HTTPResponse = _HTTPResponse  # type: ignore[misc]
 
 
 # Never convert percent-encoded characters to uppercase in urllib3>=1.25.8.
