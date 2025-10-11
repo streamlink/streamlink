@@ -1,6 +1,26 @@
 Migrations
 ==========
 
+streamlink 8.0.0
+----------------
+
+HLSStream url_master argument
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Support for the :ref:`deprecated <deprecations:url_master in HLSStream>` ``url_master`` argument and respective class attribute
+in :class:`HLSStream <streamlink.stream.HLSStream>` and :class:`MuxedHLSStream <streamlink.stream.MuxedHLSStream>`
+has been removed.
+
+| :octicon:`git-pull-request` #6688
+
+.. admonition:: Migration
+   :class: hint
+
+   ``HLSStream`` and ``MuxedHLSStream`` objects which originate from a multivariant (master) playlist should receive a reference
+   to the ``M3U8`` instance of the parsed multivariant playlist via the ``multivariant`` argument. The ``multivariant.uri``
+   attribute is a string of the multivariant playlist address.
+
+
 streamlink 7.0.0
 ----------------
 
