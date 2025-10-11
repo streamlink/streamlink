@@ -21,19 +21,19 @@ Getting started
 ---------------
 
 Now to get into actually using Streamlink, let's say you want to watch the
-stream located on ``https://www.twitch.tv/nasa``, you start off by telling Streamlink
+stream located on ``https://www.twitch.tv/CHANNEL``, you start off by telling Streamlink
 where to attempt to extract streams from. This is done by setting the URL as the
 first argument on the :command:`streamlink` command:
 
 .. code-block:: console
 
-    $ streamlink twitch.tv/nasa
-    [cli][info] Found matching plugin twitch for URL twitch.tv/nasa
+    $ streamlink twitch.tv/CHANNEL
+    [cli][info] Found matching plugin twitch for URL twitch.tv/CHANNEL
     Available streams: audio_only, 160p (worst), 360p, 480p, 720p60, 1080p60 (best)
 
 .. note::
     You don't need to include the protocol when dealing with HTTP(s) URLs,
-    e.g. just ``twitch.tv/nasa`` is enough and quicker to type.
+    e.g. just ``twitch.tv/CHANNEL`` is enough and quicker to type.
 
 .. caution::
 
@@ -62,8 +62,8 @@ argument to the :command:`streamlink` command:
 
 .. code-block:: console
 
-    $ streamlink twitch.tv/nasa 1080p60
-    [cli][info] Found matching plugin twitch for URL twitch.tv/nasa
+    $ streamlink twitch.tv/CHANNEL 1080p60
+    [cli][info] Found matching plugin twitch for URL twitch.tv/CHANNEL
     [cli][info] Opening stream: 1080p60 (hls)
     [cli][info] Starting player: vlc
 
