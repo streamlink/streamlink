@@ -582,7 +582,6 @@ class MuxedHLSStream(MuxedStream[TMuxedHLSStream_co]):
         video: str,
         audio: str | list[str],
         hlsstream: type[TMuxedHLSStream_co] | None = None,
-        url_master: str | None = None,
         multivariant: M3U8 | None = None,
         force_restart: bool = False,
         ffmpeg_options: Mapping[str, Any] | None = None,
@@ -612,22 +611,23 @@ class MuxedHLSStream(MuxedStream[TMuxedHLSStream_co]):
         # https://github.com/python/mypy/issues/18017
         TStream: type[TMuxedHLSStream_co] = hlsstream if hlsstream is not None else HLSStream  # type: ignore[assignment]
         substreams = [
-            TStream(session, url, force_restart=force_restart, name=None if idx == 0 else "audio", **kwargs)
+            TStream(
+                session,
+                url,
+                multivariant=multivariant,
+                force_restart=force_restart,
+                name=None if idx == 0 else "audio",
+                **kwargs,
+            )
             for idx, url in enumerate(tracks)
         ]
         ffmpeg_options = ffmpeg_options or {}
 
         super().__init__(session, *substreams, format="mpegts", maps=maps, **ffmpeg_options)
-        self._url_master = url_master
         self.multivariant = multivariant if multivariant and multivariant.is_master else None
 
-    @property
-    def url_master(self):
-        """Deprecated"""
-        return self.multivariant.uri if self.multivariant and self.multivariant.uri else self._url_master
-
     def to_manifest_url(self):
-        url = self.multivariant.uri if self.multivariant and self.multivariant.uri else self.url_master
+        url = self.multivariant.uri if self.multivariant and self.multivariant.uri else None
 
         if url is None:
             return super().to_manifest_url()
@@ -648,7 +648,6 @@ class HLSStream(HTTPStream):
         self,
         session: Streamlink,
         url: str,
-        url_master: str | None = None,
         multivariant: M3U8 | None = None,
         name: str | None = None,
         force_restart: bool = False,
@@ -659,7 +658,6 @@ class HLSStream(HTTPStream):
         """
         :param session: Streamlink session instance
         :param url: The URL of the HLS playlist
-        :param url_master: The URL of the HLS playlist's multivariant playlist (deprecated)
         :param multivariant: The parsed multivariant playlist
         :param name: Optional name suffix for the stream's worker and writer threads
         :param force_restart: Start from the beginning after reaching the playlist's end
@@ -669,7 +667,6 @@ class HLSStream(HTTPStream):
         """
 
         super().__init__(session, url, **kwargs)
-        self._url_master = url_master
         self.multivariant = multivariant if multivariant and multivariant.is_master else None
         self.name = name
         self.force_restart = force_restart
@@ -689,13 +686,8 @@ class HLSStream(HTTPStream):
 
         return json
 
-    @property
-    def url_master(self):
-        """Deprecated"""
-        return self.multivariant.uri if self.multivariant and self.multivariant.uri else self._url_master
-
     def to_manifest_url(self):
-        url = self.multivariant.uri if self.multivariant and self.multivariant.uri else self.url_master
+        url = self.multivariant.uri if self.multivariant and self.multivariant.uri else None
 
         if url is None:
             return super().to_manifest_url()

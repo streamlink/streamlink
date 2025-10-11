@@ -4,7 +4,7 @@ import pytest
 
 from streamlink.stream.dash import DASHStream
 from streamlink.stream.file import FileStream
-from streamlink.stream.hls import HLSStream
+from streamlink.stream.hls import M3U8, HLSStream
 from streamlink.stream.http import HTTPStream
 from streamlink.stream.stream import Stream
 
@@ -62,7 +62,9 @@ def test_hls_stream(session, common_args):
 
 
 def test_hls_stream_master(session, common_args):
-    stream = HLSStream(session, "http://host/stream.m3u8?foo=bar", "http://host/master.m3u8?foo=bar", **common_args)
+    multivariant = M3U8("http://host/master.m3u8?foo=bar")
+    multivariant.is_master = True
+    stream = HLSStream(session, "http://host/stream.m3u8?foo=bar", multivariant=multivariant, **common_args)
     assert stream.to_url() == "http://host/stream.m3u8?foo=bar&queryparamkey=queryparamval"
     assert stream.to_manifest_url() == "http://host/master.m3u8?foo=bar&queryparamkey=queryparamval"
 
