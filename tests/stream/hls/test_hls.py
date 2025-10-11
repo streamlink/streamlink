@@ -101,7 +101,9 @@ def test_repr(session: Streamlink):
     stream = HLSStream(session, "https://foo.bar/playlist.m3u8")
     assert repr(stream) == "<HLSStream ['hls', 'https://foo.bar/playlist.m3u8']>"
 
-    stream = HLSStream(session, "https://foo.bar/playlist.m3u8", "https://foo.bar/master.m3u8")
+    multivariant: M3U8[HLSSegment, HLSPlaylist] = M3U8("https://foo.bar/master.m3u8")
+    multivariant.is_master = True
+    stream = HLSStream(session, "https://foo.bar/playlist.m3u8", multivariant=multivariant)
     assert repr(stream) == "<HLSStream ['hls', 'https://foo.bar/playlist.m3u8', 'https://foo.bar/master.m3u8']>"
 
 
@@ -129,14 +131,6 @@ class TestHLSVariantPlaylist:
 
         assert stream.multivariant is not None
         assert stream.multivariant.uri == f"{base}/master.m3u8"
-        assert stream.url_master == f"{base}/master.m3u8"
-
-    def test_url_master(self, session: Streamlink):
-        stream = HLSStream(session, "http://mocked/foo", url_master="http://mocked/master.m3u8")
-
-        assert stream.multivariant is None
-        assert stream.url == "http://mocked/foo"
-        assert stream.url_master == "http://mocked/master.m3u8"
 
 
 class EventedWorkerHLSStreamReader(HLSStreamReader):
