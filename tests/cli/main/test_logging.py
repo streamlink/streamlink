@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+import re
 import sys
 from io import StringIO
 from pathlib import Path
@@ -666,7 +667,12 @@ class TestLogfile:
 
 
 class TestPrint:
-    @pytest.fixture(autouse=True)
+    @pytest.fixture()
+    def _color(self, request: pytest.FixtureRequest, monkeypatch: pytest.MonkeyPatch):
+        can_colorize = getattr(request, "param", False)
+        monkeypatch.setattr("_colorize.can_colorize", lambda: can_colorize)
+
+    @pytest.fixture()
     def stdout(self, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture, session: Streamlink):
         mock_resolve_url = Mock()
         monkeypatch.setattr(session, "resolve_url", mock_resolve_url)
@@ -681,7 +687,8 @@ class TestPrint:
 
         return out
 
-    def test_usage(self, stdout: str):
+    @pytest.mark.parametrize("_color", [True, False], ids=["color", "nocolor"])
+    def test_usage(self, stdout: str, _color):
         assert (
             stdout
             == dedent("""
@@ -711,6 +718,12 @@ class TestPrint:
             """)
             in stdout
         )
+
+    @pytest.mark.python(3, 14)
+    @pytest.mark.parametrize(("argv", "_color"), [(["--help"], True)], indirect=["argv", "_color"])
+    def test_help_color(self, _color, argv: list, stdout: str):
+        # Python's _colorize module also uses ANSI escape sequences on Windows
+        assert re.match(r"\x1b\[1;\d+musage: ", stdout), "Uses color in help-text and colors its usage line"
 
     @pytest.mark.parametrize(
         ("argv", "expected"),
