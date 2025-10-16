@@ -20,49 +20,73 @@ log = logging.getLogger(__name__)
     re.compile(r"https?://(?:www\.)?btvplus\.bg/live/?"),
 )
 class BTV(Plugin):
-    URL_API = "https://btvplus.bg/lbin/v3/btvplus/player_config.php"
+    _URL_TOKEN = "https://dai-api.bweb.bg:3000/get-token"
+    _URL_LIVESESSIONS = "https://videostitcher.googleapis.com/v1/projects/{project}/locations/{region}/liveSessions"
+    _URL_STREAM_ID = "https://pubads.g.doubleclick.net/ssai/pods/api/v1/network/{network}/custom_asset/{asset_key}/stream"
 
     def _get_streams(self):
-        media_id = self.session.http.get(
-            self.url,
+        access_token = self.session.http.get(
+            self._URL_TOKEN,
             schema=validate.Schema(
-                re.compile(r"media_id=(\d+)"),
-                validate.any(None, validate.get(1)),
+                validate.parse_json(),
+                {"access_token": str},
+                validate.get("access_token"),
             ),
         )
-        if media_id is None:
-            return
 
-        stream_url = self.session.http.get(
-            self.URL_API,
-            params={
-                "media_id": media_id,
-            },
+        event_id, asset_key, region, project, network = self.session.http.get(
+            self.url,
             schema=validate.Schema(
-                validate.any(
-                    validate.all(
-                        validate.regex(re.compile(r"geo_blocked_stream")),
-                        validate.get(0),
-                    ),
-                    validate.all(
-                        validate.parse_json(),
-                        {
-                            "status": "ok",
-                            "info": {
-                                "file": validate.url(path=validate.endswith(".m3u8")),
-                            },
-                        },
-                        validate.get(("info", "file")),
+                validate.parse_html(),
+                validate.xml_xpath_string(".//script[contains(text(),'streamData')][1]/text()"),
+                str,
+                validate.regex(re.compile(r"streamData\s*:\s*(\{.+?}),", re.DOTALL)),
+                validate.get(1),
+                validate.union(
+                    tuple(
+                        validate.all(
+                            validate.regex(re.compile(rf"""{key}\s*:\s*(?P<q>['"])(?P<value>.+?)(?P=q)""")),
+                            validate.get("value"),
+                        )
+                        for key in ("eventId", "assetKey", "region", "project", "network")
                     ),
                 ),
             ),
         )
-        if not stream_url:
-            return
+        log.debug(f"{event_id=} {asset_key=} {region=} {project=} {network=}")
 
-        if stream_url == "geo_blocked_stream":
-            log.error("The content is not available in your region")
-            return
+        # apparently, we don't need POST data
+        stream_id = self.session.http.post(
+            self._URL_STREAM_ID.format(network=network, asset_key=asset_key),
+            schema=validate.Schema(
+                validate.parse_json(),
+                {
+                    "stream_id": str,
+                },
+                validate.get("stream_id"),
+            ),
+        )
+
+        stream_url = self.session.http.post(
+            self._URL_LIVESESSIONS.format(project=project, region=region),
+            headers={
+                "Authorization": f"Bearer {access_token}",
+                "Content-Type": "application/json",
+            },
+            json={
+                "live_config": f"projects/{project}/locations/{region}/liveConfigs/{event_id}",
+                "gam_settings": {
+                    "stream_id": stream_id,
+                },
+            },
+            schema=validate.Schema(
+                validate.parse_json(),
+                {
+                    "playUri": validate.url(path=validate.endswith(".m3u8")),
+                },
+                validate.get("playUri"),
+            ),
+        )
 
         return HLSStream.parse_variant_playlist(self.session, stream_url)
 
