@@ -104,7 +104,7 @@ test = [
   "pytest-cov",
 ]
 lint = [
-  "ruff ==0.13.2",
+  "ruff ==0.14.1",
 ]
 typing = [
   { include-group = "test" },
