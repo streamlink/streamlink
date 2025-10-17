@@ -19,6 +19,12 @@ elif [[ "${PLATFORM}" == win_amd64 ]]; then
     DEPS+=()
 fi
 
+if [[ "${PY}" == *t ]]; then
+    DEPS+=(
+        'pycryptodome-20251017-1/pycryptodome-3.23.0'
+    )
+fi
+
 deps=()
 for dep in "${DEPS[@]}"; do
     deps+=("${BASE}/${dep}-${PY}-${PLATFORM}.whl")
