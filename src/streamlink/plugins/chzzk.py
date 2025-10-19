@@ -306,7 +306,7 @@ class Chzzk(Plugin):
             ).items():
                 if stream.video_representation and stream.video_representation.mimeType == "video/mp2t":
                     yield name, stream
-                    return
+            return
 
         if live_rewind_playback_json is not None:
             log.info("The video might not be fully encoded, attempting to get playback streams")
