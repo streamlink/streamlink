@@ -255,6 +255,7 @@ class Chzzk(Plugin):
                     bgda_param=bgda_param,
                     ffmpeg_options={"copyts": True},
                 ).items()
+                return
 
     def _get_live(self, channel_id):
         datatype, data = self._api.get_live_detail(channel_id)
@@ -286,7 +287,7 @@ class Chzzk(Plugin):
                     media_path,
                     ffmpeg_options={"copyts": True},
                 ).items()
-        return
+                return
 
     def _get_vod_playback(self, datatype, data):
         if datatype == "error":
@@ -305,7 +306,7 @@ class Chzzk(Plugin):
             ).items():
                 if stream.video_representation and stream.video_representation.mimeType == "video/mp2t":
                     yield name, stream
-            return
+                    return
 
         if live_rewind_playback_json is not None:
             log.info("The video might not be fully encoded, attempting to get playback streams")
