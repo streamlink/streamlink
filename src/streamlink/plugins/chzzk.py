@@ -64,6 +64,28 @@ class ChzzkAPI:
     _VIDEOS_URL = "https://api.chzzk.naver.com/service/v2/videos/{video_id}"
     _CLIP_URL = "https://api.chzzk.naver.com/service/v1/play-info/clip/{clip_id}"
 
+    _LIVE_PLAYBACK_JSON_SCHEMA = validate.none_or_all(
+        str,
+        validate.parse_json(),
+        {
+            "media": [
+                validate.all(
+                    {
+                        "mediaId": str,
+                        "protocol": str,
+                        "path": validate.url(),
+                    },
+                    validate.union_get(
+                        "mediaId",
+                        "protocol",
+                        "path",
+                    ),
+                ),
+            ],
+        },
+        validate.get("media"),
+    )
+
     def __init__(self, session):
         self._session = session
 
@@ -114,27 +136,7 @@ class ChzzkAPI:
                     {"channelName": str},
                     validate.get("channelName"),
                 ),
-                "livePlaybackJson": validate.none_or_all(
-                    str,
-                    validate.parse_json(),
-                    {
-                        "media": [
-                            validate.all(
-                                {
-                                    "mediaId": str,
-                                    "protocol": str,
-                                    "path": validate.url(),
-                                },
-                                validate.union_get(
-                                    "mediaId",
-                                    "protocol",
-                                    "path",
-                                ),
-                            ),
-                        ],
-                    },
-                    validate.get("media"),
-                ),
+                "livePlaybackJson": self._LIVE_PLAYBACK_JSON_SCHEMA,
                 "timeMachineActive": bool,
             },
             validate.union_get(
@@ -153,27 +155,7 @@ class ChzzkAPI:
         return self._query_api(
             self._CHANNELS_LIVE_PLAYBACK_URL.format(channel_id=channel_id),
             {
-                "playbackJson": validate.none_or_all(
-                    str,
-                    validate.parse_json(),
-                    {
-                        "media": [
-                            validate.all(
-                                {
-                                    "mediaId": str,
-                                    "protocol": str,
-                                    "path": validate.url(),
-                                },
-                                validate.union_get(
-                                    "mediaId",
-                                    "protocol",
-                                    "path",
-                                ),
-                            ),
-                        ],
-                    },
-                    validate.get("media"),
-                ),
+                "playbackJson": self._LIVE_PLAYBACK_JSON_SCHEMA,
             },
             validate.get(
                 "playbackJson",
@@ -220,11 +202,11 @@ class ChzzkAPI:
                 "adult",
                 "inKey",
                 "videoId",
+                "liveRewindPlaybackJson",
                 "videoNo",
                 "channel",
                 "videoTitle",
                 "videoCategory",
-                "liveRewindPlaybackJson",
             ),
         )
 
@@ -281,6 +263,19 @@ class Chzzk(Plugin):
         super().__init__(*args, **kwargs)
         self._api = ChzzkAPI(self.session)
 
+    def _get_live_playback(self, playback):
+        for media_id, media_protocol, media_path in playback:
+            if media_protocol == "HLS" and media_id == "HLS":
+                # Extract __bgda__ parameter from the media path URL
+                parsed_url = urlparse(media_path)
+                bgda_param = dict(parse_qsl(parsed_url.query)).get("hdnts")
+                yield from ChzzkHLSStream.parse_variant_playlist(
+                    self.session,
+                    media_path,
+                    bgda_param=bgda_param,
+                    ffmpeg_options={"copyts": True},
+                ).items()
+
     def _get_live(self, channel_id):
         datatype, data = self._api.get_live_detail(channel_id)
         if datatype == "error":
@@ -301,32 +296,24 @@ class Chzzk(Plugin):
             log.info("Time machine is active, attempting to get playback streams")
             datatype_playback, data_playback = self._api.get_live_playback(channel_id)
             if datatype_playback != "error" and data_playback is not None:
-                for media_id, media_protocol, media_path in data_playback:
-                    if media_protocol == "HLS" and media_id == "HLS":
-                        # Extract __bgda__ parameter from the media path URL
-                        parsed_url = urlparse(media_path)
-                        bgda_param = dict(parse_qsl(parsed_url.query)).get("hdnts")
-                        return ChzzkHLSStream.parse_variant_playlist(
-                            self.session,
-                            media_path,
-                            bgda_param=bgda_param,
-                            ffmpeg_options={"copyts": True},
-                        )
+                yield from self._get_live_playback(data_playback)
+                return
 
         for media_id, media_protocol, media_path in media:
             if media_protocol == "HLS" and media_id == "HLS":
-                return HLSStream.parse_variant_playlist(
+                yield from HLSStream.parse_variant_playlist(
                     self.session,
                     media_path,
                     ffmpeg_options={"copyts": True},
-                )
+                ).items()
+        return
 
     def _get_vod_playback(self, datatype, data):
         if datatype == "error":
             log.error(data)
             return
 
-        adult, in_key, vod_id, *metadata, live_rewind_playback_json = data
+        adult, in_key, vod_id, live_rewind_playback_json, *metadata = data
 
         if in_key is not None and vod_id is not None:
             self.id, self.author, self.title, self.category = metadata
@@ -336,25 +323,14 @@ class Chzzk(Plugin):
                 self._API_VOD_PLAYBACK_URL.format(video_id=vod_id, in_key=in_key),
                 headers={"Accept": "application/dash+xml"},
             ).items():
-                if stream.video_representation.mimeType == "video/mp2t":
+                if stream.video_representation and stream.video_representation.mimeType == "video/mp2t":
                     yield name, stream
             return
 
         if live_rewind_playback_json is not None:
             log.info("The video might not be fully encoded, attempting to get playback streams")
             self.id, self.author, self.title, self.category = metadata
-            for media_id, media_protocol, media_path in live_rewind_playback_json:
-                if media_protocol == "HLS" and media_id == "HLS":
-                    # Extract __bgda__ parameter from the media path URL
-                    parsed_url = urlparse(media_path)
-                    bgda_param = dict(parse_qsl(parsed_url.query)).get("hdnts")
-                    for name, stream in ChzzkHLSStream.parse_variant_playlist(
-                        self.session,
-                        media_path,
-                        bgda_param=bgda_param,
-                        ffmpeg_options={"copyts": True},
-                    ).items():
-                        yield name, stream
+            yield from self._get_live_playback(live_rewind_playback_json)
             return
 
         log.error(f"This stream is {'for adults only' if adult else 'unavailable'}")
