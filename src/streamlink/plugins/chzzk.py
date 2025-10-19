@@ -176,27 +176,7 @@ class ChzzkAPI:
                     {"channelName": str},
                     validate.get("channelName"),
                 ),
-                "liveRewindPlaybackJson": validate.none_or_all(
-                    str,
-                    validate.parse_json(),
-                    {
-                        "media": [
-                            validate.all(
-                                {
-                                    "mediaId": str,
-                                    "protocol": str,
-                                    "path": validate.url(),
-                                },
-                                validate.union_get(
-                                    "mediaId",
-                                    "protocol",
-                                    "path",
-                                ),
-                            ),
-                        ],
-                    },
-                    validate.get("media"),
-                ),
+                "liveRewindPlaybackJson": self._LIVE_PLAYBACK_JSON_SCHEMA,
             },
             validate.union_get(
                 "adult",
