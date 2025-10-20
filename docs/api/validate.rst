@@ -69,8 +69,6 @@ for an introduction to this API and a list of examples.
     :func:`validate()` is implemented using the stdlib's :func:`functools.singledispatch` decorator, where more specific
     schemas overload the default implementation with more validation logic.
 
-    ----
-
     By default, :func:`validate()` compares ``value`` and ``schema`` for equality. This means that simple schema objects
     like booleans, strings, numbers, None, etc. are validated here, as well as anything unknown.
 
