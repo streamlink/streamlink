@@ -312,7 +312,7 @@ class TestHLSStreamWorker(TestMixinStreamHLS, unittest.TestCase):
 
             # first playlist reload has taken one second
             frozen_time.tick(ONE_SECOND)
-            self.await_playlist_reload(1)
+            self.await_reload(1)
 
             assert worker.handshake_wait.wait_ready(1), "Arrives at wait() call #1"
             assert worker.playlist_sequence == 1, "Updates the sequence number"
@@ -322,7 +322,7 @@ class TestHLSStreamWorker(TestMixinStreamHLS, unittest.TestCase):
             # trigger next reload when the target duration has passed
             frozen_time.tick(targetduration)
             self.await_playlist_wait(1)
-            self.await_playlist_reload(1)
+            self.await_reload(1)
 
             assert worker.handshake_wait.wait_ready(1), "Arrives at wait() call #2"
             assert worker.playlist_sequence == 2, "Updates the sequence number again"
@@ -333,7 +333,7 @@ class TestHLSStreamWorker(TestMixinStreamHLS, unittest.TestCase):
                 # trigger next reload when the target duration has passed
                 frozen_time.tick(targetduration)
                 self.await_playlist_wait(1)
-                self.await_playlist_reload(1)
+                self.await_reload(1)
 
                 assert worker.handshake_wait.wait_ready(1), f"Arrives at wait() call #{num}"
                 assert worker.playlist_sequence == 2, "Sequence number is unchanged"
@@ -345,7 +345,7 @@ class TestHLSStreamWorker(TestMixinStreamHLS, unittest.TestCase):
             # trigger next reload when the target duration has passed
             frozen_time.tick(targetduration)
             self.await_playlist_wait(1)
-            self.await_playlist_reload(1)
+            self.await_reload(1)
 
             self.await_read(read_all=True)
             self.await_close(1)
@@ -373,7 +373,7 @@ class TestHLSStreamWorker(TestMixinStreamHLS, unittest.TestCase):
 
             # first playlist reload has taken one second
             frozen_time.tick(ONE_SECOND)
-            self.await_playlist_reload(1)
+            self.await_reload(1)
 
             assert worker.handshake_wait.wait_ready(1), "Arrives at first wait() call"
             assert worker.playlist_sequence == 1, "Updates the sequence number"
@@ -385,7 +385,7 @@ class TestHLSStreamWorker(TestMixinStreamHLS, unittest.TestCase):
             for num in range(10):
                 frozen_time.tick(targetduration)
                 self.await_playlist_wait(1)
-                self.await_playlist_reload(1)
+                self.await_reload(1)
 
                 assert worker.handshake_wait.wait_ready(1), f"Arrives at wait() #{num + 1}"
                 assert worker.playlist_sequence == 1, "Sequence number is unchanged"
@@ -420,7 +420,7 @@ class TestHLSStreamWorker(TestMixinStreamHLS, unittest.TestCase):
 
             # first playlist reload has taken one second
             frozen_time.tick(ONE_SECOND)
-            self.await_playlist_reload(1)
+            self.await_reload(1)
 
             assert worker.handshake_wait.wait_ready(1), "Arrives at wait() call #1"
             assert worker.playlist_sequence == 1, "Updates the sequence number"
@@ -431,7 +431,7 @@ class TestHLSStreamWorker(TestMixinStreamHLS, unittest.TestCase):
                 # trigger next reload when the target duration has passed
                 frozen_time.tick(targetduration)
                 self.await_playlist_wait(1)
-                self.await_playlist_reload(1)
+                self.await_reload(1)
 
                 assert worker.handshake_wait.wait_ready(1), f"Arrives at wait() call #{num}"
                 assert worker.playlist_sequence == 1, "Sequence number is unchanged"
@@ -443,7 +443,7 @@ class TestHLSStreamWorker(TestMixinStreamHLS, unittest.TestCase):
             # trigger next reload when the target duration has passed
             frozen_time.tick(targetduration)
             self.await_playlist_wait(1)
-            self.await_playlist_reload(1)
+            self.await_reload(1)
 
             # FIXME: NO-GIL
             #   Closing only the worker thread when no new segments were queued keeps the writer thread and buffer still open,
@@ -473,12 +473,12 @@ class TestHLSStreamWorker(TestMixinStreamHLS, unittest.TestCase):
             self.start()
 
             assert worker.handshake_reload.wait_ready(1), "Arrives at initial playlist reload"
-            assert worker.playlist_reload_last == EPOCH, "Sets the initial value of the last reload time"
+            assert worker._reload_last == EPOCH, "Sets the initial value of the last reload time"
 
             # adjust clock and reload playlist: let it take one second
-            frozen_time.move_to(worker.playlist_reload_last + ONE_SECOND)
-            self.await_playlist_reload()
-            assert worker.playlist_reload_time == 5.0, "Uses the playlist's targetduration as reload time"
+            frozen_time.move_to(worker._reload_last + ONE_SECOND)
+            self.await_reload()
+            assert worker._reload_time == 5.0, "Uses the playlist's targetduration as reload time"
 
             # time_completed = 00:00:01; time_elapsed = 1s
             assert worker.handshake_wait.wait_ready(1), "Arrives at first wait() call"
@@ -488,13 +488,13 @@ class TestHLSStreamWorker(TestMixinStreamHLS, unittest.TestCase):
             self.await_playlist_wait()
 
             assert worker.handshake_reload.wait_ready(1), "Arrives at second playlist reload"
-            assert worker.playlist_reload_last == EPOCH + targetduration, \
+            assert worker._reload_last == EPOCH + targetduration, \
                 "Last reload time is the sum of reload+wait time (=targetduration)"  # fmt: skip
 
             # adjust clock and reload playlist: let it exceed targetduration by two seconds
-            frozen_time.move_to(worker.playlist_reload_last + targetduration + ONE_SECOND * 2)
-            self.await_playlist_reload()
-            assert worker.playlist_reload_time == 5.0, "Uses the playlist's targetduration as reload time"
+            frozen_time.move_to(worker._reload_last + targetduration + ONE_SECOND * 2)
+            self.await_reload()
+            assert worker._reload_time == 5.0, "Uses the playlist's targetduration as reload time"
 
             # time_completed = 00:00:12; time_elapsed = 7s (exceeded 5s targetduration)
             assert worker.handshake_wait.wait_ready(1), "Arrives at second wait() call"
@@ -504,13 +504,13 @@ class TestHLSStreamWorker(TestMixinStreamHLS, unittest.TestCase):
             self.await_playlist_wait()
 
             assert worker.handshake_reload.wait_ready(1), "Arrives at third playlist reload"
-            assert worker.playlist_reload_last == EPOCH + targetduration * 2 + ONE_SECOND * 2, \
+            assert worker._reload_last == EPOCH + targetduration * 2 + ONE_SECOND * 2, \
                 "Sets last reload time to current time when reloading took too long (changes the interval)"  # fmt: skip
 
             # adjust clock and reload playlist: let it take one second again
-            frozen_time.move_to(worker.playlist_reload_last + ONE_SECOND)
-            self.await_playlist_reload()
-            assert worker.playlist_reload_time == 5.0, "Uses the playlist's targetduration as reload time"
+            frozen_time.move_to(worker._reload_last + ONE_SECOND)
+            self.await_reload()
+            assert worker._reload_time == 5.0, "Uses the playlist's targetduration as reload time"
 
             # time_completed = 00:00:13; time_elapsed = 1s
             assert worker.handshake_wait.wait_ready(1), "Arrives at third wait() call"
@@ -520,13 +520,13 @@ class TestHLSStreamWorker(TestMixinStreamHLS, unittest.TestCase):
             self.await_playlist_wait()
 
             assert worker.handshake_reload.wait_ready(1), "Arrives at fourth playlist reload"
-            assert worker.playlist_reload_last == EPOCH + targetduration * 3 + ONE_SECOND * 2, \
+            assert worker._reload_last == EPOCH + targetduration * 3 + ONE_SECOND * 2, \
                 "Last reload time is the sum of reload+wait time (=targetduration) of the changed interval"  # fmt: skip
 
             # adjust clock and reload playlist: simulate no fetch+processing delay
-            frozen_time.move_to(worker.playlist_reload_last)
-            self.await_playlist_reload()
-            assert worker.playlist_reload_time == 5.0, "Uses the playlist's targetduration as reload time"
+            frozen_time.move_to(worker._reload_last)
+            self.await_reload()
+            assert worker._reload_time == 5.0, "Uses the playlist's targetduration as reload time"
 
             # time_completed = 00:00:17; time_elapsed = 0s
             assert worker.handshake_wait.wait_ready(1), "Arrives at fourth wait() call"
@@ -536,11 +536,11 @@ class TestHLSStreamWorker(TestMixinStreamHLS, unittest.TestCase):
             self.await_playlist_wait()
 
             assert worker.handshake_reload.wait_ready(1), "Arrives at fifth playlist reload"
-            assert worker.playlist_reload_last == EPOCH + targetduration * 4 + ONE_SECOND * 2, \
+            assert worker._reload_last == EPOCH + targetduration * 4 + ONE_SECOND * 2, \
                 "Last reload time is the sum of reload+wait time (no delay)"  # fmt: skip
 
             # adjusting the clock is not needed anymore
-            self.await_playlist_reload()
+            self.await_reload()
             assert self.await_read(read_all=True) == self.content(segments)
             self.await_close()
             assert worker.playlist_end == 4, "Stream has ended"
@@ -990,7 +990,7 @@ class TestHLSStreamEncrypted(TestMixinStreamHLS, unittest.TestCase):
 
 
 @patch("streamlink.stream.hls.hls.HLSStreamWorker.wait", Mock(return_value=True))
-class TestHlsPlaylistReloadTime(TestMixinStreamHLS, unittest.TestCase):
+class TestHlsReloadTime(TestMixinStreamHLS, unittest.TestCase):
     segments = [
         Segment(0, duration=11),
         Segment(1, duration=7),
@@ -1013,72 +1013,72 @@ class TestHlsPlaylistReloadTime(TestMixinStreamHLS, unittest.TestCase):
         super().subject(*args, start=False, **kwargs)
 
         # mock the worker thread's _playlist_reload_time method, so that the main thread can wait on its call
-        playlist_reload_time_called = Event()
-        orig_playlist_reload_time = self.thread.reader.worker._playlist_reload_time
+        get_reload_time_called = Event()
+        orig_get_reload_time = self.thread.reader.worker._get_reload_time
 
-        def mocked_playlist_reload_time(*args, **kwargs):
-            playlist_reload_time_called.set()
-            return orig_playlist_reload_time(*args, **kwargs)
+        def mocked_get_reload_time(*args2, **kwargs2):
+            get_reload_time_called.set()
+            return orig_get_reload_time(*args2, **kwargs2)
 
         # immediately kill the writer thread as we don't need it and don't want to wait for its queue polling to end
         def mocked_queue_get():
             return None
 
         with (
-            patch.object(self.thread.reader.worker, "_playlist_reload_time", side_effect=mocked_playlist_reload_time),
+            patch.object(self.thread.reader.worker, "_get_reload_time", side_effect=mocked_get_reload_time),
             patch.object(self.thread.reader.writer, "_queue_get", side_effect=mocked_queue_get),
         ):
             self.start()
 
-            if not playlist_reload_time_called.wait(timeout=5):  # pragma: no cover
-                raise RuntimeError("Missing _playlist_reload_time() call")
+            if not get_reload_time_called.wait(timeout=5):  # pragma: no cover
+                raise RuntimeError("Missing _get_reload_time() call")
 
             # wait for the worker thread to terminate, so that deterministic assertions can be done about the reload time
             self.thread.reader.worker.join()
 
-            return self.thread.reader.worker.playlist_reload_time
+            return self.thread.reader.worker._reload_time
 
-    def test_hls_playlist_reload_time_default(self):
+    def test_default(self):
         time = self.subject([Playlist(0, self.segments, end=True, targetduration=4)], reload_time="default")
         assert time == 4, "default sets the reload time to the playlist's target duration"
 
-    def test_hls_playlist_reload_time_segment(self):
+    def test_segment(self):
         time = self.subject([Playlist(0, self.segments, end=True, targetduration=4)], reload_time="segment")
         assert time == 3, "segment sets the reload time to the playlist's last segment"
 
-    def test_hls_playlist_reload_time_segment_no_segments(self):
+    def test_segment_no_segments(self):
         time = self.subject([Playlist(0, [], end=True, targetduration=4)], reload_time="segment")
         assert time == 4, "segment sets the reload time to the targetduration if no segments are available"
 
-    def test_hls_playlist_reload_time_segment_no_segments_no_targetduration(self):
+    def test_segment_no_segments_no_targetduration(self):
         time = self.subject([Playlist(0, [], end=True, targetduration=0)], reload_time="segment")
         assert time == 6, "sets reload time to 6 seconds when no segments and no targetduration are available"
 
-    def test_hls_playlist_reload_time_live_edge(self):
+    def test_live_edge(self):
         time = self.subject([Playlist(0, self.segments, end=True, targetduration=4)], reload_time="live-edge")
         assert time == 8, "live-edge sets the reload time to the sum of the number of segments of the live-edge"
 
-    def test_hls_playlist_reload_time_live_edge_no_segments(self):
+    def test_live_edge_no_segments(self):
         time = self.subject([Playlist(0, [], end=True, targetduration=4)], reload_time="live-edge")
         assert time == 4, "live-edge sets the reload time to the targetduration if no segments are available"
 
-    def test_hls_playlist_reload_time_live_edge_no_segments_no_targetduration(self):
+    def test_live_edge_no_segments_no_targetduration(self):
         time = self.subject([Playlist(0, [], end=True, targetduration=0)], reload_time="live-edge")
         assert time == 6, "sets reload time to 6 seconds when no segments and no targetduration are available"
 
-    def test_hls_playlist_reload_time_number(self):
+    def test_number(self):
         time = self.subject([Playlist(0, self.segments, end=True, targetduration=4)], reload_time="2")
         assert time == 2, "number values override the reload time"
 
-    def test_hls_playlist_reload_time_number_invalid(self):
+    def test_number_invalid(self):
         time = self.subject([Playlist(0, self.segments, end=True, targetduration=4)], reload_time="0")
         assert time == 4, "invalid number values set the reload time to the playlist's targetduration"
 
-    def test_hls_playlist_reload_time_no_target_duration(self):
+    def test_no_target_duration(self):
         time = self.subject([Playlist(0, self.segments, end=True, targetduration=0)], reload_time="default")
         assert time == 8, "uses the live-edge sum if the playlist is missing the targetduration data"
 
-    def test_hls_playlist_reload_time_no_data(self):
+    def test_no_data(self):
         time = self.subject([Playlist(0, [], end=True, targetduration=0)], reload_time="default")
         assert time == 6, "sets reload time to 6 seconds when no data is available"
 

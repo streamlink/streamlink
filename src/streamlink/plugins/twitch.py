@@ -173,12 +173,8 @@ class TwitchHLSStreamWorker(HLSStreamWorker):
         self.had_content: bool = False
         self.logged_ads: deque[str] = deque(maxlen=10)
         super().__init__(reader, *args, **kwargs)
-
-    def _playlist_reload_time(self, playlist: TwitchM3U8):  # type: ignore[override]
-        if self.stream.low_latency and playlist.segments:
-            return playlist.segments[-1].duration
-
-        return super()._playlist_reload_time(playlist)
+        if self.stream.low_latency:
+            self.reload_time = "segment"
 
     def process_segments(self, playlist: TwitchM3U8):  # type: ignore[override]
         # ignore prefetch segments if not LL streaming
