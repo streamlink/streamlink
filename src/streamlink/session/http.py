@@ -86,7 +86,7 @@ urllib3.util.url._PERCENT_RE = urllib3.util.url.PERCENT_RE = Urllib3UtilUrlPerce
 
 
 # requests.Request.__init__ keywords, except for "hooks"
-_VALID_REQUEST_ARGS = "method", "url", "headers", "files", "data", "params", "auth", "cookies", "json"
+_VALID_REQUEST_ARGS = {"method", "url", "headers", "files", "data", "params", "auth", "cookies", "json"}
 
 
 class HTTPSession(Session):
