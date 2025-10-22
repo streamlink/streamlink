@@ -108,6 +108,7 @@ class TestKickHLSStream(TestMixinStreamHLS, unittest.TestCase):
         assert all(self.called(s) for s in segments.values() if s.num <= 7), "Ignores prefetch segments"
         assert not any(self.called(s) for s in segments.values() if s.num > 7), "Ignores prefetch segments"
         assert mock_log.info.mock_calls == []
+        assert self.thread.reader.worker._reload_time == 3.0
 
     @patch("streamlink.plugins.kick.log")
     def test_hls_low_latency_no_prefetch(self, mock_log):
@@ -138,4 +139,4 @@ class TestKickHLSStream(TestMixinStreamHLS, unittest.TestCase):
 
         self.await_write(4)
         self.await_read(read_all=True)
-        assert self.thread.reader.worker.playlist_reload_time == pytest.approx(23 / 3)
+        assert self.thread.reader.worker._reload_time == pytest.approx(23 / 3)
