@@ -253,7 +253,7 @@ Package availability
 Packaging is not done by the Streamlink maintainers themselves except for
 the `PyPI package <pypi-package-and-source-code_>`_,
 the `Windows installers + portable builds <Windows binaries_>`_,
-and the `Linux AppImages <Linux AppImages_>`_.
+and the `Linux AppImages`_.
 
 If a packaged release of Streamlink is not available for your operating system / distro or your system's architecture,
 or if it's out of date or broken, then please contact the respective package maintainers or package-repository maintainers
