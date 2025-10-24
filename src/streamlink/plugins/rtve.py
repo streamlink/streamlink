@@ -146,9 +146,9 @@ class Rtve(Plugin):
         self.id = self.session.http.get(
             self.url,
             schema=validate.Schema(
-                re.compile(r"\bdata-setup='({.+?})'", re.DOTALL),
+                validate.parse_html(),
+                validate.xml_xpath_string(".//*[contains(@class,'videoPlayer')][@data-setup][1]/@data-setup"),
                 validate.none_or_all(
-                    validate.get(1),
                     validate.parse_json(),
                     {
                         "idAsset": validate.any(int, validate.all(str, validate.transform(int))),
