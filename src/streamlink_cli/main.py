@@ -91,9 +91,7 @@ def check_file_output(path: Path, skip: bool, force: bool) -> Path:
     Checks if `path` already exists and asks the user if it should be overwritten if it does.
     """
 
-    # rewrap `path` and resolve using `os.path.realpath` instead of `path.resolve()`
-    # to avoid a pathlib issues on py39 and below
-    realpath = Path(os.path.realpath(path))
+    realpath = path.resolve()
 
     log.info(f"Writing output to\n{realpath}")
     log.debug("Checking file output")
