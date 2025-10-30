@@ -326,10 +326,9 @@ class HLSStreamWorker(SegmentedStreamWorker[HLSSegment, Response]):
         self.segment_queue_timing_threshold_factor = self.session.options.get("hls-segment-queue-threshold")
         self.live_edge = self.session.options.get("hls-live-edge")
         self.duration_offset_start = int(self.stream.start_offset + (self.session.options.get("hls-start-offset") or 0))
-        self.duration_limit = self.stream.duration or (
-            int(self.session.options.get("hls-duration")) if self.session.options.get("hls-duration") else None
-        )
         self.hls_live_restart = self.stream.force_restart or self.session.options.get("hls-live-restart")
+
+        self.duration_limit = self.stream.duration or self.duration_limit
 
         self.reload_attempts = self.session.options.get("hls-playlist-reload-attempts")
         self.reload_time = self.session.options.get("hls-playlist-reload-time")
@@ -505,10 +504,6 @@ class HLSStreamWorker(SegmentedStreamWorker[HLSSegment, Response]):
 
                 yield segment
                 queued = True
-
-                if self.duration_limit and self.duration >= self.duration_limit:
-                    log.info(f"Stopping stream early after {self.duration_limit}")
-                    return
 
                 if self.closed:  # pragma: no cover
                     return
