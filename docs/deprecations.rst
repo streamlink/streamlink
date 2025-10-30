@@ -1,6 +1,16 @@
 Deprecations
 ============
 
+streamlink 8.0.0
+----------------
+
+--hls-duration
+^^^^^^^^^^^^^^
+
+The ``--hls-duration`` CLI argument has been deprecated in favor of :option:`--stream-segmented-duration`,
+which affects all kinds of segmented streams, not just HLS streams.
+
+
 streamlink 7.0.0
 ----------------
 

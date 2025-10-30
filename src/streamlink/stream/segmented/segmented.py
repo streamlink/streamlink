@@ -193,6 +193,7 @@ class SegmentedStreamWorker(AwaitableMixin, NamedThread, Generic[TSegment, TResu
         self.session = reader.session
 
         self.duration: float = 0.0
+        self.duration_limit: float = self.session.options.get("stream-segmented-duration")
 
     def close(self) -> None:
         """
@@ -225,6 +226,10 @@ class SegmentedStreamWorker(AwaitableMixin, NamedThread, Generic[TSegment, TResu
             self.duration += segment.duration
 
             self.writer.put(segment)
+
+            if self.duration >= self.duration_limit > 0.0:
+                log.info(f"Stopping stream early after {self.duration_limit:.2f}s")
+                break
 
         # End of stream, tells the writer to exit
         self.writer.put(None)
