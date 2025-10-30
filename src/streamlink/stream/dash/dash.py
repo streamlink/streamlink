@@ -89,6 +89,7 @@ class DASHStreamWorker(SegmentedStreamWorker[DASHSegment, Response]):
         self.mpd = self.stream.mpd
 
         self.manifest_reload_retries = self.session.options.get("dash-manifest-reload-attempts")
+        self.duration_limit = self.stream.duration or self.duration_limit
 
     @contextmanager
     def sleeper(self, duration):
@@ -209,6 +210,7 @@ class DASHStream(Stream):
         mpd: MPD,
         video_representation: Representation | None = None,
         audio_representation: Representation | None = None,
+        duration: float | None = None,
         **kwargs,
     ):
         """
@@ -216,6 +218,7 @@ class DASHStream(Stream):
         :param mpd: Parsed MPD manifest
         :param video_representation: Video representation
         :param audio_representation: Audio representation
+        :param duration: Number of seconds until ending the stream
         :param kwargs: Additional keyword arguments passed to :meth:`requests.Session.request`
         """
 
@@ -223,6 +226,7 @@ class DASHStream(Stream):
         self.mpd = mpd
         self.video_representation = video_representation
         self.audio_representation = audio_representation
+        self.duration = duration
         self.args = session.http.valid_request_args(**kwargs)
 
     def __json__(self):  # noqa: PLW3201
