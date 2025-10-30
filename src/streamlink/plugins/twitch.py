@@ -181,6 +181,12 @@ class TwitchHLSStreamWorker(HLSStreamWorker):
         if not self.stream.low_latency:
             playlist.segments = [segment for segment in playlist.segments if not segment.prefetch]
 
+        # set ad segment duration to zero, so it doesn't affect the worker's `duration` attribute
+        # do it here instead of the parser because prefetch segment durations are averaged over all regular segments
+        for segment in playlist.segments:
+            if segment.ad:
+                segment.duration = 0.0
+
         # check for sequences with real content
         if not self.had_content:
             self.had_content = next((True for segment in playlist.segments if not segment.ad), False)
