@@ -485,7 +485,6 @@ class HLSStreamWorker(SegmentedStreamWorker[HLSSegment, Response]):
                 ]),
             )
 
-        total_duration = 0
         while not self.closed:
             queued = False
             for segment in self.playlist_segments:
@@ -507,8 +506,7 @@ class HLSStreamWorker(SegmentedStreamWorker[HLSSegment, Response]):
                 yield segment
                 queued = True
 
-                total_duration += segment.duration
-                if self.duration_limit and total_duration >= self.duration_limit:
+                if self.duration_limit and self.duration >= self.duration_limit:
                     log.info(f"Stopping stream early after {self.duration_limit}")
                     return
 
