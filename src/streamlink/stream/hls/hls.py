@@ -490,16 +490,7 @@ class HLSStreamWorker(SegmentedStreamWorker[HLSSegment, Response]):
                     continue
 
                 log.debug(f"Adding segment {segment.num} to queue")
-                offset = segment.num - self.sequence
-                if offset > 0:
-                    log.warning(
-                        (
-                            f"Skipped segments {self.sequence}-{segment.num - 1} after playlist reload. "
-                            if offset > 1
-                            else f"Skipped segment {self.sequence} after playlist reload. "
-                        )
-                        + "This is unsupported and will result in incoherent output data.",
-                    )
+                self.check_sequence_gap(segment)
 
                 yield segment
                 queued = True
