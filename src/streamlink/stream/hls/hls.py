@@ -319,7 +319,6 @@ class HLSStreamWorker(SegmentedStreamWorker[HLSSegment, Response]):
         self.playlist_changed = False
         self.playlist_end: int | None = None
         self.playlist_targetduration: float = 0
-        self.playlist_sequence: int = -1
         self.playlist_sequence_last: datetime = now()
         self.playlist_segments: list[HLSSegment] = []
 
@@ -406,16 +405,16 @@ class HLSStreamWorker(SegmentedStreamWorker[HLSSegment, Response]):
         if playlist.is_endlist:
             self.playlist_end = last_segment.num
 
-        if self.playlist_sequence < 0:
+        if self.sequence < 0:
             if self.playlist_end is None and not self.hls_live_restart:
                 edge_index = -(min(len(segments), max(int(self.live_edge), 1)))
                 edge_segment = segments[edge_index]
-                self.playlist_sequence = edge_segment.num
+                self.sequence = edge_segment.num
             else:
-                self.playlist_sequence = first_segment.num
+                self.sequence = first_segment.num
 
     def valid_segment(self, segment: HLSSegment) -> bool:
-        return segment.num >= self.playlist_sequence
+        return segment.num >= self.sequence
 
     def _segment_queue_timing_threshold_reached(self) -> bool:
         if self.segment_queue_timing_threshold_factor <= 0:
@@ -466,7 +465,7 @@ class HLSStreamWorker(SegmentedStreamWorker[HLSSegment, Response]):
             self.duration_offset_start = -self.duration_offset_start
 
         if self.duration_offset_start != 0:
-            self.playlist_sequence = self.duration_to_sequence(self.duration_offset_start, self.playlist_segments)
+            self.sequence = self.duration_to_sequence(self.duration_offset_start, self.playlist_segments)
 
         if self.playlist_segments:
             log.debug(
@@ -479,7 +478,7 @@ class HLSStreamWorker(SegmentedStreamWorker[HLSSegment, Response]):
                 "; ".join([
                     f"Start offset: {self.duration_offset_start}",
                     f"Duration: {self.duration_limit}",
-                    f"Start Sequence: {self.playlist_sequence}",
+                    f"Start Sequence: {self.sequence}",
                     f"End Sequence: {self.playlist_end}",
                 ]),
             )
@@ -491,13 +490,13 @@ class HLSStreamWorker(SegmentedStreamWorker[HLSSegment, Response]):
                     continue
 
                 log.debug(f"Adding segment {segment.num} to queue")
-                offset = segment.num - self.playlist_sequence
+                offset = segment.num - self.sequence
                 if offset > 0:
                     log.warning(
                         (
-                            f"Skipped segments {self.playlist_sequence}-{segment.num - 1} after playlist reload. "
+                            f"Skipped segments {self.sequence}-{segment.num - 1} after playlist reload. "
                             if offset > 1
-                            else f"Skipped segment {self.playlist_sequence} after playlist reload. "
+                            else f"Skipped segment {self.sequence} after playlist reload. "
                         )
                         + "This is unsupported and will result in incoherent output data.",
                     )
@@ -508,10 +507,8 @@ class HLSStreamWorker(SegmentedStreamWorker[HLSSegment, Response]):
                 if self.closed:  # pragma: no cover
                     return
 
-                self.playlist_sequence = segment.num + 1
-
             # End of stream
-            if self.closed or self.playlist_end is not None and (not queued or self.playlist_sequence > self.playlist_end):
+            if self.closed or self.playlist_end is not None and (not queued or self.sequence > self.playlist_end):
                 return
 
             if queued:

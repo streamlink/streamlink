@@ -201,7 +201,7 @@ class TwitchHLSStreamWorker(HLSStreamWorker):
                 log.info("This is not a low latency stream")
 
         # show pre-roll ads message only on the first playlist containing ads
-        if self.playlist_sequence == -1 and not self.had_content:
+        if self.sequence == -1 and not self.had_content:
             log.info("Waiting for pre-roll ads to finish, be patient")
 
         # log the duration of whole advertisement breaks
