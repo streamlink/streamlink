@@ -192,6 +192,7 @@ class SegmentedStreamWorker(AwaitableMixin, NamedThread, Generic[TSegment, TResu
         self.stream = reader.stream
         self.session = reader.session
 
+        self.sequence: int = -1
         self.duration: float = 0.0
         self.duration_limit: float = self.session.options.get("stream-segmented-duration")
 
@@ -223,6 +224,7 @@ class SegmentedStreamWorker(AwaitableMixin, NamedThread, Generic[TSegment, TResu
             if self.closed:  # pragma: no cover
                 break
 
+            self.sequence = segment.num + 1
             self.duration += segment.duration
 
             self.writer.put(segment)
