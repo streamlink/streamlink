@@ -209,6 +209,16 @@ class SegmentedStreamWorker(AwaitableMixin, NamedThread, Generic[TSegment, TResu
         self.closed = True
         self._wait.set()
 
+    def check_sequence_gap(self, segment: TSegment) -> None:
+        size = segment.num - self.sequence
+        if size > 0:
+            if size > 1:
+                msg = f"Sequence gap of {size} segments at position {self.sequence}. "
+            else:
+                msg = f"Sequence gap of 1 segment at position {self.sequence}. "
+            warning = "This is unsupported and will result in incoherent output data."
+            log.warning(f"{msg}{warning}")
+
     def iter_segments(self) -> Generator[TSegment, None, None]:
         """
         The iterator that generates segments for the worker thread.
