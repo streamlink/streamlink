@@ -3,7 +3,6 @@ from __future__ import annotations
 import logging
 import re
 import struct
-from datetime import timedelta
 from typing import TYPE_CHECKING, Any, ClassVar, Literal, TypeVar
 from urllib.parse import urlparse
 
@@ -16,7 +15,7 @@ from streamlink.stream.filtered import FilteredStream
 from streamlink.stream.hls.m3u8 import M3U8Parser, parse_m3u8
 from streamlink.stream.hls.segment import HLSSegment
 from streamlink.stream.http import HTTPStream
-from streamlink.stream.segmented import SegmentedStreamReader, SegmentedStreamWorker, SegmentedStreamWriter
+from streamlink.stream.segmented import PollingSegmentedStreamWorker, SegmentedStreamReader, SegmentedStreamWriter
 from streamlink.utils.cache import LRUCache
 from streamlink.utils.crypto import AES, unpad
 from streamlink.utils.formatter import Formatter
@@ -27,7 +26,6 @@ from streamlink.utils.times import now
 if TYPE_CHECKING:
     from collections.abc import Mapping
     from concurrent.futures import Future
-    from datetime import datetime
 
     from streamlink.buffers import RingBuffer
     from streamlink.session import Streamlink
@@ -300,18 +298,13 @@ class HLSStreamWriter(SegmentedStreamWriter[HLSSegment, Response]):
             log.debug(f"Segment {segment.num} complete")
 
 
-class HLSStreamWorker(SegmentedStreamWorker[HLSSegment, Response]):
+class HLSStreamWorker(PollingSegmentedStreamWorker[HLSSegment, Response]):
     reader: HLSStreamReader
     writer: HLSStreamWriter
     stream: HLSStream
 
-    SEGMENT_QUEUE_TIMING_THRESHOLD_MIN = 5.0
-
     reload_attempts: int
     reload_time: float | Literal["segment", "live-edge"]
-
-    _RELOAD_TIME_MIN = 2.0
-    _RELOAD_TIME_DEFAULT = 6.0
 
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
@@ -320,10 +313,8 @@ class HLSStreamWorker(SegmentedStreamWorker[HLSSegment, Response]):
         self.playlist_end: int | None = None
         self.playlist_targetduration: float = 0
         self.playlist_sequence: int = -1
-        self.playlist_sequence_last: datetime = now()
         self.playlist_segments: list[HLSSegment] = []
 
-        self.segment_queue_timing_threshold_factor = self.session.options.get("hls-segment-queue-threshold")
         self.live_edge = self.session.options.get("hls-live-edge")
         self.duration_offset_start = int(self.stream.start_offset + (self.session.options.get("hls-start-offset") or 0))
         self.hls_live_restart = self.stream.force_restart or self.session.options.get("hls-live-restart")
@@ -336,8 +327,8 @@ class HLSStreamWorker(SegmentedStreamWorker[HLSSegment, Response]):
             self.reload_time = float(self.reload_time)
         elif self.reload_time not in ("segment", "live-edge"):
             self.reload_time = 0.0
-        self._reload_time: float = self._RELOAD_TIME_DEFAULT
-        self._reload_last: datetime = now()
+
+        self._queue_deadline_factor = self.session.options.get("hls-segment-queue-threshold")
 
     def _fetch_playlist(self) -> Response:
         res = self.session.http.get(
@@ -375,6 +366,9 @@ class HLSStreamWorker(SegmentedStreamWorker[HLSSegment, Response]):
 
         if playlist.segments:
             self.process_segments(playlist)
+
+    def get_duration(self) -> float:
+        return self.playlist_targetduration
 
     def _get_reload_time(self, playlist: M3U8[HLSSegment, HLSPlaylist]) -> float:
         if self.reload_time == "segment" and playlist.segments:
@@ -417,20 +411,6 @@ class HLSStreamWorker(SegmentedStreamWorker[HLSSegment, Response]):
     def valid_segment(self, segment: HLSSegment) -> bool:
         return segment.num >= self.playlist_sequence
 
-    def _segment_queue_timing_threshold_reached(self) -> bool:
-        if self.segment_queue_timing_threshold_factor <= 0:
-            return False
-
-        threshold = max(
-            self.SEGMENT_QUEUE_TIMING_THRESHOLD_MIN,
-            self.playlist_targetduration * self.segment_queue_timing_threshold_factor,
-        )
-        if now() <= self.playlist_sequence_last + timedelta(seconds=threshold):
-            return False
-
-        log.warning(f"No new segments in playlist for more than {threshold:.2f}s. Stopping...")
-        return True
-
     @staticmethod
     def duration_to_sequence(duration: float, segments: list[HLSSegment]) -> int:
         d = 0.0
@@ -449,7 +429,7 @@ class HLSStreamWorker(SegmentedStreamWorker[HLSSegment, Response]):
 
     def iter_segments(self):
         self._reload_last \
-            = self.playlist_sequence_last \
+            = self._queue_last \
             = now()  # fmt: skip
 
         try:
@@ -491,16 +471,7 @@ class HLSStreamWorker(SegmentedStreamWorker[HLSSegment, Response]):
                     continue
 
                 log.debug(f"Adding segment {segment.num} to queue")
-                offset = segment.num - self.playlist_sequence
-                if offset > 0:
-                    log.warning(
-                        (
-                            f"Skipped segments {self.playlist_sequence}-{segment.num - 1} after playlist reload. "
-                            if offset > 1
-                            else f"Skipped segment {self.playlist_sequence} after playlist reload. "
-                        )
-                        + "This is unsupported and will result in incoherent output data.",
-                    )
+                self.check_queue_gap(segment, self.playlist_sequence)
 
                 yield segment
                 queued = True
@@ -510,33 +481,15 @@ class HLSStreamWorker(SegmentedStreamWorker[HLSSegment, Response]):
 
                 self.playlist_sequence = segment.num + 1
 
-            # End of stream
+            # Explicit end of stream
             if self.closed or self.playlist_end is not None and (not queued or self.playlist_sequence > self.playlist_end):
                 return
 
-            if queued:
-                self.playlist_sequence_last = now()
-            elif self._segment_queue_timing_threshold_reached():
+            # Implicit end of stream
+            if self.check_queue_deadline(queued):
                 return
 
-            # Exclude playlist fetch+processing time from the overall playlist reload time
-            # and reload playlist in a strict time interval
-            time_completed = now()
-            time_elapsed = max(0.0, (time_completed - self._reload_last).total_seconds())
-            time_wait = max(0.0, self._reload_time - time_elapsed)
-            if self.wait(time_wait):
-                if time_wait > 0:
-                    # If we had to wait, then don't call now() twice and instead reference the timestamp from before
-                    # the wait() call, to prevent a shifting time offset due to the execution time.
-                    self._reload_last = time_completed + timedelta(seconds=time_wait)
-                else:
-                    # Otherwise, get the current time, as the reload interval already has shifted.
-                    self._reload_last = now()
-
-                try:
-                    self.reload()
-                except StreamError as err:
-                    log.warning(f"Failed to reload playlist: {err}")
+            self.wait_and_reload()
 
 
 class HLSStreamReader(FilteredStream, SegmentedStreamReader[HLSSegment, Response]):
