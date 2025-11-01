@@ -134,7 +134,6 @@ class DASHStreamWorker(SegmentedStreamWorker[DASHSegment, Response]):
                     if init and not segment.init:
                         self.sequence = segment.num
                         init = False
-                    self.check_sequence_gap(segment)
                     yield segment
 
                 # close worker if type is not dynamic (all segments were put into writer queue)
