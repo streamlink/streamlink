@@ -508,6 +508,8 @@ class TestDASHStreamWorker:
             items = []
             for _ in range(num):
                 segment = next(segment_iter)
+                # fake worker.run() implementation
+                worker.check_sequence_gap(segment)
                 worker.sequence = segment.num + 1
                 items.append(segment)
 

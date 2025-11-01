@@ -234,6 +234,8 @@ class SegmentedStreamWorker(AwaitableMixin, NamedThread, Generic[TSegment, TResu
             if self.closed:  # pragma: no cover
                 break
 
+            self.check_sequence_gap(segment)
+
             self.sequence = segment.num + 1
             self.duration += segment.duration
 
