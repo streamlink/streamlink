@@ -432,6 +432,8 @@ class TestDASHStreamWorker:
             DASHSegment(uri="first_segment", num=0, duration=2.0),
             DASHSegment(uri="second_segment", num=1, duration=3.0),
             DASHSegment(uri="third_segment", num=2, duration=5.0),
+            DASHSegment(uri="fourth_segment", num=3, duration=8.0),
+            DASHSegment(uri="fifth_segment", num=4, duration=13.0),
         ]
 
     @pytest.fixture()
@@ -487,28 +489,48 @@ class TestDASHStreamWorker:
     def test_dynamic_reload(
         self,
         monkeypatch: pytest.MonkeyPatch,
+        caplog: pytest.LogCaptureFixture,
         timestamp: datetime,
         worker: DASHStreamWorker,
         representation: Mock,
         segments: list[DASHSegment],
         mpd: Mock,
     ):
+        caplog.set_level("INFO", "streamlink")
+
         mpd.dynamic = True
         mpd.type = "dynamic"
         monkeypatch.setattr("streamlink.stream.dash.dash.MPD", lambda *args, **kwargs: mpd)
 
         segment_iter = worker.iter_segments()
 
-        representation.segments.return_value = segments[:1]
-        assert next(segment_iter) is segments[0]
-        assert representation.segments.call_args_list == [call(init=True, timestamp=timestamp)]
+        def next_segments(num):
+            items = []
+            for _ in range(num):
+                segment = next(segment_iter)
+                worker.sequence = segment.num + 1
+                items.append(segment)
+
+            return items
+
+        representation.segments.return_value = segments[:2]
+        assert next_segments(2) == segments[:2]
+        assert representation.segments.call_args_list == [call(sequence=-1, init=True, timestamp=timestamp)]
         assert not worker._wait.is_set()
+        assert [(record.name, record.levelname, record.message) for record in caplog.records] == []
 
         representation.segments.reset_mock()
-        representation.segments.return_value = segments[1:]
-        assert [next(segment_iter), next(segment_iter), next(segment_iter)] == segments[1:]
-        assert representation.segments.call_args_list == [call(), call(init=False, timestamp=None)]
+        representation.segments.return_value = segments[3:]
+        assert next_segments(3) == segments[3:]
+        assert representation.segments.call_args_list == [call(), call(sequence=1, init=False, timestamp=None)]
         assert not worker._wait.is_set()
+        assert [(record.name, record.levelname, record.message) for record in caplog.records] == [
+            (
+                "streamlink.stream.segmented",
+                "warning",
+                "Sequence gap of 1 segment at position 1. This is unsupported and will result in incoherent output data.",
+            ),
+        ]
 
     def test_static(
         self,
@@ -523,7 +545,7 @@ class TestDASHStreamWorker:
 
         representation.segments.return_value = segments
         assert list(worker.iter_segments()) == segments
-        assert representation.segments.call_args_list == [call(init=True, timestamp=timestamp)]
+        assert representation.segments.call_args_list == [call(sequence=-1, init=True, timestamp=timestamp)]
         assert worker._wait.is_set()
 
     # Verify the fix for https://github.com/streamlink/streamlink/issues/2873
@@ -551,7 +573,7 @@ class TestDASHStreamWorker:
 
         representation.segments.return_value = segments
         assert list(worker.iter_segments()) == segments
-        assert representation.segments.call_args_list == [call(init=True, timestamp=timestamp)]
+        assert representation.segments.call_args_list == [call(sequence=-1, init=True, timestamp=timestamp)]
         assert mock_wait.call_args_list == [call(5)]
         assert worker._wait.is_set()
 
@@ -596,8 +618,8 @@ class TestDASHStreamWorker:
         representation.segments.return_value = segments
         worker.run()
 
-        assert [call_arg.args[0] for call_arg in reader.writer.put.call_args_list] == [*segments[0:-1], None]
-        assert representation.segments.call_args_list == [call(init=True, timestamp=timestamp)]
+        assert [call_arg.args[0] for call_arg in reader.writer.put.call_args_list] == [*segments[0:3], None]
+        assert representation.segments.call_args_list == [call(sequence=-1, init=True, timestamp=timestamp)]
         assert worker._wait.is_set()
         assert [(record.name, record.levelname, record.message) for record in caplog.records] == [
             ("streamlink.stream.segmented", "info", "Stopping stream early after 5.00s"),

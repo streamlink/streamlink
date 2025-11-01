@@ -584,6 +584,7 @@ class Representation(_RepresentationBaseType):
 
     def segments(
         self,
+        sequence: int = -1,
         init: bool = True,
         timestamp: datetime | None = None,
         **kwargs,
@@ -594,6 +595,7 @@ class Representation(_RepresentationBaseType):
         Segments appear on a timeline, for dynamic content they are only available at a certain time
         and sometimes for a limited time. For static content they are all available at the same time.
 
+        :param sequence: Sequence number
         :param init: Yield the init segment and perform other initialization logic for dynamic manifests
         :param timestamp: Optional initial timestamp for syncing timelines of multiple substreams
         :param kwargs: extra args to pass to the segment template/list
@@ -616,14 +618,13 @@ class Representation(_RepresentationBaseType):
             )
         elif segmentList:
             yield from segmentList.segments(
-                self.ident,
+                sequence=sequence,
                 init=init,
-                **kwargs,
             )
         else:
             yield DASHSegment(
                 uri=self.base_url,
-                num=-1,
+                num=sequence,
                 duration=self.period.duration.total_seconds() or self.root.mediaPresentationDuration.total_seconds(),
                 available_at=self.period.availabilityStartTime,
                 init=True,
@@ -712,21 +713,20 @@ class SegmentList(_MultipleSegmentBaseType):
     # noinspection PyUnusedLocal
     def segments(
         self,
-        ident: TTimelineIdent,
+        sequence: int = -1,
         init: bool = True,
-        **kwargs,
     ) -> Iterator[DASHSegment]:
         if init and self.initialization:  # pragma: no branch
             yield DASHSegment(
                 uri=self.make_url(self.initialization.source_url),
-                num=-1,
+                num=sequence,
                 duration=0.0,
                 available_at=self.period.availabilityStartTime,
                 init=True,
                 content=False,
                 byterange=self.initialization.range,
             )
-        for num, segment_url in self.segment_urls(ident, init):
+        for num, segment_url in self.segment_urls(sequence):
             yield DASHSegment(
                 uri=self.make_url(segment_url.media),
                 num=num,
@@ -737,43 +737,31 @@ class SegmentList(_MultipleSegmentBaseType):
                 byterange=segment_url.media_range,
             )
 
-    def segment_urls(self, ident: TTimelineIdent, init: bool) -> Iterator[tuple[int, SegmentURL]]:
-        if init:
+    def segment_urls(self, sequence: int) -> Iterator[tuple[int, SegmentURL]]:
+        if sequence == -1:
             if self.root.type == "static":
                 # yield all segments in a static manifest
-                start_number = self.startNumber
+                sequence = self.startNumber
                 segment_urls = self.segmentURLs
             else:
                 # yield a specific number of segments from the live-edge of dynamic manifests
-                start_number = self.calculate_optimal_start()
-                segment_urls = self.segmentURLs[start_number - self.startNumber :]
+                sequence = self.calculate_optimal_start()
+                segment_urls = self.segmentURLs[sequence - self.startNumber :]
 
         else:
             # skip segments with a lower number than the remembered segment number
             # and check if we've skipped any segments after reloading the manifest
-            start_number = self.root.timelines[ident]
-            offset = start_number - self.startNumber
+            offset = sequence - self.startNumber
 
             if offset >= 0:
                 # no segments were skipped: yield a slice of the segments
                 segment_urls = self.segmentURLs[offset:]
             else:
                 # segments were skipped: yield all segments and set the correct segment number
-                log.warning(
-                    (
-                        f"Skipped segments {start_number}-{self.startNumber - 1} after manifest reload. "
-                        if offset < -1
-                        else f"Skipped segment {start_number} after manifest reload. "
-                    )
-                    + "This is unsupported and will result in incoherent output data.",
-                )
-                start_number = self.startNumber
+                sequence = self.startNumber
                 segment_urls = self.segmentURLs
 
-        # remember the next segment number
-        self.root.timelines[ident] = start_number + len(segment_urls)
-
-        yield from enumerate(segment_urls, start_number)
+        yield from enumerate(segment_urls, sequence)
 
     def calculate_optimal_start(self) -> int:
         """Calculate the optimal segment number to start based on the suggestedPresentationDelay"""
