@@ -255,8 +255,8 @@ class TestHLSStream(TestMixinStreamHLS, unittest.TestCase):
 
 # TODO: finally rewrite the segmented/HLS test setup using pytest and replace redundant setups with parametrization
 @patch("streamlink.stream.hls.hls.HLSStreamWorker.wait", Mock(return_value=True))
-class TestHLSStreamPlaylistReloadDiscontinuity(TestMixinStreamHLS, unittest.TestCase):
-    @patch("streamlink.stream.hls.hls.log")
+class TestCheckSequenceGap(TestMixinStreamHLS, unittest.TestCase):
+    @patch("streamlink.stream.segmented.segmented.log")
     def test_no_discontinuity(self, mock_log: Mock):
         segments = self.subject([
             Playlist(0, [Segment(0), Segment(1)]),
@@ -269,7 +269,7 @@ class TestHLSStreamPlaylistReloadDiscontinuity(TestMixinStreamHLS, unittest.Test
         assert all(self.called(s) for s in segments.values())
         assert mock_log.warning.call_args_list == []
 
-    @patch("streamlink.stream.hls.hls.log")
+    @patch("streamlink.stream.segmented.segmented.log")
     def test_discontinuity_single_segment(self, mock_log: Mock):
         segments = self.subject([
             Playlist(0, [Segment(0), Segment(1)]),
@@ -282,11 +282,11 @@ class TestHLSStreamPlaylistReloadDiscontinuity(TestMixinStreamHLS, unittest.Test
         assert data == self.content(segments)
         assert all(self.called(s) for s in segments.values())
         assert mock_log.warning.call_args_list == [
-            call("Skipped segment 4 after playlist reload. This is unsupported and will result in incoherent output data."),
-            call("Skipped segment 7 after playlist reload. This is unsupported and will result in incoherent output data."),
+            call("Sequence gap of 1 segment at position 4. This is unsupported and will result in incoherent output data."),
+            call("Sequence gap of 1 segment at position 7. This is unsupported and will result in incoherent output data."),
         ]
 
-    @patch("streamlink.stream.hls.hls.log")
+    @patch("streamlink.stream.segmented.segmented.log")
     def test_discontinuity_multiple_segments(self, mock_log: Mock):
         segments = self.subject([
             Playlist(0, [Segment(0), Segment(1)]),
@@ -299,8 +299,8 @@ class TestHLSStreamPlaylistReloadDiscontinuity(TestMixinStreamHLS, unittest.Test
         assert data == self.content(segments)
         assert all(self.called(s) for s in segments.values())
         assert mock_log.warning.call_args_list == [
-            call("Skipped segments 4-5 after playlist reload. This is unsupported and will result in incoherent output data."),
-            call("Skipped segments 8-9 after playlist reload. This is unsupported and will result in incoherent output data."),
+            call("Sequence gap of 2 segments at position 4. This is unsupported and will result in incoherent output data."),
+            call("Sequence gap of 2 segments at position 8. This is unsupported and will result in incoherent output data."),
         ]
 
 
@@ -338,7 +338,7 @@ class TestHLSStreamWorker(TestMixinStreamHLS, unittest.TestCase):
             self.start()
 
             assert worker.handshake_reload.wait_ready(1), "Loads playlist for the first time"
-            assert worker.playlist_sequence == -1, "Initial sequence number"
+            assert worker.sequence == -1, "Initial sequence number"
             assert worker.playlist_sequence_last == EPOCH, "Sets the initial last queue time"
 
             # first playlist reload has taken one second
@@ -346,7 +346,7 @@ class TestHLSStreamWorker(TestMixinStreamHLS, unittest.TestCase):
             self.await_reload(1)
 
             assert worker.handshake_wait.wait_ready(1), "Arrives at wait() call #1"
-            assert worker.playlist_sequence == 1, "Updates the sequence number"
+            assert worker.sequence == 1, "Updates the sequence number"
             assert worker.playlist_sequence_last == EPOCH + ONE_SECOND, "Updates the last queue time"
             assert worker.playlist_targetduration == 5.0
 
@@ -356,7 +356,7 @@ class TestHLSStreamWorker(TestMixinStreamHLS, unittest.TestCase):
             self.await_reload(1)
 
             assert worker.handshake_wait.wait_ready(1), "Arrives at wait() call #2"
-            assert worker.playlist_sequence == 2, "Updates the sequence number again"
+            assert worker.sequence == 2, "Updates the sequence number again"
             assert worker.playlist_sequence_last == EPOCH + ONE_SECOND + targetduration, "Updates the last queue time again"
             assert worker.playlist_targetduration == 5.0
 
@@ -367,7 +367,7 @@ class TestHLSStreamWorker(TestMixinStreamHLS, unittest.TestCase):
                 self.await_reload(1)
 
                 assert worker.handshake_wait.wait_ready(1), f"Arrives at wait() call #{num}"
-                assert worker.playlist_sequence == 2, "Sequence number is unchanged"
+                assert worker.sequence == 2, "Sequence number is unchanged"
                 assert worker.playlist_sequence_last == EPOCH + ONE_SECOND + targetduration, "Last queue time is unchanged"
                 assert worker.playlist_targetduration == 5.0
 
@@ -399,7 +399,7 @@ class TestHLSStreamWorker(TestMixinStreamHLS, unittest.TestCase):
             self.start()
 
             assert worker.handshake_reload.wait_ready(1), "Loads playlist for the first time"
-            assert worker.playlist_sequence == -1, "Initial sequence number"
+            assert worker.sequence == -1, "Initial sequence number"
             assert worker.playlist_sequence_last == EPOCH, "Sets the initial last queue time"
 
             # first playlist reload has taken one second
@@ -407,7 +407,7 @@ class TestHLSStreamWorker(TestMixinStreamHLS, unittest.TestCase):
             self.await_reload(1)
 
             assert worker.handshake_wait.wait_ready(1), "Arrives at first wait() call"
-            assert worker.playlist_sequence == 1, "Updates the sequence number"
+            assert worker.sequence == 1, "Updates the sequence number"
             assert worker.playlist_sequence_last == EPOCH + ONE_SECOND, "Updates the last queue time"
             assert worker.playlist_targetduration == 5.0
             assert self.await_read() == self.content(segments)
@@ -419,7 +419,7 @@ class TestHLSStreamWorker(TestMixinStreamHLS, unittest.TestCase):
                 self.await_reload(1)
 
                 assert worker.handshake_wait.wait_ready(1), f"Arrives at wait() #{num + 1}"
-                assert worker.playlist_sequence == 1, "Sequence number is unchanged"
+                assert worker.sequence == 1, "Sequence number is unchanged"
                 assert worker.playlist_sequence_last == EPOCH + ONE_SECOND, "Last queue time is unchanged"
 
         assert self.thread.data == [], "No new data"
@@ -446,7 +446,7 @@ class TestHLSStreamWorker(TestMixinStreamHLS, unittest.TestCase):
             self.start()
 
             assert worker.handshake_reload.wait_ready(1), "Loads playlist for the first time"
-            assert worker.playlist_sequence == -1, "Initial sequence number"
+            assert worker.sequence == -1, "Initial sequence number"
             assert worker.playlist_sequence_last == EPOCH, "Sets the initial last queue time"
 
             # first playlist reload has taken one second
@@ -454,7 +454,7 @@ class TestHLSStreamWorker(TestMixinStreamHLS, unittest.TestCase):
             self.await_reload(1)
 
             assert worker.handshake_wait.wait_ready(1), "Arrives at wait() call #1"
-            assert worker.playlist_sequence == 1, "Updates the sequence number"
+            assert worker.sequence == 1, "Updates the sequence number"
             assert worker.playlist_sequence_last == EPOCH + ONE_SECOND, "Updates the last queue time"
             assert worker.playlist_targetduration == 1.0
 
@@ -465,7 +465,7 @@ class TestHLSStreamWorker(TestMixinStreamHLS, unittest.TestCase):
                 self.await_reload(1)
 
                 assert worker.handshake_wait.wait_ready(1), f"Arrives at wait() call #{num}"
-                assert worker.playlist_sequence == 1, "Sequence number is unchanged"
+                assert worker.sequence == 1, "Sequence number is unchanged"
                 assert worker.playlist_sequence_last == EPOCH + ONE_SECOND, "Last queue time is unchanged"
                 assert worker.playlist_targetduration == 1.0
 
@@ -513,7 +513,7 @@ class TestHLSStreamWorker(TestMixinStreamHLS, unittest.TestCase):
 
             # time_completed = 00:00:01; time_elapsed = 1s
             assert worker.handshake_wait.wait_ready(1), "Arrives at first wait() call"
-            assert worker.playlist_sequence == 1, "Has queued first segment"
+            assert worker.sequence == 1, "Has queued first segment"
             assert worker.playlist_end is None, "Stream hasn't ended yet"
             assert worker.time_wait == 4.0, "Waits for 4 seconds out of the 5 seconds reload time"
             self.await_playlist_wait()
@@ -529,7 +529,7 @@ class TestHLSStreamWorker(TestMixinStreamHLS, unittest.TestCase):
 
             # time_completed = 00:00:12; time_elapsed = 7s (exceeded 5s targetduration)
             assert worker.handshake_wait.wait_ready(1), "Arrives at second wait() call"
-            assert worker.playlist_sequence == 2, "Has queued second segment"
+            assert worker.sequence == 2, "Has queued second segment"
             assert worker.playlist_end is None, "Stream hasn't ended yet"
             assert worker.time_wait == 0.0, "Doesn't wait when reloading took too long"
             self.await_playlist_wait()
@@ -545,7 +545,7 @@ class TestHLSStreamWorker(TestMixinStreamHLS, unittest.TestCase):
 
             # time_completed = 00:00:13; time_elapsed = 1s
             assert worker.handshake_wait.wait_ready(1), "Arrives at third wait() call"
-            assert worker.playlist_sequence == 3, "Has queued third segment"
+            assert worker.sequence == 3, "Has queued third segment"
             assert worker.playlist_end is None, "Stream hasn't ended yet"
             assert worker.time_wait == 4.0, "Waits for 4 seconds out of the 5 seconds reload time"
             self.await_playlist_wait()
@@ -561,7 +561,7 @@ class TestHLSStreamWorker(TestMixinStreamHLS, unittest.TestCase):
 
             # time_completed = 00:00:17; time_elapsed = 0s
             assert worker.handshake_wait.wait_ready(1), "Arrives at fourth wait() call"
-            assert worker.playlist_sequence == 4, "Has queued fourth segment"
+            assert worker.sequence == 4, "Has queued fourth segment"
             assert worker.playlist_end is None, "Stream hasn't ended yet"
             assert worker.time_wait == 5.0, "Waits for the whole reload time"
             self.await_playlist_wait()

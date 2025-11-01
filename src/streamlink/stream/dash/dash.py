@@ -125,13 +125,15 @@ class DASHStreamWorker(SegmentedStreamWorker[DASHSegment, Response]):
                     continue
 
                 iter_segments = representation.segments(
+                    sequence=self.sequence,
                     init=init,
                     # sync initial timeline generation between audio and video threads
                     timestamp=self.reader.timestamp if init else None,
                 )
                 for segment in iter_segments:
-                    if self.closed:
-                        break
+                    if init and not segment.init:
+                        self.sequence = segment.num
+                        init = False
                     yield segment
 
                 # close worker if type is not dynamic (all segments were put into writer queue)
@@ -143,8 +145,6 @@ class DASHStreamWorker(SegmentedStreamWorker[DASHSegment, Response]):
                     back_off_factor = max(back_off_factor * 1.3, 10.0)
                 else:
                     back_off_factor = 1
-
-                init = False
 
     def reload(self):
         if self.closed:
