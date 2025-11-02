@@ -19,14 +19,12 @@ class TestSegment:
     @pytest.mark.parametrize(
         ("segmentdata", "expected"),
         [
-            ({"uri": "https://foo/bar", "num": 123, "duration": 0.0, "init": True, "content": False}, "initialization"),
-            ({"uri": "https://foo/bar", "num": 123, "duration": 0.0, "init": True, "content": True}, "123"),
-            ({"uri": "https://foo/bar", "num": -1, "duration": 0.0, "init": True, "content": True}, "bar"),
-            ({"uri": "https://foo/bar", "num": 123, "duration": 0.0}, "123"),
-            ({"uri": "https://foo/bar", "num": -1, "duration": 0.0}, "bar"),
-            ({"uri": "https://foo/bar/", "num": -1, "duration": 0.0}, "bar"),
-            ({"uri": "https://foo/bar/baz.qux", "num": -1, "duration": 0.0}, "baz.qux"),
-            ({"uri": "https://foo/bar/baz.qux?asdf", "num": -1, "duration": 0.0}, "baz.qux"),
+            ({"num": -1, "init": True, "uri": "https://foo/bar", "duration": 0.0}, "initialization"),
+            ({"num": 123, "uri": "https://foo/bar", "duration": 0.0}, "123"),
+            ({"num": -1, "uri": "https://foo/bar", "duration": 0.0}, "bar"),
+            ({"num": -1, "uri": "https://foo/bar/", "duration": 0.0}, "bar"),
+            ({"num": -1, "uri": "https://foo/bar/baz.qux", "duration": 0.0}, "baz.qux"),
+            ({"num": -1, "uri": "https://foo/bar/baz.qux?asdf", "duration": 0.0}, "baz.qux"),
         ],
     )
     def test_name(self, segmentdata: dict, expected: str):
@@ -139,7 +137,7 @@ class TestMPDParser:
                     "ident": representation.ident,
                     "mimeType": representation.mimeType,
                     "segments": [
-                        (segment.uri, segment.num, segment.duration, segment.available_at, segment.init, segment.content)
+                        (segment.num, segment.init, segment.uri, segment.duration, segment.available_at)
                         for segment in itertools.islice(representation.segments(), 100)
                     ],
                 }
@@ -153,17 +151,17 @@ class TestMPDParser:
             {
                 "ident": (None, None, "1"),
                 "mimeType": "audio/mp4",
-                "segments": [("http://cdn1.example.com/7657412348.mp4", -1, 3256.0, availability, True, True)],
+                "segments": [(-1, False, "http://cdn1.example.com/7657412348.mp4", 3256.0, availability)],
             },
             {
                 "ident": (None, None, "5"),
                 "mimeType": "application/ttml+xml",
-                "segments": [("http://cdn1.example.com/796735657.xml", -1, 3256.0, availability, True, True)],
+                "segments": [(-1, False, "http://cdn1.example.com/796735657.xml", 3256.0, availability)],
             },
             {
                 "ident": (None, None, "6"),
                 "mimeType": "video/mp4",
-                "segments": [("http://cdn1.example.com/8563456473.mp4", -1, 3256.0, availability, True, True)],
+                "segments": [(-1, False, "http://cdn1.example.com/8563456473.mp4", 3256.0, availability)],
             },
         ]
 
@@ -282,17 +280,16 @@ class TestMPDParser:
             mpd = MPD(mpd_xml, base_url="http://test/", url="http://test/manifest.mpd")
 
         segments = [
-            (segment.uri, segment.num, segment.duration, segment.available_at, segment.init, segment.content)
+            (segment.num, segment.init, segment.uri, segment.duration, segment.available_at)
             for segment in itertools.islice(mpd.periods[0].adaptationSets[0].representations[0].segments(), 100)
         ]
         assert segments == [
             (
-                f"http://test/video_1920x1080_avc1-{expected_time}.m4s",
                 9,
+                False,
+                f"http://test/video_1920x1080_avc1-{expected_time}.m4s",
                 6.0,
                 datetime.datetime(1970, 1, 1, 0, 0, 0, tzinfo=UTC),
-                False,
-                True,
             ),
         ]
 

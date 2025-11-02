@@ -623,12 +623,12 @@ class Representation(_RepresentationBaseType):
             )
         else:
             yield DASHSegment(
-                uri=self.base_url,
                 num=sequence,
+                init=False,
+                discontinuity=False,
+                uri=self.base_url,
                 duration=self.period.duration.total_seconds() or self.root.mediaPresentationDuration.total_seconds(),
                 available_at=self.period.availabilityStartTime,
-                init=True,
-                content=True,
                 byterange=None,
             )
 
@@ -718,22 +718,22 @@ class SegmentList(_MultipleSegmentBaseType):
     ) -> Iterator[DASHSegment]:
         if init and self.initialization:  # pragma: no branch
             yield DASHSegment(
+                num=-1,
+                init=True,
+                discontinuity=False,
                 uri=self.make_url(self.initialization.source_url),
-                num=sequence,
                 duration=0.0,
                 available_at=self.period.availabilityStartTime,
-                init=True,
-                content=False,
                 byterange=self.initialization.range,
             )
         for num, segment_url in self.segment_urls(sequence):
             yield DASHSegment(
-                uri=self.make_url(segment_url.media),
                 num=num,
+                init=False,
+                discontinuity=False,
+                uri=self.make_url(segment_url.media),
                 duration=self.duration_seconds,
                 available_at=self.period.availabilityStartTime,
-                init=False,
-                content=True,
                 byterange=segment_url.media_range,
             )
 
@@ -809,22 +809,22 @@ class SegmentTemplate(_MultipleSegmentBaseType):
             init_url = self.format_initialization(base_url, **kwargs)
             if init_url:  # pragma: no branch
                 yield DASHSegment(
-                    uri=init_url,
                     num=-1,
+                    init=True,
+                    discontinuity=False,
+                    uri=init_url,
                     duration=0.0,
                     available_at=self.period.availabilityStartTime,
-                    init=True,
-                    content=False,
                     byterange=None,
                 )
         for media_url, num, duration, available_at in self.format_media(ident, base_url, timestamp=timestamp, **kwargs):
             yield DASHSegment(
-                uri=media_url,
                 num=num,
+                init=False,
+                discontinuity=False,
+                uri=media_url,
                 duration=duration,
                 available_at=available_at,
-                init=False,
-                content=True,
                 byterange=None,
             )
 

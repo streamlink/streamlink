@@ -27,13 +27,11 @@ class TimelineSegment:
 @dataclass(kw_only=True)
 class DASHSegment(Segment):
     available_at: datetime = EPOCH_START
-    init: bool = False
-    content: bool = True
     byterange: tuple[int, int | None] | None = None
 
     @property
     def name(self) -> str:
-        if self.init and not self.content:
+        if self.init:
             return "initialization"
         if self.num > -1:
             return str(self.num)
