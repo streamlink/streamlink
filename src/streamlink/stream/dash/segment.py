@@ -24,7 +24,7 @@ class TimelineSegment:
     d: int
 
 
-@dataclass
+@dataclass(kw_only=True)
 class DASHSegment(Segment):
     available_at: datetime = EPOCH_START
     init: bool = False
