@@ -133,7 +133,6 @@ class HLSPlaylist:
 class HLSSegment(Segment):
     title: str | None
     key: Key | None
-    discontinuity: bool
     byterange: ByteRange | None
     date: datetime | None
     map: Map | None
