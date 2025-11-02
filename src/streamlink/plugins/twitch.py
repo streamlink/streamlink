@@ -66,7 +66,7 @@ log = logging.getLogger(__name__)
 LOW_LATENCY_MAX_LIVE_EDGE = 2
 
 
-@dataclass
+@dataclass(kw_only=True)
 class TwitchHLSSegment(HLSSegment):
     ad: bool
     prefetch: bool
