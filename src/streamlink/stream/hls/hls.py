@@ -491,11 +491,7 @@ class HLSStreamWorker(SegmentedStreamWorker[HLSSegment, Response]):
 
                 log.debug(f"Adding segment {segment.num} to queue")
 
-                yield segment
-                queued = True
-
-                if self.closed:  # pragma: no cover
-                    return
+                queued |= yield segment
 
             # End of stream
             if self.closed or self.playlist_end is not None and (not queued or self.sequence > self.playlist_end):
