@@ -62,11 +62,18 @@ def test_base_stream(session):
     assert stream.json == """{"type": "stream"}"""
 
 
-def test_file_stream_path(session):
-    stream = FileStream(session, "/path/to/file")
+@pytest.mark.parametrize(
+    "path",
+    [
+        pytest.param("/path/to/file", id="POSIX", marks=pytest.mark.posix_only),
+        pytest.param("C:\\path\\to\\file", id="Windows", marks=pytest.mark.windows_only),
+    ],
+)
+def test_file_stream_path(session: Streamlink, path: str):
+    stream = FileStream(session, path)
     assert stream.__json__() == {
         "type": "file",
-        "path": "/path/to/file",
+        "path": path,
     }
 
 

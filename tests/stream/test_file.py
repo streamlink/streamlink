@@ -14,17 +14,21 @@ if TYPE_CHECKING:
 
 
 class TestFileStream:
-    @pytest.fixture(autouse=True)
+    @pytest.fixture()
     def mock_open(self, monkeypatch: pytest.MonkeyPatch) -> Mock:
         mock_open = Mock(return_value=BytesIO(b"foo"))
-        monkeypatch.setattr("builtins.open", mock_open)
+        monkeypatch.setattr("pathlib.Path.open", mock_open)
 
         return mock_open
+
+    def test_no_path_no_fileobj(self, session: Streamlink):
+        with pytest.raises(ValueError, match=r"^path or fileobj must be set$"):
+            FileStream(session)
 
     def test_open_path(self, session: Streamlink, mock_open: Mock):
         stream = FileStream(session, path="/test/path")
         streamio = stream.open()
-        assert mock_open.call_args_list == [call("/test/path", "rb")]
+        assert mock_open.call_args_list == [call("rb")]
         assert streamio.read() == b"foo"
 
         streamio.close()
