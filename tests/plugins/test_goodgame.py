@@ -6,19 +6,14 @@ class TestPluginCanHandleUrlGoodGame(PluginCanHandleUrl):
     __plugin__ = GoodGame
 
     should_match_groups = [
-        (("default", "https://goodgame.ru/USERNAME"), {"name": "USERNAME"}),
-        (("default", "https://goodgame.ru/USERNAME/"), {"name": "USERNAME"}),
-        (("default", "https://goodgame.ru/USERNAME?foo=bar"), {"name": "USERNAME"}),
-        (("default", "https://www.goodgame.ru/USERNAME"), {"name": "USERNAME"}),
-        (("channel", "https://goodgame.ru/channel/CHANNELNAME"), {"channel": "CHANNELNAME"}),
-        (("channel", "https://goodgame.ru/channel/CHANNELNAME/"), {"channel": "CHANNELNAME"}),
-        (("channel", "https://goodgame.ru/channel/CHANNELNAME?foo=bar"), {"channel": "CHANNELNAME"}),
-        (("channel", "https://www.goodgame.ru/channel/CHANNELNAME"), {"channel": "CHANNELNAME"}),
-        (("player", "https://goodgame.ru/player?CHANNELNAME"), {"channel": "CHANNELNAME"}),
-        (("player", "https://www.goodgame.ru/player?CHANNELNAME"), {"channel": "CHANNELNAME"}),
+        (("default", "https://goodgame.ru/CHANNELNAME"), {"channel": "CHANNELNAME"}),
+        (("default", "https://goodgame.ru/CHANNELNAME/"), {"channel": "CHANNELNAME"}),
+        (("default", "https://goodgame.ru/CHANNELNAME?foo=bar"), {"channel": "CHANNELNAME"}),
+        (("default", "https://www.goodgame.ru/CHANNELNAME"), {"channel": "CHANNELNAME"}),
+        (("player", "https://goodgame.ru/player?CHANNELID"), {"channel_id": "CHANNELID"}),
+        (("player", "https://www.goodgame.ru/player?CHANNELID"), {"channel_id": "CHANNELID"}),
     ]
 
     should_not_match = [
-        "https://goodgame.ru/channel",
-        "https://goodgame.ru/player",
+        "https://goodgame.ru/player?",
     ]
