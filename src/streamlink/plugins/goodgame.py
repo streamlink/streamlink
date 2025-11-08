@@ -11,9 +11,7 @@ $metadata title
 import logging
 import re
 import sys
-from urllib.parse import parse_qsl, urlparse
 
-from streamlink.exceptions import NoStreamsError, PluginError
 from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.api import validate
 from streamlink.stream.hls import HLSStream
@@ -25,23 +23,18 @@ log = logging.getLogger(__name__)
 @pluginmatcher(
     name="default",
     pattern=re.compile(
-        r"https?://(?:www\.)?goodgame\.ru/(?P<name>(?!channel|player)[^/?]+)",
-    ),
-)
-@pluginmatcher(
-    name="channel",
-    pattern=re.compile(
-        r"https?://(?:www\.)?goodgame\.ru/channel/(?P<channel>[^/?]+)",
+        r"https?://(?:www\.)?goodgame\.ru/(?P<channel>(?!player)[^/?#]+)",
     ),
 )
 @pluginmatcher(
     name="player",
     pattern=re.compile(
-        r"https?://(?:www\.)?goodgame\.ru/player\?(?P<channel>[^&#]+)$",
+        r"https?://(?:www\.)?goodgame\.ru/player\?(?P<channel_id>[^&#]+)",
     ),
 )
 class GoodGame(Plugin):
-    _API_STREAMS_CHANNEL = "https://goodgame.ru/api/4/streams/2/channel/{channel}"
+    _API_PLAYER = "https://goodgame.ru/api/player"
+    _API_STREAM = "https://goodgame.ru/api/4/users/{channel}/stream"
 
     @classmethod
     def stream_weight(cls, stream):
@@ -49,39 +42,23 @@ class GoodGame(Plugin):
             return sys.maxsize, stream
         return super().stream_weight(stream)
 
-    def _get_channel_key(self):
+    def _get_channel_from_player(self):
         return self.session.http.get(
-            self.url,
+            self._API_PLAYER,
+            params={"src": self.match["channel_id"]},
             schema=validate.Schema(
-                re.compile(r"api:(?P<json>{.+?}),\n"),
-                validate.none_or_all(
-                    validate.get("json"),
-                    validate.parse_json(),
-                    {"channel_key": str},
-                    validate.get("channel_key"),
-                ),
+                validate.parse_json(),
+                {
+                    "streamer_name": str,
+                },
+                validate.get("streamer_name"),
             ),
         )
 
-    def _get_api_url(self):
-        if self.matches["default"]:
-            channel = self._get_channel_key()
-            log.debug(f"{channel=}")
-            if not channel:
-                raise NoStreamsError
-            return self._API_STREAMS_CHANNEL.format(channel=channel)
-
-        elif self.matches["channel"]:
-            return self._API_STREAMS_CHANNEL.format(channel=self.match["channel"])
-
-        elif self.matches["player"]:
-            return self._API_STREAMS_CHANNEL.format(channel=self.match["channel"])
-
-        raise PluginError("Invalid matcher")
-
-    def _api_stream(self, url):
+    def _api_stream(self, channel):
         return self.session.http.get(
-            url,
+            self._API_STREAM.format(channel=channel),
+            acceptable_status=(200, 404),
             schema=validate.Schema(
                 validate.parse_json(),
                 validate.any(
@@ -102,39 +79,18 @@ class GoodGame(Plugin):
                             "sources": {
                                 str: validate.url(),
                             },
-                            "game": {
+                            "gameObj": {
                                 "title": validate.none_or_all(str),
                             },
                             "title": validate.none_or_all(str),
-                            "players": [
-                                validate.all(
-                                    {
-                                        "title": str,
-                                        "online": bool,
-                                        "content": validate.all(
-                                            str,
-                                            validate.parse_html(),
-                                            validate.xml_find(".//iframe"),
-                                            validate.get("src"),
-                                            validate.transform(urlparse),
-                                        ),
-                                    },
-                                    validate.union_get(
-                                        "title",
-                                        "online",
-                                        "content",
-                                    ),
-                                ),
-                            ],
                         },
                         validate.union_get(
                             "online",
                             "id",
                             ("streamer", "username"),
-                            ("game", "title"),
+                            ("gameObj", "title"),
                             "title",
                             "sources",
-                            "players",
                         ),
                         validate.transform(lambda data: ("data", *data)),
                     ),
@@ -143,24 +99,19 @@ class GoodGame(Plugin):
         )
 
     def _get_streams(self):
-        api_url = self._get_api_url()
-        log.debug(f"{api_url=}")
+        if self.matches["player"]:
+            channel = self._get_channel_from_player()
+        else:
+            channel = self.match["channel"]
 
-        result, *data = self._api_stream(api_url)
+        result, *data = self._api_stream(channel)
         if result == "error":
             log.error(data[0] or "Unknown error")
             return
 
-        online, self.id, self.author, self.category, self.title, sources, players = data
+        online, self.id, self.author, self.category, self.title, sources = data
 
         if not online:
-            log.debug("Channel is offline, checking for embedded players...")
-            for p_title, p_online, p_url in players:
-                if p_title == "Twitch" and p_online:
-                    channel = dict(parse_qsl(p_url.query)).get("channel")
-                    if channel:
-                        log.debug(f"Redirecting to Twitch: {channel=}")
-                        return self.session.streams(f"twitch.tv/{channel}")
             return
 
         streams = {}
