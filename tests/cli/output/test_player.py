@@ -122,44 +122,72 @@ class TestPlayerArgs:
         pass
 
     @pytest.mark.parametrize(
-        ("playerpath", "playerargsclass"),
+        ("playerpath", "playerargs", "playerargsclass"),
         [
             pytest.param(
                 "player",
+                "",
                 PlayerArgs,
                 id="Unknown player",
             ),
             pytest.param(
+                "/usr/bin/flatpak",
+                "upgrade",
+                PlayerArgs,
+                marks=pytest.mark.posix_only,
+                id="Invalid flatpak command",
+            ),
+            pytest.param(
+                "/usr/bin/flatpak",
+                "run unknown",
+                PlayerArgs,
+                marks=pytest.mark.posix_only,
+                id="Unknown flatpak player",
+            ),
+            pytest.param(
                 "vlc",
+                "",
                 PlayerArgsVLC,
                 id="VLC",
             ),
             pytest.param(
                 "vlc.exe",
+                "",
                 PlayerArgs,
                 marks=pytest.mark.posix_only,
                 id="VLC with .exe file extension (POSIX)",
             ),
             pytest.param(
                 "vlc.exe",
+                "",
                 PlayerArgsVLC,
                 marks=pytest.mark.windows_only,
                 id="VLC with .exe file extension (Windows)",
             ),
             pytest.param(
                 "/usr/bin/vlc",
+                "",
                 PlayerArgsVLC,
                 marks=pytest.mark.posix_only,
                 id="VLC with absolute path (POSIX)",
             ),
             pytest.param(
+                "/usr/bin/flatpak",
+                '--system run --cwd="./foo bar" org.videolan.VLC --play-and-exit',
+                PlayerArgsVLC,
+                marks=pytest.mark.posix_only,
+                id="VLC flatpak",
+            ),
+            pytest.param(
                 "C:\\Program Files\\VideoLAN\\VLC\\vlc",
+                "",
                 PlayerArgsVLC,
                 marks=pytest.mark.windows_only,
                 id="VLC with absolute path (Windows)",
             ),
             pytest.param(
                 "C:\\Program Files\\VideoLAN\\VLC\\vlc.exe",
+                "",
                 PlayerArgsVLC,
                 marks=pytest.mark.windows_only,
                 id="VLC with absolute path and file extension (Windows)",
@@ -168,29 +196,40 @@ class TestPlayerArgs:
             # MPV
             pytest.param(
                 "mpv",
+                "",
                 PlayerArgsMPV,
                 id="MPV",
+            ),
+            pytest.param(
+                "/usr/bin/flatpak",
+                '--system run --cwd="./foo bar" io.mpv.Mpv --window-maximized',
+                PlayerArgsMPV,
+                marks=pytest.mark.posix_only,
+                id="mpv flatpak",
             ),
             # Potplayer
             pytest.param(
                 "potplayer",
+                "",
                 PlayerArgsPotplayer,
                 id="Potplayer (potplayer)",
             ),
             pytest.param(
                 "potplayermini",
+                "",
                 PlayerArgsPotplayer,
                 id="Potplayer (potplayermini)",
             ),
             pytest.param(
                 "potplayermini64",
+                "",
                 PlayerArgsPotplayer,
                 id="Potplayer (potplayermini64)",
             ),
         ],
     )
-    def test_knownplayer(self, playerpath: str, playerargsclass: type[PlayerArgs]):
-        assert isinstance(PlayerArgs(path=Path(playerpath)), playerargsclass)
+    def test_knownplayer(self, playerpath: str, playerargs: str, playerargsclass: type[PlayerArgs]):
+        assert isinstance(PlayerArgs(path=Path(playerpath), args=playerargs), playerargsclass)
 
     # noinspection PyTestParametrized
     @pytest.mark.usefixtures("playerargs", "_playerargv")
@@ -266,6 +305,57 @@ class TestPlayerArgs:
                 dict(path=Path("vlc"), args="param1{playertitleargs}param2", title="foo bar"),
                 ["vlc", "param1--input-title-format", "foo barparam2", "-"],
                 id="Explicit playertitleargs variable with improper usage (correct tokenization)",
+            ),
+            pytest.param(
+                dict(
+                    path=Path("flatpak"),
+                    args="run unknown",
+                    title="foo bar",
+                ),
+                [
+                    "flatpak",
+                    "run",
+                    "unknown",
+                    "-",
+                ],
+                id="flatpak-unknown",
+            ),
+            pytest.param(
+                dict(
+                    path=Path("flatpak"),
+                    args='--system run --cwd="./foo bar" io.mpv.Mpv --fullscreen',
+                    title="foo bar",
+                ),
+                [
+                    "flatpak",
+                    "--system",
+                    "run",
+                    "--cwd=./foo bar",
+                    "io.mpv.Mpv",
+                    "--force-media-title=foo bar",
+                    "--fullscreen",
+                    "-",
+                ],
+                id="flatpak-mpv",
+            ),
+            pytest.param(
+                dict(
+                    path=Path("flatpak"),
+                    args='--system run --cwd="./foo bar" io.mpv.Mpv --fullscreen {playertitleargs} --volume=100',
+                    title="foo bar",
+                ),
+                [
+                    "flatpak",
+                    "--system",
+                    "run",
+                    "--cwd=./foo bar",
+                    "io.mpv.Mpv",
+                    "--fullscreen",
+                    "--force-media-title=foo bar",
+                    "--volume=100",
+                    "-",
+                ],
+                id="flatpak-mpv-playertitleargs",
             ),
         ],
         indirect=True,
