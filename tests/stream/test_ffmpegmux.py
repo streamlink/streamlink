@@ -121,6 +121,35 @@ class TestCommand:
             ("ffmpegmux", "debug", " bar"),
         ]
 
+    @pytest.mark.parametrize(
+        ("timeout_value", "expected_timeout"),
+        [
+            pytest.param(None, 4.0, id="default"),
+            pytest.param(9.5, 9.5, id="custom"),
+        ],
+    )
+    def test_validate_timeout(self, session: Streamlink, timeout_value, expected_timeout):
+        session.options.update({
+            "ffmpeg-no-validation": False,
+            "ffmpeg-validation-timeout": timeout_value,
+        })
+
+        class MyFFmpegVersionOutput(FFmpegVersionOutput):
+            def run(self):
+                self.onstdout(0, "ffmpeg version 0.0.0 custom")
+                return True
+
+        with (
+            patch("streamlink.stream.ffmpegmux.which", return_value="/usr/bin/ffmpeg"),
+            patch("streamlink.stream.ffmpegmux.FFmpegVersionOutput", side_effect=MyFFmpegVersionOutput) as mock_versionoutput,
+        ):
+            result = FFMPEGMuxer.command(session)
+
+        assert result == "/usr/bin/ffmpeg"
+        assert mock_versionoutput.call_args_list == [
+            call(["/usr/bin/ffmpeg", "-version"], timeout=expected_timeout),
+        ]
+
     def test_validate_failure(self, caplog: pytest.LogCaptureFixture, session: Streamlink):
         session.options.update({"ffmpeg-no-validation": False})
 

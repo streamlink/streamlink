@@ -1301,6 +1301,18 @@ def build_parser():
             Enable the `-start_at_zero` FFmpeg option when using --ffmpeg-copyts.
         """,
     )
+    transport_ffmpeg.add_argument(
+        "--ffmpeg-validation-timeout",
+        type=float,
+        metavar="SECONDS",
+        help="""
+            Timeout in seconds for FFmpeg version validation.
+
+            Default is 4.0.
+
+            Increase this on low-power systems if FFmpeg startup is slow.
+        """,
+    )
 
     http = parser.add_argument_group("HTTP options")
     http.add_argument(
@@ -1545,6 +1557,7 @@ _ARGUMENT_TO_SESSIONOPTION: list[tuple[str, str, Callable[[Any], Any] | None]] =
     ("webbrowser_cdp_port", "webbrowser-cdp-port", None),
     ("webbrowser_cdp_timeout", "webbrowser-cdp-timeout", None),
     ("webbrowser_headless", "webbrowser-headless", None),
+    ("ffmpeg_validation_timeout", "ffmpeg-validation-timeout", None),
 ]
 
 

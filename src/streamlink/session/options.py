@@ -218,6 +218,10 @@ class StreamlinkOptions(Options):
           - ``bool``
           - ``False``
           - Disable FFmpeg validation and version logging
+        * - ffmpeg-validation-timeout
+          - ``float``
+          - ``4.0``
+          - Timeout in seconds for FFmpeg version validation
         * - ffmpeg-verbose
           - ``bool``
           - ``False``
@@ -308,6 +312,7 @@ class StreamlinkOptions(Options):
             "dash-manifest-reload-attempts": 3,
             "ffmpeg-ffmpeg": None,
             "ffmpeg-no-validation": False,
+            "ffmpeg-validation-timeout": 4.0,
             "ffmpeg-verbose": False,
             "ffmpeg-verbose-path": None,
             "ffmpeg-loglevel": None,
