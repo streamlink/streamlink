@@ -318,6 +318,7 @@ class TwitchAPI:
         self.headers.update(**dict(api_header or []))
         self.access_token_params = dict(access_token_param or [])
         self.access_token_params.setdefault("playerType", "embed")
+        self.access_token_params.setdefault("platform", "site")
 
     def call(self, data, /, *, headers=None, schema, **kwargs):
         return self.session.http.post(
@@ -503,7 +504,7 @@ class TwitchAPI:
     def access_token(self, is_live, channel_or_vod, client_integrity: tuple[str, str] | None = None):
         query = self._gql_persisted_query(
             "PlaybackAccessToken",
-            "0828119ded1c13477966434e15800ff57ddacf13ba1911c129dc2200705b0712",
+            "ed230aa1e33e07eebb8928504583da78a5173989fadfb1ac94be06a04f3cdbe9",
             isLive=is_live,
             login=channel_or_vod if is_live else "",
             isVod=not is_live,

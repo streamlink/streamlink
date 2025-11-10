@@ -669,7 +669,7 @@ class TestTwitchAPIAccessToken:
         assert payload.get("operationName") == "PlaybackAccessToken"
         assert payload.get("extensions") == {
             "persistedQuery": {
-                "sha256Hash": "0828119ded1c13477966434e15800ff57ddacf13ba1911c129dc2200705b0712",
+                "sha256Hash": "ed230aa1e33e07eebb8928504583da78a5173989fadfb1ac94be06a04f3cdbe9",
                 "version": 1,
             },
         }
@@ -683,6 +683,7 @@ class TestTwitchAPIAccessToken:
             "login": "channelname",
             "vodID": "",
             "playerType": "embed",
+            "platform": "site",
         }
 
     @pytest.fixture()
@@ -694,6 +695,7 @@ class TestTwitchAPIAccessToken:
             "login": "",
             "vodID": "vodid",
             "playerType": "embed",
+            "platform": "site",
         }
 
     @pytest.mark.parametrize(
@@ -708,6 +710,7 @@ class TestTwitchAPIAccessToken:
                     "login": "channelname",
                     "vodID": "",
                     "playerType": "embed",
+                    "platform": "site",
                 },
             ),
             (
@@ -719,6 +722,7 @@ class TestTwitchAPIAccessToken:
                     "access-token-param": [
                         ("specialVariable", "specialValue"),
                         ("playerType", "frontpage"),
+                        ("platform", "other"),
                     ],
                 },
                 {
@@ -731,6 +735,7 @@ class TestTwitchAPIAccessToken:
                     "login": "channelname",
                     "vodID": "",
                     "playerType": "frontpage",
+                    "platform": "other",
                     "specialVariable": "specialValue",
                 },
             ),
