@@ -47,15 +47,32 @@ class PlayerArgsMeta(type):
 class PlayerArgs(metaclass=PlayerArgsMeta):
     NAME: ClassVar[str] = ""
     EXECUTABLE: ClassVar[re.Pattern | None] = None
+    FLATPAK: ClassVar[str | None] = None
 
-    def __new__(cls, path: Path, *args, **kwargs):
+    def __new__(cls, path: Path, *_, args: str = "", **__):
         executable = path.name.lower()
+        is_flatpak = False
+
         if is_win32 and executable[-4:] == ".exe":
             executable = executable[:-4]
+        elif (
+            path.name.lower() == "flatpak"
+            and args
+            and (parsed := shlex.split(args))
+            and (fp_idx := cls._get_flatpak_args_app_index(parsed))
+        ):
+            is_flatpak = True
+            executable = parsed[fp_idx]
 
         playerargs = cls
         for player in cls.PLAYERS:
-            if player.EXECUTABLE is not None and player.EXECUTABLE.match(executable):
+            if (
+                player.EXECUTABLE is not None
+                and player.EXECUTABLE.match(executable)
+                or is_flatpak
+                and player.FLATPAK is not None
+                and player.FLATPAK == executable
+            ):
                 playerargs = player
                 break
 
@@ -86,6 +103,18 @@ class PlayerArgs(metaclass=PlayerArgsMeta):
         else:
             self._input = self.get_stdin()
 
+    @staticmethod
+    def _get_flatpak_args_app_index(args: list[str]) -> int:
+        found_run_cmd = False
+
+        for i, arg in enumerate(args):
+            if not found_run_cmd and arg == "run":
+                found_run_cmd = True
+            elif found_run_cmd and not arg.startswith("-"):
+                return i
+
+        return 0
+
     def build(self) -> list[str]:
         args_title = []
         if self.title is not None:
@@ -100,7 +129,10 @@ class PlayerArgs(metaclass=PlayerArgsMeta):
         args_tokenized = shlex.split(args)
 
         if not self._has_var_playertitleargs:
-            args_tokenized = [*args_title, *args_tokenized]
+            if self.path.name.lower() == "flatpak" and (fp_idx := self._get_flatpak_args_app_index(args_tokenized)):
+                args_tokenized = [*args_tokenized[: fp_idx + 1], *args_title, *args_tokenized[fp_idx + 1 :]]
+            else:
+                args_tokenized = [*args_title, *args_tokenized]
         if not self._has_var_playerinput:
             args_tokenized.append(self._input)
 
@@ -128,6 +160,7 @@ class PlayerArgs(metaclass=PlayerArgsMeta):
 class PlayerArgsVLC(PlayerArgs):
     NAME = "VLC"
     EXECUTABLE = re.compile(r"^vlc$")
+    FLATPAK = "org.videolan.VLC"
 
     def get_namedpipe(self, namedpipe: NamedPipeBase) -> str:
         if is_win32:
@@ -144,6 +177,7 @@ class PlayerArgsVLC(PlayerArgs):
 class PlayerArgsMPV(PlayerArgs):
     NAME = "mpv"
     EXECUTABLE = re.compile(r"^mpv$")
+    FLATPAK = "io.mpv.Mpv"
 
     def get_namedpipe(self, namedpipe: NamedPipeBase) -> str:
         if is_win32:
