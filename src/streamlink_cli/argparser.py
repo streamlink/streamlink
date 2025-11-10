@@ -17,7 +17,7 @@ from streamlink.utils.args import boolean, comma_list, comma_list_filter, filesi
 from streamlink.utils.times import hours_minutes_seconds_float
 from streamlink_cli.constants import STREAM_PASSTHROUGH
 from streamlink_cli.exceptions import StreamlinkCLIError
-from streamlink_cli.output.player import PlayerOutput
+from streamlink_cli.output.player import PlayerArgs, PlayerOutput
 from streamlink_cli.utils import find_default_player
 
 
@@ -688,6 +688,7 @@ def build_parser():
             This option will instead let the player decide when to exit.
         """,
     )
+    # noinspection PyTypeChecker
     player.add_argument(
         "-t",
         "--title",
@@ -699,8 +700,7 @@ def build_parser():
             as well as the "Plugins" section for the list of metadata variables defined in each plugin.
 
             Only the following players are supported:
-
-            {", ".join(sorted(PlayerOutput.PLAYERS.keys()))}
+            {"".join(f"{chr(0x0A)}            - {pn}" for pn in sorted([p.NAME for p in PlayerArgs.PLAYERS], key=str.lower))}
 
             Example:
 

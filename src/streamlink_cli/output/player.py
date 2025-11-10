@@ -22,6 +22,11 @@ if TYPE_CHECKING:
     from collections.abc import Mapping, Sequence
     from pathlib import Path
 
+    try:
+        from typing import Self  # type: ignore[attr-defined]
+    except ImportError:  # pragma: no cover
+        from typing_extensions import Self
+
     from streamlink.utils.named_pipe import NamedPipeBase
     from streamlink_cli.output.file import FileOutput
     from streamlink_cli.output.http import HTTPOutput
@@ -30,8 +35,31 @@ if TYPE_CHECKING:
 log = logging.getLogger("streamlink.cli.output")
 
 
-class PlayerArgs:
-    EXECUTABLES: ClassVar[list[re.Pattern]] = []
+class PlayerArgsMeta(type):
+    PLAYERS: ClassVar[list[Self]] = []
+
+    def __init__(cls, name, bases, attrs, **kwargs):
+        super().__init__(name, bases, attrs, **kwargs)
+        if attrs.get("NAME"):
+            cls.PLAYERS.append(cls)
+
+
+class PlayerArgs(metaclass=PlayerArgsMeta):
+    NAME: ClassVar[str] = ""
+    EXECUTABLE: ClassVar[re.Pattern | None] = None
+
+    def __new__(cls, path: Path, *args, **kwargs):
+        executable = path.name.lower()
+        if is_win32 and executable[-4:] == ".exe":
+            executable = executable[:-4]
+
+        playerargs = cls
+        for player in cls.PLAYERS:
+            if player.EXECUTABLE is not None and player.EXECUTABLE.match(executable):
+                playerargs = player
+                break
+
+        return super().__new__(playerargs)
 
     def __init__(
         self,
@@ -98,9 +126,8 @@ class PlayerArgs:
 
 
 class PlayerArgsVLC(PlayerArgs):
-    EXECUTABLES: ClassVar[list[re.Pattern]] = [
-        re.compile(r"^vlc$", re.IGNORECASE),
-    ]
+    NAME = "VLC"
+    EXECUTABLE = re.compile(r"^vlc$")
 
     def get_namedpipe(self, namedpipe: NamedPipeBase) -> str:
         if is_win32:
@@ -115,9 +142,8 @@ class PlayerArgsVLC(PlayerArgs):
 
 
 class PlayerArgsMPV(PlayerArgs):
-    EXECUTABLES: ClassVar[list[re.Pattern]] = [
-        re.compile(r"^mpv$", re.IGNORECASE),
-    ]
+    NAME = "mpv"
+    EXECUTABLE = re.compile(r"^mpv$")
 
     def get_namedpipe(self, namedpipe: NamedPipeBase) -> str:
         if is_win32:
@@ -130,9 +156,8 @@ class PlayerArgsMPV(PlayerArgs):
 
 
 class PlayerArgsPotplayer(PlayerArgs):
-    EXECUTABLES: ClassVar[list[re.Pattern]] = [
-        re.compile(r"^potplayer(?:mini(?:64)?)?$", re.IGNORECASE),
-    ]
+    NAME = "PotPlayer"
+    EXECUTABLE = re.compile(r"^potplayer(?:mini(?:64)?)?$")
 
     def get_title(self, title: str) -> list[str]:
         if self._input != "-":
@@ -148,12 +173,6 @@ class PlayerOutput(Output):
 
     PLAYER_ARGS_INPUT = "playerinput"
     PLAYER_ARGS_TITLE = "playertitleargs"
-
-    PLAYERS: ClassVar[Mapping[str, type[PlayerArgs]]] = {
-        "vlc": PlayerArgsVLC,
-        "mpv": PlayerArgsMPV,
-        "potplayer": PlayerArgsPotplayer,
-    }
 
     player: subprocess.Popen
     stdin: int | TextIO
@@ -191,7 +210,7 @@ class PlayerOutput(Output):
 
         self.title = title
 
-        self.playerargs = self.playerargsfactory(
+        self.playerargs = PlayerArgs(
             path=path,
             args=args,
             title=title,
@@ -211,19 +230,6 @@ class PlayerOutput(Output):
         else:
             self.stdout = sys.stdout
             self.stderr = sys.stderr
-
-    @classmethod
-    def playerargsfactory(cls, path: Path, **kwargs) -> PlayerArgs:
-        executable = path.name
-        if is_win32 and executable[-4:].lower() == ".exe":
-            executable = executable[:-4]
-
-        for playerclass in cls.PLAYERS.values():
-            for re_executable in playerclass.EXECUTABLES:
-                if re_executable.search(executable):
-                    return playerclass(path=path, **kwargs)
-
-        return PlayerArgs(path=path, **kwargs)
 
     @property
     def running(self):
