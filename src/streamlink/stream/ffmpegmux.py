@@ -109,14 +109,21 @@ class FFMPEGMuxer(StreamIO):
     @classmethod
     def command(cls, session):
         with _lock_resolve_command:
+            timeout = session.options.get("ffmpeg-validation-timeout") or cls.FFMPEG_VERSION_TIMEOUT
             return cls._resolve_command(
                 session.options.get("ffmpeg-ffmpeg"),
                 not session.options.get("ffmpeg-no-validation"),
+                timeout,
             )
 
     @classmethod
     @lru_cache(maxsize=128)
-    def _resolve_command(cls, command: str | None = None, validate: bool = True) -> str | None:
+    def _resolve_command(
+        cls,
+        command: str | None = None,
+        validate: bool = True,
+        timeout: float = FFMPEG_VERSION_TIMEOUT,
+    ) -> str | None:
         if command:
             resolved = which(command)
         else:
@@ -128,7 +135,7 @@ class FFMPEGMuxer(StreamIO):
 
         if resolved and validate:
             log.trace(f"Querying FFmpeg version: {[resolved, '-version']}")  # type: ignore[attr-defined]
-            versionoutput = FFmpegVersionOutput([resolved, "-version"], timeout=cls.FFMPEG_VERSION_TIMEOUT)
+            versionoutput = FFmpegVersionOutput([resolved, "-version"], timeout=timeout)
             if not versionoutput.run():
                 log.error("Could not validate FFmpeg!")
                 log.error(f"Unexpected FFmpeg version output while running {[resolved, '-version']}")
