@@ -26,7 +26,7 @@ if TYPE_CHECKING:
 class TestPlayerArgs:
     @pytest.fixture()
     def playerargs(self, request: pytest.FixtureRequest):
-        return PlayerOutput.playerargsfactory(**getattr(request, "param", {}))
+        return PlayerArgs(**getattr(request, "param", {}))
 
     @pytest.fixture()
     def _playerargv(self, request: pytest.FixtureRequest, playerargs: PlayerArgs):
@@ -190,7 +190,7 @@ class TestPlayerArgs:
         ],
     )
     def test_knownplayer(self, playerpath: str, playerargsclass: type[PlayerArgs]):
-        assert isinstance(PlayerOutput.playerargsfactory(path=Path(playerpath)), playerargsclass)
+        assert isinstance(PlayerArgs(path=Path(playerpath)), playerargsclass)
 
     # noinspection PyTestParametrized
     @pytest.mark.usefixtures("playerargs", "_playerargv")
