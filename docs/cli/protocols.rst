@@ -94,4 +94,5 @@ Parameters are passed to the following methods of their respective stream implem
         - :py:meth:`requests.Session.request`
     * - ``dash://``
       - - :py:meth:`streamlink.stream.DASHStream.parse_manifest`
+        - :py:meth:`streamlink.stream.DASHStream`
         - :py:meth:`requests.Session.request`
