@@ -100,6 +100,30 @@ of such loop-holes. See :option:`--twitch-api-header` and :option:`--twitch-acce
     format from MPEG-TS to MPEG-4, to prevent playback issues during stream discontinuities between the stream and ads.
 
 
+Higher quality streams
+----------------------
+
+Access to higher quality streams, if available, requires the :option:`--twitch-supported-codecs=h264,h265,av1` plugin argument.
+
+With the introduction of Twitch's "enhanced broadcasting" system, channels are allowed to stream in higher qualities
+than before by using more modern video codecs. Since playback capabilities are not guaranteed on every system, clients need to
+explicitly announce which video codecs are supported.
+
+:option:`--twitch-supported-codecs` allows setting a comma-separated list of supported codecs,
+``h264`` (the default), ``h265`` and ``av1``.
+
+Higher quality streams may only be available by enabling ``h265`` or ``av1``.
+Lower quality streams which are re-encoded on Twitch's end may still be ``h264``, even if not requested.
+
+.. dropdown:: Changelog
+    :animate: fade-in-slide-down
+    :chevron: right-down
+    :icon: log
+
+    Due to current limitations of Streamlink's stream selection and how stream data is presented to the user,
+    this plugin argument was added in Streamlink 8.0.0 as a temporary solution.
+
+
 Client-integrity token
 ----------------------
 

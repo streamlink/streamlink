@@ -646,6 +646,29 @@ class TestUsherService:
 
         assert [(r.name, r.levelname, r.message) for r in caplog.get_records(when="setup")] == logs
 
+    @pytest.mark.parametrize(
+        "endpoint",
+        [
+            pytest.param({"service": "channel"}, id="channel"),
+            pytest.param({"service": "video"}, id="video"),
+        ],
+        indirect=True,
+    )
+    @pytest.mark.parametrize(
+        ("plugin", "expected"),
+        [
+            pytest.param({}, "h264", id="unset"),
+            pytest.param({"supported_codecs": []}, "h264", id="empty"),
+            pytest.param({"supported_codecs": ["h264"]}, "h264", id="h264"),
+            pytest.param({"supported_codecs": ["av1", "h264"]}, "av1,h264", id="av1,h264"),
+            pytest.param({"supported_codecs": ["av1", "h264", "h265"]}, "av1,h264,h265", id="av1,h264,h265"),
+        ],
+        indirect=["plugin"],
+    )
+    def test_supported_codecs(self, plugin: Twitch, endpoint: str, expected: str):
+        qs = dict(parse_qsl(urlparse(endpoint).query))
+        assert qs.get("supported_codecs") == expected
+
 
 class TestTwitchAPIAccessToken:
     @pytest.fixture(autouse=True)
