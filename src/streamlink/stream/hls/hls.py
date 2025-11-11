@@ -590,7 +590,6 @@ class MuxedHLSStream(MuxedStream[TMuxedHLSStream_co]):
         :param video: Video stream URL
         :param audio: Audio stream URL or list of URLs
         :param hlsstream: The :class:`HLSStream` class of each sub-stream
-        :param url_master: The URL of the HLS playlist's multivariant playlist (deprecated)
         :param multivariant: The parsed multivariant playlist
         :param force_restart: Start from the beginning after reaching the playlist's end
         :param ffmpeg_options: Additional keyword arguments passed to :class:`ffmpegmux.FFMPEGMuxer`

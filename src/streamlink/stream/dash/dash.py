@@ -288,7 +288,7 @@ class DASHStream(Stream):
         :param period: Which MPD period to use (index number (int) or ``id`` attribute (str)) for finding representations
         :param with_video_only: Also return video-only streams, otherwise only return muxed streams
         :param with_audio_only: Also return audio-only streams, otherwise only return muxed streams
-        :param kwargs: Additional keyword arguments passed to :meth:`requests.Session.request`
+        :param kwargs: Additional keyword arguments passed to :class:`DASHStream` or :meth:`requests.Session.request`
         """
 
         manifest, mpd_params = cls.fetch_manifest(session, url_or_manifest, **kwargs)
