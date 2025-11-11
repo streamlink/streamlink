@@ -458,45 +458,31 @@ class TwitchAPI:
         )
 
     def metadata_clips(self, clipname):
-        queries = [
-            self._gql_persisted_query(
-                "ClipsView",
-                "4480c1dcc2494a17bb6ef64b94a5213a956afb8a45fe314c66b0d04079a93a8f",
-                slug=clipname,
-            ),
-            self._gql_persisted_query(
-                "ClipsTitle",
-                "f6cca7f2fdfbfc2cecea0c88452500dae569191e58a265f97711f8f2a838f5b4",
-                slug=clipname,
-            ),
-        ]
+        query = self._gql_persisted_query(
+            "ShareClipRenderStatus",
+            "1844261bb449fa51e6167040311da4a7a5f1c34fe71c71a3e0c4f551bc30c698",
+            slug=clipname,
+        )
 
         return self.call(
-            queries,
+            query,
             schema=validate.all(
-                validate.list(
-                    validate.all(
-                        {
-                            "data": {
-                                "clip": {
-                                    "id": str,
-                                    "broadcaster": {"displayName": str},
-                                    "game": {"name": str},
-                                },
-                            },
+                {
+                    "data": {
+                        "clip": {
+                            "id": str,
+                            "broadcaster": {"displayName": str},
+                            "game": {"name": str},
+                            "title": str,
                         },
-                        validate.get(("data", "clip")),
-                    ),
-                    validate.all(
-                        {"data": {"clip": {"title": str}}},
-                        validate.get(("data", "clip")),
-                    ),
-                ),
+                    },
+                },
+                validate.get(("data", "clip")),
                 validate.union_get(
-                    (0, "id"),
-                    (0, "broadcaster", "displayName"),
-                    (0, "game", "name"),
-                    (1, "title"),
+                    "id",
+                    ("broadcaster", "displayName"),
+                    ("game", "name"),
+                    "title",
                 ),
             ),
         )

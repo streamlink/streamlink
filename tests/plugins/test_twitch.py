@@ -1145,32 +1145,22 @@ class TestTwitchMetadata:
 
         return requests_mock.post(
             "https://gql.twitch.tv/gql",
-            json=[
-                {
-                    "data": {
-                        "clip": None
-                        if not data
-                        else {
-                            "id": "clip id",
-                            "broadcaster": {
-                                "displayName": "channel name",
-                            },
-                            "game": {
-                                "name": "game name",
-                            },
+            json={
+                "data": {
+                    "clip": None
+                    if not data
+                    else {
+                        "id": "clip id",
+                        "broadcaster": {
+                            "displayName": "channel name",
                         },
+                        "game": {
+                            "name": "game name",
+                        },
+                        "title": "clip title",
                     },
                 },
-                {
-                    "data": {
-                        "clip": None
-                        if not data
-                        else {
-                            "title": "clip title",
-                        },
-                    },
-                },
-            ],
+            },
         )
 
     @pytest.mark.parametrize(("mock_request_channel", "metadata"), [(True, "https://twitch.tv/foo")], indirect=True)
@@ -1237,32 +1227,18 @@ class TestTwitchMetadata:
     def test_metadata_clip(self, mock_request_clip, metadata):
         assert metadata == ("clip id", "channel name", "game name", "clip title")
         assert mock_request_clip.call_count == 1
-        assert mock_request_clip.request_history[0].json() == [
-            {
-                "operationName": "ClipsView",
-                "extensions": {
-                    "persistedQuery": {
-                        "version": 1,
-                        "sha256Hash": "4480c1dcc2494a17bb6ef64b94a5213a956afb8a45fe314c66b0d04079a93a8f",
-                    },
-                },
-                "variables": {
-                    "slug": "foo",
+        assert mock_request_clip.request_history[0].json() == {
+            "operationName": "ShareClipRenderStatus",
+            "extensions": {
+                "persistedQuery": {
+                    "version": 1,
+                    "sha256Hash": "1844261bb449fa51e6167040311da4a7a5f1c34fe71c71a3e0c4f551bc30c698",
                 },
             },
-            {
-                "operationName": "ClipsTitle",
-                "extensions": {
-                    "persistedQuery": {
-                        "version": 1,
-                        "sha256Hash": "f6cca7f2fdfbfc2cecea0c88452500dae569191e58a265f97711f8f2a838f5b4",
-                    },
-                },
-                "variables": {
-                    "slug": "foo",
-                },
+            "variables": {
+                "slug": "foo",
             },
-        ]
+        }
 
     @pytest.mark.parametrize(("mock_request_clip", "metadata"), [(False, "https://clips.twitch.tv/foo")], indirect=True)
     def test_metadata_clip_no_data(self, mock_request_clip, metadata):
