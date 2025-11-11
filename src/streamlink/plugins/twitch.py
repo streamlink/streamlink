@@ -370,7 +370,7 @@ class TwitchAPI:
     def metadata_video(self, video_id):
         query = self._gql_persisted_query(
             "VideoMetadata",
-            "cb3b1eb2f2d2b2f65b8389ba446ec521d76c3aa44f5424a1b1d235fe21eb4806",
+            "45111672eea2e507f8ba44d101a61862f9c56b11dee09a15634cb75cb9b9084d",
             channelLogin="",  # parameter can be empty
             videoID=video_id,
         )
@@ -406,14 +406,14 @@ class TwitchAPI:
         queries = [
             self._gql_persisted_query(
                 "ChannelShell",
-                "c3ea5a669ec074a58df5c11ce3c27093fa38534c94286dc14b68a25d5adcbf55",
+                "fea4573a7bf2644f5b3f2cbbdcbee0d17312e48d2e55f080589d053aad353f11",
                 login=channel,
-                lcpVideosEnabled=False,
             ),
             self._gql_persisted_query(
                 "StreamMetadata",
-                "059c4653b788f5bdb2f5a2d2a24b0ddc3831a15079001a3d927556a96fb0517f",
+                "b57f9b910f8cd1a4659d894fe7550ccc81ec9052c01e438b290fd66a040b9b93",
                 channelLogin=channel,
+                includeIsDJ=True,
             ),
         ]
 
