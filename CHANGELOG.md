@@ -1,5 +1,33 @@
 # Changelog
 
+## streamlink 8.0.0 (2025-11-11)
+
+- BREAKING: dropped support for [EOL Python 3.9](https://peps.python.org/pep-0596/#lifespan) ([#6674](https://github.com/streamlink/streamlink/pull/6674))
+- BREAKING/API: [removed deprecated `url_master` from `HLSStream`/`MuxedHLSStream`](https://streamlink.github.io/migrations.html#hlsstream-url-master-argument) ([#6688](https://github.com/streamlink/streamlink/pull/6688))
+- BREAKING/dependencies: bumped version requirement of [`urllib3` to `>=2.0.0`](https://urllib3.readthedocs.io/en/stable/v2-migration-guide.html) ([#6686](https://github.com/streamlink/streamlink/pull/6686))
+- Added: `--stream-segmented-duration` in favor of `--hls-duration` (now deprecated), which affects HLS, DASH and other segmented stream types ([#6705](https://github.com/streamlink/streamlink/pull/6705))
+- Added: `duration` parameter to `dash://` streams (`DASHStream`) ([#6705](https://github.com/streamlink/streamlink/pull/6705))
+- Added: `--ffmpeg-validation-timeout` for being able to increase the time for validating the FFmpeg executable (`--ffmpeg-ffmpeg`) ([#6716](https://github.com/streamlink/streamlink/pull/6716))
+- Added: Flatpak player detection for VLC and mpv ([#6717](https://github.com/streamlink/streamlink/pull/6717), [#6723](https://github.com/streamlink/streamlink/pull/6723))
+- Refactored: parts of the internal `SegmentedStream`, `HLSStream` and `DASHStream` implementations (WIP) ([#6696](https://github.com/streamlink/streamlink/pull/6696), [#6707](https://github.com/streamlink/streamlink/pull/6707), [#6709](https://github.com/streamlink/streamlink/pull/6709))
+- Updated plugins:
+  - aloula: fixed livestream schema ([#6662](https://github.com/streamlink/streamlink/pull/6662))
+  - btv: rewritten and fixed plugin ([#6691](https://github.com/streamlink/streamlink/pull/6691))
+  - chzzk: added support for in-progress VODs via live-rewind streams ([#6675](https://github.com/streamlink/streamlink/pull/6675))
+  - dlive: fixed streams expiring after 5 minutes ([#6695](https://github.com/streamlink/streamlink/pull/6695))
+  - goodgame: updated matches, switched API endpoints ([#6714](https://github.com/streamlink/streamlink/pull/6714))
+  - nhkworld: removed plugin ([#6677](https://github.com/streamlink/streamlink/pull/6677))
+  - rtve: fixed validation schema ([#6701](https://github.com/streamlink/streamlink/pull/6701))
+  - twitch: fixed access token acquirement and various persisted GraphQL query IDs ([#6720](https://github.com/streamlink/streamlink/pull/6720), [#6721](https://github.com/streamlink/streamlink/pull/6721))
+  - twitch: added `--twitch-supported-codecs` for access to higher quality streams ([#5769](https://github.com/streamlink/streamlink/pull/5769))
+- Dependencies: dropped optional `zstandard` dependency on Python 3.14 and above ([#6683](https://github.com/streamlink/streamlink/pull/6683))
+- Tests: bumped version requirement of `pytest` to `>=8.4.0` ([#6612](https://github.com/streamlink/streamlink/pull/6612))
+- Docs: refactored docs config and custom Sphinx extensions, added `make` options for disabling various components for offline building ([#6668](https://github.com/streamlink/streamlink/pull/6668), [#6669](https://github.com/streamlink/streamlink/pull/6669))
+- Docs: fixed compatibility with `docutils==0.22.2` ([#6699](https://github.com/streamlink/streamlink/pull/6699))
+
+[Full changelog](https://github.com/streamlink/streamlink/compare/7.6.0...8.0.0)
+
+
 ## streamlink 7.6.0 (2025-09-08)
 
 - Added: official support for Python 3.14 ([#6617](https://github.com/streamlink/streamlink/pull/6617))
