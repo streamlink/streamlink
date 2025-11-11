@@ -3,6 +3,7 @@ from __future__ import annotations
 import logging
 import re
 import struct
+import warnings
 from datetime import timedelta
 from typing import TYPE_CHECKING, Any, ClassVar, Literal, TypeVar
 from urllib.parse import urlparse
@@ -10,7 +11,7 @@ from urllib.parse import urlparse
 from requests import Response
 from requests.exceptions import ChunkedEncodingError, ConnectionError, ContentDecodingError, InvalidSchema  # noqa: A004
 
-from streamlink.exceptions import StreamError
+from streamlink.exceptions import StreamError, StreamlinkDeprecationWarning
 from streamlink.stream.ffmpegmux import FFMPEGMuxer, MuxedStream
 from streamlink.stream.filtered import FilteredStream
 from streamlink.stream.hls.m3u8 import M3U8Parser, parse_m3u8
@@ -337,6 +338,23 @@ class HLSStreamWorker(SegmentedStreamWorker[HLSSegment, Response]):
             self.reload_time = 0.0
         self._reload_time: float = self._RELOAD_TIME_DEFAULT
         self._reload_last: datetime = now()
+
+    def _warn_playlist_sequence(self):
+        warnings.warn(
+            f"{self.__class__.__name__}.playlist_sequence has been moved to SegmentedStreamWorker.sequence",
+            StreamlinkDeprecationWarning,
+            stacklevel=3,
+        )
+
+    @property
+    def playlist_sequence(self):
+        self._warn_playlist_sequence()
+        return self.sequence
+
+    @playlist_sequence.setter
+    def playlist_sequence(self, value):
+        self._warn_playlist_sequence()
+        self.sequence = value
 
     def _fetch_playlist(self) -> Response:
         res = self.session.http.get(
