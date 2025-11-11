@@ -1183,12 +1183,11 @@ class TestTwitchMetadata:
                 "extensions": {
                     "persistedQuery": {
                         "version": 1,
-                        "sha256Hash": "c3ea5a669ec074a58df5c11ce3c27093fa38534c94286dc14b68a25d5adcbf55",
+                        "sha256Hash": "fea4573a7bf2644f5b3f2cbbdcbee0d17312e48d2e55f080589d053aad353f11",
                     },
                 },
                 "variables": {
                     "login": "foo",
-                    "lcpVideosEnabled": False,
                 },
             },
             {
@@ -1196,11 +1195,12 @@ class TestTwitchMetadata:
                 "extensions": {
                     "persistedQuery": {
                         "version": 1,
-                        "sha256Hash": "059c4653b788f5bdb2f5a2d2a24b0ddc3831a15079001a3d927556a96fb0517f",
+                        "sha256Hash": "b57f9b910f8cd1a4659d894fe7550ccc81ec9052c01e438b290fd66a040b9b93",
                     },
                 },
                 "variables": {
                     "channelLogin": "foo",
+                    "includeIsDJ": True,
                 },
             },
         ]
@@ -1219,7 +1219,7 @@ class TestTwitchMetadata:
             "extensions": {
                 "persistedQuery": {
                     "version": 1,
-                    "sha256Hash": "cb3b1eb2f2d2b2f65b8389ba446ec521d76c3aa44f5424a1b1d235fe21eb4806",
+                    "sha256Hash": "45111672eea2e507f8ba44d101a61862f9c56b11dee09a15634cb75cb9b9084d",
                 },
             },
             "variables": {
