@@ -642,6 +642,44 @@ class TestHLSStreamWorkerOptions:
         assert [(record.category, str(record.message)) for record in recwarn.list] == warning
 
 
+class TestHLSStreamWorkerPlaylistSequenceWarning:
+    warns = pytest.mark.parametrize(
+        "_assert_warning",
+        [
+            pytest.param([
+                (
+                    StreamlinkDeprecationWarning,
+                    "HLSStreamWorker.playlist_sequence has been moved to SegmentedStreamWorker.sequence",
+                    __file__,
+                ),
+            ]),
+        ],
+        indirect=["_assert_warning"],
+    )
+
+    @pytest.fixture()
+    def reader(self, session: Streamlink):
+        stream = HLSStream(session, "")
+        return HLSStreamReader(stream)
+
+    @pytest.fixture(autouse=True)
+    def _assert_warning(self, request: pytest.FixtureRequest, recwarn: pytest.WarningsRecorder):
+        warnings = getattr(request, "param", [])
+        yield
+        assert [(record.category, str(record.message), record.filename) for record in recwarn.list] == warnings
+
+    def test_getter(self, reader: HLSStreamReader):
+        assert reader.worker.sequence == -1
+
+    @warns
+    def test_warns_getter(self, reader: HLSStreamReader):
+        assert reader.worker.playlist_sequence == -1
+
+    @warns
+    def test_warns_setter(self, reader: HLSStreamReader):
+        reader.worker.playlist_sequence = 0
+
+
 @patch("streamlink.stream.hls.hls.HLSStreamWorker.wait", Mock(return_value=True))
 class TestHLSStreamByterange(TestMixinStreamHLS, unittest.TestCase):
     __stream__ = EventedWriterHLSStream
