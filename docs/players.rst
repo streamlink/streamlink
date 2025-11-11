@@ -86,6 +86,23 @@ modes.
 .. _IINA: https://iina.io/
 
 
+Flatpak players
+---------------
+
+While Streamlink doesn't provide a dedicated CLI argument for launching `Flatpak`_ players,
+those are still supported by setting :option:`--player=flatpak` and :option:`--player-args="run APPID"`,
+where ``APPID`` is the Flatpak identifier string (see the `flatpak run <flatpak-run-manpage_>`_ command man page).
+
+Players like `VLC <flathub-VLC_>`_ or `mpv <flathub-mpv_>`_ are available on `Flathub`_ (unofficial builds, not maintained
+by the player's own developers), and are automatically detected when setting the :option:`--title` option.
+
+.. _Flatpak: https://flatpak.org/
+.. _flatpak-run-manpage: https://man7.org/linux/man-pages/man1/flatpak-run.1.html
+.. _Flathub: https://flathub.org/
+.. _flathub-VLC: https://flathub.org/en/apps/org.videolan.VLC
+.. _flathub-mpv: https://flathub.org/en/apps/io.mpv.Mpv
+
+
 Known issues and workarounds
 ----------------------------
 
