@@ -121,7 +121,7 @@ Lower quality streams which are re-encoded on Twitch's end may still be ``h264``
     :icon: log
 
     Due to current limitations of Streamlink's stream selection and how stream data is presented to the user,
-    this plugin argument was added in Streamlink 8.0.0 as a temporary solution.
+    this plugin argument was added in :ref:`streamlink 8.0.0 <changelog:streamlink 8.0.0 (2025-11-11)>` as a temporary solution.
 
 
 Client-integrity token
