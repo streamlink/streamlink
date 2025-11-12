@@ -195,7 +195,6 @@ method = { module = "build_backend.onbuild", value = "onbuild" }
 minversion = "8.4.0"
 addopts = """
 --disable-plugin-autoload
--p pytest_cov
 -p trio
 -p requests_mock
 """
