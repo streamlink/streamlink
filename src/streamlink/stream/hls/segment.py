@@ -46,15 +46,15 @@ class DateRange:
     duration: timedelta | None
     planned_duration: timedelta | None
     end_on_next: bool
-    x: dict[str, str]
+    x: dict[str, str] = field(repr=False)
 
 
 # EXT-X-KEY
 @dataclass(kw_only=True)
 class Key:
     method: str
-    uri: str | None
-    iv: bytes | None  # version >= 2
+    uri: str | None = field(repr=False)
+    iv: bytes | None = field(repr=False)  # version >= 2
     key_format: str | None  # version >= 5
     key_format_versions: str | None  # version >= 5
 
@@ -62,7 +62,7 @@ class Key:
 # EXT-X-MAP
 @dataclass(kw_only=True)
 class Map:
-    uri: str
+    uri: str = field(repr=False)
     key: Key | None
     byterange: ByteRange | None
 
