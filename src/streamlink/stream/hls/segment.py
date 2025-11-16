@@ -6,6 +6,7 @@ from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, NamedTuple
 
 from streamlink.stream.segmented.segment import Segment
+from streamlink.utils.dataclass import FormattedDataclass
 from streamlink.utils.l10n import Language
 
 
@@ -38,7 +39,7 @@ class ByteRange(NamedTuple):  # version >= 4
 
 # EXT-X-DATERANGE
 @dataclass(kw_only=True)
-class DateRange:
+class DateRange(metaclass=FormattedDataclass):
     id: str | None
     classname: str | None
     start_date: datetime | None
