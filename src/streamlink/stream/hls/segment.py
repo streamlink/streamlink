@@ -37,7 +37,8 @@ class ByteRange(NamedTuple):  # version >= 4
 
 
 # EXT-X-DATERANGE
-class DateRange(NamedTuple):
+@dataclass(kw_only=True)
+class DateRange:
     id: str | None
     classname: str | None
     start_date: datetime | None
@@ -49,7 +50,8 @@ class DateRange(NamedTuple):
 
 
 # EXT-X-KEY
-class Key(NamedTuple):
+@dataclass(kw_only=True)
+class Key:
     method: str
     uri: str | None
     iv: bytes | None  # version >= 2
@@ -58,14 +60,15 @@ class Key(NamedTuple):
 
 
 # EXT-X-MAP
-class Map(NamedTuple):
+@dataclass(kw_only=True)
+class Map:
     uri: str
     key: Key | None
     byterange: ByteRange | None
 
 
 # EXT-X-MEDIA
-@dataclass
+@dataclass(kw_only=True)
 class Media:
     uri: str | None
     type: str
@@ -102,7 +105,8 @@ class Start(NamedTuple):
 
 
 # EXT-X-STREAM-INF
-class StreamInfo(NamedTuple):
+@dataclass(kw_only=True)
+class StreamInfo:
     bandwidth: int
     program_id: str | None  # version < 6
     codecs: list[str]
@@ -113,7 +117,8 @@ class StreamInfo(NamedTuple):
 
 
 # EXT-X-I-FRAME-STREAM-INF
-class IFrameStreamInfo(NamedTuple):
+@dataclass(kw_only=True)
+class IFrameStreamInfo:
     bandwidth: int
     program_id: str | None
     codecs: list[str]
