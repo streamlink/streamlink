@@ -134,7 +134,7 @@ class TwitchM3U8Parser(M3U8Parser[TwitchM3U8, TwitchHLSSegment, HLSPlaylist]):
         daterange = self.m3u8.dateranges[-1]
         if self._is_daterange_ad(daterange):
             self.m3u8.dateranges_ads.append(daterange)
-            log.trace(f"Ad daterange: {daterange!r}")  # type: ignore[attr-defined]
+            log.trace("Advertisement: %r", daterange)  # type: ignore[attr-defined]
 
     def get_segment(self, uri: str, **data) -> TwitchHLSSegment:
         ad = self._is_segment_ad(self._date, self._extinf.title if self._extinf else None)
@@ -234,8 +234,6 @@ class TwitchHLSStreamWriter(HLSStreamWriter):
     stream: TwitchHLSStream
 
     def should_filter_segment(self, segment: TwitchHLSSegment) -> bool:  # type: ignore[override]
-        if segment.ad:  # pragma: no cover
-            log.trace(f"Filtering out segment: {segment.num=} {segment.title=} {segment.date=}")  # type: ignore[attr-defined]
         return segment.ad
 
 
