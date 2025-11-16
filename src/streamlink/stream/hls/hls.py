@@ -507,8 +507,6 @@ class HLSStreamWorker(SegmentedStreamWorker[HLSSegment, Response]):
                 if not self.valid_segment(segment):
                     continue
 
-                log.debug(f"Adding segment {segment.num} to queue")
-
                 yield segment
                 queued = True
 
