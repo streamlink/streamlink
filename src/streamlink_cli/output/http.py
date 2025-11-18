@@ -91,6 +91,7 @@ class HTTPOutput(Output):
             conn.send(b"HTTP/1.1 200 OK\r\n")
             conn.send(b"Server: Streamlink\r\n")
             conn.send(b"Content-Type: video/unknown\r\n")
+            conn.send(b"Access-Control-Allow-Origin: *\r\n")
             conn.send(b"\r\n")
         except OSError as err:
             raise OSError("Failed to write data to socket") from err
