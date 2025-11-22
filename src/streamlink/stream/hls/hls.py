@@ -306,13 +306,12 @@ class HLSStreamWorker(SegmentedStreamWorker[HLSSegment, Response]):
     writer: HLSStreamWriter
     stream: HLSStream
 
-    SEGMENT_QUEUE_TIMING_THRESHOLD_MIN = 5.0
-
     reload_attempts: int
     reload_time: float | Literal["segment", "live-edge"]
 
     _RELOAD_TIME_MIN = 2.0
     _RELOAD_TIME_DEFAULT = 6.0
+    _QUEUE_DEADLINE_MIN = 5.0
 
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
@@ -320,10 +319,8 @@ class HLSStreamWorker(SegmentedStreamWorker[HLSSegment, Response]):
         self.playlist_changed = False
         self.playlist_end: int | None = None
         self.playlist_targetduration: float = 0
-        self.playlist_sequence_last: datetime = now()
         self.playlist_segments: list[HLSSegment] = []
 
-        self.segment_queue_timing_threshold_factor = self.session.options.get("hls-segment-queue-threshold")
         self.live_edge = self.session.options.get("hls-live-edge")
         self.duration_offset_start = int(self.stream.start_offset + (self.session.options.get("hls-start-offset") or 0))
         self.hls_live_restart = self.stream.force_restart or self.session.options.get("hls-live-restart")
@@ -338,6 +335,9 @@ class HLSStreamWorker(SegmentedStreamWorker[HLSSegment, Response]):
             self.reload_time = 0.0
         self._reload_time: float = self._RELOAD_TIME_DEFAULT
         self._reload_last: datetime = now()
+
+        self._queue_deadline_factor: float = self.session.options.get("hls-segment-queue-threshold")
+        self._queue_last: datetime = now()
 
     def _warn_playlist_sequence(self):
         warnings.warn(
@@ -434,20 +434,6 @@ class HLSStreamWorker(SegmentedStreamWorker[HLSSegment, Response]):
     def valid_segment(self, segment: HLSSegment) -> bool:
         return segment.num >= self.sequence
 
-    def _segment_queue_timing_threshold_reached(self) -> bool:
-        if self.segment_queue_timing_threshold_factor <= 0:
-            return False
-
-        threshold = max(
-            self.SEGMENT_QUEUE_TIMING_THRESHOLD_MIN,
-            self.playlist_targetduration * self.segment_queue_timing_threshold_factor,
-        )
-        if now() <= self.playlist_sequence_last + timedelta(seconds=threshold):
-            return False
-
-        log.warning(f"No new segments in playlist for more than {threshold:.2f}s. Stopping...")
-        return True
-
     @staticmethod
     def duration_to_sequence(duration: float, segments: list[HLSSegment]) -> int:
         d = 0.0
@@ -464,9 +450,29 @@ class HLSStreamWorker(SegmentedStreamWorker[HLSSegment, Response]):
         # could not skip far enough, so return the default
         return default
 
+    def check_queue_deadline(self, queued: bool) -> bool:
+        # Check whether new items were queued in a specific time frame, so the stream can be stopped early
+
+        if queued:
+            self._queue_last = now()
+            return False
+
+        if self._queue_deadline_factor <= 0.0:
+            return False
+
+        deadline = max(
+            self._QUEUE_DEADLINE_MIN,
+            self.playlist_targetduration * self._queue_deadline_factor,
+        )
+        if now() <= self._queue_last + timedelta(seconds=deadline):
+            return False
+
+        log.warning(f"No new segments for more than {deadline:.2f}s. Stopping...")
+        return True
+
     def iter_segments(self):
         self._reload_last \
-            = self.playlist_sequence_last \
+            = self._queue_last \
             = now()  # fmt: skip
 
         try:
@@ -517,9 +523,8 @@ class HLSStreamWorker(SegmentedStreamWorker[HLSSegment, Response]):
             if self.closed or self.playlist_end is not None and (not queued or self.sequence > self.playlist_end):
                 return
 
-            if queued:
-                self.playlist_sequence_last = now()
-            elif self._segment_queue_timing_threshold_reached():
+            # Implicit end of stream
+            if self.check_queue_deadline(queued):
                 return
 
             # Exclude playlist fetch+processing time from the overall playlist reload time
