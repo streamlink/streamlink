@@ -336,7 +336,7 @@ class HLSStreamWorker(SegmentedStreamWorker[HLSSegment, Response]):
         self._reload_time: float = self._RELOAD_TIME_DEFAULT
         self._reload_last: datetime = now()
 
-        self._queue_deadline_factor: float = self.session.options.get("hls-segment-queue-threshold")
+        self._queue_deadline_factor: float = self.session.options.get("stream-segmented-queue-deadline")
         self._queue_last: datetime = now()
 
     def _warn_playlist_sequence(self):

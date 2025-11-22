@@ -1,6 +1,15 @@
 Deprecations
 ============
 
+streamlink 8.1.0
+----------------
+
+--hls-segment-queue-threshold
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The ``--hls-segment-queue-threshold`` CLI argument has been deprecated in favor of :option:`--stream-segmented-queue-deadline`.
+
+
 streamlink 8.0.0
 ----------------
 

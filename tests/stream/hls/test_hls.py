@@ -386,7 +386,7 @@ class TestHLSStreamWorker(TestMixinStreamHLS, unittest.TestCase):
     def test_queue_deadline_reached_ignored(self) -> None:
         segments = self.subject(
             start=False,
-            options={"hls-segment-queue-threshold": 0},
+            options={"stream-segmented-queue-deadline": 0.0},
             playlists=[
                 # no EXT-X-ENDLIST, last mocked playlist response will be repreated forever
                 Playlist(0, targetduration=5, segments=[Segment(0)]),
@@ -639,6 +639,50 @@ class TestHLSStreamWorkerOptions:
         worker = HLSStreamWorker(reader)
 
         assert worker.duration_limit == expected
+        assert [(record.category, str(record.message)) for record in recwarn.list] == warning
+
+    @pytest.mark.parametrize(
+        ("session", "expected", "warning"),
+        [
+            pytest.param(
+                {},
+                3.0,
+                [],
+                id="default-value",
+            ),
+            pytest.param(
+                {"stream-segmented-queue-deadline": 5.0},
+                5.0,
+                [],
+                id="stream-segmented-queue-deadline",
+            ),
+            pytest.param(
+                {"hls-segment-queue-threshold": 5.0},
+                5.0,
+                [
+                    (
+                        StreamlinkDeprecationWarning,
+                        "`hls-segment-queue-threshold` has been deprecated in favor of "
+                        + "the `stream-segmented-queue-deadline` option",
+                    ),
+                ],
+                id="hls-segment-queue-threshold",
+            ),
+        ],
+        indirect=["session"],
+    )
+    def test_queue_deadline(
+        self,
+        recwarn: pytest.WarningsRecorder,
+        session: Streamlink,
+        expected: float,
+        warning: list,
+    ):
+        stream = HLSStream(session, "https://foo/")
+        reader = HLSStreamReader(stream)
+        worker = HLSStreamWorker(reader)
+
+        assert worker._queue_deadline_factor == expected
         assert [(record.category, str(record.message)) for record in recwarn.list] == warning
 
 
