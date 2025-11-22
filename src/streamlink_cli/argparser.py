@@ -1018,6 +1018,28 @@ def build_parser():
         """,
     )
     transport.add_argument(
+        "--stream-segmented-queue-deadline",
+        metavar="FACTOR",
+        type=num(float, ge=0.0),
+        help="""
+            A multiplication factor of the time frame in which new segments must be queued in order to prevent playback issues
+            due to lack of video/audio data. If this segment-queue-deadline has not been met, the stream will be stopped early.
+
+            The intention of this segment-queue-deadline is to be able to stop early when the end of a stream is not announced
+            by the server, so Streamlink doesn't have to wait until a buffer read-timeout occurs. See --stream-timeout.
+
+            The base time this multiplication factor is applied to depends on the specific
+            stream implementation and the respective values returned by the streaming server.
+            This deadline check is done after trying to fetch new data.
+
+            Set to ``0`` to disable.
+
+            Default is 3.0.
+
+            By default, wait three times as long for new segments to be made available than the server's advertised time frame.
+        """,
+    )
+    transport.add_argument(
         "--stream-timeout",
         type=num(float, gt=0),
         metavar="TIMEOUT",
@@ -1094,19 +1116,9 @@ def build_parser():
     transport_hls.add_argument(
         "--hls-segment-queue-threshold",
         metavar="FACTOR",
-        type=num(float, ge=0),
+        type=num(float, ge=0.0),
         help="""
-            The multiplication factor of the HLS playlist's target duration after which the stream will be stopped early
-            if no new segments were queued after refreshing the playlist (multiple times). The target duration defines the
-            maximum duration a single segment can have, meaning new segments must be available during this time frame,
-            otherwise playback issues can occur.
-
-            The intention of this queue threshold is to be able to stop early when the end of a stream doesn't get
-            announced by the server, so Streamlink doesn't have to wait until a read-timeout occurs. See --stream-timeout.
-
-            Set to ``0`` to disable.
-
-            Default is 3.
+            Deprecated in favor of --stream-segmented-queue-deadline.
         """,
     )
     transport_hls.add_argument(

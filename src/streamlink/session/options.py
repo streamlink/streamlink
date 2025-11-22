@@ -149,6 +149,10 @@ class StreamlinkOptions(Options):
           - ``float``
           - ``0.0``
           - Limit the playback duration of segmented streams, rounded to the nearest segment
+        * - stream-segmented-queue-deadline
+          - ``float``
+          - ``3``
+          - Multiplication factor of the deadline for new segments to be queued
         * - stream-timeout
           - ``float``
           - ``60.0``
@@ -182,10 +186,10 @@ class StreamlinkOptions(Options):
             - ``segment``: duration of the last segment
             - ``live-edge``: sum of segment durations of the ``hls-live-edge`` value minus one
             - ``default``: the playlist's target duration
-        * - hls-segment-queue-threshold
+        * - hls-segment-queue-threshold *(deprecated)*
           - ``float``
           - ``3``
-          - Factor of the playlist's targetduration which sets the threshold for stopping early on missing segments
+          - See ``stream-segmented-queue-deadline``
         * - hls-segment-stream-data
           - ``bool``
           - ``False``
@@ -298,13 +302,13 @@ class StreamlinkOptions(Options):
             "stream-segment-threads": 1,
             "stream-segment-timeout": 10.0,
             "stream-segmented-duration": 0.0,
+            "stream-segmented-queue-deadline": 3,
             "stream-timeout": 60.0,
             "hls-live-edge": 3,
             "hls-live-restart": False,
             "hls-start-offset": 0.0,
             "hls-playlist-reload-attempts": 3,
             "hls-playlist-reload-time": "default",
-            "hls-segment-queue-threshold": 3,
             "hls-segment-stream-data": False,
             "hls-segment-ignore-names": [],
             "hls-segment-key-uri": None,
@@ -462,4 +466,5 @@ class StreamlinkOptions(Options):
         "http-trust-env": _set_http_attr,
         "http-timeout": _set_http_attr,
         "hls-duration": _factory_set_deprecated("stream-segmented-duration", float),
+        "hls-segment-queue-threshold": _factory_set_deprecated("stream-segmented-queue-deadline", float),
     }
