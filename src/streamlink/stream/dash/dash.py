@@ -102,6 +102,10 @@ class DASHStreamWorker(SegmentedStreamWorker[DASHSegment, Response]):
         if time_to_sleep > 0:
             self.wait(time_to_sleep)
 
+    @property
+    def _queue_deadline_wait(self) -> float:
+        return self.mpd.minimumUpdatePeriod.total_seconds()
+
     def iter_segments(self):
         init = True
         back_off_factor = 1
@@ -124,6 +128,7 @@ class DASHStreamWorker(SegmentedStreamWorker[DASHSegment, Response]):
                 if not representation:
                     continue
 
+                queued = False
                 iter_segments = representation.segments(
                     sequence=self.sequence,
                     init=init,
@@ -135,10 +140,15 @@ class DASHStreamWorker(SegmentedStreamWorker[DASHSegment, Response]):
                         self.sequence = segment.num
                         init = False
                     yield segment
+                    queued = True
 
                 # close worker if type is not dynamic (all segments were put into writer queue)
                 if self.mpd.type != "dynamic":
                     self.close()
+                    return
+
+                # Implicit end of stream
+                if self.check_queue_deadline(queued):
                     return
 
                 if not self.reload():

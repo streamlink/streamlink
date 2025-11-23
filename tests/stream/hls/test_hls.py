@@ -333,7 +333,7 @@ class TestHLSStreamWorker(TestMixinStreamHLS, unittest.TestCase):
 
         with (
             freezegun.freeze_time(EPOCH) as frozen_time,
-            patch("streamlink.stream.hls.hls.log") as mock_log,
+            patch("streamlink.stream.segmented.segmented.log") as mock_log,
         ):
             self.start()
 
@@ -441,7 +441,7 @@ class TestHLSStreamWorker(TestMixinStreamHLS, unittest.TestCase):
 
         with (
             freezegun.freeze_time(EPOCH) as frozen_time,
-            patch("streamlink.stream.hls.hls.log") as mock_log,
+            patch("streamlink.stream.segmented.segmented.log") as mock_log,
         ):
             self.start()
 
