@@ -490,12 +490,7 @@ class HLSStreamWorker(SegmentedStreamWorker[HLSSegment, Response]):
             for segment in self.playlist_segments:
                 if not self.valid_segment(segment):
                     continue
-
-                yield segment
-                queued = True
-
-                if self.closed:  # pragma: no cover
-                    return
+                queued |= yield segment
 
             # End of stream
             if self.closed or self.playlist_end is not None and (not queued or self.sequence > self.playlist_end):
