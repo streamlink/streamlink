@@ -139,8 +139,7 @@ class DASHStreamWorker(SegmentedStreamWorker[DASHSegment, Response]):
                     if init and not segment.init:
                         self.sequence = segment.num
                         init = False
-                    yield segment
-                    queued = True
+                    queued |= yield segment
 
                 # close worker if type is not dynamic (all segments were put into writer queue)
                 if self.mpd.type != "dynamic":

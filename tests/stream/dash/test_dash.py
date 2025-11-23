@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from contextlib import nullcontext
 from datetime import datetime, timezone
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Generator, Iterator
 from unittest.mock import ANY, Mock, call
 
 import freezegun
@@ -486,6 +486,19 @@ class TestDASHStreamWorker:
     def worker(self, reader: DASHStreamReader):
         return DASHStreamWorker(reader)
 
+    @staticmethod
+    def _iter_segments(iter_segments: Generator[DASHSegment, bool, None]) -> Iterator[DASHSegment]:
+        queued: bool | None = None
+        try:
+            while True:
+                if queued is None:
+                    yield next(iter_segments)
+                else:
+                    yield iter_segments.send(queued)
+                queued = True
+        except StopIteration:
+            pass
+
     def test_dynamic_reload(
         self,
         monkeypatch: pytest.MonkeyPatch,
@@ -502,7 +515,7 @@ class TestDASHStreamWorker:
         mpd.type = "dynamic"
         monkeypatch.setattr("streamlink.stream.dash.dash.MPD", lambda *args, **kwargs: mpd)
 
-        segment_iter = worker.iter_segments()
+        segment_iter = self._iter_segments(worker.iter_segments())
 
         def next_segments(num):
             items = []
@@ -546,7 +559,7 @@ class TestDASHStreamWorker:
         mpd.type = "static"
 
         representation.segments.return_value = segments
-        assert list(worker.iter_segments()) == segments
+        assert list(self._iter_segments(worker.iter_segments())) == segments
         assert representation.segments.call_args_list == [call(sequence=-1, init=True, timestamp=timestamp)]
         assert worker._wait.is_set()
 
@@ -574,7 +587,7 @@ class TestDASHStreamWorker:
         mpd.periods[0].duration.total_seconds.return_value = period_duration
 
         representation.segments.return_value = segments
-        assert list(worker.iter_segments()) == segments
+        assert list(self._iter_segments(worker.iter_segments())) == segments
         assert representation.segments.call_args_list == [call(sequence=-1, init=True, timestamp=timestamp)]
         assert mock_wait.call_args_list == [call(5)]
         assert worker._wait.is_set()

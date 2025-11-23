@@ -258,35 +258,47 @@ class SegmentedStreamWorker(AwaitableMixin, NamedThread, Generic[TSegment, TResu
             warning = "This is unsupported and will result in incoherent output data."
             log.warning(f"{msg}{warning}")
 
-    def iter_segments(self) -> Generator[TSegment, None, None]:
+    def iter_segments(self) -> Generator[TSegment, bool, None]:
         """
         The iterator that generates segments for the worker thread.
         Should be overridden by the inheriting class.
         """
 
         return
-        # noinspection PyUnreachableCode
+        # noinspection PyUnreachableCode,PyTypeChecker
         yield
 
     def run(self) -> None:
         self._queue_last = now()
 
-        for segment in self.iter_segments():
-            if self.closed:  # pragma: no cover
-                break
+        iter_segments = self.iter_segments()
+        queued: bool | None = None
 
-            log.debug("Queuing %r", segment)
+        try:
+            while True:
+                if queued is None:
+                    segment = next(iter_segments)
+                else:
+                    segment = iter_segments.send(queued)
 
-            self.check_sequence_gap(segment)
+                if self.closed:  # pragma: no cover
+                    break
 
-            self.sequence = segment.num + 1
-            self.duration += segment.duration
+                log.debug("Queuing %r", segment)
 
-            self.writer.put(segment)
+                self.check_sequence_gap(segment)
 
-            if self.duration >= self.duration_limit > 0.0:
-                log.info(f"Stopping stream early after {self.duration_limit:.2f}s")
-                break
+                self.sequence = segment.num + 1
+                self.duration += segment.duration
+
+                self.writer.put(segment)
+                queued = True
+
+                if self.duration >= self.duration_limit > 0.0:
+                    log.info(f"Stopping stream early after {self.duration_limit:.2f}s")
+                    break
+        except StopIteration:
+            pass
 
         # End of stream, tells the writer to exit
         self.writer.put(None)
