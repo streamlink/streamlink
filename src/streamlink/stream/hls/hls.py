@@ -311,7 +311,6 @@ class HLSStreamWorker(SegmentedStreamWorker[HLSSegment, Response]):
 
     _RELOAD_TIME_MIN = 2.0
     _RELOAD_TIME_DEFAULT = 6.0
-    _QUEUE_DEADLINE_MIN = 5.0
 
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
@@ -335,9 +334,6 @@ class HLSStreamWorker(SegmentedStreamWorker[HLSSegment, Response]):
             self.reload_time = 0.0
         self._reload_time: float = self._RELOAD_TIME_DEFAULT
         self._reload_last: datetime = now()
-
-        self._queue_deadline_factor: float = self.session.options.get("stream-segmented-queue-deadline")
-        self._queue_last: datetime = now()
 
     def _warn_playlist_sequence(self):
         warnings.warn(
@@ -450,25 +446,9 @@ class HLSStreamWorker(SegmentedStreamWorker[HLSSegment, Response]):
         # could not skip far enough, so return the default
         return default
 
-    def check_queue_deadline(self, queued: bool) -> bool:
-        # Check whether new items were queued in a specific time frame, so the stream can be stopped early
-
-        if queued:
-            self._queue_last = now()
-            return False
-
-        if self._queue_deadline_factor <= 0.0:
-            return False
-
-        deadline = max(
-            self._QUEUE_DEADLINE_MIN,
-            self.playlist_targetduration * self._queue_deadline_factor,
-        )
-        if now() <= self._queue_last + timedelta(seconds=deadline):
-            return False
-
-        log.warning(f"No new segments for more than {deadline:.2f}s. Stopping...")
-        return True
+    @property
+    def _queue_deadline_wait(self) -> float:
+        return self.playlist_targetduration
 
     def iter_segments(self):
         self._reload_last \
