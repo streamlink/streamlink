@@ -1294,8 +1294,8 @@ class TestHlsPlaylistParseErrors(TestMixinStreamHLS, unittest.TestCase):
         self.close()
         self.await_close()
         assert mock_log.warning.mock_calls == [
-            call("Failed to reload playlist: Missing #EXTM3U header"),
-            call("Failed to reload playlist: Missing #EXTM3U header"),
+            call("Reloading failed: Missing #EXTM3U header"),
+            call("Reloading failed: Missing #EXTM3U header"),
         ]
 
     @patch("streamlink.stream.hls.hls.parse_m3u8", Mock(return_value=FakePlaylist(is_master=True)))
