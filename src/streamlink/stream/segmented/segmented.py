@@ -269,6 +269,8 @@ class SegmentedStreamWorker(AwaitableMixin, NamedThread, Generic[TSegment, TResu
         yield
 
     def run(self) -> None:
+        self._queue_last = now()
+
         for segment in self.iter_segments():
             if self.closed:  # pragma: no cover
                 break

@@ -451,9 +451,7 @@ class HLSStreamWorker(SegmentedStreamWorker[HLSSegment, Response]):
         return self.playlist_targetduration
 
     def iter_segments(self):
-        self._reload_last \
-            = self._queue_last \
-            = now()  # fmt: skip
+        self._reload_last = now()
 
         try:
             self.reload()
