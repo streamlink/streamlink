@@ -611,10 +611,10 @@ class TestNavigate:
         mock_on_fetch_request_paused = AsyncMock()
         monkeypatch.setattr(cdp_client_session, "_on_fetch_request_paused", mock_on_fetch_request_paused)
 
-        for _on_request in on_request:
-            cdp_client_session.add_request_handler(async_handler(), on_request=_on_request)
-            cdp_client_session.add_request_handler(async_handler(), on_request=_on_request)
-            cdp_client_session.add_request_handler(async_handler(), url_pattern="http://foo", on_request=_on_request)
+        for on_request_item in on_request:
+            cdp_client_session.add_request_handler(async_handler(), on_request=on_request_item)
+            cdp_client_session.add_request_handler(async_handler(), on_request=on_request_item)
+            cdp_client_session.add_request_handler(async_handler(), url_pattern="http://foo", on_request=on_request_item)
 
         async def navigate():
             async with cdp_client_session.navigate("https://foo"):
