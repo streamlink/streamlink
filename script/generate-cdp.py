@@ -860,7 +860,7 @@ class CdpDomain:
             domain.get("description"),
             domain.get("experimental", False),
             domain.get("dependencies", []),
-            [CdpType.from_json(_type, domain_name) for _type in types],
+            [CdpType.from_json(typeitem, domain_name) for typeitem in types],
             [CdpCommand.from_json(command, domain_name) for command in commands],
             [CdpEvent.from_json(event, domain_name) for event in events],
         )

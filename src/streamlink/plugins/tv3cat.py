@@ -87,8 +87,8 @@ class TV3Cat(Plugin):
         )
 
         log.debug(f"{streams=}")
-        for _geo, data in streams:
-            if _geo == geo:
+        for key, data in streams:
+            if key == geo:
                 return data
 
         log.error("The content is geo-blocked")
