@@ -551,8 +551,9 @@ class TwitchAPI:
     def clips(self, clipname):
         query = self._gql_persisted_query(
             "VideoAccessToken_Clip",
-            "36b89d2507fce29e5ca551df756d27c1cfe079e2609642b4390aa4c35796eb11",
+            "993d9a5131f15a37bd16f32342c44ed1e0b1a9b968c6afdb662d2cddd595f6c5",
             slug=clipname,
+            platform="web",
         )
 
         return self.call(
