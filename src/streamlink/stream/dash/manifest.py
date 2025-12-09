@@ -372,11 +372,17 @@ class MPD(MPDNode):
         """
         Find the first Representation instance with a matching ident
         """
+        p, a, r = ident
         for period in self.periods:
+            if p != period.id:
+                continue
             for adaptationset in period.adaptationSets:
+                if a != adaptationset.id:
+                    continue
                 for representation in adaptationset.representations:
-                    if representation.ident == ident:
-                        return representation
+                    if r != representation.id:
+                        continue
+                    return representation
 
 
 class ProgramInformation(MPDNode):
