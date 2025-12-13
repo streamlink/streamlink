@@ -1,5 +1,16 @@
 # Changelog
 
+## streamlink 8.1.0 (2025-12-14)
+
+- Deprecated: `--hls-segment-queue-threshold` in favor of `--stream-segmented-queue-deadline` ([#6734](https://github.com/streamlink/streamlink/pull/6734))
+- Improved: debug logging of segmented streams ([#6730](https://github.com/streamlink/streamlink/pull/6730))
+- Updated plugins:
+  - twitch: fixed clips GQL API query ([#6744](https://github.com/streamlink/streamlink/pull/6744))
+- Tests: removed accidental `pytest_cov` dependency when running tests ([#6727](https://github.com/streamlink/streamlink/pull/6727))
+
+[Full changelog](https://github.com/streamlink/streamlink/compare/8.0.0...8.1.0)
+
+
 ## streamlink 8.0.0 (2025-11-11)
 
 - BREAKING: dropped support for [EOL Python 3.9](https://peps.python.org/pep-0596/#lifespan) ([#6674](https://github.com/streamlink/streamlink/pull/6674))
