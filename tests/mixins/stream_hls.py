@@ -74,17 +74,16 @@ class Tag(HLSItemBase):
 
 
 class Segment(HLSItemBase):
-    def __init__(self, num, title=None, duration=None, path_relative=True, ext=None):
+    def __init__(self, num, title=None, duration=None, path_relative=True):
         self.num = int(num or 0)
         self.title = str(title or "")
         self.duration = float(duration or 1)
         self.path_relative = bool(path_relative)
-        self.ext = str(ext or "ts")
         self.content = "[{0}]".format(self.num).encode("ascii")
 
     @property
     def path(self):
-        return "segment{0}.{1}".format(self.num, self.ext)
+        return "segment{0}.ts".format(self.num)
 
     def build(self, namespace):
         return "#EXTINF:{duration:.3f},{title}\n{path}".format(

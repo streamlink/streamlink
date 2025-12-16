@@ -189,10 +189,11 @@ class TestFilteredHLSStream(TestMixinStreamHLS, unittest.TestCase):
     def test_hls_segment_ignore_names(self):
         segments = self.subject(
             [
-                Playlist(0, [Segment(0), Segment(1), Segment(2, ext="mp4"), Segment(3, ext="mp4")], end=True),
+                Playlist(0, [Segment(0), Segment(1), Segment(2), Segment(3)], end=True),
             ],
             {
                 "hls-segment-ignore-names": [
+                    ".*",
                     "segment0",
                     "segment2",
                 ],
