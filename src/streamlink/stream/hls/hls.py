@@ -96,8 +96,7 @@ class HLSStreamWriter(SegmentedStreamWriter[HLSSegment, Response]):
         ignore_names = {*options.get("hls-segment-ignore-names")}
         if ignore_names:
             segments = "|".join(map(re.escape, ignore_names))
-            # noinspection RegExpUnnecessaryNonCapturingGroup
-            self.ignore_names = re.compile(rf"(?:{segments})\.ts", re.IGNORECASE)
+            self.ignore_names = re.compile(segments, re.IGNORECASE)
 
     @staticmethod
     def num_to_iv(n: int) -> bytes:
