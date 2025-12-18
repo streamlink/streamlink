@@ -95,6 +95,7 @@ class Soop(Plugin):
 
     CDN_TYPE_MAPPING = {
         "gs_cdn": "gs_cdn_pc_web",
+        "lg_cdn": "lg_cdn_pc_web",
     }
 
     CHANNEL_RESULT_OK = 1
