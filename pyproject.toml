@@ -106,7 +106,7 @@ test = [
   "freezegun >=1.5.0",
 ]
 lint = [
-  "ruff ==0.14.7",
+  "ruff ==0.14.10",
 ]
 typing = [
   { include-group = "test" },
@@ -311,6 +311,7 @@ ignore = [
   "A003",  # builtin-attribute-shadowing
   "A005",  # stdlib-module-shadowing
   "ASYNC109",  # async-function-with-timeout
+  "B901",  # return-in-generator
   "C408",  # unnecessary-collection-call
   "ISC003",  # explicit-string-concatenation
   "PLC1901",  # compare-to-empty-string
