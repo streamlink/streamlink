@@ -27,6 +27,7 @@ if CURRENT_PYTHON < REQUIRED_PYTHON:
 
 
 from pathlib import Path  # noqa: E402
+from typing import Sequence  # noqa: E402
 
 
 def is_wheel_for_windows(argv):
@@ -50,7 +51,7 @@ if is_wheel_for_windows(sys.argv):
 
 
 # optional data files
-data_files = [
+data_files: "list[tuple[str, Sequence[str]]]" = [
     # shell completions:
     #  requires pre-built completion files via shtab ("build" dependency group)
     #  `./script/build-shell-completions.sh`
@@ -82,7 +83,7 @@ if __name__ == "__main__":
             return _
 
     setup(
-        cmdclass=get_cmdclasses(cmdclass),
+        cmdclass=get_cmdclasses(cmdclass),  # type: ignore[arg-type]  # broken since types-setuptools-80.9.0.20251221
         entry_points=entry_points,
         data_files=data_files,
         # version="",  # static version string template, uncommented and substituted by versioningit's onbuild hook
