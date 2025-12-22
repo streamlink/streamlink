@@ -36,7 +36,7 @@ pushd "${ROOT}"
 
 check_deps() {
     local dep
-    for dep in build wheel versioningit; do
+    for dep in build versioningit; do
         if ! python -m pip -q show "${dep}"; then
             err "Missing python package: ${dep}"
         fi
