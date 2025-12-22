@@ -131,7 +131,6 @@ build = [
   { include-group = "dev" },
   "shtab",
   "build",
-  "wheel",
 ]
 script = [
   "inflection",
