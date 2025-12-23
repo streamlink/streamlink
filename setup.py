@@ -27,7 +27,11 @@ if CURRENT_PYTHON < REQUIRED_PYTHON:
 
 
 from pathlib import Path  # noqa: E402
-from typing import Sequence  # noqa: E402
+from typing import TYPE_CHECKING  # noqa: E402
+
+
+if TYPE_CHECKING:
+    from collections.abc import Sequence
 
 
 def is_wheel_for_windows(argv):
@@ -83,7 +87,7 @@ if __name__ == "__main__":
             return _
 
     setup(
-        cmdclass=get_cmdclasses(cmdclass),  # type: ignore[arg-type]  # broken since types-setuptools-80.9.0.20251221
+        cmdclass=get_cmdclasses(cmdclass),
         entry_points=entry_points,
         data_files=data_files,
         # version="",  # static version string template, uncommented and substituted by versioningit's onbuild hook
