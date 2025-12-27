@@ -297,6 +297,50 @@ def test_setup_session_options_deprecation_override(
     assert session.options.get_explicit("option") == expected
 
 
+@pytest.mark.parametrize(
+    ("argv", "option", "value", "deprecations"),
+    [
+        pytest.param(
+            [
+                "--stream-segmented-duration=123",
+                "--hls-duration=321",
+            ],
+            "stream-segmented-duration",
+            123,
+            ["`hls-duration` has been deprecated in favor of the `stream-segmented-duration` option"],
+            id="hls-duration",
+        ),
+        pytest.param(
+            [
+                "--stream-segmented-queue-deadline=0.0",
+                "--hls-segment-queue-threshold=5.0",
+            ],
+            "stream-segmented-queue-deadline",
+            0.0,
+            ["`hls-segment-queue-threshold` has been deprecated in favor of the `stream-segmented-queue-deadline` option"],
+            id="hls-segment-queue-threshold",
+        ),
+    ],
+)
+def test_setup_session_options_deprecations(
+    parser: ArgumentParser,
+    session: Streamlink,
+    argv: list[str],
+    option: str,
+    value: Any,
+    deprecations: list[str],
+):
+    """
+    Test all deprecated ArgumentParser arguments that are mapped to Streamlink session options
+    and test whether the order is correct, so deprecated arguments are always overridden.
+    """
+    args = parser.parse_args(argv)
+    with pytest.warns(SDW) as warnings:
+        setup_session_options(session, args)
+    assert [str(dep.message) for dep in warnings.list] == deprecations
+    assert session.options.get_explicit(option) == value
+
+
 def test_cli_main_setup_session_options(monkeypatch: pytest.MonkeyPatch, parser: ArgumentParser, session: Streamlink):
     class StopTest(Exception):
         pass
