@@ -1533,19 +1533,20 @@ _ARGUMENT_TO_SESSIONOPTION: list[tuple[str, str, Callable[[Any], Any] | None]] =
     ("http_timeout", "http-timeout", None),
     # stream transport arguments
     ("hls_duration", "hls-duration", None),  # deprecated options must come first
+    ("hls_segment_queue_threshold", "hls-segment-queue-threshold", None),  # deprecated options must come first
     ("ringbuffer_size", "ringbuffer-size", None),
     ("mux_subtitles", "mux-subtitles", None),
     ("stream_segment_attempts", "stream-segment-attempts", None),
     ("stream_segment_threads", "stream-segment-threads", None),
     ("stream_segment_timeout", "stream-segment-timeout", None),
     ("stream_segmented_duration", "stream-segmented-duration", None),
+    ("stream_segmented_queue_deadline", "stream-segmented-queue-deadline", None),
     ("stream_timeout", "stream-timeout", None),
     ("hls_live_edge", "hls-live-edge", None),
     ("hls_live_restart", "hls-live-restart", None),
     ("hls_start_offset", "hls-start-offset", None),
     ("hls_playlist_reload_attempts", "hls-playlist-reload-attempts", None),
     ("hls_playlist_reload_time", "hls-playlist-reload-time", None),
-    ("hls_segment_queue_threshold", "hls-segment-queue-threshold", None),
     ("hls_segment_stream_data", "hls-segment-stream-data", None),
     ("hls_segment_ignore_names", "hls-segment-ignore-names", None),
     ("hls_segment_key_uri", "hls-segment-key-uri", None),
