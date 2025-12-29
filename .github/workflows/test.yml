@@ -50,7 +50,7 @@ jobs:
             || { ec=$?; [ $ec -eq 141 ] && true || (exit $ec); }
           git fetch origin --depth=300 --update-shallow
           git describe --tags --long --dirty
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: ${{ matrix.python-version }}
       - name: Install temp dependency wheels
@@ -91,7 +91,7 @@ jobs:
           git ls-remote --tags --sort=version:refname 2>&- | awk 'END{printf "+%s:%s\n",$2,$2}' | git fetch origin --depth=300
           git fetch origin --depth=300 --update-shallow
           git describe --tags --long --dirty
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: "3.13"
       - name: Install Python dependencies
@@ -126,7 +126,7 @@ jobs:
           git ls-remote --tags --sort=version:refname 2>&- | awk 'END{printf "+%s:%s\n",$2,$2}' | git fetch origin --depth=300
           git fetch origin --depth=300 --update-shallow
           git describe --tags --long --dirty
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: "3.13"
       - name: Install Python dependencies
