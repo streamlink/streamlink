@@ -31,7 +31,7 @@ class TVKaista(Plugin):
             {
                 "User-Agent": useragents.CHROME,
                 "Accept-Language": "en-US,en;q=0.5",
-            }
+            },
         )
 
         log.debug(f"Fetching HTML for: {self.url}")
@@ -41,7 +41,7 @@ class TVKaista(Plugin):
         # The site hides the real stream URLs inside window.atob("...") calls in the JS.
 
         b64_matches = re.findall(
-            r'window\.atob\(\s*["\']([a-zA-Z0-9+/=]+)["\']\s*\)', res.text
+            r'window\.atob\(\s*["\']([a-zA-Z0-9+/=]+)["\']\s*\)', res.text,
         )
 
         found_urls = set()
