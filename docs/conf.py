@@ -16,7 +16,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent / "sphinxext"))
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
 project = "Streamlink"
-project_copyright = "2025, Streamlink"
+project_copyright = "2026, Streamlink"
 author = "Streamlink"
 version = streamlink_version.split("+")[0]
 release = streamlink_version
