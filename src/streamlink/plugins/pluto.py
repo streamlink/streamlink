@@ -10,24 +10,53 @@ $metadata title
 
 import logging
 import re
-from urllib.parse import parse_qsl, urljoin
+from dataclasses import dataclass
+from typing import ClassVar
+from urllib.parse import parse_qsl, urljoin, urlparse
 from uuid import uuid4
 
 from streamlink.exceptions import PluginError
 from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.api import useragents, validate
-from streamlink.stream.hls import HLSStream, HLSStreamReader, HLSStreamWriter
+from streamlink.stream.hls import HLSSegment, HLSStream, HLSStreamReader, HLSStreamWriter, M3U8Parser
 from streamlink.utils.url import update_qsd
 
 
 log = logging.getLogger(__name__)
 
 
-class PlutoHLSStreamWriter(HLSStreamWriter):
-    ad_re = re.compile(r"_ad/creative/|creative/\d+_ad/|dai\.google\.com|Pluto_TV_OandO/.*(Bumper|plutotv_filler)")
+@dataclass
+class PlutoHLSSegment(HLSSegment):
+    ad: bool = False
 
-    def should_filter_segment(self, segment):
-        return self.ad_re.search(segment.uri) is not None or super().should_filter_segment(segment)
+    _RE_AD: ClassVar[re.Pattern[str]] = re.compile(
+        r"""
+            _ad(?:/|%2F|_bumper)
+            |
+            plutotv_filler
+        """,
+        re.VERBOSE | re.IGNORECASE,
+    )
+
+    def __post_init__(self):
+        self.ad = self._is_ad()
+
+    def _is_ad(self) -> bool:
+        parsed = urlparse(self.uri)
+
+        if parsed.hostname and parsed.hostname.endswith("dai.google.com"):
+            return True
+
+        return re.search(self._RE_AD, parsed.path or "") is not None
+
+
+class PlutoM3U8Parser(M3U8Parser):
+    __segment__ = PlutoHLSSegment
+
+
+class PlutoHLSStreamWriter(HLSStreamWriter):
+    def should_filter_segment(self, segment: PlutoHLSSegment):  # type: ignore[override]
+        return segment.ad or super().should_filter_segment(segment)
 
 
 class PlutoHLSStreamReader(HLSStreamReader):
@@ -37,6 +66,7 @@ class PlutoHLSStreamReader(HLSStreamReader):
 class PlutoHLSStream(HLSStream):
     __shortname__ = "hls-pluto"
     __reader__ = PlutoHLSStreamReader
+    __parser__ = PlutoM3U8Parser
 
 
 @pluginmatcher(
