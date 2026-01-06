@@ -42,19 +42,19 @@ class PlutoHLSStream(HLSStream):
 @pluginmatcher(
     name="live",
     pattern=re.compile(
-        r"https?://(?:www\.)?pluto\.tv/(?:\w{2}/)?live-tv/(?P<id>[^/]+)/?$",
+        r"https?://(?:www\.)?pluto\.tv/(?:\w{2,}/)?live-tv/(?P<id>[^/?]+)",
     ),
 )
 @pluginmatcher(
     name="series",
     pattern=re.compile(
-        r"https?://(?:www\.)?pluto\.tv/(?:\w{2}/)?on-demand/series/(?P<id_s>[^/]+)(?:/season/\d+)?/episode/(?P<id_e>[^/]+)/?$",
+        r"https?://(?:www\.)?pluto\.tv/(?:\w{2,}/)?on-demand/series/(?P<id_s>[^/]+)(?:/season/\d+)?/episode/(?P<id_e>[^/?]+)",
     ),
 )
 @pluginmatcher(
     name="movies",
     pattern=re.compile(
-        r"https?://(?:www\.)?pluto\.tv/(?:\w{2}/)?on-demand/movies/(?P<id>[^/]+)/?$",
+        r"https?://(?:www\.)?pluto\.tv/(?:\w{2,}/)?on-demand/movies/(?P<id>[^/?]+)",
     ),
 )
 class Pluto(Plugin):

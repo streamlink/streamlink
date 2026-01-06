@@ -38,7 +38,4 @@ class TestPluginCanHandleUrlPluto(PluginCanHandleUrl):
 
     should_not_match = [
         "https://pluto.tv/live-tv",
-        "https://pluto.tv/en/live-tv/61409f8d6feb30000766b675/details",
-        "https://pluto.tv/en/on-demand/series/5e00cd538e67b0dcb2cf3bcd/details/season/1",
-        "https://pluto.tv/en/on-demand/movies/600545d1813b2d001b686fa9/details",
     ]
