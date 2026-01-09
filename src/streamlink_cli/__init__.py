@@ -1,3 +1,5 @@
+# ruff: noqa: RUF067
+
 from signal import SIGINT, SIGTERM, signal
 from sys import exit  # noqa: A004
 
