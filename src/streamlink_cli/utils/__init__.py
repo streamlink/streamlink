@@ -1,3 +1,5 @@
+# ruff: noqa: RUF067
+
 import json
 from datetime import datetime as _datetime
 

@@ -105,7 +105,7 @@ test = [
   "freezegun >=1.5.0",
 ]
 lint = [
-  "ruff ==0.14.10",
+  "ruff ==0.14.11",
 ]
 typing = [
   { include-group = "test" },
@@ -323,15 +323,17 @@ future-annotations = true
 
 [tool.ruff.lint.per-file-ignores]
 "__init__.py" = ["F401"]
+"build_backend/__init__.py" = ["RUF067"]
 "docs/**" = ["INP"]
 "script/**" = ["INP"]
-"src/streamlink/__init__.py" = ["I"]
+"src/streamlink/__init__.py" = ["I", "RUF067"]
 "src/streamlink/_version.py" = ["I"]
 "src/streamlink/plugins/*" = ["RUF012"]
 "src/streamlink/session/http_useragents.py" = ["E501"]
 "src/streamlink/webbrowser/cdp/devtools/*" = ["E303", "E501", "F401", "TC"]
 "src/streamlink_cli/main.py" = ["PLW0603"]
 "tests/**" = ["RUF012"]
+"tests/**/__init__.py" = ["RUF067"]
 
 [tool.ruff.lint.isort]
 known-first-party = ["streamlink", "streamlink_cli"]
