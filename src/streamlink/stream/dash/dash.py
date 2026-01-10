@@ -33,6 +33,8 @@ log = logging.getLogger(".".join(__name__.split(".")[:-1]))
 
 
 class DASHStreamWriter(SegmentedStreamWriter[DASHSegment, Response]):
+    WRITE_CHUNK_SIZE: int = 8192
+
     reader: DASHStreamReader
     stream: DASHStream
 
@@ -69,8 +71,8 @@ class DASHStreamWriter(SegmentedStreamWriter[DASHSegment, Response]):
         except StreamError as err:
             log.error(f"{self.reader.mime_type} segment {name}: failed ({err})")
 
-    def write(self, segment, res, chunk_size=8192):
-        for chunk in res.iter_content(chunk_size):
+    def write(self, segment: DASHSegment, result: Response, *data):
+        for chunk in result.iter_content(self.WRITE_CHUNK_SIZE):
             if self.closed:
                 log.warning(f"{self.reader.mime_type} segment {segment.name}: aborted")
                 return
