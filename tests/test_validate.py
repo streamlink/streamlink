@@ -641,7 +641,7 @@ class TestTransformSchema:
         with pytest.raises(ValidationError) as cm:
             # noinspection PyTypeChecker
             validate.validate(
-                validate.transform("not a callable"),
+                validate.transform("not a callable"),  # type: ignore
                 "foo",
             )
         assert_validationerror(
