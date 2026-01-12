@@ -295,9 +295,14 @@ class TestCallable:
     def subject(v):
         return v is not None
 
+    class Subject:
+        def __call__(self, v):
+            return v is not None
+
     def test_success(self):
         value = object()
         assert validate.validate(self.subject, value) is value
+        assert validate.validate(self.Subject(), value) is value
 
     def test_failure(self):
         with pytest.raises(ValidationError) as cm:
@@ -307,6 +312,16 @@ class TestCallable:
             """
                 ValidationError(Callable):
                   subject(None) is not true
+            """,
+        )
+
+        with pytest.raises(ValidationError) as cm:
+            validate.validate(self.Subject(), None)
+        assert_validationerror(
+            cm.value,
+            """
+                ValidationError(Callable):
+                  Subject(None) is not true
             """,
         )
 
