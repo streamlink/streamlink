@@ -610,7 +610,9 @@ def validator_parse_json(*args, **kwargs) -> TransformSchema:
     :raise ValidationError: On parsing error
     """
 
-    return TransformSchema(_parse_json, *args, **kwargs, exception=ValidationError, schema=None)
+    kwargs.update(exception=ValidationError, schema=None)
+
+    return TransformSchema(_parse_json, *args, **kwargs)
 
 
 def validator_parse_html(*args, **kwargs) -> TransformSchema:
@@ -630,7 +632,9 @@ def validator_parse_html(*args, **kwargs) -> TransformSchema:
     :raise ValidationError: On parsing error
     """
 
-    return TransformSchema(_parse_html, *args, **kwargs, exception=ValidationError, schema=None)
+    kwargs.update(exception=ValidationError, schema=None)
+
+    return TransformSchema(_parse_html, *args, **kwargs)
 
 
 def validator_parse_xml(*args, **kwargs) -> TransformSchema:
@@ -650,7 +654,9 @@ def validator_parse_xml(*args, **kwargs) -> TransformSchema:
     :raise ValidationError: On parsing error
     """
 
-    return TransformSchema(_parse_xml, *args, **kwargs, exception=ValidationError, schema=None)
+    kwargs.update(exception=ValidationError, schema=None)
+
+    return TransformSchema(_parse_xml, *args, **kwargs)
 
 
 def validator_parse_qsd(*args, **kwargs) -> TransformSchema:
@@ -672,6 +678,9 @@ def validator_parse_qsd(*args, **kwargs) -> TransformSchema:
 
     def parser(*_args, **_kwargs):
         validate(AnySchema(str, bytes), _args[0])
-        return _parse_qsd(*_args, **_kwargs, exception=ValidationError, schema=None)
+
+        _kwargs.update(exception=ValidationError, schema=None)
+
+        return _parse_qsd(*_args, **_kwargs)
 
     return TransformSchema(parser, *args, **kwargs)
