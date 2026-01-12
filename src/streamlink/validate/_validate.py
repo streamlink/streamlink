@@ -131,7 +131,7 @@ def _validate_callable(schema: abc.Callable, value):
     if not schema(value):
         raise ValidationError(
             "{callable} is not true",
-            callable=f"{schema.__name__}({value!r})",
+            callable=f"{getattr(schema, '__name__', schema.__class__.__name__)}({value!r})",
             schema=abc.Callable,
         )
 
