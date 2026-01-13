@@ -83,6 +83,11 @@ class DailyMotion(Plugin):
         self.author = media["owner"]["username"]
         self.title = media["title"]
 
+        # required for preventing 403 responses when using a French IP address
+        self.session.http.headers.update({
+            "priority": "u=1, i",
+        })
+
         for quality, streams in media["qualities"].items():
             for stream in streams:
                 if stream["type"] == "application/x-mpegURL":
