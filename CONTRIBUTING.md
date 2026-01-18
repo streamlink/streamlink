@@ -166,6 +166,29 @@ Adhering to the following process is the best way to get your work included in t
 under the terms of the [BSD 2-clause license][license].
 
 
+## AI-assisted contributions
+
+We value the time of our maintainers and the quality of our codebase above all else. While AI tools can assist in development, they can also result in low-effort, subpar, or broken submissions.
+
+To maintain the integrity of the project, we enforce the following rules. Failure to comply will result in your pull request being closed immediately. Repeat or extreme offenses will lead to an organization-wide ban.
+
+1. **Mandatory disclosure**
+
+    You must disclose any level of AI assistance used in your contribution (code, documentation, etc.). This includes fully AI-generated content or refactors, AI-based code completions, as well as AI-generated or translated text within the pull request description.
+
+2. **Full comprehension**
+
+    You are the owner of your submission. You must be able to explain every line of your code upon request. If a reviewer asks about a specific logic block, data structure, or the use of a particular API, "the AI suggested it" is never an acceptable answer. If you do not understand the code you are submitting, do not submit it.
+
+3. **Functionality and intent**
+
+    Unless explicitly marked as a draft, code must be fully functional and tested. We do not accept "hallucinated" or unfinished code with the expectation that maintainers will fix or complete it.
+
+    You must test your changes before submission. For example, if adding or fixing a plugin, you must include debug log output for at least one verified input URL in the PR description.
+
+    While we don't expect "perfect" code and are always happy to provide guidance or mentorship, we only do so for genuine attempts. We will not provide assistance for code that was mindlessly generated and submitted without verification.
+
+
 ## Pull request feedback
 
 Please don't hesitate to provide feedback after a pull request was submitted which will close/resolve an issue you've opened or which you've been following. Depending on the kind of issue the pull request will solve, additional feedback from users is important. This feedback can either be a comment, a simple code review, or better, a validation of all the changes by installing and running Streamlink from the pull request's branch and [providing a full debug log][debug-log].

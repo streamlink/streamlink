@@ -1,13 +1,14 @@
 <!--
-Thanks for opening a pull request!
+Thank you very much for opening a pull request!
 
-Before you continue, please make sure that you have read and understood the contribution guidelines, otherwise your changes may be rejected:
-https://github.com/streamlink/streamlink/blob/master/CONTRIBUTING.md#contributing-to-streamlink
+Before you continue, please make sure that you have read and understood the contribution guidelines, including our plugin rules, as well as our rules about AI-assisted contributions. Otherwise, your changes may be rejected.
 
-If possible, run the tests, perform code linting and build the documentation locally on your system first to avoid unnecessary build failures:
-https://streamlink.github.io/latest/developing.html#validating-changes
-
-Also don't forget to add a meaningful description of your changes, so that the reviewing process is as simple as possible for the maintainers.
-
-Thank you very much!
+Please mark the checkboxes below before submitting (replace `- [ ]` with `- [x]`)
 -->
+
+- [ ] [I have read the contribution guidelines](https://github.com/streamlink/streamlink/blob/master/CONTRIBUTING.md#contributing-to-streamlink)
+- [ ] [I have read the rules about AI-assisted contributions](https://github.com/streamlink/streamlink/blob/master/CONTRIBUTING.md#ai-assisted-contributions)
+
+----
+
+Replace this with your detailed pull request description.
