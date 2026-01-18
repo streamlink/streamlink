@@ -10,7 +10,6 @@ $metadata title
 $notes VOD content and protected videos are not supported
 """
 
-import json
 import logging
 import re
 from urllib.parse import urlparse, urlunparse
@@ -327,28 +326,23 @@ class YouTube(Plugin):
             except (PluginError, TypeError):
                 return
 
-        try:
-            api_key = re.search(r'"INNERTUBE_API_KEY":\s*"([^"]+)"', res.text).group(1)
-        except AttributeError:
+        if m := re.search(r"""(?P<q1>["'])INNERTUBE_API_KEY(?P=q1)\s*:\s*(?P<q2>["'])(?P<data>.+?)(?P=q2)""", res.text):
+            api_key = m.group("data")
+        else:
             api_key = "AIzaSyAO_FJ2SlqU8Q4STEHLGCilw_Y9_11qcW8"
 
-        try:
-            client_version = re.search(r'"INNERTUBE_CLIENT_VERSION":\s*"([\d\.]+)"', res.text).group(1)
-        except AttributeError:
-            client_version = "1.20210616.1.0"
-
-        res = self.session.http.post(
+        return self.session.http.post(
             "https://www.youtube.com/youtubei/v1/player",
             headers={"Content-Type": "application/json"},
             params={"key": api_key},
-            data=json.dumps({
+            json={
                 "videoId": video_id,
                 "contentCheckOk": True,
                 "racyCheckOk": True,
                 "context": {
                     "client": {
-                        "clientName": "WEB",
-                        "clientVersion": client_version,
+                        "clientName": "ANDROID",
+                        "clientVersion": "19.45.36",
                         "platform": "DESKTOP",
                         "clientScreen": "EMBED",
                         "clientFormFactor": "UNKNOWN_FORM_FACTOR",
@@ -357,9 +351,11 @@ class YouTube(Plugin):
                     "user": {"lockedSafetyMode": "false"},
                     "request": {"useSsl": "true"},
                 },
-            }),
+            },
+            schema=validate.Schema(
+                validate.parse_json(),
+            ),
         )
-        return parse_json(res.text)
 
     @staticmethod
     def _data_video_id(data):
@@ -370,17 +366,6 @@ class YouTube(Plugin):
                 videoId = videoRenderer.get("videoId")
                 if videoId is not None:
                     return videoId
-
-    def _data_status(self, data, errorlog=False):
-        if not data:
-            return False
-        status, reason = self._schema_playabilitystatus(data)
-        # assume that there's an error if reason is set (status will still be "OK" for some reason)
-        if status != "OK" or reason:
-            if errorlog:
-                log.error(f"Could not get video info - {status}: {reason}")
-            return False
-        return True
 
     def _get_streams(self):
         res = self._get_res(self.url)
@@ -394,18 +379,25 @@ class YouTube(Plugin):
             self.url = self._url_canonical.format(video_id=video_id)
             res = self._get_res(self.url)
 
-        data = self._get_data_from_regex(res, self._re_ytInitialPlayerResponse, "initial player response")
-        if not self._data_status(data):
-            data = self._get_data_from_api(res)
-            if not self._data_status(data, True):
-                return
+        # TODO: clean up the validation schemas and how they're applied
 
-        self.id, self.author, self.category, self.title, is_live = self._schema_videodetails(data)
+        if not (data := self._get_data_from_api(res)):
+            return
+        status, reason = self._schema_playabilitystatus(data)
+        # assume that there's an error if reason is set (status will still be "OK" for some reason)
+        if status != "OK" or reason:
+            log.error(f"Could not get video info - {status}: {reason}")
+            return
+
+        # the initial player response contains the category data, which the API response does not
+        init_player_response = self._get_data_from_regex(res, self._re_ytInitialPlayerResponse, "initial player response")
+        self.id, self.author, self.category, self.title, is_live = self._schema_videodetails(init_player_response)
         log.debug(f"Using video ID: {self.id}")
 
         if is_live:
             log.debug("This video is live.")
 
+        # TODO: remove parsing of non-HLS stuff, as we don't support this
         streams = {}
         hls_manifest, formats, adaptive_formats = self._schema_streamingdata(data)
 
