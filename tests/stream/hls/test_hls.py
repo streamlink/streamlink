@@ -1398,29 +1398,58 @@ class TestHlsExtAudio:
         ]
 
     @pytest.mark.parametrize(
-        ("session", "_playlist"),
+        ("session", "_playlist", "expected"),
         [
             pytest.param(
-                {"hls-audio-select": ["und", "qaa", "invalid"]},
+                {"hls-audio-select": ["und", "qaa", "en-x-foo", "invalid"]},
                 {"playlist": "hls/test_media_language_special.m3u8"},
-                id="special-reserved-invalid",
+                [
+                    "http://mocked/path/playlist.m3u8",
+                    "http://mocked/path/qaa.m3u8",
+                    "http://mocked/path/en-x-foo.m3u8",
+                    "http://mocked/path/invalid.m3u8",
+                    "http://mocked/path/und.m3u8",
+                ],
+                id="special-reserved-private-invalid",
             ),
             pytest.param(
-                {"hls-audio-select": ["Undetermined", "Reserved", "does NOT exist"]},
+                {"hls-audio-select": ["Undetermined", "Reserved", "Private use", "does NOT exist"]},
                 {"playlist": "hls/test_media_language_special.m3u8"},
+                [
+                    "http://mocked/path/playlist.m3u8",
+                    "http://mocked/path/qaa.m3u8",
+                    "http://mocked/path/en-x-foo.m3u8",
+                    "http://mocked/path/invalid.m3u8",
+                    "http://mocked/path/und.m3u8",
+                ],
                 id="name-attribute",
+            ),
+            pytest.param(
+                {"hls-audio-select": ["*"]},
+                {"playlist": "hls/test_media_language_special.m3u8"},
+                [
+                    "http://mocked/path/playlist.m3u8",
+                    "http://mocked/path/qaa.m3u8",
+                    "http://mocked/path/en-x-foo.m3u8",
+                    "http://mocked/path/invalid.m3u8",
+                    "http://mocked/path/und.m3u8",
+                    "http://mocked/path/qqq.m3u8",
+                ],
+                id="all",
             ),
         ],
         indirect=["session", "_playlist"],
     )
-    def test_parse_media_language(self, caplog: pytest.LogCaptureFixture, session: Streamlink, stream: MuxedHLSStream):
+    def test_parse_media_language(
+        self,
+        caplog: pytest.LogCaptureFixture,
+        session: Streamlink,
+        stream: MuxedHLSStream,
+        _playlist: None,
+        expected: list[str],
+    ):
         assert isinstance(stream, MuxedHLSStream)
-        assert [substream.url for substream in stream.substreams] == [
-            "http://mocked/path/playlist.m3u8",
-            "http://mocked/path/qaa.m3u8",
-            "http://mocked/path/invalid.m3u8",
-            "http://mocked/path/und.m3u8",
-        ]
+        assert [substream.url for substream in stream.substreams] == expected
         assert [
             record.message
             for record in caplog.get_records(when="setup")
