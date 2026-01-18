@@ -1,5 +1,14 @@
 # Changelog
 
+## streamlink 8.1.2 (2026-01-18)
+
+- Fixed: warnings when parsing HLS playlists with private-use language subtags ([#6780](https://github.com/streamlink/streamlink/pull/6780))
+- Updated plugins:
+  - youtube: fixed live streams ([#6777](https://github.com/streamlink/streamlink/pull/6777))
+
+[Full changelog](https://github.com/streamlink/streamlink/compare/8.1.1...8.1.2)
+
+
 ## streamlink 8.1.1 (2026-01-17)
 
 - Fixed: `--stream-segmented-queue-deadline` not being applied correctly to the Streamlink session options ([#6758](https://github.com/streamlink/streamlink/pull/6758))
