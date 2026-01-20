@@ -67,4 +67,4 @@ jobs:
       - name: mypy docs
         if: always()
         run: >
-          python -m mypy --no-incremental
+          python -m mypy --no-incremental docs
