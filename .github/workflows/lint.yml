@@ -67,4 +67,4 @@ jobs:
       - name: mypy docs
         if: always()
         run: >
-          python -m mypy --no-incremental docs
+          python -m mypy --python-version=3.12 --no-incremental docs
