@@ -174,6 +174,48 @@ class TestLogging:
             ("test_logger", levelname, "bar"),
         ]
 
+    def test_logrecord(self, caplog: pytest.LogCaptureFixture, log: logging.Logger):
+        def get_lineno():
+            frame = currentframe()
+            assert frame
+            assert frame.f_back
+            return getframeinfo(frame.f_back).lineno
+
+        caplog.set_level(1, "streamlink")
+        log.info("test %(a)s %(b)s", {"a": "foo", "b": "bar"}, exc_info=ValueError("err"), stack_info=True)
+        lineno = get_lineno() - 1
+
+        assert [
+            (
+                r.exc_text,
+                r.filename,
+                r.funcName,
+                r.levelname,
+                r.levelno,
+                r.lineno,
+                r.message,
+                r.module,
+                r.name,
+                r.pathname,
+                r.stack_info is not None and len(r.stack_info) > 0,
+            )
+            for r in caplog.records
+        ] == [
+            (
+                "ValueError: err",
+                "test_logger.py",
+                "test_logrecord",
+                "info",
+                20,
+                lineno,
+                "test foo bar",
+                "test_logger",
+                "test",
+                __file__,
+                True,
+            ),
+        ]
+
     @pytest.mark.parametrize(
         ("level", "expected"),
         [
@@ -378,8 +420,27 @@ class TestCaptureWarnings:
         lineno = self._warn([("Test warning", UserWarning)])
         path = Path(__file__)
         assert recwarn.list == []
-        assert [(r.name, r.levelname, r.pathname, r.filename, r.module, r.lineno, r.message) for r in caplog.records] == [
-            ("warnings", "userwarning", __file__, path.name, path.stem, lineno, f"Test warning\n  {__file__}:{lineno}"),
+        assert [
+            (
+                r.name,
+                r.levelname,
+                r.pathname,
+                r.filename,
+                r.module,
+                r.lineno,
+                r.message,
+            )
+            for r in caplog.records
+        ] == [
+            (
+                "warnings",
+                "userwarning",
+                __file__,
+                path.name,
+                path.stem,
+                lineno,
+                f"Test warning\n  {__file__}:{lineno}",
+            ),
         ]
 
     @pytest.mark.parametrize("log", [{"capture_warnings": True}], indirect=["log"])

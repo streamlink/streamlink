@@ -176,7 +176,7 @@ def _log_record_factory(name, level, fn, lno, msg, args, exc_info, func=None, si
         # noinspection PyTypeChecker
         return WarningLogRecord(name, level, fn, lno, msg, args, exc_info, func, sinfo)
 
-    return _log_record_factory_default(name, level, fn, lno, msg, args, exc_info, func=None, sinfo=None, **kwargs)
+    return _log_record_factory_default(name, level, fn, lno, msg, args, exc_info, func, sinfo, **kwargs)
 
 
 # borrowed from stdlib and modified, so that `WarningMessage` gets passed as `msg` to the `WarningLogRecord`
