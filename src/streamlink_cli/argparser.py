@@ -1349,6 +1349,23 @@ def build_parser():
         """,
     )
     http.add_argument(
+        "--http-cookies-file",
+        metavar="PATH",
+        action="append",
+        help="""
+            A path to a cookies file whose cookie data will be added to HTTP requests.
+
+            Can be repeated to add multiple cookie files.
+
+            The file format must adhere to the Netscape HTTP Cookie File format (MozillaCookieJar, curl, etc.),
+            also known as cookies.txt. Be aware that this format loses information about RFC 2965 cookies,
+            and also about newer or non-standard cookie-attributes such as port.
+
+            Unlike --http-cookie, which sends data with every request, this option enables granular control
+            by respecting domain, path, and other cookie attributes.
+        """,
+    )
+    http.add_argument(
         "--http-header",
         metavar="KEY=VALUE",
         type=keyvalue,
@@ -1522,6 +1539,7 @@ _ARGUMENT_TO_SESSIONOPTION: list[tuple[str, str, Callable[[Any], Any] | None]] =
     # HTTP session arguments
     ("https_proxy", "https-proxy", None),
     ("http_proxy", "http-proxy", None),
+    ("http_cookies_file", "http-cookies-files", None),
     ("http_cookie", "http-cookies", dict),
     ("http_header", "http-headers", dict),
     ("http_query_param", "http-query-params", dict),
