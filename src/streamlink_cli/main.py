@@ -983,7 +983,10 @@ def setup(parser: ArgumentParser) -> None:
     log_current_versions()
     log_current_arguments(streamlink, parser)
 
-    setup_session_options(streamlink, args)
+    try:
+        setup_session_options(streamlink, args)
+    except Exception as err:
+        raise StreamlinkCLIError from err
 
     setup_signals()
 
