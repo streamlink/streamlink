@@ -265,6 +265,14 @@ class TestOptionsHttpProxy:
         session.options.set("https-proxy", "https://foo")
 
 
+def test_options_http_cookies_files(monkeypatch: pytest.MonkeyPatch, session: Streamlink):
+    mock = Mock()
+    monkeypatch.setattr(session.http, "set_cookies_from_file", mock)
+
+    session.set_option("http-cookies-files", ["foo", "bar"])
+    assert mock.call_args_list == [call("foo"), call("bar")]
+
+
 class TestOptionsKeyEqualsValue:
     @pytest.fixture()
     def option(self, request, session: Streamlink):

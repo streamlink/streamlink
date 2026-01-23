@@ -7,6 +7,7 @@ from ssl import SSLContext
 from typing import TYPE_CHECKING
 from unittest.mock import Mock, PropertyMock, call
 
+import freezegun
 import pytest
 import requests
 import requests_mock as rm
@@ -20,6 +21,8 @@ from streamlink.session.http_useragents import DEFAULT
 
 
 if TYPE_CHECKING:
+    from pathlib import Path
+
     from streamlink import Streamlink
 
 
@@ -300,6 +303,94 @@ class TestHTTPSession:
         assert isinstance(session.adapters["https://"], HTTPAdapter)
         assert not isinstance(session.adapters["https://"], TLSNoDHAdapter)
         assert session.adapters["https://"].poolmanager.connection_pool_kw.get("source_address") == ("0.0.0.0", 0)
+
+
+class TestHTTPCookies:
+    def test_invalid_file(self, tmp_path: Path):
+        session = HTTPSession()
+        cookies_file = tmp_path / "invalid-file"
+        with pytest.raises(FileNotFoundError, match=r" is not a valid cookies file path$"):
+            session.set_cookies_from_file(cookies_file)
+        assert session.cookies == {}
+
+    def test_invalid_format(self, tmp_path: Path):
+        session = HTTPSession()
+        cookies_file = tmp_path / "invalid-file"
+        cookies_file.write_text("""foo\nbar\n""")
+        with pytest.raises(Exception, match=r" does not look like a Netscape format cookies file$"):
+            session.set_cookies_from_file(cookies_file)
+        assert session.cookies == {}
+
+    @freezegun.freeze_time("2000-01-01T00:00:00Z")
+    def test_cookies(self, tmp_path: Path, requests_mock: rm.Mocker):
+        session = HTTPSession()
+        cookies_file = tmp_path / "cookies.txt"
+        content = "".join([
+            "# Netscape HTTP Cookie File\n",
+            "host.local	FALSE	/a	FALSE	946684801	foo	bar\n",
+            "host.local	FALSE	/b	FALSE	946684801	baz	qux\n",
+            "host.local	FALSE	/	FALSE	946684799	expired	1\n",
+            ".host.tld	TRUE	/	TRUE	946684801	abc	def\n",
+        ])
+        cookies_file.write_text(content)
+        session.set_cookies_from_file(cookies_file)
+        assert session.cookies.get_dict(domain="host.local") == {
+            "foo": "bar",
+            "baz": "qux",
+        }
+        assert session.cookies.get_dict(domain="host.local", path="/a") == {
+            "foo": "bar",
+        }
+        assert session.cookies.get_dict(domain=".host.tld") == {
+            "abc": "def",
+        }
+
+        matcher = requests_mock.register_uri(rm.ANY, rm.ANY, status_code=200)
+
+        # domain, path, expired
+        assert session.get("http://host.local/a").status_code == 200
+        assert matcher.request_history[-1]._request.headers.get("cookie") == "foo=bar"
+        assert session.get("http://host.local/b").status_code == 200
+        assert matcher.request_history[-1]._request.headers.get("cookie") == "baz=qux"
+        assert session.get("http://foo.host.local/").status_code == 200
+        assert matcher.request_history[-1]._request.headers.get("cookie") is None
+
+        # subdomain, secure
+        assert session.get("https://sub.host.tld/").status_code == 200
+        assert matcher.request_history[-1]._request.headers.get("cookie") == "abc=def"
+        assert session.get("http://sub.host.tld/").status_code == 200
+        assert matcher.request_history[-1]._request.headers.get("cookie") is None
+
+    @freezegun.freeze_time("2000-01-01T00:00:00Z")
+    def test_cookies_override(self, tmp_path: Path):
+        session = HTTPSession()
+        file_a = tmp_path / "a"
+        file_b = tmp_path / "b"
+        file_a.write_text(
+            "".join([
+                "# Netscape HTTP Cookie File\n",
+                "host.local	FALSE	/	FALSE	946684801	foo	bar\n",
+                "host.local	FALSE	/	FALSE	946684801	abc	def\n",
+            ]),
+        )
+        file_b.write_text(
+            "".join([
+                "# Netscape HTTP Cookie File\n",
+                "host.local	FALSE	/	FALSE	946684801	foo	baz\n",
+            ]),
+        )
+
+        assert session.cookies.get_dict(domain="host.local") == {}
+        session.set_cookies_from_file(file_a)
+        assert session.cookies.get_dict(domain="host.local") == {
+            "foo": "bar",
+            "abc": "def",
+        }
+        session.set_cookies_from_file(file_b)
+        assert session.cookies.get_dict(domain="host.local") == {
+            "foo": "baz",
+            "abc": "def",
+        }
 
 
 class TestHTTPAdapters:

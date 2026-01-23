@@ -88,6 +88,10 @@ class StreamlinkOptions(Options):
           - ``{}``
           - A ``dict`` or a semicolon ``;`` delimited ``str`` of cookies to add to each HTTP/HTTPS request,
             e.g. ``foo=bar;baz=qux``
+        * - http-cookies-files
+          - ``list[str]``
+          - ``[]``
+          - A ``list`` of Netscape HTTP Cookie Files whose data will be added to HTTP/HTTPS requests
         * - http-headers
           - ``dict[str, str] | str``
           - ``{}``
@@ -386,6 +390,10 @@ class StreamlinkOptions(Options):
             = update_scheme("https://", value, force=False)  # fmt: skip
         self._deprecate_https_proxy(key)
 
+    def _set_http_cookies_files(self, _, value):
+        for item in list(value):
+            self.session.http.set_cookies_from_file(item)
+
     def _set_http_attr(self, key, value):
         setattr(self.session.http, self._OPTIONS_HTTP_ATTRS[key], value)
 
@@ -444,6 +452,7 @@ class StreamlinkOptions(Options):
         "ipv6": _set_ipv4_ipv6,
         "http-proxy": _set_http_proxy,
         "https-proxy": _set_http_proxy,
+        "http-cookies-files": _set_http_cookies_files,
         "http-cookies": _factory_set_http_attr_key_equals_value(";"),
         "http-headers": _factory_set_http_attr_key_equals_value(";"),
         "http-query-params": _factory_set_http_attr_key_equals_value("&"),

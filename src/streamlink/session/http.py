@@ -4,6 +4,8 @@ import socket
 import ssl
 import time
 import warnings
+from http.cookiejar import MozillaCookieJar
+from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 import urllib3
@@ -133,6 +135,18 @@ class HTTPSession(Session):
             adapter = HTTPAdapter()
         adapter.poolmanager.connection_pool_kw.update(self.adapters.get("https://", adapter).poolmanager.connection_pool_kw)
         self.mount("https://", adapter)
+
+    def set_cookies_from_file(self, file: Path | str):
+        path = Path(file).expanduser().resolve()
+        if not path.is_file():
+            raise FileNotFoundError(f"Error while loading cookies from file: '{path}' is not a valid cookies file path")
+
+        try:
+            cookiejar = MozillaCookieJar(filename=str(path), delayload=False)
+            cookiejar.load()
+        except Exception as err:
+            raise OSError(f"Error while loading cookies from file: {err}") from err
+        self.cookies.update(cookiejar)
 
     def resolve_url(self, url):
         """Resolves any redirects and returns the final URL."""
