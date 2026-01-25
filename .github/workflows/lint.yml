@@ -6,7 +6,7 @@ on:
 jobs:
   files:
     name: Files
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-slim
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v6
@@ -25,7 +25,7 @@ jobs:
 
   style:
     name: Code style
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-slim
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v6
@@ -48,7 +48,7 @@ jobs:
 
   typing:
     name: Typing
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-slim
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v6
