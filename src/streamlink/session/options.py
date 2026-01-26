@@ -367,14 +367,7 @@ class StreamlinkOptions(Options):
     # ---- setters
 
     def _set_interface(self, key, value):
-        for adapter in self.session.http.adapters.values():
-            if not isinstance(adapter, HTTPAdapter):
-                continue
-            if not value:
-                adapter.poolmanager.connection_pool_kw.pop("source_address", None)
-            else:
-                # https://docs.python.org/3/library/socket.html#socket.create_connection
-                adapter.poolmanager.connection_pool_kw.update(source_address=(value, 0))
+        self.session.http.set_interface(interface=value)
         self.set_explicit(key, None if not value else value)
 
     def _set_ipv4_ipv6(self, key, value):
