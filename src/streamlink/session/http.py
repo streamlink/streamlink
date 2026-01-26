@@ -126,6 +126,13 @@ class HTTPSession(Session):
         elif family == socket.AF_INET6:  # pragma: no branch
             urllib3_util_connection.allowed_gai_family = lambda: socket.AF_INET6  # type: ignore[attr-defined]
 
+    def disable_dh(self, disable: bool = True) -> None:
+        if disable:
+            adapter = TLSNoDHAdapter()
+        else:
+            adapter = HTTPAdapter()
+        self.mount("https://", adapter)
+
     def resolve_url(self, url):
         """Resolves any redirects and returns the final URL."""
         return self.get(url, stream=True).url

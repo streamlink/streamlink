@@ -6,11 +6,9 @@ from socket import AF_INET, AF_INET6
 from unittest.mock import Mock, call
 
 import pytest
-from requests.adapters import HTTPAdapter
 
 from streamlink.exceptions import StreamlinkDeprecationWarning
 from streamlink.session import Streamlink
-from streamlink.session.http import TLSNoDHAdapter
 from streamlink.session.options import StreamlinkOptions
 
 
@@ -152,16 +150,19 @@ def test_options_ipv4_ipv6(monkeypatch: pytest.MonkeyPatch, session: Streamlink)
     assert session.get_option("ipv6") is False
 
 
-def test_options_http_disable_dh(session: Streamlink):
-    assert isinstance(session.http.adapters["https://"], HTTPAdapter)
-    assert not isinstance(session.http.adapters["https://"], TLSNoDHAdapter)
+def test_options_http_disable_dh(monkeypatch: pytest.MonkeyPatch, session: Streamlink):
+    mock = Mock()
+    monkeypatch.setattr(session.http, "disable_dh", mock)
+
+    assert not session.get_option("http-disable-dh")
 
     session.set_option("http-disable-dh", True)
-    assert isinstance(session.http.adapters["https://"], TLSNoDHAdapter)
+    assert mock.call_args_list.pop() == call(disable=True)
+    assert session.get_option("http-disable-dh")
 
     session.set_option("http-disable-dh", False)
-    assert isinstance(session.http.adapters["https://"], HTTPAdapter)
-    assert not isinstance(session.http.adapters["https://"], TLSNoDHAdapter)
+    assert mock.call_args_list.pop() == call(disable=False)
+    assert not session.get_option("http-disable-dh")
 
 
 class TestOptionsHttpProxy:

@@ -283,6 +283,19 @@ class TestHTTPSession:
         session.set_address_family(family=None)
         assert mock_urllib3_util_connection.allowed_gai_family is _original_allowed_gai_family
 
+    def test_disable_dh(self):
+        session = HTTPSession()
+
+        assert isinstance(session.adapters["https://"], HTTPAdapter)
+        assert not isinstance(session.adapters["https://"], TLSNoDHAdapter)
+
+        session.disable_dh(disable=True)
+        assert isinstance(session.adapters["https://"], TLSNoDHAdapter)
+
+        session.disable_dh(disable=False)
+        assert isinstance(session.adapters["https://"], HTTPAdapter)
+        assert not isinstance(session.adapters["https://"], TLSNoDHAdapter)
+
 
 class TestHTTPAdapters:
     @staticmethod
