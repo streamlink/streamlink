@@ -5,11 +5,8 @@ from pathlib import Path
 from socket import AF_INET, AF_INET6
 from typing import TYPE_CHECKING, Any, ClassVar
 
-from requests.adapters import HTTPAdapter
-
 from streamlink.exceptions import StreamlinkDeprecationWarning
 from streamlink.options import Options
-from streamlink.session.http import TLSNoDHAdapter
 from streamlink.utils.url import update_scheme
 
 
@@ -388,13 +385,8 @@ class StreamlinkOptions(Options):
         setattr(self.session.http, self._OPTIONS_HTTP_ATTRS[key], value)
 
     def _set_http_disable_dh(self, key, value):
+        self.session.http.disable_dh(disable=bool(value))
         self.set_explicit(key, value)
-        if value:
-            adapter = TLSNoDHAdapter()
-        else:
-            adapter = HTTPAdapter()
-
-        self.session.http.mount("https://", adapter)
 
     @staticmethod
     def _factory_set_http_attr_key_equals_value(delimiter: str) -> Callable[[StreamlinkOptions, str, Any], None]:
