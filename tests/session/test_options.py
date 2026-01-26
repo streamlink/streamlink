@@ -2,9 +2,8 @@ from __future__ import annotations
 
 import re
 from inspect import currentframe, getframeinfo
-from operator import itemgetter
 from socket import AF_INET, AF_INET6
-from unittest.mock import Mock
+from unittest.mock import Mock, call
 
 import pytest
 import urllib3
@@ -103,35 +102,24 @@ def test_options_locale(monkeypatch: pytest.MonkeyPatch, session: Streamlink):
     assert localization.language.name == "German"
 
 
-class TestOptionsInterface:
-    def test_options_interface(self, session: Streamlink):
-        session.http.mount("custom://", TLSNoDHAdapter())
+def test_options_interface(monkeypatch: pytest.MonkeyPatch, session: Streamlink):
+    mock = Mock()
+    monkeypatch.setattr(session.http, "set_interface", mock)
 
-        a_http, a_https, a_custom, a_file = itemgetter("http://", "https://", "custom://", "file://")(session.http.adapters)
-        assert isinstance(a_http, HTTPAdapter)
-        assert isinstance(a_https, HTTPAdapter)
-        assert isinstance(a_custom, HTTPAdapter)
-        assert not isinstance(a_file, HTTPAdapter)
+    assert session.get_option("interface") is None
 
-        assert session.get_option("interface") is None
-        assert a_http.poolmanager.connection_pool_kw.get("source_address") is None
-        assert a_https.poolmanager.connection_pool_kw.get("source_address") is None
-        assert a_custom.poolmanager.connection_pool_kw.get("source_address") is None
+    session.set_option("interface", "my-interface")
+    assert mock.call_args_list.pop() == call(interface="my-interface")
+    assert session.get_option("interface") == "my-interface"
 
-        session.set_option("interface", "my-interface")
-        assert session.get_option("interface") == "my-interface"
-        assert a_http.poolmanager.connection_pool_kw.get("source_address") == ("my-interface", 0)
-        assert a_https.poolmanager.connection_pool_kw.get("source_address") == ("my-interface", 0)
-        assert a_custom.poolmanager.connection_pool_kw.get("source_address") == ("my-interface", 0)
+    session.set_option("interface", None)
+    assert mock.call_args_list.pop() == call(interface=None)
+    assert session.get_option("interface") is None
 
-        session.set_option("interface", None)
-        assert session.get_option("interface") is None
-        assert a_http.poolmanager.connection_pool_kw.get("source_address") is None
-        assert a_https.poolmanager.connection_pool_kw.get("source_address") is None
-        assert a_custom.poolmanager.connection_pool_kw.get("source_address") is None
-
-        # doesn't raise
-        session.set_option("interface", None)
+    # doesn't raise
+    session.set_option("interface", None)
+    assert mock.call_args_list.pop() == call(interface=None)
+    assert session.get_option("interface") is None
 
 
 def test_options_ipv4_ipv6(monkeypatch: pytest.MonkeyPatch, session: Streamlink):

@@ -102,6 +102,16 @@ class HTTPSession(Session):
         """Parses XML from a response."""
         return parse_xml(res.text, *args, **kwargs)
 
+    def set_interface(self, interface: str | None) -> None:
+        for adapter in self.adapters.values():
+            if not isinstance(adapter, HTTPAdapter):
+                continue
+            if not interface:
+                adapter.poolmanager.connection_pool_kw.pop("source_address", None)
+            else:
+                # https://docs.python.org/3/library/socket.html#socket.create_connection
+                adapter.poolmanager.connection_pool_kw.update(source_address=(interface, 0))
+
     def resolve_url(self, url):
         """Resolves any redirects and returns the final URL."""
         return self.get(url, stream=True).url

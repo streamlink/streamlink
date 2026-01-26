@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import ssl
+from operator import itemgetter
 from ssl import SSLContext
 from typing import TYPE_CHECKING
 from unittest.mock import Mock, PropertyMock, call
@@ -8,6 +9,7 @@ from unittest.mock import Mock, PropertyMock, call
 import pytest
 import requests
 import requests_mock as rm
+from requests.adapters import HTTPAdapter
 from urllib3.response import HTTPResponse
 
 from streamlink.exceptions import PluginError, StreamlinkDeprecationWarning
@@ -16,8 +18,6 @@ from streamlink.session.http_useragents import DEFAULT
 
 
 if TYPE_CHECKING:
-    from requests.adapters import HTTPAdapter
-
     from streamlink import Streamlink
 
 
@@ -224,6 +224,38 @@ class TestHTTPSession:
         res = getattr(httpsession, method)("http://mocked", encoding=encoding)
         assert res.encoding == expected
         assert res.text == "Bär"
+
+    def test_set_interface(self):
+        session = HTTPSession()
+        session.mount("custom://", TLSNoDHAdapter())
+
+        a_http, a_https, a_custom, a_file = itemgetter("http://", "https://", "custom://", "file://")(session.adapters)
+        assert isinstance(a_http, HTTPAdapter)
+        assert isinstance(a_https, HTTPAdapter)
+        assert isinstance(a_custom, HTTPAdapter)
+        assert not isinstance(a_file, HTTPAdapter)
+
+        assert a_http.poolmanager.connection_pool_kw.get("source_address") is None
+        assert a_https.poolmanager.connection_pool_kw.get("source_address") is None
+        assert a_custom.poolmanager.connection_pool_kw.get("source_address") is None
+
+        session.set_interface(interface="my-interface")
+        assert a_http.poolmanager.connection_pool_kw.get("source_address") == ("my-interface", 0)
+        assert a_https.poolmanager.connection_pool_kw.get("source_address") == ("my-interface", 0)
+        assert a_custom.poolmanager.connection_pool_kw.get("source_address") == ("my-interface", 0)
+
+        session.set_interface(interface="")
+        assert a_http.poolmanager.connection_pool_kw.get("source_address") is None
+        assert a_https.poolmanager.connection_pool_kw.get("source_address") is None
+        assert a_custom.poolmanager.connection_pool_kw.get("source_address") is None
+
+        session.set_interface(interface=None)
+        assert a_http.poolmanager.connection_pool_kw.get("source_address") is None
+        assert a_https.poolmanager.connection_pool_kw.get("source_address") is None
+        assert a_custom.poolmanager.connection_pool_kw.get("source_address") is None
+
+        # doesn't raise
+        session.set_interface(interface=None)
 
 
 class TestHTTPAdapters:
