@@ -131,6 +131,7 @@ class HTTPSession(Session):
             adapter = TLSNoDHAdapter()
         else:
             adapter = HTTPAdapter()
+        adapter.poolmanager.connection_pool_kw.update(self.adapters.get("https://", adapter).poolmanager.connection_pool_kw)
         self.mount("https://", adapter)
 
     def resolve_url(self, url):

@@ -289,12 +289,17 @@ class TestHTTPSession:
         assert isinstance(session.adapters["https://"], HTTPAdapter)
         assert not isinstance(session.adapters["https://"], TLSNoDHAdapter)
 
+        assert not session.adapters["https://"].poolmanager.connection_pool_kw.get("source_address")
+        session.adapters["https://"].poolmanager.connection_pool_kw.update(source_address=("0.0.0.0", 0))
+
         session.disable_dh(disable=True)
         assert isinstance(session.adapters["https://"], TLSNoDHAdapter)
+        assert session.adapters["https://"].poolmanager.connection_pool_kw.get("source_address") == ("0.0.0.0", 0)
 
         session.disable_dh(disable=False)
         assert isinstance(session.adapters["https://"], HTTPAdapter)
         assert not isinstance(session.adapters["https://"], TLSNoDHAdapter)
+        assert session.adapters["https://"].poolmanager.connection_pool_kw.get("source_address") == ("0.0.0.0", 0)
 
 
 class TestHTTPAdapters:
