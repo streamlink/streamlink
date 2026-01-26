@@ -365,15 +365,20 @@ class StreamlinkOptions(Options):
         self.set_explicit(key, None if not value else value)
 
     def _set_ipv4_ipv6(self, key, value):
-        if not value:
-            self.session.http.set_address_family(family=None)
-        elif key == "ipv4":
-            self.session.http.set_address_family(family=AF_INET)
-            self.set_explicit("ipv6", False)
-        else:
-            self.session.http.set_address_family(family=AF_INET6)
-            self.set_explicit("ipv4", False)
-        self.set_explicit(key, value)
+        match key, value:
+            case "ipv4", True:
+                self.session.http.set_address_family(family=AF_INET)
+                self.set_explicit("ipv4", True)
+                self.set_explicit("ipv6", False)
+            case "ipv6", True:
+                self.session.http.set_address_family(family=AF_INET6)
+                self.set_explicit("ipv4", False)
+                self.set_explicit("ipv6", True)
+            # only unset if the key's value is True
+            case _ if self.get_explicit(key):
+                self.session.http.set_address_family(family=None)
+                self.set_explicit("ipv4", False)
+                self.set_explicit("ipv6", False)
 
     def _set_http_proxy(self, key, value):
         self.session.http.proxies["http"] \

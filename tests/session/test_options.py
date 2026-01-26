@@ -144,9 +144,25 @@ def test_options_ipv4_ipv6(monkeypatch: pytest.MonkeyPatch, session: Streamlink)
     assert session.get_option("ipv6") is False
 
     session.set_option("ipv4", True)
+    assert mock.call_args_list.pop() == call(family=AF_INET)
     session.set_option("ipv6", False)
-    assert mock.call_args_list == [call(family=AF_INET), call(family=None)]
+    assert mock.call_args_list == []
     assert session.get_option("ipv4") is True
+    assert session.get_option("ipv6") is False
+    session.set_option("ipv4", False)
+    assert mock.call_args_list.pop() == call(family=None)
+    assert session.get_option("ipv4") is False
+    assert session.get_option("ipv6") is False
+
+    session.set_option("ipv6", True)
+    assert mock.call_args_list.pop() == call(family=AF_INET6)
+    session.set_option("ipv4", False)
+    assert mock.call_args_list == []
+    assert session.get_option("ipv4") is False
+    assert session.get_option("ipv6") is True
+    session.set_option("ipv6", False)
+    assert mock.call_args_list.pop() == call(family=None)
+    assert session.get_option("ipv4") is False
     assert session.get_option("ipv6") is False
 
 
