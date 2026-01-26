@@ -5,7 +5,6 @@ from pathlib import Path
 from socket import AF_INET, AF_INET6
 from typing import TYPE_CHECKING, Any, ClassVar
 
-import urllib3.util.connection as urllib3_util_connection
 from requests.adapters import HTTPAdapter
 
 from streamlink.exceptions import StreamlinkDeprecationWarning
@@ -21,8 +20,6 @@ if TYPE_CHECKING:
 
 
 _session_file = str(Path(__file__).parent / "session.py")
-
-_original_allowed_gai_family = urllib3_util_connection.allowed_gai_family  # type: ignore[attr-defined]
 
 
 def _get_deprecation_stacklevel_offset():
@@ -371,15 +368,15 @@ class StreamlinkOptions(Options):
         self.set_explicit(key, None if not value else value)
 
     def _set_ipv4_ipv6(self, key, value):
-        self.set_explicit(key, value)
         if not value:
-            urllib3_util_connection.allowed_gai_family = _original_allowed_gai_family  # type: ignore[attr-defined]
+            self.session.http.set_address_family(family=None)
         elif key == "ipv4":
+            self.session.http.set_address_family(family=AF_INET)
             self.set_explicit("ipv6", False)
-            urllib3_util_connection.allowed_gai_family = lambda: AF_INET  # type: ignore[attr-defined]
         else:
+            self.session.http.set_address_family(family=AF_INET6)
             self.set_explicit("ipv4", False)
-            urllib3_util_connection.allowed_gai_family = lambda: AF_INET6  # type: ignore[attr-defined]
+        self.set_explicit(key, value)
 
     def _set_http_proxy(self, key, value):
         self.session.http.proxies["http"] \
