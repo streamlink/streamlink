@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import ssl
 from operator import itemgetter
+from socket import AF_INET, AF_INET6
 from ssl import SSLContext
 from typing import TYPE_CHECKING
 from unittest.mock import Mock, PropertyMock, call
@@ -9,6 +10,7 @@ from unittest.mock import Mock, PropertyMock, call
 import pytest
 import requests
 import requests_mock as rm
+import urllib3
 from requests.adapters import HTTPAdapter
 from urllib3.response import HTTPResponse
 
@@ -19,6 +21,9 @@ from streamlink.session.http_useragents import DEFAULT
 
 if TYPE_CHECKING:
     from streamlink import Streamlink
+
+
+_original_allowed_gai_family = urllib3.util.connection.allowed_gai_family  # type: ignore[attr-defined]
 
 
 class TestUrllib3Overrides:
@@ -256,6 +261,27 @@ class TestHTTPSession:
 
         # doesn't raise
         session.set_interface(interface=None)
+
+    def test_set_address_family(self, monkeypatch: pytest.MonkeyPatch):
+        session = HTTPSession()
+        mock_urllib3_util_connection = Mock(allowed_gai_family=_original_allowed_gai_family)
+        monkeypatch.setattr("streamlink.session.http.urllib3_util_connection", mock_urllib3_util_connection)
+
+        assert mock_urllib3_util_connection.allowed_gai_family is _original_allowed_gai_family
+
+        session.set_address_family(family=AF_INET)
+        assert mock_urllib3_util_connection.allowed_gai_family is not _original_allowed_gai_family
+        assert mock_urllib3_util_connection.allowed_gai_family() is AF_INET
+
+        session.set_address_family(family=None)
+        assert mock_urllib3_util_connection.allowed_gai_family is _original_allowed_gai_family
+
+        session.set_address_family(family=AF_INET6)
+        assert mock_urllib3_util_connection.allowed_gai_family is not _original_allowed_gai_family
+        assert mock_urllib3_util_connection.allowed_gai_family() is AF_INET6
+
+        session.set_address_family(family=None)
+        assert mock_urllib3_util_connection.allowed_gai_family is _original_allowed_gai_family
 
 
 class TestHTTPAdapters:
