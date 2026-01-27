@@ -79,7 +79,6 @@ jobs:
 
   test_build:
     name: Test build
-    if: github.event_name != 'push'
     runs-on: ubuntu-latest
     timeout-minutes: 60
     steps:
@@ -114,7 +113,6 @@ jobs:
 
   documentation:
     name: Test docs
-    if: github.event_name != 'push'
     runs-on: ubuntu-latest
     timeout-minutes: 60
     steps:
