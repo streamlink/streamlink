@@ -6,7 +6,7 @@ import time
 import warnings
 from http.cookiejar import MozillaCookieJar
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, cast
 
 import urllib3
 import urllib3.util.connection as urllib3_util_connection
@@ -129,11 +129,13 @@ class HTTPSession(Session):
             urllib3_util_connection.allowed_gai_family = lambda: socket.AF_INET6  # type: ignore[attr-defined]
 
     def disable_dh(self, disable: bool = True) -> None:
+        adapter: HTTPAdapter
         if disable:
             adapter = TLSNoDHAdapter()
         else:
             adapter = HTTPAdapter()
-        adapter.poolmanager.connection_pool_kw.update(self.adapters.get("https://", adapter).poolmanager.connection_pool_kw)
+        previous = cast("HTTPAdapter", self.adapters.get("https://", adapter))
+        adapter.poolmanager.connection_pool_kw.update(previous.poolmanager.connection_pool_kw)
         self.mount("https://", adapter)
 
     def set_cookies_from_file(self, file: Path | str):
