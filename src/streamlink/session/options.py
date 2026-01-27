@@ -19,14 +19,16 @@ if TYPE_CHECKING:
 _session_file = str(Path(__file__).parent / "session.py")
 
 
-def _get_deprecation_stacklevel_offset():
-    """Deal with stacklevels of both session.{g,s}et_option() and session.options.{g,s}et() calls"""
+def _get_deprecation_stacklevel_offset(offset: int = 0) -> int:
+    """Deal with stacklevels of both session.{get_option,set_option}() and session.options.{get,set}() calls"""
     from inspect import currentframe  # noqa: PLC0415
 
-    frame = currentframe().f_back.f_back
-    offset = 0
+    frame = currentframe()
+    ignoreframes = 2
     while frame:
-        if frame.f_code.co_filename == _session_file and frame.f_code.co_name in ("set_option", "get_option"):
+        if ignoreframes > 0:
+            ignoreframes -= 1
+        elif frame.f_code.co_filename == _session_file and frame.f_code.co_name in ("set_option", "get_option"):
             offset += 1
             break
         frame = frame.f_back
@@ -350,7 +352,7 @@ class StreamlinkOptions(Options):
             warnings.warn(
                 "The `https-proxy` option has been deprecated in favor of a single `http-proxy` option",
                 StreamlinkDeprecationWarning,
-                stacklevel=4 + _get_deprecation_stacklevel_offset(),
+                stacklevel=_get_deprecation_stacklevel_offset(4),
             )
 
     # ---- getters
@@ -417,7 +419,7 @@ class StreamlinkOptions(Options):
             warnings.warn(
                 f"`{key}` has been deprecated in favor of the `{name}` option",
                 StreamlinkDeprecationWarning,
-                stacklevel=3 + _get_deprecation_stacklevel_offset(),
+                stacklevel=_get_deprecation_stacklevel_offset(3),
             )
 
         return inner
