@@ -9,7 +9,7 @@ import pkgutil
 import re
 from contextlib import suppress
 from pathlib import Path
-from typing import TYPE_CHECKING, Literal, TypeAlias, TypedDict
+from typing import TYPE_CHECKING, Literal, TypeAlias, TypedDict, cast
 
 import streamlink.plugins
 from streamlink.options import Argument, Arguments
@@ -176,7 +176,8 @@ class StreamlinkPlugins:
     def _load_plugins_from_path(self, path: str | Path) -> dict[str, type[Plugin]]:
         plugins: dict[str, type[Plugin]] = {}
         for finder, name, _ in pkgutil.iter_modules([str(path)]):
-            lookup = self._load_plugin_from_finder(name, finder=finder)  # type: ignore[arg-type]
+            finder = cast("PathEntryFinderProtocol", finder)
+            lookup = self._load_plugin_from_finder(name, finder=finder)
             if lookup is None:
                 continue
             mod, plugin = lookup
@@ -334,7 +335,7 @@ class StreamlinkPluginsData:
 
     @staticmethod
     def _build_argument(data: _TPluginArgumentData) -> Argument | None:
-        name: str = data.get("name")  # type: ignore[assignment]
+        name = data.get("name")
         type_data = data.get("type")
         if not type_data:
             argument_type = None
