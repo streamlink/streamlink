@@ -16,7 +16,7 @@ from setuptools.command.egg_info import egg_info as _egg_info
 # ----
 
 
-def get_requires_for_build_wheel(  # type: ignore[no-redef]
+def get_requires_for_build_wheel(  # type: ignore[no-redef]  # ty:ignore[unused-ignore-comment]
     config_settings: dict | None = None,
 ) -> list[str]:  # pragma: no cover
     # Streamlink publishes three wheels on PyPI: the generic "any" wheel, the "win32" wheel and the "win-amd64" wheel:

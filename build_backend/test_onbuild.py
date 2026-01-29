@@ -8,8 +8,7 @@ from build_backend.onbuild import onbuild
 
 
 try:
-    # noinspection PyProtectedMember
-    from versioningit.onbuild import SetuptoolsFileProvider  # type: ignore[attr-defined]
+    from versioningit.onbuild import SetuptoolsFileProvider  # type: ignore[attr-defined]  # ty:ignore[unused-ignore-comment]
 except ImportError:  # pragma: no cover
     _HAS_ONBUILD_FILE_PROVIDER = False
 else:
@@ -46,17 +45,20 @@ def build(request: pytest.FixtureRequest, tmp_path: Path, template_fields: dict)
         # We didn't find it, use the build location
         shutil.copy(PROJECT_ROOT / "streamlink" / "_version.py", pkg_dir / "streamlink" / "_version.py")
 
-    options = dict(
-        is_source=is_source,
-        template_fields=template_fields,
-        params={},
-    )
     if _HAS_ONBUILD_FILE_PROVIDER:
-        options["file_provider"] = SetuptoolsFileProvider(build_dir=tmp_path)
+        onbuild(
+            is_source=is_source,
+            template_fields=template_fields,
+            params={},
+            file_provider=SetuptoolsFileProvider(build_dir=tmp_path),
+        )
     else:  # pragma: no cover
-        options["build_dir"] = tmp_path
-
-    onbuild(**options)
+        onbuild(
+            is_source=is_source,
+            template_fields=template_fields,
+            params={},
+            build_dir=tmp_path,
+        )
 
     return tmp_path
 
