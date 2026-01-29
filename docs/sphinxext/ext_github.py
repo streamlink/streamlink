@@ -17,7 +17,7 @@ GITHUB_USER_URL = "https://github.com/{1}"
 class GithubReferences(Transform):
     default_priority = 999
 
-    def apply(self):
+    def apply(self, **_):
         config = self.document.settings.env.config
         issue_re = re.compile(config.github_issue_pattern)
         mention_re = re.compile(config.github_mention_pattern)
