@@ -4,7 +4,7 @@ import locale
 import logging
 from warnings import catch_warnings
 
-from pycountry import countries, languages  # type: ignore[import]
+from pycountry import countries, languages
 
 
 DEFAULT_LANGUAGE = "en"

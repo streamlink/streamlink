@@ -4,7 +4,7 @@ import re
 from datetime import datetime, timezone
 from typing import TYPE_CHECKING, Generic, TypeVar
 
-from isodate import LOCAL, parse_datetime  # type: ignore[import]
+from isodate import LOCAL, parse_datetime  # type: ignore[import]  # ty:ignore[unused-ignore-comment]
 
 
 if TYPE_CHECKING:
