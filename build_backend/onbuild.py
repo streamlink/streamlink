@@ -12,12 +12,11 @@ if TYPE_CHECKING:
 
 
 try:
-    # noinspection PyProtectedMember
-    from versioningit.onbuild import SetuptoolsFileProvider  # type: ignore[attr-defined]
+    from versioningit.onbuild import SetuptoolsFileProvider
 except ImportError:  # pragma: no cover
 
     @dataclass
-    class SetuptoolsFileProvider:  # type: ignore[no-redef]
+    class SetuptoolsFileProvider:  # type: ignore[no-redef]  # ty:ignore[unused-ignore-comment]
         build_dir: Path
 
 
