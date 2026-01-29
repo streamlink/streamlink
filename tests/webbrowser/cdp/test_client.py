@@ -807,6 +807,7 @@ class TestRequestMethods:
             async with cdp_client_session.alter_request(req_paused, 404, {"a": "b", "c": "d"}) as cmproxy:
                 assert cmproxy.body == "foo"
                 assert cmproxy.response_code == 404
+                assert cmproxy.response_headers is not None
                 assert cmproxy.response_headers == {"a": "b", "c": "d"}
                 cmproxy.body = cmproxy.body.upper()
                 cmproxy.response_code -= 3

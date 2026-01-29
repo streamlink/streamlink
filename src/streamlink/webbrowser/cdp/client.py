@@ -15,7 +15,7 @@ from streamlink.webbrowser.chromium import ChromiumWebbrowser
 
 
 if TYPE_CHECKING:
-    from collections.abc import AsyncGenerator, Awaitable, Callable, Coroutine, Mapping
+    from collections.abc import AsyncGenerator, Awaitable, Callable, Coroutine, Mapping, MutableMapping
 
     from streamlink.session import Streamlink
     from streamlink.webbrowser.cdp.connection import CDPSession
@@ -71,7 +71,7 @@ class RequestPausedHandler:
 class CMRequestProxy:
     body: str
     response_code: int
-    response_headers: Mapping[str, str] | None
+    response_headers: MutableMapping[str, str] | None
 
 
 class CDPClient:
@@ -401,7 +401,7 @@ class CDPClientSession:
         self,
         request: fetch.RequestPaused,
         response_code: int = 200,
-        response_headers: Mapping[str, str] | None = None,
+        response_headers: MutableMapping[str, str] | None = None,
     ) -> AsyncGenerator[CMRequestProxy, None]:
         """
         Async context manager wrapper around :meth:`fulfill_request()` which retrieves the response body,
