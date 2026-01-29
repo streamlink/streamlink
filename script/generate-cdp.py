@@ -41,7 +41,7 @@ from pathlib import Path
 from textwrap import dedent, indent as tw_indent
 from typing import TYPE_CHECKING, cast
 
-import inflection  # type: ignore[import]
+import inflection
 import requests
 
 
