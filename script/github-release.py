@@ -200,13 +200,7 @@ class GitHubAPI:
         raise_failure: bool = True,
         **kwargs,
     ) -> requests.Response:
-        func: Callable = (
-            requests.post  # type: ignore[assignment]
-            if method == "POST"
-            else requests.patch
-            if method == "PATCH"
-            else requests.get
-        )
+        func: Callable = requests.post if method == "POST" else requests.patch if method == "PATCH" else requests.get
 
         response: requests.Response = func(
             f"https://{host}{endpoint}",

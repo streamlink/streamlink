@@ -110,6 +110,7 @@ lint = [
 typing = [
   { include-group = "test" },
   { include-group = "docs" },
+  { include-group = "script" },
   "mypy[faster-cache] ==1.19.1",
   "typing-extensions >=4.0.0",
   "lxml-stubs",
