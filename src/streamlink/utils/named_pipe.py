@@ -65,7 +65,7 @@ class NamedPipePosix(NamedPipeBase):
         self.fifo = self.path.open(self.mode)
 
     def write(self, data):
-        return self.fifo.write(data)
+        return self.fifo.write(data)  # type: ignore
 
     def close(self):
         try:
