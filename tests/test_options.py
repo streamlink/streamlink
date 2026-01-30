@@ -169,7 +169,7 @@ class TestArgument:
         assert arg.default == 123
         with pytest.raises(AttributeError):
             # noinspection PyPropertyAccess
-            arg.default = 456
+            arg.default = 456  # type: ignore
 
     def test_help_suppress(self):
         argA = Argument("test", help="test")

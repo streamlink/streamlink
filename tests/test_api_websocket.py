@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING
 from unittest.mock import ANY, Mock, call, patch
 
 import pytest
-from websocket import ABNF, STATUS_NORMAL  # type: ignore[import]
+from websocket import ABNF, STATUS_NORMAL
 
 from streamlink.logger import DEBUG, TRACE
 from streamlink.plugin.api.websocket import WebsocketClient

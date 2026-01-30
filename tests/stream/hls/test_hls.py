@@ -45,7 +45,7 @@ class EncryptedBase:
     content_plain: bytes
 
     def __init__(self, num, key, iv, *args, content=None, padding=b"", append=b"", **kwargs):
-        super().__init__(num, *args, **kwargs)
+        super().__init__(num, *args, **kwargs)  # type: ignore
         aesCipher = AES.new(key, AES.MODE_CBC, iv)
         content = self.content if content is None else content
         padded = content + padding if padding else pad(content, AES.block_size, style="pkcs7")
@@ -1174,19 +1174,20 @@ class TestHlsReloadTime(TestMixinStreamHLS, unittest.TestCase):
         Segment(3, duration=3),
     ]
 
-    def get_session(self, options=None, reload_time=None, *args, **kwargs):
+    def get_session(self, options=None, *args, **kwargs):
         return super().get_session(
             dict(
                 options or {},
                 **{
                     "hls-live-edge": 3,
-                    "hls-playlist-reload-time": reload_time,
+                    "hls-playlist-reload-time": kwargs.pop("reload_time", None),
                 },
             ),
         )
 
     def subject(self, *args, **kwargs):
-        super().subject(*args, start=False, **kwargs)
+        kwargs["start"] = False
+        super().subject(*args, **kwargs)
 
         # mock the worker thread's _playlist_reload_time method, so that the main thread can wait on its call
         get_reload_time_called = Event()

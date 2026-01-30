@@ -1,6 +1,6 @@
 import signal
 
-import freezegun.config
+import freezegun.config  # type: ignore[import]
 import pytest
 
 # import streamlink_cli as early as possible to execute its default signal overrides

@@ -7,7 +7,6 @@ import re
 # noinspection PyProtectedMember
 from importlib.metadata import FileHash, PackagePath
 from pathlib import Path
-from typing import cast
 from unittest.mock import Mock, call
 
 import pytest
@@ -594,7 +593,7 @@ class TestMatchURLLoadLazy:
 
     @pytest.fixture()
     def _loaded_matchers(self, session: Streamlink):
-        matchers = cast("Matchers", _TestPlugin.matchers)
+        matchers = _TestPlugin.matchers
         session.plugins._matchers.update({"testplugin": matchers})
         assert session.plugins.get_loaded() == {}
         assert session.plugins.get_names() == ["testplugin"]
