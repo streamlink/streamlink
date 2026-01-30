@@ -15,7 +15,7 @@ if TYPE_CHECKING:
 
 
 @pytest.fixture(scope="module")
-def baseclass() -> type:
+def dataclass_hierarchy() -> tuple[type, type, type]:
     @dataclass(kw_only=True)
     class Foo(
         metaclass=FormattedDataclass,
@@ -30,14 +30,9 @@ def baseclass() -> type:
         abc: datetime = field(default=fromtimestamp(0.5))
         xyz: timedelta = field(default=fromtimestamp(1.5) - fromtimestamp(0))
 
-    return Foo
-
-
-@pytest.fixture(scope="module")
-def subclass(baseclass: type) -> type:
     @dataclass(kw_only=True)
     class Bar(
-        baseclass,
+        Foo,
         metaclass=FormattedDataclass,
         formatters={
             float: lambda x: f"{(x * 2.0):.3f}",
@@ -48,18 +43,28 @@ def subclass(baseclass: type) -> type:
         def oof(self) -> str:
             return self.foo[::-1]
 
-    return Bar
-
-
-@pytest.fixture(scope="module")
-def subsubclass(subclass: type) -> type:
     @dataclass(kw_only=True)
-    class Baz(subclass, metaclass=FormattedDataclass, extra=["barbar"]):
+    class Baz(Bar, metaclass=FormattedDataclass, extra=["barbar"]):
         @property
         def barbar(self) -> int:
             return self.bar * self.bar
 
-    return Baz
+    return Foo, Bar, Baz
+
+
+@pytest.fixture(scope="module")
+def baseclass(dataclass_hierarchy: tuple[type, type, type]) -> type:
+    return dataclass_hierarchy[0]
+
+
+@pytest.fixture(scope="module")
+def subclass(dataclass_hierarchy: tuple[type, type, type]) -> type:
+    return dataclass_hierarchy[1]
+
+
+@pytest.fixture(scope="module")
+def subsubclass(dataclass_hierarchy: tuple[type, type, type]) -> type:
+    return dataclass_hierarchy[2]
 
 
 @pytest.mark.parametrize(
