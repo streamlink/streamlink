@@ -210,6 +210,7 @@ class PlayerOutput(Output):
     PLAYER_ARGS_INPUT = "playerinput"
     PLAYER_ARGS_TITLE = "playertitleargs"
 
+    playerargs: PlayerArgs
     player: subprocess.Popen
     stdin: int | TextIO
     stdout: int | TextIO
@@ -276,8 +277,9 @@ class PlayerOutput(Output):
         args = self.playerargs.build()
 
         playerpath = args[0]
-        args[0] = which(playerpath)
-        if not args[0]:
+        if resolved := which(playerpath):
+            args[0] = resolved
+        else:
             if playerpath[:1] in ('"', "'"):
                 warnings.warn(
                     "\n".join([
@@ -347,7 +349,7 @@ class PlayerOutput(Output):
             self.namedpipe.close()
         elif self.http:
             self.http.shutdown()
-        elif not self.filename:
+        elif not self.filename and self.player.stdin:  # pragma: no branch
             self.player.stdin.close()
 
         if self.record:
@@ -374,5 +376,5 @@ class PlayerOutput(Output):
             self.namedpipe.write(data)
         elif self.http:
             self.http.write(data)
-        else:
+        elif self.player.stdin:  # pragma: no branch
             self.player.stdin.write(data)

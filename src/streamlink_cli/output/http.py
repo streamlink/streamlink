@@ -103,7 +103,7 @@ class HTTPOutput(Output):
         self.request = req
 
     def _write(self, data):
-        self.conn.sendall(data)
+        self.conn.sendall(data)  # type: ignore
 
     def _close(self):
         if self.conn:

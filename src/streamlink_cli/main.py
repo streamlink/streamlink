@@ -58,7 +58,7 @@ if TYPE_CHECKING:
 QUIET_OPTIONS = ("json", "stream_url", "quiet")
 
 
-args: Any = None  # type: ignore[assignment]
+args: argparse.Namespace = None  # type: ignore[assignment]
 console: ConsoleOutput = None  # type: ignore[assignment]
 output: FileOutput | PlayerOutput = None  # type: ignore[assignment]
 stream_fd: StreamIO = None  # type: ignore[assignment]
@@ -160,7 +160,7 @@ def create_output(formatter: Formatter) -> FileOutput | PlayerOutput:
 
         if args.player_fifo:
             try:
-                namedpipe = NamedPipe()  # type: ignore[abstract]  # ???
+                namedpipe = NamedPipe()
             except OSError as err:
                 raise StreamlinkCLIError(f"Failed to create pipe: {err}") from err
         elif args.player_http:
