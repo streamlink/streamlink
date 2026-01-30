@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import subprocess
 from typing import TYPE_CHECKING
-from unittest.mock import call, patch
+from unittest.mock import Mock, call
 
 import pytest
 
@@ -10,8 +10,6 @@ from streamlink.stream.ffmpegmux import FFMPEGMuxer, FFmpegVersionOutput
 
 
 if TYPE_CHECKING:
-    from unittest.mock import Mock
-
     from streamlink import Streamlink
 
 
@@ -36,14 +34,20 @@ def session(session: Streamlink):
 
 
 class TestCommand:
-    def test_cache(self, session: Streamlink):
-        with patch("streamlink.stream.ffmpegmux.which", return_value="some_value") as mock:
-            assert FFMPEGMuxer.command(session) == "some_value"
-            assert FFMPEGMuxer.command(session) == "some_value"
-            assert len(mock.call_args_list) == 1
-        with patch("streamlink.stream.ffmpegmux.which", return_value="other_value") as mock:
-            assert FFMPEGMuxer.command(session) == "some_value"
-            assert len(mock.call_args_list) == 0
+    def test_cache(self, monkeypatch: pytest.MonkeyPatch, session: Streamlink):
+        mock = Mock()
+        monkeypatch.setattr("streamlink.stream.ffmpegmux.which", mock)
+
+        mock.return_value = "some_value"
+        assert FFMPEGMuxer.command(session) == "some_value"
+        assert FFMPEGMuxer.command(session) == "some_value"
+        assert len(mock.call_args_list) == 1
+
+        mock.reset_mock()
+
+        mock.return_value = "other_value"
+        assert FFMPEGMuxer.command(session) == "some_value"
+        assert len(mock.call_args_list) == 0
 
     @pytest.mark.parametrize(
         ("command", "which", "expected"),
@@ -55,10 +59,17 @@ class TestCommand:
             pytest.param("custom", {"ffmpeg": "ffmpeg", "custom": "custom"}, "custom", id="custom-positive"),
         ],
     )
-    def test_no_cache(self, session: Streamlink, command: str | None, which: dict, expected: str | None):
+    def test_no_cache(
+        self,
+        monkeypatch: pytest.MonkeyPatch,
+        session: Streamlink,
+        command: str | None,
+        which: dict,
+        expected: str | None,
+    ):
+        monkeypatch.setattr("streamlink.stream.ffmpegmux.which", Mock(side_effect=which.get))
         session.options.update({"ffmpeg-ffmpeg": command})
-        with patch("streamlink.stream.ffmpegmux.which", side_effect=which.get):
-            assert FFMPEGMuxer.command(session) == expected
+        assert FFMPEGMuxer.command(session) == expected
 
     @pytest.mark.parametrize(
         ("resolved", "expected"),
@@ -67,34 +78,37 @@ class TestCommand:
             pytest.param("ffmpeg", True, id="positive"),
         ],
     )
-    def test_is_usable(self, session: Streamlink, resolved: str | None, expected: bool):
-        with patch("streamlink.stream.ffmpegmux.which", return_value=resolved):
-            assert FFMPEGMuxer.is_usable(session) is expected
+    def test_is_usable(self, monkeypatch: pytest.MonkeyPatch, session: Streamlink, resolved: str | None, expected: bool):
+        monkeypatch.setattr("streamlink.stream.ffmpegmux.which", Mock(return_value=resolved))
+        assert FFMPEGMuxer.is_usable(session) is expected
 
-    def test_log(self, caplog: pytest.LogCaptureFixture, session: Streamlink):
-        with patch("streamlink.stream.ffmpegmux.which", return_value=None):
-            assert not FFMPEGMuxer.is_usable(session)
-            assert [(record.module, record.levelname, record.message) for record in caplog.records] == [
-                (
-                    "ffmpegmux",
-                    "warning",
-                    "No valid FFmpeg binary was found. See the --ffmpeg-ffmpeg option.",
-                ),
-                (
-                    "ffmpegmux",
-                    "warning",
-                    "Muxing streams is unsupported! Only a subset of the available streams can be returned!",
-                ),
-            ]
-            assert not FFMPEGMuxer.is_usable(session)
-            assert len(caplog.records) == 2
+    def test_log(self, monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture, session: Streamlink):
+        monkeypatch.setattr("streamlink.stream.ffmpegmux.which", Mock(return_value=None))
 
-    def test_no_log(self, caplog: pytest.LogCaptureFixture, session: Streamlink):
-        with patch("streamlink.stream.ffmpegmux.which", return_value="foo"):
-            assert FFMPEGMuxer.is_usable(session)
-            assert not caplog.records
+        assert not FFMPEGMuxer.is_usable(session)
+        assert [(record.module, record.levelname, record.message) for record in caplog.records] == [
+            (
+                "ffmpegmux",
+                "warning",
+                "No valid FFmpeg binary was found. See the --ffmpeg-ffmpeg option.",
+            ),
+            (
+                "ffmpegmux",
+                "warning",
+                "Muxing streams is unsupported! Only a subset of the available streams can be returned!",
+            ),
+        ]
 
-    def test_validate_success(self, caplog: pytest.LogCaptureFixture, session: Streamlink):
+        caplog.records.clear()
+        assert not FFMPEGMuxer.is_usable(session)
+        assert len(caplog.records) == 0
+
+    def test_no_log(self, monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture, session: Streamlink):
+        monkeypatch.setattr("streamlink.stream.ffmpegmux.which", Mock(return_value="foo"))
+        assert FFMPEGMuxer.is_usable(session)
+        assert len(caplog.records) == 0
+
+    def test_validate_success(self, monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture, session: Streamlink):
         session.options.update({"ffmpeg-no-validation": False})
 
         class MyFFmpegVersionOutput(FFmpegVersionOutput):
@@ -104,12 +118,11 @@ class TestCommand:
                 self.onstdout(2, "bar")
                 return True
 
-        with (
-            patch("streamlink.stream.ffmpegmux.which", return_value="/usr/bin/ffmpeg"),
-            patch("streamlink.stream.ffmpegmux.FFmpegVersionOutput", side_effect=MyFFmpegVersionOutput) as mock_versionoutput,
-        ):
-            result = FFMPEGMuxer.command(session)
+        mock_versionoutput = Mock(side_effect=MyFFmpegVersionOutput)
+        monkeypatch.setattr("streamlink.stream.ffmpegmux.which", Mock(return_value="/usr/bin/ffmpeg"))
+        monkeypatch.setattr("streamlink.stream.ffmpegmux.FFmpegVersionOutput", mock_versionoutput)
 
+        result = FFMPEGMuxer.command(session)
         assert result == "/usr/bin/ffmpeg"
         assert mock_versionoutput.call_args_list == [
             call(["/usr/bin/ffmpeg", "-version"], timeout=4.0),
@@ -128,7 +141,7 @@ class TestCommand:
             pytest.param(9.5, 9.5, id="custom"),
         ],
     )
-    def test_validate_timeout(self, session: Streamlink, timeout_value, expected_timeout):
+    def test_validate_timeout(self, monkeypatch: pytest.MonkeyPatch, session: Streamlink, timeout_value, expected_timeout):
         session.options.update({
             "ffmpeg-no-validation": False,
             "ffmpeg-validation-timeout": timeout_value,
@@ -139,30 +152,28 @@ class TestCommand:
                 self.onstdout(0, "ffmpeg version 0.0.0 custom")
                 return True
 
-        with (
-            patch("streamlink.stream.ffmpegmux.which", return_value="/usr/bin/ffmpeg"),
-            patch("streamlink.stream.ffmpegmux.FFmpegVersionOutput", side_effect=MyFFmpegVersionOutput) as mock_versionoutput,
-        ):
-            result = FFMPEGMuxer.command(session)
+        mock_versionoutput = Mock(side_effect=MyFFmpegVersionOutput)
+        monkeypatch.setattr("streamlink.stream.ffmpegmux.which", Mock(return_value="/usr/bin/ffmpeg"))
+        monkeypatch.setattr("streamlink.stream.ffmpegmux.FFmpegVersionOutput", mock_versionoutput)
 
+        result = FFMPEGMuxer.command(session)
         assert result == "/usr/bin/ffmpeg"
         assert mock_versionoutput.call_args_list == [
             call(["/usr/bin/ffmpeg", "-version"], timeout=expected_timeout),
         ]
 
-    def test_validate_failure(self, caplog: pytest.LogCaptureFixture, session: Streamlink):
+    def test_validate_failure(self, monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture, session: Streamlink):
         session.options.update({"ffmpeg-no-validation": False})
 
         class MyFFmpegVersionOutput(FFmpegVersionOutput):
             def run(self):
                 return False
 
-        with (
-            patch("streamlink.stream.ffmpegmux.which", return_value="/usr/bin/ffmpeg"),
-            patch("streamlink.stream.ffmpegmux.FFmpegVersionOutput", side_effect=MyFFmpegVersionOutput) as mock_versionoutput,
-        ):
-            result = FFMPEGMuxer.command(session)
+        mock_versionoutput = Mock(side_effect=MyFFmpegVersionOutput)
+        monkeypatch.setattr("streamlink.stream.ffmpegmux.which", Mock(return_value="/usr/bin/ffmpeg"))
+        monkeypatch.setattr("streamlink.stream.ffmpegmux.FFmpegVersionOutput", mock_versionoutput)
 
+        result = FFMPEGMuxer.command(session)
         assert result is None
         assert mock_versionoutput.call_args_list == [
             call(["/usr/bin/ffmpeg", "-version"], timeout=4.0),
@@ -220,14 +231,18 @@ class TestOpen:
     FFMPEG_ARGS_DEFAULT_OUTPUT = ["pipe:1"]
 
     @pytest.fixture(autouse=True)
-    def which(self):
-        with patch("streamlink.stream.ffmpegmux.which", return_value="ffmpeg") as mock:
-            yield mock
+    def which(self, monkeypatch: pytest.MonkeyPatch):
+        mock = Mock(return_value="ffmpeg")
+        monkeypatch.setattr("streamlink.stream.ffmpegmux.which", mock)
+
+        return mock
 
     @pytest.fixture()
-    def popen(self):
-        with patch("subprocess.Popen") as mock:
-            yield mock
+    def popen(self, monkeypatch: pytest.MonkeyPatch):
+        mock = Mock()
+        monkeypatch.setattr("subprocess.Popen", mock)
+
+        return mock
 
     @pytest.mark.parametrize(
         ("options", "muxer_args", "expected"),
@@ -589,16 +604,17 @@ class TestOpen:
 
         streamio.close()
 
-    def test_stderr(self, session: Streamlink, popen: Mock):
+    def test_stderr(self, monkeypatch: pytest.MonkeyPatch, session: Streamlink, popen: Mock):
+        mock_stderr = Mock()
         session.options.update({"ffmpeg-verbose": True})
-        with patch("streamlink.stream.ffmpegmux.sys.stderr") as mock_stderr:
-            streamio = FFMPEGMuxer(session)
+        monkeypatch.setattr("streamlink.stream.ffmpegmux.sys.stderr", mock_stderr)
 
-            streamio.open()
-            assert popen.call_args_list[0][1]["stderr"] is mock_stderr
+        streamio = FFMPEGMuxer(session)
+        streamio.open()
+        assert popen.call_args_list[0][1]["stderr"] is mock_stderr
 
-            streamio.close()
-            assert mock_stderr.close.call_count == 0
+        streamio.close()
+        assert mock_stderr.close.call_count == 0
 
     @pytest.mark.parametrize(
         ("options", "side_effect"),
@@ -608,16 +624,25 @@ class TestOpen:
             pytest.param({"ffmpeg-verbose-path": "foo"}, OSError, id="OSError on close"),
         ],
     )
-    def test_stderr_path(self, session: Streamlink, popen: Mock, options: dict, side_effect: type[Exception] | None):
+    def test_stderr_path(
+        self,
+        monkeypatch: pytest.MonkeyPatch,
+        session: Streamlink,
+        popen: Mock,
+        options: dict,
+        side_effect: type[Exception] | None,
+    ):
+        mock_path = Mock()
         session.options.update(options)
-        with patch("streamlink.stream.ffmpegmux.Path") as mock_path:
-            file: Mock = mock_path("foo").expanduser().open("w")
-            file.close.side_effect = side_effect
-            streamio = FFMPEGMuxer(session)
+        monkeypatch.setattr("streamlink.stream.ffmpegmux.Path", mock_path)
 
-            streamio.open()
-            assert popen.call_args_list[0][1]["stderr"] is file
-            assert file.close.call_count == 0
+        file: Mock = mock_path("foo").expanduser().open("w")
+        file.close.side_effect = side_effect
+        streamio = FFMPEGMuxer(session)
 
-            streamio.close()
-            assert file.close.call_count == 1
+        streamio.open()
+        assert popen.call_args_list[0][1]["stderr"] is file
+        assert file.close.call_count == 0
+
+        streamio.close()
+        assert file.close.call_count == 1
