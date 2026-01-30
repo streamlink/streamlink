@@ -700,7 +700,7 @@ def build_parser():
             as well as the "Plugins" section for the list of metadata variables defined in each plugin.
 
             Only the following players are supported:
-            {"".join(f"{chr(0x0A)}            - {pn}" for pn in sorted([p.NAME for p in PlayerArgs.PLAYERS], key=str.lower))}
+            {"".join(f"{chr(0x0A)}            - {pn}" for pn in PlayerArgs.get_player_names())}
 
             Example:
 

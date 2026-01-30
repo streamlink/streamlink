@@ -10,7 +10,7 @@ import warnings
 from contextlib import suppress
 from shutil import which
 from time import sleep
-from typing import TYPE_CHECKING, ClassVar, TextIO
+from typing import TYPE_CHECKING, ClassVar, TextIO, cast
 
 from streamlink.compat import is_win32
 from streamlink.exceptions import StreamlinkWarning
@@ -22,11 +22,6 @@ if TYPE_CHECKING:
     from collections.abc import Mapping, Sequence
     from pathlib import Path
 
-    try:
-        from typing import Self  # type: ignore[attr-defined]
-    except ImportError:  # pragma: no cover
-        from typing_extensions import Self
-
     from streamlink.utils.named_pipe import NamedPipeBase
     from streamlink_cli.output.file import FileOutput
     from streamlink_cli.output.http import HTTPOutput
@@ -36,12 +31,12 @@ log = logging.getLogger("streamlink.cli.output")
 
 
 class PlayerArgsMeta(type):
-    PLAYERS: ClassVar[list[Self]] = []
+    PLAYERS: ClassVar[list[type[PlayerArgs]]] = []
 
     def __init__(cls, name, bases, attrs, **kwargs):
         super().__init__(name, bases, attrs, **kwargs)
         if attrs.get("NAME"):
-            cls.PLAYERS.append(cls)
+            cls.PLAYERS.append(cast("type[PlayerArgs]", cls))
 
 
 class PlayerArgs(metaclass=PlayerArgsMeta):
@@ -102,6 +97,13 @@ class PlayerArgs(metaclass=PlayerArgsMeta):
             self._input = self.get_http(http)
         else:
             self._input = self.get_stdin()
+
+    @classmethod
+    def get_player_names(cls) -> list[str]:
+        return sorted(
+            (p.NAME for p in cls.PLAYERS),
+            key=lambda s: s.lower(),
+        )
 
     @staticmethod
     def _get_flatpak_args_app_index(args: list[str]) -> int:
