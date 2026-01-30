@@ -249,7 +249,12 @@ class TestMixinStreamHLS(unittest.TestCase):
         thread.reader.writer.join(timeout)
         thread.reader.worker.join(timeout)
         thread.join(timeout)
+        assert not thread.reader.writer.is_alive()
+        assert not thread.reader.worker.is_alive()
+        assert not thread.is_alive()
         assert self.thread.reader.closed, "Stream reader is closed"
+        assert self.thread.reader.writer.closed, "Stream writer is closed"
+        assert self.thread.reader.worker.closed, "Stream worker is closed"
 
     def await_reload(self, timeout=TIMEOUT_AWAIT_RELOAD) -> None:
         worker: EventedHLSStreamWorker = self.thread.reader.worker  # type: ignore[assignment]
@@ -310,7 +315,12 @@ class TestMixinStreamHLS(unittest.TestCase):
     def close(self):
         thread = self.thread
         thread.reader.close()
+
         # Allow writer and reader threads to terminate
         if isinstance(thread.reader.writer, EventedHLSStreamWriter):
             thread.reader.writer.handshake.go()
         thread.handshake.go()
+
+        # terminate threads explicitly, just in case
+        thread.reader.writer.close()
+        thread.reader.worker.close()
