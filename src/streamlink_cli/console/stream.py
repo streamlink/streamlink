@@ -82,7 +82,10 @@ class ConsoleOutputStream(StreamWrapper):
 
         return written
 
-    def writelines(self, lines: Iterable[str], /) -> None:  # type: ignore[override]
+    # TextIOWrapper violates the Liskov substitution principle by overriding the lines argument from _IOBase.
+    # mypy doesn't like this and ty has checks built in which detect inconsistencies like this in parent classes.
+    # So just suppress mypy's override error and suppress ty's unused-ignore-comment error.
+    def writelines(self, lines: Iterable[str], /) -> None:  # type: ignore[override]  # ty:ignore[unused-ignore-comment]
         with self._lock:
             if self._stream.closed:
                 raise ValueError("I/O operation on closed file.")

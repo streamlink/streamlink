@@ -4,10 +4,10 @@ from io import TextIOWrapper
 
 
 class StreamWrapper:
-    def __init__(self, stream):
+    def __init__(self, stream: TextIOWrapper) -> None:
         super().__init__()
-        self._stream = stream
-        self._target = None
+        self._stream: TextIOWrapper = stream
+        self._target: tuple[object, str] | None = None
 
     @classmethod
     def wrap(cls, obj, attr):
