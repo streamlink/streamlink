@@ -75,8 +75,7 @@ class TestMPDParsers:
         assert MPDParsers.type("dynamic") == "dynamic"
         assert MPDParsers.type("static") == "static"
         with pytest.raises(MPDParsingError):
-            # noinspection PyTypeChecker
-            MPDParsers.type("other")
+            MPDParsers.type("other")  # type: ignore
 
     def test_duration(self):
         assert MPDParsers.duration()("PT1S") == datetime.timedelta(seconds=1)

@@ -131,8 +131,7 @@ class TestPluginMatcher:
             pass
 
         with pytest.raises(TypeError) as cm:
-            # noinspection PyTypeChecker
-            pluginmatcher(re.compile(r""))(MyPlugin)
+            pluginmatcher(re.compile(r""))(MyPlugin)  # type: ignore
 
         assert str(cm.value) == "MyPlugin is not a Plugin"
 
@@ -227,18 +226,21 @@ class TestPluginMatcher:
         assert plugin.url == "http://foo"
         assert [m is not None for m in plugin.matches] == [True, False, False]
         assert plugin.matcher is plugin.matchers[0].pattern
+        assert plugin.match is not None
         assert plugin.match.group(1) == "foo"
 
         plugin.url = "http://bar"
         assert plugin.url == "http://bar"
         assert [m is not None for m in plugin.matches] == [False, True, False]
         assert plugin.matcher is plugin.matchers[1].pattern
+        assert plugin.match is not None
         assert plugin.match.group(1) == "bar"
 
         plugin.url = "http://baz"
         assert plugin.url == "http://baz"
         assert [m is not None for m in plugin.matches] == [False, False, True]
         assert plugin.matcher is plugin.matchers[2].pattern
+        assert plugin.match is not None
         assert plugin.match.group(1) == "baz"
 
         plugin.url = "http://qux"

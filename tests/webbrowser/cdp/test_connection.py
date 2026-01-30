@@ -10,7 +10,7 @@ from unittest.mock import AsyncMock
 import pytest
 import trio
 from trio.testing import wait_all_tasks_blocked
-from trio_websocket import CloseReason, ConnectionClosed, ConnectionTimeout  # type: ignore[import]
+from trio_websocket import CloseReason, ConnectionClosed, ConnectionTimeout
 
 from streamlink.compat import ExceptionGroup
 from streamlink.webbrowser.cdp.connection import MAX_BUFFER_SIZE, CDPConnection, CDPSession

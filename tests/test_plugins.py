@@ -151,7 +151,7 @@ class TestPluginMetadata:
         return tokeninfo
 
     @pytest.fixture(scope="class")
-    def metadata_items(self, tokeninfo):
+    def metadata_items(self, tokeninfo: tokenize.TokenInfo):
         match = re.search(r"^\"\"\"\n(?P<metadata>.+)\n\"\"\"$", tokeninfo.string, re.DOTALL)
         assert match is not None, "String is a properly formatted long string"
 
@@ -161,7 +161,7 @@ class TestPluginMetadata:
         ]  # fmt: skip
         assert all(lines), "All lines are properly formatted using the '$key value' format"
 
-        return [(match.group("key"), match.group("value")) for match in lines]
+        return [(m.group("key"), m.group("value")) for m in lines if m]
 
     @pytest.fixture(scope="class")
     def metadata_keys(self, metadata_items):

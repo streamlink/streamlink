@@ -314,9 +314,9 @@ class TestLogging:
         assert getvalue(output) == "[test][info] Bär: 🐻\n"
         assert getvalue(output_ascii) == ""
 
-        assert isinstance(log.handlers[0], logging.StreamHandler)
-        # noinspection PyUnresolvedReferences
-        log.handlers[0].setStream(output_ascii)
+        handler = log.handlers[0]
+        assert isinstance(handler, logging.StreamHandler)
+        handler.setStream(output_ascii)  # type: ignore  # Expected: Never ???
 
         log.info("Bär: 🐻")
         assert getvalue(output) == "[test][info] Bär: 🐻\n"

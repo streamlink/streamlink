@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import trio
-from trio_websocket import CloseReason, ConnectionClosed  # type: ignore[import]
+from trio_websocket import CloseReason, ConnectionClosed
 
 
 class FakeWebsocketConnection:
