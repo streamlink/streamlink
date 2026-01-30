@@ -5,6 +5,7 @@ import logging as _logging
 import numbers
 import re
 import warnings
+from gettext import gettext as _, ngettext
 from pathlib import Path
 from string import printable
 from textwrap import dedent
@@ -58,28 +59,27 @@ class ArgumentParser(argparse.ArgumentParser):
             self.NESTED_ARGUMENT_GROUPS[parent].append(group)
         return group
 
-    def convert_arg_line_to_args(self, line):
+    def convert_arg_line_to_args(self, arg_line: str) -> list[str]:
         # Strip any non-printable characters that might be in the
         # beginning of the line (e.g. Unicode BOM marker).
-        match = self._RE_PRINTABLE.search(line)
+        match = self._RE_PRINTABLE.search(arg_line)
         if not match:
-            return
-        line = line[match.start() :].strip()
+            return []
+        arg_line = arg_line[match.start() :].strip()
 
         # Skip lines that do not start with a valid option (e.g. comments)
-        option = self._RE_OPTION.match(line)
+        option = self._RE_OPTION.match(arg_line)
         if not option:
-            return
+            return []
 
         name, op, value = option.group("name", "op", "value")
         prefix = self.prefix_chars[0] if len(name) == 1 else self.prefix_chars[0] * 2
         if value or op:
-            yield f"{prefix}{name}={value}"
+            return [f"{prefix}{name}={value}"]
         else:
-            yield f"{prefix}{name}"
+            return [f"{prefix}{name}"]
 
-    # noinspection PyProtectedMember,PyUnresolvedReferences,PyTypeChecker
-    def _match_argument(self, action, arg_strings_pattern):
+    def _match_argument(self, action: argparse.Action, arg_strings_pattern: str) -> int:
         # - https://github.com/streamlink/streamlink/issues/971
         # - https://bugs.python.org/issue9334
         # - https://github.com/python/cpython/blame/v3.13.0rc2/Lib/argparse.py#L2227-L2247
@@ -92,19 +92,19 @@ class ArgumentParser(argparse.ArgumentParser):
         # required number of arguments regardless of their values
         if match is None:
             nargs = action.nargs if action.nargs is not None else 1
-            if isinstance(nargs, numbers.Number) and len(arg_strings_pattern) >= nargs:
-                return nargs
+            if isinstance(nargs, numbers.Number) and len(arg_strings_pattern) >= int(nargs):
+                return int(nargs)
 
         # raise an exception if we weren't able to find a match
         if match is None:
-            nargs_errors = {
-                None: argparse._("expected one argument"),
-                argparse.OPTIONAL: argparse._("expected at most one argument"),
-                argparse.ONE_OR_MORE: argparse._("expected at least one argument"),
-            }
-            msg = nargs_errors.get(action.nargs)
-            if msg is None:
-                msg = argparse.ngettext("expected %s argument", "expected %s arguments", action.nargs) % action.nargs
+            if isinstance(action.nargs, numbers.Number):
+                msg = ngettext("expected %s argument", "expected %s arguments", int(action.nargs)) % int(action.nargs)
+            else:
+                nargs_errors: dict[str | int | None, str] = {
+                    argparse.OPTIONAL: _("expected at most one argument"),
+                    argparse.ONE_OR_MORE: _("expected at least one argument"),
+                }
+                msg = nargs_errors.get(action.nargs, _("expected one argument"))
             raise argparse.ArgumentError(action, msg)
 
         # return the number of arguments matched
