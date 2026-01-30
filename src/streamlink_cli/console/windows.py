@@ -50,10 +50,7 @@ class _WinApiCall:
         method = getattr(dll, self.__class__.__name__)
         method.argtypes = self.argtypes
         method.restype = self.restype
-        self.method = method
-
-    def __call__(self, *args):  # pragma: no cover
-        return self.method(*args)
+        self.__call__ = self.method = method
 
     def _call_success(self, *args):
         if not self.method(*args):
@@ -171,9 +168,16 @@ class FillConsoleOutputCharacterW(_WinApiCall):
 
 
 class WindowsConsole:
+    get_std_handle: ClassVar[GetStdHandle]
+    get_console_mode: ClassVar[GetConsoleMode]
+    get_console_screen_buffer_info: ClassVar[GetConsoleScreenBufferInfo]
+    set_console_cursor_position: ClassVar[SetConsoleCursorPosition]
+    fill_console_output_attribute: ClassVar[FillConsoleOutputAttribute]
+    fill_console_output_character_w: ClassVar[FillConsoleOutputCharacterW]
+
     def __new__(cls, *args, **kwargs):
         try:
-            from ctypes import windll  # noqa: PLC0415
+            from ctypes import windll  # type: ignore[import]  # noqa: PLC0415
         except ImportError:  # pragma: no cover
             return None
 

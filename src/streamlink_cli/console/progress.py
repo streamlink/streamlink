@@ -70,7 +70,7 @@ class ProgressFormatter:
                 if field_name not in params:
                     break
                 value_or_callable = params[field_name]
-                if not callable(value_or_callable):
+                if isinstance(value_or_callable, str):
                     static.append(value_or_callable)
                     length += len(value_or_callable)
                 else:
