@@ -17,6 +17,8 @@ if TYPE_CHECKING:
 
 
 class FileOutput(Output):
+    fd: BinaryIO
+
     def __init__(
         self,
         filename: Path | None = None,
@@ -25,7 +27,7 @@ class FileOutput(Output):
     ):
         super().__init__()
         self.filename = filename
-        self.fd = fd
+        self.fd = fd  # type: ignore[assignment]
         self.record = record
 
     def _open(self):
@@ -37,7 +39,7 @@ class FileOutput(Output):
             self.record.open()
 
         if is_win32:
-            msvcrt.setmode(self.fd.fileno(), O_BINARY)
+            msvcrt.setmode(self.fd.fileno(), O_BINARY)  # type: ignore[attr-defined]
 
     def _close(self):
         if self.fd is not stdout:
