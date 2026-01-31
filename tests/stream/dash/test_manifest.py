@@ -92,7 +92,7 @@ class TestMPDParsers:
             assert MPDParsers.duration()("P3Y") == datetime.timedelta(days=3 * 365 + 1)
 
     def test_datetime(self):
-        assert MPDParsers.datetime("2018-01-01T00:00:00Z") == datetime.datetime(2018, 1, 1, 0, 0, 0, tzinfo=UTC)
+        assert MPDParsers.parse_datetime("2018-01-01T00:00:00Z") == datetime.datetime(2018, 1, 1, 0, 0, 0, tzinfo=UTC)
 
     def test_segment_template(self):
         assert MPDParsers.segment_template("$Time$-$Number$-$Other$")(Time=1, Number=2, Other=3) == "1-2-3"
@@ -104,8 +104,8 @@ class TestMPDParsers:
         assert MPDParsers.frame_rate("0.2") == pytest.approx(0.2)
 
     def test_timedelta(self):
-        assert MPDParsers.timedelta(1)(100) == datetime.timedelta(0, 100.0)
-        assert MPDParsers.timedelta(10)(100) == datetime.timedelta(0, 10.0)
+        assert MPDParsers.parse_timedelta(1)(100) == datetime.timedelta(0, 100.0)
+        assert MPDParsers.parse_timedelta(10)(100) == datetime.timedelta(0, 10.0)
 
     def test_range(self):
         assert MPDParsers.range("100-") == (100, None)
