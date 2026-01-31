@@ -6,7 +6,7 @@ import logging
 from collections import defaultdict
 from contextlib import contextmanager, suppress
 from time import time
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, cast
 
 from requests import Response
 
@@ -164,7 +164,7 @@ class DASHStreamWorker(SegmentedStreamWorker[DASHSegment, Response]):
         self.reader.buffer.wait_free()
         log.debug(f"Reloading manifest {self.reader.ident!r}")
         res = self.session.http.get(
-            self.mpd.url,
+            cast("str", self.mpd.url),
             exception=StreamError,
             retries=self.manifest_reload_retries,
             **self.stream.args,
@@ -178,6 +178,11 @@ class DASHStreamWorker(SegmentedStreamWorker[DASHSegment, Response]):
         )
 
         new_rep = new_mpd.get_representation(self.reader.ident)
+        if not new_rep:
+            log.error(f"Failed to find matching DASH representation: {self.reader.ident!r}")
+            self.close()
+            return False
+
         with freeze_timeline(new_mpd):
             changed = len(list(itertools.islice(new_rep.segments(), 1))) > 0
 

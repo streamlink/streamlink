@@ -499,6 +499,18 @@ class TestDASHStreamWorker:
         except StopIteration:
             pass
 
+    @staticmethod
+    def _next_segments(worker: DASHStreamWorker, segment_iter: Iterator[DASHSegment], num: int) -> list[DASHSegment]:
+        items = []
+        for _ in range(num):
+            segment = next(segment_iter)
+            # fake worker.run() implementation
+            worker.check_sequence_gap(segment)
+            worker.sequence = segment.num + 1
+            items.append(segment)
+
+        return items
+
     def test_dynamic_reload(
         self,
         monkeypatch: pytest.MonkeyPatch,
@@ -517,26 +529,15 @@ class TestDASHStreamWorker:
 
         segment_iter = self._iter_segments(worker.iter_segments())
 
-        def next_segments(num):
-            items = []
-            for _ in range(num):
-                segment = next(segment_iter)
-                # fake worker.run() implementation
-                worker.check_sequence_gap(segment)
-                worker.sequence = segment.num + 1
-                items.append(segment)
-
-            return items
-
         representation.segments.return_value = segments[:2]
-        assert next_segments(2) == segments[:2]
+        assert self._next_segments(worker, segment_iter, 2) == segments[:2]
         assert representation.segments.call_args_list == [call(sequence=-1, init=True, timestamp=timestamp)]
         assert not worker._wait.is_set()
         assert [(record.name, record.levelname, record.message) for record in caplog.records] == []
 
         representation.segments.reset_mock()
         representation.segments.return_value = segments[3:]
-        assert next_segments(3) == segments[3:]
+        assert self._next_segments(worker, segment_iter, 3) == segments[3:]
         assert representation.segments.call_args_list == [call(), call(sequence=1, init=False, timestamp=None)]
         assert not worker._wait.is_set()
         assert [(record.name, record.levelname, record.message) for record in caplog.records] == [
@@ -544,6 +545,44 @@ class TestDASHStreamWorker:
                 "streamlink.stream.segmented",
                 "warning",
                 "Sequence gap of 1 segment at position 1. This is unsupported and will result in incoherent output data.",
+            ),
+        ]
+
+    def test_dynamic_reload_missing_representation(
+        self,
+        monkeypatch: pytest.MonkeyPatch,
+        caplog: pytest.LogCaptureFixture,
+        timestamp: datetime,
+        worker: DASHStreamWorker,
+        representation: Mock,
+        segments: list[DASHSegment],
+        mpd: Mock,
+    ):
+        caplog.set_level("INFO", "streamlink")
+
+        mpd.dynamic = True
+        mpd.type = "dynamic"
+        monkeypatch.setattr("streamlink.stream.dash.dash.MPD", lambda *args, **kwargs: mpd)
+
+        segment_iter = self._iter_segments(worker.iter_segments())
+
+        representation.segments.return_value = segments[:2]
+        assert self._next_segments(worker, segment_iter, 2) == segments[:2]
+        assert representation.segments.call_args_list == [call(sequence=-1, init=True, timestamp=timestamp)]
+        assert not worker.closed
+        assert not worker._wait.is_set()
+        assert [(record.name, record.levelname, record.message) for record in caplog.records] == []
+
+        mpd.get_representation.return_value = None
+        with pytest.raises(StopIteration):
+            self._next_segments(worker, segment_iter, 1)
+        assert worker.closed
+        assert worker._wait.is_set()
+        assert [(record.name, record.levelname, record.message) for record in caplog.records] == [
+            (
+                "streamlink.stream.dash",
+                "error",
+                "Failed to find matching DASH representation: (None, None, '1')",
             ),
         ]
 
