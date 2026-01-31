@@ -11,7 +11,7 @@ from itertools import count, repeat
 from typing import TYPE_CHECKING, Any, ClassVar, Literal, TypeAlias, TypeVar, overload
 from urllib.parse import urljoin, urlparse, urlunparse
 
-from isodate import Duration, parse_datetime, parse_duration  # type: ignore[import]
+from isodate import Duration, parse_datetime, parse_duration  # type: ignore[import]  # ty:ignore[unused-ignore-comment]
 
 from streamlink.stream.dash.segment import DASHSegment, TimelineSegment
 from streamlink.utils.times import UTC, fromtimestamp, now
@@ -23,6 +23,12 @@ if TYPE_CHECKING:
 
     # noinspection PyProtectedMember
     from lxml.etree import _Attrib, _Element
+
+    TMPDNode_co = TypeVar("TMPDNode_co", bound="MPDNode", covariant=True)
+    TAttrDefault = TypeVar("TAttrDefault")
+    TAttrParseResult = TypeVar("TAttrParseResult")
+    TAttrInherited: TypeAlias = type[TMPDNode_co] | Sequence[type[TMPDNode_co]] | None
+    TTimelineIdent: TypeAlias = tuple[str | None, str | None, str]
 
 
 log = logging.getLogger(__name__)
@@ -78,8 +84,15 @@ class MPDParsers:
         return duration_to_timedelta
 
     @staticmethod
-    def datetime(dt: str) -> datetime:
+    def parse_datetime(dt: str) -> datetime:
         return parse_datetime(dt).replace(tzinfo=UTC)
+
+    @staticmethod
+    def parse_timedelta(timescale: int | float = 1.0) -> Callable[[str | int | float], timedelta]:
+        def _timedelta(seconds: str | int | float):
+            return timedelta(seconds=int(float(seconds) / float(timescale)))
+
+        return _timedelta
 
     @staticmethod
     def segment_template(url_template: str) -> Callable[..., str]:
@@ -100,11 +113,8 @@ class MPDParsers:
         return float(a) / float(b)
 
     @staticmethod
-    def timedelta(timescale: float = 1):
-        def _timedelta(seconds):
-            return timedelta(seconds=int(float(seconds) / float(timescale)))
-
-        return _timedelta
+    def bandwidth(bandwidth: str) -> float:
+        return float(bandwidth) / 1000.0
 
     @staticmethod
     def range(range_spec: str) -> tuple[int, int | None]:
@@ -112,31 +122,28 @@ class MPDParsers:
         if len(r) != 2:
             raise MPDParsingError("Invalid byte-range-spec")
 
-        start, end = int(r[0]), r[1] and int(r[1]) or None
-        return start, end and ((end - start) + 1)
+        start = int(r[0])
+        if r[1]:
+            return start, int(r[1]) - start + 1
+        else:
+            return start, None
 
 
 class MPDParsingError(Exception):
     pass
 
 
-TMPDNode_co = TypeVar("TMPDNode_co", bound="MPDNode", covariant=True)
-TAttrDefault = TypeVar("TAttrDefault", Any, None)
-TAttrParseResult = TypeVar("TAttrParseResult")
-
-TTimelineIdent: TypeAlias = "tuple[str | None, str | None, str]"
-
-
 class MPDNode:
     __tag__: ClassVar[str]
 
     parent: MPDNode
+    baseURLs: list[BaseURL]
 
     def __init__(self, node: _Element, root: MPD, parent: MPDNode, **kwargs) -> None:
         self.node = node
         self.root = root
         self.parent = parent
-        self._base_url = kwargs.get("base_url")
+        self._base_url = kwargs.get("base_url", "")
         self.attributes: set[str] = set()
         if self.__tag__ and self.node.tag.lower() != self.__tag__.lower():
             raise MPDParsingError(f"Root tag did not match the expected tag: {self.__tag__}")
@@ -153,48 +160,61 @@ class MPDNode:
         return f"<{self.__tag__} {' '.join(f'@{attr}={getattr(self, attr)}' for attr in self.attributes)}>"
 
     @overload
-    def attr(  # type: ignore[misc]  # "Overloaded function signatures 1 and 2 overlap with incompatible return types"
+    def attr(
         self,
         key: str,
-        parser: None = None,
-        default: None = None,
-        required: bool = False,
-        inherited: type[TMPDNode_co] | Sequence[type[TMPDNode_co]] | None = None,
-    ) -> str | None:  # pragma: no cover
-        pass
+        inherited: TAttrInherited = None,
+    ) -> str | None: ...  # pragma: no cover
 
     @overload
     def attr(
         self,
         key: str,
-        parser: None,
+        parser: type[TAttrParseResult] | Callable[[Any], TAttrParseResult],
+        inherited: TAttrInherited = None,
+    ) -> TAttrParseResult | None: ...  # pragma: no cover
+
+    @overload
+    def attr(
+        self,
+        key: str,
+        required: Literal[True],
+        inherited: TAttrInherited = None,
+    ) -> str: ...  # pragma: no cover
+
+    @overload
+    def attr(
+        self,
+        key: str,
+        parser: type[TAttrParseResult] | Callable[[Any], TAttrParseResult],
+        required: Literal[True],
+        inherited: TAttrInherited = None,
+    ) -> TAttrParseResult: ...  # pragma: no cover
+
+    @overload
+    def attr(
+        self,
+        key: str,
+        required: bool = False,
+        inherited: TAttrInherited = None,
+    ) -> str | None: ...  # pragma: no cover
+
+    @overload
+    def attr(
+        self,
+        key: str,
         default: TAttrDefault,
-        required: bool = False,
-        inherited: type[TMPDNode_co] | Sequence[type[TMPDNode_co]] | None = None,
-    ) -> TAttrDefault:  # pragma: no cover
-        pass
+        inherited: TAttrInherited = None,
+    ) -> str | TAttrDefault: ...  # pragma: no cover
 
     @overload
     def attr(
         self,
         key: str,
-        parser: Callable[[Any], TAttrParseResult],
-        default: None = None,
-        required: bool = False,
-        inherited: type[TMPDNode_co] | Sequence[type[TMPDNode_co]] | None = None,
-    ) -> TAttrParseResult | None:  # pragma: no cover
-        pass
-
-    @overload
-    def attr(
-        self,
-        key: str,
-        parser: Callable[[Any], TAttrParseResult],
+        parser: type[TAttrParseResult] | Callable[[Any], TAttrParseResult],
         default: TAttrDefault,
-        required: bool = False,
-        inherited: type[TMPDNode_co] | Sequence[type[TMPDNode_co]] | None = None,
-    ) -> TAttrParseResult | TAttrDefault:  # pragma: no cover
-        pass
+        inherited: TAttrInherited = None,
+    ) -> TAttrParseResult | TAttrDefault: ...  # pragma: no cover
 
     def attr(self, key, parser=None, default=None, required=False, inherited=None):
         self.attributes.add(key)
@@ -247,7 +267,7 @@ class MPDNode:
         node = self.parent
         while node:
             if cls is None or isinstance(node, cls):  # type: ignore[arg-type]
-                n = mapper(node)  # type: ignore[arg-type]
+                n = mapper(node)
                 if n is not None:
                     yield n
             node = node.parent
@@ -280,7 +300,7 @@ class MPD(MPDNode):
 
     __tag__ = "MPD"
 
-    parent: None  # type: ignore[assignment]
+    parent: None  # type: ignore[assignment]  # ty:ignore[unused-ignore-comment]
     timelines: dict[TTimelineIdent, int]
 
     DEFAULT_MINBUFFERTIME = 3.0
@@ -309,19 +329,19 @@ class MPD(MPDNode):
         )
         self.publishTime = self.attr(
             "publishTime",
-            parser=MPDParsers.datetime,
+            parser=MPDParsers.parse_datetime,
             default=EPOCH_START,
         )
         self.availabilityStartTime = self.attr(
             "availabilityStartTime",
-            parser=MPDParsers.datetime,
+            parser=MPDParsers.parse_datetime,
             default=EPOCH_START,
         )
         self.availabilityEndTime = self.attr(
             "availabilityEndTime",
-            parser=MPDParsers.datetime,
+            parser=MPDParsers.parse_datetime,
         )
-        self.minBufferTime: timedelta = self.attr(  # type: ignore[assignment]
+        self.minBufferTime = self.attr(
             "minBufferTime",
             parser=MPDParsers.duration(self.publishTime),
             required=True,
@@ -458,7 +478,7 @@ class _RepresentationBaseType(MPDNode):
         super().__init__(*args, **kwargs)
 
         # mimeType must be set on the AdaptationSet or Representation
-        self.mimeType: str = self.attr(  # type: ignore[assignment]
+        self.mimeType = self.attr(
             "mimeType",
             required=type(self) is Representation,
             inherited=_RepresentationBaseType,
@@ -556,19 +576,20 @@ class Representation(_RepresentationBaseType):
     __tag__ = "Representation"
 
     parent: AdaptationSet
+    mimeType: str
 
     def __init__(self, *args, period: Period, **kwargs) -> None:
         super().__init__(*args, **kwargs)
 
         self.period = period
 
-        self.id: str = self.attr(  # type: ignore[assignment]
+        self.id = self.attr(
             "id",
             required=True,
         )
-        self.bandwidth: float = self.attr(  # type: ignore[assignment]
+        self.bandwidth = self.attr(
             "bandwidth",
-            parser=lambda b: float(b) / 1000.0,
+            parser=MPDParsers.bandwidth,
             required=True,
         )
 
@@ -653,25 +674,31 @@ class _SegmentBaseType(MPDNode):
 
         self.period = period
 
-        self.timescale: int = self.attr(
+        self.timescale = self.attr(
             "timescale",
             parser=int,
             default=self._find_default("timescale", 1),
         )
-        self.presentationTimeOffset: timedelta = self.attr(
+        self.presentationTimeOffset = self.attr(
             "presentationTimeOffset",
-            parser=MPDParsers.timedelta(self.timescale),
+            parser=MPDParsers.parse_timedelta(self.timescale),
             default=self._find_default("presentationTimeOffset", timedelta()),
         )
-        self.availabilityTimeOffset: timedelta = self.attr(
+        self.availabilityTimeOffset = self.attr(
             "availabilityTimeOffset",
-            parser=MPDParsers.timedelta(self.timescale),
+            parser=MPDParsers.parse_timedelta(self.timescale),
             default=self._find_default("availabilityTimeOffset", timedelta()),
         )
 
         self.initialization = self.only_child(Initialization) or self._find_default("initialization")
 
-    def _find_default(self, attr: str, default: TAttrDefault = None) -> TAttrDefault | Any:
+    @overload
+    def _find_default(self, attr: str) -> Any | None: ...  # pragma: no cover
+
+    @overload
+    def _find_default(self, attr: str, default: TAttrDefault) -> TAttrDefault: ...  # pragma: no cover
+
+    def _find_default(self, attr: str, default: TAttrDefault | None = None) -> Any | None:
         """Find default values from nodes of the same type on ancestor nodes"""
         # the node attribute on each ancestor is named after its node tag, with the first character being lowercase
         nodeattr = f"{self.__tag__[0].lower()}{self.__tag__[1:]}"
@@ -693,7 +720,7 @@ class _MultipleSegmentBaseType(_SegmentBaseType):
             parser=int,
             default=self._find_default("duration"),
         )
-        self.startNumber: int = self.attr(
+        self.startNumber = self.attr(
             "startNumber",
             parser=int,
             default=self._find_default("startNumber", 1),
@@ -994,7 +1021,7 @@ class _TimelineSegment(MPDNode):
         super().__init__(*args, **kwargs)
 
         self.t = self.attr("t", parser=int)
-        self.d: int = self.attr("d", parser=int, required=True)  # type: ignore[assignment]
+        self.d = self.attr("d", parser=int, required=True)
         self.r = self.attr("r", parser=int, default=0)
 
 
