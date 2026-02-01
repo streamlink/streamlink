@@ -14,7 +14,7 @@ from dataclasses import dataclass
 from typing import Any
 
 import streamlink.webbrowser.cdp.devtools.runtime as runtime
-from streamlink.webbrowser.cdp.devtools.util import T_JSON_DICT, event_class
+from streamlink.webbrowser.cdp.devtools.util import T_JSON_DICT, CDPEvent
 
 
 class StreamHandle(str):

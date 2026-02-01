@@ -15,7 +15,7 @@ from typing import Any
 
 import streamlink.webbrowser.cdp.devtools.page as page
 import streamlink.webbrowser.cdp.devtools.target as target
-from streamlink.webbrowser.cdp.devtools.util import T_JSON_DICT, event_class
+from streamlink.webbrowser.cdp.devtools.util import T_JSON_DICT, CDPEvent
 
 
 class BrowserContextID(str):
@@ -758,9 +758,8 @@ def add_privacy_sandbox_coordinator_key_config(
     yield cmd_dict
 
 
-@event_class("Browser.downloadWillBegin")
 @dataclass
-class DownloadWillBegin:
+class DownloadWillBegin(CDPEvent, event="Browser.downloadWillBegin"):
     """
     **EXPERIMENTAL**
 
@@ -785,9 +784,8 @@ class DownloadWillBegin:
         )
 
 
-@event_class("Browser.downloadProgress")
 @dataclass
-class DownloadProgress:
+class DownloadProgress(CDPEvent, event="Browser.downloadProgress"):
     """
     **EXPERIMENTAL**
 

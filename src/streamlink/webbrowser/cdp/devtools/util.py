@@ -7,23 +7,43 @@
 
 from __future__ import annotations
 
-from typing import Any, TypeAlias
+from typing import TYPE_CHECKING, Any, TypeAlias, cast
+
+
+if TYPE_CHECKING:
+    from collections.abc import MutableMapping
+
+    try:
+        from typing import Self  # type: ignore[attr-defined]
+    except ImportError:
+        from typing_extensions import Self
 
 
 T_JSON_DICT: TypeAlias = dict[str, Any]
-_event_parsers = {}
+_event_parsers: MutableMapping[str, type[CDPEvent]] = {}
 
 
-def event_class(method):
-    """A decorator that registers a class as an event class."""
+class _CDPEventMeta(type):
+    def __new__(
+        cls,
+        name,
+        bases,
+        namespace,
+        event: str | None = None,
+        **kwargs,
+    ) -> _CDPEventMeta:
+        obj = super().__new__(cls, name, bases, namespace, **kwargs)
+        if event is not None:
+            _event_parsers[event] = cast("type[CDPEvent]", obj)
 
-    def decorate(cls):
-        _event_parsers[method] = cls
-        return cls
-
-    return decorate
+        return obj
 
 
-def parse_json_event(json: T_JSON_DICT) -> Any:
+class CDPEvent(metaclass=_CDPEventMeta):
+    @classmethod
+    def from_json(cls, json: T_JSON_DICT) -> Self: ...  # pragma: no cover
+
+
+def parse_json_event(json: T_JSON_DICT) -> CDPEvent:
     """Parse a JSON dictionary into a CDP event."""
     return _event_parsers[json["method"]].from_json(json["params"])

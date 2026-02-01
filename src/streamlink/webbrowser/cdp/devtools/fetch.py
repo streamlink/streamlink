@@ -16,7 +16,7 @@ from typing import Any
 import streamlink.webbrowser.cdp.devtools.io as io
 import streamlink.webbrowser.cdp.devtools.network as network
 import streamlink.webbrowser.cdp.devtools.page as page
-from streamlink.webbrowser.cdp.devtools.util import T_JSON_DICT, event_class
+from streamlink.webbrowser.cdp.devtools.util import T_JSON_DICT, CDPEvent
 
 
 class RequestId(str):
@@ -424,9 +424,8 @@ def take_response_body_as_stream(
     return io.StreamHandle.from_json(json["stream"])
 
 
-@event_class("Fetch.requestPaused")
 @dataclass
-class RequestPaused:
+class RequestPaused(CDPEvent, event="Fetch.requestPaused"):
     """
     Issued when the domain is enabled and the request URL matches the
     specified filter. The request is paused until the client responds
@@ -479,9 +478,8 @@ class RequestPaused:
         )
 
 
-@event_class("Fetch.authRequired")
 @dataclass
-class AuthRequired:
+class AuthRequired(CDPEvent, event="Fetch.authRequired"):
     """
     Issued when the domain is enabled with handleAuthRequests set to true.
     The request is paused until client responds with continueWithAuth.

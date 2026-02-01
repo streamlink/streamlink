@@ -13,7 +13,7 @@ from collections.abc import Generator
 from dataclasses import dataclass
 from typing import Any
 
-from streamlink.webbrowser.cdp.devtools.util import T_JSON_DICT, event_class
+from streamlink.webbrowser.cdp.devtools.util import T_JSON_DICT, CDPEvent
 
 
 @dataclass
@@ -687,9 +687,8 @@ def synthesize_tap_gesture(
     yield cmd_dict
 
 
-@event_class("Input.dragIntercepted")
 @dataclass
-class DragIntercepted:
+class DragIntercepted(CDPEvent, event="Input.dragIntercepted"):
     """
     **EXPERIMENTAL**
 

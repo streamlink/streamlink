@@ -13,7 +13,7 @@ from collections.abc import Generator
 from dataclasses import dataclass
 from typing import Any
 
-from streamlink.webbrowser.cdp.devtools.util import T_JSON_DICT, event_class
+from streamlink.webbrowser.cdp.devtools.util import T_JSON_DICT, CDPEvent
 
 
 def disable() -> Generator[T_JSON_DICT, T_JSON_DICT, None]:
@@ -36,9 +36,8 @@ def enable() -> Generator[T_JSON_DICT, T_JSON_DICT, None]:
     yield cmd_dict
 
 
-@event_class("Inspector.detached")
 @dataclass
-class Detached:
+class Detached(CDPEvent, event="Inspector.detached"):
     """
     Fired when remote debugging connection is about to be terminated. Contains detach reason.
     """
@@ -52,9 +51,8 @@ class Detached:
         )
 
 
-@event_class("Inspector.targetCrashed")
 @dataclass
-class TargetCrashed:
+class TargetCrashed(CDPEvent, event="Inspector.targetCrashed"):
     """
     Fired when debugging target has crashed
     """
@@ -67,9 +65,8 @@ class TargetCrashed:
         )
 
 
-@event_class("Inspector.targetReloadedAfterCrash")
 @dataclass
-class TargetReloadedAfterCrash:
+class TargetReloadedAfterCrash(CDPEvent, event="Inspector.targetReloadedAfterCrash"):
     """
     Fired when debugging target has reloaded after crash
     """
