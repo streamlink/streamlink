@@ -19,7 +19,7 @@ import streamlink.webbrowser.cdp.devtools.emulation as emulation
 import streamlink.webbrowser.cdp.devtools.io as io
 import streamlink.webbrowser.cdp.devtools.network as network
 import streamlink.webbrowser.cdp.devtools.runtime as runtime
-from streamlink.webbrowser.cdp.devtools.util import T_JSON_DICT, event_class
+from streamlink.webbrowser.cdp.devtools.util import T_JSON_DICT, CDPEvent
 
 
 class FrameId(str):
@@ -3355,9 +3355,8 @@ def set_prerendering_allowed(
     yield cmd_dict
 
 
-@event_class("Page.domContentEventFired")
 @dataclass
-class DomContentEventFired:
+class DomContentEventFired(CDPEvent, event="Page.domContentEventFired"):
     timestamp: network.MonotonicTime
 
     @classmethod
@@ -3367,9 +3366,8 @@ class DomContentEventFired:
         )
 
 
-@event_class("Page.fileChooserOpened")
 @dataclass
-class FileChooserOpened:
+class FileChooserOpened(CDPEvent, event="Page.fileChooserOpened"):
     """
     Emitted only when ``page.interceptFileChooser`` is enabled.
     """
@@ -3389,9 +3387,8 @@ class FileChooserOpened:
         )
 
 
-@event_class("Page.frameAttached")
 @dataclass
-class FrameAttached:
+class FrameAttached(CDPEvent, event="Page.frameAttached"):
     """
     Fired when frame has been attached to its parent.
     """
@@ -3411,9 +3408,8 @@ class FrameAttached:
         )
 
 
-@event_class("Page.frameClearedScheduledNavigation")
 @dataclass
-class FrameClearedScheduledNavigation:
+class FrameClearedScheduledNavigation(CDPEvent, event="Page.frameClearedScheduledNavigation"):
     """
     Fired when frame no longer has a scheduled navigation.
     """
@@ -3427,9 +3423,8 @@ class FrameClearedScheduledNavigation:
         )
 
 
-@event_class("Page.frameDetached")
 @dataclass
-class FrameDetached:
+class FrameDetached(CDPEvent, event="Page.frameDetached"):
     """
     Fired when frame has been detached from its parent.
     """
@@ -3445,9 +3440,8 @@ class FrameDetached:
         )
 
 
-@event_class("Page.frameSubtreeWillBeDetached")
 @dataclass
-class FrameSubtreeWillBeDetached:
+class FrameSubtreeWillBeDetached(CDPEvent, event="Page.frameSubtreeWillBeDetached"):
     """
     **EXPERIMENTAL**
 
@@ -3464,9 +3458,8 @@ class FrameSubtreeWillBeDetached:
         )
 
 
-@event_class("Page.frameNavigated")
 @dataclass
-class FrameNavigated:
+class FrameNavigated(CDPEvent, event="Page.frameNavigated"):
     """
     Fired once navigation of the frame has completed. Frame is now associated with the new loader.
     """
@@ -3482,9 +3475,8 @@ class FrameNavigated:
         )
 
 
-@event_class("Page.documentOpened")
 @dataclass
-class DocumentOpened:
+class DocumentOpened(CDPEvent, event="Page.documentOpened"):
     """
     **EXPERIMENTAL**
 
@@ -3500,9 +3492,8 @@ class DocumentOpened:
         )
 
 
-@event_class("Page.frameResized")
 @dataclass
-class FrameResized:
+class FrameResized(CDPEvent, event="Page.frameResized"):
     """
     **EXPERIMENTAL**
 
@@ -3517,9 +3508,8 @@ class FrameResized:
         )
 
 
-@event_class("Page.frameStartedNavigating")
 @dataclass
-class FrameStartedNavigating:
+class FrameStartedNavigating(CDPEvent, event="Page.frameStartedNavigating"):
     """
     **EXPERIMENTAL**
 
@@ -3552,9 +3542,8 @@ class FrameStartedNavigating:
         )
 
 
-@event_class("Page.frameRequestedNavigation")
 @dataclass
-class FrameRequestedNavigation:
+class FrameRequestedNavigation(CDPEvent, event="Page.frameRequestedNavigation"):
     """
     **EXPERIMENTAL**
 
@@ -3580,9 +3569,8 @@ class FrameRequestedNavigation:
         )
 
 
-@event_class("Page.frameScheduledNavigation")
 @dataclass
-class FrameScheduledNavigation:
+class FrameScheduledNavigation(CDPEvent, event="Page.frameScheduledNavigation"):
     """
     Fired when frame schedules a potential navigation.
     """
@@ -3606,9 +3594,8 @@ class FrameScheduledNavigation:
         )
 
 
-@event_class("Page.frameStartedLoading")
 @dataclass
-class FrameStartedLoading:
+class FrameStartedLoading(CDPEvent, event="Page.frameStartedLoading"):
     """
     **EXPERIMENTAL**
 
@@ -3624,9 +3611,8 @@ class FrameStartedLoading:
         )
 
 
-@event_class("Page.frameStoppedLoading")
 @dataclass
-class FrameStoppedLoading:
+class FrameStoppedLoading(CDPEvent, event="Page.frameStoppedLoading"):
     """
     **EXPERIMENTAL**
 
@@ -3642,9 +3628,8 @@ class FrameStoppedLoading:
         )
 
 
-@event_class("Page.downloadWillBegin")
 @dataclass
-class DownloadWillBegin:
+class DownloadWillBegin(CDPEvent, event="Page.downloadWillBegin"):
     """
     **EXPERIMENTAL**
 
@@ -3670,9 +3655,8 @@ class DownloadWillBegin:
         )
 
 
-@event_class("Page.downloadProgress")
 @dataclass
-class DownloadProgress:
+class DownloadProgress(CDPEvent, event="Page.downloadProgress"):
     """
     **EXPERIMENTAL**
 
@@ -3698,9 +3682,8 @@ class DownloadProgress:
         )
 
 
-@event_class("Page.interstitialHidden")
 @dataclass
-class InterstitialHidden:
+class InterstitialHidden(CDPEvent, event="Page.interstitialHidden"):
     """
     Fired when interstitial page was hidden
     """
@@ -3713,9 +3696,8 @@ class InterstitialHidden:
         )
 
 
-@event_class("Page.interstitialShown")
 @dataclass
-class InterstitialShown:
+class InterstitialShown(CDPEvent, event="Page.interstitialShown"):
     """
     Fired when interstitial page was shown
     """
@@ -3728,9 +3710,8 @@ class InterstitialShown:
         )
 
 
-@event_class("Page.javascriptDialogClosed")
 @dataclass
-class JavascriptDialogClosed:
+class JavascriptDialogClosed(CDPEvent, event="Page.javascriptDialogClosed"):
     """
     Fired when a JavaScript initiated dialog (alert, confirm, prompt, or onbeforeunload) has been
     closed.
@@ -3751,9 +3732,8 @@ class JavascriptDialogClosed:
         )
 
 
-@event_class("Page.javascriptDialogOpening")
 @dataclass
-class JavascriptDialogOpening:
+class JavascriptDialogOpening(CDPEvent, event="Page.javascriptDialogOpening"):
     """
     Fired when a JavaScript initiated dialog (alert, confirm, prompt, or onbeforeunload) is about to
     open.
@@ -3785,9 +3765,8 @@ class JavascriptDialogOpening:
         )
 
 
-@event_class("Page.lifecycleEvent")
 @dataclass
-class LifecycleEvent:
+class LifecycleEvent(CDPEvent, event="Page.lifecycleEvent"):
     """
     Fired for lifecycle events (navigation, load, paint, etc) in the current
     target (including local frames).
@@ -3809,9 +3788,8 @@ class LifecycleEvent:
         )
 
 
-@event_class("Page.backForwardCacheNotUsed")
 @dataclass
-class BackForwardCacheNotUsed:
+class BackForwardCacheNotUsed(CDPEvent, event="Page.backForwardCacheNotUsed"):
     """
     **EXPERIMENTAL**
 
@@ -3839,9 +3817,8 @@ class BackForwardCacheNotUsed:
         )
 
 
-@event_class("Page.loadEventFired")
 @dataclass
-class LoadEventFired:
+class LoadEventFired(CDPEvent, event="Page.loadEventFired"):
     timestamp: network.MonotonicTime
 
     @classmethod
@@ -3851,9 +3828,8 @@ class LoadEventFired:
         )
 
 
-@event_class("Page.navigatedWithinDocument")
 @dataclass
-class NavigatedWithinDocument:
+class NavigatedWithinDocument(CDPEvent, event="Page.navigatedWithinDocument"):
     """
     **EXPERIMENTAL**
 
@@ -3875,9 +3851,8 @@ class NavigatedWithinDocument:
         )
 
 
-@event_class("Page.screencastFrame")
 @dataclass
-class ScreencastFrame:
+class ScreencastFrame(CDPEvent, event="Page.screencastFrame"):
     """
     **EXPERIMENTAL**
 
@@ -3899,9 +3874,8 @@ class ScreencastFrame:
         )
 
 
-@event_class("Page.screencastVisibilityChanged")
 @dataclass
-class ScreencastVisibilityChanged:
+class ScreencastVisibilityChanged(CDPEvent, event="Page.screencastVisibilityChanged"):
     """
     **EXPERIMENTAL**
 
@@ -3917,9 +3891,8 @@ class ScreencastVisibilityChanged:
         )
 
 
-@event_class("Page.windowOpen")
 @dataclass
-class WindowOpen:
+class WindowOpen(CDPEvent, event="Page.windowOpen"):
     """
     Fired when a new window is going to be opened, via window.open(), link click, form submission,
     etc.
@@ -3943,9 +3916,8 @@ class WindowOpen:
         )
 
 
-@event_class("Page.compilationCacheProduced")
 @dataclass
-class CompilationCacheProduced:
+class CompilationCacheProduced(CDPEvent, event="Page.compilationCacheProduced"):
     """
     **EXPERIMENTAL**
 

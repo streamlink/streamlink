@@ -14,7 +14,7 @@ from dataclasses import dataclass
 from typing import Any
 
 import streamlink.webbrowser.cdp.devtools.network as network
-from streamlink.webbrowser.cdp.devtools.util import T_JSON_DICT, event_class
+from streamlink.webbrowser.cdp.devtools.util import T_JSON_DICT, CDPEvent
 
 
 class CertificateId(int):
@@ -440,9 +440,8 @@ def set_override_certificate_errors(
     yield cmd_dict
 
 
-@event_class("Security.certificateError")
 @dataclass
-class CertificateError:
+class CertificateError(CDPEvent, event="Security.certificateError"):
     """
     There is a certificate error. If overriding certificate errors is enabled, then it should be
     handled with the ``handleCertificateError`` command. Note: this event does not fire if the
@@ -465,9 +464,8 @@ class CertificateError:
         )
 
 
-@event_class("Security.visibleSecurityStateChanged")
 @dataclass
-class VisibleSecurityStateChanged:
+class VisibleSecurityStateChanged(CDPEvent, event="Security.visibleSecurityStateChanged"):
     """
     **EXPERIMENTAL**
 
@@ -483,9 +481,8 @@ class VisibleSecurityStateChanged:
         )
 
 
-@event_class("Security.securityStateChanged")
 @dataclass
-class SecurityStateChanged:
+class SecurityStateChanged(CDPEvent, event="Security.securityStateChanged"):
     """
     The security state of the page changed. No longer being sent.
     """

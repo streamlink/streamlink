@@ -16,7 +16,7 @@ from typing import Any
 import streamlink.webbrowser.cdp.devtools.dom as dom
 import streamlink.webbrowser.cdp.devtools.network as network
 import streamlink.webbrowser.cdp.devtools.page as page
-from streamlink.webbrowser.cdp.devtools.util import T_JSON_DICT, event_class
+from streamlink.webbrowser.cdp.devtools.util import T_JSON_DICT, CDPEvent
 
 
 @dataclass
@@ -1639,9 +1639,8 @@ def remove_screen(
     yield cmd_dict
 
 
-@event_class("Emulation.virtualTimeBudgetExpired")
 @dataclass
-class VirtualTimeBudgetExpired:
+class VirtualTimeBudgetExpired(CDPEvent, event="Emulation.virtualTimeBudgetExpired"):
     """
     **EXPERIMENTAL**
 

@@ -15,7 +15,7 @@ from typing import Any
 
 import streamlink.webbrowser.cdp.devtools.browser as browser
 import streamlink.webbrowser.cdp.devtools.page as page
-from streamlink.webbrowser.cdp.devtools.util import T_JSON_DICT, event_class
+from streamlink.webbrowser.cdp.devtools.util import T_JSON_DICT, CDPEvent
 
 
 class TargetID(str):
@@ -652,9 +652,8 @@ def open_dev_tools(
     return TargetID.from_json(json["targetId"])
 
 
-@event_class("Target.attachedToTarget")
 @dataclass
-class AttachedToTarget:
+class AttachedToTarget(CDPEvent, event="Target.attachedToTarget"):
     """
     **EXPERIMENTAL**
 
@@ -674,9 +673,8 @@ class AttachedToTarget:
         )
 
 
-@event_class("Target.detachedFromTarget")
 @dataclass
-class DetachedFromTarget:
+class DetachedFromTarget(CDPEvent, event="Target.detachedFromTarget"):
     """
     **EXPERIMENTAL**
 
@@ -696,9 +694,8 @@ class DetachedFromTarget:
         )
 
 
-@event_class("Target.receivedMessageFromTarget")
 @dataclass
-class ReceivedMessageFromTarget:
+class ReceivedMessageFromTarget(CDPEvent, event="Target.receivedMessageFromTarget"):
     """
     Notifies about a new protocol message received from the session (as reported in
     ``attachedToTarget`` event).
@@ -718,9 +715,8 @@ class ReceivedMessageFromTarget:
         )
 
 
-@event_class("Target.targetCreated")
 @dataclass
-class TargetCreated:
+class TargetCreated(CDPEvent, event="Target.targetCreated"):
     """
     Issued when a possible inspection target is created.
     """
@@ -733,9 +729,8 @@ class TargetCreated:
         )
 
 
-@event_class("Target.targetDestroyed")
 @dataclass
-class TargetDestroyed:
+class TargetDestroyed(CDPEvent, event="Target.targetDestroyed"):
     """
     Issued when a target is destroyed.
     """
@@ -748,9 +743,8 @@ class TargetDestroyed:
         )
 
 
-@event_class("Target.targetCrashed")
 @dataclass
-class TargetCrashed:
+class TargetCrashed(CDPEvent, event="Target.targetCrashed"):
     """
     Issued when a target has crashed.
     """
@@ -769,9 +763,8 @@ class TargetCrashed:
         )
 
 
-@event_class("Target.targetInfoChanged")
 @dataclass
-class TargetInfoChanged:
+class TargetInfoChanged(CDPEvent, event="Target.targetInfoChanged"):
     """
     Issued when some information about a target has changed. This only happens between
     ``targetCreated`` and ``targetDestroyed``.

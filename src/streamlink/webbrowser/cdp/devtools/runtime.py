@@ -13,7 +13,7 @@ from collections.abc import Generator
 from dataclasses import dataclass
 from typing import Any
 
-from streamlink.webbrowser.cdp.devtools.util import T_JSON_DICT, event_class
+from streamlink.webbrowser.cdp.devtools.util import T_JSON_DICT, CDPEvent
 
 
 class ScriptId(str):
@@ -1428,9 +1428,8 @@ def get_exception_details(
     return ExceptionDetails.from_json(json["exceptionDetails"]) if "exceptionDetails" in json else None
 
 
-@event_class("Runtime.bindingCalled")
 @dataclass
-class BindingCalled:
+class BindingCalled(CDPEvent, event="Runtime.bindingCalled"):
     """
     **EXPERIMENTAL**
 
@@ -1450,9 +1449,8 @@ class BindingCalled:
         )
 
 
-@event_class("Runtime.consoleAPICalled")
 @dataclass
-class ConsoleAPICalled:
+class ConsoleAPICalled(CDPEvent, event="Runtime.consoleAPICalled"):
     """
     Issued when console API was called.
     """
@@ -1485,9 +1483,8 @@ class ConsoleAPICalled:
         )
 
 
-@event_class("Runtime.exceptionRevoked")
 @dataclass
-class ExceptionRevoked:
+class ExceptionRevoked(CDPEvent, event="Runtime.exceptionRevoked"):
     """
     Issued when unhandled exception was revoked.
     """
@@ -1504,9 +1501,8 @@ class ExceptionRevoked:
         )
 
 
-@event_class("Runtime.exceptionThrown")
 @dataclass
-class ExceptionThrown:
+class ExceptionThrown(CDPEvent, event="Runtime.exceptionThrown"):
     """
     Issued when exception was thrown and unhandled.
     """
@@ -1522,9 +1518,8 @@ class ExceptionThrown:
         )
 
 
-@event_class("Runtime.executionContextCreated")
 @dataclass
-class ExecutionContextCreated:
+class ExecutionContextCreated(CDPEvent, event="Runtime.executionContextCreated"):
     """
     Issued when new execution context is created.
     """
@@ -1538,9 +1533,8 @@ class ExecutionContextCreated:
         )
 
 
-@event_class("Runtime.executionContextDestroyed")
 @dataclass
-class ExecutionContextDestroyed:
+class ExecutionContextDestroyed(CDPEvent, event="Runtime.executionContextDestroyed"):
     """
     Issued when execution context is destroyed.
     """
@@ -1557,9 +1551,8 @@ class ExecutionContextDestroyed:
         )
 
 
-@event_class("Runtime.executionContextsCleared")
 @dataclass
-class ExecutionContextsCleared:
+class ExecutionContextsCleared(CDPEvent, event="Runtime.executionContextsCleared"):
     """
     Issued when all executionContexts were cleared in browser
     """
@@ -1572,9 +1565,8 @@ class ExecutionContextsCleared:
         )
 
 
-@event_class("Runtime.inspectRequested")
 @dataclass
-class InspectRequested:
+class InspectRequested(CDPEvent, event="Runtime.inspectRequested"):
     """
     Issued when object should be inspected (for example, as a result of inspect() command line API
     call).

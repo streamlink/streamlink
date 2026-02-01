@@ -19,7 +19,7 @@ import streamlink.webbrowser.cdp.devtools.io as io
 import streamlink.webbrowser.cdp.devtools.page as page
 import streamlink.webbrowser.cdp.devtools.runtime as runtime
 import streamlink.webbrowser.cdp.devtools.security as security
-from streamlink.webbrowser.cdp.devtools.util import T_JSON_DICT, event_class
+from streamlink.webbrowser.cdp.devtools.util import T_JSON_DICT, CDPEvent
 
 
 class ResourceType(enum.Enum):
@@ -3421,9 +3421,8 @@ def set_cookie_controls(
     yield cmd_dict
 
 
-@event_class("Network.dataReceived")
 @dataclass
-class DataReceived:
+class DataReceived(CDPEvent, event="Network.dataReceived"):
     """
     Fired when data chunk was received over the network.
     """
@@ -3449,9 +3448,8 @@ class DataReceived:
         )
 
 
-@event_class("Network.eventSourceMessageReceived")
 @dataclass
-class EventSourceMessageReceived:
+class EventSourceMessageReceived(CDPEvent, event="Network.eventSourceMessageReceived"):
     """
     Fired when EventSource message is received.
     """
@@ -3477,9 +3475,8 @@ class EventSourceMessageReceived:
         )
 
 
-@event_class("Network.loadingFailed")
 @dataclass
-class LoadingFailed:
+class LoadingFailed(CDPEvent, event="Network.loadingFailed"):
     """
     Fired when HTTP request has failed to load.
     """
@@ -3511,9 +3508,8 @@ class LoadingFailed:
         )
 
 
-@event_class("Network.loadingFinished")
 @dataclass
-class LoadingFinished:
+class LoadingFinished(CDPEvent, event="Network.loadingFinished"):
     """
     Fired when HTTP request has finished loading.
     """
@@ -3533,9 +3529,8 @@ class LoadingFinished:
         )
 
 
-@event_class("Network.requestIntercepted")
 @dataclass
-class RequestIntercepted:
+class RequestIntercepted(CDPEvent, event="Network.requestIntercepted"):
     """
     **EXPERIMENTAL**
 
@@ -3593,9 +3588,8 @@ class RequestIntercepted:
         )
 
 
-@event_class("Network.requestServedFromCache")
 @dataclass
-class RequestServedFromCache:
+class RequestServedFromCache(CDPEvent, event="Network.requestServedFromCache"):
     """
     Fired if request ended up loading from cache.
     """
@@ -3609,9 +3603,8 @@ class RequestServedFromCache:
         )
 
 
-@event_class("Network.requestWillBeSent")
 @dataclass
-class RequestWillBeSent:
+class RequestWillBeSent(CDPEvent, event="Network.requestWillBeSent"):
     """
     Fired when page is about to send HTTP request.
     """
@@ -3660,9 +3653,8 @@ class RequestWillBeSent:
         )
 
 
-@event_class("Network.resourceChangedPriority")
 @dataclass
-class ResourceChangedPriority:
+class ResourceChangedPriority(CDPEvent, event="Network.resourceChangedPriority"):
     """
     **EXPERIMENTAL**
 
@@ -3684,9 +3676,8 @@ class ResourceChangedPriority:
         )
 
 
-@event_class("Network.signedExchangeReceived")
 @dataclass
-class SignedExchangeReceived:
+class SignedExchangeReceived(CDPEvent, event="Network.signedExchangeReceived"):
     """
     **EXPERIMENTAL**
 
@@ -3705,9 +3696,8 @@ class SignedExchangeReceived:
         )
 
 
-@event_class("Network.responseReceived")
 @dataclass
-class ResponseReceived:
+class ResponseReceived(CDPEvent, event="Network.responseReceived"):
     """
     Fired when HTTP response is available.
     """
@@ -3740,9 +3730,8 @@ class ResponseReceived:
         )
 
 
-@event_class("Network.webSocketClosed")
 @dataclass
-class WebSocketClosed:
+class WebSocketClosed(CDPEvent, event="Network.webSocketClosed"):
     """
     Fired when WebSocket is closed.
     """
@@ -3759,9 +3748,8 @@ class WebSocketClosed:
         )
 
 
-@event_class("Network.webSocketCreated")
 @dataclass
-class WebSocketCreated:
+class WebSocketCreated(CDPEvent, event="Network.webSocketCreated"):
     """
     Fired upon WebSocket creation.
     """
@@ -3781,9 +3769,8 @@ class WebSocketCreated:
         )
 
 
-@event_class("Network.webSocketFrameError")
 @dataclass
-class WebSocketFrameError:
+class WebSocketFrameError(CDPEvent, event="Network.webSocketFrameError"):
     """
     Fired when WebSocket message error occurs.
     """
@@ -3803,9 +3790,8 @@ class WebSocketFrameError:
         )
 
 
-@event_class("Network.webSocketFrameReceived")
 @dataclass
-class WebSocketFrameReceived:
+class WebSocketFrameReceived(CDPEvent, event="Network.webSocketFrameReceived"):
     """
     Fired when WebSocket message is received.
     """
@@ -3825,9 +3811,8 @@ class WebSocketFrameReceived:
         )
 
 
-@event_class("Network.webSocketFrameSent")
 @dataclass
-class WebSocketFrameSent:
+class WebSocketFrameSent(CDPEvent, event="Network.webSocketFrameSent"):
     """
     Fired when WebSocket message is sent.
     """
@@ -3847,9 +3832,8 @@ class WebSocketFrameSent:
         )
 
 
-@event_class("Network.webSocketHandshakeResponseReceived")
 @dataclass
-class WebSocketHandshakeResponseReceived:
+class WebSocketHandshakeResponseReceived(CDPEvent, event="Network.webSocketHandshakeResponseReceived"):
     """
     Fired when WebSocket handshake response becomes available.
     """
@@ -3869,9 +3853,8 @@ class WebSocketHandshakeResponseReceived:
         )
 
 
-@event_class("Network.webSocketWillSendHandshakeRequest")
 @dataclass
-class WebSocketWillSendHandshakeRequest:
+class WebSocketWillSendHandshakeRequest(CDPEvent, event="Network.webSocketWillSendHandshakeRequest"):
     """
     Fired when WebSocket is about to initiate handshake.
     """
@@ -3894,9 +3877,8 @@ class WebSocketWillSendHandshakeRequest:
         )
 
 
-@event_class("Network.webTransportCreated")
 @dataclass
-class WebTransportCreated:
+class WebTransportCreated(CDPEvent, event="Network.webTransportCreated"):
     """
     Fired upon WebTransport creation.
     """
@@ -3919,9 +3901,8 @@ class WebTransportCreated:
         )
 
 
-@event_class("Network.webTransportConnectionEstablished")
 @dataclass
-class WebTransportConnectionEstablished:
+class WebTransportConnectionEstablished(CDPEvent, event="Network.webTransportConnectionEstablished"):
     """
     Fired when WebTransport handshake is finished.
     """
@@ -3938,9 +3919,8 @@ class WebTransportConnectionEstablished:
         )
 
 
-@event_class("Network.webTransportClosed")
 @dataclass
-class WebTransportClosed:
+class WebTransportClosed(CDPEvent, event="Network.webTransportClosed"):
     """
     Fired when WebTransport is disposed.
     """
@@ -3957,9 +3937,8 @@ class WebTransportClosed:
         )
 
 
-@event_class("Network.directTCPSocketCreated")
 @dataclass
-class DirectTCPSocketCreated:
+class DirectTCPSocketCreated(CDPEvent, event="Network.directTCPSocketCreated"):
     """
     **EXPERIMENTAL**
 
@@ -3985,9 +3964,8 @@ class DirectTCPSocketCreated:
         )
 
 
-@event_class("Network.directTCPSocketOpened")
 @dataclass
-class DirectTCPSocketOpened:
+class DirectTCPSocketOpened(CDPEvent, event="Network.directTCPSocketOpened"):
     """
     **EXPERIMENTAL**
 
@@ -4014,9 +3992,8 @@ class DirectTCPSocketOpened:
         )
 
 
-@event_class("Network.directTCPSocketAborted")
 @dataclass
-class DirectTCPSocketAborted:
+class DirectTCPSocketAborted(CDPEvent, event="Network.directTCPSocketAborted"):
     """
     **EXPERIMENTAL**
 
@@ -4035,9 +4012,8 @@ class DirectTCPSocketAborted:
         )
 
 
-@event_class("Network.directTCPSocketClosed")
 @dataclass
-class DirectTCPSocketClosed:
+class DirectTCPSocketClosed(CDPEvent, event="Network.directTCPSocketClosed"):
     """
     **EXPERIMENTAL**
 
@@ -4054,9 +4030,8 @@ class DirectTCPSocketClosed:
         )
 
 
-@event_class("Network.directTCPSocketChunkSent")
 @dataclass
-class DirectTCPSocketChunkSent:
+class DirectTCPSocketChunkSent(CDPEvent, event="Network.directTCPSocketChunkSent"):
     """
     **EXPERIMENTAL**
 
@@ -4075,9 +4050,8 @@ class DirectTCPSocketChunkSent:
         )
 
 
-@event_class("Network.directTCPSocketChunkReceived")
 @dataclass
-class DirectTCPSocketChunkReceived:
+class DirectTCPSocketChunkReceived(CDPEvent, event="Network.directTCPSocketChunkReceived"):
     """
     **EXPERIMENTAL**
 
@@ -4096,9 +4070,8 @@ class DirectTCPSocketChunkReceived:
         )
 
 
-@event_class("Network.directUDPSocketCreated")
 @dataclass
-class DirectUDPSocketCreated:
+class DirectUDPSocketCreated(CDPEvent, event="Network.directUDPSocketCreated"):
     """
     **EXPERIMENTAL**
 
@@ -4119,9 +4092,8 @@ class DirectUDPSocketCreated:
         )
 
 
-@event_class("Network.directUDPSocketOpened")
 @dataclass
-class DirectUDPSocketOpened:
+class DirectUDPSocketOpened(CDPEvent, event="Network.directUDPSocketOpened"):
     """
     **EXPERIMENTAL**
 
@@ -4148,9 +4120,8 @@ class DirectUDPSocketOpened:
         )
 
 
-@event_class("Network.directUDPSocketAborted")
 @dataclass
-class DirectUDPSocketAborted:
+class DirectUDPSocketAborted(CDPEvent, event="Network.directUDPSocketAborted"):
     """
     **EXPERIMENTAL**
 
@@ -4169,9 +4140,8 @@ class DirectUDPSocketAborted:
         )
 
 
-@event_class("Network.directUDPSocketClosed")
 @dataclass
-class DirectUDPSocketClosed:
+class DirectUDPSocketClosed(CDPEvent, event="Network.directUDPSocketClosed"):
     """
     **EXPERIMENTAL**
 
@@ -4188,9 +4158,8 @@ class DirectUDPSocketClosed:
         )
 
 
-@event_class("Network.directUDPSocketChunkSent")
 @dataclass
-class DirectUDPSocketChunkSent:
+class DirectUDPSocketChunkSent(CDPEvent, event="Network.directUDPSocketChunkSent"):
     """
     **EXPERIMENTAL**
 
@@ -4209,9 +4178,8 @@ class DirectUDPSocketChunkSent:
         )
 
 
-@event_class("Network.directUDPSocketChunkReceived")
 @dataclass
-class DirectUDPSocketChunkReceived:
+class DirectUDPSocketChunkReceived(CDPEvent, event="Network.directUDPSocketChunkReceived"):
     """
     **EXPERIMENTAL**
 
@@ -4230,9 +4198,8 @@ class DirectUDPSocketChunkReceived:
         )
 
 
-@event_class("Network.requestWillBeSentExtraInfo")
 @dataclass
-class RequestWillBeSentExtraInfo:
+class RequestWillBeSentExtraInfo(CDPEvent, event="Network.requestWillBeSentExtraInfo"):
     """
     **EXPERIMENTAL**
 
@@ -4267,9 +4234,8 @@ class RequestWillBeSentExtraInfo:
         )
 
 
-@event_class("Network.responseReceivedExtraInfo")
 @dataclass
-class ResponseReceivedExtraInfo:
+class ResponseReceivedExtraInfo(CDPEvent, event="Network.responseReceivedExtraInfo"):
     """
     **EXPERIMENTAL**
 
@@ -4322,9 +4288,8 @@ class ResponseReceivedExtraInfo:
         )
 
 
-@event_class("Network.responseReceivedEarlyHints")
 @dataclass
-class ResponseReceivedEarlyHints:
+class ResponseReceivedEarlyHints(CDPEvent, event="Network.responseReceivedEarlyHints"):
     """
     **EXPERIMENTAL**
 
@@ -4348,9 +4313,8 @@ class ResponseReceivedEarlyHints:
         )
 
 
-@event_class("Network.trustTokenOperationDone")
 @dataclass
-class TrustTokenOperationDone:
+class TrustTokenOperationDone(CDPEvent, event="Network.trustTokenOperationDone"):
     """
     **EXPERIMENTAL**
 
@@ -4385,9 +4349,8 @@ class TrustTokenOperationDone:
         )
 
 
-@event_class("Network.policyUpdated")
 @dataclass
-class PolicyUpdated:
+class PolicyUpdated(CDPEvent, event="Network.policyUpdated"):
     """
     **EXPERIMENTAL**
 
@@ -4402,9 +4365,8 @@ class PolicyUpdated:
         )
 
 
-@event_class("Network.subresourceWebBundleMetadataReceived")
 @dataclass
-class SubresourceWebBundleMetadataReceived:
+class SubresourceWebBundleMetadataReceived(CDPEvent, event="Network.subresourceWebBundleMetadataReceived"):
     """
     **EXPERIMENTAL**
 
@@ -4424,9 +4386,8 @@ class SubresourceWebBundleMetadataReceived:
         )
 
 
-@event_class("Network.subresourceWebBundleMetadataError")
 @dataclass
-class SubresourceWebBundleMetadataError:
+class SubresourceWebBundleMetadataError(CDPEvent, event="Network.subresourceWebBundleMetadataError"):
     """
     **EXPERIMENTAL**
 
@@ -4445,9 +4406,8 @@ class SubresourceWebBundleMetadataError:
         )
 
 
-@event_class("Network.subresourceWebBundleInnerResponseParsed")
 @dataclass
-class SubresourceWebBundleInnerResponseParsed:
+class SubresourceWebBundleInnerResponseParsed(CDPEvent, event="Network.subresourceWebBundleInnerResponseParsed"):
     """
     **EXPERIMENTAL**
 
@@ -4472,9 +4432,8 @@ class SubresourceWebBundleInnerResponseParsed:
         )
 
 
-@event_class("Network.subresourceWebBundleInnerResponseError")
 @dataclass
-class SubresourceWebBundleInnerResponseError:
+class SubresourceWebBundleInnerResponseError(CDPEvent, event="Network.subresourceWebBundleInnerResponseError"):
     """
     **EXPERIMENTAL**
 
@@ -4501,9 +4460,8 @@ class SubresourceWebBundleInnerResponseError:
         )
 
 
-@event_class("Network.reportingApiReportAdded")
 @dataclass
-class ReportingApiReportAdded:
+class ReportingApiReportAdded(CDPEvent, event="Network.reportingApiReportAdded"):
     """
     **EXPERIMENTAL**
 
@@ -4519,9 +4477,8 @@ class ReportingApiReportAdded:
         )
 
 
-@event_class("Network.reportingApiReportUpdated")
 @dataclass
-class ReportingApiReportUpdated:
+class ReportingApiReportUpdated(CDPEvent, event="Network.reportingApiReportUpdated"):
     """
     **EXPERIMENTAL**
 
@@ -4536,9 +4493,8 @@ class ReportingApiReportUpdated:
         )
 
 
-@event_class("Network.reportingApiEndpointsChangedForOrigin")
 @dataclass
-class ReportingApiEndpointsChangedForOrigin:
+class ReportingApiEndpointsChangedForOrigin(CDPEvent, event="Network.reportingApiEndpointsChangedForOrigin"):
     """
     **EXPERIMENTAL**
 

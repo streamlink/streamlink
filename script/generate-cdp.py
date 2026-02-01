@@ -101,24 +101,44 @@ UTIL = f"""{SHARED_HEADER}
 
 from __future__ import annotations
 
-from typing import Any, TypeAlias
+from typing import TYPE_CHECKING, Any, TypeAlias, cast
+
+
+if TYPE_CHECKING:
+    from collections.abc import MutableMapping
+
+    try:
+        from typing import Self  # type: ignore[attr-defined]
+    except ImportError:
+        from typing_extensions import Self
 
 
 T_JSON_DICT: TypeAlias = dict[str, Any]
-_event_parsers = {{{{}}}}
+_event_parsers: MutableMapping[str, type[CDPEvent]] = {{{{}}}}
 
 
-def event_class(method):
-    \"\"\"A decorator that registers a class as an event class.\"\"\"
+class _CDPEventMeta(type):
+    def __new__(
+        cls,
+        name,
+        bases,
+        namespace,
+        event: str | None = None,
+        **kwargs,
+    ) -> _CDPEventMeta:
+        obj = super().__new__(cls, name, bases, namespace, **kwargs)
+        if event is not None:
+            _event_parsers[event] = cast("type[CDPEvent]", obj)
 
-    def decorate(cls):
-        _event_parsers[method] = cls
-        return cls
-
-    return decorate
+        return obj
 
 
-def parse_json_event(json: T_JSON_DICT) -> Any:
+class CDPEvent(metaclass=_CDPEventMeta):
+    @classmethod
+    def from_json(cls, json: T_JSON_DICT) -> Self: ...  # pragma: no cover
+
+
+def parse_json_event(json: T_JSON_DICT) -> CDPEvent:
     \"\"\"Parse a JSON dictionary into a CDP event.\"\"\"
     return _event_parsers[json["method"]].from_json(json["params"])
 """
@@ -790,9 +810,8 @@ class CdpEvent:
     def generate_code(self) -> str:
         """Generate code for a CDP event."""
         code = dedent(f"""\
-            @event_class(\"{self.domain}.{self.name}\")
             @dataclass
-            class {self.py_name}:""")
+            class {self.py_name}(CDPEvent, event=\"{self.domain}.{self.name}\"):""")
 
         code += "\n"
         desc = ""
@@ -915,7 +934,7 @@ class CdpDomain:
         """
         dependencies = self.get_imports()
         imports = [f"import {package}.{d} as {d}\n" for d in sorted(dependencies)]
-        imports.append(f"from {package}.util import T_JSON_DICT, event_class")
+        imports.append(f"from {package}.util import T_JSON_DICT, CDPEvent")
 
         return "".join(imports)
 

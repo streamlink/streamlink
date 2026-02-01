@@ -14,7 +14,7 @@ from dataclasses import dataclass
 from typing import Any
 
 import streamlink.webbrowser.cdp.devtools.runtime as runtime
-from streamlink.webbrowser.cdp.devtools.util import T_JSON_DICT, event_class
+from streamlink.webbrowser.cdp.devtools.util import T_JSON_DICT, CDPEvent
 
 
 class BreakpointId(str):
@@ -1185,9 +1185,8 @@ def step_over(
     yield cmd_dict
 
 
-@event_class("Debugger.breakpointResolved")
 @dataclass
-class BreakpointResolved:
+class BreakpointResolved(CDPEvent, event="Debugger.breakpointResolved"):
     """
     Fired when breakpoint is resolved to an actual script and location.
     Deprecated in favor of ``resolvedBreakpoints`` in the ``scriptParsed`` event.
@@ -1205,9 +1204,8 @@ class BreakpointResolved:
         )
 
 
-@event_class("Debugger.paused")
 @dataclass
-class Paused:
+class Paused(CDPEvent, event="Debugger.paused"):
     """
     Fired when the virtual machine stopped on breakpoint or exception or any other stop criteria.
     """
@@ -1239,9 +1237,8 @@ class Paused:
         )
 
 
-@event_class("Debugger.resumed")
 @dataclass
-class Resumed:
+class Resumed(CDPEvent, event="Debugger.resumed"):
     """
     Fired when the virtual machine resumed execution.
     """
@@ -1254,9 +1251,8 @@ class Resumed:
         )
 
 
-@event_class("Debugger.scriptFailedToParse")
 @dataclass
-class ScriptFailedToParse:
+class ScriptFailedToParse(CDPEvent, event="Debugger.scriptFailedToParse"):
     """
     Fired when virtual machine fails to parse the script.
     """
@@ -1321,9 +1317,8 @@ class ScriptFailedToParse:
         )
 
 
-@event_class("Debugger.scriptParsed")
 @dataclass
-class ScriptParsed:
+class ScriptParsed(CDPEvent, event="Debugger.scriptParsed"):
     """
     Fired when virtual machine parses script. This event is also fired for all known and uncollected
     scripts upon enabling debugger.

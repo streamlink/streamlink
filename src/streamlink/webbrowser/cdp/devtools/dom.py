@@ -15,7 +15,7 @@ from typing import Any
 
 import streamlink.webbrowser.cdp.devtools.page as page
 import streamlink.webbrowser.cdp.devtools.runtime as runtime
-from streamlink.webbrowser.cdp.devtools.util import T_JSON_DICT, event_class
+from streamlink.webbrowser.cdp.devtools.util import T_JSON_DICT, CDPEvent
 
 
 class NodeId(int):
@@ -1844,9 +1844,8 @@ def force_show_popover(
     return [NodeId.from_json(i) for i in json["nodeIds"]]
 
 
-@event_class("DOM.attributeModified")
 @dataclass
-class AttributeModified:
+class AttributeModified(CDPEvent, event="DOM.attributeModified"):
     """
     Fired when ``Element``'s attribute is modified.
     """
@@ -1866,9 +1865,8 @@ class AttributeModified:
         )
 
 
-@event_class("DOM.attributeRemoved")
 @dataclass
-class AttributeRemoved:
+class AttributeRemoved(CDPEvent, event="DOM.attributeRemoved"):
     """
     Fired when ``Element``'s attribute is removed.
     """
@@ -1885,9 +1883,8 @@ class AttributeRemoved:
         )
 
 
-@event_class("DOM.characterDataModified")
 @dataclass
-class CharacterDataModified:
+class CharacterDataModified(CDPEvent, event="DOM.characterDataModified"):
     """
     Mirrors ``DOMCharacterDataModified`` event.
     """
@@ -1904,9 +1901,8 @@ class CharacterDataModified:
         )
 
 
-@event_class("DOM.childNodeCountUpdated")
 @dataclass
-class ChildNodeCountUpdated:
+class ChildNodeCountUpdated(CDPEvent, event="DOM.childNodeCountUpdated"):
     """
     Fired when ``Container``'s child node count has changed.
     """
@@ -1923,9 +1919,8 @@ class ChildNodeCountUpdated:
         )
 
 
-@event_class("DOM.childNodeInserted")
 @dataclass
-class ChildNodeInserted:
+class ChildNodeInserted(CDPEvent, event="DOM.childNodeInserted"):
     """
     Mirrors ``DOMNodeInserted`` event.
     """
@@ -1945,9 +1940,8 @@ class ChildNodeInserted:
         )
 
 
-@event_class("DOM.childNodeRemoved")
 @dataclass
-class ChildNodeRemoved:
+class ChildNodeRemoved(CDPEvent, event="DOM.childNodeRemoved"):
     """
     Mirrors ``DOMNodeRemoved`` event.
     """
@@ -1964,9 +1958,8 @@ class ChildNodeRemoved:
         )
 
 
-@event_class("DOM.distributedNodesUpdated")
 @dataclass
-class DistributedNodesUpdated:
+class DistributedNodesUpdated(CDPEvent, event="DOM.distributedNodesUpdated"):
     """
     **EXPERIMENTAL**
 
@@ -1985,9 +1978,8 @@ class DistributedNodesUpdated:
         )
 
 
-@event_class("DOM.documentUpdated")
 @dataclass
-class DocumentUpdated:
+class DocumentUpdated(CDPEvent, event="DOM.documentUpdated"):
     """
     Fired when ``Document`` has been totally updated. Node ids are no longer valid.
     """
@@ -2000,9 +1992,8 @@ class DocumentUpdated:
         )
 
 
-@event_class("DOM.inlineStyleInvalidated")
 @dataclass
-class InlineStyleInvalidated:
+class InlineStyleInvalidated(CDPEvent, event="DOM.inlineStyleInvalidated"):
     """
     **EXPERIMENTAL**
 
@@ -2018,9 +2009,8 @@ class InlineStyleInvalidated:
         )
 
 
-@event_class("DOM.pseudoElementAdded")
 @dataclass
-class PseudoElementAdded:
+class PseudoElementAdded(CDPEvent, event="DOM.pseudoElementAdded"):
     """
     **EXPERIMENTAL**
 
@@ -2039,9 +2029,8 @@ class PseudoElementAdded:
         )
 
 
-@event_class("DOM.topLayerElementsUpdated")
 @dataclass
-class TopLayerElementsUpdated:
+class TopLayerElementsUpdated(CDPEvent, event="DOM.topLayerElementsUpdated"):
     """
     **EXPERIMENTAL**
 
@@ -2056,9 +2045,8 @@ class TopLayerElementsUpdated:
         )
 
 
-@event_class("DOM.scrollableFlagUpdated")
 @dataclass
-class ScrollableFlagUpdated:
+class ScrollableFlagUpdated(CDPEvent, event="DOM.scrollableFlagUpdated"):
     """
     **EXPERIMENTAL**
 
@@ -2077,9 +2065,8 @@ class ScrollableFlagUpdated:
         )
 
 
-@event_class("DOM.pseudoElementRemoved")
 @dataclass
-class PseudoElementRemoved:
+class PseudoElementRemoved(CDPEvent, event="DOM.pseudoElementRemoved"):
     """
     **EXPERIMENTAL**
 
@@ -2098,9 +2085,8 @@ class PseudoElementRemoved:
         )
 
 
-@event_class("DOM.setChildNodes")
 @dataclass
-class SetChildNodes:
+class SetChildNodes(CDPEvent, event="DOM.setChildNodes"):
     """
     Fired when backend wants to provide client with the missing DOM structure. This happens upon
     most of the calls requesting node ids.
@@ -2118,9 +2104,8 @@ class SetChildNodes:
         )
 
 
-@event_class("DOM.shadowRootPopped")
 @dataclass
-class ShadowRootPopped:
+class ShadowRootPopped(CDPEvent, event="DOM.shadowRootPopped"):
     """
     **EXPERIMENTAL**
 
@@ -2139,9 +2124,8 @@ class ShadowRootPopped:
         )
 
 
-@event_class("DOM.shadowRootPushed")
 @dataclass
-class ShadowRootPushed:
+class ShadowRootPushed(CDPEvent, event="DOM.shadowRootPushed"):
     """
     **EXPERIMENTAL**
 
