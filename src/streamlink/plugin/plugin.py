@@ -196,7 +196,7 @@ def parse_params(params: str | None = None) -> dict[str, Any]:
 
 
 class Matcher(NamedTuple):
-    pattern: re.Pattern
+    pattern: re.Pattern[str]
     priority: int
     name: str | None = None
 
@@ -231,7 +231,7 @@ class Matchers(_MCollection[Matcher]):
 
 
 class Matches(_MCollection[Union[re.Match, None]]):
-    def update(self, matchers: Matchers, value: str) -> tuple[re.Pattern | None, re.Match | None]:
+    def update(self, matchers: Matchers, value: str) -> tuple[re.Pattern[str] | None, re.Match[str] | None]:
         matches = [(matcher, matcher.pattern.match(value)) for matcher in matchers]
 
         self.clear()
@@ -280,10 +280,10 @@ class Plugin(metaclass=PluginMeta):
     matches: Matches
 
     #: A reference to the compiled :class:`re.Pattern` of the first matching matcher.
-    matcher: re.Pattern | None = None
+    matcher: re.Pattern[str] = None  # type: ignore[assignment]
 
     #: A reference to the :class:`re.Match` result of the first matching matcher.
-    match: re.Match | None = None
+    match: re.Match[str] = None  # type: ignore[assignment]
 
     #: Metadata 'id' attribute: unique stream ID, etc.
     id: str | None = None
@@ -318,8 +318,6 @@ class Plugin(metaclass=PluginMeta):
         self.session: Streamlink = session
         self.matches = Matches()
         self.url: str = url
-        if self.matchers and not self.match:
-            raise PluginError("The input URL did not match any of this plugin's matchers")
 
         self.load_cookies()
 
@@ -336,8 +334,12 @@ class Plugin(metaclass=PluginMeta):
     def url(self, value: str):
         self._url = value
 
-        if self.matchers:
-            self.matcher, self.match = self.matches.update(self.matchers, value)
+        if not self.matchers:
+            return
+
+        self.matcher, self.match = self.matches.update(self.matchers, value)  # type: ignore[assignment]
+        if not self.matcher or not self.match:
+            raise PluginError("The input URL did not match any of this plugin's matchers")
 
     def set_option(self, key, value):
         self.options.set(key, value)
