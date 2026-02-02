@@ -3,17 +3,37 @@ from __future__ import annotations
 import json
 import logging
 from threading import RLock, Thread, current_thread
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, TypedDict
 from urllib.parse import unquote_plus, urlparse
 
 from certifi import where as certify_where
-from websocket import ABNF, STATUS_NORMAL, WebSocketApp, enableTrace  # type: ignore[attr-defined,import]
+from websocket import ABNF, STATUS_NORMAL, WebSocketApp, enableTrace
 
 from streamlink.logger import TRACE, root as rootlogger
 
 
 if TYPE_CHECKING:
+    from typing_extensions import NotRequired
+
     from streamlink.session import Streamlink
+
+    class TWSRunForever(TypedDict):
+        sockopt: NotRequired[tuple]
+        sslopt: NotRequired[dict]
+        ping_interval: NotRequired[float | int]
+        ping_timeout: NotRequired[float | int | None]
+        ping_payload: NotRequired[str]
+        http_proxy_host: NotRequired[str]
+        http_proxy_port: NotRequired[int | str]
+        http_no_proxy: NotRequired[list]
+        http_proxy_auth: NotRequired[tuple]
+        http_proxy_timeout: NotRequired[float | None]
+        skip_utf8_validation: NotRequired[bool]
+        host: NotRequired[str]
+        origin: NotRequired[str]
+        suppress_origin: NotRequired[bool]
+        proxy_type: NotRequired[str]
+        reconnect: NotRequired[int]
 
 
 log = logging.getLogger(__name__)
@@ -48,7 +68,13 @@ class WebsocketClient(Thread):
         ping_payload: str = "",
     ):
         if rootlogger.level <= TRACE:
-            enableTrace(True, handler=next(iter(rootlogger.handlers), logging.StreamHandler()))  # type: ignore
+            enableTrace(
+                True,
+                handler=next(
+                    (handler for handler in rootlogger.handlers if isinstance(handler, logging.StreamHandler)),
+                    logging.StreamHandler(),
+                ),
+            )
 
         if not header:
             header = []
@@ -56,17 +82,6 @@ class WebsocketClient(Thread):
             header = [f"{k!s}: {v!s}" for k, v in header.items()]
         if not any(True for h in header if h.startswith("User-Agent: ")):
             header.append(f"User-Agent: {session.http.headers['User-Agent']!s}")
-
-        proxy_options: dict[str, Any] = {}
-        http_proxy: str | None = session.get_option("http-proxy")
-        if http_proxy:
-            p = urlparse(http_proxy)
-            proxy_options["proxy_type"] = p.scheme
-            proxy_options["http_proxy_host"] = p.hostname
-            if p.port:  # pragma: no branch
-                proxy_options["http_proxy_port"] = p.port
-            if p.username:  # pragma: no branch
-                proxy_options["http_proxy_auth"] = unquote_plus(p.username), unquote_plus(p.password or "")
 
         self._reconnect = False
         self._reconnect_lock = RLock()
@@ -77,17 +92,31 @@ class WebsocketClient(Thread):
 
         self.session = session
         self._ws_init(url, subprotocols, header, cookie)
-        self._ws_rundata = dict(
-            sockopt=sockopt,
+        self._ws_rundata: TWSRunForever = dict(
             sslopt=sslopt,
-            host=host,
-            origin=origin,
             suppress_origin=suppress_origin,
             ping_interval=ping_interval,
             ping_timeout=ping_timeout,
             ping_payload=ping_payload,
-            **proxy_options,
         )
+
+        if sockopt:  # pragma: no branch
+            self._ws_rundata["sockopt"] = sockopt
+        if host:  # pragma: no branch
+            self._ws_rundata["host"] = host
+        if origin:  # pragma: no branch
+            self._ws_rundata["origin"] = origin
+
+        http_proxy: str | None = session.get_option("http-proxy")
+        if http_proxy:
+            p = urlparse(http_proxy)
+            self._ws_rundata["proxy_type"] = p.scheme
+            if p.hostname:  # pragma: no branch
+                self._ws_rundata["http_proxy_host"] = p.hostname
+            if p.port:  # pragma: no branch
+                self._ws_rundata["http_proxy_port"] = p.port
+            if p.username:  # pragma: no branch
+                self._ws_rundata["http_proxy_auth"] = unquote_plus(p.username), unquote_plus(p.password or "")
 
         self._id += 1
         super().__init__(
