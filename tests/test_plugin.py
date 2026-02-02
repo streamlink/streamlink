@@ -243,7 +243,8 @@ class TestPluginMatcher:
         assert plugin.match is not None
         assert plugin.match.group(1) == "baz"
 
-        plugin.url = "http://qux"
+        with pytest.raises(PluginError, match=r"^The input URL did not match any of this plugin's matchers$"):
+            plugin.url = "http://qux"
         assert plugin.url == "http://qux"
         assert [m is not None for m in plugin.matches] == [False, False, False]
         assert plugin.matcher is None
@@ -277,7 +278,8 @@ class TestPluginMatcher:
         assert plugin.matches["foo"] is None
         assert plugin.matches["bar"] is not None
 
-        plugin.url = "http://baz"
+        with pytest.raises(PluginError, match=r"^The input URL did not match any of this plugin's matchers$"):
+            plugin.url = "http://baz"
         assert plugin.matches["foo"] is None
         assert plugin.matches["bar"] is None
 
