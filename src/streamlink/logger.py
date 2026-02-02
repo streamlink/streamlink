@@ -7,7 +7,7 @@ from logging import CRITICAL, DEBUG, ERROR, INFO, WARNING
 from pathlib import Path
 from sys import version_info
 from threading import Lock
-from typing import IO, TYPE_CHECKING, Literal
+from typing import IO, TYPE_CHECKING, Callable, Literal, TextIO
 
 # noinspection PyProtectedMember
 from warnings import WarningMessage
@@ -153,7 +153,7 @@ class StreamHandler(logging.StreamHandler):
 
 
 class WarningLogRecord(logging.LogRecord):
-    msg: WarningMessage  # type: ignore[assignment]
+    msg: WarningMessage
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -180,7 +180,14 @@ def _log_record_factory(name, level, fn, lno, msg, args, exc_info, func=None, si
 
 
 # borrowed from stdlib and modified, so that `WarningMessage` gets passed as `msg` to the `WarningLogRecord`
-def _showwarning(message, category, filename, lineno, file=None, line=None):
+def _showwarning(
+    message: Warning | str,
+    category: type[Warning],
+    filename: str,
+    lineno: int,
+    file: TextIO | None = None,
+    line: str | None = None,
+) -> None:
     if file is not None:  # pragma: no cover
         if _showwarning_default is not None:
             # noinspection PyCallingNonCallable
@@ -191,16 +198,16 @@ def _showwarning(message, category, filename, lineno, file=None, line=None):
     root.log(WARNING, warning, stacklevel=2)
 
 
-def capturewarnings(capture=False):
+def capturewarnings(capture: bool = False) -> None:
     global _showwarning_default  # noqa: PLW0603
 
     if capture:
         if _showwarning_default is None:
             _showwarning_default = warnings.showwarning
-            warnings.showwarning = _showwarning
+            warnings.showwarning = _showwarning  # type: ignore[assignment]
     else:
         if _showwarning_default is not None:
-            warnings.showwarning = _showwarning_default
+            warnings.showwarning = _showwarning_default  # type: ignore[assignment]
             _showwarning_default = None
 
 
@@ -244,7 +251,7 @@ def basicConfig(
     return handler
 
 
-_showwarning_default = None
+_showwarning_default: Callable[[Warning | str, type[Warning], str, int, TextIO | None, str | None], None] | None = None
 _log_record_factory_default = logging.getLogRecordFactory()
 logging.setLogRecordFactory(_log_record_factory)
 
