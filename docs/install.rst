@@ -434,8 +434,8 @@ Streamlink defines a `build system <pyproject.toml_>`__ according to `PEP-517`_ 
       - Used for loading the CA bundle extracted from the Mozilla Included CA Certificate List
     * - runtime
       - `exceptiongroup`_
-      - Only required when ``python_version<"3.11"`` |br|
-        Used for ``ExceptionGroup`` handling
+      - | Only required on ``python_version<"3.11"``
+        | Used for ``ExceptionGroup`` handling on older Python versions
     * - runtime
       - `isodate`_
       - Used for parsing ISO8601 strings
@@ -460,6 +460,10 @@ Streamlink defines a `build system <pyproject.toml_>`__ according to `PEP-517`_ 
     * - runtime
       - `trio-websocket`_
       - Used for WebSocket connections on top of the async trio framework
+    * - runtime
+      - `typing-extensions`_
+      - | Only required on ``python_version<"3.11"``
+        | Used for :pep:`681` on older Python versions
     * - runtime
       - `urllib3`_
       - Used internally by `requests`_, defined as direct dependency
@@ -500,6 +504,7 @@ Streamlink defines a `build system <pyproject.toml_>`__ according to `PEP-517`_ 
 .. _requests: https://requests.readthedocs.io/en/latest/
 .. _trio: https://trio.readthedocs.io/en/stable/
 .. _trio-websocket: https://trio-websocket.readthedocs.io/en/stable/
+.. _typing-extensions: https://typing-extensions.readthedocs.io/
 .. _urllib3: https://urllib3.readthedocs.io/en/stable/
 .. _websocket-client: https://pypi.org/project/websocket-client/
 
