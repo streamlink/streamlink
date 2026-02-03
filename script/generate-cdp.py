@@ -101,23 +101,21 @@ UTIL = f"""{SHARED_HEADER}
 
 from __future__ import annotations
 
+from abc import ABC, ABCMeta, abstractmethod
 from typing import TYPE_CHECKING, Any, TypeAlias, cast
 
 
 if TYPE_CHECKING:
     from collections.abc import MutableMapping
 
-    try:
-        from typing import Self  # type: ignore[attr-defined]
-    except ImportError:
-        from typing_extensions import Self
+    from typing_extensions import Self
 
 
 T_JSON_DICT: TypeAlias = dict[str, Any]
 _event_parsers: MutableMapping[str, type[CDPEvent]] = {{{{}}}}
 
 
-class _CDPEventMeta(type):
+class _CDPEventMetaBase(type):
     def __new__(
         cls,
         name,
@@ -125,7 +123,7 @@ class _CDPEventMeta(type):
         namespace,
         event: str | None = None,
         **kwargs,
-    ) -> _CDPEventMeta:
+    ) -> _CDPEventMetaBase:
         obj = super().__new__(cls, name, bases, namespace, **kwargs)
         if event is not None:
             _event_parsers[event] = cast("type[CDPEvent]", obj)
@@ -133,9 +131,15 @@ class _CDPEventMeta(type):
         return obj
 
 
-class CDPEvent(metaclass=_CDPEventMeta):
+class _CDPEventMeta(_CDPEventMetaBase, ABCMeta):
+    pass
+
+
+class CDPEvent(ABC, metaclass=_CDPEventMeta):
     @classmethod
-    def from_json(cls, json: T_JSON_DICT) -> Self: ...  # pragma: no cover
+    @abstractmethod
+    def from_json(cls, json: T_JSON_DICT) -> Self:  # pragma: no cover
+        raise NotImplementedError
 
 
 def parse_json_event(json: T_JSON_DICT) -> CDPEvent:

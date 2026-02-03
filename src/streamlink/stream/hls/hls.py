@@ -30,15 +30,12 @@ if TYPE_CHECKING:
     from concurrent.futures import Future
     from datetime import datetime
 
+    from typing_extensions import Self
+
     from streamlink.buffers import RingBuffer
     from streamlink.session import Streamlink
     from streamlink.stream.hls.m3u8 import M3U8
     from streamlink.stream.hls.segment import ByteRange, HLSPlaylist, Key, Map, Media
-
-    try:
-        from typing import Self  # type: ignore[attr-defined]
-    except ImportError:
-        from typing_extensions import Self
 
 
 log = logging.getLogger(".".join(__name__.split(".")[:-1]))
@@ -738,8 +735,8 @@ class HLSStream(HTTPStream):
             raise OSError(f"Failed to parse playlist: {err}") from err
 
         stream_name: str | None
-        stream: HLSStream | MuxedHLSStream
-        streams: dict[str, HLSStream | MuxedHLSStream] = {}
+        stream: Self | MuxedHLSStream[Self]
+        streams: dict[str, Self | MuxedHLSStream[Self]] = {}
 
         for playlist in multivariant.playlists:
             if playlist.is_iframe:

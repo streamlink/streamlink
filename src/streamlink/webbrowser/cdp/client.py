@@ -17,13 +17,10 @@ from streamlink.webbrowser.chromium import ChromiumWebbrowser
 if TYPE_CHECKING:
     from collections.abc import AsyncGenerator, Awaitable, Callable, Coroutine, Mapping, MutableMapping
 
+    from typing_extensions import Self
+
     from streamlink.session import Streamlink
     from streamlink.webbrowser.cdp.connection import CDPSession
-
-    try:
-        from typing import Self  # type: ignore[attr-defined]
-    except ImportError:
-        from typing_extensions import Self
 
     TRequestHandlerCallable: TypeAlias = "Callable[[CDPClientSession, fetch.RequestPaused], Awaitable]"
 

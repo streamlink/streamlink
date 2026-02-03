@@ -21,14 +21,10 @@ if TYPE_CHECKING:
     from collections.abc import AsyncGenerator, Generator, MutableMapping
 
     from trio_websocket import WebSocketConnection
+    from typing_extensions import Self
 
     from streamlink.webbrowser.cdp.devtools.target import TargetID
     from streamlink.webbrowser.cdp.devtools.util import T_JSON_DICT
-
-    try:
-        from typing import Self  # type: ignore[attr-defined]
-    except ImportError:
-        from typing_extensions import Self
 
 
 log = logging.getLogger(__name__)

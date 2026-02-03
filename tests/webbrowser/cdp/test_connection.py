@@ -24,14 +24,10 @@ if TYPE_CHECKING:
     from collections.abc import Generator
 
     from trio.testing import MockClock
+    from typing_extensions import Self
 
     from streamlink.webbrowser.cdp.connection import CDPEventListener
     from streamlink.webbrowser.cdp.devtools.util import T_JSON_DICT
-
-    try:
-        from typing import Self  # type: ignore[attr-defined]
-    except ImportError:
-        from typing_extensions import Self
 
 
 EPSILON = 0.1
