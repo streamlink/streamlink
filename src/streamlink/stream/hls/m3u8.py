@@ -34,11 +34,6 @@ if TYPE_CHECKING:
 
     from streamlink.logger import StreamlinkLogger
 
-    try:
-        from typing import Self  # type: ignore[attr-defined]
-    except ImportError:
-        from typing_extensions import Self
-
 
 log: StreamlinkLogger = logging.getLogger(__name__)  # type: ignore[assignment]
 
@@ -119,7 +114,8 @@ class M3U8Parser(Generic[TM3U8_co, THLSSegment_co, THLSPlaylist_co], metaclass=M
     __segment__: ClassVar[type[HLSSegment]] = HLSSegment
     __playlist__: ClassVar[type[HLSPlaylist]] = HLSPlaylist
 
-    _TAGS: ClassVar[Mapping[str, Callable[[Self, str], None]]]
+    # TODO: fix this (can't use Self in a ClassVar)
+    _TAGS: ClassVar[Mapping[str, Callable[[M3U8Parser, str], None]]]
 
     _extinf_re = re.compile(r"(?P<duration>\d+(\.\d+)?)(,(?P<title>.+))?")
     _attr_re = re.compile(
