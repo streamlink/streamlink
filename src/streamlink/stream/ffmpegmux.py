@@ -253,7 +253,7 @@ class FFMPEGMuxer(StreamIO):
         return self
 
     def read(self, size=-1):
-        return self.process.stdout.read(size)
+        return self.process.stdout.read(size)  # type: ignore[attr-defined]
 
     def close(self):
         if self.closed:
@@ -263,7 +263,7 @@ class FFMPEGMuxer(StreamIO):
         if self.process:
             # kill ffmpeg
             self.process.kill()
-            self.process.stdout.close()
+            self.process.stdout.close()  # type: ignore[attr-defined]
 
             executor = concurrent.futures.ThreadPoolExecutor()
 
@@ -284,7 +284,7 @@ class FFMPEGMuxer(StreamIO):
             ]  # fmt: skip
             concurrent.futures.wait(futures, return_when=concurrent.futures.ALL_COMPLETED)
 
-        if self.errorlog is not sys.stderr and self.errorlog is not subprocess.DEVNULL:
+        if self.errorlog is not sys.stderr and not isinstance(self.errorlog, int):
             with suppress(OSError):
                 self.errorlog.close()
 

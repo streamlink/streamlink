@@ -88,7 +88,7 @@ class Cache:
         self._cache.clear()
 
         # noinspection PyUnresolvedReferences
-        log.trace(f"Loading cache file: {self.filename}")
+        log.trace(f"Loading cache file: {self.filename}")  # type: ignore[attr-defined]
 
         try:
             with self.filename.open("r", encoding="utf-8") as fd:
@@ -121,7 +121,7 @@ class Cache:
             return
 
         # noinspection PyUnresolvedReferences
-        log.trace(f"Scheduling write to cache file: {WRITE_DEBOUNCE_TIME:.1f}s")
+        log.trace(f"Scheduling write to cache file: {WRITE_DEBOUNCE_TIME:.1f}s")  # type: ignore[attr-defined]
         self._timer = Timer(WRITE_DEBOUNCE_TIME, self._save)
         self._timer.daemon = True
         self._timer.name = "CacheSaveThread"
@@ -135,7 +135,7 @@ class Cache:
             return
 
         # noinspection PyUnresolvedReferences
-        log.trace(f"Writing to cache file: {self.filename}")
+        log.trace(f"Writing to cache file: {self.filename}")  # type: ignore[attr-defined]
 
         fd = None
         try:
