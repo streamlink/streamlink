@@ -107,7 +107,7 @@ test = [
   "freezegun >=1.5.0",
 ]
 lint = [
-  "ruff ==0.14.11",
+  "ruff ==0.15.0",
 ]
 typing = [
   { include-group = "test" },
