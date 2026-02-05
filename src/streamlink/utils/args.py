@@ -1,11 +1,7 @@
 from __future__ import annotations
 
 import re
-from typing import TYPE_CHECKING, Any, Generic, TypeVar
-
-
-if TYPE_CHECKING:
-    from _typeshed import SupportsDunderGE, SupportsDunderGT, SupportsDunderLE, SupportsDunderLT
+from typing import Any, Generic, TypeVar
 
 
 _BOOLEAN_TRUE = "yes", "1", "true", "on"
@@ -78,11 +74,10 @@ class num(Generic[_TNum]):
         lt: _TNum | None = None,
     ):
         self.numtype: type[_TNum] = numtype
-        # ge/gt/le/lt use their respective reflection type, as they are the RHS argument of the comparison
-        self.ge: SupportsDunderLE[_TNum] | None = ge
-        self.gt: SupportsDunderLT[_TNum] | None = gt
-        self.le: SupportsDunderGE[_TNum] | None = le
-        self.lt: SupportsDunderGT[_TNum] | None = lt
+        self.ge: _TNum | None = ge
+        self.gt: _TNum | None = gt
+        self.le: _TNum | None = le
+        self.lt: _TNum | None = lt
         self.__name__ = numtype.__name__
 
     def __call__(self, value: Any) -> _TNum:
