@@ -1,5 +1,24 @@
 # Changelog
 
+## streamlink 8.2.0 (2026-02-09)
+
+- Added: `--http-cookies-file` CLI argument and `http-cookies-files` session option ([#6796](https://github.com/streamlink/streamlink/pull/6796))
+- Changed: `PluginError` to also be raised when setting a plugin's `url` attribute to a value that doesn't match any of its URL matchers, not just when initializing the plugin class ([#6810](https://github.com/streamlink/streamlink/pull/6810))
+- Deprecated: imports of re-exported module attributes from `streamlink.utils` ([#6819](https://github.com/streamlink/streamlink/pull/6819))
+- Fixed: `LogRecord` missing the function name and stack info ([#6788](https://github.com/streamlink/streamlink/pull/6788))
+- Fixed: custom network interface being reset when disabling Diffie-Hellman key exchange ([#6795](https://github.com/streamlink/streamlink/pull/6795))
+- Fixed: broken logic when unsetting ipv4/ipv6 session options ([#6795](https://github.com/streamlink/streamlink/pull/6795))
+- Fixed: edge case when trying to detect the text encoding of certain kinds of HTML responses ([#6802](https://github.com/streamlink/streamlink/pull/6802))
+- Fixed: missing representation not being handled when polling dynamic DASH manifests ([#6807](https://github.com/streamlink/streamlink/pull/6807))
+- Updated plugins:
+  - dailymotion: disabled TLS session tickets, fixing 403 HLS playlist responses on Python builds with an older version of OpenSSL ([#6816](https://github.com/streamlink/streamlink/pull/6816))
+- Docs: bumped dependencies with support for Sphinx 9 ([#6783](https://github.com/streamlink/streamlink/pull/6783))
+- Docs: added rules for AI-assisted contributions ([#6782](https://github.com/streamlink/streamlink/pull/6782))
+- Build: added `typing-extensions` as a runtime dependency on Python 3.10, as it was already a transitive runtime dependency (via `exceptiongroup`) that was used as a fallback import since 8.1.0 ([#6813](https://github.com/streamlink/streamlink/pull/6813))
+
+[Full changelog](https://github.com/streamlink/streamlink/compare/8.1.2...8.2.0)
+
+
 ## streamlink 8.1.2 (2026-01-18)
 
 - Fixed: warnings when parsing HLS playlists with private-use language subtags ([#6780](https://github.com/streamlink/streamlink/pull/6780))
