@@ -13,7 +13,7 @@ import freezegun
 import pytest
 import requests.cookies
 
-from streamlink.options import Options
+from streamlink.options import Argument, Options
 from streamlink.plugin import (
     HIGH_PRIORITY,
     NORMAL_PRIORITY,
@@ -303,11 +303,14 @@ class TestPluginArguments:
         assert all(callable(value) for value in _PLUGINARGUMENT_TYPE_REGISTRY.values())
 
     @pytest.mark.parametrize("pluginclass", [DecoratedPlugin, ClassAttrPlugin])
-    def test_arguments(self, pluginclass):
+    def test_arguments(self, pluginclass: type[Plugin]):
         assert pluginclass.arguments is not None
         assert tuple(arg.name for arg in pluginclass.arguments) == ("foo", "bar", "baz"), "Argument name"
         assert tuple(arg.dest for arg in pluginclass.arguments) == ("_foo", "_bar", "_baz"), "Argument keyword"
         assert tuple(arg.options.get("help") for arg in pluginclass.arguments) == ("FOO", "BAR", "BAZ"), "argparse keyword"
+        assert isinstance(pluginclass.get_argument("foo"), Argument)
+        assert pluginclass.get_argument("doesnotexist") is None
+        assert Plugin.get_argument("no-arguments") is None
 
     @pytest.mark.parametrize("pluginclass", [DecoratedPlugin, ClassAttrPlugin])
     def test_arguments_mixed(self, pluginclass):

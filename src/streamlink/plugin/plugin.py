@@ -347,15 +347,17 @@ class Plugin(abc.ABC, metaclass=_PluginMeta):
         if not self.matcher or not self.match:
             raise PluginError("The input URL did not match any of this plugin's matchers")
 
-    def set_option(self, key, value):
+    def set_option(self, key: str, value: Any) -> None:
         self.options.set(key, value)
 
-    def get_option(self, key):
+    def get_option(self, key: str) -> Any:
         return self.options.get(key)
 
     @classmethod
-    def get_argument(cls, key):
-        return cls.arguments and cls.arguments.get(key)
+    def get_argument(cls, key: str) -> Argument | None:
+        if not cls.arguments:
+            return None
+        return cls.arguments.get(key)
 
     @classmethod
     def stream_weight(cls, stream: str) -> tuple[float, str]:
