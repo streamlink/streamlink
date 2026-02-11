@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import abc
 import ast
 import logging
 import operator
@@ -243,14 +244,14 @@ class Matches(_MCollection[Union[re.Match, None]]):
         return next(((matcher.pattern, match) for matcher, match in matches if match is not None), (None, None))
 
 
-class PluginMeta(type):
+class _PluginMeta(abc.ABCMeta):
     def __init__(cls, name, bases, namespace, **kwargs):
         super().__init__(name, bases, namespace, **kwargs)
         cls.matchers = Matchers(*getattr(cls, "matchers", []))
         cls.arguments = Arguments(*getattr(cls, "arguments", []))
 
 
-class Plugin(metaclass=PluginMeta):
+class Plugin(abc.ABC, metaclass=_PluginMeta):
     """
     Plugin base class for retrieving streams and metadata from the URL specified.
     """
@@ -368,6 +369,7 @@ class Plugin(metaclass=PluginMeta):
 
         return stream_types
 
+    @abc.abstractmethod
     def _get_streams(self) -> Iterable[tuple[str, Stream | Iterable[Stream]]] | Mapping[str, Stream | Iterable[Stream]] | None:
         """
         Implement the stream and metadata retrieval here.
