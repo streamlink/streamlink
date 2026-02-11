@@ -37,7 +37,7 @@ class GoodGame(Plugin):
     _API_STREAM = "https://goodgame.ru/api/4/users/{channel}/stream"
 
     @classmethod
-    def stream_weight(cls, stream):
+    def stream_weight(cls, stream: str) -> tuple[float, str]:
         if stream == "source":
             return sys.maxsize, stream
         return super().stream_weight(stream)

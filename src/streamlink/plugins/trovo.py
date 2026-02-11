@@ -27,7 +27,7 @@ log = logging.getLogger(__name__)
 )
 class Trovo(Plugin):
     @classmethod
-    def stream_weight(cls, stream):
+    def stream_weight(cls, stream: str) -> tuple[float, str]:
         if stream == "source":
             return sys.maxsize, stream
         return super().stream_weight(stream)

@@ -72,12 +72,12 @@ class DLive(Plugin):
     }
 
     @classmethod
-    def stream_weight(cls, key):
-        weight = cls.QUALITY_WEIGHTS.get(key)
+    def stream_weight(cls, stream: str) -> tuple[float, str]:
+        weight = cls.QUALITY_WEIGHTS.get(stream)
         if weight:
             return weight, "dlive"
 
-        return super().stream_weight(key)
+        return super().stream_weight(stream)
 
     def _get_streams_video(self, video):
         log.debug(f"Getting video HLS streams for {video}")

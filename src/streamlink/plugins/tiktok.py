@@ -37,12 +37,12 @@ class TikTok(Plugin):
     _STATUS_OFFLINE = 4
 
     @classmethod
-    def stream_weight(cls, key):
-        weight = cls.QUALITY_WEIGHTS.get(key)
+    def stream_weight(cls, stream: str) -> tuple[float, str]:
+        weight = cls.QUALITY_WEIGHTS.get(stream)
         if weight:
-            return weight, key
+            return weight, stream
 
-        return super().stream_weight(key)
+        return super().stream_weight(stream)
 
     def _query_api(self, url, **kwargs):
         schema = kwargs.pop("schema")
