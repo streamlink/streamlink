@@ -11,7 +11,7 @@ import re
 from streamlink.exceptions import NoStreamsError
 from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.api import validate
-from streamlink.stream import HLSStream
+from streamlink.stream.hls import HLSStream
 from streamlink.utils.url import update_scheme
 
 
