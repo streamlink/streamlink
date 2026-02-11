@@ -436,7 +436,11 @@ class TestSetupPluginArgsAndOptions:
         ], "Parser has all arguments registered"  # fmt: skip
 
     def test_setup_options_no_plugin_arguments(self, session: Streamlink, console: Mock):
-        options = setup_plugin_options(session, Namespace(), "mock", Plugin)
+        class ConcretePlugin(Plugin):
+            def _get_streams(self):  # pragma: no cover
+                return None
+
+        options = setup_plugin_options(session, Namespace(), "mock", ConcretePlugin)
         assert options == {}
         assert options.defaults == {}
 

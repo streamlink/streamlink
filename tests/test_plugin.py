@@ -62,7 +62,6 @@ class TestPlugin:
     @pytest.mark.parametrize(
         ("pluginclass", "module", "logger"),
         [
-            (Plugin, "plugin", "streamlink.plugin.plugin"),
             (FakePlugin, "test_plugin", "tests.test_plugin"),
             (RenamedPlugin, "baz", "foo.bar.baz"),
             (CustomConstructorOnePlugin, "test_plugin", "tests.test_plugin"),
@@ -168,6 +167,7 @@ class TestPluginMatcher:
             Matcher(re.compile(r"baz"), HIGH_PRIORITY, "baz"),
         ]
 
+    # noinspection PyAbstractClass
     def test_matchers_inheritance(self):
         @pluginmatcher(re.compile(r"foo"))
         @pluginmatcher(re.compile(r"bar"))
@@ -191,7 +191,7 @@ class TestPluginMatcher:
             Matcher(re.compile(r"bar"), NORMAL_PRIORITY),
         ]
 
-    # noinspection PyUnusedLocal
+    # noinspection PyUnusedLocal,PyAbstractClass
     def test_matchers_inheritance_named_duplicate(self):
         @pluginmatcher(name="foo", pattern=re.compile(r"foo"))
         class PluginOne(FakePlugin):

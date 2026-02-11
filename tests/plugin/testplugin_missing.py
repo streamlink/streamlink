@@ -1,6 +1,7 @@
 from streamlink.plugin.plugin import Plugin
 
 
+# noinspection PyAbstractClass
 class TestPluginMissing(Plugin):
     pass
 
