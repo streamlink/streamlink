@@ -810,7 +810,7 @@ class Twitch(Plugin):
     _CACHE_KEY_CLIENT_INTEGRITY = "client-integrity"
 
     @classmethod
-    def stream_weight(cls, stream):
+    def stream_weight(cls, stream: str) -> tuple[float, str]:
         if stream == "source":
             return sys.maxsize, stream
         return super().stream_weight(stream)

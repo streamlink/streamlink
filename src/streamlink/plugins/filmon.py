@@ -197,12 +197,12 @@ class Filmon(Plugin):
         self.session.options.set("hls-playlist-reload-time", "segment")
 
     @classmethod
-    def stream_weight(cls, key):
-        weight = cls.quality_weights.get(key)
+    def stream_weight(cls, stream: str) -> tuple[float, str]:
+        weight = cls.quality_weights.get(stream)
         if weight:
             return weight, "filmon"
 
-        return super().stream_weight(key)
+        return super().stream_weight(stream)
 
     def _get_streams(self):
         channel = self.match.group("channel")

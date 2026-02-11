@@ -37,7 +37,7 @@ class VKvideolive(Plugin):
     }
 
     @classmethod
-    def stream_weight(cls, stream):
+    def stream_weight(cls, stream: str) -> tuple[float, str]:
         if stream in cls._WEIGHTS:
             return cls._WEIGHTS[stream], "vkvideolive"
 

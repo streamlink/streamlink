@@ -101,7 +101,7 @@ class YouTube(Plugin):
         self.session.http.headers.update({"User-Agent": useragents.CHROME})
 
     @classmethod
-    def stream_weight(cls, stream):
+    def stream_weight(cls, stream: str) -> tuple[float, str]:
         match_3d = re.match(r"(\w+)_3d", stream)
         match_hfr = re.match(r"(\d+p)(\d+)", stream)
         if match_3d:

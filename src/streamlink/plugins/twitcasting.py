@@ -58,7 +58,7 @@ class TwitCasting(Plugin):
     }
 
     @classmethod
-    def stream_weight(cls, stream):
+    def stream_weight(cls, stream: str) -> tuple[float, str]:
         return (cls._WEIGHTS[stream], "none") if stream in cls._WEIGHTS else super().stream_weight(stream)
 
     def _api_query_streamserver(self):

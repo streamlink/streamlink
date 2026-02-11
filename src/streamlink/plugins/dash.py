@@ -23,7 +23,7 @@ log = logging.getLogger(__name__)
 )
 class MPEGDASH(Plugin):
     @classmethod
-    def stream_weight(cls, stream):
+    def stream_weight(cls, stream: str) -> tuple[float, str]:
         match = re.match(r"^(?:(.*)\+)?(?:a(\d+)k)$", stream)
         if match and match.group(1) and match.group(2):
             weight, group = stream_weight(match.group(1))
