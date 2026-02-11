@@ -96,7 +96,7 @@ _COOKIE_KEYS = (
 )
 
 
-def stream_weight(stream):
+def stream_weight(stream: str) -> tuple[float, str]:
     for group, weights in QUALITY_WEIGHTS_EXTRA.items():
         if stream in weights:
             return weights[stream], group
@@ -104,7 +104,7 @@ def stream_weight(stream):
     match = re.match(r"^(\d+)(k|p)?(\d+)?(\+)?(?:[a_](\d+)k)?(?:_(alt)(\d)?)?$", stream)
 
     if match:
-        weight = 0
+        weight = 0.0
 
         if match.group(6):
             if match.group(7):
@@ -352,7 +352,7 @@ class Plugin(metaclass=PluginMeta):
         return cls.arguments and cls.arguments.get(key)
 
     @classmethod
-    def stream_weight(cls, stream):
+    def stream_weight(cls, stream: str) -> tuple[float, str]:
         return stream_weight(stream)
 
     @classmethod
