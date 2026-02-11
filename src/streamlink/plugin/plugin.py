@@ -24,6 +24,7 @@ if TYPE_CHECKING:
     from http.cookiejar import Cookie
 
     from streamlink.session.session import Streamlink
+    from streamlink.stream.stream import Stream
     from streamlink.user_input import UserInputRequester
 
 
@@ -367,6 +368,16 @@ class Plugin(metaclass=PluginMeta):
 
         return stream_types
 
+    def _get_streams(self) -> Iterable[tuple[str, Stream | Iterable[Stream]]] | Mapping[str, Stream | Iterable[Stream]] | None:
+        """
+        Implement the stream and metadata retrieval here.
+
+        This method can either act as a generator that yields tuples of stream names and streams,
+        or it can return a sequence of tuples of stream names and streams, or a mapping of stream names and streams.
+        """
+
+        raise NotImplementedError
+
     def streams(self, stream_types=None, sorting_excludes=None):
         """
         Attempts to extract available streams.
@@ -495,17 +506,6 @@ class Plugin(metaclass=PluginMeta):
             final_sorted_streams["best-unfiltered"] = streams[best]
 
         return final_sorted_streams
-
-    def _get_streams(self):
-        """
-        Implement the stream and metadata retrieval here.
-
-        Needs to return either a dict of :class:`Stream <streamlink.stream.Stream>` instances mapped by stream name,
-        or needs to act as a generator which yields tuples of stream names and :class:`Stream <streamlink.stream.Stream>`
-        instances.
-        """
-
-        raise NotImplementedError
 
     def get_metadata(self) -> Mapping[str, str | None]:
         return dict(
