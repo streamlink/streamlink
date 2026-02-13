@@ -121,8 +121,7 @@ class OnePlusOne(Plugin):
         url_hls = self.api.get_hls_url()
         if not url_hls:
             return
-        for q, s in HLSStream.parse_variant_playlist(self.session, url_hls).items():
-            yield q, OnePlusOneHLS(self.session, s.url, self_url=self.url)
+        return OnePlusOneHLS.parse_variant_playlist(self.session, url_hls, self_url=self.url)
 
 
 __plugin__ = OnePlusOne
