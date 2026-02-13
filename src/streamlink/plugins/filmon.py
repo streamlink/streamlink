@@ -29,12 +29,13 @@ log = getLogger(__name__)
 
 
 class FilmOnHLSStreamWorker(HLSStreamWorker):
+    stream: FilmOnHLS
+
     def _fetch_playlist(self):
         try:
             return super()._fetch_playlist()
         except StreamError as err:
-            # noinspection PyUnresolvedReferences
-            if err.err.response.status_code in (403, 502):
+            if hasattr(err, "err") and err.err.response.status_code in (403, 502):  # type: ignore
                 self.stream.watch_timeout = 0
                 self.playlist_reload_time = 0
                 log.debug(f"Force-reloading the channel playlist on error: {err}")
