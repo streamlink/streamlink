@@ -21,7 +21,7 @@ log = getLogger(__name__)
 
 
 @pluginmatcher(
-    re.compile(r"https?://network\.wwe\.com/(video|live)/(?P<stream_id>\d+)"),
+    re.compile(r"https?://network\.wwe\.com/(?P<content_type>video|live)/(?P<stream_id>\d+)"),
 )
 @pluginargument(
     "email",
@@ -166,7 +166,7 @@ class WWENetwork(Plugin):
 
     def _get_streams(self):
         if token := self._login(self.get_option("email"), self.get_option("password")):
-            return self._get_streams_content(*self.match.groups(), token)
+            return self._get_streams_content(self.match["content_type"], self.match["stream_id"], token)
 
 
 __plugin__ = WWENetwork
