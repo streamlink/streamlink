@@ -79,8 +79,14 @@ class OPENRECtv(Plugin):
         self.video_id = None
 
     def login(self, email, password):
-        res = self.session.http.post(self.login_url, data={"mail": email, "password": password})
-        data = self.session.http.json(res, self._login_schema)
+        data = self.session.http.post(
+            self.login_url,
+            data={"mail": email, "password": password},
+            schema=validate.Schema(
+                validate.parse_json(),
+                self._login_schema,
+            ),
+        )
         if data["status"] == 0:
             log.debug("Logged in as {0}".format(data["data"]["user_name"]))
         else:
