@@ -97,7 +97,7 @@ class Streann(Plugin):
     def get_token(self, **config):
         log.debug("get_token")
         pdata = dict(
-            arg1=base64.b64encode(self._domain.encode("utf8")),
+            arg1=base64.b64encode(self._domain.encode("utf8")),  # type: ignore
             arg2=base64.b64encode(self.time.encode("utf8")),
         )
 
