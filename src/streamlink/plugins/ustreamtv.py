@@ -397,11 +397,11 @@ class UStreamTVStreamWriter(SegmentedStreamWriter[UStreamTVSegment, Response]):
         except StreamError as err:
             log.error(f"Failed to fetch {self.stream.kind} segment {segment.num}: {err}")
 
-    def write(self, segment: UStreamTVSegment, res: Response, *data):
+    def write(self, segment: UStreamTVSegment, result: Response, *data):
         if self.closed:  # pragma: no cover
             return
         try:
-            for chunk in res.iter_content(8192):
+            for chunk in result.iter_content(8192):
                 self.reader.buffer.write(chunk)
             log.debug(f"Download of {self.stream.kind} segment {segment.num} complete")
         except OSError as err:
@@ -416,7 +416,7 @@ class UStreamTVStreamWorker(SegmentedStreamWorker[UStreamTVSegment, Response]):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.wsclient = self.stream.wsclient
-        self.segment_id = self.wsclient.stream_initial_id
+        self.sequence = self.wsclient.stream_initial_id or -1
         self.queue = self.wsclient.segments_subscribe()
 
     def iter_segments(self):
@@ -434,12 +434,12 @@ class UStreamTVStreamWorker(SegmentedStreamWorker[UStreamTVSegment, Response]):
             if self.closed:
                 return
 
-            if segment.num < self.segment_id:
+            if segment.num < self.sequence:
                 continue
 
             log.debug(f"Adding {self.stream.kind} segment {segment.num} to queue")
             yield segment
-            self.segment_id = segment.num + 1
+            self.sequence = segment.num + 1
 
 
 class UStreamTVStreamReader(SegmentedStreamReader[UStreamTVSegment, Response]):
@@ -563,10 +563,10 @@ class UStreamTV(Plugin):
             return
 
         if not wsclient.stream_formats_audio:
-            for video in wsclient.stream_formats_video:
+            for video in wsclient.stream_formats_video or []:
                 yield f"{video.height}p", UStreamTVStream(self.session, "video", wsclient, video)
         else:
-            for video in wsclient.stream_formats_video:
+            for video in wsclient.stream_formats_video or []:
                 for audio in wsclient.stream_formats_audio:
                     yield (
                         f"{video.height}p+a{audio.bitrate}k",
