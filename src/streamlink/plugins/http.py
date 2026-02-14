@@ -16,7 +16,7 @@ log = getLogger(__name__)
 class HTTPStreamPlugin(Plugin):
     def _get_streams(self):
         data = self.match.groupdict()
-        url = update_scheme("https://", data.get("url"), force=False)
+        url = update_scheme("https://", str(data.get("url", "")), force=False)
         params = parse_params(data.get("params"))
         log.debug(f"URL={url}; params={params}")
 

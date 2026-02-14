@@ -50,7 +50,7 @@ class Ceskatelevize(Plugin):
                 "streamType": "dash",
                 "quality": "web",
                 "maxQualityCount": 5,
-                "sessionId": uuid4(),
+                "sessionId": str(uuid4()),
             },
             schema=validate.Schema(
                 validate.parse_json(),

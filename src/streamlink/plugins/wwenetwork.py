@@ -80,7 +80,7 @@ class WWENetwork(Plugin):
 
     def _get_streams_content(self, content_type, content_id, token):
         success, data = self.session.http.get(
-            self._API_URLS.get(content_type).format(content_id),
+            str(self._API_URLS.get(content_type, "")).format(content_id),
             acceptable_status=(200, 401, 404),
             params={"includePlaybackDetails": "URL"},
             headers={"Authorization": f"Bearer {token}", **self._API_HEADERS},
