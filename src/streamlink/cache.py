@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import json
-import logging
 import os
 import shutil
 import tempfile
@@ -15,6 +14,7 @@ from time import time
 from typing import TYPE_CHECKING, Any
 
 from streamlink.compat import is_win32
+from streamlink.logger import getLogger
 
 
 if TYPE_CHECKING:
@@ -32,7 +32,7 @@ CACHE_DIR = xdg_cache / "streamlink"
 WRITE_DEBOUNCE_TIME = 3.0
 
 
-log = logging.getLogger(__name__)
+log = getLogger(__name__)
 
 
 def _atomic(fn):
@@ -87,8 +87,7 @@ class Cache:
         self._cache_orig.clear()
         self._cache.clear()
 
-        # noinspection PyUnresolvedReferences
-        log.trace(f"Loading cache file: {self.filename}")  # type: ignore[attr-defined]
+        log.trace(f"Loading cache file: {self.filename}")
 
         try:
             with self.filename.open("r", encoding="utf-8") as fd:
@@ -120,8 +119,7 @@ class Cache:
         if self._disabled or not self._dirty:
             return
 
-        # noinspection PyUnresolvedReferences
-        log.trace(f"Scheduling write to cache file: {WRITE_DEBOUNCE_TIME:.1f}s")  # type: ignore[attr-defined]
+        log.trace(f"Scheduling write to cache file: {WRITE_DEBOUNCE_TIME:.1f}s")
         self._timer = Timer(WRITE_DEBOUNCE_TIME, self._save)
         self._timer.daemon = True
         self._timer.name = "CacheSaveThread"
@@ -134,8 +132,7 @@ class Cache:
         if self._disabled or not self._dirty:
             return
 
-        # noinspection PyUnresolvedReferences
-        log.trace(f"Writing to cache file: {self.filename}")  # type: ignore[attr-defined]
+        log.trace(f"Writing to cache file: {self.filename}")
 
         fd = None
         try:

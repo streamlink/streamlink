@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import logging
 import queue
 from concurrent import futures
 from concurrent.futures import ThreadPoolExecutor
@@ -9,6 +8,7 @@ from threading import Event, current_thread
 from typing import TYPE_CHECKING, ClassVar, Generic, TypeAlias, TypeVar
 
 from streamlink.buffers import RingBuffer
+from streamlink.logger import getLogger
 from streamlink.stream.segmented.segment import Segment
 from streamlink.stream.stream import StreamIO
 from streamlink.utils.thread import NamedThread
@@ -23,7 +23,7 @@ if TYPE_CHECKING:
     from streamlink.stream.stream import Stream
 
 
-log = logging.getLogger(".".join(__name__.split(".")[:-1]))
+log = getLogger(".".join(__name__.split(".")[:-1]))
 
 
 class AwaitableMixin:

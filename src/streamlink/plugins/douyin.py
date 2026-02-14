@@ -9,17 +9,17 @@ $metadata title
 
 from __future__ import annotations
 
-import logging
 import re
 import uuid
 
+from streamlink.logger import getLogger
 from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.api import validate
 from streamlink.stream.http import HTTPStream
 from streamlink.utils.url import update_scheme
 
 
-log = logging.getLogger(__name__)
+log = getLogger(__name__)
 
 
 @pluginmatcher(

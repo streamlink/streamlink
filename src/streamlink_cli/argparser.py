@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import argparse
-import logging as _logging
 import numbers
 import re
 import warnings
@@ -13,6 +12,7 @@ from typing import TYPE_CHECKING, Any
 
 from streamlink import __version__ as streamlink_version, logger
 from streamlink.exceptions import StreamlinkDeprecationWarning
+from streamlink.logger import getLogger
 from streamlink.options import Options
 from streamlink.utils.args import boolean, comma_list, comma_list_filter, filesize, keyvalue, num
 from streamlink.utils.times import hours_minutes_seconds_float
@@ -30,7 +30,7 @@ if TYPE_CHECKING:
     from streamlink.user_input import UserInputRequester
 
 
-log = _logging.getLogger(__name__)
+log = getLogger(__name__)
 
 
 class ArgumentParser(argparse.ArgumentParser):

@@ -6,11 +6,11 @@ $metadata id
 """
 
 import hashlib
-import logging
 import re
 import sys
 
 from streamlink.buffers import RingBuffer
+from streamlink.logger import getLogger
 from streamlink.plugin import Plugin, pluginargument, pluginmatcher
 from streamlink.plugin.api import validate
 from streamlink.plugin.api.websocket import WebsocketClient
@@ -19,7 +19,7 @@ from streamlink.stream.stream import Stream, StreamIO
 from streamlink.utils.url import update_qsd
 
 
-log = logging.getLogger(__name__)
+log = getLogger(__name__)
 
 
 class TwitCastingHLSStreamWriter(HLSStreamWriter):

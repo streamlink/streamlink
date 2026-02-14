@@ -5,10 +5,10 @@ $type live, vod
 $metadata title
 """
 
-import logging
 import re
 from urllib.parse import urlparse
 
+from streamlink.logger import getLogger
 from streamlink.plugin import Plugin, PluginError, pluginmatcher
 from streamlink.plugin.api import validate
 from streamlink.stream.hls import HLSStream
@@ -16,7 +16,7 @@ from streamlink.stream.http import HTTPStream
 from streamlink.utils.parse import parse_qsd
 
 
-log = logging.getLogger(__name__)
+log = getLogger(__name__)
 
 
 class BrightcovePlayer:

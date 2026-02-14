@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import logging
 import time
 from typing import TYPE_CHECKING
 from urllib.parse import urlparse
@@ -9,6 +8,7 @@ import trio
 from requests.cookies import RequestsCookieJar
 
 from streamlink.compat import BaseExceptionGroup
+from streamlink.logger import getLogger
 from streamlink.webbrowser.cdp import CDPClient
 
 
@@ -17,7 +17,7 @@ if TYPE_CHECKING:
     from streamlink.webbrowser.cdp import CDPClientSession, devtools
 
 
-log = logging.getLogger(__name__)
+log = getLogger(__name__)
 
 
 class AWSWAF:

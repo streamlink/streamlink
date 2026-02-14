@@ -4,7 +4,6 @@ import base64
 import hashlib
 import importlib.metadata
 import json
-import logging
 import pkgutil
 import re
 from contextlib import suppress
@@ -12,6 +11,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Literal, TypeAlias, TypedDict, cast
 
 import streamlink.plugins
+from streamlink.logger import getLogger
 from streamlink.options import Argument, Arguments
 
 # noinspection PyProtectedMember
@@ -26,7 +26,7 @@ if TYPE_CHECKING:
     from _typeshed.importlib import PathEntryFinderProtocol
 
 
-log = logging.getLogger(".".join(__name__.split(".")[:-1]))
+log = getLogger(".".join(__name__.split(".")[:-1]))
 
 # The path to Streamlink's built-in plugins
 _PLUGINS_PATH = Path(streamlink.plugins.__path__[0])

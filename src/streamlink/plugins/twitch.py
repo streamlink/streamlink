@@ -17,7 +17,6 @@ $notes Acquires a :ref:`client-integrity token <cli/plugins/twitch:Client-integr
 from __future__ import annotations
 
 import argparse
-import logging
 import math
 import re
 import sys
@@ -33,6 +32,7 @@ from urllib.parse import urlparse
 from requests.exceptions import HTTPError
 
 from streamlink.exceptions import NoStreamsError, PluginError
+from streamlink.logger import getLogger
 from streamlink.plugin import Plugin, pluginargument, pluginmatcher
 from streamlink.plugin.api import validate
 from streamlink.session import http_useragents
@@ -62,7 +62,7 @@ if TYPE_CHECKING:
     from streamlink.stream.hls import DateRange
 
 
-log = logging.getLogger(__name__)
+log = getLogger(__name__)
 
 LOW_LATENCY_MAX_LIVE_EDGE = 2
 
@@ -134,7 +134,7 @@ class TwitchM3U8Parser(M3U8Parser[TwitchM3U8, TwitchHLSSegment, HLSPlaylist]):
         daterange = self.m3u8.dateranges[-1]
         if self._is_daterange_ad(daterange):
             self.m3u8.dateranges_ads.append(daterange)
-            log.trace("Advertisement: %r", daterange)  # type: ignore[attr-defined]
+            log.trace("Advertisement: %r", daterange)
 
     def get_segment(self, uri: str, **data) -> TwitchHLSSegment:
         ad = self._is_segment_ad(self._date, self._extinf.title if self._extinf else None)

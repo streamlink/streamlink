@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import logging
 import os
 import re
 import shlex
@@ -14,6 +13,7 @@ from typing import TYPE_CHECKING, ClassVar, TextIO, cast
 
 from streamlink.compat import is_win32
 from streamlink.exceptions import StreamlinkWarning
+from streamlink.logger import getLogger
 from streamlink_cli.output.abc import Output
 from streamlink_cli.utils import Formatter
 
@@ -27,7 +27,7 @@ if TYPE_CHECKING:
     from streamlink_cli.output.http import HTTPOutput
 
 
-log = logging.getLogger("streamlink.cli.output")
+log = getLogger("streamlink.cli.output")
 
 
 class PlayerArgsMeta(type):

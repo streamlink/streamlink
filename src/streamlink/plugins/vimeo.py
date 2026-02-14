@@ -8,11 +8,11 @@ $metadata title
 $notes Password protected streams are not supported
 """
 
-import logging
 import re
 from urllib.parse import urljoin, urlparse
 
 from streamlink.exceptions import NoStreamsError
+from streamlink.logger import getLogger
 from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.api import validate
 from streamlink.stream.dash import DASHStream
@@ -22,7 +22,7 @@ from streamlink.stream.http import HTTPStream
 from streamlink.utils.url import update_scheme
 
 
-log = logging.getLogger(__name__)
+log = getLogger(__name__)
 
 
 @pluginmatcher(

@@ -1,15 +1,15 @@
 from __future__ import annotations
 
-import logging
 import re
 
 import requests
 
 from streamlink import __version__ as streamlink_version
 from streamlink.cache import Cache
+from streamlink.logger import getLogger
 
 
-log = logging.getLogger("streamlink.cli")
+log = getLogger("streamlink.cli")
 
 
 def _parse_version(version: str) -> tuple[int, int, int, int]:

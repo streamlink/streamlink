@@ -7,7 +7,6 @@ $region Japan
 
 import hashlib
 import hmac
-import logging
 import re
 import struct
 import time
@@ -19,6 +18,7 @@ from requests import Response
 from requests.adapters import BaseAdapter
 
 from streamlink.exceptions import NoStreamsError
+from streamlink.logger import getLogger
 from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.api import useragents, validate
 from streamlink.stream.hls import HLSStream, HLSStreamReader, HLSStreamWriter
@@ -26,7 +26,7 @@ from streamlink.utils.crypto import AES
 from streamlink.utils.url import update_qsd
 
 
-log = logging.getLogger(__name__)
+log = getLogger(__name__)
 
 
 class AbemaTVHLSStreamWriter(HLSStreamWriter):

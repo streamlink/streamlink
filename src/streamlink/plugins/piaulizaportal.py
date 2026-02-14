@@ -8,17 +8,17 @@ $account Purchased tickets are required.
 $notes Tickets purchased at "PIA LIVE STREAM" are used for this platform.
 """
 
-import logging
 import re
 import time
 from urllib.parse import parse_qsl, urlparse
 
+from streamlink.logger import getLogger
 from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.api import validate
 from streamlink.stream.hls import HLSStream
 
 
-log = logging.getLogger(__name__)
+log = getLogger(__name__)
 
 
 @pluginmatcher(

@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import copy
 import itertools
-import logging
 from collections import defaultdict
 from contextlib import contextmanager, suppress
 from time import time
@@ -11,6 +10,7 @@ from typing import TYPE_CHECKING, Any, cast
 from requests import Response
 
 from streamlink.exceptions import PluginError, StreamError
+from streamlink.logger import getLogger
 from streamlink.stream.dash.manifest import MPD, freeze_timeline
 from streamlink.stream.dash.segment import DASHSegment
 from streamlink.stream.ffmpegmux import FFMPEGMuxer
@@ -29,7 +29,7 @@ if TYPE_CHECKING:
     from streamlink.stream.dash.manifest import Representation
 
 
-log = logging.getLogger(".".join(__name__.split(".")[:-1]))
+log = getLogger(".".join(__name__.split(".")[:-1]))
 
 
 class DASHStreamWriter(SegmentedStreamWriter[DASHSegment, Response]):

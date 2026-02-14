@@ -6,10 +6,10 @@ $type live, vod
 $region Spain
 """
 
-import logging
 import re
 
 from streamlink.exceptions import NoStreamsError, PluginError
+from streamlink.logger import getLogger
 from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.api import validate
 from streamlink.stream.dash import DASHStream
@@ -17,7 +17,7 @@ from streamlink.stream.hls import HLSStream
 from streamlink.stream.http import HTTPStream
 
 
-log = logging.getLogger(__name__)
+log = getLogger(__name__)
 
 
 @pluginmatcher(

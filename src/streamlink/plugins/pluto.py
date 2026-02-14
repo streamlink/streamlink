@@ -8,7 +8,6 @@ $metadata category
 $metadata title
 """
 
-import logging
 import re
 from dataclasses import dataclass
 from typing import ClassVar
@@ -16,13 +15,14 @@ from urllib.parse import parse_qsl, urljoin, urlparse
 from uuid import uuid4
 
 from streamlink.exceptions import PluginError
+from streamlink.logger import getLogger
 from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.api import useragents, validate
 from streamlink.stream.hls import HLSSegment, HLSStream, HLSStreamReader, HLSStreamWriter, M3U8Parser
 from streamlink.utils.url import update_qsd
 
 
-log = logging.getLogger(__name__)
+log = getLogger(__name__)
 
 
 @dataclass

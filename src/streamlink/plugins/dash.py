@@ -1,13 +1,13 @@
-import logging
 import re
 
+from streamlink.logger import getLogger
 from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.plugin import LOW_PRIORITY, parse_params, stream_weight
 from streamlink.stream.dash import DASHStream
 from streamlink.utils.url import update_scheme
 
 
-log = logging.getLogger(__name__)
+log = getLogger(__name__)
 
 
 @pluginmatcher(

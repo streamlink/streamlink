@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import logging
 import re
 import struct
 import warnings
@@ -12,6 +11,7 @@ from requests import Response
 from requests.exceptions import ChunkedEncodingError, ConnectionError, ContentDecodingError, InvalidSchema  # noqa: A004
 
 from streamlink.exceptions import StreamError, StreamlinkDeprecationWarning
+from streamlink.logger import getLogger
 from streamlink.stream.ffmpegmux import FFMPEGMuxer, MuxedStream
 from streamlink.stream.filtered import FilteredStream
 from streamlink.stream.hls.m3u8 import M3U8Parser, parse_m3u8
@@ -38,7 +38,7 @@ if TYPE_CHECKING:
     from streamlink.stream.hls.segment import ByteRange, HLSPlaylist, Key, Map, Media
 
 
-log = logging.getLogger(".".join(__name__.split(".")[:-1]))
+log = getLogger(".".join(__name__.split(".")[:-1]))
 
 
 class ByteRangeOffset:

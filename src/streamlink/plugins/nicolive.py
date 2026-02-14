@@ -11,12 +11,12 @@ $notes Timeshift is supported
 
 from __future__ import annotations
 
-import logging
 import re
 from threading import Event
 from typing import TYPE_CHECKING
 from urllib.parse import urljoin
 
+from streamlink.logger import getLogger
 from streamlink.plugin import Plugin, pluginargument, pluginmatcher
 from streamlink.plugin.api import useragents, validate
 from streamlink.plugin.api.websocket import WebsocketClient
@@ -29,7 +29,7 @@ if TYPE_CHECKING:
     from streamlink.stream.hls import HLSSegment
 
 
-log = logging.getLogger(__name__)
+log = getLogger(__name__)
 
 
 class NicoLiveWsClient(WebsocketClient):

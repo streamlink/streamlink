@@ -9,7 +9,7 @@ from urllib.parse import unquote_plus, urlparse
 from certifi import where as certify_where
 from websocket import ABNF, STATUS_NORMAL, WebSocketApp, enableTrace
 
-from streamlink.logger import TRACE, root as rootlogger
+from streamlink.logger import TRACE, getLogger, root as rootlogger
 
 
 if TYPE_CHECKING:
@@ -36,7 +36,7 @@ if TYPE_CHECKING:
         reconnect: NotRequired[int]
 
 
-log = logging.getLogger(__name__)
+log = getLogger(__name__)
 
 
 class WebsocketClient(Thread):
