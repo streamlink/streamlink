@@ -20,26 +20,6 @@ if TYPE_CHECKING:
     from collections.abc import Iterator
 
 
-if TYPE_CHECKING:
-    _BaseLoggerClass = logging.Logger
-else:
-    _BaseLoggerClass = logging.getLoggerClass()
-
-
-class StreamlinkLogger(_BaseLoggerClass):
-    def iter(self, level: int, messages: Iterator[str], *args, **kwargs) -> Iterator[str]:
-        """
-        Iterator wrapper for logging multiple items in a single call and checking log level only once
-        """
-
-        if not self.isEnabledFor(level):
-            yield from messages
-
-        for message in messages:
-            self._log(level, message, args, **kwargs)
-            yield message
-
-
 FORMAT_STYLE: Literal["%", "{", "$"] = "{"
 FORMAT_BASE = "[{name}][{levelname}] {message}"
 FORMAT_DATE = "%H:%M:%S"
@@ -68,6 +48,55 @@ _levelToNames = {
 }
 
 _custom_levels = TRACE, ALL
+
+
+# noinspection PyPep8Naming
+def getLogger(name: str) -> StreamlinkLogger:
+    """
+    Get a child-node of the root :class:`StreamlinkLogger`.
+    Use this instead of ``logging.getLogger(__name__)`` to ensure that a StreamlinkLogger is created.
+    """
+    return _get_child(root, name.removeprefix("streamlink."))
+
+
+def _get_child(logger: logging.Logger, name: str) -> StreamlinkLogger:
+    manager = logger.manager
+    old_logger_class = manager.loggerClass
+    try:
+        manager.loggerClass = StreamlinkLogger
+        # `Logger.getChild()` doesn't actually return a child logger of its own type (wrong annotation of "-> Self").
+        # It returns whatever was set on its manager, or globally on the logging module (`logging.setLoggerClass()`).
+        # To fix this and to ensure that we always return a `StreamlinkLogger`,
+        # temporarily override the manager's `loggerClass` attribute.
+        # Other libs importing Streamlink can still safely use their own custom `logging.Logger` subclasses.
+        return logger.getChild(name)  # type: ignore
+    finally:
+        manager.loggerClass = old_logger_class
+
+
+if TYPE_CHECKING:
+    _BaseLoggerClass = logging.Logger
+else:
+    _BaseLoggerClass = logging.getLoggerClass()
+
+
+# inherit from `logging.getLoggerClass()`, since we call `logging.setLoggerClass()` down below
+class StreamlinkLogger(_BaseLoggerClass):
+    if TYPE_CHECKING:
+        all = _BaseLoggerClass.info
+        trace = _BaseLoggerClass.info
+
+    def iter(self, level: int, messages: Iterator[str], *args, **kwargs) -> Iterator[str]:
+        """
+        Iterator wrapper for logging multiple items in a single call and checking log level only once
+        """
+
+        if not self.isEnabledFor(level):
+            yield from messages
+
+        for message in messages:
+            self._log(level, message, args, **kwargs)
+            yield message
 
 
 def _logmethodfactory(level: int, name: str):
@@ -256,8 +285,11 @@ _log_record_factory_default = logging.getLogRecordFactory()
 logging.setLogRecordFactory(_log_record_factory)
 
 
+# Keep `logging.setLoggerClass(StreamlinkLogger)` for backward compatibility:
+# Third party plugins could create a logger from `logging.getLogger()` and then call custom `StreamlinkLogger` methods,
+# assuming of course that no one else has changed the logger-class on the manager or the global logging module value.
 logging.setLoggerClass(StreamlinkLogger)
-root = logging.getLogger("streamlink")
+root: StreamlinkLogger = _get_child(logging.root, "streamlink")
 root.setLevel(WARNING)
 
 levels = list(_levelToNames.values())
@@ -272,6 +304,7 @@ __all__ = [
     "DEBUG",
     "TRACE",
     "ALL",
+    "getLogger",
     "StreamlinkLogger",
     "basicConfig",
     "root",
