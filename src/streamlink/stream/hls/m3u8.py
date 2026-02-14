@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import logging
 import math
 import re
 from binascii import Error as BinasciiError, unhexlify
@@ -11,7 +10,7 @@ from urllib.parse import urljoin, urlparse
 from isodate import ISO8601Error, parse_datetime  # type: ignore[import]  # ty:ignore[unused-ignore-comment]
 from requests import Response
 
-from streamlink.logger import ALL
+from streamlink.logger import ALL, getLogger
 from streamlink.stream.hls.segment import (
     ByteRange,
     DateRange,
@@ -32,10 +31,8 @@ if TYPE_CHECKING:
     from collections.abc import Callable, Iterator, Mapping
     from datetime import datetime
 
-    from streamlink.logger import StreamlinkLogger
 
-
-log: StreamlinkLogger = logging.getLogger(__name__)  # type: ignore[assignment]
+log = getLogger(__name__)
 
 
 THLSSegment_co = TypeVar("THLSSegment_co", bound=HLSSegment, covariant=True)

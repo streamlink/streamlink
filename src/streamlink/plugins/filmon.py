@@ -7,13 +7,13 @@ $notes Some VODs are mp4 which may not stream, use -o to download
 
 from __future__ import annotations
 
-import logging
 import re
 import time
 from typing import TYPE_CHECKING
 from urllib.parse import urlparse, urlunparse
 
 from streamlink.exceptions import PluginError, StreamError
+from streamlink.logger import getLogger
 from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.api import validate
 from streamlink.session.http import TLSSecLevel1Adapter
@@ -25,7 +25,7 @@ if TYPE_CHECKING:
     from collections.abc import Iterator
 
 
-log = logging.getLogger(__name__)
+log = getLogger(__name__)
 
 
 class FilmOnHLSStreamWorker(HLSStreamWorker):

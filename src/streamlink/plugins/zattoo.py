@@ -17,18 +17,18 @@ $url www.meinewelt.cc
 $type live, vod
 """
 
-import logging
 import re
 import uuid
 
 from streamlink.cache import Cache
+from streamlink.logger import getLogger
 from streamlink.plugin import Plugin, pluginargument, pluginmatcher
 from streamlink.plugin.api import validate
 from streamlink.stream.dash import DASHStream
 from streamlink.stream.hls import HLSStream
 
 
-log = logging.getLogger(__name__)
+log = getLogger(__name__)
 
 
 @pluginmatcher(

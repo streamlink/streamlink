@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import abc
 import ast
-import logging
 import operator
 import re
 import time
@@ -17,6 +16,7 @@ import streamlink.utils.args
 import streamlink.utils.times
 from streamlink.cache import Cache
 from streamlink.exceptions import FatalPluginError, NoStreamsError, PluginError
+from streamlink.logger import getLogger
 from streamlink.options import Argument, Arguments, Options
 from streamlink.stream.stream import Stream
 
@@ -44,7 +44,7 @@ _PLUGINARGUMENT_TYPE_REGISTRY: Mapping[str, Callable[[Any], Any]] = {
 }
 
 
-log = logging.getLogger(__name__)
+log = getLogger(__name__)
 
 # FIXME: This is a crude attempt at making a bitrate's
 # weight end up similar to the weight of a resolution.
@@ -311,7 +311,7 @@ class Plugin(abc.ABC, metaclass=_PluginMeta):
 
         modulename = self.__class__.__module__
         self.module = modulename.split(".")[-1]
-        self.logger = logging.getLogger(modulename)
+        self.logger = getLogger(modulename)
 
         self.options = Options(options)
 

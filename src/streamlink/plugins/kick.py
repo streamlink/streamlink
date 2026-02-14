@@ -11,13 +11,13 @@ $metadata title
 
 from __future__ import annotations
 
-import logging
 import re
 from dataclasses import dataclass, replace as dataclass_replace
 from ssl import OP_NO_TICKET
 from typing import ClassVar
 
 from streamlink.exceptions import NoStreamsError
+from streamlink.logger import getLogger
 from streamlink.plugin import Plugin, PluginError, pluginargument, pluginmatcher
 from streamlink.plugin.api import useragents, validate
 from streamlink.session.http import SSLContextAdapter
@@ -34,7 +34,7 @@ from streamlink.stream.hls import (
 )
 
 
-log = logging.getLogger(__name__)
+log = getLogger(__name__)
 
 LOW_LATENCY_MAX_LIVE_EDGE = 2
 

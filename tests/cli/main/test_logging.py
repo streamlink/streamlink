@@ -13,7 +13,7 @@ import pytest
 
 import streamlink_cli.main
 import tests
-from streamlink.logger import ALL, TRACE, StringFormatter
+from streamlink.logger import ALL, TRACE, StringFormatter, getLogger, root as rootlogger
 from streamlink_cli.exceptions import StreamlinkCLIError
 from streamlink_cli.main import build_parser
 
@@ -60,7 +60,6 @@ class TestStdoutStderr:
     def test_streams(self, capsys: pytest.CaptureFixture, parser: ArgumentParser, argv: list, stream: str | None):
         streamlink_cli.main.setup(parser)
 
-        rootlogger = logging.getLogger("streamlink")
         clilogger = streamlink_cli.main.log
         assert clilogger.parent is rootlogger
 
@@ -100,7 +99,7 @@ class TestStdoutStderr:
         stderr: str,
     ):
         def run(_parser):
-            childlogger = logging.getLogger("streamlink.test_main_logging")
+            childlogger = getLogger("streamlink.test_main_logging")
             streamlink_cli.main.log.info("a")
             childlogger.error("b")
             raise StreamlinkCLIError("c")
@@ -154,7 +153,7 @@ class TestStdoutStderr:
         expected_stderr: str,
     ):
         def run(_parser):
-            childlogger = logging.getLogger("streamlink.test_main_logging")
+            childlogger = getLogger("streamlink.test_main_logging")
             streamlink_cli.main.log.info("a")
             childlogger.error("b")
             raise StreamlinkCLIError("c")
@@ -474,7 +473,6 @@ class TestInfos:
 def test_logformat(argv: list, parser: ArgumentParser, level: int, fmt: str, datefmt: str):
     streamlink_cli.main.setup(parser)
 
-    rootlogger = logging.getLogger("streamlink")
     assert rootlogger.level == level
     assert rootlogger.handlers
     formatter = rootlogger.handlers[0].formatter
@@ -543,7 +541,6 @@ class TestLogfile:
         monkeypatch.setattr("builtins.open", mock_open)
 
         streamlink_cli.main.setup(parser)
-        rootlogger = logging.getLogger("streamlink")
 
         if stream is None:
             assert not streamlink_cli.main.console.console_output
@@ -616,7 +613,6 @@ class TestLogfile:
         streamlink_cli.main.setup(parser)
         assert abspath.parent.exists()
 
-        rootlogger = logging.getLogger("streamlink")
         assert isinstance(rootlogger.handlers[0], logging.FileHandler)
         assert rootlogger.handlers[0].baseFilename == str(abspath)
         assert rootlogger.handlers[0].stream is streamobj
@@ -650,7 +646,6 @@ class TestLogfile:
         streamlink_cli.main.setup(parser)
         assert mock_open.call_args_list == [call(abspath, "a", encoding="utf-8", errors=None)]
 
-        rootlogger = logging.getLogger("streamlink")
         handler = rootlogger.handlers[0]
         assert isinstance(handler, logging.FileHandler)
         assert handler.stream is streamobj

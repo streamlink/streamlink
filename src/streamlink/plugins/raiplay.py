@@ -6,11 +6,11 @@ $region Italy
 """
 
 import base64
-import logging
 import re
 from urllib.parse import parse_qsl, urlparse, urlunparse
 
 from streamlink.exceptions import PluginError
+from streamlink.logger import getLogger
 from streamlink.plugin import Plugin, pluginargument, pluginmatcher
 from streamlink.plugin.api import validate
 from streamlink.stream.hls import HLSStream
@@ -18,7 +18,7 @@ from streamlink.utils.times import fromtimestamp
 from streamlink.utils.url import update_qsd
 
 
-log = logging.getLogger(__name__)
+log = getLogger(__name__)
 
 
 @pluginmatcher(

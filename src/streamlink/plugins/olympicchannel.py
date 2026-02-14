@@ -6,17 +6,17 @@ $type live, vod
 $notes Only non-premium content is available
 """
 
-import logging
 import re
 from time import time
 from urllib.parse import urljoin, urlparse
 
+from streamlink.logger import getLogger
 from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.api import validate
 from streamlink.stream.hls import HLSStream
 
 
-log = logging.getLogger(__name__)
+log = getLogger(__name__)
 
 
 @pluginmatcher(

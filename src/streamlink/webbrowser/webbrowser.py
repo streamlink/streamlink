@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import logging
 import sys
 import tempfile
 from contextlib import asynccontextmanager, contextmanager
@@ -11,6 +10,7 @@ from typing import TYPE_CHECKING
 import trio
 
 from streamlink.compat import BaseExceptionGroup
+from streamlink.logger import getLogger
 from streamlink.utils.path import resolve_executable
 from streamlink.webbrowser.exceptions import WebbrowserError
 
@@ -21,7 +21,7 @@ if TYPE_CHECKING:
     from pathlib import Path
 
 
-log = logging.getLogger(__name__)
+log = getLogger(__name__)
 
 
 class Webbrowser:

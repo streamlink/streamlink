@@ -10,10 +10,10 @@ $metadata title
 $notes VOD content and protected videos are not supported
 """
 
-import logging
 import re
 from urllib.parse import urlparse, urlunparse
 
+from streamlink.logger import getLogger
 from streamlink.plugin import Plugin, PluginError, pluginmatcher
 from streamlink.plugin.api import useragents, validate
 from streamlink.stream.ffmpegmux import MuxedStream
@@ -23,7 +23,7 @@ from streamlink.utils.data import search_dict
 from streamlink.utils.parse import parse_json
 
 
-log = logging.getLogger(__name__)
+log = getLogger(__name__)
 
 
 @pluginmatcher(

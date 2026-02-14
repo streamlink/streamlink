@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import copy
-import logging
 import math
 import re
 from collections import defaultdict
@@ -13,6 +12,7 @@ from urllib.parse import urljoin, urlparse, urlunparse
 
 from isodate import Duration, parse_datetime, parse_duration  # type: ignore[import]  # ty:ignore[unused-ignore-comment]
 
+from streamlink.logger import getLogger
 from streamlink.stream.dash.segment import DASHSegment, TimelineSegment
 from streamlink.utils.times import UTC, fromtimestamp, now
 
@@ -31,7 +31,7 @@ if TYPE_CHECKING:
     TTimelineIdent: TypeAlias = tuple[str | None, str | None, str]
 
 
-log = logging.getLogger(__name__)
+log = getLogger(__name__)
 
 EPOCH_START = fromtimestamp(0)
 ONE_SECOND = timedelta(seconds=1)

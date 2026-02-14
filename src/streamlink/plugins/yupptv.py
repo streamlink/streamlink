@@ -5,16 +5,16 @@ $type live, vod
 $account Some streams require an account and subscription
 """
 
-import logging
 import re
 import time
 
+from streamlink.logger import getLogger
 from streamlink.plugin import Plugin, pluginargument, pluginmatcher
 from streamlink.plugin.api import useragents
 from streamlink.stream.hls import HLSStream, HLSStreamReader, HLSStreamWriter
 
 
-log = logging.getLogger(__name__)
+log = getLogger(__name__)
 
 
 class HLSStreamWriterYupptv(HLSStreamWriter):

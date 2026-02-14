@@ -7,7 +7,6 @@ $type live, vod
 
 from __future__ import annotations
 
-import logging
 import re
 from collections import deque
 from dataclasses import dataclass
@@ -20,6 +19,7 @@ from urllib.parse import urljoin, urlunparse
 from requests import Response
 
 from streamlink.exceptions import PluginError, StreamError
+from streamlink.logger import getLogger
 from streamlink.plugin import Plugin, pluginargument, pluginmatcher
 from streamlink.plugin.api import useragents, validate
 from streamlink.plugin.api.websocket import WebsocketClient
@@ -33,7 +33,7 @@ if TYPE_CHECKING:
     from collections.abc import Callable, Mapping
 
 
-log = logging.getLogger(__name__)
+log = getLogger(__name__)
 
 
 @dataclass
@@ -223,8 +223,8 @@ class UStreamTVWsClient(WebsocketClient):
 
         cmd: str = parsed["cmd"]
         args: list[dict] = parsed["args"]
-        log.trace(f"Received '{cmd}' command")  # type: ignore[attr-defined]
-        log.trace(f"{args!r}")  # type: ignore[attr-defined]
+        log.trace(f"Received '{cmd}' command")
+        log.trace(f"{args!r}")
 
         handlers = self._MESSAGE_HANDLERS.get(cmd)
         if handlers is not None:

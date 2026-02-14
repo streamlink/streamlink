@@ -7,17 +7,17 @@ $metadata title
 $region Vietnam
 """
 
-import logging
 import re
 from datetime import datetime, timezone
 from hashlib import md5
 
+from streamlink.logger import getLogger
 from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.api import validate
 from streamlink.stream.hls import HLSStream
 
 
-log = logging.getLogger(__name__)
+log = getLogger(__name__)
 
 
 @pluginmatcher(

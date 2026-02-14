@@ -6,15 +6,15 @@ $type live
 $region Switzerland
 """
 
-import logging
 import re
 from urllib.parse import parse_qsl, urlparse, urlunparse
 
+from streamlink.logger import getLogger
 from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.stream.hls import HLSStream
 
 
-log = logging.getLogger(__name__)
+log = getLogger(__name__)
 
 
 @pluginmatcher(

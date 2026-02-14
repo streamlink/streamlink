@@ -1,17 +1,18 @@
 from __future__ import annotations
 
 import locale
-import logging
 from warnings import catch_warnings
 
 from pycountry import countries, languages
+
+from streamlink.logger import getLogger
 
 
 DEFAULT_LANGUAGE = "en"
 DEFAULT_COUNTRY = "US"
 DEFAULT_LANGUAGE_CODE = f"{DEFAULT_LANGUAGE}_{DEFAULT_COUNTRY}"
 
-log = logging.getLogger(__name__)
+log = getLogger(__name__)
 
 
 class Country:

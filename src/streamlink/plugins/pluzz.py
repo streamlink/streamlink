@@ -7,10 +7,10 @@ $metadata title
 $region France, Andorra, Monaco
 """
 
-import logging
 import re
 from urllib.parse import urlparse
 
+from streamlink.logger import getLogger
 from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.api import useragents, validate
 from streamlink.stream.dash import DASHStream
@@ -18,7 +18,7 @@ from streamlink.stream.hls import HLSStream
 from streamlink.utils.times import localnow
 
 
-log = logging.getLogger(__name__)
+log = getLogger(__name__)
 
 
 @pluginmatcher(

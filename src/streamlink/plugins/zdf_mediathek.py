@@ -5,17 +5,17 @@ $type live, vod
 $region Germany
 """
 
-import logging
 import re
 from urllib.parse import urlparse, urlunparse
 
+from streamlink.logger import getLogger
 from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.api import validate
 from streamlink.stream.hls import HLSStream
 from streamlink.utils.url import url_concat
 
 
-log = logging.getLogger(__name__)
+log = getLogger(__name__)
 
 
 @pluginmatcher(

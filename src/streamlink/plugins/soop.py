@@ -11,16 +11,16 @@ $metadata title
 from __future__ import annotations
 
 import argparse
-import logging
 import re
 
 from streamlink.exceptions import NoStreamsError
+from streamlink.logger import getLogger
 from streamlink.plugin import Plugin, pluginargument, pluginmatcher
 from streamlink.plugin.api import validate
 from streamlink.stream.hls import HLSStream, HLSStreamReader, HLSStreamWriter
 
 
-log = logging.getLogger(__name__)
+log = getLogger(__name__)
 
 
 class SoopHLSStreamWriter(HLSStreamWriter):

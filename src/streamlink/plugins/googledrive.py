@@ -5,15 +5,15 @@ $url drive.google.com
 $type vod
 """
 
-import logging
 import re
 from urllib.parse import parse_qsl
 
+from streamlink.logger import getLogger
 from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.stream.http import HTTPStream
 
 
-log = logging.getLogger(__name__)
+log = getLogger(__name__)
 
 
 @pluginmatcher(

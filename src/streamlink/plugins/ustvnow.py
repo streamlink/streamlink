@@ -7,17 +7,17 @@ $account Required, additional subscription required by some streams
 
 import base64
 import json
-import logging
 import re
 from urllib.parse import urljoin, urlparse
 from uuid import uuid4
 
+from streamlink.logger import getLogger
 from streamlink.plugin import Plugin, PluginError, pluginargument, pluginmatcher
 from streamlink.stream.hls import HLSStream
 from streamlink.utils.crypto import AES, SHA256, pad, unpad
 
 
-log = logging.getLogger(__name__)
+log = getLogger(__name__)
 
 
 @pluginmatcher(

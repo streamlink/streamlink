@@ -7,18 +7,18 @@ $account Some streams require a login
 """
 
 import base64
-import logging
 import re
 import time
 
 from streamlink.exceptions import FatalPluginError
+from streamlink.logger import getLogger
 from streamlink.plugin import Plugin, pluginargument, pluginmatcher
 from streamlink.plugin.api import validate
 from streamlink.stream.dash import DASHStream
 from streamlink.utils.crypto import RSA, PKCS1_v1_5
 
 
-log = logging.getLogger(__name__)
+log = getLogger(__name__)
 
 
 class SteamLoginFailed(Exception):

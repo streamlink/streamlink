@@ -5,17 +5,17 @@ $url 01net.com
 $type live, vod
 """
 
-import logging
 import re
 from urllib.parse import urljoin
 
+from streamlink.logger import getLogger
 from streamlink.plugin import Plugin, PluginError, pluginmatcher
 from streamlink.plugin.api import validate
 from streamlink.plugins.brightcove import BrightcovePlayer
 from streamlink.stream.http import HTTPStream
 
 
-log = logging.getLogger(__name__)
+log = getLogger(__name__)
 
 
 @pluginmatcher(

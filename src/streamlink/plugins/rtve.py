@@ -8,13 +8,13 @@ $region Spain
 
 from __future__ import annotations
 
-import logging
 import re
 from base64 import b64decode
 from io import BytesIO
 from typing import TYPE_CHECKING
 from urllib.parse import urlparse
 
+from streamlink.logger import getLogger
 from streamlink.plugin import Plugin, PluginError, pluginmatcher
 from streamlink.plugin.api import validate
 from streamlink.stream.ffmpegmux import MuxedStream
@@ -27,7 +27,7 @@ if TYPE_CHECKING:
     from collections.abc import Iterator, Sequence
 
 
-log = logging.getLogger(__name__)
+log = getLogger(__name__)
 
 
 class Base64Reader:

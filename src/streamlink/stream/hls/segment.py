@@ -1,10 +1,10 @@
 from __future__ import annotations
 
-import logging
 import re
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, NamedTuple
 
+from streamlink.logger import getLogger
 from streamlink.stream.segmented.segment import Segment
 from streamlink.utils.dataclass import FormattedDataclass
 from streamlink.utils.l10n import Language
@@ -14,7 +14,7 @@ if TYPE_CHECKING:
     from datetime import datetime, timedelta
 
 
-log = logging.getLogger(".".join(__name__.split(".")[:-1]))
+log = getLogger(".".join(__name__.split(".")[:-1]))
 
 
 _MEDIA_LANGUAGE_CODES_RESERVED_LOCAL = re.compile(r"^q[a-t][a-z]$")
