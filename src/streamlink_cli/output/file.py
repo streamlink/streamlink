@@ -9,7 +9,7 @@ from streamlink_cli.output.abc import Output
 
 if is_win32:
     import msvcrt
-    from os import O_BINARY  # type: ignore[attr-defined]
+    import os
 
 
 if TYPE_CHECKING:
@@ -39,7 +39,7 @@ class FileOutput(Output):
             self.record.open()
 
         if is_win32:
-            msvcrt.setmode(self.fd.fileno(), O_BINARY)  # type: ignore[attr-defined]
+            msvcrt.setmode(self.fd.fileno(), os.O_BINARY)
 
     def _close(self):
         if self.fd is not stdout:
