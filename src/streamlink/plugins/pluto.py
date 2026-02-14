@@ -14,9 +14,8 @@ from typing import ClassVar
 from urllib.parse import parse_qsl, urljoin, urlparse
 from uuid import uuid4
 
-from streamlink.exceptions import PluginError
 from streamlink.logger import getLogger
-from streamlink.plugin import Plugin, pluginmatcher
+from streamlink.plugin import Plugin, PluginError, pluginmatcher
 from streamlink.plugin.api import useragents, validate
 from streamlink.stream.hls import HLSSegment, HLSStream, HLSStreamReader, HLSStreamWriter, M3U8Parser
 from streamlink.utils.url import update_qsd
@@ -92,7 +91,9 @@ class Pluto(Plugin):
         super().__init__(*args, **kwargs)
         self.session.http.headers.update({"User-Agent": useragents.FIREFOX})
         self._app_version = None
-        self._device_version = re.search(r"Firefox/(\d+(?:\.\d+)*)", useragents.FIREFOX)[1]
+        if not (m := re.search(r"Firefox/(\d+(?:\.\d+)*)", useragents.FIREFOX)):
+            raise PluginError("Could not find Firefox version")
+        self._device_version = m[1]
         self._client_id = str(uuid4())
 
     @property
