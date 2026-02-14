@@ -9,6 +9,8 @@ $metadata title
 $region Lithuania
 """
 
+from __future__ import annotations
+
 import re
 
 from streamlink.logger import getLogger
@@ -26,12 +28,12 @@ log = getLogger(__name__)
 class LNK(Plugin):
     API_URL = "https://lnk.lt/api/video/video-config/{0}"
 
-    CHANNEL_MAP = {
-        "lnk": 137535,
-        "btv": 137534,
-        "2tv": 95343,
-        "infotv": 137748,
-        "tv1": 106791,
+    CHANNEL_MAP: dict[str, str] = {
+        "lnk": "137535",
+        "btv": "137534",
+        "2tv": "95343",
+        "infotv": "137748",
+        "tv1": "106791",
     }
 
     def _get_streams(self):

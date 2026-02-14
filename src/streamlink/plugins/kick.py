@@ -214,7 +214,7 @@ class Kick(Plugin):
 
     def _get_api_headers(self):
         # _get_cookies_from_webbrowser() from above updates the session headers with Chromium's initial request headers
-        ua = self.session.http.headers.get("User-Agent", useragents.CHROME)
+        ua = str(self.session.http.headers.get("User-Agent", useragents.CHROME))
         if "Chrome/" not in ua:
             ua = useragents.CHROME
 
