@@ -76,12 +76,12 @@ class NimoTV(Plugin):
 
         mStreamPkg = bytes.fromhex(mStreamPkg)
         try:
-            appid = self._re_appid.search(mStreamPkg).group(1).decode("utf-8")
-            domain = self._re_domain.search(mStreamPkg).group(1).decode("utf-8")
-            id_ = self._re_id.search(mStreamPkg).group(1).decode("utf-8")
-            tp = self._re_tp.search(mStreamPkg).group(1).decode("utf-8")
-            ws_secret = self._re_wsSecret.search(mStreamPkg).group(1).decode("utf-8")
-            ws_time = self._re_wsTime.search(mStreamPkg).group(1).decode("utf-8")
+            appid = self._re_appid.search(mStreamPkg).group(1).decode("utf-8")  # type: ignore[attr-defined]
+            domain = self._re_domain.search(mStreamPkg).group(1).decode("utf-8")  # type: ignore[attr-defined]
+            id_ = self._re_id.search(mStreamPkg).group(1).decode("utf-8")  # type: ignore[attr-defined]
+            tp = self._re_tp.search(mStreamPkg).group(1).decode("utf-8")  # type: ignore[attr-defined]
+            ws_secret = self._re_wsSecret.search(mStreamPkg).group(1).decode("utf-8")  # type: ignore[attr-defined]
+            ws_time = self._re_wsTime.search(mStreamPkg).group(1).decode("utf-8")  # type: ignore[attr-defined]
         except AttributeError:
             log.error("invalid mStreamPkg")
             return

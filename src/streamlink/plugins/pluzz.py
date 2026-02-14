@@ -79,7 +79,9 @@ class Pluzz(Plugin):
         self.session.http.headers.update({
             "User-Agent": useragents.CHROME,
         })
-        CHROME_VERSION = re.compile(r"Chrome/(\d+)").search(useragents.CHROME).group(1)
+        if not (m := re.compile(r"Chrome/(\d+)").search(useragents.CHROME)):
+            return
+        CHROME_VERSION = m.group(1)
 
         if not (video_id := self._get_video_id()):
             return
