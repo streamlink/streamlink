@@ -10,6 +10,9 @@ if TYPE_CHECKING:
 
 _TESTSUITE_DIRS = {
     "default": [],
+    "plugins": [
+        Path("tests", "plugins_remote"),
+    ],
 }
 
 
@@ -22,6 +25,7 @@ def pytest_addoption(parser: pytest.Parser) -> None:
         help="""
             Select the test suite:
             - 'default' is the regular test suite with unit and integration tests
+            - 'plugins' runs real-world plugin data tests and is only meant to be run by developers
         """,
     )
 
