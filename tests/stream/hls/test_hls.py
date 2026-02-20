@@ -348,7 +348,7 @@ class TestHLSStreamWorker(TestMixinStreamHLS, unittest.TestCase):
             assert worker.handshake_wait.wait_ready(1), "Arrives at wait() call #1"
             assert worker.sequence == 1, "Updates the sequence number"
             assert worker._queue_last == EPOCH + ONE_SECOND, "Updates the last queue time"
-            assert worker.playlist_targetduration == 5.0
+            assert worker.playlist_targetduration == pytest.approx(5.0)
 
             # trigger next reload when the target duration has passed
             frozen_time.tick(targetduration)
@@ -358,7 +358,7 @@ class TestHLSStreamWorker(TestMixinStreamHLS, unittest.TestCase):
             assert worker.handshake_wait.wait_ready(1), "Arrives at wait() call #2"
             assert worker.sequence == 2, "Updates the sequence number again"
             assert worker._queue_last == EPOCH + ONE_SECOND + targetduration, "Updates the last queue time again"
-            assert worker.playlist_targetduration == 5.0
+            assert worker.playlist_targetduration == pytest.approx(5.0)
 
             for num in range(3, 6):
                 # trigger next reload when the target duration has passed
@@ -369,7 +369,7 @@ class TestHLSStreamWorker(TestMixinStreamHLS, unittest.TestCase):
                 assert worker.handshake_wait.wait_ready(1), f"Arrives at wait() call #{num}"
                 assert worker.sequence == 2, "Sequence number is unchanged"
                 assert worker._queue_last == EPOCH + ONE_SECOND + targetduration, "Last queue time is unchanged"
-                assert worker.playlist_targetduration == 5.0
+                assert worker.playlist_targetduration == pytest.approx(5.0)
 
             assert mock_log.warning.call_args_list == []
 
@@ -409,7 +409,7 @@ class TestHLSStreamWorker(TestMixinStreamHLS, unittest.TestCase):
             assert worker.handshake_wait.wait_ready(1), "Arrives at first wait() call"
             assert worker.sequence == 1, "Updates the sequence number"
             assert worker._queue_last == EPOCH + ONE_SECOND, "Updates the last queue time"
-            assert worker.playlist_targetduration == 5.0
+            assert worker.playlist_targetduration == pytest.approx(5.0)
             assert self.await_read() == self.content(segments)
 
             # keep reloading a couple of times
@@ -456,7 +456,7 @@ class TestHLSStreamWorker(TestMixinStreamHLS, unittest.TestCase):
             assert worker.handshake_wait.wait_ready(1), "Arrives at wait() call #1"
             assert worker.sequence == 1, "Updates the sequence number"
             assert worker._queue_last == EPOCH + ONE_SECOND, "Updates the last queue time"
-            assert worker.playlist_targetduration == 1.0
+            assert worker.playlist_targetduration == pytest.approx(1.0)
 
             for num in range(2, 7):
                 # trigger next reload when the target duration has passed
@@ -467,7 +467,7 @@ class TestHLSStreamWorker(TestMixinStreamHLS, unittest.TestCase):
                 assert worker.handshake_wait.wait_ready(1), f"Arrives at wait() call #{num}"
                 assert worker.sequence == 1, "Sequence number is unchanged"
                 assert worker._queue_last == EPOCH + ONE_SECOND, "Last queue time is unchanged"
-                assert worker.playlist_targetduration == 1.0
+                assert worker.playlist_targetduration == pytest.approx(1.0)
 
             assert mock_log.warning.call_args_list == []
 
@@ -509,13 +509,13 @@ class TestHLSStreamWorker(TestMixinStreamHLS, unittest.TestCase):
             # adjust clock and reload playlist: let it take one second
             frozen_time.move_to(worker._reload_last + ONE_SECOND)
             self.await_reload()
-            assert worker._reload_time == 5.0, "Uses the playlist's targetduration as reload time"
+            assert worker._reload_time == pytest.approx(5.0), "Uses the playlist's targetduration as reload time"
 
             # time_completed = 00:00:01; time_elapsed = 1s
             assert worker.handshake_wait.wait_ready(1), "Arrives at first wait() call"
             assert worker.sequence == 1, "Has queued first segment"
             assert worker.playlist_end is None, "Stream hasn't ended yet"
-            assert worker.time_wait == 4.0, "Waits for 4 seconds out of the 5 seconds reload time"
+            assert worker.time_wait == pytest.approx(4.0), "Waits for 4 seconds out of the 5 seconds reload time"
             self.await_playlist_wait()
 
             assert worker.handshake_reload.wait_ready(1), "Arrives at second playlist reload"
@@ -525,13 +525,13 @@ class TestHLSStreamWorker(TestMixinStreamHLS, unittest.TestCase):
             # adjust clock and reload playlist: let it exceed targetduration by two seconds
             frozen_time.move_to(worker._reload_last + targetduration + ONE_SECOND * 2)
             self.await_reload()
-            assert worker._reload_time == 5.0, "Uses the playlist's targetduration as reload time"
+            assert worker._reload_time == pytest.approx(5.0), "Uses the playlist's targetduration as reload time"
 
             # time_completed = 00:00:12; time_elapsed = 7s (exceeded 5s targetduration)
             assert worker.handshake_wait.wait_ready(1), "Arrives at second wait() call"
             assert worker.sequence == 2, "Has queued second segment"
             assert worker.playlist_end is None, "Stream hasn't ended yet"
-            assert worker.time_wait == 0.0, "Doesn't wait when reloading took too long"
+            assert worker.time_wait == pytest.approx(0.0), "Doesn't wait when reloading took too long"
             self.await_playlist_wait()
 
             assert worker.handshake_reload.wait_ready(1), "Arrives at third playlist reload"
@@ -541,13 +541,13 @@ class TestHLSStreamWorker(TestMixinStreamHLS, unittest.TestCase):
             # adjust clock and reload playlist: let it take one second again
             frozen_time.move_to(worker._reload_last + ONE_SECOND)
             self.await_reload()
-            assert worker._reload_time == 5.0, "Uses the playlist's targetduration as reload time"
+            assert worker._reload_time == pytest.approx(5.0), "Uses the playlist's targetduration as reload time"
 
             # time_completed = 00:00:13; time_elapsed = 1s
             assert worker.handshake_wait.wait_ready(1), "Arrives at third wait() call"
             assert worker.sequence == 3, "Has queued third segment"
             assert worker.playlist_end is None, "Stream hasn't ended yet"
-            assert worker.time_wait == 4.0, "Waits for 4 seconds out of the 5 seconds reload time"
+            assert worker.time_wait == pytest.approx(4.0), "Waits for 4 seconds out of the 5 seconds reload time"
             self.await_playlist_wait()
 
             assert worker.handshake_reload.wait_ready(1), "Arrives at fourth playlist reload"
@@ -557,13 +557,13 @@ class TestHLSStreamWorker(TestMixinStreamHLS, unittest.TestCase):
             # adjust clock and reload playlist: simulate no fetch+processing delay
             frozen_time.move_to(worker._reload_last)
             self.await_reload()
-            assert worker._reload_time == 5.0, "Uses the playlist's targetduration as reload time"
+            assert worker._reload_time == pytest.approx(5.0), "Uses the playlist's targetduration as reload time"
 
             # time_completed = 00:00:17; time_elapsed = 0s
             assert worker.handshake_wait.wait_ready(1), "Arrives at fourth wait() call"
             assert worker.sequence == 4, "Has queued fourth segment"
             assert worker.playlist_end is None, "Stream hasn't ended yet"
-            assert worker.time_wait == 5.0, "Waits for the whole reload time"
+            assert worker.time_wait == pytest.approx(5.0), "Waits for the whole reload time"
             self.await_playlist_wait()
 
             assert worker.handshake_reload.wait_ready(1), "Arrives at fifth playlist reload"
