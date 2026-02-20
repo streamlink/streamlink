@@ -1449,10 +1449,13 @@ class TestXmlXpathValidator:
 
     def test_extensions(self, element):
         def foo(context, a, b):
-            return int(context.context_node.attrib.get("val")) + a + b
+            return float(context.context_node.attrib.get("val")) + a + b
 
-        element = Element("root", attrib={"val": "3"})
-        assert validate.validate(validate.xml_xpath("foo(5, 7)", extensions={(None, "foo"): foo}), element) == 15.0
+        element = Element("root", attrib={"val": "3.14"})
+        assert validate.validate(
+            validate.xml_xpath("foo(5, 7)", extensions={(None, "foo"): foo}),
+            element,
+        ) == pytest.approx(15.14)
 
     def test_smart_strings(self, element):
         assert validate.validate(validate.xml_xpath("*/text()"), element)[0].getparent().tag == "foo"

@@ -104,7 +104,7 @@ class TestHTTPSession:
     def test_session_init(self):
         session = HTTPSession()
         assert session.headers.get("User-Agent") == DEFAULT
-        assert session.timeout == 20.0
+        assert session.timeout == 20.0  # noqa: RUF069
         assert "file://" in session.adapters.keys()
 
     def test_read_timeout(self, monkeypatch: pytest.MonkeyPatch):

@@ -37,8 +37,8 @@ class TestOptions:
         assert options["non_existing"] is None
 
         options.set("abc-def", 3.14)
-        assert options.get("abc-def") == 3.14
-        assert options.get("abc-def") == 3.14
+        assert options.get("abc-def") == 3.14  # noqa: RUF069
+        assert options.get("abc-def") == 3.14  # noqa: RUF069
 
         obj = object()
         options["foo_bar"] = obj

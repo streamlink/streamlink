@@ -800,7 +800,7 @@ class SegmentList(_MultipleSegmentBaseType):
         """Calculate the optimal segment number to start based on the suggestedPresentationDelay"""
         suggested_delay = self.root.suggestedPresentationDelay
 
-        if self.duration_seconds == 0.0:
+        if not self.duration:
             log.info(f"Unknown segment duration. Falling back to an offset of {MPD.DEFAULT_LIVE_EDGE_SEGMENTS} segments.")
             offset = MPD.DEFAULT_LIVE_EDGE_SEGMENTS
         else:

@@ -192,7 +192,7 @@ class TestFFmpegVersionOutput:
     def output(self):
         output = FFmpegVersionOutput(["/usr/bin/ffmpeg", "-version"], timeout=1.0)
         assert output.command == ["/usr/bin/ffmpeg", "-version"]
-        assert output.timeout == 1.0
+        assert output.timeout == 1.0  # noqa: RUF069
         assert output.output == []
         assert output.version is None
 

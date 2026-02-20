@@ -285,7 +285,7 @@ class TestTwitchHLSStream(TestMixinStreamHLS, unittest.TestCase):
         data = self.await_read(read_all=True)
         assert data == self.content(segments, cond=lambda s: s.num >= 4), "Filters out preroll ad segments"
         assert all(self.called(s) for s in segments.values()), "Downloads all segments"
-        assert self.thread.reader.worker.duration == 2.0, "Ad segments don't affect the output duration"
+        assert self.thread.reader.worker.duration == pytest.approx(2.0), "Ad segments don't affect the output duration"
         assert mock_log.info.mock_calls == [
             call("Will skip ad segments"),
             call("Waiting for pre-roll ads to finish, be patient"),
@@ -312,7 +312,7 @@ class TestTwitchHLSStream(TestMixinStreamHLS, unittest.TestCase):
         data = self.await_read(read_all=True)
         assert data == self.content(segments, cond=lambda s: s.num != 2 and s.num != 3), "Filters out mid-stream ad segments"
         assert all(self.called(s) for s in segments.values()), "Downloads all segments"
-        assert self.thread.reader.worker.duration == 4.0, "Ad segments don't affect the output duration"
+        assert self.thread.reader.worker.duration == pytest.approx(4.0), "Ad segments don't affect the output duration"
         assert mock_log.info.mock_calls == [
             call("Will skip ad segments"),
             call("Detected advertisement break of 2 seconds"),
@@ -362,7 +362,7 @@ class TestTwitchHLSStream(TestMixinStreamHLS, unittest.TestCase):
         data = self.await_read(read_all=True)
         assert data == self.content(segments, cond=lambda s: s.num not in (0, 1, 4, 5, 6, 7, 8)), "Filters out all ad segments"
         assert all(self.called(s) for s in segments.values()), "Downloads all segments"
-        assert self.thread.reader.worker.duration == 3.0, "Ad segments don't affect the output duration"
+        assert self.thread.reader.worker.duration == pytest.approx(3.0), "Ad segments don't affect the output duration"
         assert mock_log.info.mock_calls == [
             call("Will skip ad segments"),
             call("Waiting for pre-roll ads to finish, be patient"),
@@ -415,7 +415,7 @@ class TestTwitchHLSStream(TestMixinStreamHLS, unittest.TestCase):
         assert mock_log.info.mock_calls == [
             call("Will skip ad segments"),
         ]
-        assert self.thread.reader.worker._reload_time == 3.0
+        assert self.thread.reader.worker._reload_time == pytest.approx(3.0)
 
     @patch("streamlink.plugins.twitch.log")
     def test_hls_low_latency_no_prefetch(self, mock_log):
