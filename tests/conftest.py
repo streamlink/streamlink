@@ -75,6 +75,7 @@ def _check_test_condition(item: pytest.Item):  # pragma: no cover
         kwargs = dict(m.kwargs)
         reason = kwargs.pop("reason", None)
         if callable(data):
+            assert not isinstance(data, tuple)
             cond, msg = data(*m.args, **kwargs)
         else:
             cond, msg = data

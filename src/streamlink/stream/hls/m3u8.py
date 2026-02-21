@@ -144,7 +144,7 @@ class M3U8Parser(Generic[TM3U8_co, THLSSegment_co, THLSPlaylist_co], metaclass=M
 
     def __init__(self, base_uri: str | None = None):
         # PEP 696 might solve this
-        self.m3u8: TM3U8_co = self.__m3u8__(base_uri)  # type: ignore[assignment]  # ty:ignore[unused-ignore-comment]
+        self.m3u8: TM3U8_co = self.__m3u8__(base_uri)  # type: ignore[assignment]
 
         self._expect_playlist: bool = False
         self._streaminf: dict[str, str] | None = None
