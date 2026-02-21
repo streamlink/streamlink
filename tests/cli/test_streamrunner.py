@@ -48,7 +48,7 @@ class FakeStream(_TestableWithHandshake, StreamIO):
 
     def __init__(self) -> None:
         super().__init__()
-        self.data: deque[bytes | Callable] = deque()
+        self.data: deque[bytes | Callable[[], bytes]] = deque()
 
     # noinspection PyUnusedLocal
     def read(self, *args):
@@ -56,7 +56,10 @@ class FakeStream(_TestableWithHandshake, StreamIO):
             if not self.data:
                 return b""
             data = self.data.popleft()
-            return data() if callable(data) else data
+            if callable(data) and not isinstance(data, bytes):
+                return data()
+            else:
+                return data
 
 
 class FakeOutput(_TestableWithHandshake):
