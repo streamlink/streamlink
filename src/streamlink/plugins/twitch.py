@@ -305,10 +305,10 @@ class UsherService:
             ).validate(extra_params)
             log.debug(f"{extra_params_debug!r}")
 
-        return self._create_url(f"/api/channel/hls/{channel.lower()}.m3u8", **extra_params)
+        return self._create_url(f"/api/v2/channel/hls/{channel.lower()}.m3u8", **extra_params)
 
     def video(self, video_id: str, **extra_params) -> str:
-        return self._create_url(f"/vod/{video_id}", **extra_params)
+        return self._create_url(f"/vod/v2/{video_id}.m3u8", **extra_params)
 
 
 class TwitchAPI:
