@@ -617,7 +617,7 @@ class TestUsherService:
         [
             pytest.param(
                 {"service": "channel", "args": ("TWITCH",)},
-                "/api/channel/hls/twitch.m3u8",
+                "/api/v2/channel/hls/twitch.m3u8",
                 [
                     (
                         "streamlink.plugins.twitch",
@@ -629,7 +629,7 @@ class TestUsherService:
             ),
             pytest.param(
                 {"service": "video", "args": ("1234567890",)},
-                "/vod/1234567890",
+                "/vod/v2/1234567890.m3u8",
                 [],
                 id="video",
             ),
