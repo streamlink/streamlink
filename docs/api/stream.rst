@@ -1,18 +1,16 @@
 Stream
 ------
 
-.. module:: streamlink.stream
-
 All streams inherit from the :class:`Stream` base class.
 
-.. autoclass:: Stream
+.. autoclass:: streamlink.stream.stream.Stream
 
-.. autoclass:: MuxedStream
+.. autoclass:: streamlink.stream.ffmpegmux.MuxedStream
 
-.. autoclass:: HTTPStream
+.. autoclass:: streamlink.stream.http.HTTPStream
 
-.. autoclass:: HLSStream
+.. autoclass:: streamlink.stream.hls.HLSStream
 
-.. autoclass:: MuxedHLSStream
+.. autoclass:: streamlink.stream.hls.MuxedHLSStream
 
-.. autoclass:: DASHStream
+.. autoclass:: streamlink.stream.dash.DASHStream
