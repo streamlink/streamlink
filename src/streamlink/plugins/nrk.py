@@ -70,6 +70,7 @@ class NRK(Plugin):
     def _get_assets(self, manifest_type, program_id):
         return self.session.http.get(
             self._URL_MANIFEST.format(manifest_type=manifest_type, program_id=program_id),
+            headers={"Accept": "application/vnd.nrk.psapi+json; version=9; player=tv-player; device=player-core"},
             schema=validate.Schema(
                 validate.parse_json(),
                 {
