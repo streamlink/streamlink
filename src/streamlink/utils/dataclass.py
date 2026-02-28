@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import dataclasses
 from datetime import datetime, timedelta
-from typing import TYPE_CHECKING, Callable, TypeAlias, TypeVar
+from typing import TYPE_CHECKING, TypeAlias, TypeVar
 from weakref import WeakKeyDictionary
 
 
@@ -13,6 +13,8 @@ except ImportError:  # pragma: no cover
 
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
+
     from _typeshed import DataclassInstance
 
     _Ta = TypeVar("_Ta")

@@ -7,7 +7,7 @@ from logging import CRITICAL, DEBUG, ERROR, INFO, WARNING
 from pathlib import Path
 from sys import version_info
 from threading import Lock
-from typing import IO, TYPE_CHECKING, Callable, Literal, TextIO
+from typing import IO, TYPE_CHECKING, Literal, TextIO
 
 # noinspection PyProtectedMember
 from warnings import WarningMessage
@@ -17,7 +17,7 @@ from streamlink.utils.times import fromlocaltimestamp
 
 
 if TYPE_CHECKING:
-    from collections.abc import Iterator
+    from collections.abc import Callable, Iterator
 
 
 FORMAT_STYLE: Literal["%", "{", "$"] = "{"

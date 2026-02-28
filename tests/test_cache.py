@@ -6,7 +6,7 @@ from io import BytesIO, TextIOWrapper
 from json import JSONDecodeError
 from pathlib import Path
 from threading import Thread, Timer
-from typing import Callable
+from typing import TYPE_CHECKING
 from unittest.mock import Mock
 
 import freezegun
@@ -15,6 +15,10 @@ import pytest
 # noinspection PyProtectedMember
 from streamlink.cache import WRITE_DEBOUNCE_TIME, Cache
 from tests.testutils.handshake import Handshake
+
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 
 @pytest.fixture(autouse=True)
