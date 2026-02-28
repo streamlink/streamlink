@@ -153,8 +153,7 @@ class ArgparseDirective(Directive):
             options = f"\n{' ' * len(directive)}".join(options)
             yield f"{directive}{options}"
             yield ""
-            for line in self.process_help(action.help).split("\n"):
-                yield line
+            yield from self.process_help(action.help).split("\n")
             yield ""
 
     def generate_parser_rst(self, parser, parent=None, depth=0):
