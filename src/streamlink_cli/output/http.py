@@ -67,7 +67,7 @@ class HTTPOutput(Output):
             conn, _addr = self.socket.accept()
             conn.settimeout(None)
             self.conn = conn
-        except socket.timeout as err:
+        except TimeoutError as err:
             self.conn = None
             raise OSError("Socket accept timed out") from err
 
