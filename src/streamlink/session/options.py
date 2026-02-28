@@ -405,7 +405,7 @@ class StreamlinkOptions(Options):
 
     @staticmethod
     def _factory_set_http_attr_key_equals_value(delimiter: str) -> Callable[[StreamlinkOptions, str, Any], None]:
-        def inner(self: "StreamlinkOptions", key: str, value: Any) -> None:
+        def inner(self: StreamlinkOptions, key: str, value: Any) -> None:
             getattr(self.session.http, self._OPTIONS_HTTP_ATTRS[key]).update(
                 value if isinstance(value, dict) else dict(self._parse_key_equals_value_string(delimiter, value)),
             )

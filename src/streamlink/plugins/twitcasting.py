@@ -5,6 +5,8 @@ $type live
 $metadata id
 """
 
+from __future__ import annotations
+
 import hashlib
 import re
 import sys
@@ -141,7 +143,7 @@ class TwitCastingWsClient(WebsocketClient):
 
 
 class TwitCastingReader(StreamIO):
-    def __init__(self, stream: "TwitCastingStream", timeout=None):
+    def __init__(self, stream: TwitCastingStream, timeout=None):
         super().__init__()
         self.session = stream.session
         self.stream = stream

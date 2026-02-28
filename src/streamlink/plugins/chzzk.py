@@ -8,6 +8,8 @@ $metadata category
 $metadata title
 """
 
+from __future__ import annotations
+
 import re
 from urllib.parse import parse_qsl, urlparse
 
@@ -25,8 +27,8 @@ log = getLogger(__name__)
 class ChzzkHLSStreamWorker(HLSStreamWorker):
     """Custom HLS stream worker that adds __bgda__ query parameter to segment URLs"""
 
-    reader: "ChzzkHLSStreamReader"
-    stream: "ChzzkHLSStream"
+    reader: ChzzkHLSStreamReader
+    stream: ChzzkHLSStream
 
     def process_segments(self, playlist):
         """Override process_segments to add __bgda__ parameter to segment URIs"""
@@ -44,8 +46,8 @@ class ChzzkHLSStreamWorker(HLSStreamWorker):
 class ChzzkHLSStreamReader(HLSStreamReader):
     __worker__ = ChzzkHLSStreamWorker
 
-    worker: "ChzzkHLSStreamWorker"
-    stream: "ChzzkHLSStream"
+    worker: ChzzkHLSStreamWorker
+    stream: ChzzkHLSStream
 
 
 class ChzzkHLSStream(HLSStream):
