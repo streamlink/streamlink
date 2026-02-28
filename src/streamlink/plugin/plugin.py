@@ -8,7 +8,7 @@ import time
 from collections.abc import Iterable, Mapping
 from contextlib import suppress
 from functools import partial
-from typing import TYPE_CHECKING, Any, ClassVar, List, Literal, NamedTuple, Type, TypeVar, Union
+from typing import TYPE_CHECKING, Any, ClassVar, Literal, NamedTuple, TypeVar
 
 import requests.cookies
 
@@ -22,6 +22,7 @@ from streamlink.stream.stream import Stream
 
 
 if TYPE_CHECKING:
+    import builtins
     from collections.abc import Callable, Iterator, MutableMapping
     from http.cookiejar import Cookie
 
@@ -210,7 +211,7 @@ class Matcher(NamedTuple):
 MType = TypeVar("MType")
 
 
-class _MCollection(List[MType]):
+class _MCollection(list[MType]):
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
         self._names: dict[str, MType] = {}
@@ -236,7 +237,7 @@ class Matchers(_MCollection[Matcher]):
             self._names[matcher.name] = matcher
 
 
-class Matches(_MCollection[Union[re.Match, None]]):
+class Matches(_MCollection[re.Match | None]):
     def update(self, matchers: Matchers, value: str) -> tuple[re.Pattern[str] | None, re.Match[str] | None]:
         matches = [(matcher, matcher.pattern.match(value)) for matcher in matchers]
 
@@ -789,7 +790,7 @@ def pluginargument(
         argument_name=argument_name,
     )
 
-    def decorator(cls: Type[Plugin]) -> Type[Plugin]:
+    def decorator(cls: builtins.type[Plugin]) -> builtins.type[Plugin]:
         if not issubclass(cls, Plugin):
             raise TypeError(f"{repr(cls)} is not a Plugin")  # noqa: RUF010  # builtins.repr gets monkeypatched in tests
         cls.arguments.add(arg)
