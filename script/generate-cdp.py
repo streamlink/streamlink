@@ -48,6 +48,8 @@ import requests
 if TYPE_CHECKING:
     from collections.abc import Iterator
 
+    from typing_extensions import Self
+
 
 URL_API_NPMJS_LATEST = "https://registry.npmjs.org/devtools-protocol/latest"
 JSON_PROTOCOL_URLS = [
@@ -275,7 +277,7 @@ class CdpItems:
     ref: str
 
     @classmethod
-    def from_json(cls, type_) -> "CdpItems":
+    def from_json(cls, type_) -> Self:
         """Generate code to instantiate an item from a JSON object."""
         return cls(type_.get("type"), type_.get("$ref"))
 
@@ -320,7 +322,7 @@ class CdpProperty:
         return ann
 
     @classmethod
-    def from_json(cls, property_, domain) -> "CdpProperty":
+    def from_json(cls, property_, domain) -> Self:
         """Instantiate a CDP property from a JSON object."""
         return cls(
             property_["name"],
@@ -403,7 +405,7 @@ class CdpType:
     domain: str
 
     @classmethod
-    def from_json(cls, type_, domain) -> "CdpType":
+    def from_json(cls, type_, domain) -> Self:
         """Instantiate a CDP type from a JSON object."""
         return cls(
             type_["id"],
@@ -678,7 +680,7 @@ class CdpCommand:
         return snake_case(self.name)
 
     @classmethod
-    def from_json(cls, command, domain) -> "CdpCommand":
+    def from_json(cls, command, domain) -> Self:
         """Instantiate a CDP command from a JSON object."""
         parameters = command.get("parameters", [])
         returns = command.get("returns", [])
@@ -688,8 +690,8 @@ class CdpCommand:
             command.get("description"),
             command.get("experimental", False),
             command.get("deprecated", False),
-            [cast("CdpParameter", CdpParameter.from_json(p, domain)) for p in parameters],
-            [cast("CdpReturn", CdpReturn.from_json(r, domain)) for r in returns],
+            [CdpParameter.from_json(p, domain) for p in parameters],
+            [CdpReturn.from_json(r, domain) for r in returns],
             domain,
         )
 
@@ -807,7 +809,7 @@ class CdpEvent:
             json_.get("description"),
             json_.get("deprecated", False),
             json_.get("experimental", False),
-            [cast("CdpParameter", CdpParameter.from_json(p, domain)) for p in json_.get("parameters", [])],
+            [CdpParameter.from_json(p, domain) for p in json_.get("parameters", [])],
             domain,
         )
 

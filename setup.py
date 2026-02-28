@@ -55,7 +55,7 @@ if is_wheel_for_windows(sys.argv):
 
 
 # optional data files
-data_files: "list[tuple[str, Sequence[str]]]" = [
+data_files: "list[tuple[str, Sequence[str]]]" = [  # noqa: UP037
     # shell completions:
     #  requires pre-built completion files via shtab ("build" dependency group)
     #  `./script/build-shell-completions.sh`
@@ -83,7 +83,7 @@ if __name__ == "__main__":
         from versioningit import get_cmdclasses
     except ImportError:  # pragma: no cover
 
-        def get_cmdclasses(bases: "dict[str, type[Command]] | None" = None) -> "dict[str, type[Command]]":
+        def get_cmdclasses(bases: "dict[str, type[Command]] | None" = None) -> "dict[str, type[Command]]":  # noqa: UP037
             return bases or {}
 
     setup(

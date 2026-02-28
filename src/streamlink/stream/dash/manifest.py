@@ -669,7 +669,7 @@ class _SegmentBaseType(MPDNode):
 
     _ancestors = (Period, AdaptationSet, Representation)
 
-    def __init__(self, *args, period: "Period", **kwargs) -> None:
+    def __init__(self, *args, period: Period, **kwargs) -> None:
         super().__init__(*args, **kwargs)
 
         self.period = period
