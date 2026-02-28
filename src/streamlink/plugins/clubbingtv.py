@@ -71,7 +71,7 @@ class ClubbingTV(Plugin):
 
         stream_url = match.group("stream_url")
         log.info(
-            "Fetching external stream from URL {0}".format(stream_url),
+            f"Fetching external stream from URL {stream_url}",
         )
         return self.session.streams(stream_url)
 

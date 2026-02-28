@@ -68,7 +68,7 @@ class N13TV(Plugin):
         )
 
         url = self.session.http.json(res, schema=self.live_schema)
-        log.debug("URL={0}".format(url))
+        log.debug(f"URL={url}")
 
         return HLSStream.parse_variant_playlist(self.session, url)
 
@@ -96,15 +96,15 @@ class N13TV(Plugin):
             except AttributeError:
                 raise PluginError("Could not split 'MediaFile' components") from None
 
-            media_path = "{0}{1}{2}{3}{4}{5}".format(
+            media_path = "".join([
                 base_path,
                 vod_data["MediaRoot"],
                 base_file,
                 vod_data["Bitrates"],
                 file_ext,
                 vod_data["StreamingType"],
-            )
-            log.debug("Media path={0}".format(media_path))
+            ])
+            log.debug("Media path=%s", media_path)
 
             vod_url = urlunparse((
                 vod_data["ProtocolType"],
@@ -114,13 +114,13 @@ class N13TV(Plugin):
                 vod_data["Token"],
                 "",
             ))
-            log.debug("URL={0}".format(vod_url))
+            log.debug("URL=%s", vod_url)
 
             return HLSStream.parse_variant_playlist(self.session, vod_url)
 
     def _get_streams(self):
         url_type = self.match.group(1)
-        log.debug("URL type={0}".format(url_type))
+        log.debug(f"URL type={url_type}")
 
         res = self.session.http.get(self.url)
 
@@ -129,13 +129,13 @@ class N13TV(Plugin):
             video_name = m and m.group(1)
             if not video_name:
                 raise PluginError("Could not determine video_name")
-            log.debug("Video name={0}".format(video_name))
+            log.debug(f"Video name={video_name}")
 
         m = self.main_js_url_re.search(res.text)
         main_js_path = m and m.group(1)
         if not main_js_path:
             raise PluginError("Could not determine main_js_path")
-        log.debug("Main JS path={0}".format(main_js_path))
+        log.debug(f"Main JS path={main_js_path}")
 
         res = self.session.http.get(urljoin(self.url, main_js_path))
 
@@ -143,7 +143,7 @@ class N13TV(Plugin):
         user_id = m and m.group(1)
         if not user_id:
             raise PluginError("Could not determine user_id")
-        log.debug("User ID={0}".format(user_id))
+        log.debug(f"User ID={user_id}")
 
         if url_type == "live":
             return self._get_live(user_id)

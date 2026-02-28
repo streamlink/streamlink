@@ -24,7 +24,7 @@ class GoogleDocs(Plugin):
 
     def _get_streams(self):
         docid = self.match.group(1)
-        log.debug("Google Docs ID: {0}".format(docid))
+        log.debug("Google Docs ID: %s", docid)
         res = self.session.http.get(self.api_url, params=dict(docid=docid))
         data = dict(parse_qsl(res.text))
 
@@ -33,9 +33,9 @@ class GoogleDocs(Plugin):
             streams = [s.split("|") for s in data["fmt_stream_map"].split(",")]
             for qcode, url in streams:
                 _, h = fmts[qcode].split("x")
-                yield "{0}p".format(h), HTTPStream(self.session, url)
+                yield f"{h}p", HTTPStream(self.session, url)
         else:
-            log.error("{0} (ID: {1})".format(data["reason"], docid))
+            log.error("%s (ID: %s)", data["reason"], docid)
 
 
 __plugin__ = GoogleDocs

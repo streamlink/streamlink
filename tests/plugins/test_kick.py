@@ -41,7 +41,7 @@ class TestPluginCanHandleUrlKick(PluginCanHandleUrl):
 
 class SegmentPrefetch(Segment):
     def build(self, namespace):
-        return "#EXT-X-PREFETCH:{0}".format(self.url(namespace))
+        return f"#EXT-X-PREFETCH:{self.url(namespace)}"
 
 
 class _KickHLSStreamWriter(EventedHLSStreamWriter, KickHLSStreamWriter):

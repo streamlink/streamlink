@@ -26,7 +26,7 @@ class Tvibo(Plugin):
         api_response = self.session.http.get(self._api_url.format(id=channel_id), acceptable_status=(200, 404))
 
         data = self.session.http.json(api_response)
-        log.trace("{0!r}".format(data))
+        log.trace("%r", data)
         if data.get("st"):
             yield "source", HLSStream(self.session, data["st"])
         elif data.get("error"):

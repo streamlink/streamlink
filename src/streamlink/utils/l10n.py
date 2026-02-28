@@ -53,13 +53,8 @@ class Country:
         )
 
     def __str__(self):
-        return "Country({0!r}, {1!r}, {2!r}, {3!r}, official_name={4!r})".format(
-            self.alpha2,
-            self.alpha3,
-            self.numeric,
-            self.name,
-            self.official_name,
-        )
+        alpha2, alpha3, numeric, name, official_name = self.alpha2, self.alpha3, self.numeric, self.name, self.official_name
+        return f"Country({alpha2!r}, {alpha3!r}, {numeric!r}, {name!r}, {official_name=!r})"
 
 
 class Language:
@@ -101,12 +96,8 @@ class Language:
         )
 
     def __str__(self):
-        return "Language({0!r}, {1!r}, {2!r}, bibliographic={3!r})".format(
-            self.alpha2,
-            self.alpha3,
-            self.name,
-            self.bibliographic,
-        )
+        alpha2, alpha3, name, bibliographic = self.alpha2, self.alpha3, self.name, self.bibliographic
+        return f"Language({alpha2!r}, {alpha3!r}, {name!r}, {bibliographic=!r})"
 
 
 class Localization:

@@ -76,7 +76,7 @@ class ArgparseDirective(Directive):
         helptext = dedent(helptext)
 
         helptext = _inline_code_block_re.sub(
-            lambda m: ":code:`{0}`".format(m.group(1).replace("\\", "\\\\")),
+            lambda m: ":code:`{}`".format(m.group(1).replace("\\", "\\\\")),
             helptext,
         )
 

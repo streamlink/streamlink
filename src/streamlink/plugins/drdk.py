@@ -61,7 +61,7 @@ class DRDK(Plugin):
 
     def _get_streams(self):
         path = self.match.group(1)
-        log.debug("Path={0}".format(path))
+        log.debug(f"Path={path}")
 
         return self._get_live(path)
 

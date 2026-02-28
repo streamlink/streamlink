@@ -152,15 +152,12 @@ class Segment(_Segment):
         self.date = DATETIME_BASE + timedelta(seconds=num)
 
     def build(self, namespace):
-        return "#EXT-X-PROGRAM-DATE-TIME:{0}\n{1}".format(
-            self.date.strftime(DATETIME_FORMAT),
-            super().build(namespace),
-        )
+        return f"#EXT-X-PROGRAM-DATE-TIME:{self.date.strftime(DATETIME_FORMAT)}\n{super().build(namespace)}"
 
 
 class SegmentPrefetch(Segment):
     def build(self, namespace):
-        return "#EXT-X-TWITCH-PREFETCH:{0}".format(self.url(namespace))
+        return f"#EXT-X-TWITCH-PREFETCH:{self.url(namespace)}"
 
 
 class _TwitchHLSStreamWriter(EventedHLSStreamWriter, TwitchHLSStreamWriter):

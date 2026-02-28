@@ -64,18 +64,18 @@ class MuxedStream(Stream, Generic[TSubstreams_co]):
         # only update the maps values if they haven't been set
         update_maps = not maps
         for substream in self.substreams:
-            log.debug("Opening {0} substream".format(substream.shortname()))
+            log.debug("Opening %s substream", substream.shortname())
             if update_maps:
                 maps.append(len(fds))
             fds.append(substream and substream.open())
 
         for i, subtitle in enumerate(self.subtitles.items()):
             language, substream = subtitle
-            log.debug("Opening {0} subtitle stream".format(substream.shortname()))
+            log.debug("Opening %s subtitle stream", substream.shortname())
             if update_maps:
                 maps.append(len(fds))
             fds.append(substream and substream.open())
-            metadata["s:s:{0}".format(i)] = ["language={0}".format(language)]
+            metadata[f"s:s:{i}"] = [f"language={language}"]
 
         self.options["metadata"] = metadata
         self.options["maps"] = maps
@@ -233,8 +233,8 @@ class FFMPEGMuxer(StreamIO):
 
         for stream, data in metadata.items():
             for datum in data:
-                stream_id = ":{0}".format(stream) if stream else ""
-                self._cmd.extend(["-metadata{0}".format(stream_id), datum])
+                stream_id = f":{stream}" if stream else ""
+                self._cmd.extend([f"-metadata{stream_id}", datum])
 
         self._cmd.extend(["-f", ofmt, outpath])
         log.debug(f"ffmpeg command: {self._cmd!r}")

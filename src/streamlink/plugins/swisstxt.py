@@ -26,7 +26,7 @@ class Swisstxt(Plugin):
     def get_stream_url(self, event_id):
         site = self.match.group(1) or self.match.group(2)
         api_url = self.api_url.format(id=event_id, site=site.upper())
-        log.debug("Calling API: {0}".format(api_url))
+        log.debug(f"Calling API: {api_url}")
 
         stream_url = self.session.http.get(api_url).text.strip("\"'")
 
