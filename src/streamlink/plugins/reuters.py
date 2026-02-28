@@ -79,7 +79,7 @@ class Reuters(Plugin):
                 validate.parse_json(),
                 {"videohub-by-guid-v1": {str: {"data": {"result": {"videos": list}}}}},
                 validate.get("videohub-by-guid-v1"),
-                validate.transform(lambda obj: obj[next(iter((obj.keys())))]),
+                validate.transform(lambda obj: obj[next(iter(obj.keys()))]),
                 validate.get(("data", "result", "videos", 0)),
                 schema_video,
             )
