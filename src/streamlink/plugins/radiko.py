@@ -41,7 +41,7 @@ class Radiko(Plugin):
         yield from HLSStream.parse_variant_playlist(self.session, url).items()
 
     def _live(self, station_id):
-        live_url = "http://f-radiko.smartstream.ne.jp/{}/_definst_/simul-stream.stream/playlist.m3u8".format(station_id)
+        live_url = f"http://f-radiko.smartstream.ne.jp/{station_id}/_definst_/simul-stream.stream/playlist.m3u8"
         token, _area_id = self._authorize()
         lsid = hashlib.md5(str(random.random()).encode("utf-8")).hexdigest()
         live_params = {
@@ -102,7 +102,7 @@ class Radiko(Plugin):
             date = yesterday.strftime("%Y%m%d")
         else:
             date = today.strftime("%Y%m%d")
-        api = "http://radiko.jp/v3/program/station/date/{}/{}.xml".format(date, station_id)
+        api = f"http://radiko.jp/v3/program/station/date/{date}/{station_id}.xml"
         r = self.session.http.get(api)
         tree = XML(r.content)
         for x in tree[2][0][1].findall("prog"):

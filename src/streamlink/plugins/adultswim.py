@@ -115,7 +115,7 @@ class AdultSwim(Plugin):
     def _get_video_data(self, slug):
         m = self.truncate_url_re.search(self.url)
         if m and m.group(1):
-            log.debug("Truncated URL={0}".format(m.group(1)))
+            log.debug(f"Truncated URL={m.group(1)}")
         else:
             raise PluginError("Failed to truncate URL")
 
@@ -137,14 +137,14 @@ class AdultSwim(Plugin):
         app_id_js_url = m and m.group(1)
         if not app_id_js_url:
             raise PluginError("Could not determine app_id_js_url")
-        log.debug("app_id_js_url={0}".format(app_id_js_url))
+        log.debug(f"app_id_js_url={app_id_js_url}")
 
         res = self.session.http.get(app_id_js_url)
         m = self.app_id_re.search(res.text)
         app_id = m and m.group(1)
         if not app_id:
             raise PluginError("Could not determine app_id")
-        log.debug("app_id={0}".format(app_id))
+        log.debug(f"app_id={app_id}")
 
         res = self.session.http.get(
             self.token_url,
@@ -169,7 +169,7 @@ class AdultSwim(Plugin):
         elif not show_name:
             raise PluginError(f"Missing show_name for url_type: {url_type}")
 
-        log.debug("URL type={0}".format(url_type))
+        log.debug(f"URL type={url_type}")
 
         if url_type == "live-stream":
             video_id = self._get_stream_data(url_type)
@@ -178,17 +178,15 @@ class AdultSwim(Plugin):
         elif url_type == "videos":
             if show_name is None or episode_name is None:
                 raise PluginError(
-                    "Missing show_name or episode_name for url_type: {0}".format(
-                        url_type,
-                    ),
+                    f"Missing show_name or episode_name for url_type: {url_type}",
                 )
             video_id = self._get_video_data(episode_name)
         else:
-            raise PluginError("Unrecognised url_type: {0}".format(url_type))
+            raise PluginError(f"Unrecognised url_type: {url_type}")
 
         if video_id is None:
             raise PluginError("Could not find video_id")
-        log.debug("Video ID={0}".format(video_id))
+        log.debug(f"Video ID={video_id}")
 
         res = self.session.http.get(self.video_data_url.format(video_id))
 
@@ -203,13 +201,13 @@ class AdultSwim(Plugin):
                 url_parsed.netloc,
                 url_parsed.path,
                 url_parsed.params,
-                "{0}={1}".format("hdnts", token),
+                f"hdnts={token}",
                 url_parsed.fragment,
             ))
         else:
             raise PluginError("Could not find a usable URL in url_data")
 
-        log.debug("URL={0}".format(url))
+        log.debug(f"URL={url}")
 
         return HLSStream.parse_variant_playlist(self.session, url)
 

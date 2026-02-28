@@ -248,7 +248,7 @@ class AbemaTV(Plugin):
                 return {}
             playlisturl = self._SLOTM3U8.format(slots)
 
-        log.debug("URL={0}".format(playlisturl))
+        log.debug(f"URL={playlisturl}")
 
         # hook abematv private protocol
         self.session.http.mount("abematv-license://", AbemaTVLicenseAdapter(self.session, deviceid, self.usertoken))

@@ -118,7 +118,7 @@ class Zattoo(Plugin):
             and self.session.http.cookies.get("beaker.session.id", domain=self.domain)
         )
         self._session_control = self._session_attributes.get("session_control", False)
-        self.base_url = "https://{0}".format(self.domain)
+        self.base_url = f"https://{self.domain}"
         self.headers = {
             "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
             "X-Requested-With": "XMLHttpRequest",
@@ -211,10 +211,10 @@ class Zattoo(Plugin):
                 return
             params.update(params_cid)
         elif vod_id:
-            log.debug("Found vod_id: {0}".format(vod_id))
+            log.debug(f"Found vod_id: {vod_id}")
             watch_url = f"{self.base_url}/zapi/avod/videos/{vod_id}/watch"
         elif recording_id:
-            log.debug("Found recording_id: {0}".format(recording_id))
+            log.debug(f"Found recording_id: {recording_id}")
             watch_url = f"{self.base_url}/zapi/watch/recording/{recording_id}"
         else:
             log.debug("Missing watch_url")
@@ -282,7 +282,7 @@ class Zattoo(Plugin):
                     yield from DASHStream.parse_manifest(self.session, url["url"]).items()
 
     def _get_params_cid(self, channel):
-        log.debug("get channel ID for {0}".format(channel))
+        log.debug(f"get channel ID for {channel}")
         try:
             res = self.session.http.get(
                 f"{self.base_url}/zapi/v2/cached/channels/{self._session_attributes.get('power_guide_hash')}",
@@ -341,7 +341,7 @@ class Zattoo(Plugin):
         if not cid:
             cid = channel
 
-        log.debug("CHANNEL ID: {0}".format(cid))
+        log.debug(f"CHANNEL ID: {cid}")
         return {"cid": cid}
 
     def reset_session(self):
@@ -359,7 +359,7 @@ class Zattoo(Plugin):
             log.info("All credentials were successfully removed.")
         elif self._authed and not self._session_control:
             # check every two hours, if the session is actually valid
-            log.debug("Session control for {0}".format(self.domain))
+            log.debug(f"Session control for {self.domain}")
             active = self.session.http.get(
                 f"{self.base_url}/zapi/v3/session",
                 schema=validate.Schema(validate.parse_json(), {"active": bool}, validate.get("active")),

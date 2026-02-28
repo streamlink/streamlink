@@ -88,9 +88,9 @@ class OPENRECtv(Plugin):
             ),
         )
         if data["status"] == 0:
-            log.debug("Logged in as {0}".format(data["data"]["user_name"]))
+            log.debug("Logged in as %s", data["data"]["user_name"])
         else:
-            log.error("Failed to login: {0}".format(data["error_message"]))
+            log.error("Failed to login: %s", data["error_message"])
         return data["status"] == 0
 
     def _get_movie_data(self):
@@ -108,7 +108,7 @@ class OPENRECtv(Plugin):
             log.debug("Got valid detail response")
             return data
         else:
-            log.error("Failed to get video stream: {0}".format(data["message"]))
+            log.error("Failed to get video stream: %s", data["message"])
 
     def _get_subscription_movie_data(self):
         url = self.subscription_info_url.format(id=self.video_id)
@@ -125,7 +125,7 @@ class OPENRECtv(Plugin):
             log.debug("Got valid subscription info")
             return data
         else:
-            log.error("Failed to get video stream: {0}".format(data["message"]))
+            log.error("Failed to get video stream: %s", data["message"])
 
     def get_author(self):
         mdata = self._get_movie_data()
@@ -144,7 +144,7 @@ class OPENRECtv(Plugin):
         mdata = self._get_movie_data()
 
         if mdata:
-            log.debug("Found video: {0} ({1})".format(mdata["title"], mdata["id"]))
+            log.debug("Found video: %s (%s)", mdata["title"], mdata["id"])
             m3u8_file = None
             # subscription
             if mdata["public_type"] == "member":

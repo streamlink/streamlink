@@ -464,17 +464,17 @@ class Plugin(abc.ABC, metaclass=_PluginMeta):
             if existing:
                 existing_stream_type = type(existing).shortname()
                 if existing_stream_type != stream_type:
-                    name = "{0}_{1}".format(name, stream_type)
+                    name = f"{name}_{stream_type}"
 
                 if name in streams:
-                    name = "{0}_alt".format(name)
+                    name = f"{name}_alt"
                     num_alts = len(list(filter(lambda n: n.startswith(name), streams.keys())))
 
                     # We shouldn't need more than 2 alt streams
                     if num_alts >= 2:
                         continue
                     elif num_alts > 0:
-                        name = "{0}{1}".format(name, num_alts + 1)
+                        name = f"{name}{num_alts + 1}"
 
             # Validate stream name and discard the stream if it's bad.
             match = re.match(r"([A-z0-9_+]+)", name)
@@ -576,12 +576,13 @@ class Plugin(abc.ABC, metaclass=_PluginMeta):
             expires = default_expires
             if cookie_dict["expires"]:
                 expires = int(cookie_dict["expires"] - time.time())
-            key = "__cookie:{0}:{1}:{2}:{3}".format(
+            key = ":".join([
+                "__cookie",
                 cookie.name,
                 cookie.domain,
                 cookie.port_specified and cookie.port or "80",
                 cookie.path_specified and cookie.path or "*",
-            )
+            ])
             self.cache.set(key, cookie_dict, expires)
             saved.append(cookie.name)
 

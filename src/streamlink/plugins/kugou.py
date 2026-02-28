@@ -78,7 +78,7 @@ class Kugou(Plugin):
             },
         )
         stream_data_json = self.session.http.json(res, schema=self._stream_data_schema)
-        log.trace("{0!r}".format(stream_data_json))
+        log.trace("%r", stream_data_json)
         if stream_data_json["code"] != 0 or stream_data_json["data"]["status"] != 1:
             return
 

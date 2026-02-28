@@ -36,7 +36,7 @@ class MRTmk(Plugin):
     def _get_streams(self):
         res = self.session.http.get(self.url)
         stream_urls = self.stream_schema.validate(res.text)
-        log.debug("Found streams: {0}".format(len(stream_urls)))
+        log.debug(f"Found streams: {len(stream_urls)}")
         if not stream_urls:
             return
 
