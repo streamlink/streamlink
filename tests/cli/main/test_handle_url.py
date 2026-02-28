@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import json
 import re
-from typing import TYPE_CHECKING, Iterator
+from typing import TYPE_CHECKING
 from unittest.mock import Mock
 
 import pytest
@@ -14,6 +14,8 @@ from streamlink.stream.stream import Stream
 
 
 if TYPE_CHECKING:
+    from collections.abc import Iterator
+
     from streamlink.session import Streamlink
 
 

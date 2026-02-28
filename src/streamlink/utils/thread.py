@@ -3,7 +3,11 @@ from __future__ import annotations
 from collections import defaultdict
 from itertools import count
 from threading import RLock, Thread
-from typing import Iterator
+from typing import TYPE_CHECKING
+
+
+if TYPE_CHECKING:
+    from collections.abc import Iterator
 
 
 _threadname_lock = RLock()

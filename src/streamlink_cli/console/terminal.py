@@ -1,7 +1,13 @@
+from __future__ import annotations
+
 from shutil import get_terminal_size
-from typing import Iterable
+from typing import TYPE_CHECKING
 
 from streamlink.compat import is_win32
+
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable
 
 
 # widths generated from

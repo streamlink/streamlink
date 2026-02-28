@@ -11,11 +11,11 @@ from ctypes.wintypes import (
     WCHAR,
     WORD,
 )
-from typing import TYPE_CHECKING, Callable, ClassVar
+from typing import TYPE_CHECKING, ClassVar
 
 
 if TYPE_CHECKING:
-    from collections.abc import Sequence
+    from collections.abc import Callable, Sequence
     from ctypes import CDLL
     from io import TextIOWrapper
 

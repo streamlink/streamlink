@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from contextlib import nullcontext
 from datetime import datetime, timezone
-from typing import TYPE_CHECKING, Generator, Iterator
+from typing import TYPE_CHECKING
 from unittest.mock import ANY, Mock, call
 
 import freezegun
@@ -17,6 +17,8 @@ from tests.resources import text, xml
 
 
 if TYPE_CHECKING:
+    from collections.abc import Generator, Iterator
+
     import requests_mock as rm
 
     from streamlink.session import Streamlink
