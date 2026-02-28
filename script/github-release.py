@@ -380,7 +380,7 @@ class Release:
             contents = fh.read()
 
         if not contents:
-            raise IOError()
+            raise OSError()
 
         return contents
 
