@@ -2,14 +2,14 @@ from __future__ import annotations
 
 import argparse
 from collections.abc import Iterable
-from typing import TYPE_CHECKING, Any, ClassVar, Dict, Literal, TypeVar
+from typing import TYPE_CHECKING, Any, ClassVar, Literal, TypeVar
 
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Iterator, Mapping
 
 
-class Options(Dict[str, Any]):
+class Options(dict[str, Any]):
     """
     For storing options to be used by the Streamlink session and plugins, with default values.
 
@@ -256,7 +256,7 @@ class Argument:
         return isinstance(other, self.__class__) and hash(self) == hash(other)
 
 
-class Arguments(Dict[str, Argument]):
+class Arguments(dict[str, Argument]):
     """
     A collection of :class:`Argument` instances for :class:`Plugin <streamlink.plugin.Plugin>` classes.
 
