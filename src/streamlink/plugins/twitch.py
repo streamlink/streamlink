@@ -45,6 +45,7 @@ from streamlink.stream.hls import (
     HLSStreamWorker,
     HLSStreamWriter,
     M3U8Parser,
+    Media,
     parse_tag,
 )
 from streamlink.stream.http import HTTPStream
@@ -152,6 +153,28 @@ class TwitchM3U8Parser(M3U8Parser[TwitchM3U8, TwitchHLSSegment, HLSPlaylist]):
             segment.discontinuity = False
 
         return segment
+
+    def get_playlist(self, *args, **kwargs):
+        streaminf = self._streaminf or {}
+        playlist = super().get_playlist(*args, **kwargs)
+        # backwards compatibility for stream names on Usher v2
+        if not playlist.media and (name := streaminf.get("IVS-NAME")):
+            is_audio_only = name in ("audio_only", "audio")  # live + VOD
+            media = Media(
+                uri=None,
+                type="VIDEO",
+                group_id=name,
+                language=None,
+                name=name,
+                default=not is_audio_only,
+                autoselect=not is_audio_only,
+                forced=False,
+                characteristics=None,
+            )
+            playlist.stream_info.video = name
+            playlist.media.append(media)
+
+        return playlist
 
     def _is_segment_ad(self, date: datetime | None, title: str | None = None) -> bool:
         return (

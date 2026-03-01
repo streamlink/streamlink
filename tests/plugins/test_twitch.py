@@ -189,6 +189,15 @@ def test_stream_weight(requests_mock: rm.Mocker, session: Streamlink):
     assert data["worst"] is data["160p30"]
 
 
+def test_multivariant(session: Streamlink, requests_mock: rm.Mocker):
+    with text("hls/test_multivariant_twitch_usher_v2.m3u8") as fd:
+        content = fd.read()
+        requests_mock.get("http://mocked/multivariant.m3u8", text=content)
+        streams = TwitchHLSStream.parse_variant_playlist(session, "http://mocked/multivariant.m3u8")
+
+    assert sorted(streams.keys()) == ["1080p60", "160p", "360p", "480p", "720p60", "audio_only"]
+
+
 @patch("streamlink.stream.hls.HLSStreamWorker.wait", MagicMock(return_value=True))
 class TestTwitchHLSStream(TestMixinStreamHLS, unittest.TestCase):
     __stream__ = _TwitchHLSStream
