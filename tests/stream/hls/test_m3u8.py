@@ -188,6 +188,58 @@ def test_parse_extinf(string: str, expected: ExtInf):
 
 
 @pytest.mark.parametrize(
+    ("string", "signed", "expected", "log"),
+    [
+        (None, False, None, []),
+        ("123", False, pytest.approx(123.0), []),
+        ("123.", False, pytest.approx(123.0), []),
+        ("123.456", False, pytest.approx(123.456), []),
+        ("-123.456", False, pytest.approx(123.456), []),
+        ("-123.456", True, pytest.approx(-123.456), []),
+        (
+            "",
+            False,
+            None,
+            [("streamlink.stream.hls.m3u8", "warning", "Discarded invalid decimal-floating-point value")],
+        ),
+        (
+            "foo",
+            False,
+            None,
+            [("streamlink.stream.hls.m3u8", "warning", "Discarded invalid decimal-floating-point value")],
+        ),
+        (
+            "123foo",
+            False,
+            None,
+            [("streamlink.stream.hls.m3u8", "warning", "Discarded invalid decimal-floating-point value")],
+        ),
+        (
+            "",
+            True,
+            None,
+            [("streamlink.stream.hls.m3u8", "warning", "Discarded invalid signed-decimal-floating-point value")],
+        ),
+        (
+            "foo",
+            True,
+            None,
+            [("streamlink.stream.hls.m3u8", "warning", "Discarded invalid signed-decimal-floating-point value")],
+        ),
+        (
+            "123foo",
+            True,
+            None,
+            [("streamlink.stream.hls.m3u8", "warning", "Discarded invalid signed-decimal-floating-point value")],
+        ),
+    ],
+)
+def test_parse_float(caplog: pytest.LogCaptureFixture, string: str | None, signed: bool, expected: bytes | None, log: list):
+    assert M3U8Parser.parse_float(string, signed=signed) == expected
+    assert [(record.name, record.levelname, record.message) for record in caplog.records] == log
+
+
+@pytest.mark.parametrize(
     ("string", "log", "expected"),
     [
         (None, False, None),
@@ -358,6 +410,7 @@ class TestHLSPlaylist:
                 program_id="1",
                 codecs=["avc1.4d400d", "mp4a.40.2"],
                 resolution=Resolution(width=422, height=180),
+                framerate=None,
                 audio="stereo",
                 video=None,
                 subtitles="subs",
@@ -367,6 +420,7 @@ class TestHLSPlaylist:
                 program_id="1",
                 codecs=["avc1.4d4015", "mp4a.40.2"],
                 resolution=Resolution(width=638, height=272),
+                framerate=None,
                 audio="stereo",
                 video=None,
                 subtitles="subs",
@@ -376,6 +430,7 @@ class TestHLSPlaylist:
                 program_id="1",
                 codecs=["avc1.4d4015", "mp4a.40.2"],
                 resolution=Resolution(width=638, height=272),
+                framerate=None,
                 audio="stereo",
                 video=None,
                 subtitles="subs",
@@ -385,6 +440,7 @@ class TestHLSPlaylist:
                 program_id="1",
                 codecs=["avc1.4d401f", "mp4a.40.2"],
                 resolution=Resolution(width=958, height=408),
+                framerate=None,
                 audio="surround",
                 video=None,
                 subtitles="subs",
@@ -394,6 +450,7 @@ class TestHLSPlaylist:
                 program_id="1",
                 codecs=["avc1.4d401f", "mp4a.40.2"],
                 resolution=Resolution(width=1277, height=554),
+                framerate=None,
                 audio="surround",
                 video=None,
                 subtitles="subs",
@@ -403,6 +460,7 @@ class TestHLSPlaylist:
                 program_id="1",
                 codecs=["avc1.4d4028", "mp4a.40.2"],
                 resolution=Resolution(width=1921, height=818),
+                framerate=None,
                 audio="surround",
                 video=None,
                 subtitles="subs",
@@ -412,6 +470,7 @@ class TestHLSPlaylist:
                 program_id="1",
                 codecs=["avc1.4d4028", "mp4a.40.2"],
                 resolution=Resolution(width=1921, height=818),
+                framerate=None,
                 audio="surround",
                 video=None,
                 subtitles="subs",
@@ -421,6 +480,7 @@ class TestHLSPlaylist:
                 program_id="1",
                 codecs=["avc1.4d4033", "mp4a.40.2"],
                 resolution=Resolution(width=4096, height=1744),
+                framerate=None,
                 audio="surround",
                 video=None,
                 subtitles="subs",
