@@ -134,6 +134,10 @@ class TestHLSVariantPlaylist:
         assert stream.multivariant is not None
         assert stream.multivariant.uri == f"{base}/master.m3u8"
 
+    @pytest.mark.parametrize("streams", ["hls/test_multivariant_twitch_usher_v2.m3u8"], indirect=True)
+    def test_framerate(self, streams: dict[str, HLSStream]):
+        assert sorted(streams.keys()) == ["1080p60", "160k", "160p", "360p", "480p", "720p60"]
+
 
 class EventedWorkerHLSStreamReader(HLSStreamReader):
     __worker__ = EventedHLSStreamWorker
