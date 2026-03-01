@@ -117,6 +117,7 @@ class StreamInfo:
     program_id: str | None  # version < 6
     codecs: list[str]
     resolution: Resolution | None
+    framerate: float | None
     audio: str | None
     video: str | None
     subtitles: str | None

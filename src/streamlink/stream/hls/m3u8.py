@@ -170,6 +170,8 @@ class M3U8Parser(Generic[TM3U8_co, THLSSegment_co, THLSPlaylist_co], metaclass=M
         res = streaminf.get("RESOLUTION")
         resolution = None if not res else cls.parse_resolution(res)
 
+        framerate = cls.parse_float(streaminf.get("FRAME-RATE"))
+
         codecs = str(streaminf.get("CODECS") or "").split(",")
 
         if streaminfoclass is IFrameStreamInfo:
@@ -186,6 +188,7 @@ class M3U8Parser(Generic[TM3U8_co, THLSSegment_co, THLSPlaylist_co], metaclass=M
                 program_id=program_id,
                 codecs=codecs,
                 resolution=resolution,
+                framerate=framerate,
                 audio=streaminf.get("AUDIO"),
                 video=streaminf.get("VIDEO"),
                 subtitles=streaminf.get("SUBTITLES"),
@@ -243,6 +246,21 @@ class M3U8Parser(Generic[TM3U8_co, THLSSegment_co, THLSPlaylist_co], metaclass=M
             duration=float(match.group("duration")),
             title=match.group("title"),
         )
+
+    @staticmethod
+    def parse_float(value: str | None, signed: bool = False) -> float | None:
+        if value is not None:
+            if signed:
+                try:
+                    return float(value)
+                except ValueError:
+                    log.warning("Discarded invalid signed-decimal-floating-point value")
+            else:
+                try:
+                    return abs(float(value))
+                except ValueError:
+                    log.warning("Discarded invalid decimal-floating-point value")
+        return None
 
     @staticmethod
     def parse_hex(value: str | None) -> bytes | None:
