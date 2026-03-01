@@ -3,8 +3,11 @@
 from __future__ import annotations
 
 import argparse
+import ast
+import json
 import re
 import sys
+from collections.abc import Sequence
 from os import getenv
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
@@ -13,12 +16,12 @@ import requests
 
 
 if TYPE_CHECKING:
-    from collections.abc import Mapping, Sequence
+    from collections.abc import Mapping
 
 
 ROOT = Path(__file__).parents[1].resolve()
 
-MAPPING: Mapping[str, Sequence[str | int]] = {
+MAPPING_USERAGENTS: Mapping[str, Sequence[str | int]] = {
     "ANDROID": ("android", "standard", "sample_user_agents", "chrome", 0),
     "CHROME": ("chrome", "windows", "sample_user_agents", "standard", 0),
     "CHROME_OS": ("chrome-os", "standard", "sample_user_agents", "x86_64", 0),
@@ -27,6 +30,16 @@ MAPPING: Mapping[str, Sequence[str | int]] = {
     "IPHONE": ("ios", "standard", "sample_user_agents", "safari", 0),
     "OPERA": ("opera", "standard", "sample_user_agents", "windows", 0),
     "SAFARI": ("safari", "macos", "sample_user_agents", "standard", 0),
+}
+MAPPING_VERSIONS: Mapping[str, Sequence[str]] = {
+    "ANDROID_VERSION": ("android", "standard", "latest_version"),
+    "CHROME_VERSION": ("chrome", "windows", "latest_version"),
+    "CHROME_OS_VERSION": ("chrome-os", "standard", "latest_version"),
+    "FIREFOX_VERSION": ("firefox", "standard", "latest_version"),
+    "IE_11_VERSION": ("internet-explorer", "internet-explorer-windows-10", "latest_version"),
+    "IPHONE_VERSION": ("ios", "standard", "latest_version"),
+    "OPERA_VERSION": ("opera", "standard", "latest_version"),
+    "SAFARI_VERSION": ("safari", "macos", "latest_version"),
 }
 
 
@@ -75,27 +88,36 @@ def main(api_key: str, file: Path):
         raise ValueError("Error while querying API or parsing JSON response") from err
 
     version_data: dict = data.get("version_data") or {}
-    user_agents = {}
-    for browser, seq in MAPPING.items():
-        obj: Any = version_data
-        for item in seq:
+
+    def traverse(obj: Any, keys: Sequence[str | int]) -> Any:
+        for item in keys:
             try:
                 obj = obj[item]
-            except LookupError as err:
-                raise ValueError(f"Invalid key: {item} ({seq})") from err
+            except LookupError as error:
+                raise ValueError(f"Invalid key: {item} ({keys})") from error
 
-        if not isinstance(obj, str):
-            raise ValueError(f"Invalid result: {obj!r} ({seq})")
+        return obj
 
-        user_agents[browser] = obj
-
-    for browser, user_agent in user_agents.items():
+    def substitute(a: str, v: str):
+        nonlocal contents
         contents = re.sub(
-            rf'(?:^|(?<=\n)){re.escape(browser)} = ".*?"\n',
-            f'{browser} = "{user_agent}"\n',
+            rf"(?:^|(?<=\n)){re.escape(a)} = .*?\n",
+            f"{a} = {v.strip()}\n",
             contents,
             count=1,
         )
+
+    for attr, seq in MAPPING_USERAGENTS.items():
+        value = traverse(version_data, seq)
+        assert isinstance(value, str)
+        substitute(attr, json.dumps(value))
+
+    for attr, seq in MAPPING_VERSIONS.items():
+        value = traverse(version_data, seq)
+        assert isinstance(value, Sequence)
+        assert all(str.isdecimal(v) for v in value)
+        version: list[ast.expr] = [ast.Constant(int(v)) for v in value]
+        substitute(attr, ast.unparse(ast.Tuple(version)))
 
     file.write_text(contents, encoding="utf-8")
 

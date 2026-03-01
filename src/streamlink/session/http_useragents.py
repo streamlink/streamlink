@@ -7,6 +7,15 @@ IPHONE = "Mozilla/5.0 (iPhone; CPU iPhone OS 18_7_5 like Mac OS X) AppleWebKit/6
 OPERA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36 OPR/129.0.0.0"
 SAFARI = "Mozilla/5.0 (Macintosh; Intel Mac OS X 15_7_4) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.0 Safari/605.1.15"
 
+ANDROID_VERSION = (16,)
+CHROME_VERSION = (145, 0, 7632, 118)
+CHROME_OS_VERSION = (144, 0, 7559, 172)
+FIREFOX_VERSION = (148, 0)
+IE_11_VERSION = (11,)
+IPHONE_VERSION = (18, 7, 5)
+OPERA_VERSION = (129, 0, 5818, 0)
+SAFARI_VERSION = (26,)
+
 # Backwards compatibility
 EDGE = CHROME
 FIREFOX_MAC = FIREFOX
