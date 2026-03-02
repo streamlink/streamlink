@@ -979,13 +979,13 @@ class SegmentTemplate(_MultipleSegmentBaseType):
             return
 
         if not self.segmentTimeline:
-            log.debug(f"Generating segment numbers for {self.root.type} playlist: {ident!r}")
+            log.debug("Generating segment numbers for %s playlist: %r", self.root.type, ident)
             duration = self.duration_seconds
             for number, available_at in self.segment_numbers(timestamp=timestamp):
                 url = self.make_url(base_url, self.fmt_media(Number=number, **kwargs))
                 yield url, number, duration, available_at
         else:
-            log.debug(f"Generating segment timeline for {self.root.type} playlist: {ident!r}")
+            log.debug("Generating segment timeline for %s playlist: %r", self.root.type, ident)
             for number, segment, available_at in self.segment_timeline(ident):
                 url = self.make_url(base_url, self.fmt_media(Time=segment.t, Number=number, **kwargs))
                 duration = segment.d / self.timescale

@@ -304,7 +304,10 @@ class PlayerOutput(Output):
             self._open_subprocess(args)
 
     def _open_call(self, args: list[str]):
-        log.debug(f"Calling: {args!r}{f', env: {self.env!r}' if self.env else ''}")
+        if self.env:
+            log.debug("Calling: %r, env: %r", args, self.env)
+        else:
+            log.debug("Calling: %r", args)
 
         environ = dict(os.environ)
         environ.update(self.env)
@@ -317,7 +320,10 @@ class PlayerOutput(Output):
         )
 
     def _open_subprocess(self, args: list[str]):
-        log.debug(f"Opening subprocess: {args!r}{f', env: {self.env!r}' if self.env else ''}")
+        if self.env:
+            log.debug("Opening subprocess: %r, env: %r", args, self.env)
+        else:
+            log.debug("Opening subprocess: %r", args)
 
         environ = dict(os.environ)
         environ.update(self.env)
