@@ -182,6 +182,7 @@ class Pluto(Plugin):
                 "deviceType": "web",
                 "clientID": self._client_id,
                 "clientModelNumber": "1.0.0",
+                "serverSideAds": "false",
                 **request,
             },
             schema=validate.Schema(
@@ -260,7 +261,9 @@ class Pluto(Plugin):
 
             params = dict(parse_qsl(data["stitcherParams"]))
             params["jwt"] = data["sessionToken"]
-            url = urljoin(data["servers"]["stitcher"], path)
+            params["includeExtendedEvents"] = "true"
+            params["masterJWTPassthrough"] = "true"
+            url = urljoin(data["servers"]["stitcher"], "v2" + path)
             url = update_qsd(url, params)
 
             return PlutoHLSStream.parse_variant_playlist(self.session, url)
