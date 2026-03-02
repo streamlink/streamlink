@@ -336,7 +336,7 @@ class Zattoo(Plugin):
                 cid = c["cid"]
                 log.debug(f"{c!r}")
 
-        log.trace(f"Available zattoo channels in this country: {', '.join(sorted(zattoo_list))}")
+        log.trace("Available zattoo channels in this country: %r", sorted(zattoo_list))
 
         if not cid:
             cid = channel

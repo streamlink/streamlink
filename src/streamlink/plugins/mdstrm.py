@@ -149,7 +149,7 @@ class MDStrm(Plugin):
             else:
                 log.debug("Failed to find 'parent._dai_session'")
 
-        log.trace(f"{params!r}")
+        log.trace("%r", params)
         self.id = options["id"]
         self.title = options["title"]
         return HLSStream.parse_variant_playlist(

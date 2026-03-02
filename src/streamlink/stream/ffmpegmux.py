@@ -134,7 +134,7 @@ class FFMPEGMuxer(StreamIO):
                     break
 
         if resolved and validate:
-            log.trace(f"Querying FFmpeg version: {[resolved, '-version']}")
+            log.trace("Querying FFmpeg version: %r", [resolved, "-version"])
             versionoutput = FFmpegVersionOutput([resolved, "-version"], timeout=timeout)
             if not versionoutput.run():
                 log.error("Could not validate FFmpeg!")

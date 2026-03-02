@@ -125,7 +125,7 @@ class OKru(Plugin):
         if not metadata and metadata_url:
             metadata = self.session.http.post(metadata_url).text
 
-        log.trace(f"{metadata!r}")
+        log.trace("%r", metadata)
 
         data = schema_metadata.validate(metadata)
 

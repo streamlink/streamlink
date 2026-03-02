@@ -55,7 +55,7 @@ class Aloula(Plugin):
             return
 
         live_data = live_data[0]
-        log.trace(f"{live_data!r}")
+        log.trace("%r", live_data)
 
         if not live_data["has_live"]:
             log.error("Stream is not live")
@@ -102,7 +102,7 @@ class Aloula(Plugin):
             ),
         )
 
-        log.trace(f"{vod_data!r}")
+        log.trace("%r", vod_data)
 
         if "cms_error" in vod_data and vod_data["cms_error"] == "auth":
             log.error("This stream requires a login; specify appropriate Authorization and profile HTTP headers")

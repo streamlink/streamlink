@@ -79,7 +79,7 @@ class OnePlusOneAPI:
         if not url_parts:
             raise NoStreamsError
 
-        log.trace(f"url_parts={url_parts}")
+        log.trace("url_parts=%s", url_parts)
         self.session.http.headers.update({"Referer": self.url})
 
         try:

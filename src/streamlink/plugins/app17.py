@@ -42,7 +42,7 @@ class App17(Plugin):
             ),
             acceptable_status=(200, 403, 404, 420),
         )
-        log.trace(f"{data!r}")
+        log.trace("%r", data)
         if data.get("errorCode"):
             log.error(f"{data['errorCode']} - {data['errorMessage'].replace('Something wrong: ', '')}")
             return
