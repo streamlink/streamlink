@@ -152,7 +152,7 @@ class Douyin(Plugin):
             url = update_scheme("https://", url, force=True)
             yield name, HTTPStream(self.session, url)
 
-        log.debug(f"{self.QUALITY_WEIGHTS=!r}")
+        log.debug("self.QUALITY_WEIGHTS=%r", self.QUALITY_WEIGHTS)
 
 
 __plugin__ = Douyin

@@ -264,7 +264,7 @@ class Zattoo(Plugin):
                     log.error("Paid subscription required for this channel.")
                     log.info("If paid subscription exist, use --zattoo-purge-credentials to start a new session.")
                 else:
-                    log.debug(f"unknown error {data!r}")
+                    log.debug("unknown error %r", data)
                     log.debug("Force session reset for watch_url")
                     self.reset_session()
                 continue
@@ -334,7 +334,7 @@ class Zattoo(Plugin):
             zattoo_list.append(c["display_alias"])
             if c["display_alias"] == channel:
                 cid = c["cid"]
-                log.debug(f"{c!r}")
+                log.debug("%r", c)
 
         log.trace("Available zattoo channels in this country: %r", sorted(zattoo_list))
 

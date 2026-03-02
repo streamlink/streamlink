@@ -45,7 +45,7 @@ class TVIPlayer(Plugin):
         )
         if not data:
             return
-        log.debug(f"{data!r}")
+        log.debug("%r", data)
 
         if data["liveType"].upper() == "DIRETO" and data["videoType"].upper() == "LIVE":
             geo_path = "live"
@@ -63,7 +63,7 @@ class TVIPlayer(Plugin):
                 },
             ),
         )
-        log.debug(f"{data_geo!r}")
+        log.debug("%r", data_geo)
         if data_geo["detail"] != "ok":
             log.error(f"{data_geo['detail']}")
             return

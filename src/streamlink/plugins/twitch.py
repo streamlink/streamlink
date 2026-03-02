@@ -326,7 +326,7 @@ class UsherService:
                     "show_ads": bool,
                 },
             ).validate(extra_params)
-            log.debug(f"{extra_params_debug!r}")
+            log.debug("%r", extra_params_debug)
 
         return self._create_url(f"/api/v2/channel/hls/{channel.lower()}.m3u8", **extra_params)
 

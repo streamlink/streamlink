@@ -143,7 +143,7 @@ class Huya(Plugin):
                 self.QUALITY_WEIGHTS[name] = weight
                 yield name, HTTPStream(self.session, url, params=params)
 
-        log.debug(f"QUALITY_WEIGHTS: {self.QUALITY_WEIGHTS!r}")
+        log.debug("QUALITY_WEIGHTS: %r", self.QUALITY_WEIGHTS)
 
     def _get_stream_params(self, fm, fs, ctype, ws_time, stream_name, i_bit_rate):
         uid = random.randint(12340000, 12349999)
