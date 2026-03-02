@@ -198,7 +198,7 @@ class YouTube(Plugin):
             ),
         )
         videoDetails = schema.validate(data)
-        log.trace(f"videoDetails = {videoDetails!r}")
+        log.trace("videoDetails = %r", videoDetails)
         return videoDetails
 
     @classmethod

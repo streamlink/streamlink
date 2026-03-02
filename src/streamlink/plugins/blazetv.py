@@ -92,7 +92,7 @@ class BlazeTV(Plugin):
             self.title = data["title"]
             self.category = f"S{data['season']}E{data['episode']}"
 
-        log.trace(f"token_data={token_data!r}")
+        log.trace("token_data=%r", token_data)
 
         hls_url = self.session.http.get(
             token_data["url"],

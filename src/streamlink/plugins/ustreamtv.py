@@ -223,8 +223,8 @@ class UStreamTVWsClient(WebsocketClient):
 
         cmd: str = parsed["cmd"]
         args: list[dict] = parsed["args"]
-        log.trace(f"Received '{cmd}' command")
-        log.trace(f"{args!r}")
+        log.trace("Received '%s' command", cmd)
+        log.trace("%r", args)
 
         handlers = self._MESSAGE_HANDLERS.get(cmd)
         if handlers is not None:

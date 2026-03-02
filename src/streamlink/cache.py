@@ -87,7 +87,7 @@ class Cache:
         self._cache_orig.clear()
         self._cache.clear()
 
-        log.trace(f"Loading cache file: {self.filename}")
+        log.trace("Loading cache file: %s", self.filename)
 
         try:
             with self.filename.open("r", encoding="utf-8") as fd:
@@ -97,7 +97,7 @@ class Cache:
         except FileNotFoundError:
             pass
         except Exception as err:
-            log.warning(f"Failed loading cache file, continuing without cache: {err}")
+            log.warning("Failed loading cache file, continuing without cache: %s", err)
 
     def _prune(self):
         now = time()
@@ -119,7 +119,7 @@ class Cache:
         if self._disabled or not self._dirty:
             return
 
-        log.trace(f"Scheduling write to cache file: {WRITE_DEBOUNCE_TIME:.1f}s")
+        log.trace("Scheduling write to cache file: %.1fs", WRITE_DEBOUNCE_TIME)
         self._timer = Timer(WRITE_DEBOUNCE_TIME, self._save)
         self._timer.daemon = True
         self._timer.name = "CacheSaveThread"
@@ -132,7 +132,7 @@ class Cache:
         if self._disabled or not self._dirty:
             return
 
-        log.trace(f"Writing to cache file: {self.filename}")
+        log.trace("Writing to cache file: %s", self.filename)
 
         fd = None
         try:
@@ -146,7 +146,7 @@ class Cache:
             if fd:
                 with suppress(OSError):
                     Path(fd.name).unlink()
-            log.error(f"Error while writing to cache file: {err}")
+            log.error("Error while writing to cache file: %s", err)
         else:
             self._cache_orig.clear()
             self._cache_orig.update(**deepcopy(self._cache))

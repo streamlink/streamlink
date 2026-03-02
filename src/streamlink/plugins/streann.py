@@ -130,7 +130,7 @@ class Streann(Plugin):
                 },
             }),
         )
-        log.trace(f"{data!r}")
+        log.trace("%r", data)
         self.title = data.get("name")
         return data["token"]
 
@@ -167,7 +167,7 @@ class Streann(Plugin):
             log.debug("Found passphrase")
             params = decrypt_openssl(data, passphrase)
             config = parse_qsd(params.decode("utf8"))
-            log.trace(f"config: {config!r}")
+            log.trace("config: %r", config)
             token = self.get_token(**config)
             if not token:
                 return

@@ -107,7 +107,7 @@ class NimoTV(Plugin):
             elif v in ("720p", "480p", "360p"):
                 params["sphd"] = 1
 
-            log.trace(f"{v} params={params!r}")
+            log.trace("%s params=%r", v, params)
             # some qualities might not exist, but it will select a different lower quality
             yield v, HTTPStream(self.session, url, params=params)
 

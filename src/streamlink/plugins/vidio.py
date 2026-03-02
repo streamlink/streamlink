@@ -80,7 +80,7 @@ class Vidio(Plugin):
         params = {}
         if has_token:
             token, hls_url, dash_url = self._get_stream_token(self.id, "dash")
-            log.trace(f"{token=}")
+            log.trace("token=%s", token)
             params.update([param.split("=", 1) for param in (token.split("&") if token else [])])
 
         if hls_url:
