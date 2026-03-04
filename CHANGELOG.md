@@ -1,5 +1,20 @@
 # Changelog
 
+## streamlink 8.2.1 (2026-03-05)
+
+- Changed: HLS stream names using the "pixels" format to include framerate data, if available ([#6848](https://github.com/streamlink/streamlink/pull/6848))
+- Deprecated: imports of re-exported attributes from `streamlink.stream` ([#6821](https://github.com/streamlink/streamlink/pull/6821))
+- Fixed: plugin-related typing issues and missing typing annotations ([#6822](https://github.com/streamlink/streamlink/pull/6822))
+- Updated plugins:
+  - ceskatelevize: fixed sports streams ([#6826](https://github.com/streamlink/streamlink/pull/6826))
+  - nrk: updated to tv-player v9 ([#6841](https://github.com/streamlink/streamlink/pull/6841))
+  - pluto: updated to v2 API ([#6851](https://github.com/streamlink/streamlink/pull/6851))
+  - twitch: switched to Usher v2 API endpoints ([#6840](https://github.com/streamlink/streamlink/pull/6840), [#6847](https://github.com/streamlink/streamlink/pull/6847))
+  - youtube: updated API clientVersion ([#6853](https://github.com/streamlink/streamlink/pull/6853))
+
+[Full changelog](https://github.com/streamlink/streamlink/compare/8.2.0...8.2.1)
+
+
 ## streamlink 8.2.0 (2026-02-09)
 
 - Added: `--http-cookies-file` CLI argument and `http-cookies-files` session option ([#6796](https://github.com/streamlink/streamlink/pull/6796))
