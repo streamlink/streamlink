@@ -29,6 +29,7 @@ jobs:
           python -m pip install -U
           -e .
           --group docs
+          'sphinx<9'
       - name: Build
         run: make --directory=docs html
       - name: Deploy
