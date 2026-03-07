@@ -246,8 +246,14 @@ for an introduction to this API and a list of examples.
 
 .. automodule:: streamlink.plugin.api.validate
     :imported-members:
-    :exclude-members: Schema, SchemaContainer, validate
+    :exclude-members: Schema, SchemaContainer, validate, list
     :member-order: bysource
+
+.. py:class:: list(*schemas)
+    :module: streamlink.plugin.api.validate
+    :no-index:
+
+    Alias of :class:`ListSchema <_schemas.ListSchema>`.
 
 .. automodule:: streamlink.validate._schemas
     :exclude-members: SchemaContainer
