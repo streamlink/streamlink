@@ -31,14 +31,17 @@ class HTTPOutput(Output):
         self.conn: socket.socket | None = None
 
     @property
-    def addresses(self):
+    def addresses(self) -> list[str]:
         if self.host:
             return [self.host]
 
         addrs = {"127.0.0.1"}
         with suppress(socket.gaierror):
-            for info in socket.getaddrinfo(socket.gethostname(), self.port, socket.AF_INET):
-                addrs.add(info[4][0])
+            addrinfo = socket.getaddrinfo(socket.gethostname(), self.port, socket.AF_INET)
+            for _family, _type, _proto, _canonname, (address, *_) in addrinfo:
+                if not isinstance(address, str):
+                    continue
+                addrs.add(address)
 
         return sorted(addrs)
 
