@@ -5,6 +5,7 @@ import ssl
 import time
 import warnings
 from http.cookiejar import MozillaCookieJar
+from ipaddress import ip_address
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, cast
 
@@ -12,9 +13,11 @@ import urllib3
 import urllib3.util.connection as urllib3_util_connection
 from requests import Request, Session
 from requests.adapters import HTTPAdapter
+from urllib3.connection import HTTPConnection
 from urllib3.util import create_urllib3_context  # type: ignore[attr-defined]
 
 import streamlink.session.http_useragents as useragents
+from streamlink.compat import is_win32
 from streamlink.exceptions import PluginError, StreamlinkDeprecationWarning
 from streamlink.packages.requests_file import FileAdapter
 from streamlink.utils.parse import parse_json, parse_xml
@@ -110,14 +113,39 @@ class HTTPSession(Session):
         return parse_xml(res.text, *args, **kwargs)
 
     def set_interface(self, interface: str | None) -> None:
+        connection_pool_kw: dict[str, Any] = {}
+        if interface:
+            iface: str | None = None
+            host: str | None = None
+            if is_win32:
+                host = interface
+            else:
+                if interface.startswith("if!"):
+                    iface = interface[3:]
+                elif interface.startswith("host!"):
+                    host = interface[5:]
+                elif interface.startswith("ifhost!") and "!" in interface[7:]:
+                    iface, host = interface[7:].split("!", 1)
+                else:
+                    try:
+                        host = str(ip_address(interface))
+                    except ValueError:
+                        iface = interface
+
+            if iface:
+                connection_pool_kw["socket_options"] = [
+                    *HTTPConnection.default_socket_options,
+                    (socket.SOL_SOCKET, socket.SO_BINDTODEVICE, iface.encode()),
+                ]
+            if host:
+                connection_pool_kw["source_address"] = (host, 0)
+
         for adapter in self.adapters.values():
             if not isinstance(adapter, HTTPAdapter):
                 continue
-            if not interface:
-                adapter.poolmanager.connection_pool_kw.pop("source_address", None)
-            else:
-                # https://docs.python.org/3/library/socket.html#socket.create_connection
-                adapter.poolmanager.connection_pool_kw.update(source_address=(interface, 0))
+            adapter.poolmanager.connection_pool_kw.pop("source_address", None)
+            adapter.poolmanager.connection_pool_kw.pop("socket_options", None)
+            adapter.poolmanager.connection_pool_kw.update(connection_pool_kw)
 
     # noinspection PyMethodMayBeStatic
     def set_address_family(self, family: socket.AddressFamily | None = None) -> None:

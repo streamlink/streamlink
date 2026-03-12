@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import socket
 import ssl
 from operator import itemgetter
 from socket import AF_INET, AF_INET6
@@ -13,6 +14,7 @@ import requests
 import requests_mock as rm
 import urllib3
 from requests.adapters import HTTPAdapter
+from urllib3.connection import HTTPConnection
 from urllib3.response import HTTPResponse
 
 from streamlink.exceptions import PluginError, StreamlinkDeprecationWarning
@@ -233,7 +235,95 @@ class TestHTTPSession:
         assert res.encoding == expected
         assert res.text == "Bär"
 
-    def test_set_interface(self):
+    # not defined in stdlib on Windows
+    SO_BINDTODEVICE = getattr(socket, "SO_BINDTODEVICE", 0)
+
+    @pytest.mark.parametrize(
+        ("interface", "source_address", "socket_options"),
+        [
+            pytest.param(
+                None,
+                None,
+                None,
+                id="none",
+            ),
+            pytest.param(
+                "",
+                None,
+                None,
+                id="empty",
+            ),
+            pytest.param(
+                "0.0.0.0",
+                ("0.0.0.0", 0),
+                None,
+                id="ipv4",
+            ),
+            pytest.param(
+                "::1",
+                ("::1", 0),
+                None,
+                id="ipv6",
+            ),
+            pytest.param(
+                "my-interface",
+                None,
+                [*HTTPConnection.default_socket_options, (socket.SOL_SOCKET, SO_BINDTODEVICE, b"my-interface")],
+                id="unix-iface",
+                marks=pytest.mark.posix_only,
+            ),
+            pytest.param(
+                "if!my-interface",
+                None,
+                [*HTTPConnection.default_socket_options, (socket.SOL_SOCKET, SO_BINDTODEVICE, b"my-interface")],
+                id="unix-iface-prefix",
+                marks=pytest.mark.posix_only,
+            ),
+            pytest.param(
+                "host!0.0.0.0",
+                ("0.0.0.0", 0),
+                None,
+                id="unix-host-prefix",
+                marks=pytest.mark.posix_only,
+            ),
+            pytest.param(
+                "host!foo",
+                ("foo", 0),
+                None,
+                id="unix-host-prefix-hostname",
+                marks=pytest.mark.posix_only,
+            ),
+            pytest.param(
+                "ifhost!my-interface!0.0.0.0",
+                ("0.0.0.0", 0),
+                [*HTTPConnection.default_socket_options, (socket.SOL_SOCKET, SO_BINDTODEVICE, b"my-interface")],
+                id="unix-ifhost-prefix",
+                marks=pytest.mark.posix_only,
+            ),
+            pytest.param(
+                "ifhost!my-interface",
+                None,
+                [*HTTPConnection.default_socket_options, (socket.SOL_SOCKET, SO_BINDTODEVICE, b"ifhost!my-interface")],
+                id="unix-ifhost-prefix-invalid",
+                marks=pytest.mark.posix_only,
+            ),
+            pytest.param(
+                "my-interface",
+                ("my-interface", 0),
+                None,
+                id="win32-iface",
+                marks=pytest.mark.windows_only,
+            ),
+            pytest.param(
+                "ifhost!my-interface!0.0.0.0",
+                ("ifhost!my-interface!0.0.0.0", 0),
+                None,
+                id="win32-prefix",
+                marks=pytest.mark.windows_only,
+            ),
+        ],
+    )
+    def test_set_interface(self, interface: str, source_address: tuple | None, socket_options: list[tuple] | None):
         session = HTTPSession()
         session.mount("custom://", TLSNoDHAdapter())
 
@@ -243,24 +333,24 @@ class TestHTTPSession:
         assert isinstance(a_custom, HTTPAdapter)
         assert not isinstance(a_file, HTTPAdapter)
 
-        assert a_http.poolmanager.connection_pool_kw.get("source_address") is None
-        assert a_https.poolmanager.connection_pool_kw.get("source_address") is None
-        assert a_custom.poolmanager.connection_pool_kw.get("source_address") is None
+        for adapter in a_http, a_https, a_custom:
+            assert adapter.poolmanager.connection_pool_kw.get("source_address") is None
+            assert adapter.poolmanager.connection_pool_kw.get("socket_options") is None
 
-        session.set_interface(interface="my-interface")
-        assert a_http.poolmanager.connection_pool_kw.get("source_address") == ("my-interface", 0)
-        assert a_https.poolmanager.connection_pool_kw.get("source_address") == ("my-interface", 0)
-        assert a_custom.poolmanager.connection_pool_kw.get("source_address") == ("my-interface", 0)
+        session.set_interface(interface=interface)
+        for adapter in a_http, a_https, a_custom:
+            assert adapter.poolmanager.connection_pool_kw.get("source_address") == source_address
+            assert adapter.poolmanager.connection_pool_kw.get("socket_options") == socket_options
 
         session.set_interface(interface="")
-        assert a_http.poolmanager.connection_pool_kw.get("source_address") is None
-        assert a_https.poolmanager.connection_pool_kw.get("source_address") is None
-        assert a_custom.poolmanager.connection_pool_kw.get("source_address") is None
+        for adapter in a_http, a_https, a_custom:
+            assert adapter.poolmanager.connection_pool_kw.get("source_address") is None
+            assert adapter.poolmanager.connection_pool_kw.get("socket_options") is None
 
         session.set_interface(interface=None)
-        assert a_http.poolmanager.connection_pool_kw.get("source_address") is None
-        assert a_https.poolmanager.connection_pool_kw.get("source_address") is None
-        assert a_custom.poolmanager.connection_pool_kw.get("source_address") is None
+        for adapter in a_http, a_https, a_custom:
+            assert adapter.poolmanager.connection_pool_kw.get("source_address") is None
+            assert adapter.poolmanager.connection_pool_kw.get("socket_options") is None
 
         # doesn't raise
         session.set_interface(interface=None)
