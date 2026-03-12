@@ -468,7 +468,15 @@ def build_parser():
         type=str,
         metavar="INTERFACE",
         help="""
-            Set the network interface.
+            Select the network interface, either by IP address or by interface name.
+
+            The following optional prefixes are supported:
+
+            - `if!<name>` interface name
+            - `host!<name>` IP address or hostname
+            - `ifhost!<interface>!<host>` interface name and IP address or hostname
+
+            Note: On Windows, only IP addresses are supported and prefixes are ignored.
         """,
     )
     network.add_argument(

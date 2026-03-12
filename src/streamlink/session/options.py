@@ -68,7 +68,7 @@ class StreamlinkOptions(Options):
         * - interface
           - ``str | None``
           - ``None``
-          - Network interface address
+          - Network interface name or address.
         * - ipv4
           - ``bool``
           - ``False``
