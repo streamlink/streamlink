@@ -485,8 +485,8 @@ class TestHLSStreamWorker(TestMixinStreamHLS, unittest.TestCase):
             #   which is why the test's reader thread keeps running until the test teardown,
             #   but this somehow breaks the assertion down below, so close everything manually...
             #   These tests will have to be rewritten eventually in pytest-style, without having to mock log calls.
-            self.thread.close()
-            self.thread.join(1)
+            self.close()
+            self.await_close()
 
             assert mock_log.warning.call_args_list == [call("No new segments for more than 5.00s. Stopping...")]
 
@@ -1214,8 +1214,9 @@ class TestHlsReloadTime(TestMixinStreamHLS, unittest.TestCase):
             if not get_reload_time_called.wait(timeout=5):  # pragma: no cover
                 raise RuntimeError("Missing _get_reload_time() call")
 
-            # wait for the worker thread to terminate, so that deterministic assertions can be done about the reload time
-            self.thread.reader.worker.join()
+            # close threads first, so that deterministic assertions can be done about the reload time
+            self.close()
+            self.await_close()
 
             return self.thread.reader.worker._reload_time
 

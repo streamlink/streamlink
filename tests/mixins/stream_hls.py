@@ -318,5 +318,5 @@ class TestMixinStreamHLS(unittest.TestCase):
         thread.handshake.go()
 
         # terminate threads explicitly, just in case
-        thread.reader.writer.close()
+        thread.writer_close()  # see writer.close() override in HLSStreamReadThread
         thread.reader.worker.close()
