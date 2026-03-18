@@ -164,10 +164,11 @@ class TestHLSStream(TestMixinStreamHLS, unittest.TestCase):
         return session
 
     def test_thread_names(self):
+        testid = self.id()
         self.subject(playlists=[Playlist(0, [Segment(0)], end=True)])
-        assert self.thread.reader.worker.name == "HLSStreamWorker-0"
-        assert self.thread.reader.writer.name == "HLSStreamWriter-0"
-        assert self.thread.reader.writer.executor._thread_name_prefix == "HLSStreamWriter-0-executor"
+        assert self.thread.reader.worker.name == f"HLSStreamWorker-{testid}-0"
+        assert self.thread.reader.writer.name == f"HLSStreamWriter-{testid}-0"
+        assert self.thread.reader.writer.executor._thread_name_prefix == f"HLSStreamWriter-{testid}-0-executor"
         self.await_read(read_all=True)
 
     def test_playlist_end(self):
