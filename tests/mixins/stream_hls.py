@@ -136,7 +136,7 @@ class HLSStreamReadThread(Thread):
     Run the reader on a separate thread, so that each read can be controlled from within the main thread
     """
 
-    def __init__(self, session: Streamlink, stream: HLSStream, *args, **kwargs):
+    def __init__(self, session: Streamlink, stream: HLSStream, *args, testid: str | None = None, **kwargs):
         super().__init__(*args, **kwargs, daemon=True)
 
         self.read_once = Event()
@@ -146,7 +146,7 @@ class HLSStreamReadThread(Thread):
 
         self.session = session
         self.stream = stream
-        self.reader = stream.__reader__(stream)
+        self.reader = stream.__reader__(stream, name=testid)
 
         # ensure that at least one read was attempted before closing the writer thread early
         # otherwise, the writer will close the reader's buffer, making it not block on read and yielding empty results
@@ -297,7 +297,13 @@ class TestMixinStreamHLS(unittest.TestCase):
 
         self.session = self.get_session(options, *args, **kwargs)
         self.stream = self.__stream__(self.session, self.url(playlists[0]), **(streamoptions or {}))
-        self.thread = self.__readthread__(self.session, self.stream, name=f"ReadThread-{self.id()}", **(threadoptions or {}))
+        self.thread = self.__readthread__(
+            self.session,
+            self.stream,
+            name=f"ReadThread-{self.id()}",
+            testid=self.id(),
+            **(threadoptions or {}),
+        )
 
         if start:
             self.start()
