@@ -22,17 +22,19 @@ TIME_TEST_MAX = 10
 
 # language=python
 CODE = """
+import _codecs
 import signal
 import sys
 
 if sys.argv[-1] == "ignoresigterm":
     signal.signal(signal.SIGTERM, signal.SIG_IGN)
 
-while line := sys.stdin.readline():
-    if line[:5] == "exit:":
-        sys.exit(int(line[5:]))
-    stream = sys.stdout if line[:7] == "stdout:" else sys.stderr
-    stream.write(line[7:])
+while line := sys.stdin.buffer.readline():
+    if line[:5] == b"exit:":
+        raise SystemExit(int(line[5:-1]))
+    stream = sys.stdout.buffer if line[:7] == b"stdout:" else sys.stderr.buffer
+    line, _ = _codecs.escape_decode(line[7:-1])
+    stream.write(line)
     stream.flush()
 """.strip()
 
@@ -52,9 +54,10 @@ class FakeProcessOutput(ProcessOutput):
         kwargs.setdefault("command", command)
 
         super().__init__(*args, **kwargs)
+        self.stream_receive_some_event = trio.Event()
         self.onoutput_sender, self.onoutput_receiver = trio.open_memory_channel(10)
 
-        def _onoutput(channel, meth):
+        def onstdouterr(channel, meth):
             def _inner(*_args, **_kwargs):
                 res = meth(*_args, **_kwargs)
                 try:
@@ -65,8 +68,18 @@ class FakeProcessOutput(ProcessOutput):
             return _inner
 
         self.onexit = Mock(side_effect=self.onexit)
-        self.onstdout = Mock(side_effect=_onoutput("stdout", self.onstdout))
-        self.onstderr = Mock(side_effect=_onoutput("stderr", self.onstderr))
+        self.onstdout = Mock(side_effect=onstdouterr("stdout", self.onstdout))
+        self.onstderr = Mock(side_effect=onstdouterr("stderr", self.onstderr))
+
+    async def _onoutput(self, callback: Callable[[int, str], bool | None], stream: trio.abc.ReceiveStream):
+        async def stream_receive_some(*_args, **_kwargs):
+            self.stream_receive_some_event.set()
+            return await receive_some(*_args, **_kwargs)
+
+        receive_some = stream.receive_some
+        stream.receive_some = stream_receive_some  # type: ignore
+
+        return await super()._onoutput(callback, stream)
 
 
 @pytest.fixture()
@@ -174,18 +187,24 @@ async def test_stdout_stderr(get_process: Callable[[], Awaitable[trio.Process]])
         assert po.onstdout.call_args_list == []
         assert po.onstderr.call_args_list == []
 
-        await process.stdin.send_all(b"stdout:foo\n")
+        await process.stdin.send_all(b"stdout:foo\\n\n")
         assert await po.onoutput_receiver.receive() == ("stdout", None)
         assert po.onstdout.call_args_list == [call(0, "foo")]
         assert po.onstderr.call_args_list == []
 
-        await process.stdin.send_all(b"stderr:bar\n")
+        await process.stdin.send_all(b"stdout:bar\\nbaz\\n\n")
+        assert await po.onoutput_receiver.receive() == ("stdout", None)
+        assert await po.onoutput_receiver.receive() == ("stdout", None)
+        assert po.onstdout.call_args_list == [call(0, "foo"), call(1, "bar"), call(2, "baz")]
+        assert po.onstderr.call_args_list == []
+
+        await process.stdin.send_all(b"stderr:bar\\n\n")
         assert await po.onoutput_receiver.receive() == ("stderr", None)
-        assert po.onstdout.call_args_list == [call(0, "foo")]
+        assert po.onstdout.call_args_list == [call(0, "foo"), call(1, "bar"), call(2, "baz")]
         assert po.onstderr.call_args_list == [call(0, "bar")]
 
         # order of items in receive stream is not guaranteed
-        await process.stdin.send_all(b"stdout:123\nstderr:456\n")
+        await process.stdin.send_all(b"stdout:123\\n\nstderr:456\\n\n")
         received = []
         for _ in range(2):
             received.append(await po.onoutput_receiver.receive())
@@ -196,8 +215,61 @@ async def test_stdout_stderr(get_process: Callable[[], Awaitable[trio.Process]])
 
     assert result is True
     assert po.onexit.call_args_list == [call(0)]
-    assert po.onstdout.call_args_list == [call(0, "foo"), call(1, "123")]
+    assert po.onstdout.call_args_list == [call(0, "foo"), call(1, "bar"), call(2, "baz"), call(3, "123")]
     assert po.onstderr.call_args_list == [call(0, "bar"), call(1, "456")]
+
+
+@pytest.mark.trio()
+@pytest.mark.parametrize(
+    ("stdin", "expected"),
+    [
+        pytest.param(
+            (b"stdout:foo\n", b"stdout:bar\\n\n"),
+            ([call(0, "foobar")], [call(0, "foobar")]),
+            id="line",
+        ),
+        pytest.param(
+            # incomplete UTF-8 sequence of the bear-face emoji, followed by its remaining data and another incomplete one
+            (b"stdout:\\xf0\\x9f\n", b"stdout:\\x90\\xbb\\n\\xf0\\x9f\n"),
+            # final result includes the Unicode "replacement character" due to the buffer having an incomplete UTF-8 sequence
+            ([call(0, "🐻")], [call(0, "🐻"), call(1, "\ufffd")]),
+            id="utf8-sequence",
+        ),
+    ],
+)
+async def test_stdout_incomplete_chunks(
+    get_process: Callable[[], Awaitable[trio.Process]],
+    stdin: tuple[bytes, bytes],
+    expected: tuple[list, list],
+):
+    po = FakeProcessOutput(timeout=4)
+    po._receive_max_bytes = 1  # required for full code coverage
+    result = None
+
+    async def run():
+        nonlocal result
+        result = await po.arun()
+
+    async with trio.open_nursery() as nursery:
+        nursery.start_soon(run)
+        process = await get_process()
+        assert process.stdin
+        assert po.onstdout.call_args_list == []
+
+        await process.stdin.send_all(stdin[0])
+        await po.stream_receive_some_event.wait()
+        assert po.onoutput_sender.statistics().current_buffer_used == 0
+        assert po.onstdout.call_args_list == []
+
+        await process.stdin.send_all(stdin[1])
+        assert await po.onoutput_receiver.receive() == ("stdout", None)
+        assert po.onstdout.call_args_list == expected[0]
+
+        await process.stdin.send_all(b"exit:0\n")
+
+    assert result is True
+    assert po.onexit.call_args_list == [call(0)]
+    assert po.onstdout.call_args_list == expected[1]
 
 
 @pytest.mark.trio()
@@ -237,7 +309,7 @@ async def test_output_callback(
         process = await get_process()
         assert process.stdin
 
-        await process.stdin.send_all(f"{channel}:yes\n".encode())
+        await process.stdin.send_all(f"{channel}:yes\\n\n".encode())
         assert await po.onoutput_receiver.receive() == (channel, return_value)
 
         await process.stdin.send_all(b"exit:0\n")
@@ -267,7 +339,7 @@ async def test_output_exception(get_process: Callable[[], Awaitable[trio.Process
             process = await get_process()
             assert process.stdin
 
-            await process.stdin.send_all(b"stdout:foo\n")
+            await process.stdin.send_all(b"stdout:foo\\n\n")
             assert await po.onoutput_receiver.receive() == ("stdout", None)
 
     assert process
@@ -292,7 +364,7 @@ async def test_kill(monkeypatch: pytest.MonkeyPatch, mock_clock: MockClock, get_
         assert process.stdin
 
         # ensure that our Python subprocess has fully initialized and updated its SIGTERM signal handler
-        await process.stdin.send_all(b"stdout:OK\n")
+        await process.stdin.send_all(b"stdout:OK\\n\n")
         assert await po.onoutput_receiver.receive() == ("stdout", None)
         assert po.onstdout.call_args_list == [call(0, "OK")]
         po.onstdout.call_args_list.clear()

@@ -1,7 +1,8 @@
 from __future__ import annotations
 
+import codecs
 import math
-from contextlib import suppress
+from contextlib import aclosing, suppress
 from functools import partial
 from subprocess import PIPE
 from typing import TYPE_CHECKING, BinaryIO
@@ -10,7 +11,7 @@ import trio
 
 
 if TYPE_CHECKING:
-    from collections.abc import Callable
+    from collections.abc import AsyncGenerator, Callable
 
 
 class ProcessOutput:
@@ -29,6 +30,7 @@ class ProcessOutput:
         self.wait_terminate = wait_terminate
         self.stdin = stdin
         self._send_channel, self._receive_channel = trio.open_memory_channel(1)
+        self._receive_max_bytes: int | None = None
 
     def run(self) -> bool:  # pragma: no cover
         return trio.run(self.arun)
@@ -71,18 +73,36 @@ class ProcessOutput:
         result = self.onexit(code)
         await self._send_channel.send(result)
 
-    async def _onoutput(self, callback: Callable[[int, str], bool | None], stream: trio.abc.ReceiveChannel[bytes]):
+    async def _onoutput(self, callback: Callable[[int, str], bool | None], stream: trio.abc.ReceiveStream):
         idx = 0
-        async for line in stream:
-            try:
-                content = line.decode("utf-8").strip()
-                result = callback(idx, content)
-            except Exception:
-                raise
-            if result is not None:
-                await self._send_channel.send(bool(result))
-                break
-            idx += 1
+        async with aclosing(self._line_decode(stream)) as iter_line_decode:
+            async for line in iter_line_decode:
+                try:
+                    content = line.strip()
+                    result = callback(idx, content)
+                except Exception:
+                    raise
+                if result is not None:
+                    await self._send_channel.send(bool(result))
+                    break
+                idx += 1
+
+    async def _line_decode(self, stream: trio.abc.ReceiveStream) -> AsyncGenerator[str, None]:
+        decoder = codecs.getincrementaldecoder("utf-8")(errors="replace")
+        buffer: str = ""
+        while chunk := await stream.receive_some(max_bytes=self._receive_max_bytes):
+            buffer += decoder.decode(chunk, final=False)
+            while buffer:
+                line, nl, buffer = buffer.partition("\n")
+                if nl:
+                    yield line
+                else:
+                    buffer = line
+                    break
+        if tail := decoder.decode(b"", final=True):
+            buffer += tail
+        if buffer:
+            yield buffer
 
     def onexit(self, code: int) -> bool:
         return code == 0
