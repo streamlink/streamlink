@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import json
 import logging
-from threading import RLock, Thread, current_thread
+from threading import Event, RLock, Thread, current_thread
 from typing import TYPE_CHECKING, Any, TypedDict
 from urllib.parse import unquote_plus, urlparse
 
@@ -83,7 +83,8 @@ class WebsocketClient(Thread):
         if not any(True for h in header if h.startswith("User-Agent: ")):
             header.append(f"User-Agent: {session.http.headers['User-Agent']!s}")
 
-        self._reconnect = False
+        self.reconnect_done = Event()
+        self.is_reconnecting = Event()
         self._reconnect_lock = RLock()
 
         if not sslopt:  # pragma: no cover
@@ -146,9 +147,10 @@ class WebsocketClient(Thread):
             self.ws.run_forever(**self._ws_rundata)
             # check if closed via a reconnect() call
             with self._reconnect_lock:
-                if not self._reconnect:
+                if not self.is_reconnecting.is_set():
                     return
-                self._reconnect = False
+                self.reconnect_done.set()
+                self.is_reconnecting.clear()
 
     # ----
 
@@ -164,8 +166,11 @@ class WebsocketClient(Thread):
             # ws connection is not active (anymore)
             if not self.ws.keep_running:
                 return
+            if self.is_reconnecting.is_set():
+                return
+            self.is_reconnecting.set()
+            self.reconnect_done.clear()
             log.debug("Reconnecting...")
-            self._reconnect = True
             self.ws.close(**(closeopts or {}))
             self._ws_init(
                 url=self.ws.url if url is None else url,
