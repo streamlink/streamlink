@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from threading import Thread
 from typing import TYPE_CHECKING
 from unittest.mock import ANY, Mock, call, patch
 
@@ -231,17 +232,32 @@ class TestWebsocketClient:
         client.start()
         assert client.ws.close.call_count == 0
         assert websocketapp.call_count == 1, "Creates initial connection"
-        assert not client._reconnect, "Has not set the _reconnect state"
+        assert not client.is_reconnecting.is_set(), "Has not set the is_reconnecting state"
         assert handshake.wait_ready(1), "Enters run_forever loop on client thread"
+        assert not client.reconnect_done.is_set(), "Reconnect is not done yet"
 
         client.reconnect()
         assert client.ws.close.call_count == 1
         assert websocketapp.call_count == 2, "Creates new connection"
-        assert client._reconnect, "Has set the _reconnect state"
+        assert client.is_reconnecting.is_set(), "Has set the is_reconnecting state"
+        assert not client.reconnect_done.is_set(), "Has not finished reconnecting"
+
+        threads = [Thread(target=client.reconnect, daemon=True) for _ in range(2)]
+        for thread in threads:
+            thread.start()
+        for thread in threads:
+            thread.join(1)
+            assert not thread.is_alive()
+
+        assert client.ws.close.call_count == 1, "Can't reconnect unless connection was reestablished"
+        assert websocketapp.call_count == 2, "Doesn't reconnect more than once"
+        assert client.is_reconnecting.is_set(), "Has set the is_reconnecting state"
+        assert not client.reconnect_done.is_set(), "Has not finished reconnecting"
 
         assert handshake.step(1)
         assert handshake.wait_ready(1), "Enters run_forever loop on client thread again"
-        assert not client._reconnect, "Has reset the _reconnect state"
+        assert not client.is_reconnecting.is_set(), "Has cleared the is_reconnecting state"
+        assert client.reconnect_done.is_set(), "Has finished reconnecting"
 
         assert handshake.step(1)
         assert not handshake.wait_ready(0), "Doesn't enter run_forever loop on client thread again"
