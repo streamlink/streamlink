@@ -16,6 +16,9 @@ from threading import Event
 from typing import TYPE_CHECKING
 from urllib.parse import urljoin
 
+from requests.exceptions import HTTPError
+
+from streamlink.exceptions import StreamError
 from streamlink.logger import getLogger
 from streamlink.plugin import Plugin, pluginargument, pluginmatcher
 from streamlink.plugin.api import useragents, validate
@@ -56,6 +59,10 @@ class NicoLiveWsClient(WebsocketClient):
         self.opened = Event()
         self.ready = Event()
 
+    def reconnect(self, *args, **kwargs):
+        self.ready.clear()
+        return super().reconnect(*args, **kwargs)
+
     def on_open(self, wsapp):
         super().on_open(wsapp)
         self.send_playerversion()
@@ -84,6 +91,7 @@ class NicoLiveWsClient(WebsocketClient):
 
         # cookies may be required by some HLS multivariant playlists
         if cookies := data.get("cookies", []):
+            log.info("Applying HTTP session cookies from websocket data")
             for cookie in self._SCHEMA_COOKIES.validate(cookies):
                 self.session.http.cookies.set(**cookie)
 
@@ -135,6 +143,32 @@ class NicoLiveWsClient(WebsocketClient):
 class NicoLiveHLSStreamWriter(HLSStreamWriter):
     reader: NicoLiveHLSStreamReader
     stream: NicoLiveHLSStream
+
+    def create_decryptor(self, *args, **kwargs):
+        try:
+            return super().create_decryptor(*args, **kwargs)
+        except StreamError as err:
+            # TODO: fix HTTPSession.request()
+            if (
+                not (orig_err := getattr(err, "err", None))
+                or not isinstance(orig_err, HTTPError)
+                or orig_err.response.status_code != 403
+            ):
+                raise
+
+            if not self.stream.wsclient.is_reconnecting.is_set():
+                log.warning("HLSSegment decryption key retrieval failed. Attempting to reconnect to websocket...")
+                self.stream.wsclient.reconnect()
+            if (
+                not self.stream.wsclient.reconnect_done.wait(self.stream.wsclient.STREAM_OPENED_TIMEOUT)
+                or not self.stream.wsclient.ready.wait(self.stream.wsclient.STREAM_OPENED_TIMEOUT)
+            ):  # fmt: skip
+                raise
+
+            # drop cached key
+            self.key_uri = None
+
+            return super().create_decryptor(*args, **kwargs)
 
     def should_filter_segment(self, segment: HLSSegment) -> bool:
         if "/blank/" in segment.uri:
