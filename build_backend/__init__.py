@@ -16,7 +16,7 @@ from setuptools.command.egg_info import egg_info as _egg_info
 # ----
 
 
-def get_requires_for_build_wheel(  # type: ignore[no-redef]  # ty:ignore[unused-ignore-comment]
+def get_requires_for_build_wheel(  # type: ignore[no-redef]
     config_settings: dict | None = None,
 ) -> list[str]:  # pragma: no cover
     # Streamlink publishes three wheels on PyPI: the generic "any" wheel, the "win32" wheel and the "win-amd64" wheel:
@@ -39,7 +39,7 @@ def get_requires_for_build_wheel(  # type: ignore[no-redef]  # ty:ignore[unused-
         "--build-option",
         # types-setuptools-70.3.0.20240710 has the wrong type for
         #   setuptools.command.egg_info.user_options (setuptools._distutils.cmd.Command.user_options)
-        _egg_info.user_options,  # type: ignore[arg-type]
+        _egg_info.user_options,  # type: ignore[arg-type, ty:invalid-argument-type]
     )
 
     return _build_meta.get_requires_for_build_wheel(config_settings)

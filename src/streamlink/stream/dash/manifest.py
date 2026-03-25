@@ -10,7 +10,7 @@ from itertools import count, repeat
 from typing import TYPE_CHECKING, Any, ClassVar, Literal, TypeAlias, TypeVar, overload
 from urllib.parse import urljoin, urlparse, urlunparse
 
-from isodate import Duration, parse_datetime, parse_duration  # type: ignore[import]  # ty:ignore[unused-ignore-comment]
+from isodate import Duration, parse_datetime, parse_duration  # type: ignore[import]
 
 from streamlink.logger import getLogger
 from streamlink.stream.dash.segment import DASHSegment, TimelineSegment
@@ -266,7 +266,7 @@ class MPDNode:
     ) -> Iterator[MPDNode]:
         node = self.parent
         while node:
-            if cls is None or isinstance(node, cls):  # type: ignore[arg-type]
+            if cls is None or isinstance(node, cls):  # type: ignore[arg-type, ty:invalid-argument-type]
                 n = mapper(node)
                 if n is not None:
                     yield n
@@ -300,7 +300,7 @@ class MPD(MPDNode):
 
     __tag__ = "MPD"
 
-    parent: None  # type: ignore[assignment]  # ty:ignore[unused-ignore-comment]
+    parent: None  # type: ignore[assignment]
     timelines: dict[TTimelineIdent, int]
 
     DEFAULT_MINBUFFERTIME = 3.0

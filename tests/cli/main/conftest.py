@@ -89,8 +89,8 @@ def _setup(monkeypatch: pytest.MonkeyPatch, requests_mock: Mock, session: Stream
         capturewarnings(False)
         streamlink_cli.main.logger.root.handlers.clear()
         streamlink_cli.main.logger.root.setLevel(level)
-        streamlink_cli.main.args = None  # type: ignore[assignment]
-        streamlink_cli.main.console = None  # type: ignore[assignment]
+        streamlink_cli.main.args = None  # type: ignore[assignment, ty:invalid-assignment]
+        streamlink_cli.main.console = None  # type: ignore[assignment, ty:invalid-assignment]
 
 
 @pytest.fixture(autouse=True)

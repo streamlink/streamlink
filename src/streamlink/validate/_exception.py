@@ -40,7 +40,7 @@ class ValidationError(ValueError):
             return ""
         if isinstance(self.schema, str):
             return f"({self.schema})"
-        return f"({self.schema.__name__})"  # type: ignore[attr-defined]
+        return f"({self.schema.__name__})"  # type: ignore[attr-defined, ty:unresolved-attribute]
 
     def __str__(self):
         cls = self.__class__

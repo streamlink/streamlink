@@ -2,7 +2,7 @@ import argparse
 from datetime import datetime, timedelta, timezone
 
 import freezegun
-import isodate  # type: ignore[import]  # ty:ignore[unused-ignore-comment]
+import isodate  # type: ignore[import]
 import pytest
 
 from streamlink.utils.times import (

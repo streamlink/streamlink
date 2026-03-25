@@ -253,7 +253,7 @@ class FFMPEGMuxer(StreamIO):
         return self
 
     def read(self, size=-1):
-        return self.process.stdout.read(size)  # type: ignore[attr-defined]
+        return self.process.stdout.read(size)  # type: ignore[attr-defined, ty:unresolved-attribute]
 
     def close(self):
         if self.closed:
@@ -263,7 +263,7 @@ class FFMPEGMuxer(StreamIO):
         if self.process:
             # kill ffmpeg
             self.process.kill()
-            self.process.stdout.close()  # type: ignore[attr-defined]
+            self.process.stdout.close()  # type: ignore[attr-defined, ty:unresolved-attribute]
 
             executor = concurrent.futures.ThreadPoolExecutor()
 

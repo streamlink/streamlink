@@ -8,7 +8,7 @@ from build_backend.onbuild import onbuild
 
 
 try:
-    from versioningit.onbuild import SetuptoolsFileProvider  # type: ignore[attr-defined]  # ty:ignore[unused-ignore-comment]
+    from versioningit.onbuild import SetuptoolsFileProvider  # type: ignore[attr-defined]
 except ImportError:  # pragma: no cover
     _HAS_ONBUILD_FILE_PROVIDER = False
 else:

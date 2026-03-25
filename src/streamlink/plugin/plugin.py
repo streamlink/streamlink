@@ -287,10 +287,10 @@ class Plugin(abc.ABC, metaclass=_PluginMeta):
     matches: Matches
 
     #: A reference to the compiled :class:`re.Pattern` of the first matching matcher.
-    matcher: re.Pattern[str] = None  # type: ignore[assignment]
+    matcher: re.Pattern[str] = None  # type: ignore[assignment, ty:invalid-assignment]
 
     #: A reference to the :class:`re.Match` result of the first matching matcher.
-    match: re.Match[str] = None  # type: ignore[assignment]
+    match: re.Match[str] = None  # type: ignore[assignment, ty:invalid-assignment]
 
     #: Metadata 'id' attribute: unique stream ID, etc.
     id: str | None = None
@@ -344,7 +344,7 @@ class Plugin(abc.ABC, metaclass=_PluginMeta):
         if not self.matchers:
             return
 
-        self.matcher, self.match = self.matches.update(self.matchers, value)  # type: ignore[assignment]
+        self.matcher, self.match = self.matches.update(self.matchers, value)  # type: ignore[assignment, ty:invalid-assignment]
         if not self.matcher or not self.match:
             raise PluginError("The input URL did not match any of this plugin's matchers")
 

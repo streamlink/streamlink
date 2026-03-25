@@ -76,7 +76,7 @@ def _plugins(session: Streamlink):
     indirect=["argv"],
 )
 def test_can_handle_url(requests_mock: rm.Mocker, session: Streamlink, argv: list, exit_code: int):
-    requests_mock.request(rm.ANY, "http://aborted", exc=KeyboardInterrupt)  # type: ignore[arg-type]
+    requests_mock.request(rm.ANY, "http://aborted", exc=KeyboardInterrupt)  # type: ignore[arg-type, ty:invalid-argument-type]
     requests_mock.request(rm.ANY, "http://exists", content=b"")
     requests_mock.request(rm.ANY, "http://exists-redirect", status_code=301, headers={"Location": "http://exists"})
     requests_mock.request(rm.ANY, "http://missing-redirect", status_code=301, headers={"Location": "http://missing"})

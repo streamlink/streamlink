@@ -155,7 +155,7 @@ class HLSStreamReadThread(Thread):
             return self.writer_close()
 
         self.writer_close = self.reader.writer.close
-        self.reader.writer.close = _await_read_then_close  # type: ignore[assignment]
+        self.reader.writer.close = _await_read_then_close  # type: ignore[assignment, ty:invalid-assignment]
 
     def run(self):
         while not self.reader.buffer.closed:
@@ -253,18 +253,18 @@ class TestMixinStreamHLS(unittest.TestCase):
         assert self.thread.reader.worker.closed, "Stream worker is closed"
 
     def await_reload(self, timeout=TIMEOUT_AWAIT_RELOAD) -> None:
-        worker: EventedHLSStreamWorker = self.thread.reader.worker  # type: ignore[assignment]
+        worker: EventedHLSStreamWorker = self.thread.reader.worker  # type: ignore[assignment, ty:invalid-assignment]
         assert worker.is_alive()
         assert worker.handshake_reload.step(timeout)
 
     def await_playlist_wait(self, timeout=TIMEOUT_AWAIT_PLAYLIST_WAIT) -> None:
-        worker: EventedHLSStreamWorker = self.thread.reader.worker  # type: ignore[assignment]
+        worker: EventedHLSStreamWorker = self.thread.reader.worker  # type: ignore[assignment, ty:invalid-assignment]
         assert worker.is_alive()
         assert worker.handshake_wait.step(timeout)
 
     # make write calls on the write-thread and wait until it has finished
     def await_write(self, write_calls=1, timeout=TIMEOUT_AWAIT_WRITE) -> None:
-        writer: EventedHLSStreamWriter = self.thread.reader.writer  # type: ignore[assignment]
+        writer: EventedHLSStreamWriter = self.thread.reader.writer  # type: ignore[assignment, ty:invalid-assignment]
         assert writer.is_alive()
         for _ in range(write_calls):
             assert writer.handshake.step(timeout)
