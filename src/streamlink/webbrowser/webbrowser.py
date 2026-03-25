@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import sys
 import tempfile
 from contextlib import asynccontextmanager, contextmanager
 from functools import partial
@@ -74,8 +73,7 @@ class Webbrowser:
     @staticmethod
     @contextmanager
     def _create_temp_dir() -> Generator[str, None, None]:
-        kwargs = {"ignore_cleanup_errors": True} if sys.version_info >= (3, 10) else {}
-        with tempfile.TemporaryDirectory(**kwargs) as temp_file:  # type: ignore[call-overload]
+        with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as temp_file:
             yield temp_file
 
 
