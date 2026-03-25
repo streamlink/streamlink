@@ -27,7 +27,7 @@ class FileOutput(Output):
     ):
         super().__init__()
         self.filename = filename
-        self.fd = fd  # type: ignore[assignment]
+        self.fd = fd  # type: ignore[assignment, ty:invalid-assignment]
         self.record = record
 
     def _open(self):

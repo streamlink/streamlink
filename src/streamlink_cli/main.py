@@ -59,11 +59,11 @@ if TYPE_CHECKING:
 QUIET_OPTIONS = ("json", "stream_url", "quiet")
 
 
-args: argparse.Namespace = None  # type: ignore[assignment]
-console: ConsoleOutput = None  # type: ignore[assignment]
-output: FileOutput | PlayerOutput = None  # type: ignore[assignment]
-stream_fd: StreamIO = None  # type: ignore[assignment]
-streamlink: Streamlink = None  # type: ignore[assignment]
+args: argparse.Namespace = None  # type: ignore[assignment, ty:invalid-assignment]
+console: ConsoleOutput = None  # type: ignore[assignment, ty:invalid-assignment]
+output: FileOutput | PlayerOutput = None  # type: ignore[assignment, ty:invalid-assignment]
+stream_fd: StreamIO = None  # type: ignore[assignment, ty:invalid-assignment]
+streamlink: Streamlink = None  # type: ignore[assignment, ty:invalid-assignment]
 
 
 log = getLogger("streamlink.cli")

@@ -49,7 +49,7 @@ class EqSimpleCData(_CTypesComparable[_SimpleCData]):
 
     def _get_data(self, data: _SimpleCData) -> tuple:
         # noinspection PyProtectedMember
-        return data._type_, data.value  # type: ignore[attr-defined]
+        return data._type_, data.value  # type: ignore[attr-defined, ty:unresolved-attribute]
 
 
 class EqStructure(_CTypesComparable[Structure]):
@@ -101,7 +101,7 @@ def test_call_success_error(monkeypatch: pytest.MonkeyPatch, mock_windll: Mock):
     mock_windll.kernel32.GetLastError.return_value = 87
 
     with pytest.raises(OSError) as exc_info:  # noqa: PT011
-        windows_console.set_console_cursor_position(123, 456)  # type: ignore[arg-type]
+        windows_console.set_console_cursor_position(123, 456)  # type: ignore[arg-type, ty:invalid-argument-type]
     assert str(exc_info.value) == "Error while calling kernel32.SetConsoleCursorPosition (last_error=0x57)"
 
 

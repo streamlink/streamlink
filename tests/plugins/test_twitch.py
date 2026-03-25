@@ -693,7 +693,7 @@ class TestTwitchAPIAccessToken:
         mock = requests_mock.post("https://gql.twitch.tv/gql", **getattr(request, "param", {"json": {}}))
         yield mock
         assert mock.call_count > 0
-        payload = mock.last_request.json()  # type: ignore[union-attr]
+        payload = mock.last_request.json()  # type: ignore[union-attr, ty:unresolved-attribute]
         assert tuple(sorted(payload.keys())) == ("extensions", "operationName", "variables")
         assert payload.get("operationName") == "PlaybackAccessToken"
         assert payload.get("extensions") == {
@@ -706,7 +706,7 @@ class TestTwitchAPIAccessToken:
     @pytest.fixture()
     def _assert_live(self, mock: rm.Mocker):
         yield
-        assert mock.last_request.json().get("variables") == {  # type: ignore[union-attr]
+        assert mock.last_request.json().get("variables") == {  # type: ignore[union-attr, ty:unresolved-attribute]
             "isLive": True,
             "isVod": False,
             "login": "channelname",
@@ -718,7 +718,7 @@ class TestTwitchAPIAccessToken:
     @pytest.fixture()
     def _assert_vod(self, mock: rm.Mocker):
         yield
-        assert mock.last_request.json().get("variables") == {  # type: ignore[union-attr]
+        assert mock.last_request.json().get("variables") == {  # type: ignore[union-attr, ty:unresolved-attribute]
             "isLive": False,
             "isVod": True,
             "login": "",
@@ -774,13 +774,13 @@ class TestTwitchAPIAccessToken:
     def test_plugin_options(self, plugin: Twitch, mock: rm.Mocker, exp_headers: dict, exp_variables: dict):
         with pytest.raises(PluginError):
             plugin._access_token(True, "channelname")
-        requestheaders = dict(mock.last_request._request.headers)  # type: ignore[union-attr]
+        requestheaders = dict(mock.last_request._request.headers)  # type: ignore[union-attr, ty:unresolved-attribute]
         for header in plugin.session.http.headers.keys():
             del requestheaders[header]
         del requestheaders["Content-Type"]
         del requestheaders["Content-Length"]
         assert requestheaders == exp_headers
-        assert mock.last_request.json().get("variables") == exp_variables  # type: ignore[union-attr]
+        assert mock.last_request.json().get("variables") == exp_variables  # type: ignore[union-attr, ty:unresolved-attribute]
 
     @pytest.mark.parametrize(
         ("session", "mock"),

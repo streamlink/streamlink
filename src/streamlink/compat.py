@@ -9,9 +9,9 @@ from typing import TYPE_CHECKING, Any
 
 
 try:
-    from builtins import BaseExceptionGroup, ExceptionGroup  # type: ignore[attr-defined]
+    from builtins import BaseExceptionGroup, ExceptionGroup  # type: ignore[attr-defined, ty:unresolved-import]
 except ImportError:  # pragma: no cover
-    from exceptiongroup import BaseExceptionGroup, ExceptionGroup  # type: ignore[import]
+    from exceptiongroup import BaseExceptionGroup, ExceptionGroup  # type: ignore[import, ty:unresolved-import]
 
 
 from streamlink.exceptions import StreamlinkDeprecationWarning

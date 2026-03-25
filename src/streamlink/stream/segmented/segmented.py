@@ -266,7 +266,7 @@ class SegmentedStreamWorker(AwaitableMixin, NamedThread, Generic[TSegment, TResu
 
         return
         # noinspection PyUnreachableCode,PyTypeChecker
-        yield
+        yield  # type: ignore[ty:invalid-yield]
 
     def run(self) -> None:
         self._queue_last = now()

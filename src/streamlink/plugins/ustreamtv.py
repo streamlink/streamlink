@@ -373,7 +373,7 @@ class UStreamTVStreamWriter(SegmentedStreamWriter[UStreamTVSegment, Response]):
             self.queue(segment, self.executor.submit(self.fetch, segment, False))
 
     # noinspection PyMethodOverriding
-    def fetch(self, segment: UStreamTVSegment, is_init: bool):  # type: ignore[override]
+    def fetch(self, segment: UStreamTVSegment, is_init: bool):  # type: ignore[override, ty:invalid-method-override]
         if self.closed:  # pragma: no cover
             return
 

@@ -197,7 +197,7 @@ class HLSStreamWriter(SegmentedStreamWriter[HLSSegment, Response]):
             log.error(f"Failed to fetch segment {segment.num}: {err}")
 
     def fetch_map(self, segment: HLSSegment) -> Response | None:
-        segment_map: Map = segment.map  # type: ignore[assignment]  # map is not None
+        segment_map: Map = segment.map  # type: ignore[assignment, ty:invalid-assignment]  # map is not None
         try:
             return self._fetch(
                 segment_map.uri,
@@ -581,7 +581,7 @@ class MuxedHLSStream(MuxedStream[TMuxedHLSStream_co]):
         maps.extend(f"{i}:a" for i in range(1, len(tracks)))
 
         # https://github.com/python/mypy/issues/18017
-        TStream: type[TMuxedHLSStream_co] = hlsstream if hlsstream is not None else HLSStream  # type: ignore[assignment]
+        TStream: type[TMuxedHLSStream_co] = hlsstream if hlsstream is not None else HLSStream  # type: ignore[assignment, ty:invalid-assignment]
         substreams = [
             TStream(
                 session,

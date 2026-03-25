@@ -14,7 +14,7 @@ import urllib3.util.connection as urllib3_util_connection
 from requests import Request, Session
 from requests.adapters import HTTPAdapter
 from urllib3.connection import HTTPConnection
-from urllib3.util import create_urllib3_context  # type: ignore[attr-defined]
+from urllib3.util import create_urllib3_context  # type: ignore[attr-defined, ty:unresolved-import]
 
 import streamlink.session.http_useragents as useragents
 from streamlink.compat import is_win32
@@ -29,7 +29,7 @@ if TYPE_CHECKING:
     from requests import PreparedRequest
 
 
-_original_allowed_gai_family = urllib3_util_connection.allowed_gai_family  # type: ignore[attr-defined]
+_original_allowed_gai_family = urllib3_util_connection.allowed_gai_family  # type: ignore[attr-defined, ty:unresolved-attribute]
 
 
 # Never convert percent-encoded characters to uppercase in urllib3>=2.0.0.
@@ -44,7 +44,7 @@ _original_allowed_gai_family = urllib3_util_connection.allowed_gai_family  # typ
 # > encodings.
 class Urllib3UtilUrlPercentReOverride:
     # noinspection PyProtectedMember
-    _re_percent_encoding: re.Pattern = urllib3.util.url._PERCENT_RE  # type: ignore[attr-defined]
+    _re_percent_encoding: re.Pattern = urllib3.util.url._PERCENT_RE  # type: ignore[attr-defined, ty:unresolved-attribute]
 
     # noinspection PyUnusedLocal
     # https://github.com/urllib3/urllib3/blob/2.0.0/src/urllib3/util/url.py#L241-L243
@@ -53,7 +53,7 @@ class Urllib3UtilUrlPercentReOverride:
         return string, len(cls._re_percent_encoding.findall(string))
 
 
-urllib3.util.url._PERCENT_RE = Urllib3UtilUrlPercentReOverride  # type: ignore[attr-defined]
+urllib3.util.url._PERCENT_RE = Urllib3UtilUrlPercentReOverride  # type: ignore[attr-defined, ty:unresolved-attribute]
 
 
 # requests.Request.__init__ keywords, except for "hooks"
@@ -150,11 +150,11 @@ class HTTPSession(Session):
     # noinspection PyMethodMayBeStatic
     def set_address_family(self, family: socket.AddressFamily | None = None) -> None:
         if family is None:
-            urllib3_util_connection.allowed_gai_family = _original_allowed_gai_family  # type: ignore[attr-defined]
+            urllib3_util_connection.allowed_gai_family = _original_allowed_gai_family  # type: ignore[attr-defined, ty:unresolved-attribute]
         elif family == socket.AF_INET:
-            urllib3_util_connection.allowed_gai_family = lambda: socket.AF_INET  # type: ignore[attr-defined]
+            urllib3_util_connection.allowed_gai_family = lambda: socket.AF_INET  # type: ignore[attr-defined, ty:unresolved-attribute]
         elif family == socket.AF_INET6:  # pragma: no branch
-            urllib3_util_connection.allowed_gai_family = lambda: socket.AF_INET6  # type: ignore[attr-defined]
+            urllib3_util_connection.allowed_gai_family = lambda: socket.AF_INET6  # type: ignore[attr-defined, ty:unresolved-attribute]
 
     def disable_dh(self, disable: bool = True) -> None:
         adapter: HTTPAdapter

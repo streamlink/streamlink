@@ -638,7 +638,7 @@ class TestLogfile:
         abspath = str(Path().resolve() / "tty")
 
         streamobj = StringIO()
-        streamobj.isatty = lambda: True  # type: ignore[method-assign]
+        streamobj.isatty = lambda: True  # type: ignore[method-assign, ty:invalid-assignment]
 
         mock_open = Mock(return_value=streamobj)
         monkeypatch.setattr("builtins.open", mock_open)

@@ -720,8 +720,8 @@ class TestHandleEvent:
             FakeEvent(value="baz"),
         ]
         assert FakeEvent not in cdp_connection.event_channels
-        assert all(listener._sender._closed for listener in listeners)  # type: ignore[attr-defined]
-        assert all(listener._receiver._closed for listener in listeners)  # type: ignore[attr-defined]
+        assert all(listener._sender._closed for listener in listeners)  # type: ignore[attr-defined, ty:unresolved-attribute]
+        assert all(listener._receiver._closed for listener in listeners)  # type: ignore[attr-defined, ty:unresolved-attribute]
         assert [(record.name, record.levelname, record.message) for record in caplog.records] == [
             (
                 "streamlink.webbrowser.cdp.connection",

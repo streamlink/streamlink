@@ -28,7 +28,7 @@ if TYPE_CHECKING:
     from streamlink import Streamlink
 
 
-_original_allowed_gai_family = urllib3.util.connection.allowed_gai_family  # type: ignore[attr-defined]
+_original_allowed_gai_family = urllib3.util.connection.allowed_gai_family  # type: ignore[attr-defined, ty:unresolved-attribute]
 
 
 class TestUrllib3Overrides:

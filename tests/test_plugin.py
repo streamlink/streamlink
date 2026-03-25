@@ -418,7 +418,7 @@ class TestPluginArguments:
 
         with pytest.raises(TypeError, match=r"^NotAPlugin is not a Plugin$"):
             # noinspection PyUnusedLocal
-            @pluginargument("foo")  # type: ignore[arg-type]
+            @pluginargument("foo")  # type: ignore[arg-type, ty:invalid-argument-type]
             class NotAPlugin(metaclass=NotAPluginMeta):
                 pass
 

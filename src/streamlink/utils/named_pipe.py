@@ -13,7 +13,7 @@ from streamlink.logger import getLogger
 
 
 try:
-    from ctypes import byref, c_ulong, c_void_p, cast, windll  # type: ignore[attr-defined]
+    from ctypes import byref, c_ulong, c_void_p, cast, windll  # type: ignore[attr-defined, ty:unresolved-import]
 except ImportError:
     pass
 

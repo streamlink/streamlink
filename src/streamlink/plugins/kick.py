@@ -84,7 +84,7 @@ class KickHLSStreamWorker(HLSStreamWorker):
         if self.stream.low_latency:
             self.reload_time = "segment"
 
-    def process_segments(self, playlist: KickM3U8):  # type: ignore[override]
+    def process_segments(self, playlist: KickM3U8):  # type: ignore[override, ty:invalid-method-override]
         # ignore prefetch segments if not LL streaming
         if not self.stream.low_latency:
             playlist.segments = [segment for segment in playlist.segments if not segment.prefetch]

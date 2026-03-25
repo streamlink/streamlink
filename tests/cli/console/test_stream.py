@@ -124,7 +124,7 @@ class TestConsoleOutputStream:
             return len(msg)
 
         fakebuffer: list[Buffer] = []
-        buffer.write = fakewrite  # type: ignore[method-assign]
+        buffer.write = fakewrite  # type: ignore[method-assign, ty:invalid-assignment]
 
         assert console_output_stream.write("foo") == 0
         assert fakebuffer == []
@@ -162,7 +162,7 @@ class TestConsoleOutputStreamANSI:
             return len(msg)
 
         fakebuffer: list[Buffer] = []
-        buffer.write = fakewrite  # type: ignore[method-assign]
+        buffer.write = fakewrite  # type: ignore[method-assign, ty:invalid-assignment]
 
         return fakebuffer
 

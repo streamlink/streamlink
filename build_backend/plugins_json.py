@@ -485,7 +485,7 @@ def to_json(data: Output, fd: TextIO | None = None, comments: list[str] | None =
     textio: TextIO = fd or sys.stdout
     for line in PLUGINSJSON_COMMENTS if comments is None else comments:
         textio.write(f"// {line}\n")
-    json.dump(data, textio, cls=JSONEncoder, **outputformat)  # type: ignore[arg-type]
+    json.dump(data, textio, cls=JSONEncoder, **outputformat)  # type: ignore[arg-type, ty:invalid-argument-type]
 
 
 if __name__ == "__main__":  # pragma: no cover

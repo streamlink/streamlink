@@ -233,10 +233,10 @@ def capturewarnings(capture: bool = False) -> None:
     if capture:
         if _showwarning_default is None:
             _showwarning_default = warnings.showwarning
-            warnings.showwarning = _showwarning  # type: ignore[assignment]
+            warnings.showwarning = _showwarning  # type: ignore[assignment, ty:invalid-assignment]
     else:
         if _showwarning_default is not None:
-            warnings.showwarning = _showwarning_default  # type: ignore[assignment]
+            warnings.showwarning = _showwarning_default  # type: ignore[assignment, ty:invalid-assignment]
             _showwarning_default = None
 
 

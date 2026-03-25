@@ -16,7 +16,7 @@ try:
 except ImportError:  # pragma: no cover
 
     @dataclass
-    class SetuptoolsFileProvider:  # type: ignore[no-redef]  # ty:ignore[unused-ignore-comment]
+    class SetuptoolsFileProvider:  # type: ignore[no-redef]
         build_dir: Path
 
 

@@ -46,7 +46,7 @@ def indent(value, length=4):
 class ArgparseDirective(Directive):
     has_content = True
     # noinspection PyClassVar
-    option_spec: ClassVar[dict[str, Callable[[str], Any]]] = {  # type: ignore[misc]  # ty:ignore[unused-ignore-comment]
+    option_spec: ClassVar[dict[str, Callable[[str], Any]]] = {  # type: ignore[misc]
         "module": unchanged,
         "attr": unchanged,
     }

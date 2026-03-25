@@ -54,7 +54,7 @@ class PlutoM3U8Parser(M3U8Parser):
 
 
 class PlutoHLSStreamWriter(HLSStreamWriter):
-    def should_filter_segment(self, segment: PlutoHLSSegment):  # type: ignore[override]
+    def should_filter_segment(self, segment: PlutoHLSSegment):  # type: ignore[override, ty:invalid-method-override]
         return segment.ad or super().should_filter_segment(segment)
 
 
