@@ -4,7 +4,7 @@ import math
 import re
 from binascii import Error as BinasciiError, unhexlify
 from datetime import timedelta
-from typing import TYPE_CHECKING, ClassVar, Generic, TypeVar
+from typing import TYPE_CHECKING, ClassVar, Generic, TypeVar, cast
 from urllib.parse import urljoin, urlparse
 
 from isodate import ISO8601Error, parse_datetime  # type: ignore[import]
@@ -28,7 +28,7 @@ from streamlink.stream.hls.segment import (
 
 
 if TYPE_CHECKING:
-    from collections.abc import Callable, Iterator, Mapping
+    from collections.abc import Callable, Iterable, Iterator, Mapping
     from datetime import datetime
 
 
@@ -590,9 +590,12 @@ class M3U8Parser(Generic[TM3U8_co, THLSSegment_co, THLSPlaylist_co], metaclass=M
     def parse(self, data: str | Response) -> TM3U8_co:
         lines: Iterator[str]
         if isinstance(data, str):
-            lines = iter(filter(bool, data.splitlines()))
+            line_iterable: Iterable[str] = data.splitlines()
         else:
-            lines = iter(filter(bool, data.iter_lines(decode_unicode=True)))
+            # cast from `Iterator[str | bytes]` to `Iterator[str]`,
+            # as we explicitly set the encoding of the HTTP response to UTF-8 according to RFC 8216
+            line_iterable = cast("Iterator[str]", data.iter_lines(decode_unicode=True))
+        lines = iter(filter(bool, line_iterable))
 
         try:
             line = next(lines)
