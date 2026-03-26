@@ -34,10 +34,9 @@ class Radiko(Plugin):
         else:
             start_at = self.match.group("start_at")
             url, token = self._timefree(station_id, start_at)
-        headers = {
+        self.session.http.headers.update({
             "X-Radiko-AuthToken": token,
-        }
-        self.session.http.headers = headers
+        })
         yield from HLSStream.parse_variant_playlist(self.session, url).items()
 
     def _live(self, station_id):
