@@ -1,5 +1,6 @@
 """
 $description TV and live video game broadcasts, artist performances and personal daily-life video blogs & shows.
+$url play.sooplive.com
 $url play.sooplive.co.kr
 $url play.afreecatv.com
 $type live
@@ -37,20 +38,20 @@ class SoopHLSStream(HLSStream):
 
 
 @pluginmatcher(
-    re.compile(r"https?://play\.(sooplive\.co\.kr|afreecatv\.com)/(?P<channel>\w+)(?:/(?P<bno>\d+))?"),
+    re.compile(r"https?://play\.(sooplive\.com|sooplive\.co\.kr|afreecatv\.com)/(?P<channel>\w+)(?:/(?P<bno>\d+))?"),
 )
 @pluginargument(
     "username",
     sensitive=True,
     requires=["password"],
     metavar="USERNAME",
-    help="The username used to register with sooplive.co.kr.",
+    help="The username used to register with sooplive.com.",
 )
 @pluginargument(
     "password",
     sensitive=True,
     metavar="PASSWORD",
-    help="A sooplive.co.kr account password to use with --soop-username.",
+    help="A sooplive.com account password to use with --soop-username.",
 )
 @pluginargument(
     "purge-credentials",
