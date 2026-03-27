@@ -1,5 +1,6 @@
 """
 $description TV and live video game broadcasts, artist performances and personal daily-life video blogs & shows.
+$url play.sooplive.com
 $url play.sooplive.co.kr
 $url play.afreecatv.com
 $type live
@@ -37,20 +38,20 @@ class SoopHLSStream(HLSStream):
 
 
 @pluginmatcher(
-    re.compile(r"https?://play\.(sooplive\.co\.kr|afreecatv\.com)/(?P<channel>\w+)(?:/(?P<bno>\d+))?"),
+    re.compile(r"https?://play\.(sooplive\.com|sooplive\.co\.kr|afreecatv\.com)/(?P<channel>\w+)(?:/(?P<bno>\d+))?"),
 )
 @pluginargument(
     "username",
     sensitive=True,
     requires=["password"],
     metavar="USERNAME",
-    help="The username used to register with sooplive.co.kr.",
+    help="The username used to register with sooplive.com.",
 )
 @pluginargument(
     "password",
     sensitive=True,
     metavar="PASSWORD",
-    help="A sooplive.co.kr account password to use with --soop-username.",
+    help="A sooplive.com account password to use with --soop-username.",
 )
 @pluginargument(
     "purge-credentials",
@@ -101,7 +102,7 @@ class Soop(Plugin):
     CHANNEL_RESULT_OK = 1
     CHANNEL_LOGIN_REQUIRED = -6
 
-    CHANNEL_API_URL = "https://live.sooplive.co.kr/afreeca/player_live_api.php"
+    CHANNEL_API_URL = "https://live.sooplive.com/afreeca/player_live_api.php"
     CHANNEL_API_DATA_COMMON = {
         "from_api": "0",
         "mode": "landing",
@@ -111,9 +112,9 @@ class Soop(Plugin):
 
     STREAM_PASSWORD_PROTECTED = "Y"
 
-    AUTH_CHECK_URL = "https://afevent2.sooplive.co.kr/api/get_private_info.php"
+    AUTH_CHECK_URL = "https://afevent2.sooplive.com/api/get_private_info.php"
 
-    LOGIN_URL = "https://login.sooplive.co.kr/app/LoginAction.php"
+    LOGIN_URL = "https://login.sooplive.com/app/LoginAction.php"
     LOGIN_RESULT_OK = 1
 
     _schema_channel = validate.Schema(
@@ -279,11 +280,11 @@ class Soop(Plugin):
 
         self.session.http.headers.update({
             "Referer": self.url,
-            "Origin": "https://play.sooplive.co.kr",
+            "Origin": "https://play.sooplive.com",
         })
 
         authed = False
-        if self.session.http.cookies.get_dict(domain=".sooplive.co.kr"):
+        if self.session.http.cookies.get_dict(domain=".sooplive.com"):
             if authed := self._check_auth():
                 log.debug("Authentication using stored credentials was successful")
             else:
