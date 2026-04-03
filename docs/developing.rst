@@ -111,6 +111,7 @@ performing these checks locally avoids unnecessary build failures.
     # check code for formatting errors
     ruff format --diff .
     # check code for typing errors
+    ty check
     mypy
 
     # build the documentation
