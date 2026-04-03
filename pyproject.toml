@@ -113,6 +113,7 @@ typing = [
   { include-group = "test" },
   { include-group = "docs" },
   { include-group = "script" },
+  "ty ==0.0.28",
   "mypy[faster-cache] ==1.20.0",
   "typing-extensions >=4.0.0",
   "lxml-stubs",
@@ -363,6 +364,14 @@ avoid-escape = false
 
 [tool.ruff.lint.flake8-implicit-str-concat]
 allow-multiline = false
+
+
+# https://docs.astral.sh/ty/reference/configuration/
+[tool.ty.src]
+exclude = [
+  "src/streamlink/packages/**",
+  "src/streamlink_cli/packages/**",
+]
 
 
 # https://mypy.readthedocs.io/en/stable/config_file.html
