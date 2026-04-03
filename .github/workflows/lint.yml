@@ -60,6 +60,10 @@ jobs:
           python -m pip install -U
           -e .
           --group typing
+      - name: ty
+        if: ${{ !cancelled() }}
+        run: >
+          python -m ty check
       - name: mypy
         if: ${{ !cancelled() }}
         run: >
