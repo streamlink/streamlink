@@ -20,7 +20,6 @@ class TestPluginCanHandleUrlCDNBG(PluginCanHandleUrl):
         (("bnt", "http://tv.bnt.bg/bnt3"), {}),
         (("bnt", "http://tv.bnt.bg/bnt4"), {}),
         (("mu-vi", "http://mu-vi.tv/LiveStreams/pages/Live.aspx"), {}),
-        (("bstv", "http://live.bstv.bg/"), {}),
         (("bloombergtv", "https://www.bloombergtv.bg/video"), {}),
         (("cdnbg", "https://i.cdn.bg/live/xfr3453g0d"), {}),
         (("armymedia", "https://armymedia.bg/%d0%bd%d0%b0-%d0%b6%d0%b8%d0%b2%d0%be/"), {}),
