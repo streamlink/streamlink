@@ -7,7 +7,7 @@ class TestPluginCanHandleUrlTelefe(PluginCanHandleUrl):
 
     should_match = [
         "https://mitelefe.com/vivo",
-        "https://mitelefe.com/vivo/",
+        "https://mitelefe.com/telefe-en-vivo",
     ]
 
     should_not_match = [
