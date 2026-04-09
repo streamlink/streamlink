@@ -1,5 +1,19 @@
 # Changelog
 
+## streamlink 8.3.0 (2026-04-10)
+
+- Added: support for choosing the `--interface` by name on non-Windows systems, with optional prefixes, similar to curl ([#6862](https://github.com/streamlink/streamlink/pull/6862))
+- Added: support for also checking stream segments in `HLSStream.parse_variant_playlist()` by setting `check_streams="segments"` ([#6878](https://github.com/streamlink/streamlink/pull/6878))
+- Fixed: stdout/stderr streams in `ProcessOutput` not being fully line-buffered ([#6868](https://github.com/streamlink/streamlink/pull/6868))
+- Updated plugins:
+  - cdnbg: rewritten and fixed plugin ([#6890](https://github.com/streamlink/streamlink/pull/6890))
+  - nicolive: added websocket reconnect attempts on HLS decryption key retrieval failure ([#6871](https://github.com/streamlink/streamlink/pull/6871))
+  - soop: migrated to sooplive.com ([#6876](https://github.com/streamlink/streamlink/pull/6876))
+  - telefe: rewritten and fixed plugin ([#6891](https://github.com/streamlink/streamlink/pull/6891))
+
+[Full changelog](https://github.com/streamlink/streamlink/compare/8.2.1...8.3.0)
+
+
 ## streamlink 8.2.1 (2026-03-05)
 
 - Changed: HLS stream names using the "pixels" format to include framerate data, if available ([#6848](https://github.com/streamlink/streamlink/pull/6848))
