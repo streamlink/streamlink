@@ -157,6 +157,10 @@ class StreamlinkOptions(Options):
           - ``float``
           - ``60.0``
           - Timeout for reading data from stream
+        * - stream-passthrough-encrypted
+          - ``bool``
+          - ``False``
+          - Pass through encrypted stream segments without attempting decryption
         * - hls-live-edge
           - ``int``
           - ``3``
@@ -304,6 +308,7 @@ class StreamlinkOptions(Options):
             "stream-segmented-duration": 0.0,
             "stream-segmented-queue-deadline": 3,
             "stream-timeout": 60.0,
+            "stream-passthrough-encrypted": False,
             "hls-live-edge": 3,
             "hls-live-restart": False,
             "hls-start-offset": 0.0,

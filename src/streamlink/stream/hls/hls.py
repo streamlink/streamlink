@@ -95,6 +95,7 @@ class HLSStreamWriter(SegmentedStreamWriter[HLSSegment, Response]):
         if ignore_names:
             segments = "|".join(map(re.escape, ignore_names))
             self.ignore_names = re.compile(segments, re.IGNORECASE)
+        self.passthrough_encrypted = options.get("stream-passthrough-encrypted")
 
     @staticmethod
     def num_to_iv(n: int) -> bytes:
@@ -260,7 +261,8 @@ class HLSStreamWriter(SegmentedStreamWriter[HLSSegment, Response]):
         # TODO: Rewrite HLSSegment, HLSStreamWriter and HLSStreamWorker based on independent initialization section segments,
         #       similar to the DASH implementation
         key = segment.map.key if is_map and segment.map else segment.key
-        if key and key.method != "NONE":
+
+        if key and key.method != "NONE" and not self.passthrough_encrypted:
             try:
                 decryptor = self.create_decryptor(key, segment.num)
             except (StreamError, ValueError) as err:
@@ -331,6 +333,7 @@ class HLSStreamWorker(SegmentedStreamWorker[HLSSegment, Response]):
             self.reload_time = 0.0
         self._reload_time: float = self._RELOAD_TIME_DEFAULT
         self._reload_last: datetime = now()
+        self.passthrough_encrypted = self.session.options.get("stream-passthrough-encrypted")
 
     def _warn_playlist_sequence(self):
         warnings.warn(
@@ -404,8 +407,10 @@ class HLSStreamWorker(SegmentedStreamWorker[HLSSegment, Response]):
         segments = playlist.segments
         first_segment, last_segment = segments[0], segments[-1]
 
-        if first_segment.key and first_segment.key.method != "NONE":
+        if self.sequence < 0 and first_segment.key and first_segment.key.method != "NONE":
             log.debug("Segments in this playlist are encrypted")
+            if self.passthrough_encrypted:
+                log.warning(f"The stream content is encrypted with '{first_segment.key.method}' and won't be decrypted.")
 
         self.playlist_changed = [s.num for s in self.playlist_segments] != [s.num for s in segments]
         self.playlist_segments = segments
