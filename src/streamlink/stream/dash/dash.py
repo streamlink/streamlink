@@ -308,6 +308,7 @@ class DASHStream(Stream):
         """
 
         manifest, mpd_params = cls.fetch_manifest(session, url_or_manifest, **kwargs)
+        passthrough_encrypted = session.options.get("stream-passthrough-encrypted")
 
         try:
             mpd = cls.parse_mpd(manifest, mpd_params)
@@ -333,15 +334,23 @@ class DASHStream(Stream):
 
         # Search for suitable video and audio representations
         for aset in period_selection.adaptationSets:
-            if aset.contentProtections:
+            if aset.contentProtections and not passthrough_encrypted:
                 raise PluginError(f"{source} is protected by DRM")
             for rep in aset.representations:
-                if rep.contentProtections:
+                if rep.contentProtections and not passthrough_encrypted:
                     raise PluginError(f"{source} is protected by DRM")
                 if rep.mimeType.startswith("video"):
                     video.append(rep)
                 elif rep.mimeType.startswith("audio"):  # pragma: no branch
                     audio.append(rep)
+
+        if passthrough_encrypted:
+            is_encrypted = any(
+                aset.contentProtections or any(rep.contentProtections for rep in aset.representations)
+                for aset in period_selection.adaptationSets
+            )
+            if is_encrypted:
+                log.warning(f"{source} is protected by DRM and won't be decrypted.")
 
         if not video:
             video.append(None)

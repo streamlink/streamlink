@@ -1060,6 +1060,16 @@ def build_parser():
         """,
     )
     transport.add_argument(
+        "--stream-passthrough-encrypted",
+        action="store_true",
+        default=None,
+        help="""
+            Pass through data from encrypted streams without decryption or encryption checks.
+
+            This applies to DASH and HLS streams, and will likely result in garbage output.
+        """,
+    )
+    transport.add_argument(
         "--mux-subtitles",
         action="store_true",
         default=None,
@@ -1568,6 +1578,7 @@ _ARGUMENT_TO_SESSIONOPTION: list[tuple[str, str, Callable[[Any], Any] | None]] =
     ("stream_segmented_duration", "stream-segmented-duration", None),
     ("stream_segmented_queue_deadline", "stream-segmented-queue-deadline", None),
     ("stream_timeout", "stream-timeout", None),
+    ("stream_passthrough_encrypted", "stream-passthrough-encrypted", None),
     ("hls_live_edge", "hls-live-edge", None),
     ("hls_live_restart", "hls-live-restart", None),
     ("hls_start_offset", "hls-start-offset", None),
