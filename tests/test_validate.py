@@ -1,5 +1,6 @@
 import re
 from textwrap import dedent
+from typing import Any
 
 import pytest
 from lxml.etree import Element, tostring as etree_tostring
@@ -735,8 +736,8 @@ class TestGetItemSchema:
 
 class TestAttrSchema:
     class Subject:
-        foo = 1
-        bar = 2
+        foo: Any = 1
+        bar: Any = 2
 
         def __repr__(self):
             return self.__class__.__name__
