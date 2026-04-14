@@ -349,8 +349,8 @@ class DASHStream(Stream):
                 aset.contentProtections or any(rep.contentProtections for rep in aset.representations)
                 for aset in period_selection.adaptationSets
             )
-            if is_encrypted:
-                log.warning(f"{source} is protected by DRM and won't be decrypted.")
+            if is_encrypted:  # pragma: no branch
+                log.warning(f"{source} is protected by DRM and won't be decrypted")
 
         if not video:
             video.append(None)

@@ -943,9 +943,10 @@ class TestHLSStreamEncrypted(TestMixinStreamHLS, unittest.TestCase):
     __stream__ = EventedWriterHLSStream
 
     def get_session(self, options=None, *args, **kwargs):
+        options = options or {}
+        options.setdefault("hls-live-edge", 3)
+        options.setdefault("http-headers", {"X-FOO": "BAR"})
         session = super().get_session(options)
-        session.set_option("hls-live-edge", 3)
-        session.set_option("http-headers", {"X-FOO": "BAR"})
 
         return session
 
@@ -1256,6 +1257,45 @@ class TestHLSStreamEncrypted(TestMixinStreamHLS, unittest.TestCase):
         expected += self.content(segments, cond=lambda s: 2 <= s.num <= 3)
         expected += self.content(segments, prop="content_plain", cond=lambda s: 4 <= s.num <= 5)
         assert data == expected, "Switches between encryption key methods"
+
+    @patch("streamlink.stream.hls.hls.log")
+    def test_hls_passthrough_encrypted(self, mock_log: Mock):
+        aes_key, aes_iv, key = self.gen_key()
+        segments = self.subject(
+            options={
+                "hls-live-edge": 4,
+                "stream-passthrough-encrypted": True,
+            },
+            playlists=[
+                Playlist(0, [key] + [SegmentEnc(num, aes_key, aes_iv) for num in range(4)]),
+                Playlist(4, [key] + [SegmentEnc(num, aes_key, aes_iv) for num in range(4, 8)], end=True),
+            ],
+        )
+
+        self.await_write(8)
+        data = self.await_read(read_all=True)
+        self.await_close()
+
+        expected = self.content(segments)
+        encrypted = self.content(segments, prop="content_plain")
+        assert data == expected, "Does not decrypt the stream data"
+        assert data != encrypted, "Does not decrypt the stream data"
+        assert (
+            len([
+                call_arg
+                for call_arg in mock_log.debug.call_args_list
+                if call_arg.args == ("Segments in this playlist are encrypted",)
+            ])
+            == 1
+        )
+        assert (
+            len([
+                call_arg
+                for call_arg in mock_log.warning.call_args_list
+                if call_arg.args == ("The stream content is encrypted with '%s' and won't be decrypted", "AES-128")
+            ])
+            == 1
+        )
 
 
 @patch("streamlink.stream.hls.hls.HLSStreamWorker.wait", Mock(return_value=True))
