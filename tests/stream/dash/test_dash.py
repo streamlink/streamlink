@@ -302,19 +302,53 @@ class TestDASHStreamParseManifest:
         [
             pytest.param(
                 Mock(contentProtections="DRM", representations=[]),
-                id="ContentProtection on AdaptationSet",
+                id="adaptationset",
             ),
             pytest.param(
-                Mock(contentProtections=None, representations=[Mock(id="1", contentProtections="DRM")]),
-                id="ContentProtection on Representation",
+                Mock(contentProtections=None, representations=[Mock(id="1", contentProtections="DRM", height=1080)]),
+                id="representation",
             ),
         ],
     )
-    def test_contentprotection(self, session: Streamlink, mpd: Mock, adaptationset: Mock):
+    @pytest.mark.parametrize(
+        ("session", "raises", "logrecords"),
+        [
+            pytest.param(
+                {},
+                pytest.raises(PluginError, match=r" is protected by DRM$"),
+                [],
+                id="no-passthrough-encrypted",
+            ),
+            pytest.param(
+                {"stream-passthrough-encrypted": True},
+                does_not_raise,
+                [
+                    (
+                        "streamlink.stream.dash",
+                        "warning",
+                        "http://test/manifest.mpd is protected by DRM and won't be decrypted",
+                    ),
+                ],
+                id="passthrough-encrypted",
+            ),
+        ],
+        indirect=["session"],
+    )
+    def test_contentprotection(
+        self,
+        caplog: pytest.LogCaptureFixture,
+        session: Streamlink,
+        raises: nullcontext,
+        adaptationset: Mock,
+        mpd: Mock,
+        logrecords: list,
+    ):
         mpd.return_value = Mock(periods=[Mock(adaptationSets=[adaptationset])])
 
-        with pytest.raises(PluginError):
+        with raises:
             DASHStream.parse_manifest(session, "http://test/manifest.mpd")
+
+        assert [(record.name, record.levelname, record.message) for record in caplog.records] == logrecords
 
     @pytest.mark.nomockedhttprequest()
     def test_string(self, session: Streamlink, mpd: Mock, parse_xml: Mock):

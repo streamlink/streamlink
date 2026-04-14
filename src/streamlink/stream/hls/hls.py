@@ -410,7 +410,7 @@ class HLSStreamWorker(SegmentedStreamWorker[HLSSegment, Response]):
         if self.sequence < 0 and first_segment.key and first_segment.key.method != "NONE":
             log.debug("Segments in this playlist are encrypted")
             if self.passthrough_encrypted:
-                log.warning(f"The stream content is encrypted with '{first_segment.key.method}' and won't be decrypted.")
+                log.warning("The stream content is encrypted with '%s' and won't be decrypted", first_segment.key.method)
 
         self.playlist_changed = [s.num for s in self.playlist_segments] != [s.num for s in segments]
         self.playlist_segments = segments
