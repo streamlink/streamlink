@@ -1546,7 +1546,7 @@ def build_parser():
 
 # The order of arguments determines if options get overridden by `Streamlink.set_option()`
 # NOTE: arguments with `action=store_{true,false}` must set `default=None`
-_ARGUMENT_TO_SESSIONOPTION: list[tuple[str, str, Callable[[Any], Any] | None]] = [
+_ARGUMENT_TO_SESSIONOPTION: list[tuple[str, str, Callable[[Any], Any] | type | None]] = [
     # generic arguments
     ("no_plugin_cache", "no-plugin-cache", None),
     ("locale", "locale", None),
