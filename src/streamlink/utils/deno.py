@@ -1,68 +1,84 @@
-import logging
-import os
-import shlex
+from __future__ import annotations
+
 import subprocess
+from typing import ClassVar
 
+from streamlink.logger import getLogger
 from streamlink.utils.path import resolve_executable
+from streamlink.utils.processoutput import ProcessOutput
 
 
-log = logging.getLogger(__name__)
+log = getLogger(__name__)
 
 
-class Deno:
-    def __init__(self, params: dict | None = None):
-        self._DEFAULT_PARAMS = {
-            "--ext": "js",
-            "--no-code-cache": True,
-            "--no-prompt": True,
-            "--no-remote": True,
-            "--no-lock": True,
-            "--node-modules-dir": "none",
-            "--no-config": True,
-            "--no-npm": True,
-            "--cached-only": True,
-        }
+class DenoProcessor(ProcessOutput):
+    # https://docs.deno.com/runtime/reference/cli/run/#usage
+    DEFAULT_PARAMS: ClassVar[list[str]] = [
+        "--ext=js",
+        "--no-code-cache",
+        "--no-prompt",
+        "--no-remote",
+        "--no-lock",
+        "--node-modules-dir=none",
+        "--no-config",
+        "--no-npm",
+        "-",
+    ]
 
-        self._exec_path = resolve_executable("deno")
-        if not self._exec_path:
+    def __init__(
+        self,
+        command: list[str],
+        executable_path: str | None = None,
+        **kwargs,
+    ) -> None:
+        self._output_lines: list[str] = []
+        exec_path = self.resolve_path(executable_path)
+        super().__init__([exec_path, *command], **kwargs)
+
+    @property
+    def output(self) -> str:
+        return "\n".join(self._output_lines)
+
+    def onstdout(self, idx: int, line: str) -> None:
+        self._output_lines.append(line)
+
+    def onstderr(self, idx: int, line: str) -> bool:
+        raise RuntimeError(f"Deno error: {line}")
+
+    @staticmethod
+    def resolve_path(executable_path: str | None = None):
+        if not executable_path:
+            exec_path = resolve_executable(names=["deno.exe", "deno"])
+        else:
+            exec_path = executable_path
+
+        if not exec_path:
             raise FileNotFoundError("Deno not found. Please install Deno from the official website")
-        self._params = {**self._DEFAULT_PARAMS, **(params or {})}
+        return str(exec_path)
 
-    def _build_cmd(self) -> list[str]:
-        cmd = [str(self._exec_path), "run"]
-        for flag, value in self._params.items():
-            if value is True:
-                cmd.append(str(flag))
-            elif value is not False and value is not None:
-                cmd.append(f"{flag}={value}")
-        cmd.append("-")
-        return cmd
-
-    def execute(self, stdin) -> str:
-        cmd = self._build_cmd()
-        log.debug("Executing Deno: %s", shlex.join(cmd))
-
+    @classmethod
+    def execute(cls, stdin: str, timeout=60) -> str:
+        cmd = [cls.resolve_path(), "run", *cls.DEFAULT_PARAMS]
+        log.trace("Executing Deno: %r", cmd)
         proc = subprocess.Popen(
             cmd,
             text=True,
             stdin=subprocess.PIPE,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
-            env=os.environ.copy(),
             encoding="utf-8",
         )
         try:
-            stdout, stderr = proc.communicate(stdin)
+            stdout, stderr = proc.communicate(stdin, timeout=timeout)
         except BaseException:
             proc.kill()
-            proc.wait(timeout=0)
             raise
 
         if proc.returncode or stderr:
             msg = f"Deno process failed (returncode: {proc.returncode})"
             if stderr:
-                msg = f"{msg}: {stderr.strip()}"
-            raise Exception(msg)
+                msg = f"{msg}: {stderr.strip()[:200]}"
+            raise RuntimeError(msg)
 
         log.debug("Deno process completed successfully")
         return stdout
