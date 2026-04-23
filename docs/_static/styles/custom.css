@@ -120,6 +120,10 @@ a[href^="https://"]:not(.no-external-link-icon):not(.muted-link):not(.sd-badge):
   background-color: transparent !important;
 }
 
+a.sidebar-brand:visited {
+  color: unset;
+}
+
 .sidebar-brand,
 .sidebar-versions,
 .sidebar-search,
