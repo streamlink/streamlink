@@ -38,7 +38,11 @@ if TYPE_CHECKING:
         def __call__(self, byte_str: bytes, should_rename_legacy: bool = False, **kwargs: Any) -> _DetectEncodingResult: ...
 
 
+is_linux = sys.platform == "linux"
+is_android = sys.platform == "android"
 is_darwin = sys.platform == "darwin"
+is_freebsd = sys.platform.startswith("freebsd")
+is_posix = os.name == "posix"
 is_win32 = os.name == "nt"
 
 
@@ -96,6 +100,10 @@ __all__ = [
     "ExceptionGroup",
     "deprecated",
     "detect_encoding",
+    "is_linux",
+    "is_android",
     "is_darwin",
+    "is_freebsd",
+    "is_posix",
     "is_win32",
 ]
