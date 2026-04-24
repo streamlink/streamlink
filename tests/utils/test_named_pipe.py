@@ -10,7 +10,7 @@ from streamlink.utils.named_pipe import NamedPipe, NamedPipePosix, NamedPipeWind
 
 
 try:
-    from ctypes import byref, c_ulong, create_string_buffer, windll  # type: ignore[attr-defined, ty:unresolved-import]
+    from ctypes import byref, c_ulong, create_string_buffer, windll  # type: ignore[attr-defined]
 except ImportError:
     pass
 

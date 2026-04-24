@@ -177,7 +177,7 @@ class WindowsConsole:
 
     def __new__(cls, *args, **kwargs):
         try:
-            from ctypes import windll  # type: ignore[import, ty:unresolved-import]  # noqa: PLC0415
+            from ctypes import windll  # type: ignore[import]  # noqa: PLC0415
         except ImportError:  # pragma: no cover
             return None
 
