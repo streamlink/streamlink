@@ -21,7 +21,7 @@ log = getLogger("streamlink.cli")
 
 ACCEPTABLE_ERRNO = errno.EPIPE, errno.EINVAL, errno.ECONNRESET
 with suppress(AttributeError):
-    ACCEPTABLE_ERRNO += (errno.WSAECONNABORTED,)  # type: ignore[assignment, attr-defined, ty:unresolved-attribute]
+    ACCEPTABLE_ERRNO += (errno.WSAECONNABORTED,)  # type: ignore[assignment, attr-defined]
 
 
 def _noop(_):

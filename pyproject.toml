@@ -367,6 +367,9 @@ allow-multiline = false
 
 
 # https://docs.astral.sh/ty/reference/configuration/
+[tool.ty.environment]
+python-platform = "all"
+
 [tool.ty.src]
 exclude = [
   "src/streamlink/packages/**",
