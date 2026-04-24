@@ -19,6 +19,8 @@ if TYPE_CHECKING:
 
 
 _TEST_CONDITION_MARKERS: Mapping[str, tuple[bool, str] | Callable[[Any], tuple[bool, str]]] = {
+    "linux_only": (sys.platform == "linux", "only applicable on Linux"),
+    "darwin_only": (sys.platform == "darwin", "only applicable on macOS"),
     "posix_only": (os.name == "posix", "only applicable on a POSIX OS"),
     "windows_only": (os.name == "nt", "only applicable on Windows"),
     "python": lambda *ver, **_: (  # pragma: no cover
@@ -41,6 +43,8 @@ _TEST_PRIORITIES = (
 
 
 def pytest_configure(config: pytest.Config):
+    config.addinivalue_line("markers", "linux_only: tests which are only applicable on Linux")
+    config.addinivalue_line("markers", "darwin_only: tests which are only applicable on macOS")
     config.addinivalue_line("markers", "posix_only: tests which are only applicable on a POSIX OS")
     config.addinivalue_line("markers", "windows_only: tests which are only applicable on Windows")
     config.addinivalue_line("markers", "python(version): tests which are only applicable on specific Python versions")
