@@ -20,6 +20,7 @@ jobs:
       matrix:
         runs-on:
           - ubuntu-latest
+          - macos-latest
           - windows-latest
         python-version:
           - "3.10"
