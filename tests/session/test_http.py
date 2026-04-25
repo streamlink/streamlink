@@ -18,7 +18,13 @@ from urllib3.connection import HTTPConnection
 from urllib3.response import HTTPResponse
 
 from streamlink.exceptions import PluginError, StreamlinkDeprecationWarning
-from streamlink.session.http import HTTPSession, SSLContextAdapter, TLSNoDHAdapter, TLSSecLevel1Adapter
+from streamlink.session.http import (
+    HTTPSession,
+    SSLContextAdapter,
+    TLSNoDHAdapter,
+    TLSSecLevel1Adapter,
+    urllib3_set_socket_options,
+)
 from streamlink.session.http_useragents import DEFAULT
 
 
@@ -100,6 +106,45 @@ class TestUrllib3Overrides:
         req = requests.Request(method="GET", url=url)
         prep = httpsession.prepare_request(req)
         assert prep.url == expected
+
+    @pytest.mark.parametrize(
+        ("sock", "options", "expected"),
+        [
+            pytest.param(
+                {},
+                [],
+                [],
+                id="no-options",
+            ),
+            pytest.param(
+                {},
+                [(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)],
+                [(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)],
+                id="no-filters",
+            ),
+            # see set_interface() on darwin
+            pytest.param(
+                {},
+                [(socket.IPPROTO_IP, 25, 1), (socket.IPPROTO_IPV6, 125, 1)],
+                [(socket.IPPROTO_IP, 25, 1)],
+                id="inet-filter-ipproto-ipv6",
+            ),
+            # see set_interface() on darwin
+            pytest.param(
+                {"family": socket.AF_INET6},
+                [(socket.IPPROTO_IP, 25, 1), (socket.IPPROTO_IPV6, 125, 1)],
+                [(socket.IPPROTO_IPV6, 125, 1)],
+                id="inet6-filter-ipproto-ip",
+            ),
+        ],
+    )
+    def test_set_socket_options(self, sock: dict, options: list, expected: list):
+        sock.setdefault("family", socket.AF_INET)
+        sock.setdefault("type", socket.SOCK_STREAM)
+        sock.setdefault("proto", socket.IPPROTO_TCP)
+        mock_socket = Mock(**sock)
+        urllib3_set_socket_options(mock_socket, options)
+        assert mock_socket.setsockopt.call_args_list == [call(*item) for item in expected]
 
 
 class TestHTTPSession:

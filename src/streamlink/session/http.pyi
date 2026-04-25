@@ -71,6 +71,8 @@ _Exception: TypeAlias = type[Exception]
 
 # ----
 
+def urllib3_set_socket_options(sock: socket.socket, options: list[tuple[int, int, int | bytes]] | None) -> None: ...
+
 class SSLContextAdapter(HTTPAdapter):
     def get_ssl_context(self) -> ssl.SSLContext: ...
 

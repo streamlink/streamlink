@@ -26,8 +26,12 @@ from streamlink.utils.parse import parse_json, parse_xml
 
 if TYPE_CHECKING:
     import re
+    from collections.abc import Iterator
+    from typing import TypeAlias
 
     from requests import PreparedRequest
+
+    _TYPE_SOCKET_OPTION: TypeAlias = tuple[int, int, int | bytes]
 
 
 log = getLogger(__name__)
@@ -58,6 +62,31 @@ class Urllib3UtilUrlPercentReOverride:
 
 
 urllib3.util.url._PERCENT_RE = Urllib3UtilUrlPercentReOverride  # type: ignore[attr-defined, ty:unresolved-attribute]
+
+
+# Monkey-patch urllib3's set_socket_options,
+# so we can filter out certain options which are incompatible based on certain socket attributes.
+# The main intention is to filter out socket options on darwin when setting the network interface by name (see down below).
+def urllib3_set_socket_options(sock: socket.socket, options: list[_TYPE_SOCKET_OPTION] | None) -> None:
+    if not options:
+        return
+
+    for opt in _filter_socket_options(sock, options):
+        sock.setsockopt(*opt)
+
+
+def _filter_socket_options(sock: socket.socket, options: list[_TYPE_SOCKET_OPTION]) -> Iterator[_TYPE_SOCKET_OPTION]:
+    for option in options:
+        match sock.family, *option:
+            case socket.AF_INET, socket.IPPROTO_IPV6, *_:
+                pass
+            case socket.AF_INET6, socket.IPPROTO_IP, *_:
+                pass
+            case _:
+                yield option
+
+
+urllib3.util.connection._set_socket_options = urllib3_set_socket_options  # type: ignore[attr-defined, ty:unresolved-attribute]
 
 
 # requests.Request.__init__ keywords, except for "hooks"
