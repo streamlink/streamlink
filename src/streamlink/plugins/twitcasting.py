@@ -25,8 +25,14 @@ log = getLogger(__name__)
 
 
 class TwitCastingHLSStreamWriter(HLSStreamWriter):
+    _re_preroll_map_segment = re.compile(r"-\d+\.\w+$", re.IGNORECASE)
+
     def should_filter_segment(self, segment):
-        return "preroll-" in segment.uri or super().should_filter_segment(segment)
+        return (
+            "preroll-" in segment.uri
+            or (segment.map and self._re_preroll_map_segment.search(segment.map.uri))
+            or super().should_filter_segment(segment)
+        )
 
 
 class TwitCastingHLSStreamReader(HLSStreamReader):
