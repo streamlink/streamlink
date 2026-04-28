@@ -25,6 +25,7 @@ from streamlink.stream.hls.segment import (
     Start,
     StreamInfo,
 )
+from streamlink.utils.url import is_insecure_scheme
 
 
 if TYPE_CHECKING:
@@ -145,6 +146,7 @@ class M3U8Parser(Generic[TM3U8_co, THLSSegment_co, THLSPlaylist_co], metaclass=M
     def __init__(self, base_uri: str | None = None):
         # PEP 696 might solve this
         self.m3u8: TM3U8_co = self.__m3u8__(base_uri)  # type: ignore[assignment, ty:invalid-assignment]
+        self._scheme = urlparse(base_uri).scheme if base_uri else None
 
         self._expect_playlist: bool = False
         self._streaminf: dict[str, str] | None = None
@@ -630,7 +632,10 @@ class M3U8Parser(Generic[TM3U8_co, THLSSegment_co, THLSPlaylist_co], metaclass=M
         return self.m3u8
 
     def uri(self, uri: str) -> str:
-        if uri and urlparse(uri).scheme:
+        if uri and (scheme := urlparse(uri).scheme):
+            base_scheme = self._scheme
+            if not base_scheme or is_insecure_scheme(base_scheme, scheme):
+                raise ValueError(f"Prevented access to insecure resource in playlist: {base_scheme=!r} {scheme=!r}")
             return uri
         elif uri and self.m3u8.uri:
             return urljoin(self.m3u8.uri, uri)

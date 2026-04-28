@@ -4,6 +4,7 @@ import itertools
 import logging
 import os
 import unittest
+from contextlib import nullcontext
 from datetime import datetime, timedelta, timezone
 from threading import Event
 from typing import TYPE_CHECKING, NamedTuple
@@ -37,6 +38,9 @@ if TYPE_CHECKING:
 
 EPOCH = datetime(2000, 1, 1, 0, 0, 0, 0, tzinfo=timezone.utc)
 ONE_SECOND = timedelta(seconds=1.0)
+
+
+does_not_raise = nullcontext()
 
 
 class EncryptedBase:
@@ -1296,6 +1300,188 @@ class TestHLSStreamEncrypted(TestMixinStreamHLS, unittest.TestCase):
             ])
             == 1
         )
+
+
+@patch("streamlink.stream.hls.hls.HLSStreamWorker.wait", Mock(return_value=True))
+# override default queue polling rate to avoid unnecessary stalling during test runtime
+@patch(
+    "streamlink.stream.segmented.segmented.SegmentedStreamWriter._queue_get",
+    lambda writer: writer._queue.get(block=True, timeout=0.01),
+)
+class TestHlsInsecureSchemeMedia(TestMixinStreamHLS, unittest.TestCase):
+    @patch("streamlink.stream.hls.hls.log")
+    def test_http_to_file_segment(self, mock_log: Mock):
+        class FileSegment(Segment):
+            @property
+            def path(self):
+                return f"file:///path/{self.num}"
+
+        self.subject([Playlist(0, [Segment(0), FileSegment(1)], end=True)])
+
+        assert self.await_read(read_all=True) == b"", "Rejects the entire playlist"
+        assert mock_log.error.call_args_list == [
+            call("Prevented access to insecure resource in playlist: base_scheme='http' scheme='file'"),
+        ]
+
+    @patch("streamlink.stream.hls.hls.log")
+    def test_http_to_file_map(self, mock_log: Mock):
+        map0 = TagMap(0, "", attrs={"URI": "file:///path/map0"})
+        self.subject([Playlist(0, [map0, Segment(0)], end=True)])
+
+        assert self.await_read(read_all=True) == b"", "Rejects the entire playlist"
+        assert mock_log.error.call_args_list == [
+            call("Prevented access to insecure resource in playlist: base_scheme='http' scheme='file'"),
+        ]
+
+    @patch("streamlink.stream.hls.hls.log")
+    def test_http_to_file_key(self, mock_log: Mock):
+        key = TagKey(method="AES-128", uri="file:///key", iv=os.urandom(16), keyformat="identity", keyformatversions=1)
+        self.subject([Playlist(0, [key, Segment(0)], end=True)])
+
+        assert self.await_read(read_all=True) == b"", "Rejects the entire playlist"
+        assert mock_log.error.call_args_list == [
+            call("Prevented access to insecure resource in playlist: base_scheme='http' scheme='file'"),
+        ]
+
+    @patch("streamlink.stream.hls.hls.log")
+    def test_file_to_file(self, mock_log: Mock):
+        class FilePlaylist(Playlist):
+            def url(self, namespace):
+                return "file:///path/playlist"
+
+        class FileSegment(Segment):
+            @property
+            def path(self):
+                return f"file:///path/{self.num}"
+
+            def url(self, namespace):
+                return self.path
+
+        segments = self.subject([FilePlaylist(0, [FileSegment(0), FileSegment(1)], end=True)])
+
+        assert self.await_read(read_all=True) == self.content(segments)
+        assert mock_log.error.call_args_list == []
+
+    @patch("streamlink.stream.hls.hls.log")
+    def test_http_to_https(self, mock_log: Mock):
+        class SecureSegment(Segment):
+            @property
+            def path(self):
+                return f"https://mocked/{self.num}"
+
+            def url(self, namespace):
+                return self.path
+
+        segments = self.subject([Playlist(0, [SecureSegment(0)], end=True)])
+
+        assert self.await_read(read_all=True) == self.content(segments)
+        assert mock_log.error.call_args_list == []
+
+    @patch("streamlink.stream.hls.hls.log")
+    def test_https_to_http(self, mock_log: Mock):
+        class SecurePlaylist(Playlist):
+            def url(self, namespace):
+                return f"https://mocked/{namespace}/{self.path}"
+
+        class InsecureSegment(Segment):
+            @property
+            def path(self):
+                return f"http://mocked/{self.num}"
+
+            def url(self, namespace):
+                return self.path
+
+        self.subject([SecurePlaylist(0, [InsecureSegment(0)], end=True)])
+
+        assert self.await_read(read_all=True) == b"", "Rejects the entire playlist"
+        assert mock_log.error.call_args_list == [
+            call("Prevented access to insecure resource in playlist: base_scheme='https' scheme='http'"),
+        ]
+
+
+@pytest.mark.parametrize(
+    ("multivariant", "media1", "media2", "raises"),
+    [
+        pytest.param(
+            "http://mocked/multivariant",
+            "file:///path/media1",
+            "http://mocked/media2",
+            pytest.raises(
+                OSError,
+                match=r".+: Prevented access to insecure resource in playlist: base_scheme='http' scheme='file'$",
+            ),
+            id="http-to-file-media1",
+        ),
+        pytest.param(
+            "http://mocked/multivariant",
+            "http://mocked/media1",
+            "file:///path/media2",
+            pytest.raises(
+                OSError,
+                match=r".+: Prevented access to insecure resource in playlist: base_scheme='http' scheme='file'$",
+            ),
+            id="http-to-file-media2",
+        ),
+        pytest.param(
+            "file:///path/multivariant",
+            "file:///path/media1",
+            "file:///path/media2",
+            does_not_raise,
+            id="file-to-file",
+        ),
+        pytest.param(
+            "http://mocked/multivariant",
+            "https://mocked/media1",
+            "https://mocked/media2",
+            does_not_raise,
+            id="http-to-https",
+        ),
+        pytest.param(
+            "https://mocked/multivariant",
+            "http://mocked/media1",
+            "https://mocked/media2",
+            pytest.raises(
+                OSError,
+                match=r".+: Prevented access to insecure resource in playlist: base_scheme='https' scheme='http'$",
+            ),
+            id="https-to-http-media1",
+        ),
+        pytest.param(
+            "https://mocked/multivariant",
+            "https://mocked/media1",
+            "http://mocked/media2",
+            pytest.raises(
+                OSError,
+                match=r".+: Prevented access to insecure resource in playlist: base_scheme='https' scheme='http'$",
+            ),
+            id="https-to-http-media2",
+        ),
+    ],
+)
+def test_hls_insecure_scheme_multivariant(
+    session: Streamlink,
+    requests_mock: rm.Mocker,
+    multivariant: str,
+    media1: str,
+    media2: str,
+    raises: nullcontext,
+):
+    requests_mock.register_uri("GET", media1, text="")
+    requests_mock.register_uri("GET", media2, text="")
+    requests_mock.register_uri(
+        "GET",
+        multivariant,
+        text="\n".join([
+            "#EXTM3U",
+            f'#EXT-X-MEDIA:TYPE=AUDIO,GROUP-ID="audio",URI="{media1}",NAME="audio",AUTOSELECT=YES,DEFAULT=YES',
+            '#EXT-X-STREAM-INF:BANDWIDTH=1,AUDIO="audio"',
+            "#EXT-X-STREAM-INF:BANDWIDTH=1",
+            media2,
+            "",
+        ]),
+    )
+    with raises:
+        HLSStream.parse_variant_playlist(session, multivariant)
 
 
 @patch("streamlink.stream.hls.hls.HLSStreamWorker.wait", Mock(return_value=True))
