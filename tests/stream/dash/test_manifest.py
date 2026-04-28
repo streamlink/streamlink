@@ -5,6 +5,7 @@ from unittest.mock import Mock
 
 import pytest
 from freezegun import freeze_time
+from lxml.etree import iselement
 
 from streamlink.stream.dash.manifest import MPD, DASHSegment, MPDParsers, MPDParsingError, Representation
 from streamlink.utils.times import fromtimestamp
@@ -13,6 +14,9 @@ from tests.resources import xml
 
 EPOCH_START = fromtimestamp(0)
 UTC = datetime.timezone.utc
+
+
+does_not_raise = nullcontext()
 
 
 class TestSegment:
@@ -695,6 +699,133 @@ class TestMPDParser:
                 ("https://other/media_audio_320kbps-1.m4s", expected_availability),
             ],
         ]
+
+    @pytest.mark.parametrize(
+        ("base_url", "node_base_url", "raises"),
+        [
+            pytest.param(
+                "http://foo/",
+                "file:///path/foo",
+                pytest.raises(
+                    MPDParsingError,
+                    match=r"^Prevented access to insecure resource in manifest: base_scheme='http' scheme='file'$",
+                ),
+                id="http-to-file",
+            ),
+            pytest.param(
+                "file:///path/foo",
+                "file:///path/bar",
+                does_not_raise,
+                id="file-to-file",
+            ),
+            pytest.param(
+                "http://foo/",
+                "https://foo/",
+                does_not_raise,
+                id="http-to-https",
+            ),
+            pytest.param(
+                "https://foo/",
+                "http://foo/",
+                pytest.raises(
+                    MPDParsingError,
+                    match=r"^Prevented access to insecure resource in manifest: base_scheme='https' scheme='http'$",
+                ),
+                id="https-to-http",
+            ),
+        ],
+    )
+    @pytest.mark.parametrize(
+        "xpath",
+        [
+            pytest.param("./BaseURL[1]", id="root"),
+            pytest.param(".//Period[1]/BaseURL[1]", id="period"),
+            pytest.param(".//AdaptationSet[1]/BaseURL[1]", id="adaptationset"),
+            pytest.param(".//Representation[1]/BaseURL[1]", id="representation"),
+        ],
+    )
+    def test_baseurl_insecure_scheme(
+        self,
+        xpath: str,
+        base_url: str,
+        node_base_url: str,
+        raises: nullcontext,
+    ):
+        with xml("dash/test_baseurl_scheme_mismatch.mpd") as mpd_xml:
+            element = mpd_xml.xpath(xpath)[0]
+            assert iselement(element)
+            element.text = node_base_url
+
+        with raises:
+            mpd = MPD(mpd_xml, base_url=base_url, url=f"{base_url}/manifest.mpd")
+            rep = mpd.get_representation(("0", "0", "0"))
+            assert rep
+            list(itertools.islice(rep.segments(), 0, 2))
+
+    @pytest.mark.parametrize(
+        ("base_url", "segment_url", "raises"),
+        [
+            pytest.param(
+                "http://foo/",
+                "file:///path/foo",
+                pytest.raises(
+                    MPDParsingError,
+                    match=r"^Prevented access to insecure resource in manifest: base_scheme='http' scheme='file'$",
+                ),
+                id="http-to-file",
+            ),
+            pytest.param(
+                "file:///path/foo",
+                "file:///path/bar",
+                does_not_raise,
+                id="file-to-file",
+            ),
+            pytest.param(
+                "http://foo/",
+                "https://foo/",
+                does_not_raise,
+                id="http-to-https",
+            ),
+            pytest.param(
+                "https://foo/",
+                "http://foo/",
+                pytest.raises(
+                    MPDParsingError,
+                    match=r"^Prevented access to insecure resource in manifest: base_scheme='https' scheme='http'$",
+                ),
+                id="https-to-http",
+            ),
+        ],
+    )
+    @pytest.mark.parametrize(
+        ("repid", "xpath", "attr"),
+        [
+            pytest.param("0", ".//Representation[1]/SegmentTemplate[1]", "initialization", id="template-init"),
+            pytest.param("0", ".//Representation[1]/SegmentTemplate[1]", "media", id="template-media"),
+            pytest.param("1", ".//Representation[2]/SegmentList[1]/Initialization[1]", "sourceURL", id="list-init"),
+            pytest.param("1", ".//Representation[2]/SegmentList[1]/SegmentURL[1]", "media", id="list-media"),
+        ],
+    )
+    def test_segmentbasetype_insecure_scheme(
+        self,
+        repid: str,
+        xpath: str,
+        attr: str,
+        base_url: str,
+        segment_url: str,
+        raises: nullcontext,
+    ):
+        with xml("dash/test_segment_scheme_mismatch.mpd") as mpd_xml:
+            element = mpd_xml.xpath(xpath)[0]
+            assert iselement(element)
+            element.attrib[attr] = segment_url
+            mpd = MPD(mpd_xml, base_url=base_url, url=f"{base_url}/manifest.mpd")
+
+        rep = mpd.get_representation(("0", "0", repid))
+        assert rep
+
+        with raises:
+            list(itertools.islice(rep.segments(), 0, 2))
 
     def test_timeline_ids(self):
         with xml("dash/test_timeline_ids.mpd") as mpd_xml, freeze_time("2000-01-01T00:00:00Z"):

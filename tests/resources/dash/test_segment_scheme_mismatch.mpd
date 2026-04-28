@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<MPD
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xmlns:xlink="http://www.w3.org/1999/xlink"
+  xmlns="urn:mpeg:dash:schema:mpd:2011"
+  xsi:schemaLocation="urn:mpeg:DASH:schema:MPD:2011 http://standards.iso.org/ittf/PubliclyAvailableStandards/MPEG-DASH_schema_files/DASH-MPD.xsd"
+  profiles="urn:mpeg:dash:profile:isoff-live:2011"
+  type="static"
+  availabilityStartTime="2020-01-01T00:00:00Z"
+  mediaPresentationDuration="PT0H0M6.00S"
+  minBufferTime="PT6.0S"
+>
+  <Period id="0" start="PT12M34S">
+    <AdaptationSet
+      id="0"
+      mimeType="video/mp4"
+      maxWidth="1920"
+      maxHeight="1080"
+      par="16:9"
+      frameRate="60"
+      segmentAlignment="true"
+      startWithSAP="1"
+      subsegmentAlignment="true"
+      subsegmentStartsWithSAP="1"
+    >
+      <Representation id="0" codecs="avc1.640028" width="1920" height="1080" sar="1:1" bandwidth="9000000">
+        <SegmentTemplate
+          presentationTimeOffset="0"
+          timescale="90000"
+          duration="540000"
+          startNumber="1"
+          media="media_$RepresentationID$-$Number$.m4s"
+          initialization="init_$RepresentationID$.m4s"
+        />
+      </Representation>
+      <Representation id="1" codecs="avc1.640028" width="1920" height="1080" sar="1:1" bandwidth="9000000">
+        <SegmentList presentationTimeOffset="0" timescale="90000" duration="540000" startNumber="1">
+          <Initialization sourceURL="init.m4s"/>
+          <SegmentURL media="1.m4s"/>
+        </SegmentList>
+      </Representation>
+    </AdaptationSet>
+  </Period>
+</MPD>

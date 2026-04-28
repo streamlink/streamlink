@@ -15,6 +15,7 @@ from isodate import Duration, parse_datetime, parse_duration  # type: ignore[imp
 from streamlink.logger import getLogger
 from streamlink.stream.dash.segment import DASHSegment, TimelineSegment
 from streamlink.utils.times import UTC, fromtimestamp, now
+from streamlink.utils.url import is_insecure_scheme
 
 
 if TYPE_CHECKING:
@@ -137,6 +138,7 @@ class MPDNode:
     __tag__: ClassVar[str]
 
     parent: MPDNode
+    _base_url: str
     baseURLs: list[BaseURL]
 
     def __init__(self, node: _Element, root: MPD, parent: MPDNode, **kwargs) -> None:
@@ -284,11 +286,16 @@ class MPDNode:
                 return value
 
     @property
-    def base_url(self):
-        base_url = self._base_url
-        if hasattr(self, "baseURLs") and len(self.baseURLs):
-            base_url = urljoin(base_url, self.baseURLs[0].url)
-        return base_url
+    def base_url(self) -> str:
+        if hasattr(self, "baseURLs") and self.baseURLs and (other := self.baseURLs[0].url):
+            base_scheme = urlparse(self._base_url).scheme
+            scheme = urlparse(other).scheme
+            if is_insecure_scheme(base_scheme, scheme):
+                raise MPDParsingError(f"Prevented access to insecure resource in manifest: {base_scheme=!r} {scheme=!r}")
+
+            return urljoin(self._base_url, other)
+
+        return self._base_url
 
 
 class MPD(MPDNode):
@@ -730,6 +737,18 @@ class _MultipleSegmentBaseType(_SegmentBaseType):
 
         self.segmentTimeline = self.only_child(SegmentTimeline) or self._find_default("segmentTimeline")
 
+    @staticmethod
+    def make_url(base_url: str, url: str | None) -> str:
+        if not url:  # pragma: no cover
+            return base_url
+
+        base_scheme = urlparse(base_url).scheme
+        scheme = urlparse(url).scheme
+        if is_insecure_scheme(base_scheme, scheme):
+            raise MPDParsingError(f"Prevented access to insecure resource in manifest: {base_scheme=!r} {scheme=!r}")
+
+        return urljoin(base_url, url)
+
 
 class SegmentBase(_SegmentBaseType):
     __tag__ = "SegmentBase"
@@ -754,7 +773,7 @@ class SegmentList(_MultipleSegmentBaseType):
                 num=-1,
                 init=True,
                 discontinuity=False,
-                uri=self.make_url(self.initialization.source_url),
+                uri=self.make_url(self.base_url, self.initialization.source_url),
                 duration=0.0,
                 available_at=self.period.availabilityStartTime,
                 byterange=self.initialization.range,
@@ -764,7 +783,7 @@ class SegmentList(_MultipleSegmentBaseType):
                 num=num,
                 init=False,
                 discontinuity=False,
-                uri=self.make_url(segment_url.media),
+                uri=self.make_url(self.base_url, segment_url.media),
                 duration=self.duration_seconds,
                 available_at=self.period.availabilityStartTime,
                 byterange=segment_url.media_range,
@@ -810,9 +829,6 @@ class SegmentList(_MultipleSegmentBaseType):
         log.debug(f"Calculated optimal offset is {offset} segments. First segment is {start}.")
 
         return start
-
-    def make_url(self, url: str | None) -> str:
-        return urljoin(self.base_url, url)
 
 
 class SegmentTemplate(_MultipleSegmentBaseType):
@@ -860,10 +876,6 @@ class SegmentTemplate(_MultipleSegmentBaseType):
                 available_at=available_at,
                 byterange=None,
             )
-
-    @staticmethod
-    def make_url(base_url: str, url: str) -> str:
-        return urljoin(base_url, url)
 
     def segment_numbers(self, timestamp: datetime | None = None) -> Iterator[tuple[int, datetime]]:
         """
