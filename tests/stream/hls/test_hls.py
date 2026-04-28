@@ -12,7 +12,9 @@ from unittest.mock import Mock, call, patch
 
 import freezegun
 import pytest
+import requests.adapters
 import requests_mock as rm
+from requests import Response
 from requests.exceptions import InvalidSchema
 
 from streamlink.exceptions import StreamlinkDeprecationWarning
@@ -1044,6 +1046,38 @@ class TestHLSStreamEncrypted(TestMixinStreamHLS, unittest.TestCase):
         assert not any(self.called(s) for s in segments.values() if s.num < 1), "Skips first segment"
         assert all(self.called(s) for s in segments.values() if s.num >= 1), "Downloads all remaining segments"
         assert self.get_mock(segments[1]).last_request._request.headers.get("X-FOO") == "BAR"
+
+    @patch("streamlink.stream.hls.hls.log")
+    def test_hls_encrypted_aes128_custom_adapter(self, mock_log: Mock):
+        class FooAdapter(requests.adapters.BaseAdapter):
+            def close(self):  # pragma: no cover
+                return
+
+            def send(self, request, *_, **__):
+                res = Response()
+                res.request = request
+                res.status_code = 200
+                res._content = aes_key
+                return res
+
+        aes_key, aes_iv, key = self.gen_key(uri="foo://bar/baz", mock={"real_http": True})
+
+        segments = self.subject(
+            [
+                Playlist(0, [key, SegmentEnc(0, aes_key, aes_iv)], end=True),
+            ],
+            start=False,
+        )
+
+        self.session.http.mount("foo://", FooAdapter())
+
+        self.start()
+        self.await_write(1)
+        data = self.await_read(read_all=True)
+        self.await_close()
+
+        assert data == self.content(segments, prop="content_plain")
+        assert mock_log.error.call_args_list == []
 
     def test_hls_encrypted_aes128_with_map(self):
         aesKey, aesIv, key = self.gen_key()
