@@ -2,7 +2,7 @@ from urllib.parse import quote
 
 import pytest
 
-from streamlink.utils.url import absolute_url, prepend_www, update_qsd, update_scheme, url_concat, url_equal
+from streamlink.utils.url import absolute_url, is_insecure_scheme, prepend_www, update_qsd, update_scheme, url_concat, url_equal
 
 
 @pytest.mark.parametrize(
@@ -26,6 +26,25 @@ def test_absolute_url(baseurl, url, expected):
 )
 def test_prepend_www(url, expected):
     assert expected == prepend_www(url)
+
+
+@pytest.mark.parametrize(
+    ("current_scheme", "target_scheme", "expected"),
+    [
+        ("http", "", False),
+        ("https", "", False),
+        ("file", "", False),
+        ("http", "http", False),
+        ("http", "https", False),
+        ("https", "https", False),
+        ("https", "http", True),
+        ("file", "file", False),
+        ("http", "file", True),
+        ("https", "file", True),
+    ],
+)
+def test_is_insecure_scheme(current_scheme: str, target_scheme: str, expected: bool):
+    assert is_insecure_scheme(current_scheme, target_scheme) == expected
 
 
 @pytest.mark.parametrize(

@@ -18,6 +18,13 @@ def prepend_www(url):
     return parsed.geturl()
 
 
+def is_insecure_scheme(current_scheme: str, target_scheme: str) -> bool:
+    return (
+        target_scheme == "file" and current_scheme != "file"
+        or target_scheme == "http" and current_scheme == "https"
+    )  # fmt: skip
+
+
 def update_scheme(current: str, target: str, force: bool = True) -> str:
     """
     Take the scheme from the current URL and apply it to the target URL if it is missing
