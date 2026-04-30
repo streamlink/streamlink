@@ -118,11 +118,11 @@ typing = [
   "typing-extensions >=4.0.0",
   "lxml-stubs",
   "trio-typing",
+  "types-docutils",
   "types-freezegun",
   "types-requests",
   "types-setuptools",
   "types-urllib3",
-  "docutils-stubs",
 ]
 docs = [
   { include-group = "dev" },
