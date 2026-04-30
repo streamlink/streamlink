@@ -113,7 +113,7 @@ typing = [
   { include-group = "test" },
   { include-group = "docs" },
   { include-group = "script" },
-  "ty ==0.0.30",
+  "ty ==0.0.33",
   "mypy[faster-cache] ==1.20.1",
   "typing-extensions >=4.0.0",
   "lxml-stubs",
