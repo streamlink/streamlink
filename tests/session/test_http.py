@@ -482,13 +482,20 @@ class TestHTTPSession:
             assert adapter.poolmanager.connection_pool_kw.get("socket_options") == socket_options
         assert [(record.name, record.levelname, record.message) for record in caplog.records] == log
 
+        a_new = TLSNoDHAdapter()
+        assert a_new.poolmanager.connection_pool_kw.get("source_address") is None
+        assert a_new.poolmanager.connection_pool_kw.get("socket_options") is None
+        session.mount("new://", a_new)
+        assert a_new.poolmanager.connection_pool_kw.get("source_address") == source_address
+        assert a_new.poolmanager.connection_pool_kw.get("socket_options") == socket_options
+
         session.set_interface(interface="")
-        for adapter in a_http, a_https, a_custom:
+        for adapter in a_http, a_https, a_custom, a_new:
             assert adapter.poolmanager.connection_pool_kw.get("source_address") is None
             assert adapter.poolmanager.connection_pool_kw.get("socket_options") is None
 
         session.set_interface(interface=None)
-        for adapter in a_http, a_https, a_custom:
+        for adapter in a_http, a_https, a_custom, a_new:
             assert adapter.poolmanager.connection_pool_kw.get("source_address") is None
             assert adapter.poolmanager.connection_pool_kw.get("socket_options") is None
 
