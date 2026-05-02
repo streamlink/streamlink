@@ -30,6 +30,7 @@ if TYPE_CHECKING:
     from typing import TypeAlias
 
     from requests import PreparedRequest
+    from requests.adapters import BaseAdapter
 
     _TYPE_SOCKET_OPTION: TypeAlias = tuple[int, int, int | bytes]
 
@@ -191,6 +192,16 @@ class HTTPSession(Session):
             adapter.poolmanager.connection_pool_kw.pop("source_address", None)
             adapter.poolmanager.connection_pool_kw.pop("socket_options", None)
             adapter.poolmanager.connection_pool_kw.update(connection_pool_kw)
+
+    def mount(self, prefix: str | bytes, adapter: BaseAdapter) -> None:
+        # Update poolmanager connection kwargs for HTTPAdapters mounted after interface options were set
+        if isinstance(adapter, HTTPAdapter) and "http://" in self.adapters and "https://" in self.adapters:
+            default_adapter_connection_pool_kw = cast("HTTPAdapter", self.adapters["https://"]).poolmanager.connection_pool_kw
+            adapter.poolmanager.connection_pool_kw.update({
+                "source_address": default_adapter_connection_pool_kw.get("source_address"),
+                "socket_options": default_adapter_connection_pool_kw.get("socket_options"),
+            })
+        super().mount(prefix, adapter)
 
     # noinspection PyMethodMayBeStatic
     def set_address_family(self, family: socket.AddressFamily | None = None) -> None:
