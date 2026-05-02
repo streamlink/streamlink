@@ -238,7 +238,7 @@ Linux and BSD
 .. _Gentoo Linux: https://packages.gentoo.org/package/net-misc/streamlink
 .. _NixOS: https://github.com/NixOS/nixpkgs/tree/master/pkgs/by-name/st/streamlink
 .. _openSUSE: https://build.opensuse.org/package/show/multimedia:apps/streamlink
-.. _Ubuntu: https://packages.ubuntu.com/noble/streamlink
+.. _Ubuntu: https://packages.ubuntu.com/resolute/streamlink
 .. _Solus: https://github.com/getsolus/packages/tree/main/packages/s/streamlink
 .. _Void: https://github.com/void-linux/void-packages/tree/master/srcpkgs/streamlink
 
