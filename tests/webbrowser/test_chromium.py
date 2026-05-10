@@ -16,6 +16,9 @@ from streamlink.webbrowser.exceptions import WebbrowserError
 
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
+    from contextlib import AbstractAsyncContextManager
+
     import requests_mock as rm
 
     from streamlink.session import Streamlink
@@ -128,8 +131,8 @@ def test_default_args():
 @pytest.mark.parametrize("headless", [pytest.param(True, id="headless"), pytest.param(False, id="not-headless")])
 async def test_launch(
     monkeypatch: pytest.MonkeyPatch,
-    mock_clock,
-    webbrowser_launch,
+    mock_clock: trio.testing.MockClock,
+    webbrowser_launch: Callable[..., AbstractAsyncContextManager[tuple[trio.Nursery, trio.Process]]],
     host: str,
     port: int | None,
     headless: bool,
@@ -143,14 +146,14 @@ async def test_launch(
 
     webbrowser = ChromiumWebbrowser(host=host, port=port)
 
-    process: trio.Process
     async with webbrowser_launch(webbrowser=webbrowser, headless=headless, timeout=999) as (_nursery, process):
         assert process.poll() is None, "process is still running"
+        assert isinstance(process.args, list)
         assert f"--remote-debugging-host={host}" in process.args
         assert "--remote-debugging-port=1234" in process.args
         assert ("--headless=new" in process.args) is headless
         param_user_data_dir = next(  # pragma: no branch
-            (arg for arg in process.args if arg.startswith("--user-data-dir=")),
+            (arg for arg in process.args if isinstance(arg, str) and arg.startswith("--user-data-dir=")),
             None,
         )
         assert param_user_data_dir is not None

@@ -117,7 +117,6 @@ typing = [
   "mypy[faster-cache] ==1.20.2",
   "typing-extensions >=4.0.0",
   "lxml-stubs",
-  "trio-typing",
   "types-docutils",
   "types-freezegun",
   "types-requests",
