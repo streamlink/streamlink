@@ -52,8 +52,10 @@ class ProcessOutput:
                 process: trio.Process = await nursery.start(run_process)
 
                 nursery.start_soon(self._onexit, process)
-                nursery.start_soon(self._onoutput, self.onstdout, process.stdout)
-                nursery.start_soon(self._onoutput, self.onstderr, process.stderr)
+                if process.stdout:  # pragma: no branch
+                    nursery.start_soon(self._onoutput, self.onstdout, process.stdout)
+                if process.stderr:  # pragma: no branch
+                    nursery.start_soon(self._onoutput, self.onstderr, process.stderr)
 
                 res = await self._receive_channel.receive()
                 nursery.cancel_scope.cancel()
