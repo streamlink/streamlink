@@ -254,8 +254,8 @@ class HTTPSession(Session):
         acceptable_status = kwargs.pop("acceptable_status", [])
         encoding = kwargs.pop("encoding", None)
         exception = kwargs.pop("exception", PluginError)
-        headers = kwargs.pop("headers", {})
-        params = kwargs.pop("params", {})
+        headers = kwargs.pop("headers", None) or {}
+        params = kwargs.pop("params", None) or {}
         proxies = kwargs.pop("proxies", self.proxies)
         raise_for_status = kwargs.pop("raise_for_status", True)
         schema = kwargs.pop("schema", None)
