@@ -121,7 +121,6 @@ typing = [
   "types-freezegun",
   "types-requests",
   "types-setuptools",
-  "types-urllib3",
 ]
 docs = [
   { include-group = "dev" },

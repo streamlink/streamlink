@@ -14,7 +14,7 @@ import urllib3.util.connection as urllib3_util_connection
 from requests import Request, Session
 from requests.adapters import HTTPAdapter
 from urllib3.connection import HTTPConnection
-from urllib3.util import create_urllib3_context  # type: ignore[attr-defined, ty:unresolved-import]
+from urllib3.util import create_urllib3_context
 
 import streamlink.session.http_useragents as useragents
 from streamlink.compat import is_darwin, is_linux, is_win32
@@ -38,7 +38,15 @@ if TYPE_CHECKING:
 log = getLogger(__name__)
 
 
-_original_allowed_gai_family = urllib3_util_connection.allowed_gai_family  # type: ignore[attr-defined, ty:unresolved-attribute]
+_original_allowed_gai_family = urllib3_util_connection.allowed_gai_family
+
+
+def allowed_gai_family_inet() -> socket.AddressFamily:
+    return socket.AF_INET
+
+
+def allowed_gai_family_inet6() -> socket.AddressFamily:
+    return socket.AF_INET6
 
 
 # Never convert percent-encoded characters to uppercase in urllib3>=2.0.0.
@@ -53,7 +61,7 @@ _original_allowed_gai_family = urllib3_util_connection.allowed_gai_family  # typ
 # > encodings.
 class Urllib3UtilUrlPercentReOverride:
     # noinspection PyProtectedMember
-    _re_percent_encoding: re.Pattern = urllib3.util.url._PERCENT_RE  # type: ignore[attr-defined, ty:unresolved-attribute]
+    _re_percent_encoding: re.Pattern = urllib3.util.url._PERCENT_RE  # type: ignore[attr-defined]
 
     # noinspection PyUnusedLocal
     # https://github.com/urllib3/urllib3/blob/2.0.0/src/urllib3/util/url.py#L241-L243
@@ -62,7 +70,7 @@ class Urllib3UtilUrlPercentReOverride:
         return string, len(cls._re_percent_encoding.findall(string))
 
 
-urllib3.util.url._PERCENT_RE = Urllib3UtilUrlPercentReOverride  # type: ignore[attr-defined, ty:unresolved-attribute]
+urllib3.util.url._PERCENT_RE = Urllib3UtilUrlPercentReOverride  # type: ignore[assignment, ty:invalid-assignment]
 
 
 # Monkey-patch urllib3's set_socket_options,
@@ -87,7 +95,7 @@ def _filter_socket_options(sock: socket.socket, options: list[_TYPE_SOCKET_OPTIO
                 yield option
 
 
-urllib3.util.connection._set_socket_options = urllib3_set_socket_options  # type: ignore[attr-defined, ty:unresolved-attribute]
+urllib3.util.connection._set_socket_options = urllib3_set_socket_options  # type: ignore[ty:invalid-assignment]
 
 
 # requests.Request.__init__ keywords, except for "hooks"
@@ -206,11 +214,11 @@ class HTTPSession(Session):
     # noinspection PyMethodMayBeStatic
     def set_address_family(self, family: socket.AddressFamily | None = None) -> None:
         if family is None:
-            urllib3_util_connection.allowed_gai_family = _original_allowed_gai_family  # type: ignore[attr-defined, ty:unresolved-attribute]
+            urllib3_util_connection.allowed_gai_family = _original_allowed_gai_family
         elif family == socket.AF_INET:
-            urllib3_util_connection.allowed_gai_family = lambda: socket.AF_INET  # type: ignore[attr-defined, ty:unresolved-attribute]
+            urllib3_util_connection.allowed_gai_family = allowed_gai_family_inet  # type: ignore[ty:invalid-assignment]
         elif family == socket.AF_INET6:  # pragma: no branch
-            urllib3_util_connection.allowed_gai_family = lambda: socket.AF_INET6  # type: ignore[attr-defined, ty:unresolved-attribute]
+            urllib3_util_connection.allowed_gai_family = allowed_gai_family_inet6  # type: ignore[ty:invalid-assignment]
 
     def disable_dh(self, disable: bool = True) -> None:
         adapter: HTTPAdapter
