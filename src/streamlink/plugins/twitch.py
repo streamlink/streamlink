@@ -995,7 +995,7 @@ class Twitch(Plugin):
         except OSError as err:
             # TODO: fix the "err" attribute set by HTTPSession.request()
             orig = getattr(err, "err", None)
-            if isinstance(orig, HTTPError) and orig.response.status_code >= 400:
+            if isinstance(orig, HTTPError) and orig.response is not None and orig.response.status_code >= 400:
                 # The playlist's error response may include JSON data with an error message
                 with suppress(PluginError):
                     error = validate.Schema(

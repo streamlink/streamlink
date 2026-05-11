@@ -13,7 +13,7 @@ try:
 except ImportError:  # pragma: no cover
     from exceptiongroup import BaseExceptionGroup, ExceptionGroup  # type: ignore[import, ty:unresolved-import]
 
-from requests.compat import chardet as charset_normalizer  # type: ignore[attr-defined, ty:unresolved-import]
+from requests.compat import chardet as charset_normalizer
 
 from streamlink.exceptions import StreamlinkDeprecationWarning
 

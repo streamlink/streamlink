@@ -201,10 +201,15 @@ class HTTPSession(Session):
             adapter.poolmanager.connection_pool_kw.pop("socket_options", None)
             adapter.poolmanager.connection_pool_kw.update(connection_pool_kw)
 
-    def mount(self, prefix: str | bytes, adapter: BaseAdapter) -> None:
+    def mount(self, prefix: str, adapter: BaseAdapter) -> None:
         # Update poolmanager connection kwargs for HTTPAdapters mounted after interface options were set
-        if isinstance(adapter, HTTPAdapter) and "http://" in self.adapters and "https://" in self.adapters:
-            default_adapter_connection_pool_kw = cast("HTTPAdapter", self.adapters["https://"]).poolmanager.connection_pool_kw
+        if (
+            isinstance(adapter, HTTPAdapter)
+            and "http://" in self.adapters
+            and (https_adapter := self.adapters.get("https://"))
+            and isinstance(https_adapter, HTTPAdapter)
+        ):
+            default_adapter_connection_pool_kw = https_adapter.poolmanager.connection_pool_kw
             adapter.poolmanager.connection_pool_kw.update({
                 "source_address": default_adapter_connection_pool_kw.get("source_address"),
                 "socket_options": default_adapter_connection_pool_kw.get("socket_options"),
