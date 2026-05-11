@@ -1,73 +1,39 @@
 import socket
 import ssl
-from collections.abc import Callable, Iterable, Mapping, MutableMapping, Sequence
+from collections.abc import Sequence
 from pathlib import Path
-from typing import Any, TypeAlias
+from typing import Any, TypedDict
 
-# noinspection PyUnresolvedReferences
-from _typeshed import SupportsItems, SupportsRead  # noqa: PLC2701
+# noinspection PyProtectedMember
+import requests._types as _requeststypes  # noqa: PLC2701
 from requests import PreparedRequest, Response, Session
 from requests.adapters import HTTPAdapter
-from requests.auth import AuthBase
-from requests.cookies import RequestsCookieJar
+from typing_extensions import Unpack
 
 from streamlink.plugin.api.validate import Schema
-from streamlink.session import Streamlink
 
-# START: borrowed from typeshed / types-requests
-# https://github.com/python/typeshed/blob/b3db49abbd563a8543783fcd2b4d6765b32812b0/stubs/requests/requests/sessions.pyi
+class _StreamlinkKwargs(TypedDict, total=False):
+    acceptable_status: Sequence[int] | None
+    encoding: str | None
+    exception: type[Exception]
+    raise_for_status: bool
+    retries: float
+    retry_backoff: float
+    retry_max_backoff: float
+    schema: Schema
+    session: HTTPSession
 
-_Data: TypeAlias = (
-    # used in requests.models.PreparedRequest.prepare_body
-    #
-    # case: is_stream
-    # see requests.adapters.HTTPAdapter.send
-    # will be sent directly to http.HTTPConnection.send(...) (through urllib3)
-    Iterable[bytes]
-    # case: not is_stream
-    # will be modified before being sent to urllib3.HTTPConnectionPool.urlopen(body=...)
-    # see requests.models.RequestEncodingMixin._encode_params
-    # see requests.models.RequestEncodingMixin._encode_files
-    # note that keys&values are converted from Any to str by urllib.parse.urlencode
-    | str
-    | bytes
-    | SupportsRead[str | bytes]
-    | list[tuple[Any, Any]]
-    | tuple[tuple[Any, Any], ...]
-    | Mapping[Any, Any]
-)
-_Auth: TypeAlias = tuple[str, str] | AuthBase | Callable[[PreparedRequest], PreparedRequest]
-_Cert: TypeAlias = str | tuple[str, str]
-_FileName: TypeAlias = str | None
-_FileContent: TypeAlias = SupportsRead[str | bytes] | str | bytes
-_FileContentType: TypeAlias = str
-_FileCustomHeaders: TypeAlias = Mapping[str, str]
-_FileSpecTuple2: TypeAlias = tuple[_FileName, _FileContent]
-_FileSpecTuple3: TypeAlias = tuple[_FileName, _FileContent, _FileContentType]
-_FileSpecTuple4: TypeAlias = tuple[_FileName, _FileContent, _FileContentType, _FileCustomHeaders]
-_FileSpec: TypeAlias = _FileContent | _FileSpecTuple2 | _FileSpecTuple3 | _FileSpecTuple4
-_Files: TypeAlias = Mapping[str, _FileSpec] | Iterable[tuple[str, _FileSpec]]
-_Hook: TypeAlias = Callable[[Response], Any]
-_HooksInput: TypeAlias = Mapping[str, Iterable[_Hook] | _Hook]
+class _RequestKwargs(_requeststypes.RequestKwargs, _StreamlinkKwargs):
+    pass
 
-_ParamsMappingKeyType: TypeAlias = str | bytes | float
-_ParamsMappingValueType: TypeAlias = str | bytes | float | Iterable[str | bytes | float] | None
-_Params: TypeAlias = (
-    SupportsItems[_ParamsMappingKeyType, _ParamsMappingValueType]
-    | tuple[_ParamsMappingKeyType, _ParamsMappingValueType]
-    | Iterable[tuple[_ParamsMappingKeyType, _ParamsMappingValueType]]
-    | str
-    | bytes
-)
-_TextMapping: TypeAlias = MutableMapping[str, str]
-_HeadersUpdateMapping: TypeAlias = Mapping[str, str | bytes | None]
-_Timeout: TypeAlias = float | tuple[float | None, float | None]
-_Verify: TypeAlias = bool | str
+class _GetKwargs(_requeststypes.GetKwargs, _StreamlinkKwargs):
+    pass
 
-# END: borrowed from typeshed / types-requests
+class _PostKwargs(_requeststypes.PostKwargs, _StreamlinkKwargs):
+    pass
 
-_AcceptableStatus: TypeAlias = Sequence[int]
-_Exception: TypeAlias = type[Exception]
+class _DataKwargs(_requeststypes.DataKwargs, _StreamlinkKwargs):
+    pass
 
 # ----
 
@@ -90,7 +56,7 @@ class HTTPSession(Session):
         cls,
         res: Response,
         name: str | None = ...,
-        exception: _Exception | None = ...,
+        exception: type[Exception] | None = ...,
         schema: Schema | None = ...,
         *args,
         **kwargs,
@@ -102,7 +68,7 @@ class HTTPSession(Session):
         ignore_ns: bool | None = ...,
         invalid_char_entities: bool | None = ...,
         name: str | None = ...,
-        exception: _Exception | None = ...,
+        exception: type[Exception] | None = ...,
         schema: Schema | None = ...,
         *args,
         **kwargs,
@@ -117,232 +83,48 @@ class HTTPSession(Session):
     def prepare_new_request(self, **req_keywords) -> PreparedRequest: ...
     def request(
         self,
-        method: str | bytes,
-        url: str | bytes,
-        params: _Params | None = ...,
-        data: _Data | None = ...,
-        headers: _HeadersUpdateMapping | None = ...,
-        cookies: RequestsCookieJar | _TextMapping | None = ...,
-        files: _Files | None = ...,
-        auth: _Auth | None = ...,
-        timeout: _Timeout | None = ...,
-        allow_redirects: bool = ...,
-        proxies: _TextMapping | None = ...,
-        hooks: _HooksInput | None = ...,
-        stream: bool | None = ...,
-        verify: _Verify | None = ...,
-        cert: _Cert | None = ...,
-        json: Any | None = ...,
-        # Streamlink stuff
-        acceptable_status: _AcceptableStatus | None = ...,
-        encoding: str | None = ...,
-        exception: _Exception | None = ...,
-        raise_for_status: bool | None = ...,
-        session: Streamlink | None = ...,
-        schema: Schema | None = ...,
-        retries: float | None = ...,
-        retry_backoff: float | None = ...,
-        retry_max_backoff: float | None = ...,
+        method: str,
+        url: _requeststypes.UriType,
+        *args,
+        **kwargs: Unpack[_RequestKwargs],
     ) -> Any: ...
     def get(
         self,
-        url: str | bytes,
-        *,
-        params: _Params | None = ...,
-        data: _Data | None = ...,
-        headers: _HeadersUpdateMapping | None = ...,
-        cookies: RequestsCookieJar | _TextMapping | None = ...,
-        files: _Files | None = ...,
-        auth: _Auth | None = ...,
-        timeout: _Timeout | None = ...,
-        allow_redirects: bool = ...,
-        proxies: _TextMapping | None = ...,
-        hooks: _HooksInput | None = ...,
-        stream: bool | None = ...,
-        verify: _Verify | None = ...,
-        cert: _Cert | None = ...,
-        json: Any | None = ...,
-        # Streamlink stuff
-        acceptable_status: _AcceptableStatus | None = ...,
-        encoding: str | None = ...,
-        exception: _Exception | None = ...,
-        raise_for_status: bool | None = ...,
-        session: Streamlink | None = ...,
-        schema: Schema | None = ...,
-        retries: float | None = ...,
-        retry_backoff: float | None = ...,
-        retry_max_backoff: float | None = ...,
+        url: _requeststypes.UriType,
+        params: _requeststypes.ParamsType | None = None,
+        **kwargs: Unpack[_GetKwargs],
     ) -> Any: ...
     def options(
         self,
-        url: str | bytes,
-        *,
-        params: _Params | None = ...,
-        data: _Data | None = ...,
-        headers: _HeadersUpdateMapping | None = ...,
-        cookies: RequestsCookieJar | _TextMapping | None = ...,
-        files: _Files | None = ...,
-        auth: _Auth | None = ...,
-        timeout: _Timeout | None = ...,
-        allow_redirects: bool = ...,
-        proxies: _TextMapping | None = ...,
-        hooks: _HooksInput | None = ...,
-        stream: bool | None = ...,
-        verify: _Verify | None = ...,
-        cert: _Cert | None = ...,
-        json: Any | None = ...,
-        # Streamlink stuff
-        acceptable_status: _AcceptableStatus | None = ...,
-        exception: _Exception | None = ...,
-        raise_for_status: bool | None = ...,
-        session: Streamlink | None = ...,
-        schema: Schema | None = ...,
-        retries: float | None = ...,
-        retry_backoff: float | None = ...,
-        retry_max_backoff: float | None = ...,
+        url: _requeststypes.UriType,
+        **kwargs: Unpack[_RequestKwargs],
     ) -> Any: ...
     def head(
         self,
-        url: str | bytes,
-        *,
-        params: _Params | None = ...,
-        data: _Data | None = ...,
-        headers: _HeadersUpdateMapping | None = ...,
-        cookies: RequestsCookieJar | _TextMapping | None = ...,
-        files: _Files | None = ...,
-        auth: _Auth | None = ...,
-        timeout: _Timeout | None = ...,
-        allow_redirects: bool = ...,
-        proxies: _TextMapping | None = ...,
-        hooks: _HooksInput | None = ...,
-        stream: bool | None = ...,
-        verify: _Verify | None = ...,
-        cert: _Cert | None = ...,
-        json: Any | None = ...,
-        # Streamlink stuff
-        acceptable_status: _AcceptableStatus | None = ...,
-        encoding: str | None = ...,
-        exception: _Exception | None = ...,
-        raise_for_status: bool | None = ...,
-        session: Streamlink | None = ...,
-        schema: Schema | None = ...,
-        retries: float | None = ...,
-        retry_backoff: float | None = ...,
-        retry_max_backoff: float | None = ...,
+        url: _requeststypes.UriType,
+        **kwargs: Unpack[_RequestKwargs],
     ) -> Any: ...
     def post(
         self,
-        url: str | bytes,
-        data: _Data | None = ...,
-        json: Any | None = ...,
-        *,
-        params: _Params | None = ...,
-        headers: _HeadersUpdateMapping | None = ...,
-        cookies: RequestsCookieJar | _TextMapping | None = ...,
-        files: _Files | None = ...,
-        auth: _Auth | None = ...,
-        timeout: _Timeout | None = ...,
-        allow_redirects: bool = ...,
-        proxies: _TextMapping | None = ...,
-        hooks: _HooksInput | None = ...,
-        stream: bool | None = ...,
-        verify: _Verify | None = ...,
-        cert: _Cert | None = ...,
-        # Streamlink stuff
-        acceptable_status: _AcceptableStatus | None = ...,
-        encoding: str | None = ...,
-        exception: _Exception | None = ...,
-        raise_for_status: bool | None = ...,
-        session: Streamlink | None = ...,
-        schema: Schema | None = ...,
-        retries: float | None = ...,
-        retry_backoff: float | None = ...,
-        retry_max_backoff: float | None = ...,
+        url: _requeststypes.UriType,
+        data: _requeststypes.DataType = None,
+        json: _requeststypes.JsonType = None,
+        **kwargs: Unpack[_PostKwargs],
     ) -> Any: ...
     def put(
         self,
-        url: str | bytes,
-        data: _Data | None = ...,
-        *,
-        params: _Params | None = ...,
-        headers: _HeadersUpdateMapping | None = ...,
-        cookies: RequestsCookieJar | _TextMapping | None = ...,
-        files: _Files | None = ...,
-        auth: _Auth | None = ...,
-        timeout: _Timeout | None = ...,
-        allow_redirects: bool = ...,
-        proxies: _TextMapping | None = ...,
-        hooks: _HooksInput | None = ...,
-        stream: bool | None = ...,
-        verify: _Verify | None = ...,
-        cert: _Cert | None = ...,
-        json: Any | None = ...,
-        # Streamlink stuff
-        acceptable_status: _AcceptableStatus | None = ...,
-        encoding: str | None = ...,
-        exception: _Exception | None = ...,
-        raise_for_status: bool | None = ...,
-        session: Streamlink | None = ...,
-        schema: Schema | None = ...,
-        retries: float | None = ...,
-        retry_backoff: float | None = ...,
-        retry_max_backoff: float | None = ...,
+        url: _requeststypes.UriType,
+        data: _requeststypes.DataType = None,
+        **kwargs: Unpack[_DataKwargs],
     ) -> Any: ...
     def patch(
         self,
-        url: str | bytes,
-        data: _Data | None = ...,
-        *,
-        params: _Params | None = ...,
-        headers: _HeadersUpdateMapping | None = ...,
-        cookies: RequestsCookieJar | _TextMapping | None = ...,
-        files: _Files | None = ...,
-        auth: _Auth | None = ...,
-        timeout: _Timeout | None = ...,
-        allow_redirects: bool = ...,
-        proxies: _TextMapping | None = ...,
-        hooks: _HooksInput | None = ...,
-        stream: bool | None = ...,
-        verify: _Verify | None = ...,
-        cert: _Cert | None = ...,
-        json: Any | None = ...,
-        # Streamlink stuff
-        acceptable_status: _AcceptableStatus | None = ...,
-        encoding: str | None = ...,
-        exception: _Exception | None = ...,
-        raise_for_status: bool | None = ...,
-        session: Streamlink | None = ...,
-        schema: Schema | None = ...,
-        retries: float | None = ...,
-        retry_backoff: float | None = ...,
-        retry_max_backoff: float | None = ...,
+        url: _requeststypes.UriType,
+        data: _requeststypes.DataType = None,
+        **kwargs: Unpack[_DataKwargs],
     ) -> Any: ...
     def delete(
         self,
-        url: str | bytes,
-        *,
-        params: _Params | None = ...,
-        data: _Data | None = ...,
-        headers: _HeadersUpdateMapping | None = ...,
-        cookies: RequestsCookieJar | _TextMapping | None = ...,
-        files: _Files | None = ...,
-        auth: _Auth | None = ...,
-        timeout: _Timeout | None = ...,
-        allow_redirects: bool = ...,
-        proxies: _TextMapping | None = ...,
-        hooks: _HooksInput | None = ...,
-        stream: bool | None = ...,
-        verify: _Verify | None = ...,
-        cert: _Cert | None = ...,
-        json: Any | None = ...,
-        # Streamlink stuff
-        acceptable_status: _AcceptableStatus | None = ...,
-        encoding: str | None = ...,
-        exception: _Exception | None = ...,
-        raise_for_status: bool | None = ...,
-        session: Streamlink | None = ...,
-        schema: Schema | None = ...,
-        retries: float | None = ...,
-        retry_backoff: float | None = ...,
-        retry_max_backoff: float | None = ...,
+        url: _requeststypes.UriType,
+        **kwargs: Unpack[_RequestKwargs],
     ) -> Any: ...

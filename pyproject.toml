@@ -119,7 +119,6 @@ typing = [
   "lxml-stubs",
   "types-docutils",
   "types-freezegun",
-  "types-requests",
   "types-setuptools",
 ]
 docs = [

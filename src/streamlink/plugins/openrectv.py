@@ -98,8 +98,8 @@ class OPENRECtv(Plugin):
         res = self.session.http.get(
             url,
             headers={
-                "access-token": self.session.http.cookies.get("access_token"),
-                "uuid": self.session.http.cookies.get("uuid"),
+                "access-token": self.session.http.cookies.get("access_token") or "",
+                "uuid": self.session.http.cookies.get("uuid") or "",
             },
         )
         data = self.session.http.json(res, schema=self._info_schema)
@@ -115,8 +115,8 @@ class OPENRECtv(Plugin):
         res = self.session.http.get(
             url,
             headers={
-                "access-token": self.session.http.cookies.get("access_token"),
-                "uuid": self.session.http.cookies.get("uuid"),
+                "access-token": self.session.http.cookies.get("access_token") or "",
+                "uuid": self.session.http.cookies.get("uuid") or "",
             },
         )
         data = self.session.http.json(res, schema=self._subscription_schema)
