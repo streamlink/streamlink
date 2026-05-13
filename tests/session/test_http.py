@@ -5,7 +5,7 @@ import ssl
 from operator import itemgetter
 from socket import AF_INET, AF_INET6
 from ssl import SSLContext
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 from unittest.mock import Mock, PropertyMock, call
 
 import freezegun
@@ -154,6 +154,63 @@ class TestHTTPSession:
         assert session.timeout == 20.0  # noqa: RUF069
         assert "file://" in session.adapters.keys()
 
+    @pytest.mark.parametrize("verb", ["get", "post", "head", "options", "put", "patch", "delete"])
+    def test_http_verbs(self, requests_mock: rm.Mocker, verb: str):
+        mocked = requests_mock.register_uri(verb, "http://localhost", text="OK")
+        session = HTTPSession()
+        method = getattr(session, verb)
+        assert callable(method)
+        res = method("http://localhost")
+        assert isinstance(res, requests.Response)
+        assert res.text == "OK"
+        assert mocked.called_once
+
+    @pytest.mark.parametrize(
+        ("params", "expected"),
+        [
+            pytest.param(
+                {"one": "three", "foo": "bar"},
+                "http://localhost/path?one=two&foo=bar",
+                id="mapping",
+            ),
+            pytest.param(
+                [("one", "three"), ("foo", "bar")],
+                "http://localhost/path?one=two&foo=bar",
+                id="list",
+            ),
+            pytest.param(
+                (("one", "three"), ("foo", "bar")),
+                "http://localhost/path?one=two&foo=bar",
+                id="tuple",
+            ),
+            pytest.param(
+                "one=three&foo=bar",
+                "http://localhost/path?one=two",
+                id="str",
+            ),
+            pytest.param(
+                b"one=three&foo=bar",
+                "http://localhost/path?one=two",
+                id="bytes",
+            ),
+        ],
+    )
+    def test_session_keyword(self, requests_mock: rm.Mocker, params: Any, expected: str):
+        session_one = HTTPSession()
+        session_two = HTTPSession()
+        requests_mock.register_uri("GET", "http://localhost/path")
+        session_two.headers.update({"User-Agent": "foo"})
+        session_two.params.update({"one": "two"})
+        res = session_one.get(
+            "http://localhost/path",
+            headers={"User-Agent": "bar", "X-Foo": "bar"},
+            params=params,
+            session=session_two,
+        )
+        assert res.request.headers["User-Agent"] == "foo"
+        assert res.request.headers["X-Foo"] == "bar"
+        assert res.request.url == expected
+
     def test_read_timeout(self, monkeypatch: pytest.MonkeyPatch):
         mock_sleep = Mock()
         mock_request = Mock(side_effect=requests.Timeout)
@@ -164,11 +221,25 @@ class TestHTTPSession:
         with pytest.raises(PluginError, match=r"^Unable to open URL: http://localhost/"):
             session.get("http://localhost/", timeout=123, retries=3, retry_backoff=2, retry_max_backoff=5)
 
-        assert mock_request.call_args_list == [
-            call("GET", "http://localhost/", headers={}, params={}, timeout=123, proxies={}, allow_redirects=True),
-            call("GET", "http://localhost/", headers={}, params={}, timeout=123, proxies={}, allow_redirects=True),
-            call("GET", "http://localhost/", headers={}, params={}, timeout=123, proxies={}, allow_redirects=True),
-            call("GET", "http://localhost/", headers={}, params={}, timeout=123, proxies={}, allow_redirects=True),
+        assert mock_request.call_args_list == 4 * [
+            call(
+                "GET",
+                "http://localhost/",
+                params=None,
+                data=None,
+                headers=None,
+                cookies=None,
+                files=None,
+                auth=None,
+                timeout=123,
+                allow_redirects=True,
+                proxies=None,
+                hooks=None,
+                stream=None,
+                verify=None,
+                cert=None,
+                json=None,
+            ),
         ]
         assert mock_sleep.call_args_list == [
             call(2),
