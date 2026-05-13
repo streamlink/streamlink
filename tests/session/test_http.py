@@ -218,8 +218,11 @@ class TestHTTPSession:
         monkeypatch.setattr("streamlink.session.http.Session.request", mock_request)
 
         session = HTTPSession()
-        with pytest.raises(PluginError, match=r"^Unable to open URL: http://localhost/"):
+        with pytest.raises(PluginError, match=r"^Unable to open URL: http://localhost/") as err:
             session.get("http://localhost/", timeout=123, retries=3, retry_backoff=2, retry_max_backoff=5)
+        oerr = getattr(err.value, "err", None)
+        assert isinstance(oerr, requests.Timeout)
+        assert err.value.__context__ is oerr
 
         assert mock_request.call_args_list == 4 * [
             call(

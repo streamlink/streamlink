@@ -347,7 +347,7 @@ class HTTPSession(Session):
                 if attempt >= retries:
                     err = exception(f"Unable to open URL: {url} ({rerr})")
                     err.err = rerr  # ty:ignore[unresolved-attribute]
-                    raise err from None  # TODO: fix this
+                    raise err from rerr
                 attempt += 1
                 # back off retrying, but only to a maximum sleep time
                 delay = min(retry_max_backoff, retry_backoff * (2 ** (attempt - 1)))
