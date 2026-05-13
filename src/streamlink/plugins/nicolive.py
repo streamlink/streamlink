@@ -148,10 +148,10 @@ class NicoLiveHLSStreamWriter(HLSStreamWriter):
         try:
             return super().create_decryptor(*args, **kwargs)
         except StreamError as err:
-            # TODO: fix HTTPSession.request()
             if (
-                not (orig_err := getattr(err, "err", None))
+                not (orig_err := err.__context__)
                 or not isinstance(orig_err, HTTPError)
+                or orig_err.response is None
                 or orig_err.response.status_code != 403
             ):
                 raise

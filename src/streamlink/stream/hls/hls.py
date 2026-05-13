@@ -130,10 +130,8 @@ class HLSStreamWriter(SegmentedStreamWriter[HLSSegment, Response]):
                     **self.reader.request_params,
                 )
             except StreamError as err:
-                # FIXME: fix HTTPSession.request()
-                original_error = getattr(err, "err", None)
-                if isinstance(original_error, InvalidSchema):
-                    raise StreamError(f"Unable to find connection adapter for key URI: {key_uri}") from original_error
+                if isinstance(err.__context__, InvalidSchema):
+                    raise StreamError(f"Unable to find connection adapter for key URI: {key_uri}") from err.__context__
                 raise  # pragma: no cover
 
             res.encoding = "binary/octet-stream"
