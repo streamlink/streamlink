@@ -194,7 +194,7 @@ class GitHubAPI:
     def call(
         self,
         host: str = "api.github.com",
-        method: Literal["GET", "POST", "PATCH"] = "GET",
+        method: Literal["GET", "POST", "PATCH", "DELETE"] = "GET",
         endpoint: str = "/",
         headers: dict[str, Any] | None = None,
         raise_failure: bool = True,
@@ -261,16 +261,17 @@ class GitHubAPI:
         )
         log.info(f"Successfully updated existing GitHub release {self.repo}#{self.tag}")
 
-    def create_or_update_release(self, **payload) -> int:
-        payload.update(tag_name=self.tag)
-        release_id = self.get_release_id()
+    def delete_release(self, release_id: int) -> None:
+        if not self.authenticated:
+            log.info(f"dry-run: Would have deleted GitHub release {self.repo}#{self.tag}")
+            return
 
-        if not release_id:
-            return self.create_release(payload)
-
-        self.update_release(release_id, payload)
-
-        return release_id
+        log.info(f"Deleting GitHub release {self.repo}#{self.tag}")
+        self.call(
+            method="DELETE",
+            endpoint=f"/repos/{self.repo}/releases/{release_id}",
+        )
+        log.info(f"Successfully deleted GitHub release {self.repo}#{self.tag}")
 
     def upload_asset(self, release_id: int, filename: str, filehandle: IO):
         if not self.authenticated:
@@ -288,13 +289,33 @@ class GitHubAPI:
         )
         log.info(f"Successfully uploaded '{filename}' to GitHub release {self.repo}#{self.tag}")
 
+    def publish_release(self, name: str, body: str, filehandles: Mapping[str, IO[bytes]]):
+        release_id = self.create_release({
+            "tag_name": self.tag,
+            "draft": True,
+            "name": name,
+            "body": body,
+        })
+
+        try:
+            for filename, filehandle in filehandles.items():
+                self.upload_asset(release_id, filename, filehandle)
+
+            self.update_release(
+                release_id,
+                {"draft": False},
+            )
+        except requests.RequestException as err:
+            log.error(f"Unable to publish release: {err}")
+            self.delete_release(release_id)
+
     def get_contributors(self, start: str, end: str) -> list[Author]:
         log.debug(f"Getting contributors of {self.repo} in commit range {start}...{end}")
 
         authors: dict[Email, Author] = {}
         co_authors: list[Email] = []
 
-        total_commits = None
+        total_commits: int | None = None
         parsed_commits = 0
         page = 0
 
@@ -332,7 +353,7 @@ class GitHubAPI:
                 # GitHub identifies its users by checking the commit-author's email address
                 commit_author_email = Email((commit.get("author") or {}).get("email", ""))
                 # The commit-author's name can differ from the GitHub user account name -> use the provided author login
-                author_name = (commitdata.get("author") or {}).get("login")
+                author_name: str | None = (commitdata.get("author") or {}).get("login")
                 if not commit_author_email or not author_name:
                     continue
 
@@ -410,7 +431,7 @@ class Release:
 
     @staticmethod
     @contextmanager
-    def get_file_handles(assets: list[Path]) -> Generator[Mapping[str, IO], None, None]:
+    def get_file_handles(assets: list[Path]) -> Generator[Mapping[str, IO[bytes]], None, None]:
         handles = {}
         try:
             for asset in assets:
@@ -457,7 +478,13 @@ class Release:
         return jinjatemplate.render(context)
 
 
-def main(args: argparse.Namespace):
+def main() -> None:
+    args: argparse.Namespace = get_args()
+    logging.basicConfig(
+        level=logging.DEBUG if args.debug else logging.INFO,
+        format="[%(levelname)s] %(message)s",
+    )
+
     # if no tag was provided, get the current tag from `git describe --tags`
     tag = args.tag or Git.tag()
     if not tag:
@@ -469,7 +496,6 @@ def main(args: argparse.Namespace):
     release = Release(tag, args.template, args.changelog)
 
     # get file handles of release assets first, to prevent unnecessary API requests if input files can't be found
-    filehandles: Mapping[str, IO]
     with release.get_file_handles(args.assets) as filehandles:
         # initialize GitHub API
         api = GitHubAPI(args.repo, tag)
@@ -477,27 +503,24 @@ def main(args: argparse.Namespace):
         # prepare the release body with the changelog, contributors list and git shortlog
         body = release.get_body(api, args.no_contributors, args.no_shortlog)
 
-        # create a new release or update an existing one with the same tag
-        release_id = api.create_or_update_release(
+        # publish the new release
+        api.publish_release(
             name=f"Streamlink {tag}",
             body=body,
+            filehandles=filehandles,
         )
-
-        # upload assets
-        for filename, filehandle in filehandles.items():
-            api.upload_asset(release_id, filename, filehandle)
 
     log.info("Done")
 
 
 if __name__ == "__main__":
-    args = get_args()
-    logging.basicConfig(
-        level=logging.DEBUG if args.debug else logging.INFO,
-        format="[%(levelname)s] %(message)s",
-    )
-
+    # noinspection PyBroadException
     try:
-        main(args)
+        main()
     except KeyboardInterrupt:
         sys.exit(130)
+    except Exception:
+        log.exception("Error", exc_info=True)
+        sys.exit(1)
+    else:
+        sys.exit(0)
