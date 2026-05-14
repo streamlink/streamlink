@@ -29,14 +29,15 @@ ROOT = Path(__file__).parents[1].resolve()
 DEFAULT_REPO = "streamlink/streamlink"
 
 
-RE_CHANGELOG = re.compile(
+RE_CHANGELOG_DELIM = re.compile(r"\n## streamlink ")
+RE_CHANGELOG_CONTENT = re.compile(
     r"""
-        ##\sstreamlink\s+
-        (?P<version>\d+\.\d+\.\d+(?:-\S+)?)\s+
+        ^
+        (?P<version>\d+\.\d+\.\d+(?:-\S+)?)\s
         \((?P<date>\d{4}-\d\d-\d\d)\)\n\n
         (?P<changelog>.+?)\n\n
-        \[Full\schangelog]\(\S+\)\n+
-        (?=\#\#\sstreamlink|$)
+        \[Full\ changelog]\(\S+\.\.\.(?P=version)\)\n\n
+        $
     """,
     re.VERBOSE | re.DOTALL | re.IGNORECASE,
 )
@@ -62,6 +63,11 @@ def get_args():
         "--debug",
         action="store_true",
         help="Enable debug logging",
+    )
+    parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Don't make any GitHub API calls",
     )
     parser.add_argument(
         "--repo",
@@ -161,7 +167,7 @@ class GitHubAPI:
     PER_PAGE = 100
     MAX_REQUESTS = 10
 
-    def __init__(self, repo: str, tag: str):
+    def __init__(self, repo: str, tag: str, dry_run: bool = False):
         self.authenticated = False
         self.repo = repo
         self.tag = tag
@@ -169,7 +175,10 @@ class GitHubAPI:
             "Accept": "application/vnd.github.v3+json",
             "User-Agent": repo,
         }
-        self._get_api_key()
+        if dry_run:
+            log.info("dry-run: Not making any GitHub API calls")
+        else:
+            self._get_api_key()
 
     def _get_api_key(self):
         github_token, releases_api_key = getenv("GITHUB_TOKEN"), getenv("RELEASES_API_KEY")
@@ -396,7 +405,7 @@ class Release:
         self.changelog = changelog
 
     @staticmethod
-    def _read_file(path: Path):
+    def _read_file(path: Path) -> str:
         with path.open("r", encoding="utf-8") as fh:
             contents = fh.read()
 
@@ -412,7 +421,7 @@ class Release:
         except OSError as err:
             raise OSError("Missing release template file") from err
 
-    def _read_changelog(self):
+    def _read_changelog(self) -> str:
         log.debug(f"Opening changelog file: {self.changelog}")
         try:
             return self._read_file(self.changelog)
@@ -423,7 +432,19 @@ class Release:
         changelog = self._read_changelog()
 
         log.debug("Parsing changelog file")
-        for match in re.finditer(RE_CHANGELOG, changelog):
+        sections = re.split(RE_CHANGELOG_DELIM, changelog)
+        num = len(sections)
+        for idx, section in enumerate(iter(sections)):
+            if idx == 0:
+                continue
+            elif idx == num - 1:
+                # workaround for whitespace at EOF,
+                # so we can have a sensible error message on missing changelog for current tag
+                section += "\n"
+
+            if not (match := re.search(RE_CHANGELOG_CONTENT, section)):
+                raise ValueError(f"Invalid changelog format:\n{section}")
+
             if match.group("version") == self.tag:
                 return match.groupdict()
 
@@ -498,7 +519,7 @@ def main() -> None:
     # get file handles of release assets first, to prevent unnecessary API requests if input files can't be found
     with release.get_file_handles(args.assets) as filehandles:
         # initialize GitHub API
-        api = GitHubAPI(args.repo, tag)
+        api = GitHubAPI(args.repo, tag, dry_run=args.dry_run)
 
         # prepare the release body with the changelog, contributors list and git shortlog
         body = release.get_body(api, args.no_contributors, args.no_shortlog)
