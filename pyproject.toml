@@ -113,9 +113,13 @@ typing = [
   { include-group = "test" },
   { include-group = "docs" },
   { include-group = "script" },
+  # tools and typing dependencies
   "ty ==0.0.34",
   "mypy[faster-cache] ==2.0.0",
   "typing-extensions >=4.0.0",
+  # dependency overrides
+  "requests >=2.34.0,!=2.34.1",
+  # dependency type-stubs
   "lxml-stubs",
   "types-docutils",
   "types-freezegun",
