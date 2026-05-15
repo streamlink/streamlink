@@ -217,6 +217,7 @@ source = [
   "build_backend",
   "src",
   "tests",
+  "conftest.py",
 ]
 
 [tool.coverage.report]
@@ -242,6 +243,7 @@ src = [
   "build_backend",
   "src",
   "tests",
+  "conftest.py",
 ]
 fix = false
 line-length = 128
@@ -391,5 +393,6 @@ files = [
   "src/streamlink/",
   "src/streamlink_cli/",
   "tests/",
+  "conftest.py",
   "setup.py",
 ]
