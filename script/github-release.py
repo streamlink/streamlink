@@ -29,6 +29,7 @@ ROOT = Path(__file__).parents[1].resolve()
 DEFAULT_REPO = "streamlink/streamlink"
 
 
+RE_RELEASE_COMMIT_MESSAGE = re.compile(r"^release: (?P<version>\d+\.\d+\.\d+(?:-\S+)?)$")
 RE_CHANGELOG_DELIM = re.compile(r"\n## streamlink ")
 RE_CHANGELOG_CONTENT = re.compile(
     r"""
@@ -68,6 +69,15 @@ def get_args():
         "--dry-run",
         action="store_true",
         help="Don't make any GitHub API calls",
+    )
+    parser.add_argument(
+        "--check",
+        metavar="GITREF",
+        help=(
+            "Validate the changelog added by a specific git ref, usually HEAD.\n"
+            + f"Must be a release commit using the '{RE_RELEASE_COMMIT_MESSAGE.pattern}' format.\n"
+            + 'Implies --dry-run and --tag="".'
+        ),
     )
     parser.add_argument(
         "--repo",
@@ -148,6 +158,18 @@ class Git:
             )
         except subprocess.CalledProcessError as err:
             raise ValueError(f"Could not get tag from git:\n{err.stderr}") from err
+
+    @classmethod
+    def commit_msg(cls, ref: str = "HEAD") -> str:
+        try:
+            return cls._output(
+                "show",
+                "-s",
+                "--format=%s",
+                ref,
+            )
+        except subprocess.CalledProcessError as err:
+            raise ValueError(f"Could not get commit message from git:\n{err.stderr}") from err
 
     @classmethod
     def shortlog(cls, start: str, end: str) -> str:
@@ -399,8 +421,9 @@ class GitHubAPI:
 
 
 class Release:
-    def __init__(self, tag: str, template: Path, changelog: Path):
-        self.tag = tag
+    def __init__(self, ref: str, version: str, template: Path, changelog: Path):
+        self.ref = ref
+        self.version = version
         self.template = template
         self.changelog = changelog
 
@@ -445,10 +468,10 @@ class Release:
             if not (match := re.search(RE_CHANGELOG_CONTENT, section)):
                 raise ValueError(f"Invalid changelog format:\n{section}")
 
-            if match.group("version") == self.tag:
+            if match.group("version") == self.version:
                 return match.groupdict()
 
-        raise KeyError("Missing changelog for current release")
+        raise KeyError(f"Missing changelog for release {self.version}")
 
     @staticmethod
     @contextmanager
@@ -480,7 +503,7 @@ class Release:
 
         if not no_contributors or not no_shortlog:
             # don't include the tagged release commit
-            prev_commit = f"{self.tag}~1"
+            prev_commit = f"{self.ref}~1"
 
             # get the previous tag
             start = Git.tag(prev_commit)
@@ -506,27 +529,40 @@ def main() -> None:
         format="[%(levelname)s] %(message)s",
     )
 
-    # if no tag was provided, get the current tag from `git describe --tags`
-    tag = args.tag or Git.tag()
-    if not tag:
-        raise ValueError("Missing git tag")
+    dry_run = args.dry_run
+
+    if args.check:
+        dry_run = True
+        commit_msg = Git.commit_msg(args.check)
+        if not (match := RE_RELEASE_COMMIT_MESSAGE.search(commit_msg)):
+            log.warning(f"Git ref '{args.check}' is not a release commit, exiting...")
+            log.warning(commit_msg)
+            return
+
+        ref = args.check
+        version = match.group("version")
+    else:
+        ref = version = args.tag or Git.tag()
+        if not ref:
+            raise ValueError("Missing git tag")
 
     log.info(f"Repo: {args.repo}")
-    log.info(f"Tag: {tag}")
+    log.info(f"Ref: {ref}")
+    log.info(f"Version: {version}")
 
-    release = Release(tag, args.template, args.changelog)
+    release = Release(ref, version, args.template, args.changelog)
 
     # get file handles of release assets first, to prevent unnecessary API requests if input files can't be found
     with release.get_file_handles(args.assets) as filehandles:
         # initialize GitHub API
-        api = GitHubAPI(args.repo, tag, dry_run=args.dry_run)
+        api = GitHubAPI(args.repo, ref, dry_run=dry_run)
 
         # prepare the release body with the changelog, contributors list and git shortlog
         body = release.get_body(api, args.no_contributors, args.no_shortlog)
 
         # publish the new release
         api.publish_release(
-            name=f"Streamlink {tag}",
+            name=f"Streamlink {version}",
             body=body,
             filehandles=filehandles,
         )
