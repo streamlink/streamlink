@@ -10,6 +10,7 @@ $metadata title
 from __future__ import annotations
 
 import re
+import sys
 import uuid
 
 from streamlink.logger import getLogger
@@ -30,7 +31,15 @@ log = getLogger(__name__)
 class Douyin(Plugin):
     _STATUS_LIVE = 2
 
-    QUALITY_WEIGHTS: dict[str, int] = {}
+    # There's no bitrate information in the JSON data available anymore.
+    # These weights are based on empirically measured video bitrates of a specific stream during plugin fixing.
+    # The values themselves don't matter, only the order.
+    QUALITY_WEIGHTS: dict[str, int] = {
+        "full_hd1": sys.maxsize,
+        "hd1": 8000,
+        "sd2": 2000,
+        "sd1": 1000,
+    }
 
     @classmethod
     def stream_weight(cls, stream: str) -> tuple[float, str]:
@@ -43,62 +52,32 @@ class Douyin(Plugin):
     SCHEMA_ROOM_STORE = validate.all(
         {
             "roomInfo": {
-                # "room" and "anchor" keys are missing on invalid channels
                 validate.optional("room"): validate.all(
                     {
-                        "id_str": str,
                         "status": int,
+                        "id_str": str,
                         "title": str,
+                        validate.optional("owner"): validate.all(
+                            {"nickname": str},
+                            validate.get("nickname"),
+                        ),
+                        validate.optional("stream_url"): {
+                            "flv_pull_url": {
+                                str: validate.url(),
+                            },
+                        },
                     },
                     validate.union_get(
                         "status",
                         "id_str",
                         "title",
+                        "owner",
+                        "stream_url",
                     ),
-                ),
-                validate.optional("anchor"): validate.all(
-                    {"nickname": str},
-                    validate.get("nickname"),
                 ),
             },
         },
-        validate.union_get(
-            ("roomInfo", "room"),
-            ("roomInfo", "anchor"),
-        ),
-    )
-
-    SCHEMA_STREAM_STORE = validate.all(
-        {
-            "streamData": {
-                "H264_streamData": {
-                    # "stream" value is `none` on offline/invalid channels
-                    "stream": validate.none_or_all(
-                        {
-                            str: validate.all(
-                                {
-                                    "main": {
-                                        # HLS stream URLs are multivariant streams but only with a single media playlist,
-                                        # so avoid using HLS in favor of having reduced stream lookup/start times
-                                        "flv": validate.any("", validate.url()),
-                                        "sdk_params": validate.all(
-                                            validate.parse_json(),
-                                            {"vbitrate": int},
-                                            validate.get("vbitrate"),
-                                        ),
-                                    },
-                                },
-                                validate.union_get(
-                                    ("main", "sdk_params"),
-                                    ("main", "flv"),
-                                ),
-                            ),
-                        },
-                    ),
-                },
-            },
-        },
-        validate.get(("streamData", "H264_streamData", "stream")),
+        validate.get(("roomInfo", "room")),
     )
 
     def _get_streams(self):
@@ -124,35 +103,21 @@ class Douyin(Plugin):
                     validate.get((0, "state")),
                     {
                         "roomStore": self.SCHEMA_ROOM_STORE,
-                        "streamStore": self.SCHEMA_STREAM_STORE,
                     },
-                    validate.union_get(
-                        "roomStore",
-                        "streamStore",
-                    ),
+                    validate.get("roomStore"),
                 ),
             ),
         )
         if not data:
             return
 
-        (room_info, self.author), stream_data = data
-        if not room_info:
-            return
-
-        status, self.id, self.title = room_info
+        status, self.id, self.title, self.author, streams = data
         if status != self._STATUS_LIVE:
             log.info("The channel is currently offline")
             return
 
-        for name, (vbitrate, url) in stream_data.items():
-            if not url:
-                continue
-            self.QUALITY_WEIGHTS[name] = vbitrate
-            url = update_scheme("https://", url, force=True)
-            yield name, HTTPStream(self.session, url)
-
-        log.debug("self.QUALITY_WEIGHTS=%r", self.QUALITY_WEIGHTS)
+        for name, flv_url in streams["flv_pull_url"].items():
+            yield name.lower(), HTTPStream(self.session, update_scheme("https://", flv_url, force=True))
 
 
 __plugin__ = Douyin
