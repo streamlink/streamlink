@@ -411,7 +411,7 @@ class TestPluginArguments:
             namespace = parser.parse_args(args)
             assert namespace.myplugin_foo == expected
 
-    def test_decorator_typeerror(self, monkeypatch: pytest.MonkeyPatch):
+    def test_decorator_typeerror(self):
         class NotAPluginMeta(type):
             def __repr__(self) -> str:
                 return self.__name__
@@ -419,7 +419,7 @@ class TestPluginArguments:
         with pytest.raises(TypeError, match=r"^NotAPlugin is not a Plugin$"):
             # noinspection PyUnusedLocal
             @pluginargument("foo")  # type: ignore[arg-type, ty:invalid-argument-type]
-            class NotAPlugin(metaclass=NotAPluginMeta):
+            class NotAPlugin(metaclass=NotAPluginMeta):  # type: ignore[type-var]
                 pass
 
     def test_empty(self):

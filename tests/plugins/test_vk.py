@@ -100,8 +100,7 @@ class TestPluginCanHandleUrlVK(PluginCanHandleUrl):
     ],
 )
 def test_url_redirect(requests_mock: rm.Mocker, session: Streamlink, url: str, newurl: str, raises: nullcontext):
-    # noinspection PyTypeChecker
-    plugin: VK = VK(session, url)
+    plugin = VK(session, url)
     requests_mock.get(url, text=f"""<!DOCTYPE html><html><head><meta property="og:url" content="{newurl}"/></head></html>""")
     with raises:
         plugin.follow_vk_redirect()

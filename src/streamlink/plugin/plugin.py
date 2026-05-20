@@ -29,6 +29,8 @@ if TYPE_CHECKING:
     from streamlink.session.session import Streamlink
     from streamlink.user_input import UserInputRequester
 
+    _TPlugin = TypeVar("_TPlugin", bound="Plugin")
+
 
 #: See the :func:`~.pluginargument` decorator
 _PLUGINARGUMENT_TYPE_REGISTRY: Mapping[str, Callable[[Any], Any]] = {
@@ -657,7 +659,7 @@ def pluginmatcher(
     pattern: re.Pattern,
     priority: int = NORMAL_PRIORITY,
     name: str | None = None,
-) -> Callable[[type[Plugin]], type[Plugin]]:
+) -> Callable[[type[_TPlugin]], type[_TPlugin]]:
     """
     Decorator for plugin URL matchers.
 
@@ -695,7 +697,7 @@ def pluginmatcher(
 
     matcher = Matcher(pattern, priority, name)
 
-    def decorator(cls: type[Plugin]) -> type[Plugin]:
+    def decorator(cls: type[_TPlugin]) -> type[_TPlugin]:
         if not issubclass(cls, Plugin):
             raise TypeError(f"{cls.__name__} is not a Plugin")
         cls.matchers.add(matcher)
@@ -727,7 +729,7 @@ def pluginargument(
     prompt: str | None = None,
     sensitive: bool = False,
     argument_name: str | None = None,
-) -> Callable[[type[Plugin]], type[Plugin]]:
+) -> Callable[[type[_TPlugin]], type[_TPlugin]]:
     """
     Decorator for plugin arguments. Takes the same arguments as :class:`Argument <streamlink.options.Argument>`.
 
@@ -791,7 +793,8 @@ def pluginargument(
         argument_name=argument_name,
     )
 
-    def decorator(cls: builtins.type[Plugin]) -> builtins.type[Plugin]:
+    # noinspection PyUnresolvedReferences
+    def decorator(cls: builtins.type[_TPlugin]) -> builtins.type[_TPlugin]:
         if not issubclass(cls, Plugin):
             raise TypeError(f"{repr(cls)} is not a Plugin")  # noqa: RUF010  # builtins.repr gets monkeypatched in tests
         cls.arguments.add(arg)
