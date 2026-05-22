@@ -246,6 +246,7 @@ class PlayerOutput(Output):
         self.record = record
 
         self.title = title
+        self._closed = False
 
         self.playerargs = PlayerArgs(
             path=path,
@@ -267,6 +268,20 @@ class PlayerOutput(Output):
         else:
             self.stdout = sys.stdout
             self.stderr = sys.stderr
+
+    def close(self):
+        if self._closed:
+            return
+
+        if self.opened:
+            self._close()
+        else:
+            self._close_player_input()
+            if self.record:
+                self.record.close()
+
+        self.opened = False
+        self._closed = True
 
     @property
     def running(self):
@@ -348,14 +363,19 @@ class PlayerOutput(Output):
             self.http.accept_connection()
             self.http.open()
 
+    def _close_player_input(self) -> bool:
+        if self.namedpipe:
+            self.namedpipe.close()
+            return True
+        if self.http:
+            self.http.shutdown()
+            return True
+        return False
+
     def _close(self):
         # Close input to the player first to signal the end of the
         # stream and allow the player to terminate of its own accord
-        if self.namedpipe:
-            self.namedpipe.close()
-        elif self.http:
-            self.http.shutdown()
-        elif not self.filename and self.player.stdin:  # pragma: no branch
+        if not self._close_player_input() and not self.filename and self.player.stdin:  # pragma: no branch
             self.player.stdin.close()
 
         if self.record:
