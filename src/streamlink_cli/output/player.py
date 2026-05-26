@@ -240,6 +240,7 @@ class PlayerOutput(Output):
         self.call = call
         self.quiet = quiet
 
+        self.player = None  # type: ignore[assignment, ty:invalid-assignment]
         self.filename = filename
         self.namedpipe = namedpipe
         self.http = http
@@ -348,16 +349,21 @@ class PlayerOutput(Output):
             self.http.accept_connection()
             self.http.open()
 
-    def _close(self):
-        # Close input to the player first to signal the end of the
-        # stream and allow the player to terminate of its own accord
+    def close(self):
+        # Close input to the player first to signal the end of the stream and allow the player to terminate on its own.
+        # Always close the player input, regardless whether the player was not launched yet
         if self.namedpipe:
             self.namedpipe.close()
+            self.namedpipe = None
         elif self.http:
             self.http.shutdown()
-        elif not self.filename and self.player.stdin:  # pragma: no branch
+            self.http = None
+        elif not self.filename and self.player and self.player.stdin:  # pragma: no branch
             self.player.stdin.close()
 
+        super().close()
+
+    def _close(self):
         if self.record:
             self.record.close()
 

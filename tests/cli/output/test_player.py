@@ -488,3 +488,16 @@ class TestPlayerOutput:
         with expected:
             playeroutput.open()
         assert any(record.category is StreamlinkWarning for record in recwarn.list) is warns
+
+    @pytest.mark.parametrize(
+        ("playeroutput", "input_attr", "close_method"),
+        [
+            pytest.param({"path": Path("player"), "namedpipe": Mock()}, "namedpipe", "close", id="namedpipe"),
+            pytest.param({"path": Path("player"), "http": Mock()}, "http", "shutdown", id="http"),
+        ],
+        indirect=["playeroutput"],
+    )
+    def test_close_unopened_player_input(self, playeroutput: PlayerOutput, input_attr: str, close_method: str):
+        playerinput: Mock = getattr(playeroutput, input_attr)
+        playeroutput.close()
+        assert getattr(playerinput, close_method).call_count == 1
