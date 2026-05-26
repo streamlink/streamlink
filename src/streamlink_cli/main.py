@@ -585,19 +585,24 @@ def format_valid_streams(plugin: Plugin, streams: Mapping[str, Stream]) -> str:
     return delimiter.join(validstreams)
 
 
+def close_output():
+    if not output:  # pragma: no cover
+        return
+    with suppress(KeyboardInterrupt):
+        output.close()
+
+
 def handle_url_wrapper() -> int:
     exit_code = 0
     try:
         handle_url()
     except KeyboardInterrupt:
-        # Close output
-        if output:
-            try:
-                output.close()
-            except KeyboardInterrupt:
-                pass
+        close_output()
         console.msg("Interrupted! Exiting...")
         exit_code = 128 + signal.SIGINT
+    except Exception:
+        close_output()
+        raise
     finally:
         if stream_fd:
             try:

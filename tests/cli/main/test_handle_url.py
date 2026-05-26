@@ -11,6 +11,7 @@ import streamlink_cli.main
 from streamlink.exceptions import FatalPluginError, PluginError
 from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.stream.stream import Stream
+from streamlink_cli.exceptions import StreamlinkCLIError
 
 
 if TYPE_CHECKING:
@@ -511,8 +512,7 @@ class TestHandleUrlKeyboardInterruptAndCleanup:
     @pytest.fixture(autouse=True)
     def handle_url(self, request: pytest.FixtureRequest, monkeypatch: pytest.MonkeyPatch):
         mock_handle_url = Mock()
-        if getattr(request, "param", False):
-            mock_handle_url.side_effect = KeyboardInterrupt
+        mock_handle_url.side_effect = getattr(request, "param", None)
         monkeypatch.setattr(streamlink_cli.main, "handle_url", mock_handle_url)
 
     @staticmethod
@@ -542,7 +542,7 @@ class TestHandleUrlKeyboardInterruptAndCleanup:
         ("handle_url", "output", "stream_fd", "exit_code", "stdout"),
         [
             pytest.param(
-                False,
+                None,
                 {},
                 {},
                 0,
@@ -550,7 +550,7 @@ class TestHandleUrlKeyboardInterruptAndCleanup:
                 id="no-keyboardinterrupt",
             ),
             pytest.param(
-                True,
+                KeyboardInterrupt,
                 {},
                 {},
                 130,
@@ -558,7 +558,7 @@ class TestHandleUrlKeyboardInterruptAndCleanup:
                 id="no-output",
             ),
             pytest.param(
-                True,
+                KeyboardInterrupt,
                 {"initialized": True},
                 {},
                 130,
@@ -566,7 +566,7 @@ class TestHandleUrlKeyboardInterruptAndCleanup:
                 id="output",
             ),
             pytest.param(
-                True,
+                KeyboardInterrupt,
                 {"initialized": True},
                 {"initialized": True},
                 130,
@@ -574,7 +574,7 @@ class TestHandleUrlKeyboardInterruptAndCleanup:
                 id="output-streamfd",
             ),
             pytest.param(
-                True,
+                KeyboardInterrupt,
                 {"initialized": True, "close_raises": True},
                 {"initialized": True},
                 130,
@@ -582,12 +582,28 @@ class TestHandleUrlKeyboardInterruptAndCleanup:
                 id="output-streamfd-outputclose-interrupted",
             ),
             pytest.param(
-                True,
+                KeyboardInterrupt,
                 {"initialized": True},
                 {"initialized": True, "close_raises": True},
                 130,
                 "Interrupted! Exiting...\n[cli][info] Closing currently open stream...\n",
                 id="output-streamfd-streamfdclose-interrupted",
+            ),
+            pytest.param(
+                StreamlinkCLIError("foo", code=1),
+                {"initialized": True},
+                {},
+                1,
+                "error: foo\n",
+                id="output-exception",
+            ),
+            pytest.param(
+                StreamlinkCLIError("foo", code=1),
+                {"initialized": True, "close_raises": True},
+                {},
+                1,
+                "error: foo\n",
+                id="output-exception-interrupted",
             ),
         ],
         indirect=["handle_url", "output", "stream_fd"],
