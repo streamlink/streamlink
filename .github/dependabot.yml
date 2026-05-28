@@ -1,0 +1,24 @@
+version: 2
+updates:
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "monthly"
+    commit-message:
+      prefix: "ci.github"
+    # ignore semver-patch version bumps for third-party actions
+    ignore:
+      - dependency-name: "codecov/codecov-action"
+        update-types: [ "version-update:semver-patch" ]
+      - dependency-name: "pypa/gh-action-pypi-publish"
+        update-types: [ "version-update:semver-patch" ]
+      - dependency-name: "peter-evans/create-pull-request"
+        update-types: [ "version-update:semver-patch" ]
+    # group official actions into a single PR, unless it's a major version bump
+    groups:
+      github-actions:
+        patterns:
+          - "actions/*"
+        update-types:
+          - "minor"
+          - "patch"
