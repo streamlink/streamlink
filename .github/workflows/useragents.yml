@@ -18,7 +18,7 @@ jobs:
       - run: python ./script/update-user-agents.py
         env:
           WHATISMYBROWSER_API_KEY: ${{ secrets.WHATISMYBROWSER_API_KEY }}
-      - uses: peter-evans/create-pull-request@0979079bc20c05bbbb590a56c21c4e2b1d1f1bbe
+      - uses: peter-evans/create-pull-request@5f6978faf089d4d20b00c7766989d076bb2fc7f1 # v8.1.1
         with:
           token: ${{ secrets.STREAMLINKBOT_USERAGENTS_PR }}
           add-paths: |
