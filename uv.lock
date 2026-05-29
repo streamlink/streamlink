@@ -1891,7 +1891,7 @@ requires-dist = [
     { name = "certifi" },
     { name = "exceptiongroup", marker = "python_full_version < '3.11'" },
     { name = "isodate" },
-    { name = "lxml", specifier = ">=4.6.4,<7" },
+    { name = "lxml", specifier = ">=4.6.4,<8" },
     { name = "pycountry" },
     { name = "pycryptodome", specifier = ">=3.4.3,<4" },
     { name = "pysocks", specifier = ">=1.5.6,!=1.5.7" },
