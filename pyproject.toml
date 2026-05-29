@@ -57,7 +57,7 @@ dependencies = [
   "certifi",
   "exceptiongroup ; python_version<'3.11'",
   "isodate",
-  "lxml >=4.6.4,<7",
+  "lxml >=4.6.4,<8",
   "pycountry",
   "pycryptodome >=3.4.3,<4",
   "PySocks >=1.5.6,!=1.5.7",
