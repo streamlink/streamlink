@@ -785,6 +785,40 @@ class TestHLSStreamWorkerOptions:
         assert [(record.category, str(record.message)) for record in recwarn.list] == warning
 
 
+duration_to_segments_data = [1.0, 2.0, 3.0, 5.0, 7.0]
+
+
+@pytest.mark.parametrize(
+    ("duration", "durations", "expected"),
+    [
+        pytest.param(0.0, [], -1, id="empty"),
+        pytest.param(0.0, duration_to_segments_data, 0, id="no-duration"),
+        pytest.param(1.0, duration_to_segments_data, 1, id="one-segment"),
+        pytest.param(6.0, duration_to_segments_data, 3, id="multiple-segments-exact"),
+        pytest.param(6.1, duration_to_segments_data, 4, id="multiple-segments-partial"),
+        pytest.param(-7.0, duration_to_segments_data, 3, id="negative-one-segment-exact"),
+        pytest.param(-1.0, duration_to_segments_data, 3, id="negative-one-segment-partial"),
+        pytest.param(-12.0, duration_to_segments_data, 2, id="negative-multiple-segments-exact"),
+        pytest.param(-12.1, duration_to_segments_data, 1, id="negative-multiple-segments-partial"),
+    ],
+)
+def test_hlsstreamworker_duration_to_sequence(duration: float, durations: list[float], expected: int):
+    segments = [
+        HLSSegment(
+            num=num,
+            duration=d,
+            uri="",
+            title=None,
+            key=None,
+            byterange=None,
+            date=None,
+            map=None,
+        )
+        for num, d in enumerate(durations)
+    ]
+    assert HLSStreamWorker.duration_to_sequence(duration, segments) == expected
+
+
 class TestHLSStreamWorkerPlaylistSequenceWarning:
     warns = pytest.mark.parametrize(
         "_assert_warning",
