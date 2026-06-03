@@ -31,8 +31,7 @@ def async_handler(*args, **kwargs):
 
 @pytest.fixture()
 def chromium_webbrowser(monkeypatch: pytest.MonkeyPatch):
-    # noinspection PyUnusedLocal
-    def mock_launch(*args, **kwargs):
+    def mock_launch(*_, **__):
         return trio.open_nursery()
 
     mock_chromium_webbrowser = Mock(
@@ -88,7 +87,7 @@ class TestLaunch:
         return mock_run
 
     @pytest.fixture(autouse=True)
-    def _mock_launch(self, request: pytest.FixtureRequest, session: Streamlink, mock_run, cdp_client: Mock):
+    def _mock_launch(self, request: pytest.FixtureRequest, session: Streamlink, mock_run: Mock, cdp_client: Mock):
         result = object()
         mock_runner = AsyncMock(return_value=result)
         with getattr(request, "param", nullcontext()):
@@ -160,7 +159,7 @@ class TestRun:
         self,
         cdp_client: CDPClient,
         websocket_connection: FakeWebsocketConnection,
-        fail_unhandled_requests,
+        fail_unhandled_requests: bool,
     ):
         client_session = None
 
@@ -492,7 +491,7 @@ class TestNavigate:
         async def navigate():
             nonlocal loaded
             async with cdp_client_session.navigate("https://foo") as frame_id:
-                assert frame_id == "frame-id-1"
+                assert str(frame_id) == "frame-id-1"
                 await cdp_client_session.loaded(frame_id)
                 loaded = True
 

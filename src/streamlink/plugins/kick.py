@@ -189,7 +189,6 @@ class Kick(Plugin):
             await client_session.continue_request(request)
 
         async def get_challenge_cookies(client: CDPClient):
-            client_session: CDPClientSession
             async with client.session() as client_session:
                 client_session.add_request_handler(on_main, url_pattern=self.url, on_request=True)
                 async with client_session.navigate(self.url) as frame_id:

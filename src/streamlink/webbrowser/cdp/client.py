@@ -17,8 +17,6 @@ from streamlink.webbrowser.chromium import ChromiumWebbrowser
 if TYPE_CHECKING:
     from collections.abc import AsyncGenerator, Awaitable, Callable, Coroutine, Mapping, MutableMapping
 
-    from typing_extensions import Self
-
     from streamlink.session import Streamlink
     from streamlink.webbrowser.cdp.connection import CDPSession
 
@@ -99,7 +97,7 @@ class CDPClient:
     def launch(
         cls,
         session: Streamlink,
-        runner: Callable[[Self], Coroutine],
+        runner: Callable[[CDPClient], Coroutine],
         executable: str | None = None,
         timeout: float | None = None,
         cdp_host: str | None = None,
@@ -184,12 +182,10 @@ class CDPClient:
         cdp_port: int | None = None,
         cdp_timeout: float | None = None,
         headless: bool = False,
-    ) -> AsyncGenerator[Self, None]:
+    ) -> AsyncGenerator[CDPClient, None]:
         webbrowser = ChromiumWebbrowser(executable=executable, host=cdp_host, port=cdp_port)
-        nursery: trio.Nursery
         async with webbrowser.launch(headless=headless, timeout=timeout) as nursery:
             websocket_url = webbrowser.get_websocket_url(session)
-            cdp_connection: CDPConnection
             async with CDPConnection.create(websocket_url, timeout=cdp_timeout) as cdp_connection:
                 yield cls(session, cdp_connection, nursery, headless)
 

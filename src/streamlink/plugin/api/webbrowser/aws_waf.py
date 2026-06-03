@@ -59,7 +59,6 @@ class AWSWAF:
             return await client_session.fulfill_request(request, body="")
 
         async def acquire_token(client: CDPClient):
-            client_session: CDPClientSession
             async with client.session(max_buffer_size=100) as client_session:
                 client_session.add_request_handler(on_request, on_request=True)
                 with trio.move_on_after(timeout):

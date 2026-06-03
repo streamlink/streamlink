@@ -693,7 +693,6 @@ class TwitchClientIntegrity:
                 cm.body = "<!doctype html>"
 
         async def acquire_client_integrity_token(client: CDPClient):
-            client_session: CDPClientSession
             async with client.session() as client_session:
                 client_session.add_request_handler(on_main, url_pattern=url, on_request=True)
                 async with client_session.navigate(url) as frame_id:

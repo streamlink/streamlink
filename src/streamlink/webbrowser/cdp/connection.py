@@ -203,6 +203,7 @@ class CDPBase:
             self.cmd_buffers.pop(cmd_id, None)
             raise CDPError("Sending CDP message and receiving its response timed out")
 
+        # noinspection PyUnnecessaryCast
         response = cast("TCmdResponse", cmd_buffer.response)
         self.cmd_buffers.pop(cmd_id, None)
 
@@ -292,7 +293,7 @@ class CDPConnection(CDPBase, trio.abc.AsyncResource):
 
     @classmethod
     @asynccontextmanager
-    async def create(cls, url: str, timeout: float | None = None) -> AsyncGenerator[Self, None]:
+    async def create(cls, url: str, timeout: float | None = None) -> AsyncGenerator[CDPConnection, None]:
         """
         Establish a new CDP connection to the Chromium-based web browser's remote debugging interface.
 
@@ -316,7 +317,6 @@ class CDPConnection(CDPBase, trio.abc.AsyncResource):
         """
 
         await self.websocket.aclose()
-        inst: CDPBase
         for inst in (self, *self.sessions.values()):
             for event_channels in inst.event_channels.values():
                 for event_channel in event_channels:
