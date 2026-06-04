@@ -47,7 +47,7 @@ def test_load_module_importerror(name: str, path: Path, expected: ImportError):
 def test_load_module():
     name = __name__.split(".")[-1]
 
-    try:
+    try:  # noqa: PLW0717
         assert __name__ in sys.modules
         assert name not in sys.modules
 

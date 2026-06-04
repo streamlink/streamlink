@@ -525,7 +525,7 @@ class TestDASHStreamWorker:
     @staticmethod
     def _iter_segments(iter_segments: Generator[DASHSegment, bool, None]) -> Iterator[DASHSegment]:
         queued: bool | None = None
-        try:
+        try:  # noqa: PLW0717
             while True:
                 if queued is None:
                     yield next(iter_segments)

@@ -76,7 +76,7 @@ if __name__ == "__main__":
     sys.path.insert(0, str(Path(__file__).parent))
 
     from build_backend.commands import cmdclass
-    from setuptools import Command, setup  # noqa: TC002
+    from setuptools import Command, setup
 
     try:
         # versioningit is only required when building from git (see pyproject.toml)

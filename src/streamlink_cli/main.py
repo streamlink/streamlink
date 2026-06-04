@@ -266,7 +266,7 @@ def output_stream_http(
 
         stream_fd = prebuffer = None
         while not stream_fd and (not player or player.running):
-            try:
+            try:  # noqa: PLW0717
                 if not initial_streams_used:
                     streams = initial_streams
                     initial_streams_used = True
@@ -625,7 +625,7 @@ def handle_url():
 
     """
 
-    try:
+    try:  # noqa: PLW0717
         pluginname, pluginclass, resolved_url = streamlink.resolve_url(args.url)
         log.info(f"Found matching plugin {pluginname} for URL {args.url}")
 

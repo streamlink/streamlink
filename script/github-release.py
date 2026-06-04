@@ -477,7 +477,7 @@ class Release:
     @contextmanager
     def get_file_handles(assets: list[Path]) -> Generator[Mapping[str, IO[bytes]], None, None]:
         handles = {}
-        try:
+        try:  # noqa: PLW0717
             for asset in assets:
                 asset = ROOT / asset
                 if not asset.is_file():

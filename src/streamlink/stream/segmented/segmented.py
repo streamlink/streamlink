@@ -274,7 +274,7 @@ class SegmentedStreamWorker(AwaitableMixin, NamedThread, Generic[TSegment, TResu
         iter_segments = self.iter_segments()
         queued: bool | None = None
 
-        try:
+        try:  # noqa: PLW0717
             while True:
                 if queued is None:
                     segment = next(iter_segments)

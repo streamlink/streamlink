@@ -677,7 +677,7 @@ class TwitchClientIntegrity:
         device_id: str,
     ) -> tuple[str, int] | None:
         from streamlink.compat import BaseExceptionGroup  # noqa: PLC0415
-        from streamlink.webbrowser.cdp import CDPClient, CDPClientSession, devtools  # noqa: PLC0415, TC001
+        from streamlink.webbrowser.cdp import CDPClient, CDPClientSession, devtools  # noqa: PLC0415
 
         url = f"https://www.twitch.tv/{channel}"
         js_get_integrity_token = cls.JS_INTEGRITY_TOKEN \
@@ -887,7 +887,7 @@ class Twitch(Plugin):
             setattr(self, method, method_factory(getattr(parent, method)))
 
     def _get_metadata(self):
-        try:
+        with suppress(PluginError, TypeError):
             if self.video_id:
                 data = self.api.metadata_video(self.video_id)
             elif self.clip_id:
@@ -897,8 +897,6 @@ class Twitch(Plugin):
             else:  # pragma: no cover
                 return
             self.id, self.author, self.category, self.title = data
-        except (PluginError, TypeError):
-            pass
 
     def _client_integrity_token(self, channel: str) -> tuple[str, str] | None:
         if self.options.get("purge-client-integrity"):

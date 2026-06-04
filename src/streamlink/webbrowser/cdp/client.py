@@ -408,7 +408,7 @@ class CDPClientSession:
             if b64encoded:  # pragma: no branch
                 body = base64.b64decode(body).decode()
         proxy = CMRequestProxy(body=body, response_code=response_code, response_headers=response_headers)
-        yield proxy
+        yield proxy  # noqa: RUF075
         await self.fulfill_request(
             request=request,
             response_code=proxy.response_code,
