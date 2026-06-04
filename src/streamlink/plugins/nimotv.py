@@ -75,7 +75,7 @@ class NimoTV(Plugin):
             return
 
         mStreamPkg = bytes.fromhex(mStreamPkg)
-        try:
+        try:  # noqa: PLW0717
             appid = self._re_appid.search(mStreamPkg).group(1).decode("utf-8")  # type: ignore[ty:unresolved-attribute]
             domain = self._re_domain.search(mStreamPkg).group(1).decode("utf-8")  # type: ignore[ty:unresolved-attribute]
             id_ = self._re_id.search(mStreamPkg).group(1).decode("utf-8")  # type: ignore[ty:unresolved-attribute]

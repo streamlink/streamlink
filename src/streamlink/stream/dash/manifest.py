@@ -56,8 +56,10 @@ def count_dt(firstval: datetime | None = None, step: timedelta = ONE_SECOND) -> 
 @contextmanager
 def freeze_timeline(mpd):
     timelines = copy.copy(mpd.timelines)
-    yield
-    mpd.timelines = timelines
+    try:
+        yield
+    finally:
+        mpd.timelines = timelines
 
 
 _re_segment_template = re.compile(r"(.*?)\$(\w+)(?:%([\w.]+))?\$")

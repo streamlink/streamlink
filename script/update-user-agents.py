@@ -80,12 +80,13 @@ def main(api_key: str, file: Path):
         )
         if response.status_code != 200:
             response.raise_for_status()
-        data: Any = response.json()
-        result: dict = data and data.get("result") or {}
-        if result.get("code") != "success":
-            raise ValueError(result.get("message") or "Missing version_data in JSON response")
     except requests.exceptions.RequestException as err:
         raise ValueError("Error while querying API or parsing JSON response") from err
+
+    data: Any = response.json()
+    result: dict = data and data.get("result") or {}
+    if result.get("code") != "success":
+        raise ValueError(result.get("message") or "Missing version_data in JSON response")
 
     version_data: dict = data.get("version_data") or {}
 

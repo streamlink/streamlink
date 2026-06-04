@@ -99,7 +99,7 @@ class DASHStreamWorker(SegmentedStreamWorker[DASHSegment, Response]):
         Do something and then wait for a given duration minus the time it took doing something
         """
         s = time()
-        yield
+        yield  # noqa: RUF075
         time_to_sleep = duration - (time() - s)
         if time_to_sleep > 0:
             self.wait(time_to_sleep)
