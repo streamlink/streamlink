@@ -376,15 +376,20 @@ class GitHubAPI:
 
             for commitdata in commits:
                 commit = commitdata.get("commit") or {}
+                author = commitdata.get("author") or {}
 
                 # ignore merge commits
                 if len(commitdata.get("parents") or []) > 1:
                     continue
 
+                # ignore bots
+                if author.get("type", "").lower() == "bot":
+                    continue
+
                 # GitHub identifies its users by checking the commit-author's email address
                 commit_author_email = Email((commit.get("author") or {}).get("email", ""))
                 # The commit-author's name can differ from the GitHub user account name -> use the provided author login
-                author_name: str | None = (commitdata.get("author") or {}).get("login")
+                author_name: str | None = author.get("login")
                 if not commit_author_email or not author_name:
                     continue
 
