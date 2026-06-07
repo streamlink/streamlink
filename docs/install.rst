@@ -187,16 +187,6 @@ Linux and BSD
       - .. code-block:: bash
 
             sudo dnf install streamlink
-    * - :octicon:`package-dependents` `FreeBSD (pkg)`_
-      - .. code-block:: bash
-
-            pkg install multimedia/streamlink
-
-    * - :octicon:`package-dependents` `FreeBSD (ports)`_
-      - .. code-block:: bash
-
-            cd /usr/ports/multimedia/streamlink
-            make config install clean
     * - :octicon:`package-dependents` `Gentoo Linux`_
       - .. code-block:: bash
 
@@ -233,8 +223,6 @@ Linux and BSD
 .. _Debian (sid, testing): https://packages.debian.org/sid/streamlink
 .. _Debian (stable): https://packages.debian.org/trixie-backports/streamlink
 .. _Fedora: https://src.fedoraproject.org/rpms/python-streamlink
-.. _FreeBSD (pkg): https://ports.freebsd.org/cgi/ports.cgi?query=streamlink&stype=name
-.. _FreeBSD (ports): https://www.freshports.org/multimedia/streamlink
 .. _Gentoo Linux: https://packages.gentoo.org/package/net-misc/streamlink
 .. _NixOS: https://github.com/NixOS/nixpkgs/tree/master/pkgs/by-name/st/streamlink
 .. _openSUSE: https://build.opensuse.org/package/show/multimedia:apps/streamlink
