@@ -8,6 +8,8 @@ updates:
       prefix: "ci.github"
     # ignore semver-patch version bumps for third-party actions
     ignore:
+      - dependency-name: "astral-sh/setup-uv"
+        update-types: [ "version-update:semver-patch" ]
       - dependency-name: "codecov/codecov-action"
         update-types: [ "version-update:semver-patch" ]
       - dependency-name: "pypa/gh-action-pypi-publish"
