@@ -24,3 +24,20 @@ updates:
         update-types:
           - "minor"
           - "patch"
+  - package-ecosystem: "uv"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    commit-message:
+      prefix: "build"
+    # only ever update the uv lockfile
+    versioning-strategy: "lockfile-only"
+    ignore:
+      # temporarily disable updates for Sphinx
+      - dependency-name: "sphinx"
+        update-types: ["version-update:semver-major"]
+    groups:
+      uv-lockfile:
+        update-types:
+          - "minor"
+          - "patch"
