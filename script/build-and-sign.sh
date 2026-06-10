@@ -35,9 +35,10 @@ pushd "${ROOT}"
 
 
 check_deps() {
-    local dep
+    local dep pip
+    [[ -n "${UV:-}" ]] && pip="uv pip" || pip="python -m pip"
     for dep in build versioningit; do
-        if ! python -m pip -q show "${dep}"; then
+        if ! $pip show -q "${dep}"; then
             err "Missing python package: ${dep}"
         fi
     done
