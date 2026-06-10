@@ -99,17 +99,14 @@ jobs:
       - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
         with:
           python-version: "3.14"
-      - name: Install Python dependencies
-        run: >
-          python -m pip install -U
-          -e .
-          --group build
-          --group script
+      - uses: astral-sh/setup-uv@fac544c07dec837d0ccb6301d7b5580bf5edae39 # v8.2.0
       - name: Build shell completions
         continue-on-error: ${{ matrix.continue || false }}
-        run: bash ./script/build-shell-completions.sh
+        run: |
+          uv run --frozen --group build ./script/build-shell-completions.sh
       - name: Build sdist and wheels
-        run: ./script/build-and-sign.sh
+        run: |
+          uv run --frozen --group build ./script/build-and-sign.sh
       - name: Plugins JSON
         run: |
           set -x
@@ -120,7 +117,7 @@ jobs:
       - name: Changelog
         if: github.event_name == 'pull_request'
         run: |
-          python ./script/github-release.py --check=${{ github.event.pull_request.head.sha }}
+          uv run --frozen --only-group script ./script/github-release.py --check=${{ github.event.pull_request.head.sha }}
 
   documentation:
     name: Test docs
