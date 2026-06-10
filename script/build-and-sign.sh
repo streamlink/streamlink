@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 shopt -s nullglob
-set -e
+set -euo pipefail
 
 
 ROOT=$(git rev-parse --show-toplevel 2>/dev/null || realpath "$(dirname "$(readlink -f "${0}")")/..")
@@ -62,8 +62,8 @@ build() {
 }
 
 sign() {
-    [[ -z "${SIGNING_KEY_PASSPHRASE}" ]] && { warn "Empty SIGNING_KEY_PASSPHRASE, not signing built files"; exit; }
-    [[ -z "${SIGNING_KEY_ID}" ]] && err "Missing SIGNING_KEY_ID"
+    [[ -z "${SIGNING_KEY_PASSPHRASE:-}" ]] && { warn "Empty SIGNING_KEY_PASSPHRASE, not signing built files"; exit; }
+    [[ -z "${SIGNING_KEY_ID:-}" ]] && err "Missing SIGNING_KEY_ID"
 
     local tmp
     # shellcheck disable=SC2064
