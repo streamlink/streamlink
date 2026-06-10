@@ -37,8 +37,8 @@ pushd "${ROOT}"
 check_deps() {
     local dep pip
     [[ -n "${UV:-}" ]] && pip="uv pip" || pip="python -m pip"
-    for dep in build versioningit; do
-        if ! $pip show -q "${dep}"; then
+    for dep in build setuptools versioningit; do
+        if ! $pip show "${dep}"; then
             err "Missing python package: ${dep}"
         fi
     done
@@ -53,12 +53,12 @@ build() {
     mkdir -p "${DIST}"
 
     log "Building Streamlink sdist and generic wheel"
-    python -m build --outdir "${DIST}" --sdist --wheel
+    python -m build --no-isolation --outdir "${DIST}" --sdist --wheel
 
     # see custom build-system override in pyproject.toml
     for platform in "${WHEEL_PLATFORMS[@]}"; do
         log "Building Streamlink platform-specific wheel for ${platform}"
-        python -m build --outdir "${DIST}" --wheel --config-setting="--build-option=--plat-name=${platform}"
+        python -m build --no-isolation --outdir "${DIST}" --wheel --config-setting="--build-option=--plat-name=${platform}"
     done
 }
 
