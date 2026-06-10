@@ -20,28 +20,23 @@ DEPS=()
 
 if [[ "${PY}" == cp314-cp314t ]]; then
     DEPS+=(
-        "brotli-20260523-1/brotli-1.2.0-${PY}-${PLATFORM}.whl"
-        "pycryptodome-20260424-1/pycryptodome-3.24.0b0-${PY}-${PLATFORM}.whl"
+        "${BASE}/brotli-20260523-1/brotli-1.2.0-${PY}-${PLATFORM}.whl"
+        "${BASE}/pycryptodome-20260610-1/pycryptodome-3.23.0-${PY}-${PLATFORM}.whl"
     )
 
 elif [[ "${PY}" == cp315-cp315 ]]; then
     DEPS+=(
-        "brotli-20260523-1/brotli-1.2.0-${PY}-${PLATFORM}.whl"
-        "lxml-20260523-1/lxml-6.1.1-${PY}-${PLATFORM}.whl"
+        "${BASE}/brotli-20260523-1/brotli-1.2.0-${PY}-${PLATFORM}.whl"
+        "${BASE}/lxml-20260523-1/lxml-6.1.1-${PY}-${PLATFORM}.whl"
     )
     if [[ "${PLATFORM}" == win_amd64 ]]; then
         DEPS+=(
-            "cffi-20260523-1/cffi-2.0.0-${PY}-${PLATFORM}.whl"
+            "${BASE}/cffi-20260523-1/cffi-2.0.0-${PY}-${PLATFORM}.whl"
         )
     fi
 fi
 
 
 if [[ ${#DEPS[@]} != 0 ]]; then
-    deps=()
-    for dep in "${DEPS[@]}"; do
-        deps+=("${BASE}/${dep}")
-    done
-
-    python -m pip install -U "${deps[@]}"
+    uv pip install -U "${DEPS[@]}"
 fi
