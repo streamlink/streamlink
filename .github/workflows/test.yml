@@ -72,7 +72,7 @@ jobs:
         continue-on-error: ${{ matrix.continue || false }}
         shell: bash
         run: |
-          export PYTHON_GIL=$(python -c 'import sysconfig;print(1 - sysconfig.get_config_var("Py_GIL_DISABLED"))')
+          export PYTHON_GIL=$(python -c 'import sysconfig;print(1 - (sysconfig.get_config_var("Py_GIL_DISABLED") or 0))')
           pytest --trace-config -r a -p pytest_cov --cov --cov-branch --cov-report=xml --durations 10
       - name: Upload coverage data
         if: github.event_name != 'schedule'
