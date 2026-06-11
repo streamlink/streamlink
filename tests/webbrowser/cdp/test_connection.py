@@ -68,7 +68,7 @@ class FakeEvent(CDPEvent, event=None):
 
 @pytest.fixture()
 async def cdp_connection(websocket_connection: FakeWebsocketConnection):
-    try:  # noqa: PLW0717
+    try:
         async with CDPConnection.create("ws://localhost:1234/fake") as cdp_connection:
             assert isinstance(cdp_connection, CDPConnection)
             assert not websocket_connection.closed
