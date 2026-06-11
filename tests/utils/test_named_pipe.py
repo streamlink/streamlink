@@ -55,7 +55,7 @@ class ReadNamedPipeThreadPosix(ReadNamedPipeThread):
 class ReadNamedPipeThreadWindows(ReadNamedPipeThread):
     def read(self):
         handle = windll.kernel32.CreateFileW(str(self.path), GENERIC_READ, 0, None, OPEN_EXISTING, 0, None)
-        try:  # noqa: PLW0717
+        try:
             while True:
                 data = create_string_buffer(NamedPipeWindows.bufsize)
                 read = c_ulong(0)
