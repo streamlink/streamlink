@@ -31,22 +31,25 @@ class NOS(Plugin):
                 validate.none_or_all(
                     validate.parse_json(),
                     {
-                        "@type": validate.any(
-                            "VideoObject",
-                            validate.all(
-                                list,
-                                validate.contains("VideoObject"),
-                            ),
+                        "@graph": validate.all(
+                            [dict],
+                            validate.filter(lambda item: item.get("@type") == "VideoObject"),
+                            validate.filter(lambda item: item.get("encodingFormat") == "application/vnd.apple.mpegurl"),
                         ),
-                        "encodingFormat": "application/vnd.apple.mpegurl",
-                        "contentUrl": validate.url(),
-                        "identifier": validate.any(int, str),
-                        "name": str,
                     },
-                    validate.union_get(
-                        "contentUrl",
-                        "identifier",
-                        "name",
+                    validate.get("@graph"),
+                    validate.get(0),
+                    validate.none_or_all(
+                        {
+                            "contentUrl": validate.url(),
+                            "identifier": validate.any(int, str),
+                            "name": str,
+                        },
+                        validate.union_get(
+                            "contentUrl",
+                            "identifier",
+                            "name",
+                        ),
                     ),
                 ),
             ),
@@ -56,12 +59,16 @@ class NOS(Plugin):
 
         hls_url, self.id, self.title = data
 
-        res = self.session.http.get(hls_url, raise_for_status=False)
+        headers = {
+            "Origin": "https://nos.nl",
+            "Referer": self.url,
+        }
+        res = self.session.http.get(hls_url, headers=headers, raise_for_status=False)
         if res.status_code >= 400:
             log.error("Content is inaccessible or may have expired")
             return
 
-        return HLSStream.parse_variant_playlist(self.session, hls_url)
+        return HLSStream.parse_variant_playlist(self.session, hls_url, headers=headers)
 
 
 __plugin__ = NOS
