@@ -52,8 +52,10 @@ class TestRTPPlay:
         var f = {hls : atob( decodeURIComponent(["aHR0c", "HM6Ly", "92YWx", "pZA=="].join("") ) ), dash: foo() };
     """
 
+    # noinspection PyNestedDecorators
     @pytest.fixture(scope="class")
-    def playlist(self):
+    @classmethod
+    def playlist(cls):
         with text("hls/test_master.m3u8") as fd:
             return fd.read()
 

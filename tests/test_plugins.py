@@ -54,8 +54,10 @@ def unique(iterable):
 
 
 class TestPlugins:
+    # noinspection PyNestedDecorators
     @pytest.fixture(scope="class", params=plugin_modules, ids=[moduleinfo.name for moduleinfo in plugin_modules])
-    def plugin(self, request):
+    @classmethod
+    def plugin(cls, request):
         return exec_module(request.param.module_finder, f"streamlink.plugins.{request.param.name}")
 
     def test_exports_plugin(self, plugin):
@@ -111,8 +113,10 @@ class TestPluginTests:
 
 
 class TestPluginMetadata:
+    # noinspection PyNestedDecorators
     @pytest.fixture(scope="class")
-    def metadata_keys_all(self):
+    @classmethod
+    def metadata_keys_all(cls):
         return (
             "description",
             "url",
@@ -124,32 +128,40 @@ class TestPluginMetadata:
             "notes",
         )
 
+    # noinspection PyNestedDecorators
     @pytest.fixture(scope="class")
-    def metadata_keys_required(self):
+    @classmethod
+    def metadata_keys_required(cls):
         return (
             "description",
             "url",
             "type",
         )
 
+    # noinspection PyNestedDecorators
     @pytest.fixture(scope="class")
-    def metadata_keys_repeat(self):
+    @classmethod
+    def metadata_keys_repeat(cls):
         return (
             "url",
             "metadata",
             "notes",
         )
 
+    # noinspection PyNestedDecorators
     @pytest.fixture(scope="class")
-    def metadata_keys_no_repeat(self, metadata_keys_all, metadata_keys_repeat):
+    @classmethod
+    def metadata_keys_no_repeat(cls, metadata_keys_all, metadata_keys_repeat):
         return tuple(
             key
             for key in metadata_keys_all
             if key not in metadata_keys_repeat
         )  # fmt: skip
 
+    # noinspection PyNestedDecorators
     @pytest.fixture(scope="class", params=plugins_no_protocols)
-    def tokeninfo(self, request):
+    @classmethod
+    def tokeninfo(cls, request):
         with (Path(plugins_path) / f"{request.param}.py").open(encoding="utf-8") as handle:
             tokeninfo = next(tokenize.generate_tokens(handle.readline), None)
 
@@ -158,8 +170,10 @@ class TestPluginMetadata:
 
         return tokeninfo
 
+    # noinspection PyNestedDecorators
     @pytest.fixture(scope="class")
-    def metadata_items(self, tokeninfo: tokenize.TokenInfo):
+    @classmethod
+    def metadata_items(cls, tokeninfo: tokenize.TokenInfo):
         match = re.search(r"^\"\"\"\n(?P<metadata>.+)\n\"\"\"$", tokeninfo.string, re.DOTALL)
         assert match is not None, "String is a properly formatted long string"
 
@@ -171,12 +185,16 @@ class TestPluginMetadata:
 
         return [(m.group("key"), m.group("value")) for m in lines if m]
 
+    # noinspection PyNestedDecorators
     @pytest.fixture(scope="class")
-    def metadata_keys(self, metadata_items):
+    @classmethod
+    def metadata_keys(cls, metadata_items):
         return tuple(key for key, value in metadata_items)
 
+    # noinspection PyNestedDecorators
     @pytest.fixture(scope="class")
-    def metadata_dict(self, metadata_keys_no_repeat, metadata_items):
+    @classmethod
+    def metadata_dict(cls, metadata_keys_no_repeat, metadata_items):
         return {k: v for k, v in metadata_items if k in metadata_keys_no_repeat}
 
     def test_no_unknown(self, metadata_keys_all, metadata_keys):

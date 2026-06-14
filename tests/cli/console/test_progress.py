@@ -13,8 +13,10 @@ from tests.testutils.handshake import Handshake
 
 
 class TestProgressFormatter:
+    # noinspection PyNestedDecorators
     @pytest.fixture(scope="class")
-    def params(self):
+    @classmethod
+    def params(cls):
         return dict(
             written="WRITTEN",
             elapsed="ELAPSED",
