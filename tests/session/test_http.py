@@ -38,8 +38,10 @@ _original_allowed_gai_family = urllib3.util.connection.allowed_gai_family
 
 
 class TestUrllib3Overrides:
+    # noinspection PyNestedDecorators
     @pytest.fixture(scope="class")
-    def httpsession(self) -> HTTPSession:
+    @classmethod
+    def httpsession(cls) -> HTTPSession:
         return HTTPSession()
 
     @pytest.mark.parametrize(
