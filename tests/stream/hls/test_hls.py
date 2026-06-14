@@ -1631,13 +1631,25 @@ class TestHlsReloadTime(TestMixinStreamHLS, unittest.TestCase):
         time = self.subject([Playlist(0, [], end=True, targetduration=0)], reload_time="live-edge")
         assert time == 6, "sets reload time to 6 seconds when no segments and no targetduration are available"
 
-    def test_number(self):
+    def test_number_int(self):
         time = self.subject([Playlist(0, self.segments, end=True, targetduration=4)], reload_time="2")
         assert time == 2, "number values override the reload time"
+
+    def test_number_float(self):
+        time = self.subject([Playlist(0, self.segments, end=True, targetduration=4)], reload_time="2.5")
+        assert time == pytest.approx(2.5), "number values override the reload time"
 
     def test_number_invalid(self):
         time = self.subject([Playlist(0, self.segments, end=True, targetduration=4)], reload_time="0")
         assert time == 4, "invalid number values set the reload time to the playlist's targetduration"
+
+    @patch("streamlink.stream.hls.hls.log")
+    def test_number_error(self, mock_log: Mock):
+        time = self.subject([Playlist(0, self.segments, end=True, targetduration=4)], reload_time="foo")
+        assert time == 4, "invalid number values set the reload time to the playlist's targetduration"
+        assert mock_log.error.call_args_list == [
+            call("Failed parsing hls-playlist-reload-time value: could not convert string to float: 'foo'"),
+        ]
 
     def test_no_target_duration(self):
         time = self.subject([Playlist(0, self.segments, end=True, targetduration=0)], reload_time="default")
