@@ -23,6 +23,7 @@ from streamlink.utils.cache import LRUCache
 from streamlink.utils.crypto import AES, unpad
 from streamlink.utils.formatter import Formatter
 from streamlink.utils.l10n import Language
+from streamlink.utils.num import to_float
 from streamlink.utils.times import now
 
 
@@ -325,12 +326,19 @@ class HLSStreamWorker(SegmentedStreamWorker[HLSSegment, Response]):
 
         self.reload_attempts = self.session.options.get("hls-playlist-reload-attempts")
         self.reload_time = self.session.options.get("hls-playlist-reload-time")
-        if str(self.reload_time).isnumeric() and float(self.reload_time) >= self._RELOAD_TIME_MIN:
-            self.reload_time = float(self.reload_time)
-        elif self.reload_time not in ("segment", "live-edge"):
+        if self.reload_time in (None, "default"):
             self.reload_time = 0.0
+        elif self.reload_time not in ("segment", "live-edge"):
+            try:
+                self.reload_time = to_float(self.reload_time, raise_on_error=True)
+                if self.reload_time < self._RELOAD_TIME_MIN:
+                    self.reload_time = 0.0
+            except Exception as err:
+                log.error(f"Failed parsing hls-playlist-reload-time value: {err}")
+                self.reload_time = 0.0
         self._reload_time: float = self._RELOAD_TIME_DEFAULT
         self._reload_last: datetime = now()
+
         self.passthrough_encrypted = self.session.options.get("stream-passthrough-encrypted")
 
     def _warn_playlist_sequence(self):
