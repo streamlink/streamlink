@@ -490,7 +490,7 @@ def to_json(data: Output, fd: TextIO | None = None, comments: list[str] | None =
 
 if __name__ == "__main__":  # pragma: no cover
 
-    def main():
+    def main() -> None:
         parser = argparse.ArgumentParser()
         parser.add_argument("dir", nargs="?", type=Path, default=DEFAULT_PLUGINSPATH)
         parser.add_argument("--no-comments", action="store_true")
@@ -500,7 +500,7 @@ if __name__ == "__main__":  # pragma: no cover
         args = parser.parse_args()
         data = build(args.dir)
 
-        options = {"pretty": args.pretty}
+        options: dict = {"pretty": args.pretty}
         if args.no_comments:
             options["comments"] = []
 
