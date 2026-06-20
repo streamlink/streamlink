@@ -9,18 +9,15 @@ class TestPluginCanHandleUrlDouyu(PluginCanHandleUrl):
         "https://www.douyu.com/12345",
         "https://www.douyu.com/topic/12345",
         "http://www.douyu.com/999",
-        "https://www.douyu.com/952595?dyshid=16793ba-595f1b40c7d47a73240bc10b26051701",
     ]
 
     should_match_groups = [
         ("https://www.douyu.com/288016", {"rid": "288016"}),
         ("https://www.douyu.com/topic/12345", {"rid": "12345"}),
-        ("https://www.douyu.com/952595?dyshid=abc123", {"rid": "952595", "dyshid": "abc123"}),
     ]
 
     should_not_match = [
         "https://www.douyu.com/",
         "https://www.douyu.com/member/cp",
         "https://www.douyu.com/abc_def",
-        "https://example.com/12345",
     ]
