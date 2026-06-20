@@ -86,8 +86,47 @@ class Douyu(Plugin):
             f = hashlib.md5((f + key).encode("utf-8")).hexdigest()
         return hashlib.md5((f + key + suffix).encode("utf-8")).hexdigest()
 
-    def _request_stream(self, rid: str, rate: int, did: str, enc_data: dict, auth: str) -> dict | None:
+    def _get_encryption(self, did: str) -> dict | None:
+        enc_response = self.session.http.get(
+            self._URL_ENCRYPTION,
+            params={"did": did},
+            schema=validate.Schema(
+                validate.parse_json(),
+                {
+                    "error": int,
+                    "data": validate.any(
+                        None,
+                        {
+                            "key": str,
+                            "rand_str": str,
+                            "enc_time": int,
+                            "enc_data": str,
+                            "is_special": int,
+                        },
+                    ),
+                },
+            ),
+        )
+        if enc_response["error"] != 0 or not enc_response["data"]:
+            return None
+        return enc_response["data"]
+
+    def _request_stream(self, rid: str, rate: int, did: str) -> dict | None:
+        enc_data = self._get_encryption(did)
+        if not enc_data:
+            log.error("Failed to get encryption parameters")
+            return None
+
         ts = int(time.time())
+        auth = self._compute_auth(
+            rid=rid,
+            ts=ts,
+            key=enc_data["key"],
+            rand_str=enc_data["rand_str"],
+            enc_time=enc_data["enc_time"],
+            is_special=enc_data["is_special"],
+        )
+
         play_data = self.session.http.post(
             self._URL_PLAY.format(rid=rid),
             data={
@@ -134,43 +173,7 @@ class Douyu(Plugin):
             log.info("Streamer is offline")
             return
 
-        enc_response = self.session.http.get(
-            self._URL_ENCRYPTION,
-            params={"did": did},
-            schema=validate.Schema(
-                validate.parse_json(),
-                {
-                    "error": int,
-                    "data": validate.any(
-                        None,
-                        {
-                            "key": str,
-                            "rand_str": str,
-                            "enc_time": int,
-                            "enc_data": str,
-                            "is_special": int,
-                        },
-                    ),
-                },
-            ),
-        )
-
-        if enc_response["error"] != 0 or not enc_response["data"]:
-            log.error("Failed to get encryption parameters")
-            return
-
-        enc_data = enc_response["data"]
-        ts = int(time.time())
-        auth = self._compute_auth(
-            rid=rid,
-            ts=ts,
-            key=enc_data["key"],
-            rand_str=enc_data["rand_str"],
-            enc_time=enc_data["enc_time"],
-            is_special=enc_data["is_special"],
-        )
-
-        first_data = self._request_stream(rid, 0, did, enc_data, auth)
+        first_data = self._request_stream(rid, 0, did)
         if not first_data:
             log.error("Failed to get stream URL")
             return
@@ -205,7 +208,7 @@ class Douyu(Plugin):
             if rate == 0:
                 data = first_data
             else:
-                data = self._request_stream(rid, rate, did, enc_data, auth)
+                data = self._request_stream(rid, rate, did)
 
             if data:
                 url = f"{data['rtmp_url']}/{data['rtmp_live']}"
