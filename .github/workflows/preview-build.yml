@@ -9,6 +9,7 @@ on:
       - "**"
     paths:
       - "pyproject.toml"
+      - "uv.lock"
       - "setup.py"
       - "MANIFEST.in"
       - "build_backend/**"
