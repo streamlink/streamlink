@@ -36,8 +36,3 @@ updates:
       # temporarily disable updates for Sphinx
       - dependency-name: "sphinx"
         update-types: ["version-update:semver-major"]
-    groups:
-      uv-lockfile:
-        update-types:
-          - "minor"
-          - "patch"
