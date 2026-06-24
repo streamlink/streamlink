@@ -4,6 +4,7 @@ on:
   push:
     branches-ignore:
       - "automated/**"
+      - "dependabot/**"
     tags-ignore:
       - "**"
   pull_request: {}
