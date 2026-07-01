@@ -1,9 +1,4 @@
 #!/usr/bin/env python
-# /// script
-# dependencies = [
-#   "requests",
-# ]
-# ///
 
 from __future__ import annotations
 
