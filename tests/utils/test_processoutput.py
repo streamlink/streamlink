@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import sys
+from subprocess import PIPE
 from typing import TYPE_CHECKING
 from unittest.mock import Mock, call
 
@@ -52,6 +53,7 @@ class FakeProcessOutput(ProcessOutput):
         if ignoresigterm:
             command.append("ignoresigterm")
         kwargs.setdefault("command", command)
+        kwargs.setdefault("stdin", PIPE)
 
         super().__init__(*args, **kwargs)
         self.stream_receive_some_event = trio.Event()
@@ -345,6 +347,45 @@ async def test_output_exception(get_process: Callable[[], Awaitable[trio.Process
     assert process
     assert process.poll() is not None
     assert exc_info.group_contains(ZeroDivisionError)
+
+
+@pytest.mark.trio()
+@pytest.mark.parametrize(
+    ("kwargs_constructor", "kwargs_arun"),
+    [
+        pytest.param(
+            {"stdin": b"exit:123\n"},
+            {},
+            id="constructor",
+        ),
+        pytest.param(
+            {},
+            {"stdin": b"exit:123\n"},
+            id="arun",
+        ),
+    ],
+)
+async def test_stdin_arg(get_process: Callable[[], Awaitable[trio.Process]], kwargs_constructor: dict, kwargs_arun: dict):
+    class CustomProcessOutput(ProcessOutput):
+        def onexit(self, code: int) -> bool:
+            return code == 123
+
+    class CustomFakeProcessOutput(FakeProcessOutput, CustomProcessOutput):
+        pass
+
+    po = CustomFakeProcessOutput(timeout=4, **kwargs_constructor)
+    result = None
+
+    async def run():
+        nonlocal result
+        result = await po.arun(**kwargs_arun)
+
+    async with trio.open_nursery() as nursery:
+        nursery.start_soon(run)
+        process = await get_process()
+        assert process.stdin is None
+
+    assert result
 
 
 @pytest.mark.posix_only()

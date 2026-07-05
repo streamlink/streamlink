@@ -112,7 +112,7 @@ class TestCommand:
         session.options.update({"ffmpeg-no-validation": False})
 
         class MyFFmpegVersionOutput(FFmpegVersionOutput):
-            def run(self):
+            def run(self, *_, **__):
                 self.onstdout(0, "ffmpeg version 0.0.0 suffix")
                 self.onstdout(1, "foo")
                 self.onstdout(2, "bar")
@@ -148,7 +148,7 @@ class TestCommand:
         })
 
         class MyFFmpegVersionOutput(FFmpegVersionOutput):
-            def run(self):
+            def run(self, *_, **__):
                 self.onstdout(0, "ffmpeg version 0.0.0 custom")
                 return True
 
@@ -166,7 +166,7 @@ class TestCommand:
         session.options.update({"ffmpeg-no-validation": False})
 
         class MyFFmpegVersionOutput(FFmpegVersionOutput):
-            def run(self):
+            def run(self, *_, **__):
                 return False
 
         mock_versionoutput = Mock(side_effect=MyFFmpegVersionOutput)
