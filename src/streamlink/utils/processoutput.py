@@ -5,13 +5,18 @@ import math
 from contextlib import aclosing, suppress
 from functools import partial
 from subprocess import PIPE
-from typing import TYPE_CHECKING, BinaryIO
+from typing import TYPE_CHECKING, BinaryIO, TypedDict
 
 import trio
 
 
 if TYPE_CHECKING:
     from collections.abc import AsyncGenerator, Callable
+
+    from typing_extensions import Unpack
+
+    class TRunArgs(TypedDict, total=False):
+        stdin: int | bytes | BinaryIO | None
 
 
 class ProcessOutput:
@@ -23,7 +28,7 @@ class ProcessOutput:
         command: list[str],
         timeout: float = math.inf,
         wait_terminate: float = 2.0,
-        stdin: int | bytes | BinaryIO | None = PIPE,
+        stdin: int | bytes | BinaryIO = b"",
     ):
         self.command = command
         self.timeout = timeout
@@ -32,10 +37,11 @@ class ProcessOutput:
         self._send_channel, self._receive_channel = trio.open_memory_channel(1)
         self._receive_max_bytes: int | None = None
 
-    def run(self) -> bool:  # pragma: no cover
-        return trio.run(self.arun)
+    def run(self, **kwargs: Unpack[TRunArgs]) -> bool:  # pragma: no cover
+        return trio.run(partial(self.arun, **kwargs))
 
-    async def arun(self) -> bool:
+    async def arun(self, **kwargs: Unpack[TRunArgs]) -> bool:
+        stdin = kwargs.get("stdin")
         with trio.move_on_after(self.timeout):
             async with trio.open_nursery() as nursery:
                 run_process = partial(
@@ -44,7 +50,7 @@ class ProcessOutput:
                     check=False,
                     capture_stdout=False,
                     capture_stderr=False,
-                    stdin=self.stdin,
+                    stdin=self.stdin if stdin is None else stdin,
                     stdout=PIPE,
                     stderr=PIPE,
                     deliver_cancel=self._deliver_cancel,
