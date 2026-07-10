@@ -107,7 +107,7 @@ test = [
   "freezegun >=1.5.0",
 ]
 lint = [
-  "ruff ==0.15.17",
+  "ruff ==0.15.21",
 ]
 typing = [
   { include-group = "test" },
@@ -325,7 +325,6 @@ ignore = [
   "RUF021",  # parenthesize-chained-operators
   "RUF022",  # unsorted-dunder-all
   "RUF027",  # missing-f-string-syntax
-  "RUF076",  # pytest-fixture-autouse
 ]
 future-annotations = true
 
