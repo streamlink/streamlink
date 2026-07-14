@@ -877,3 +877,34 @@ class TestMPDParser:
         assert getattr(mpd.get_representation(("period-0", "0", "audio2")), "mimeType", None) == "audio/mp4"
         assert getattr(mpd.get_representation(("period-0", None, "video1")), "mimeType", None) == "video/mp4"
         assert getattr(mpd.get_representation(("period-0", None, "video2")), "mimeType", None) == "video/mp4"
+
+    def test_attribute_namespaces(self):
+        with xml("dash/test_attribute_namespaces.mpd") as mpd_xml:
+            mpd = MPD(mpd_xml, base_url="http://test/", url="http://test/manifest.mpd")
+
+        assert [
+            (
+                cont_prot.schemeIdUri,
+                cont_prot.default_KID,
+                cont_prot.value,
+            )
+            for period in mpd.periods
+            for aset in period.adaptationSets
+            for cont_prot in aset.contentProtections
+        ] == [
+            (
+                "urn:mpeg:dash:mp4protection:2011",
+                "00000000-0000-0000-0000-000000000000",
+                "cenc",
+            ),
+            (
+                "urn:mpeg:dash:mp4protection:2011",
+                "00000000-0000-0000-0000-000000000001",
+                "cenc",
+            ),
+            (
+                "urn:uuid:9a04f079-9840-4286-ab92-e65be0885f95",
+                None,
+                "MSPR 2.0",
+            ),
+        ]

@@ -1094,4 +1094,4 @@ class ContentProtection(MPDNode):
 
         self.schemeIdUri = self.attr("schemeIdUri")
         self.value = self.attr("value")
-        self.default_KID = self.attr("default_KID")
+        self.default_KID = self.attr("default_KID") or self.attr("default_KID", namespace="urn:mpeg:cenc:2013")  # 5.8.5.2.2

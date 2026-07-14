@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<MPD
+  xmlns="urn:mpeg:dash:schema:mpd:2011"
+  xmlns:cenc="urn:mpeg:cenc:2013"
+  xmlns:mas="urn:marlin:mas:1-0:services:schemas:mpd"
+  xmlns:mspr="urn:microsoft:playready"
+  maxSegmentDuration="PT0H0M3.840S"
+  mediaPresentationDuration="PT0H7M44.000S"
+  minBufferTime="PT1.500S"
+  profiles="urn:dvb:dash:profile:dvb-dash:2014,urn:dvb:dash:profile:dvb-dash:isoff-ext-live:2014"
+  type="static"
+>
+ <Period duration="PT0H7M44.000S" id="0">
+  <AdaptationSet contentType="video" id="0" lang="en" maxFrameRate="25" maxHeight="2160" maxWidth="3840" par="16:9" segmentAlignment="true" startWithSAP="1">
+   <ContentProtection default_KID="00000000-0000-0000-0000-000000000000" schemeIdUri="urn:mpeg:dash:mp4protection:2011" value="cenc"/>
+   <ContentProtection cenc:default_KID="00000000-0000-0000-0000-000000000001" schemeIdUri="urn:mpeg:dash:mp4protection:2011" value="cenc"/>
+   <ContentProtection schemeIdUri="urn:uuid:9a04f079-9840-4286-ab92-e65be0885f95" value="MSPR 2.0">
+     <mspr:pro>...</mspr:pro>
+     <cenc:pssh>...</cenc:pssh>
+   </ContentProtection>
+   <Representation bandwidth="3546816" codecs="avc1.640028" frameRate="25" height="2160" id="0" mimeType="video/mp4" sar="1:1" scanType="progressive" width="3840">
+   </Representation>
+  </AdaptationSet>
+ </Period>
+</MPD>
