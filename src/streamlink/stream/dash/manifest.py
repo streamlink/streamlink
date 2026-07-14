@@ -220,15 +220,24 @@ class MPDNode:
         inherited: TAttrInherited = None,
     ) -> TAttrParseResult | TAttrDefault: ...  # pragma: no cover
 
-    def attr(self, key, parser=None, default=None, required=False, inherited=None):
+    def attr(self, key, parser=None, default=None, required=False, inherited=None, match_local_name=True):
+        def _local_name(name):
+            return name.split("}", 1)[1] if name.startswith("{") else name
+
         self.attributes.add(key)
-        if key in self.attrib:
-            value = self.attrib.get(key)
+        value = self.attrib.get(key)
+        if value is None and match_local_name:
+            matches = [v for k, v in self.attrib.items() if _local_name(k) == key]
+            if len(matches) == 1:
+                value = matches[0]
+            elif len(matches) > 1:
+                raise MPDParsingError(f"Multiple namespaced attributes found matching {key} ")
+        if value is not None:
             if parser and callable(parser):
                 return parser(value)
             else:
                 return value
-        elif inherited:
+        if inherited:
             value = self.walk_back_get_attr(key, inherited)
             if value is not None:
                 return value
