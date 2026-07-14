@@ -227,9 +227,9 @@ class MPDNode:
         self.attributes.add(key)
         value = self.attrib.get(key)
         if value is None and match_local_name:
-            matches = [v for k, v in self.attrib.items() if _local_name(k) == key]
+            matches = [k for k in self.attrib if _local_name(k) == key]
             if len(matches) == 1:
-                value = matches[0]
+                value = self.attrib[matches[0]]
             elif len(matches) > 1:
                 log.debug("Ambiguous local name lookup for attribute %r on <%s>: %s", key, self.__tag__, matches)
         if value is not None:
