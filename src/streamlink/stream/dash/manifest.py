@@ -231,7 +231,12 @@ class MPDNode:
             if len(matches) == 1:
                 value = matches[0]
             elif len(matches) > 1:
-                raise MPDParsingError(f"Multiple namespaced attributes found matching {key} ")
+                log.debug(
+                    "Ambiguous local name lookup for attribute %r on <%s>: %s",
+                    key,
+                    self.__tag__,
+                    matches,
+                )
         if value is not None:
             if parser and callable(parser):
                 return parser(value)
