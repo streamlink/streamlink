@@ -105,6 +105,10 @@ Higher quality streams
 
 Access to higher quality streams, if available, requires the :option:`--twitch-supported-codecs=h264,h265,av1` plugin argument.
 
+Depending on the stream, an additional requirement may be the `authentication with a Twitch account <Authentication_>`_.
+Please also be aware that switching to a different player type other than the default "web" player (e.g. "frontpage")
+via :option:`--twitch-access-token-param=playerType=...` may prevent access to higher quality streams.
+
 With the introduction of Twitch's "enhanced broadcasting" system, channels are allowed to stream in higher qualities
 than before by using more modern video codecs. Since playback capabilities are not guaranteed on every system, clients need to
 explicitly announce which video codecs are supported.
@@ -114,6 +118,17 @@ explicitly announce which video codecs are supported.
 
 Higher quality streams may only be available by enabling ``h265`` or ``av1``.
 Lower quality streams which are re-encoded on Twitch's end may still be ``h264``, even if not requested.
+
+.. note::
+
+    Higher quality streams use fragmented MPEG-4 containers (``.mp4``) instead of MPEG-2 transport streams (``.ts``).
+    This is also the case for re-encoded lower quality streams on Twitch's end when the input is a higher quality stream.
+
+.. note::
+
+    Streams in a fragmented MPEG-4 container always have a non-zero presentation time offset which points to the start
+    of the broadcast. While modern video players handle this offset seamlessly, other programs may require a simple re-mux
+    via FFmpeg (``-c copy``) first, as it'll adjust the timestamps automatically.
 
 .. dropdown:: Changelog
     :animate: fade-in-slide-down
