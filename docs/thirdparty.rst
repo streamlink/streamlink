@@ -76,4 +76,30 @@ OBS-Streamlink
   embedding streams directly as a scene source. This is useful for broadcasters of
   multi-platform live streams and for live commentators.
 
+Clippiti
+---------
+
+.. image:: https://raw.githubusercontent.com/tarzasai/Clippiti/main/doc/media/main-window.png
+  :align: center
+  :alt: Clippiti screenshot with OSD help and pinned toolbar
+
+:Description: Cross-platforms livestream player with clipping and recording
+:OS: :fab:`windows;fa-xl` :fab:`apple;fa-xl` :fab:`linux;fa-xl`
+:Author: `tarzasai <https://github.com/tarzasai>`_
+:Website: https://github.com/tarzasai/clippiti
+:Info: A PyQt6 desktop app that opens livestreams with Streamlink, keeps a rolling local buffer, and lets you take snapshots or save both live and past moments as clips (ts or mp4). Quick install from PyPi.
+
+Lurkiti
+---------
+
+.. image:: https://raw.githubusercontent.com/tarzasai/Lurkiti/main/media/settings1.png
+  :align: center
+  :alt: Lurkiti screenshot of the settings window
+
+:Description: A system-tray app to monitors and launch livestreams with Streamlink
+:OS: :fab:`windows;fa-xl` :fab:`apple;fa-xl` :fab:`linux;fa-xl`
+:Author: `tarzasai <https://github.com/tarzasai>`_
+:Website: https://github.com/tarzasai/Lurkiti
+:Info: Per-stream quality, notification, streamlink and player options. Last online / last watched tracking. Favicon fetching and caching. Quick install from PyPi.
+
 .. content list end
