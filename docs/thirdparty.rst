@@ -76,4 +76,23 @@ OBS-Streamlink
   embedding streams directly as a scene source. This is useful for broadcasters of
   multi-platform live streams and for live commentators.
 
+Lurkiti
+-------
+
+.. image:: https://raw.githubusercontent.com/tarzasai/Lurkiti/v1.0.22/media/settings1.png
+  :align: center
+  :alt: Lurkiti settings window
+
+:Description: Monitors livestreams from the system tray and opens them with
+  Streamlink
+:Type: GUI (system tray application)
+:OS: :fab:`windows;fa-xl` :fab:`apple;fa-xl` :fab:`linux;fa-xl`
+:Author: `tarzasai <https://github.com/tarzasai>`_
+:Website: https://github.com/tarzasai/Lurkiti
+:Info: Lurkiti is a system-tray app that monitors a list of livestreams (Twitch,
+  YouTube and any other Streamlink-supported site) and notifies you when they go
+  live. Streams open in your preferred player (mpv, VLC, Clippiti, etc.) with
+  per-stream quality, notification, Streamlink and player option overrides.
+  Quick install from PyPi.
+
 .. content list end
