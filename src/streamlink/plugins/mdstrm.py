@@ -3,13 +3,13 @@ $description CDN hosting live content for various websites in the Americas.
 $url mdstrm.com
 $url latina.pe/tvenvivo
 $url saltillo.multimedios.com/video
-$type live
+$type live, vod
 $metadata id
 $metadata title
 """
 
 import re
-from urllib.parse import urlparse
+from urllib.parse import parse_qsl, urlparse
 
 from streamlink.logger import getLogger
 from streamlink.plugin import Plugin, pluginmatcher
@@ -28,7 +28,7 @@ log = getLogger(__name__)
     re.compile(r"https://saltillo\.multimedios\.com/video"),
 )
 @pluginmatcher(
-    re.compile(r"https://mdstrm\.com/live-stream/\w+"),
+    re.compile(r"https://mdstrm\.com/(?:live-stream|embed)/\w+"),
 )
 class MDStrm(Plugin):
     @staticmethod
@@ -58,7 +58,10 @@ class MDStrm(Plugin):
         return string
 
     def _get_streams(self):
-        p_netloc = urlparse(self.url).netloc
+        parsed_url = urlparse(self.url)
+        query = dict(parse_qsl(parsed_url.query))
+
+        p_netloc = parsed_url.netloc
         if p_netloc == "mdstrm.com":
             url_iframe = self.url
         else:
@@ -88,7 +91,7 @@ class MDStrm(Plugin):
             validate.parse_json(),
             {
                 "id": str,
-                "isOnline": bool,
+                validate.optional("isOnline"): bool,
                 "src": {"hls": validate.url()},
                 "type": str,
                 "without_cookies": bool,
@@ -148,6 +151,8 @@ class MDStrm(Plugin):
                 params["adInsertionSessionId"] = ad
             else:
                 log.debug("Failed to find 'parent._dai_session'")
+        if access_token := query.get("access_token") is not None:
+            params["access_token"] = access_token
 
         log.trace("%r", params)
         self.id = options["id"]

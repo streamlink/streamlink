@@ -11,6 +11,7 @@ class TestPluginCanHandleUrlMDStrm(PluginCanHandleUrl):
         "https://mdstrm.com/live-stream/5ce7109c7398b977dc0744cd",
         "https://mdstrm.com/live-stream/60b578b060947317de7b57ac",
         "https://mdstrm.com/live-stream/61e1e088d04d7744686afc42",
+        "https://mdstrm.com/embed/6a59aaedf3a78bd81a5cdb97",
         "https://saltillo.multimedios.com/video/monterrey-tv-en-vivo/v7567",
         "https://www.latina.pe/tvenvivo",
     ]
