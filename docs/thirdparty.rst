@@ -79,7 +79,7 @@ OBS-Streamlink
 Lurkiti
 -------
 
-.. image:: https://raw.githubusercontent.com/tarzasai/Lurkiti/v1.0.22/media/settings1.png
+.. image:: https://github.com/user-attachments/assets/25ae6d3c-f2d1-4303-b686-d9d703d38661
   :align: center
   :alt: Lurkiti settings window
 
@@ -98,7 +98,7 @@ Lurkiti
 Clippiti
 --------
 
-.. image:: https://raw.githubusercontent.com/tarzasai/clippiti/v0.1.16/doc/media/main-window.png
+.. image:: https://github.com/user-attachments/assets/de6bed0e-dfa1-4119-8f37-ffac7e3f6470
   :align: center
   :alt: Clippiti main window with OSD help and pinned toolbar
 
