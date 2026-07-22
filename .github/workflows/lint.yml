@@ -4,12 +4,18 @@ on:
   pull_request: {}
 
 jobs:
-  files:
-    name: Files
+  repo-integrity:
+    name: Repo integrity
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 300
+      - name: Fetch base branch ref
+        run: |
+          git fetch origin --depth=300 "+${{ github.base_ref }}:refs/remotes/origin/${{ github.base_ref }}"
       - name: File permissions
         if: ${{ !cancelled() }}
         run: "! grep -Ev '^644' <(git ls-files src/ tests/ | xargs stat '--format=%a %n')"
@@ -22,6 +28,20 @@ jobs:
       - name: No unicode bidirectional control characters
         if: ${{ !cancelled() }}
         run: "! git grep -EIn $'[\\u2066\\u2067\\u2068\\u2069\\u202A\\u202B\\u202C\\u202D\\u202E]'"
+      - name: Linear git history
+        if: ${{ !cancelled() }}
+        run: |
+          git log -z --format="%H%n%s" --min-parents=2 "origin/${{ github.base_ref }}..HEAD" \
+            | awk -v RS='\0' -F'\n' \
+              -f .github/workflows/scripts/lint-git-common.awk \
+              -f .github/workflows/scripts/lint-git-linear-history.awk
+      - name: Git commit messages
+        if: ${{ !cancelled() }}
+        run: |
+          git log -z --format="%H%n%B" "origin/${{ github.base_ref }}..HEAD" \
+            | awk -v RS='\0' -F'\n' \
+              -f .github/workflows/scripts/lint-git-common.awk \
+              -f .github/workflows/scripts/lint-git-commit-msg-format.awk
 
   style:
     name: Code style
