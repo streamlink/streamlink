@@ -150,7 +150,7 @@ To improve git history and changelog legibility, Streamlink enforces a specific 
 It is a variation of `conventional commits`_ using component/package prefixes instead of conventional types and scopes.
 
 Commit messages must begin with a lowercase prefix, followed by a colon and a space, and end with a subject description.
-The maximum line length is 50 characters.
+The maximum line length is 72 characters.
 
 The prefix must be a dot-separated pseudo-Python-import-path of the modified file path,
 ignoring the ``streamlink`` namespace (while renaming ``streamlink_cli`` to ``cli``).
