@@ -19,13 +19,12 @@ from urllib.parse import urlparse
 
 from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.api import validate
-from streamlink.session.http import TLSSecLevel1Adapter
+from streamlink.session.http import TLSPartialVerifyAdapter
 from streamlink.stream.http import HTTPStream
 from streamlink.utils.parse import parse_qsd
 
 
 log = logging.getLogger(__name__)
-
 
 @pluginmatcher(
     re.compile(
@@ -178,10 +177,9 @@ class Douyu(Plugin):
             log.error("Failed to get stream URL")
             return
 
-        # Mount TLSSecLevel1Adapter for CDN domains that may not be compatible
-        # with OpenSSL 3.0's default security level (SECLEVEL=2)
-        cdn_netloc = urlparse(first_data["rtmp_url"]).netloc
-        self.session.http.mount(f"https://{cdn_netloc}", TLSSecLevel1Adapter())
+        # Mount TLSPartialVerifyAdapter for CDN domains that may not be compatible with OpenSSL 3.0's default security level (SECLEVEL=2)
+        # or domains with underscore
+        self.session.http.mount("https://", TLSPartialVerifyAdapter())
 
         multirates = first_data.get("multirates", [])
 

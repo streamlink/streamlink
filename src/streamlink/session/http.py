@@ -415,5 +415,16 @@ class TLSSecLevel1Adapter(SSLContextAdapter):
 
         return ctx
 
+class TLSPartialVerifyAdapter(TLSSecLevel1Adapter):
+    def get_ssl_context(self) -> ssl.SSLContext:
+        ctx = super().get_ssl_context()
+        # not work, will be set to True in create_urllib3_context because verify_mode == ssl.CERT_REQUIRED
+        # ctx.check_hostname = False 
+        ctx.verify_mode = ssl.CERT_REQUIRED
+        return ctx
+    def init_poolmanager(self, *args, **kwargs):
+        kwargs["ssl_context"] = self.get_ssl_context()
+        kwargs["assert_hostname"] = False
+        return super().init_poolmanager(*args, **kwargs)
 
-__all__ = ["HTTPSession", "SSLContextAdapter", "TLSNoDHAdapter", "TLSSecLevel1Adapter"]
+__all__ = ["HTTPSession", "SSLContextAdapter", "TLSNoDHAdapter", "TLSSecLevel1Adapter", "TLSPartialVerifyAdapter"]
