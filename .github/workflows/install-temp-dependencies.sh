@@ -27,7 +27,7 @@ if [[ "${PY}" == cp314-cp314t ]]; then
 elif [[ "${PY}" == cp315-cp315 ]]; then
     DEPS+=(
         "${BASE}/brotli-20260523-1/brotli-1.2.0-${PY}-${PLATFORM}.whl"
-        "${BASE}/lxml-20260523-1/lxml-6.1.1-${PY}-${PLATFORM}.whl"
+        "${BASE}/lxml-20260723-1/lxml-6.1.1-${PY}-${PLATFORM}.whl"
     )
     if [[ "${PLATFORM}" == win_amd64 ]]; then
         DEPS+=(
