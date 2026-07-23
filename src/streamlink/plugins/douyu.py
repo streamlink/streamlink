@@ -27,6 +27,21 @@ from streamlink.utils.parse import parse_qsd
 log = logging.getLogger(__name__)
 
 
+class TLSPartialVerifyAdapter(TLSSecLevel1Adapter):
+    """
+    The base class SSLContextAdapter resets ssl_context.check_hostname to True when sending a request,
+    so overriding get_ssl_context does not take effect.
+
+    Instead, assert_hostname is used to influence urllib3's internal decision logic,
+    ultimately achieving the effect of check_hostname=False to skip certificate hostname verification,
+    while still retaining certificate chain-related validation."
+    """
+
+    def init_poolmanager(self, *args, **kwargs):
+        kwargs["assert_hostname"] = False
+        return super().init_poolmanager(*args, **kwargs)
+
+
 @pluginmatcher(
     re.compile(
         r"https?://(?:www\.)?douyu\.com/(?:topic/)?(?P<rid>\d+)",
@@ -178,10 +193,10 @@ class Douyu(Plugin):
             log.error("Failed to get stream URL")
             return
 
-        # Mount TLSSecLevel1Adapter for CDN domains that may not be compatible
+        # Mount TLSPartialVerifyAdapter for CDN domains that may not be compatible
         # with OpenSSL 3.0's default security level (SECLEVEL=2)
-        cdn_netloc = urlparse(first_data["rtmp_url"]).netloc
-        self.session.http.mount(f"https://{cdn_netloc}", TLSSecLevel1Adapter())
+        # or domains with underscore
+        self.session.http.mount("https://", TLSPartialVerifyAdapter())
 
         multirates = first_data.get("multirates", [])
 
