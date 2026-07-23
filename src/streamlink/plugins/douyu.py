@@ -37,7 +37,6 @@ class TLSPartialVerifyAdapter(TLSSecLevel1Adapter):
     """
 
     def init_poolmanager(self, *args, **kwargs):
-        kwargs["ssl_context"] = self.get_ssl_context()
         kwargs["assert_hostname"] = False
         return super().init_poolmanager(*args, **kwargs)
 
