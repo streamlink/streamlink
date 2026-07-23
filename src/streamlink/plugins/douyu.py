@@ -29,7 +29,8 @@ log = logging.getLogger(__name__)
 
 class TLSPartialVerifyAdapter(TLSSecLevel1Adapter):
     """
-    The base class SSLContextAdapter resets ssl_context.check_hostname to True when sending a request, so overriding get_ssl_context does not take effect.
+    The base class SSLContextAdapter resets ssl_context.check_hostname to True when sending a request,
+    so overriding get_ssl_context does not take effect.
 
     Instead, assert_hostname is used to influence urllib3's internal decision logic,
     ultimately achieving the effect of check_hostname=False to skip certificate hostname verification,
@@ -192,7 +193,8 @@ class Douyu(Plugin):
             log.error("Failed to get stream URL")
             return
 
-        # Mount TLSPartialVerifyAdapter for CDN domains that may not be compatible with OpenSSL 3.0's default security level (SECLEVEL=2)
+        # Mount TLSPartialVerifyAdapter for CDN domains that may not be compatible
+        # with OpenSSL 3.0's default security level (SECLEVEL=2)
         # or domains with underscore
         self.session.http.mount("https://", TLSPartialVerifyAdapter())
 
