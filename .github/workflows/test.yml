@@ -65,7 +65,7 @@ jobs:
         shell: bash
         run: |
           # Can't use a uv.lock or requirements.txt file due to missing environment marker for ABI features (PEP 780)
-          ./.github/workflows/install-temp-dependencies.sh
+          ./.github/workflows/scripts/install-temp-dependencies.sh
           # Installing temp dependency wheels prevents us from having a uv-managed venv
           uv export --frozen --all-extras --group test --format requirements-txt | uv pip install -r -
         continue-on-error: ${{ matrix.continue || false }}
