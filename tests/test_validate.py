@@ -9,7 +9,7 @@ import streamlink.validate as validate
 from streamlink.exceptions import PluginError
 
 # noinspection PyProtectedMember
-from streamlink.validate._exception import ValidationError  # noqa: PLC2701
+from streamlink.validate._exception import ValidationError  # ruff: ignore[import-private-name]
 
 
 def assert_validationerror(exception: Exception, expected: str, regex: bool = False):
@@ -1780,5 +1780,5 @@ class TestValidationError:
             """
                 ValidationError:
                   foo <Some really long error message that exceeds the maximum...> bar <'Some really long error message that exceeds the maximu...> baz
-            """,  # noqa: E501
+            """,  # ruff: ignore[line-too-long]
         )

@@ -3,7 +3,7 @@ from __future__ import annotations
 import gettext
 
 # noinspection PyProtectedMember
-from argparse import SUPPRESS, ArgumentError, Namespace, _StoreConstAction, _VersionAction  # noqa: PLC2701
+from argparse import SUPPRESS, ArgumentError, Namespace, _StoreConstAction, _VersionAction  # ruff: ignore[import-private-name]
 from typing import TYPE_CHECKING, Any
 from unittest.mock import Mock, call
 

@@ -9,7 +9,7 @@ from setuptools import build_meta as _build_meta
 # https://peps.python.org/pep-0517/
 # https://peps.python.org/pep-0660/
 # noinspection PyUnresolvedReferences
-from setuptools.build_meta import *  # noqa: F403
+from setuptools.build_meta import *  # ruff: ignore[undefined-local-with-import-star]
 from setuptools.command.egg_info import egg_info as _egg_info
 
 

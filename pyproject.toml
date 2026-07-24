@@ -107,7 +107,7 @@ test = [
   "freezegun >=1.5.0",
 ]
 lint = [
-  "ruff ==0.15.21",
+  "ruff ==0.16.0",
 ]
 typing = [
   { include-group = "test" },
@@ -313,34 +313,34 @@ select = [
   "RUF",
 ]
 ignore = [
-  "A003",  # builtin-attribute-shadowing
-  "A005",  # stdlib-module-shadowing
-  "ASYNC109",  # async-function-with-timeout
-  "B901",  # return-in-generator
-  "C408",  # unnecessary-collection-call
-  "ISC003",  # explicit-string-concatenation
-  "PLC1901",  # compare-to-empty-string
-  "PLC2801",  # unnecessary-dunder-call
-  "PLW2901",  # redefined-loop-name
-  "RUF021",  # parenthesize-chained-operators
-  "RUF022",  # unsorted-dunder-all
-  "RUF027",  # missing-f-string-syntax
+  "async-function-with-timeout",
+  "builtin-attribute-shadowing",
+  "compare-to-empty-string",
+  "explicit-string-concatenation",
+  "missing-f-string-syntax",
+  "parenthesize-chained-operators",
+  "redefined-loop-name",
+  "return-in-generator",
+  "stdlib-module-shadowing",
+  "unnecessary-collection-call",
+  "unnecessary-dunder-call",
+  "unsorted-dunder-all",
 ]
 future-annotations = true
 
 [tool.ruff.lint.per-file-ignores]
-"__init__.py" = ["F401"]
-"build_backend/__init__.py" = ["RUF067"]
+"__init__.py" = ["unused-import"]
+"build_backend/__init__.py" = ["non-empty-init-module"]
 "docs/**" = ["INP"]
 "script/**" = ["INP"]
-"src/streamlink/__init__.py" = ["I", "RUF067"]
+"src/streamlink/__init__.py" = ["I", "non-empty-init-module"]
 "src/streamlink/_version.py" = ["I"]
-"src/streamlink/plugins/*" = ["RUF012"]
-"src/streamlink/session/http_useragents.py" = ["E501"]
-"src/streamlink/webbrowser/cdp/devtools/*" = ["E303", "E501", "F401", "TC"]
-"src/streamlink_cli/main.py" = ["PLW0603"]
-"tests/**" = ["RUF012"]
-"tests/**/__init__.py" = ["RUF067"]
+"src/streamlink/plugins/*" = ["mutable-class-default"]
+"src/streamlink/session/http_useragents.py" = ["line-too-long"]
+"src/streamlink/webbrowser/cdp/devtools/*" = ["TC", "line-too-long", "too-many-blank-lines", "unused-import"]
+"src/streamlink_cli/main.py" = ["global-statement"]
+"tests/**" = ["mutable-class-default"]
+"tests/**/__init__.py" = ["non-empty-init-module"]
 
 [tool.ruff.lint.isort]
 known-first-party = ["streamlink", "streamlink_cli"]

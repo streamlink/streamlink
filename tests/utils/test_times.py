@@ -48,7 +48,7 @@ class TestDatetime:
         assert fromlocaltimestamp(self.TS_Y2K) == datetime(2000, 1, 1, 0, 0, 0, 0, timezone.utc)
 
     def test_parse_datetime(self, chatham_islands: timezone):
-        assert parse_datetime("2000-01-01T00:00:00") == datetime(2000, 1, 1, 0, 0, 0, 0)  # noqa: DTZ001
+        assert parse_datetime("2000-01-01T00:00:00") == datetime(2000, 1, 1, 0, 0, 0, 0)  # ruff: ignore[call-datetime-without-tzinfo]
         assert parse_datetime("2000-01-01T00:00:00Z") == datetime(2000, 1, 1, 0, 0, 0, 0, timezone.utc)
         assert parse_datetime("2000-01-01T00:00:00+1245") == datetime(2000, 1, 1, 0, 0, 0, 0, chatham_islands)
         with pytest.raises(isodate.ISO8601Error):
@@ -177,7 +177,7 @@ class TestHoursMinutesSeconds:
         ],
     )
     def test_hours_minutes_seconds_exception(self, timestamp: str):
-        with pytest.raises(ValueError):  # noqa: PT011
+        with pytest.raises(ValueError):  # ruff: ignore[pytest-raises-too-broad]
             hours_minutes_seconds_float(timestamp)
 
     @pytest.mark.parametrize("method", [hours_minutes_seconds, hours_minutes_seconds_float])

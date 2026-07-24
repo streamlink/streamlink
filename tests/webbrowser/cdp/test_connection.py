@@ -114,7 +114,7 @@ class TestCreateConnection:
 class TestReaderError:
     @pytest.mark.trio()
     async def test_invalid_json(self, caplog: pytest.LogCaptureFixture, websocket_connection: FakeWebsocketConnection):
-        with pytest.raises(ExceptionGroup) as excinfo:  # noqa: PT012
+        with pytest.raises(ExceptionGroup) as excinfo:  # ruff: ignore[pytest-raises-with-multiple-statements]
             async with CDPConnection.create("ws://localhost:1234/fake"):
                 assert not websocket_connection.closed
                 await websocket_connection.sender.send("INVALID JSON")
@@ -128,7 +128,7 @@ class TestReaderError:
 
     @pytest.mark.trio()
     async def test_unknown_session_id(self, caplog: pytest.LogCaptureFixture, websocket_connection: FakeWebsocketConnection):
-        with pytest.raises(ExceptionGroup) as excinfo:  # noqa: PT012
+        with pytest.raises(ExceptionGroup) as excinfo:  # ruff: ignore[pytest-raises-with-multiple-statements]
             async with CDPConnection.create("ws://localhost:1234/fake"):
                 assert not websocket_connection.closed
                 await websocket_connection.sender.send("""{"sessionId":"unknown"}""")
@@ -250,7 +250,7 @@ class TestSend:
         assert cdp_connection.cmd_buffers == {}
         assert websocket_connection.sent == []
 
-        with pytest.raises(ExceptionGroup) as excinfo:  # noqa: PT012
+        with pytest.raises(ExceptionGroup) as excinfo:  # ruff: ignore[pytest-raises-with-multiple-statements]
             async with trio.open_nursery() as nursery:
                 nursery.start_soon(cdp_connection.send, bad_command())
                 nursery.start_soon(websocket_connection.sender.send, """{"id":0,"result":{}}""")
@@ -281,7 +281,7 @@ class TestSend:
         assert cdp_connection.cmd_buffers == {}
         assert websocket_connection.sent == []
 
-        with pytest.raises(ExceptionGroup) as excinfo:  # noqa: PT012
+        with pytest.raises(ExceptionGroup) as excinfo:  # ruff: ignore[pytest-raises-with-multiple-statements]
             async with trio.open_nursery() as nursery:
                 nursery.start_soon(cdp_connection.send, fake_command(FakeCommand("foo")))
                 nursery.start_soon(websocket_connection.sender.send, """{"id":0,"result":{}}""")
@@ -404,7 +404,7 @@ class TestHandleCmdResponse:
         assert cdp_connection.cmd_buffers == {}
         assert websocket_connection.sent == []
 
-        with pytest.raises(ExceptionGroup) as excinfo:  # noqa: PT012
+        with pytest.raises(ExceptionGroup) as excinfo:  # ruff: ignore[pytest-raises-with-multiple-statements]
             async with trio.open_nursery() as nursery:
                 nursery.start_soon(cdp_connection.send, fake_command(FakeCommand("foo")))
                 nursery.start_soon(websocket_connection.sender.send, """{"id":0,"error":"Some error message"}""")
@@ -435,7 +435,7 @@ class TestHandleCmdResponse:
         assert cdp_connection.cmd_buffers == {}
         assert websocket_connection.sent == []
 
-        with pytest.raises(ExceptionGroup) as excinfo:  # noqa: PT012
+        with pytest.raises(ExceptionGroup) as excinfo:  # ruff: ignore[pytest-raises-with-multiple-statements]
             async with trio.open_nursery() as nursery:
                 nursery.start_soon(cdp_connection.send, fake_command(FakeCommand("foo")))
                 nursery.start_soon(websocket_connection.sender.send, """{"id":0}""")

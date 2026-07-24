@@ -88,7 +88,7 @@ def _sync2async(obj, name, method):
     meth = getattr(obj, method)
 
     @wraps(meth)
-    async def wrapper(*args, **kwargs):  # noqa: RUF029
+    async def wrapper(*args, **kwargs):  # ruff: ignore[unused-async]
         return meth(*args, **kwargs)
 
     setattr(obj, name, wrapper)

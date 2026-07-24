@@ -147,4 +147,4 @@ class TestDeprecated:
 
         with raises_on_missing:
             # noinspection PyStatementEffect
-            module.does_not_exist  # noqa: B018
+            module.does_not_exist  # ruff: ignore[useless-expression]

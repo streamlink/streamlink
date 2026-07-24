@@ -40,7 +40,7 @@ class HTTPStream(Stream):
         self.args["url"] = url
         self.buffered = buffered
 
-    def __json__(self):  # noqa: PLW3201
+    def __json__(self):  # ruff: ignore[bad-dunder-method-name]
         req = self.session.http.prepare_new_request(**self.args)
 
         return dict(

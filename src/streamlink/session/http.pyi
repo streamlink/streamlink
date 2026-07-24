@@ -5,7 +5,7 @@ from pathlib import Path
 from typing import Any, TypedDict, overload
 
 # noinspection PyProtectedMember
-import requests._types as _requeststypes  # noqa: PLC2701
+import requests._types as _requeststypes  # ruff: ignore[import-private-name]
 from requests import PreparedRequest, Response, Session
 from requests.adapters import HTTPAdapter
 from requests.cookies import CookieJar, RequestsCookieJar

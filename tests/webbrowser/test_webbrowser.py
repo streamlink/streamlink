@@ -103,7 +103,7 @@ class TestLaunch:
     @pytest.mark.parametrize("exception", [KeyboardInterrupt, SystemExit])
     async def test_propagate_keyboardinterrupt_systemexit(self, caplog: pytest.LogCaptureFixture, webbrowser_launch, exception):
         process: trio.Process
-        with pytest.raises(exception) as excinfo:  # noqa: PT012
+        with pytest.raises(exception) as excinfo:  # ruff: ignore[pytest-raises-with-multiple-statements]
             async with webbrowser_launch() as (_nursery, process):
                 assert process.poll() is None, "process is still running"
                 async with trio.open_nursery():
@@ -118,7 +118,7 @@ class TestLaunch:
     @pytest.mark.trio()
     async def test_terminate_on_exception(self, caplog: pytest.LogCaptureFixture, webbrowser_launch):
         process: trio.Process
-        with pytest.raises(BaseExceptionGroup) as excinfo:  # noqa: PT012
+        with pytest.raises(BaseExceptionGroup) as excinfo:  # ruff: ignore[pytest-raises-with-multiple-statements]
             async with webbrowser_launch() as (_nursery, process):
                 assert process.poll() is None, "process is still running"
                 async with trio.open_nursery():

@@ -182,7 +182,7 @@ class TestStdoutStderr:
         exception = Exception()
         monkeypatch.setattr("streamlink_cli.main.setup", Mock(side_effect=exception))
 
-        with pytest.raises(Exception) as excinfo:  # noqa: PT011
+        with pytest.raises(Exception) as excinfo:  # ruff: ignore[pytest-raises-too-broad]
             streamlink_cli.main.main()
         assert excinfo.value is exception, "Does not catch non-StreamlinkCLIError exceptions"
 

@@ -31,7 +31,7 @@ class FileStream(Stream):
         else:
             raise ValueError("path or fileobj must be set")
 
-    def __json__(self):  # noqa: PLW3201
+    def __json__(self):  # ruff: ignore[bad-dunder-method-name]
         json = super().__json__()
 
         if self.path:

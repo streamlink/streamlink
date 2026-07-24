@@ -131,7 +131,7 @@ class TransformSchema:
         self.kwargs = kwargs
 
 
-class OptionalSchema:  # noqa: B903
+class OptionalSchema:  # ruff: ignore[class-as-data-structure]
     """
     An optional key set in a :class:`dict`.
 
@@ -192,7 +192,7 @@ class AttrSchema(SchemaContainer):
     """
 
 
-class GetItemSchema:  # noqa: B903
+class GetItemSchema:  # ruff: ignore[class-as-data-structure]
     """
     Get an ``item`` from the input.
 
@@ -308,7 +308,7 @@ class UnionGetSchema:
         self.seq = seq
 
 
-class RegexSchema:  # noqa: B903
+class RegexSchema:  # ruff: ignore[class-as-data-structure]
     """
     A :class:`re.Pattern` that **must** match.
 
@@ -353,7 +353,7 @@ class RegexSchema:  # noqa: B903
         self.method = method
 
 
-class XmlElementSchema:  # noqa: B903
+class XmlElementSchema:  # ruff: ignore[class-as-data-structure]
     """
     Validate an XML element.
 

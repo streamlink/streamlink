@@ -228,7 +228,7 @@ def _showwarning(
 
 
 def capturewarnings(capture: bool = False) -> None:
-    global _showwarning_default  # noqa: PLW0603
+    global _showwarning_default  # ruff: ignore[global-statement]
 
     if capture:
         if _showwarning_default is None:
@@ -245,7 +245,7 @@ def basicConfig(
     *,
     filename: str | Path | None = None,
     filemode: str = "a",
-    format: str = FORMAT_BASE,  # noqa: A002
+    format: str = FORMAT_BASE,  # ruff: ignore[builtin-argument-shadowing]
     datefmt: str = FORMAT_DATE,
     style: Literal["%", "{", "$"] = FORMAT_STYLE,
     level: str | None = None,

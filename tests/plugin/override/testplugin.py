@@ -1,4 +1,4 @@
-# ruff: noqa: INP001
+# ruff: file-ignore[implicit-namespace-package]
 
 from tests.plugin.testplugin import __plugin__ as TestPlugin
 

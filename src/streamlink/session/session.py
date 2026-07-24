@@ -4,7 +4,7 @@ import warnings
 from functools import lru_cache
 from typing import TYPE_CHECKING, Any
 
-import streamlink.compat  # noqa: F401
+import streamlink.compat  # ruff: ignore[unused-import]
 from streamlink import __version__
 from streamlink.exceptions import NoPluginError, PluginError, StreamlinkDeprecationWarning
 from streamlink.logger import getLogger
@@ -85,7 +85,7 @@ class Streamlink:
 
         return self.options.get(key)
 
-    @lru_cache(maxsize=128)  # noqa: B019
+    @lru_cache(maxsize=128)  # ruff: ignore[cached-instance-method]
     def resolve_url(
         self,
         url: str,

@@ -11,7 +11,7 @@ import requests_mock as rm
 from streamlink.session import Streamlink
 
 # noinspection PyProtectedMember
-from streamlink.utils.thread import _threadname_counters  # noqa: PLC2701
+from streamlink.utils.thread import _threadname_counters  # ruff: ignore[import-private-name]
 
 
 if TYPE_CHECKING:
@@ -135,7 +135,7 @@ def os_environ(request: pytest.FixtureRequest, monkeypatch: pytest.MonkeyPatch) 
 
 @pytest.fixture(autouse=True, scope="session")
 def _patch_trio_run():
-    import trio  # noqa: PLC0415
+    import trio  # ruff: ignore[import-outside-top-level]
 
     trio_run = trio.run
     # `strict_exception_groups` changed from False to True in `trio==0.25`:

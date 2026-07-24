@@ -9,7 +9,12 @@ from typing import TYPE_CHECKING, Any, ClassVar, Literal, TypeVar
 from urllib.parse import urlparse
 
 from requests import Response
-from requests.exceptions import ChunkedEncodingError, ConnectionError, ContentDecodingError, InvalidSchema  # noqa: A004
+from requests.exceptions import (
+    ChunkedEncodingError,
+    ConnectionError,  # ruff: ignore[builtin-import-shadowing]
+    ContentDecodingError,
+    InvalidSchema,
+)
 
 from streamlink.exceptions import StreamError, StreamlinkDeprecationWarning
 from streamlink.logger import getLogger
@@ -656,7 +661,7 @@ class HLSStream(HTTPStream):
         self.start_offset = start_offset
         self.duration = duration
 
-    def __json__(self):  # noqa: PLW3201
+    def __json__(self):  # ruff: ignore[bad-dunder-method-name]
         json = super().__json__()
 
         try:
