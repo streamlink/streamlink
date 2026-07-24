@@ -139,7 +139,7 @@ Adhering to the following process is the best way to get your work included in t
    git checkout -b TOPIC-BRANCH-NAME
    ```
 
-4. Commit your changes in logical chunks. Please adhere to these [git commit message guidelines][howto-format-commits] or your code is unlikely be merged into the project. Use git's [interactive rebase][howto-rebase] feature to tidy up your commits before making them public.
+4. Commit your changes in logical chunks. Please adhere to our [git commit message style][howto-format-commits] or your code is unlikely be merged into the project. Use git's [interactive rebase][howto-rebase] feature to tidy up your commits before making them public.
 
 5. If your topic branch is based off an outdated commit on the master branch, then rebase first:
    ```bash
@@ -264,7 +264,7 @@ This contributing guide has been adapted from [HTML5 boilerplate's guide][ref-h5
   [mastering-markdown]: https://guides.github.com/features/mastering-markdown
   [howto-fork]: https://help.github.com/articles/fork-a-repo
   [howto-rebase]: https://help.github.com/articles/interactive-rebase
-  [howto-format-commits]: http://tbaggery.com/2008/04/19/a-note-about-git-commit-messages.html
+  [howto-format-commits]: https://streamlink.github.io/developing.html#git-commit-style
   [howto-open-pull-requests]: https://help.github.com/articles/using-pull-requests
   [Git]: https://git-scm.com
   [license]: https://github.com/streamlink/streamlink/blob/master/LICENSE

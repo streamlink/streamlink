@@ -143,6 +143,40 @@ structure should be compliant-ready for `linting <Validating changes_>`_.
 .. _pyproject.toml: https://github.com/streamlink/streamlink/blob/master/pyproject.toml
 
 
+Git commit style
+----------------
+
+To improve git history and changelog legibility, Streamlink enforces a specific commit message format.
+It is a variation of `conventional commits`_ using component/package prefixes instead of conventional types and scopes.
+
+Commit messages must begin with a lowercase prefix, followed by a colon and a space, and end with a subject description.
+The maximum line length is 72 characters.
+
+The prefix must be a dot-separated pseudo-Python-import-path of the modified file path,
+ignoring the ``streamlink`` namespace (while renaming ``streamlink_cli`` to ``cli``).
+Non-code changes should use an equivalent pseudo-path.
+If not applicable, standard conventional commit types must be used instead.
+If a commit affects multiple components, the primary one should be chosen, or a second prefix should be added
+using the same separator format.
+
+Subject descriptions must start with a lowercase present-tense English verb (e.g. "add", "remove", "refactor")
+which communicates the nature of the changes, and they must end without punctuation.
+
+For example:
+
+.. code-block:: text
+
+    session.http: fix set_interface on macOS
+    plugins.twitch: switch to usher v2 endpoints
+    ci.github: run preview-builds on uv.lock updates
+
+Optional message bodies must be separated from the subject by a blank line, with lines wrapped at 72 characters.
+Markdown formatting is supported. Standardized footers (e.g. ``Co-Authored-By: name <email-address>``)
+may be included at the end of the body.
+
+.. _conventional commits: https://www.conventionalcommits.org/
+
+
 Plugins
 -------
 
