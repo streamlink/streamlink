@@ -93,7 +93,7 @@ class TestNamedPipePosix:
     def test_create(self, monkeypatch: pytest.MonkeyPatch):
         mock_mkfifo = Mock(side_effect=OSError)
         monkeypatch.setattr("streamlink.utils.named_pipe.os.mkfifo", mock_mkfifo)
-        with pytest.raises(OSError):  # noqa: PT011
+        with pytest.raises(OSError):  # ruff: ignore[pytest-raises-too-broad]
             NamedPipePosix()
         assert mock_mkfifo.call_args[0][1:] == (0o660,)
 
@@ -115,7 +115,7 @@ class TestNamedPipePosix:
         pipe.open()
         assert mock_fd_close.call_args_list == []
 
-        with pytest.raises(OSError):  # noqa: PT011
+        with pytest.raises(OSError):  # ruff: ignore[pytest-raises-too-broad]
             pipe.close()
         assert mock_fd_close.call_args_list == [call()]
         assert not pipe.path.is_fifo()
@@ -191,7 +191,7 @@ class TestNamedPipeWindows:
         pipe.open()
         assert mock_method.call_args_list == []
 
-        with pytest.raises(OSError):  # noqa: PT011
+        with pytest.raises(OSError):  # ruff: ignore[pytest-raises-too-broad]
             pipe.close()
         assert mock_method.call_args_list == [call(mock_pipe)]
         assert pipe.pipe is None

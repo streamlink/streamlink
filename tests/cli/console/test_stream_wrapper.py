@@ -30,7 +30,7 @@ def test_wrap(capsys: pytest.CaptureFixture[str]):
     streamwrapper.write("foo")
     streamwrapper.write("bar")
     streamwrapper.writelines(["abc", "def"])
-    print("123", end="456")  # noqa: T201
+    print("123", end="456")  # ruff: ignore[print]
     streamwrapper.flush()
 
     out, err = capsys.readouterr()

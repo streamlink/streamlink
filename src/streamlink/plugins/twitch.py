@@ -676,8 +676,10 @@ class TwitchClientIntegrity:
         headers: Mapping[str, str],
         device_id: str,
     ) -> tuple[str, int] | None:
-        from streamlink.compat import BaseExceptionGroup  # noqa: PLC0415
-        from streamlink.webbrowser.cdp import CDPClient, CDPClientSession, devtools  # noqa: PLC0415
+        # ruff: disable[import-outside-top-level]
+        from streamlink.compat import BaseExceptionGroup
+        from streamlink.webbrowser.cdp import CDPClient, CDPClientSession, devtools
+        # ruff: enable[import-outside-top-level]
 
         url = f"https://www.twitch.tv/{channel}"
         js_get_integrity_token = cls.JS_INTEGRITY_TOKEN \

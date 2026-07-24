@@ -87,7 +87,7 @@ class _WebbrowserLauncher:
 
     @asynccontextmanager
     async def launch(self) -> AsyncGenerator[trio.Nursery, None]:
-        try:  # noqa: PLW0717
+        try:  # ruff: ignore[too-many-statements-in-try-clause]
             headless = self.headless
             async with trio.open_nursery() as nursery:
                 log.info(f"Launching web browser: {self.executable} ({headless=})")

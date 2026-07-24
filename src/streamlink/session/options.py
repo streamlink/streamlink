@@ -21,7 +21,7 @@ _session_file = str(Path(__file__).parent / "session.py")
 
 def _get_deprecation_stacklevel_offset(offset: int = 0) -> int:
     """Deal with stacklevels of both session.{get_option,set_option}() and session.options.{get,set}() calls"""
-    from inspect import currentframe  # noqa: PLC0415
+    from inspect import currentframe  # ruff: ignore[import-outside-top-level]
 
     frame = currentframe()
     ignoreframes = 2

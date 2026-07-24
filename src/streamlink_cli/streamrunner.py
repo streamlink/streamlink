@@ -107,7 +107,7 @@ class StreamRunner:
 
         # TODO: Fix error messages (s/when/while/) and only log "Stream ended" when it ended on its own (data == b"").
         #       These are considered breaking changes of the CLI output, which is parsed by 3rd party tools.
-        try:  # noqa: PLW0717
+        try:  # ruff: ignore[too-many-statements-in-try-clause]
             write(prebuffer)
             progress(prebuffer)
             del prebuffer

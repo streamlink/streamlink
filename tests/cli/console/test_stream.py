@@ -53,7 +53,7 @@ class TestConsoleOutputStreamFeatureDetection:
     @pytest.fixture()
     def stream(self, request: pytest.FixtureRequest, monkeypatch: pytest.MonkeyPatch, stream: TextIOWrapper):
         isatty = getattr(request, "param", True)
-        setattr(stream, "isatty", lambda: isatty)  # noqa: B010
+        setattr(stream, "isatty", lambda: isatty)  # ruff: ignore[set-attr-with-constant]
 
         return stream
 

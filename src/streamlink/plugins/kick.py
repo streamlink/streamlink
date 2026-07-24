@@ -178,9 +178,11 @@ class Kick(Plugin):
         })
 
     def _get_cookies_from_webbrowser(self) -> bool:
-        from streamlink.compat import BaseExceptionGroup  # noqa: PLC0415
-        from streamlink.webbrowser.cdp import CDPClient, CDPClientSession  # noqa: PLC0415
-        from streamlink.webbrowser.cdp.devtools import fetch  # noqa: PLC0415, TC001
+        # ruff: disable[import-outside-top-level]
+        from streamlink.compat import BaseExceptionGroup
+        from streamlink.webbrowser.cdp import CDPClient, CDPClientSession
+        from streamlink.webbrowser.cdp.devtools import fetch  # ruff: ignore[typing-only-first-party-import]
+        # ruff: enable[import-outside-top-level]
 
         async def on_main(client_session: CDPClientSession, request: fetch.RequestPaused):
             # get Chromium's request headers, update HTTP session headers and also cache them

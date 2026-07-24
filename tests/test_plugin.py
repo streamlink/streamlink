@@ -27,8 +27,8 @@ from streamlink.plugin import (
 
 # noinspection PyProtectedMember
 from streamlink.plugin.plugin import (
-    _COOKIE_KEYS,  # noqa: PLC2701
-    _PLUGINARGUMENT_TYPE_REGISTRY,  # noqa: PLC2701
+    _COOKIE_KEYS,  # ruff: ignore[import-private-name]
+    _PLUGINARGUMENT_TYPE_REGISTRY,  # ruff: ignore[import-private-name]
     Matcher,
     parse_params,
     stream_weight,

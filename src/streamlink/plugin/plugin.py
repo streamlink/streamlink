@@ -717,12 +717,12 @@ def pluginargument(
     nargs: int | Literal["?", "*", "+"] | None = None,
     const: Any = None,
     default: Any = None,
-    type: str | Callable[[Any], _TChoices | Any] | None = None,  # noqa: A002
+    type: str | Callable[[Any], _TChoices | Any] | None = None,  # ruff: ignore[builtin-argument-shadowing]
     type_args: list | tuple | None = None,
     type_kwargs: Mapping[str, Any] | None = None,
     choices: _TChoices | None = None,
     required: bool = False,
-    help: str | None = None,  # noqa: A002
+    help: str | None = None,  # ruff: ignore[builtin-argument-shadowing]
     metavar: str | list[str] | tuple[str, ...] | None = None,
     dest: str | None = None,
     requires: str | list[str] | tuple[str, ...] | None = None,
@@ -796,7 +796,7 @@ def pluginargument(
     # noinspection PyUnresolvedReferences
     def decorator(cls: builtins.type[_TPlugin]) -> builtins.type[_TPlugin]:
         if not issubclass(cls, Plugin):
-            raise TypeError(f"{repr(cls)} is not a Plugin")  # noqa: RUF010  # builtins.repr gets monkeypatched in tests
+            raise TypeError(f"{repr(cls)} is not a Plugin")  # ruff: ignore[explicit-f-string-type-conversion]  # builtins.repr gets monkeypatched in tests
         cls.arguments.add(arg)
 
         return cls

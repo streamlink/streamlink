@@ -35,7 +35,7 @@ def build_stream(params: dict, wrap: bool = False):
     else:
         stream = orig
 
-    setattr(stream, "isatty", lambda: isatty)  # noqa: B010
+    setattr(stream, "isatty", lambda: isatty)  # ruff: ignore[set-attr-with-constant]
 
     return stream
 
@@ -219,14 +219,14 @@ class TestMessages:
 
     def test_msg_json_object(self, console_output: ConsoleOutputStream):
         console = ConsoleOutput(console_output=console_output, json=True)
-        console.msg_json(Mock(__json__=lambda: {"test": "Hello world, Γειά σου Κόσμε, こんにちは世界"}))  # noqa: RUF001
-        assert getvalue(console_output) == '{\n  "test": "Hello world, Γειά σου Κόσμε, こんにちは世界"\n}\n'  # noqa: RUF001
+        console.msg_json(Mock(__json__=lambda: {"test": "Hello world, Γειά σου Κόσμε, こんにちは世界"}))  # ruff: ignore[ambiguous-unicode-character-string]
+        assert getvalue(console_output) == '{\n  "test": "Hello world, Γειά σου Κόσμε, こんにちは世界"\n}\n'  # ruff: ignore[ambiguous-unicode-character-string]
 
     def test_msg_json_list(self, console_output: ConsoleOutputStream):
         console = ConsoleOutput(console_output=console_output, json=True)
-        test_list = ["Hello world, Γειά σου Κόσμε, こんにちは世界", '"🐻"']  # noqa: RUF001
+        test_list = ["Hello world, Γειά σου Κόσμε, こんにちは世界", '"🐻"']  # ruff: ignore[ambiguous-unicode-character-string]
         console.msg_json(test_list)
-        assert getvalue(console_output) == '[\n  "Hello world, Γειά σου Κόσμε, こんにちは世界",\n  "\\"🐻\\""\n]\n'  # noqa: RUF001
+        assert getvalue(console_output) == '[\n  "Hello world, Γειά σου Κόσμε, こんにちは世界",\n  "\\"🐻\\""\n]\n'  # ruff: ignore[ambiguous-unicode-character-string]
 
     def test_msg_json_merge_object(self, console_output: ConsoleOutputStream):
         console = ConsoleOutput(console_output=console_output, json=True)
@@ -302,7 +302,7 @@ class TestMessages:
 class TestPrompts:
     def test_prompt_exception(self, console_output: ConsoleOutputStream):
         console = ConsoleOutput(console_output=console_output)
-        with pytest.raises(BaseException) as exc_info:  # noqa: PT011
+        with pytest.raises(BaseException) as exc_info:  # ruff: ignore[pytest-raises-too-broad]
             with console._prompt():
                 raise EOFError
         assert isinstance(exc_info.value, OSError)
@@ -311,7 +311,7 @@ class TestPrompts:
     @pytest.mark.parametrize("exception", [OSError, KeyboardInterrupt])
     def test_prompt_exception_passthrough(self, console_output: ConsoleOutputStream, exception: type[Exception]):
         console = ConsoleOutput(console_output=console_output)
-        with pytest.raises(BaseException) as exc_info:  # noqa: PT011
+        with pytest.raises(BaseException) as exc_info:  # ruff: ignore[pytest-raises-too-broad]
             with console._prompt():
                 raise exception
         assert isinstance(exc_info.value, exception)

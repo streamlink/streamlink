@@ -6,9 +6,11 @@ def _get_version() -> str:
     """
     Get the current version from git in "editable" installs
     """
-    from pathlib import Path  # noqa: PLC0415
-    from versioningit import get_version  # noqa: PLC0415
-    import streamlink  # noqa: PLC0415
+    # ruff: disable[import-outside-top-level]
+    from pathlib import Path
+    from versioningit import get_version
+    import streamlink
+    # ruff: enable[import-outside-top-level]
 
     return get_version(project_dir=Path(streamlink.__file__).parents[2])
 

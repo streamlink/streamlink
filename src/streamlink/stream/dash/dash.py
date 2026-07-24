@@ -99,7 +99,7 @@ class DASHStreamWorker(SegmentedStreamWorker[DASHSegment, Response]):
         Do something and then wait for a given duration minus the time it took doing something
         """
         s = time()
-        yield  # noqa: RUF075
+        yield  # ruff: ignore[fallible-context-manager]
         time_to_sleep = duration - (time() - s)
         if time_to_sleep > 0:
             self.wait(time_to_sleep)
@@ -245,7 +245,7 @@ class DASHStream(Stream):
         self.duration = duration
         self.args = session.http.valid_request_args(**kwargs)
 
-    def __json__(self):  # noqa: PLW3201
+    def __json__(self):  # ruff: ignore[bad-dunder-method-name]
         json = dict(type=self.shortname())
 
         if self.mpd.url:

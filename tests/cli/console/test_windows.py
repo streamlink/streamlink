@@ -3,7 +3,7 @@ from __future__ import annotations
 import sys
 
 # noinspection PyProtectedMember
-from ctypes import Structure, _SimpleCData  # noqa: PLC2701
+from ctypes import Structure, _SimpleCData  # ruff: ignore[import-private-name]
 from ctypes.wintypes import DWORD, WCHAR, WORD
 from types import ModuleType
 from typing import TYPE_CHECKING, ClassVar, Generic, TypeVar
@@ -100,7 +100,7 @@ def test_call_success_error(monkeypatch: pytest.MonkeyPatch, mock_windll: Mock):
     monkeypatch.setattr(windows_console.set_console_cursor_position, "method", Mock(return_value=False))
     mock_windll.kernel32.GetLastError.return_value = 87
 
-    with pytest.raises(OSError) as exc_info:  # noqa: PT011
+    with pytest.raises(OSError) as exc_info:  # ruff: ignore[pytest-raises-too-broad]
         windows_console.set_console_cursor_position(123, 456)  # type: ignore[arg-type, ty:invalid-argument-type]
     assert str(exc_info.value) == "Error while calling kernel32.SetConsoleCursorPosition (last_error=0x57)"
 

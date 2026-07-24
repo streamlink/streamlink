@@ -83,7 +83,7 @@ class TestLogging:
     ):
         params = getattr(request, "param", {})
 
-        with pytest.raises(Exception) as cm:  # noqa: PT011
+        with pytest.raises(Exception) as cm:  # ruff: ignore[pytest-raises-too-broad]
             logger.basicConfig(stream=output, **params)
 
         return cm.value
@@ -382,10 +382,10 @@ class TestLogging:
 
     def test_logfile(self, logfile: Path, log: StreamlinkLogger, output: TextIOWrapper):
         log.setLevel("info")
-        log.info("Hello world, Γειά σου Κόσμε, こんにちは世界")  # noqa: RUF001
+        log.info("Hello world, Γειά σου Κόσμε, こんにちは世界")  # ruff: ignore[ambiguous-unicode-character-string]
         log.handlers[0].flush()
         with logfile.open("r", encoding="utf-8") as fh:
-            assert fh.read() == "[test][info] Hello world, Γειά σου Κόσμε, こんにちは世界\n"  # noqa: RUF001
+            assert fh.read() == "[test][info] Hello world, Γειά σου Κόσμε, こんにちは世界\n"  # ruff: ignore[ambiguous-unicode-character-string]
 
 
 class TestCaptureWarnings:

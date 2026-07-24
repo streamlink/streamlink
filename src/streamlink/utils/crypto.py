@@ -1,4 +1,4 @@
-# ruff: noqa: F401
+# ruff: file-ignore[unused-import]
 import hashlib
 
 

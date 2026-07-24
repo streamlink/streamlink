@@ -27,7 +27,7 @@ def test_term_width(monkeypatch: pytest.MonkeyPatch, expected: int):
     [
         ("ABCDEFGHIJ", 10),
         ("A你好世界こんにちは안녕하세요B", 30),
-        ("·「」『』【】-=！@#￥%……&×（）", 30),  # noqa: RUF001
+        ("·「」『』【】-=！@#￥%……&×（）", 30),  # ruff: ignore[ambiguous-unicode-character-string]
     ],
 )
 def test_text_width(chars, expected):

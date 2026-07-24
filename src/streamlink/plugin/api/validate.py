@@ -1,2 +1,2 @@
 # noinspection PyUnresolvedReferences
-from streamlink.validate import *  # noqa: F403
+from streamlink.validate import *  # ruff: ignore[undefined-local-with-import-star]

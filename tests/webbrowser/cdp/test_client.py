@@ -204,7 +204,7 @@ class TestEvaluate:
 
     @pytest.mark.trio()
     async def test_exception(self, cdp_client_session: CDPClientSession, websocket_connection: FakeWebsocketConnection):
-        with pytest.raises(ExceptionGroup) as excinfo:  # noqa: PT012
+        with pytest.raises(ExceptionGroup) as excinfo:  # ruff: ignore[pytest-raises-with-multiple-statements]
             async with trio.open_nursery() as nursery:
                 nursery.start_soon(cdp_client_session.evaluate, "/")
 
@@ -232,7 +232,7 @@ class TestEvaluate:
 
     @pytest.mark.trio()
     async def test_error(self, cdp_client_session: CDPClientSession, websocket_connection: FakeWebsocketConnection):
-        with pytest.raises(ExceptionGroup) as excinfo:  # noqa: PT012
+        with pytest.raises(ExceptionGroup) as excinfo:  # ruff: ignore[pytest-raises-with-multiple-statements]
             async with trio.open_nursery() as nursery:
                 nursery.start_soon(cdp_client_session.evaluate, "new Error('foo')")
 
@@ -423,7 +423,7 @@ class TestNavigate:
             async with cdp_client_session.navigate("https://foo"):
                 pass  # pragma: no cover
 
-        with pytest.raises(ExceptionGroup) as excinfo:  # noqa: PT012
+        with pytest.raises(ExceptionGroup) as excinfo:  # ruff: ignore[pytest-raises-with-multiple-statements]
             async with trio.open_nursery() as nursery:
                 nursery.start_soon(navigate)
 
@@ -444,7 +444,7 @@ class TestNavigate:
             async with cdp_client_session.navigate("https://foo"):
                 pass  # pragma: no cover
 
-        with pytest.raises(ExceptionGroup) as excinfo:  # noqa: PT012
+        with pytest.raises(ExceptionGroup) as excinfo:  # ruff: ignore[pytest-raises-with-multiple-statements]
             async with trio.open_nursery() as nursery:
                 nursery.start_soon(navigate)
 

@@ -105,7 +105,7 @@ class Proxy(Generic[TProxyItem]):
 def update_file(file: Path) -> Generator[Proxy[str], None, None]:
     with file.open("r+", encoding="utf-8") as fh:
         proxy = Proxy(fh.read())
-        yield proxy  # noqa: RUF075
+        yield proxy  # ruff: ignore[fallible-context-manager]
         fh.seek(0)
         fh.write(proxy.get())
         fh.truncate()

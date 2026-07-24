@@ -106,10 +106,10 @@ class Argument:
         nargs: int | Literal["?", "*", "+"] | None = None,
         const: Any = None,
         default: Any = None,
-        type: Callable[[Any], _TChoices | Any] | None = None,  # noqa: A002
+        type: Callable[[Any], _TChoices | Any] | None = None,  # ruff: ignore[builtin-argument-shadowing]
         choices: _TChoices | None = None,
         required: bool = False,
-        help: str | None = None,  # noqa: A002
+        help: str | None = None,  # ruff: ignore[builtin-argument-shadowing]
         metavar: str | list[str] | tuple[str, ...] | None = None,
         dest: str | None = None,
         # additional `Argument()` keywords

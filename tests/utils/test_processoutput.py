@@ -85,7 +85,7 @@ class FakeProcessOutput(ProcessOutput):
 
 
 @pytest.fixture()
-async def _max_test_time(nursery: trio.Nursery, mock_clock: MockClock):  # noqa: RUF029
+async def _max_test_time(nursery: trio.Nursery, mock_clock: MockClock):  # ruff: ignore[unused-async]
     async def timeout():  # pragma: no cover
         await trio.sleep(TIME_TEST_MAX)
         mock_clock.autojump_threshold = 0
@@ -335,7 +335,7 @@ async def test_output_exception(get_process: Callable[[], Awaitable[trio.Process
     # noinspection PyUnusedLocal
     process: trio.Process | None = None
 
-    with pytest.raises(ExceptionGroup) as exc_info:  # noqa: PT012
+    with pytest.raises(ExceptionGroup) as exc_info:  # ruff: ignore[pytest-raises-with-multiple-statements]
         async with trio.open_nursery() as nursery:
             nursery.start_soon(po.arun)
             process = await get_process()

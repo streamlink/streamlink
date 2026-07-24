@@ -153,7 +153,7 @@ class TestHTTPSession:
     def test_session_init(self):
         session = HTTPSession()
         assert session.headers.get("User-Agent") == DEFAULT
-        assert session.timeout == 20.0  # noqa: RUF069
+        assert session.timeout == 20.0  # ruff: ignore[float-equality-comparison]
         assert "file://" in session.adapters.keys()
 
     @pytest.mark.parametrize("verb", ["get", "post", "head", "options", "put", "patch", "delete"])
@@ -254,7 +254,7 @@ class TestHTTPSession:
 
     @pytest.mark.parametrize("encoding", ["UTF-32BE", "UTF-32LE", "UTF-16BE", "UTF-16LE", "UTF-8"])
     def test_determine_json_encoding(self, recwarn: pytest.WarningsRecorder, encoding: str):
-        data = "Hello world, Γειά σου Κόσμε, こんにちは世界".encode(encoding)  # noqa: RUF001
+        data = "Hello world, Γειά σου Κόσμε, こんにちは世界".encode(encoding)  # ruff: ignore[ambiguous-unicode-character-string]
         assert HTTPSession.determine_json_encoding(data) == encoding
         assert [(record.category, str(record.message)) for record in recwarn.list] == [
             (StreamlinkDeprecationWarning, "Deprecated HTTPSession.determine_json_encoding() call"),
@@ -278,13 +278,13 @@ class TestHTTPSession:
         ],
     )
     def test_json(self, monkeypatch: pytest.MonkeyPatch, encoding: str, override: str | None):
-        mock_content = PropertyMock(return_value='{"test": "Α and Ω"}'.encode(encoding))  # noqa: RUF001
+        mock_content = PropertyMock(return_value='{"test": "Α and Ω"}'.encode(encoding))  # ruff: ignore[ambiguous-unicode-character-string]
         monkeypatch.setattr("requests.Response.content", mock_content)
 
         res = requests.Response()
         res.encoding = override
 
-        assert HTTPSession.json(res) == {"test": "Α and Ω"}  # noqa: RUF001
+        assert HTTPSession.json(res) == {"test": "Α and Ω"}  # ruff: ignore[ambiguous-unicode-character-string]
 
     @pytest.mark.parametrize(
         ("content_type", "encoding", "content", "expected"),

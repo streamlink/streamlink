@@ -148,7 +148,7 @@ class TestLoad:
                 "streamlink.session",
                 "info",
                 f"Plugin testplugin is being overridden by {PATH_TESTPLUGINS_OVERRIDE / 'testplugin.py'}"
-                + " (sha256:47d9c5ec4167565db13aae76f2fbedcf961f5fca386e60c4384ee5e92714b5f3)",
+                + " (sha256:033019b26b6bf33b4ebd629aea1b195a5d54d23f57a49742b8f46764439c6cdc)",
             ),
         ]
 

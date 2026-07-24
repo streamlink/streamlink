@@ -1,4 +1,4 @@
-# ruff: noqa: A004, I001
+# ruff: file-ignore[builtin-import-shadowing, unsorted-imports]
 # order the module members logically (autodoc_member_order == "bysource")
 
 from streamlink.validate._validate import (
