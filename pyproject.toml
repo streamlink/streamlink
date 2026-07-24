@@ -330,15 +330,10 @@ future-annotations = true
 
 [tool.ruff.lint.per-file-ignores]
 "__init__.py" = ["unused-import"]
-"build_backend/__init__.py" = ["non-empty-init-module"]
 "docs/**" = ["INP"]
 "script/**" = ["INP"]
-"src/streamlink/__init__.py" = ["I", "non-empty-init-module"]
-"src/streamlink/_version.py" = ["I"]
 "src/streamlink/plugins/*" = ["mutable-class-default"]
-"src/streamlink/session/http_useragents.py" = ["line-too-long"]
 "src/streamlink/webbrowser/cdp/devtools/*" = ["TC", "line-too-long", "too-many-blank-lines", "unused-import"]
-"src/streamlink_cli/main.py" = ["global-statement"]
 "tests/**" = ["mutable-class-default"]
 "tests/**/__init__.py" = ["non-empty-init-module"]
 

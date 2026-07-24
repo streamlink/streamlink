@@ -6,11 +6,11 @@ def _get_version() -> str:
     """
     Get the current version from git in "editable" installs
     """
-    # ruff: disable[import-outside-top-level]
+    # ruff: disable[import-outside-top-level, unsorted-imports]
     from pathlib import Path
     from versioningit import get_version
     import streamlink
-    # ruff: enable[import-outside-top-level]
+    # ruff: enable[import-outside-top-level, unsorted-imports]
 
     return get_version(project_dir=Path(streamlink.__file__).parents[2])
 
