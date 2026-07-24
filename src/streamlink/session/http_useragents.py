@@ -1,3 +1,5 @@
+# ruff: file-ignore[line-too-long]
+
 ANDROID = "Mozilla/5.0 (Linux; Android 17) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.7827.201 Mobile Safari/537.36"
 CHROME = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36"
 CHROME_OS = "Mozilla/5.0 (X11; CrOS x86_64 16667.55.0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.7827.226 Safari/537.36"

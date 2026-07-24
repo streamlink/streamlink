@@ -11,7 +11,7 @@ Full documentation is available at https://streamlink.github.io/
 
 from streamlink._version import __version__
 from streamlink.api import streams
-from streamlink.exceptions import StreamlinkError, PluginError, NoStreamsError, NoPluginError, StreamError
+from streamlink.exceptions import NoPluginError, NoStreamsError, PluginError, StreamError, StreamlinkError
 from streamlink.session import Streamlink
 
 
