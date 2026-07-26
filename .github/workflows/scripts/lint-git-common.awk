@@ -1,5 +1,5 @@
 BEGIN {
-    MAX_LENGTH_SUBJ = 50
+    MAX_LENGTH_SUBJ = 72
     MAX_LENGTH_BODY = 72
 }
 
