@@ -184,8 +184,8 @@ class Progress(Thread):
     def close(self):
         self._wait.set()
 
-    def write(self, chunk: bytes):
-        size = len(chunk)
+    def write(self, data: bytes):
+        size = len(data)
         with self._lock:
             self.overall += size
             self.written += size
