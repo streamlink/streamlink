@@ -17,10 +17,7 @@ jobs:
         with:
           fetch-depth: 300
       - name: Fetch tags
-        run: |
-          git ls-remote --tags --sort=version:refname 2>&- | awk 'END{printf "+%s:%s\n",$2,$2}' | git fetch origin --depth=300
-          git fetch origin --depth=300 --update-shallow
-          git describe --tags --long --dirty
+        run: ./.github/workflows/scripts/fetch-tags.sh
       - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
         with:
           python-version: "3.14"
@@ -56,10 +53,7 @@ jobs:
         with:
           fetch-depth: 300
       - name: Fetch tags
-        run: |
-          git ls-remote --tags --sort=version:refname 2>&- | awk 'END{printf "+%s:%s\n",$2,$2}' | git fetch origin --depth=300
-          git fetch origin --depth=300 --update-shallow
-          git describe --tags --long --dirty
+        run: ./.github/workflows/scripts/fetch-tags.sh
       - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
         with:
           python-version: "3.14"
