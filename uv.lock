@@ -1841,7 +1841,6 @@ all = [
 build = [
     { name = "build" },
     { name = "setuptools" },
-    { name = "shtab" },
     { name = "versioningit" },
 ]
 dev = [
@@ -1865,6 +1864,7 @@ script = [
     { name = "inflection" },
     { name = "jinja2" },
     { name = "requests" },
+    { name = "shtab" },
 ]
 test = [
     { name = "coverage", extra = ["toml"] },
@@ -1892,6 +1892,7 @@ typing = [
     { name = "requests" },
     { name = "requests-mock" },
     { name = "setuptools" },
+    { name = "shtab" },
     { name = "sphinx" },
     { name = "sphinx-design", version = "0.6.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11'" },
     { name = "sphinx-design", version = "0.7.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11'" },
@@ -1956,7 +1957,6 @@ all = [
 build = [
     { name = "build" },
     { name = "setuptools", specifier = ">=77.0.0" },
-    { name = "shtab" },
     { name = "versioningit", specifier = ">=2.0.0,<4" },
 ]
 dev = [
@@ -1976,6 +1976,7 @@ script = [
     { name = "inflection" },
     { name = "jinja2" },
     { name = "requests" },
+    { name = "shtab" },
 ]
 test = [
     { name = "coverage", extras = ["toml"] },
@@ -2003,6 +2004,7 @@ typing = [
     { name = "requests", specifier = ">=2.34.0,!=2.34.1" },
     { name = "requests-mock" },
     { name = "setuptools", specifier = ">=77.0.0" },
+    { name = "shtab" },
     { name = "sphinx", specifier = ">=7.0.0,<9" },
     { name = "sphinx-design", specifier = ">=0.6.0,<0.8" },
     { name = "ty", specifier = "==0.0.64" },

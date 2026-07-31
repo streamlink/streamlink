@@ -99,7 +99,7 @@ jobs:
       - name: Build shell completions
         continue-on-error: ${{ matrix.continue || false }}
         run: |
-          uv run --frozen --group build ./script/build-shell-completions.sh
+          uv run --frozen --group script ./script/build-shell-completions.py
       - name: Build sdist and wheels
         run: |
           uv run --frozen --group build ./script/build-and-sign.sh
