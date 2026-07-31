@@ -16,6 +16,7 @@ from streamlink_cli._parser import get_parser as get_streamlink_cli_parser  # ru
 
 SHELLS = {
     "bash": "streamlink",
+    "fish": "streamlink.fish",
     "zsh": "_streamlink",
 }
 OUTPUT_PATH = Path(__file__).parent.parent / "completions"

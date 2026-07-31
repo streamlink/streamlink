@@ -60,6 +60,7 @@ data_files: "list[tuple[str, Sequence[str]]]" = [  # ruff: ignore[quoted-annotat
     #  requires pre-built completion files via shtab ("build" dependency group)
     #  `./script/build-shell-completions.py`
     ("share/bash-completion/completions", ["completions/bash/streamlink"]),
+    ("share/fish/vendor_completions.d", ["completions/fish/streamlink.fish"]),
     ("share/zsh/site-functions", ["completions/zsh/_streamlink"]),
     # man page:
     #  requires the pre-built man page file via sphinx ("docs" dependency group)
