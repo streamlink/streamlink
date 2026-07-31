@@ -140,7 +140,7 @@ script = [
   "inflection",
   "jinja2",
   "requests",
-  "shtab",
+  "shtab >=1.9.0",
 ]
 all = [
   { include-group = "test" },

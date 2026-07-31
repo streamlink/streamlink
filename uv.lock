@@ -1603,11 +1603,11 @@ wheels = [
 
 [[package]]
 name = "shtab"
-version = "1.8.1"
+version = "1.9.0"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/56/b3/b7c99318ba2b0d7d7e71b78318c162690dd5639cd06e2d3bca9292737e4e/shtab-1.8.1.tar.gz", hash = "sha256:3edaf857ba164a0d7bb64e958eab8d6756d5aee3949c7f36a7e779bf1ce3b897", size = 46449, upload-time = "2026-07-03T11:43:26.663Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/98/d2/a3888d39793b08af7153e4c62d7f18b1dfafb592d1d690a7e2867c5c1599/shtab-1.9.0.tar.gz", hash = "sha256:cb59baa64587799ff9123a3a649573d7bf3f183d848bcad1264890136552ef9f", size = 48568, upload-time = "2026-07-31T11:40:27.203Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/9f/2f/35d4ec80d8ee39e792cd6e0d4f3dd84ea6783f13b7c47b4c319d9062aaf0/shtab-1.8.1-py3-none-any.whl", hash = "sha256:4fc418e0173e66385e4605044a26a4910e73dde2dc23e809acc2f0275e842426", size = 14905, upload-time = "2026-07-03T11:43:25.374Z" },
+    { url = "https://files.pythonhosted.org/packages/0d/03/6d323ed9497bd2c067a3b4e6e78ea9d5dcf4f941692181e67d67f7e2c39f/shtab-1.9.0-py3-none-any.whl", hash = "sha256:f1059c145289ad17e25244cde5242f6d39075af656e03e1f0543549450ef9c37", size = 14949, upload-time = "2026-07-31T11:40:25.833Z" },
 ]
 
 [[package]]
@@ -1944,7 +1944,7 @@ all = [
     { name = "requests-mock" },
     { name = "ruff", specifier = "==0.16.0" },
     { name = "setuptools", specifier = ">=77.0.0" },
-    { name = "shtab" },
+    { name = "shtab", specifier = ">=1.9.0" },
     { name = "sphinx", specifier = ">=7.0.0,<9" },
     { name = "sphinx-design", specifier = ">=0.6.0,<0.8" },
     { name = "ty", specifier = "==0.0.64" },
@@ -1976,7 +1976,7 @@ script = [
     { name = "inflection" },
     { name = "jinja2" },
     { name = "requests" },
-    { name = "shtab" },
+    { name = "shtab", specifier = ">=1.9.0" },
 ]
 test = [
     { name = "coverage", extras = ["toml"] },
@@ -2004,7 +2004,7 @@ typing = [
     { name = "requests", specifier = ">=2.34.0,!=2.34.1" },
     { name = "requests-mock" },
     { name = "setuptools", specifier = ">=77.0.0" },
-    { name = "shtab" },
+    { name = "shtab", specifier = ">=1.9.0" },
     { name = "sphinx", specifier = ">=7.0.0,<9" },
     { name = "sphinx-design", specifier = ">=0.6.0,<0.8" },
     { name = "ty", specifier = "==0.0.64" },
