@@ -134,13 +134,13 @@ docs = [
 ]
 build = [
   { include-group = "dev" },
-  "shtab",
   "build",
 ]
 script = [
   "inflection",
   "jinja2",
   "requests",
+  "shtab",
 ]
 all = [
   { include-group = "test" },

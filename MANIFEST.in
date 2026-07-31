@@ -12,7 +12,7 @@ recursive-include tests *
 prune docs/_build
 include docs/_build/man/*
 
-include script/build-shell-completions.sh
+include script/build-shell-completions.py
 
 prune */__pycache__
 global-exclude *.pyc *~ *.bak *.swp *.pyo

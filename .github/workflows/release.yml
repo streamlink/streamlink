@@ -27,7 +27,7 @@ jobs:
           uv run --frozen --group docs make --directory=docs man
       - name: Build shell completions
         run: |
-          uv run --frozen --group build ./script/build-shell-completions.sh
+          uv run --frozen --group script ./script/build-shell-completions.py
       - name: Build sdist and wheels
         run: |
           uv run --frozen --group build ./script/build-and-sign.sh
