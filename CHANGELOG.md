@@ -1,5 +1,30 @@
 # Changelog
 
+## streamlink 8.5.0 (2026-08-01)
+
+- Fixed: named-pipe player inputs not being cleaned up on pre-open failure ([#6935](https://github.com/streamlink/streamlink/pull/6935))
+- Fixed: stream start offsets being incorrectly cast to int in HLS ([#6941](https://github.com/streamlink/streamlink/pull/6941))
+- Fixed: `hls-playlist-reload-time` not accepting floats ([#6957](https://github.com/streamlink/streamlink/pull/6957))
+- Refactored: `HTTPSession` and fixed many typing issues ([#6924](https://github.com/streamlink/streamlink/pull/6924))
+- Refactored: `MPDNode` in DASH manifest parser to allow attribute namespaces ([#6988](https://github.com/streamlink/streamlink/pull/6988))
+- Updated plugins:
+  - douyin: fixed validation schema ([#6930](https://github.com/streamlink/streamlink/pull/6930))
+  - douyu: re-introduced plugin with new implementation ([#6959](https://github.com/streamlink/streamlink/pull/6959), [#7003](https://github.com/streamlink/streamlink/pull/7003))
+  - mdstrm: added support for VODs / embedded streams with access tokens ([#6994](https://github.com/streamlink/streamlink/pull/6994))
+  - nos: rewritten and fixed plugin ([#6954](https://github.com/streamlink/streamlink/pull/6954))
+  - radiko: fixed live\_url value ([#6962](https://github.com/streamlink/streamlink/pull/6962))
+  - trovo: removed plugin ([#6999](https://github.com/streamlink/streamlink/pull/6999))
+  - tvazteca: added new plugin ([#6994](https://github.com/streamlink/streamlink/pull/6994))
+- Docs: clarified requirements of Twitch high quality streams ([#6992](https://github.com/streamlink/streamlink/pull/6992))
+- Tests: fixed test failures since Python 3.15 beta 1 ([#6919](https://github.com/streamlink/streamlink/pull/6919))
+- Security: made GitHub releases immutable ([#6927](https://github.com/streamlink/streamlink/pull/6927))
+- Security: pinned all GitHub actions to commit IDs ([#6936](https://github.com/streamlink/streamlink/pull/6936))
+- Security: switched to uv lockfile for all CI workflows and for building release assets ([#6948](https://github.com/streamlink/streamlink/pull/6948))
+- Misc: added pre-built FISH shell completions to release tarballs and wheels ([#7014](https://github.com/streamlink/streamlink/pull/7014))
+
+[Full changelog](https://github.com/streamlink/streamlink/compare/8.4.0...8.5.0)
+
+
 ## streamlink 8.4.0 (2026-05-06)
 
 - SECURITY: fixed arbitrary local file read via `file://` URI in HLS and DASH ([`CVE-2026-44353`](https://nvd.nist.gov/vuln/detail/CVE-2026-44353) / [`GHSA-hgqw-6m45-hw5f`](https://github.com/streamlink/streamlink/security/advisories/GHSA-hgqw-6m45-hw5f))
