@@ -448,37 +448,34 @@ class TwitchAPI:
             queries,
             schema=validate.all(
                 validate.list(
-                    validate.all(
-                        {
-                            "data": {
-                                "userOrError": {
-                                    "displayName": str,
+                    {
+                        "data": {
+                            "userOrError": {
+                                "displayName": str,
+                            },
+                        },
+                    },
+                    {
+                        "data": {
+                            "user": {
+                                "lastBroadcast": {
+                                    "title": str,
+                                },
+                                "stream": {
+                                    "id": str,
+                                    "game": validate.none_or_all(
+                                        {"name": str},
+                                        validate.get("name"),
+                                    ),
                                 },
                             },
                         },
-                    ),
-                    validate.all(
-                        {
-                            "data": {
-                                "user": {
-                                    "lastBroadcast": {
-                                        "title": str,
-                                    },
-                                    "stream": {
-                                        "id": str,
-                                        "game": {
-                                            "name": str,
-                                        },
-                                    },
-                                },
-                            },
-                        },
-                    ),
+                    },
                 ),
                 validate.union_get(
                     (1, "data", "user", "stream", "id"),
                     (0, "data", "userOrError", "displayName"),
-                    (1, "data", "user", "stream", "game", "name"),
+                    (1, "data", "user", "stream", "game"),
                     (1, "data", "user", "lastBroadcast", "title"),
                 ),
             ),

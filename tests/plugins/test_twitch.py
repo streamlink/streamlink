@@ -1110,7 +1110,9 @@ class TestTwitchMetadata:
 
     @pytest.fixture()
     def mock_request_channel(self, request: pytest.FixtureRequest, requests_mock: rm.Mocker):
-        data = getattr(request, "param", True)
+        param = getattr(request, "param", {})
+        data = param.get("data", True)
+        game = param.get("game", True)
 
         return requests_mock.post(
             "https://gql.twitch.tv/gql",
@@ -1134,7 +1136,9 @@ class TestTwitchMetadata:
                             },
                             "stream": {
                                 "id": "stream id",
-                                "game": {
+                                "game": None
+                                if not game
+                                else {
                                     "name": "channel game",
                                 },
                             },
@@ -1192,7 +1196,7 @@ class TestTwitchMetadata:
             },
         )
 
-    @pytest.mark.parametrize(("mock_request_channel", "metadata"), [(True, "https://twitch.tv/foo")], indirect=True)
+    @pytest.mark.parametrize(("mock_request_channel", "metadata"), [({}, "https://twitch.tv/foo")], indirect=True)
     def test_metadata_channel(self, mock_request_channel, metadata):
         assert metadata == ("stream id", "channel name", "channel game", "channel status")
         assert mock_request_channel.call_count == 1
@@ -1224,9 +1228,14 @@ class TestTwitchMetadata:
             },
         ]
 
-    @pytest.mark.parametrize(("mock_request_channel", "metadata"), [(False, "https://twitch.tv/foo")], indirect=True)
+    @pytest.mark.parametrize(("mock_request_channel", "metadata"), [({"data": False}, "https://twitch.tv/foo")], indirect=True)
     def test_metadata_channel_no_data(self, mock_request_channel, metadata):
         assert metadata == (None, None, None, None)
+        assert mock_request_channel.call_count == 1
+
+    @pytest.mark.parametrize(("mock_request_channel", "metadata"), [({"game": False}, "https://twitch.tv/foo")], indirect=True)
+    def test_metadata_channel_no_category(self, mock_request_channel, metadata):
+        assert metadata == ("stream id", "channel name", None, "channel status")
         assert mock_request_channel.call_count == 1
 
     @pytest.mark.parametrize(("mock_request_video", "metadata"), [(True, "https://twitch.tv/videos/1337")], indirect=True)
