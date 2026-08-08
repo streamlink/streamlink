@@ -339,7 +339,7 @@ class TestLogging:
 
         handler = log.handlers[0]
         assert isinstance(handler, logging.StreamHandler)
-        handler.setStream(output_ascii)  # type: ignore  # Expected: Never ???
+        handler.setStream(output_ascii)
 
         log.info("Bär: 🐻")
         assert getvalue(output) == "[test][info] Bär: 🐻\n"
