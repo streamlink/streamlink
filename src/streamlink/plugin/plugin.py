@@ -433,7 +433,7 @@ class Plugin(abc.ABC, metaclass=_PluginMeta):
         try:
             if returned_streams := self._get_streams():
                 if isinstance(returned_streams, Mapping):
-                    ostreams = list(returned_streams.items())  # ty:ignore[invalid-assignment]
+                    ostreams = list(returned_streams.items())
                 else:
                     ostreams = list(returned_streams)
         except NoStreamsError:
