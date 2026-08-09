@@ -238,6 +238,12 @@ a.sidebar-brand:visited {
   font-weight: normal;
 }
 
+/* See: table.docutils td p, table.docutils th p */
+table.docutils td div.line, table.docutils th div.line,
+table.docutils td ul, table.docutils th ul {
+  margin: .25rem;
+}
+
 table.table-custom-layout {
   width: 100%;
   table-layout: fixed;
