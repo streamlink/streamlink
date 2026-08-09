@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import socket
 import ssl
-from contextlib import nullcontext
+from contextlib import closing, nullcontext
 from operator import itemgetter
 from socket import AF_INET, AF_INET6
 from ssl import SSLContext
@@ -19,6 +19,7 @@ from urllib3.connection import HTTPConnection
 from urllib3.response import HTTPResponse
 
 from streamlink.exceptions import PluginError, StreamlinkDeprecationWarning
+from streamlink.packages.requests_file import FileAdapter
 from streamlink.session.http import (
     HTTPSession,
     SSLContextAdapter,
@@ -703,6 +704,20 @@ class TestRedirect:
         assert resp.text == "redirect"
         assert (resp._next is not None) is has_next
         assert mocked.call_count == 0
+
+    def test_no_redirect_file(self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path):
+        monkeypatch.chdir(tmp_path)
+        one = tmp_path / "one"
+        two = tmp_path / "two"
+        one.symlink_to(two)
+        two.write_bytes(b"data")
+
+        session = HTTPSession()
+        assert isinstance(session.adapters.get("file://"), FileAdapter)
+        for file in ("one", "two"):
+            with closing(session.get(f"file://./{file}")) as resp:
+                assert not resp.is_redirect
+                assert resp.content == b"data"
 
 
 class TestHTTPCookies:
