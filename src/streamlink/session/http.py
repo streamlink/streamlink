@@ -8,11 +8,13 @@ from http.cookiejar import MozillaCookieJar
 from ipaddress import ip_address
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Protocol, TypeVar, cast, runtime_checkable
+from urllib.parse import urlparse
 
 import urllib3
 import urllib3.util.connection as urllib3_util_connection
-from requests import Request, Session
+from requests import Request, Response, Session
 from requests.adapters import HTTPAdapter
+from requests.exceptions import InvalidURL
 from urllib3.connection import HTTPConnection
 from urllib3.util import create_urllib3_context
 
@@ -110,6 +112,10 @@ def _filter_socket_options(sock: socket.socket, options: list[_TYPE_SOCKET_OPTIO
 
 
 urllib3.util.connection._set_socket_options = urllib3_set_socket_options  # type: ignore[ty:invalid-assignment]
+
+
+class InvalidRedirectURL(InvalidURL):
+    pass
 
 
 # requests.Request.__init__ keywords, except for "hooks"
@@ -258,6 +264,41 @@ class HTTPSession(Session):
         except Exception as err:
             raise OSError(f"Error while loading cookies from file: {err}") from err
         self.cookies.update(cookiejar)
+
+    def get_redirect_target(self, resp: Response) -> str | None:
+        target = super().get_redirect_target(resp)
+        if not target or not resp.request.url:
+            return target
+
+        scheme_source = urlparse(resp.request.url).scheme.lower()
+        scheme_target = urlparse(target).scheme.lower() or scheme_source
+
+        # Only permit same-scheme redirections
+        # or redirections to https:// from any other protocol (including protocols with custom adapters)
+        if scheme_target == scheme_source or scheme_target == "https":
+            return target
+
+        raise InvalidRedirectURL(f"Disallowed redirection to {scheme_target}:// URL from {resp.request.url}")
+
+    def resolve_redirects(self, *args, **kwargs):
+        yield_requests = kwargs.get("yield_requests", False)
+        try:
+            yield from super().resolve_redirects(*args, **kwargs)
+        except InvalidRedirectURL:
+            # Depending on the value of yield_requests, we need to either stop the generator,
+            # or keep raising the InvalidRedirectURL exception from the inner get_redirect_target() call:
+            # 1. allow_redirects=False can be set by the user when making requests.
+            #    Then no redirection history is built, but a PreparedRequest is set on the response's _next attr by calling
+            #    resolve_redirects(yield_requests=True) and only getting the first item of this generator. We therefore must
+            #    stop it instead of raising InvalidRedirectURL, since we want the request to complete regularly.
+            # 2. allow_redirects=True is the default behavior when making requests.
+            #    A redirection history is built and each individual hop inside resolve_redirects(yield_requests=False)
+            #    calls send(allow_redirects=False), which itself calls resolve_redirects(yield_requests=True), like in 1.
+            #    The outer resolve_redirects(yield_requests=False) call however should keep raising InvalidRedirectURL,
+            #    as we want the redirection chain to fail immediately with the right error in case a redirection is not allowed.
+            if yield_requests:
+                return
+            raise
 
     def resolve_url(self, url):
         """Resolves any redirects and returns the final URL."""
