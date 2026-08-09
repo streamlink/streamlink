@@ -410,9 +410,6 @@ Streamlink defines a `build system <pyproject.toml_>`__ according to `PEP-517`_ 
       - At least version **65.6.0** |br|
         Used as build backend
     * - build
-      - `wheel`_
-      - Used by the build frontend for creating Python wheels
-    * - build
       - `versioningit`_
       - At least version **2.0.0** |br|
         Used for generating the version string from git when building, or when running in an editable install.
@@ -479,7 +476,6 @@ Streamlink defines a `build system <pyproject.toml_>`__ according to `PEP-517`_ 
 
 .. _Python: https://www.python.org/
 .. _setuptools: https://setuptools.pypa.io/en/latest/
-.. _wheel: https://wheel.readthedocs.io/en/stable/
 .. _versioningit: https://versioningit.readthedocs.io/en/stable/
 
 .. _certifi: https://certifiio.readthedocs.io/en/latest/
