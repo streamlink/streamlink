@@ -7,8 +7,7 @@ build:
   jobs:
     post_checkout:
       - "[ ${READTHEDOCS_VERSION_TYPE} = external ] || exit 183"
-      - git ls-remote --tags --sort=version:refname 2>&- | awk "END{printf \"+%s:%s\\n\",\$2,\$2}" | git fetch origin --depth=300
-      - git fetch origin --depth=300 --update-shallow
+      - bash ./.github/workflows/scripts/fetch-tags.sh
       - git describe --tags --long --dirty
 
 python:
