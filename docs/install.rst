@@ -463,11 +463,13 @@ Streamlink defines a `build system <pyproject.toml_>`__ according to `PEP-517`_ 
         - HLS streams optionally need to get remuxed depending on the stream selection.
     * - optional
       - | `brotli`_
-        | ``decompress`` extras marker
+        | ``streamlink[decompress]``
+        | via ``urllib3[brotli]``
       - Used for decompressing HTTP responses
     * - optional
       - | `backports.zstd`_
-        | ``decompress`` extras marker
+        | ``streamlink[decompress]``
+        | via ``urllib3[zstd]``
       - | Only required on ``python_version<"3.14"``
         | Used for decompressing HTTP responses
 
