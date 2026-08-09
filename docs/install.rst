@@ -466,9 +466,10 @@ Streamlink defines a `build system <pyproject.toml_>`__ according to `PEP-517`_ 
         | ``decompress`` extras marker
       - Used for decompressing HTTP responses
     * - optional
-      - | `zstandard`_
+      - | `backports.zstd`_
         | ``decompress`` extras marker
-      - Used for decompressing HTTP responses
+      - | Only required on ``python_version<"3.14"``
+        | Used for decompressing HTTP responses
 
 .. _pyproject.toml: https://github.com/streamlink/streamlink/blob/master/pyproject.toml
 .. _PEP-517: https://peps.python.org/pep-0517/
@@ -493,7 +494,7 @@ Streamlink defines a `build system <pyproject.toml_>`__ according to `PEP-517`_ 
 .. _websocket-client: https://pypi.org/project/websocket-client/
 
 .. _brotli: https://pypi.org/project/Brotli/
-.. _zstandard: https://pypi.org/project/zstandard/
+.. _backports.zstd: https://pypi.org/project/backports.zstd/
 
 .. _FFmpeg: https://www.ffmpeg.org/
 .. _muxing: https://en.wikipedia.org/wiki/Multiplexing#Video_processing
