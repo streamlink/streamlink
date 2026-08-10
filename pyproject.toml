@@ -319,6 +319,7 @@ ignore = [
   "compare-to-empty-string",
   "explicit-string-concatenation",
   "missing-f-string-syntax",
+  "missing-trailing-comma",  # already covered by ruff's formatter
   "parenthesize-chained-operators",
   "redefined-loop-name",
   "return-in-generator",
