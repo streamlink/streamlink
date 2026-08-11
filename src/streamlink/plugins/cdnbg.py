@@ -123,6 +123,10 @@ class CDNBG(Plugin):
                         validate.parse_json(),
                     ),
                     validate.all(
+                        validate.regex(re.compile(r"""window\.APP_CONFIG\.stream\s*=\s*'(?P<url>.+?)';""")),
+                        validate.get("url"),
+                    ),
+                    validate.all(
                         validate.parse_html(),
                         validate.any(
                             self._find_url_xpath(".//video[contains(@src,'m3u8')][1]/@src"),
