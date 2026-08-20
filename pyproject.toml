@@ -115,7 +115,7 @@ typing = [
   { include-group = "docs" },
   { include-group = "script" },
   # tools and typing dependencies
-  "ty ==0.0.69",
+  "ty ==0.0.73",
   "mypy[faster-cache] ==2.3.0",
   "typing-extensions >=4.0.0",
   # dependency overrides
