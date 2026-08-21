@@ -28,10 +28,38 @@ class TestPluginCanHandleUrlPluto(PluginCanHandleUrl):
         (
             (
                 "movies",
-                "https://pluto.tv/en/on-demand/movies/600545d1813b2d001b686fa9",
+                "https://pluto.tv/en/on-demand/movies/5ed28c8cefbd62001b280de6",
             ),
             {
-                "id": "600545d1813b2d001b686fa9",
+                "id": "5ed28c8cefbd62001b280de6",
+            },
+        ),
+        (
+            (
+                "series",
+                "https://pluto.tv/gsa/shows/2740225/episode/60dee91cfc802600134b886d/",
+            ),
+            {
+                "id_s": "2740225",
+                "id_e": "60dee91cfc802600134b886d",
+            },
+        ),
+        (
+            (
+                "movies",
+                "https://pluto.tv/us/movies/6925771d1a8e9be91b1b7d22/#open",
+            ),
+            {
+                "id": "6925771d1a8e9be91b1b7d22",
+            },
+        ),
+        (
+            (
+                "live",
+                "https://pluto.tv/fr/watch/live-tv/31528/",
+            ),
+            {
+                "id": "31528",
             },
         ),
     ]

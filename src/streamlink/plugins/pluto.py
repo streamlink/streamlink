@@ -8,6 +8,7 @@ $metadata category
 $metadata title
 """
 
+import json
 import re
 from dataclasses import dataclass
 from typing import ClassVar
@@ -24,7 +25,7 @@ from streamlink.utils.url import update_qsd
 log = getLogger(__name__)
 
 
-@dataclass
+@dataclass(kw_only=True)
 class PlutoHLSSegment(HLSSegment):
     ad: bool = False
 
@@ -71,19 +72,19 @@ class PlutoHLSStream(HLSStream):
 @pluginmatcher(
     name="live",
     pattern=re.compile(
-        r"https?://(?:www\.)?pluto\.tv/(?:\w{2,}/)?live-tv/(?P<id>[^/?]+)",
+        r"https?://(?:www\.)?pluto\.tv/(?:\w{2,}/)?(?:\w{2,}/)?live-tv/#?(?P<id>[^/?]+)",
     ),
 )
 @pluginmatcher(
     name="series",
     pattern=re.compile(
-        r"https?://(?:www\.)?pluto\.tv/(?:\w{2,}/)?on-demand/series/(?P<id_s>[^/]+)(?:/season/\d+)?/episode/(?P<id_e>[^/?]+)",
+        r"https?://(?:www\.)?pluto\.tv/(?:\w{2,}/)?(?:on-demand/series|shows)/(?P<id_s>[^/]+)(?:/season/\d+)?/episode/#?(?P<id_e>[^/?]+)",
     ),
 )
 @pluginmatcher(
     name="movies",
     pattern=re.compile(
-        r"https?://(?:www\.)?pluto\.tv/(?:\w{2,}/)?on-demand/movies/(?P<id>[^/?]+)",
+        r"https?://(?:www\.)?pluto\.tv/(?:\w{2,}/)?(?:on-demand/movies|movies)/#?(?P<id>[^/?]+)",
     ),
 )
 class Pluto(Plugin):
@@ -105,19 +106,126 @@ class Pluto(Plugin):
             self.url,
             schema=validate.Schema(
                 validate.parse_html(),
-                validate.xml_xpath_string(".//head/meta[@name='appVersion']/@content"),
+                validate.any(
+                    validate.all(
+                        validate.xml_xpath_string(".//head/meta[(@name='appVersion' or @name='app_version')][1]/@content"),
+                        str,
+                    ),
+                    validate.all(
+                        validate.xml_xpath_string(".//script[@id='__NEXT_DATA__'][1]/text()"),
+                        validate.none_or_all(
+                            validate.parse_json(),
+                            {"props": {"globalAppVersion": str}},
+                            validate.get(("props", "globalAppVersion")),
+                        ),
+                    ),
+                ),
                 validate.any(None, str),
             ),
         )
         if not self._app_version:
             raise PluginError("Could not find pluto app version")
 
-        log.debug(f"{self._app_version=}")
+        log.debug("self._app_version: %s", self._app_version)
 
         return self._app_version
 
+    def _graphql_request(self, url: str, operation_name: str, extensions: dict, variables: dict, schema):
+        return self.session.http.get(
+            url,
+            params={
+                "extensions": json.dumps(extensions, separators=(",", ":")),
+                "variables": json.dumps(variables, separators=(",", ":")),
+                "operationName": operation_name,
+            },
+            headers={"apollo-require-preflight": "true"},
+            schema=schema,
+        )
+
+    def _get_series_metadata(self) -> dict:
+        data = self._graphql_request(
+            "https://pluto.tv/api/tn/hubs/graphql/",
+            "FullEpisodesData",
+            {"tnPersistedDocumentHash": "c33226b006b70748f919b5a1ea58d4f07c28cce943d1d2cc0a86fe10fd761b27"},
+            {
+                "showId": self.match["id_s"],
+                "apiRawContentId": None,
+                "withApiRaw": False,
+                "episodeId": self.match["id_e"],
+            },
+            schema=validate.Schema(
+                validate.parse_json(),
+                {
+                    "data": {
+                        "fullEpisodes": validate.none_or_all(
+                            {
+                                "episodes": [
+                                    {
+                                        "contentId": str,
+                                        validate.optional("seriesTitle"): str,
+                                        validate.optional("genre"): str,
+                                        validate.optional("title"): str,
+                                    },
+                                ],
+                            },
+                            validate.get("episodes"),
+                            validate.filter(lambda x: x.get("contentId") == self.match["id_e"]),
+                            validate.get(0),
+                        ),
+                    },
+                },
+                validate.get(("data", "fullEpisodes")),
+            ),
+        )
+        log.debug("_get_series_metadata: %s", data)
+        return data or {}
+
+    def _resolve_channel_origin_id(self, origin_id):
+        return self._graphql_request(
+            "https://pluto.tv/api/tn/video/graphql/",
+            "ChannelsOne",
+            {"tnPersistedDocumentHash": "b9c2b93c341345b0c990fa85bd9b596944c7f343d11ed066d2e1e2db42b1f7ca"},
+            {
+                "params": {
+                    "userRegistrationCountry": "US",
+                    "userState": "ANONYMOUS",
+                    "packageCode": "NEW_FREE_PACKAGE",
+                    "userProfileType": "ADULT",
+                    "billingVendor": "cbscomp",
+                    "dma": 0,
+                    "stationId": None,
+                    "channelCategorySlug": None,
+                    "platformType": "Desktop",
+                    "showListing": True,
+                    "hideChannelsWithoutListings": True,
+                    "rows": 20,
+                    "numOfUpcomingListings": 0,
+                    "filterLockedChannels": False,
+                    "isPreviewMode": False,
+                    "channelOriginId": int(origin_id),
+                },
+            },
+            schema=validate.Schema(
+                validate.parse_json(),
+                {
+                    "data": {
+                        "channels": {
+                            validate.optional("channel"): validate.none_or_all(
+                                {
+                                    "videoContentId": str,
+                                    "channelName": str,
+                                },
+                                validate.get("videoContentId"),
+                            ),
+                        },
+                    },
+                },
+                validate.get(("data", "channels", "channel")),
+            ),
+        )
+
     def _get_api_data(self, request):
-        log.debug(f"_get_api_data: {request=}")
+        log.debug("_get_api_data: %s", request)
 
         schema_paths = validate.any(
             validate.all(
@@ -200,9 +308,16 @@ class Pluto(Plugin):
         )
 
     def _get_streams_live(self):
-        data = self._get_api_data({"channelSlug": self.match["id"]})
+        origin_id = self.match["id"]
+
+        if not origin_id.isdigit():
+            video_content_id = origin_id
+        elif not (video_content_id := self._resolve_channel_origin_id(origin_id)):
+            return
+
+        data = self._get_api_data({"channelSlug": video_content_id})
         epg = data.get("EPG", [])
-        media = next((e for e in epg if e["id"] == self.match["id"]), None)
+        media = next((e for e in epg if e["id"] == video_content_id), None)
         if not media:
             return
 
@@ -212,22 +327,17 @@ class Pluto(Plugin):
         return data, media["stitched"]
 
     def _get_streams_series(self):
-        data = self._get_api_data({"seriesIDs": self.match["id_s"]})
-        vod = data.get("VOD", [])
-        media = next((v for v in vod if v["id"] == self.match["id_s"]), None)
-        if not media:
-            return
-        seasons = media.get("seasons", [])
-        episode = next((e for s in seasons for e in s["episodes"] if e["_id"] == self.match["id_e"]), None)
-        if not episode:
-            return
+        episode_id = self.match["id_e"]
+        data = self._get_api_data({})
+        stitched_path = f"/stitch/hls/episode/{episode_id}/master.m3u8"
 
-        self.id = episode["_id"]
-        self.author = media["name"]
-        self.category = media["genre"]
-        self.title = episode["name"]
+        metadata = self._get_series_metadata()
+        self.id = episode_id
+        self.author = metadata.get("seriesTitle")
+        self.category = metadata.get("genre")
+        self.title = metadata.get("title")
 
-        return data, episode["stitched"]
+        return data, [("hls", stitched_path)]
 
     def _get_streams_movies(self):
         data = self._get_api_data({"seriesIDs": self.match["id"]})
