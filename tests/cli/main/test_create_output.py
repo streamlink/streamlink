@@ -13,7 +13,7 @@ from streamlink_cli.main import (
     create_output,
     setup_args,
 )
-from streamlink_cli.output import FileOutput, PlayerOutput
+from streamlink_cli.output import FileOutput, HTTPOutput, PlayerOutput
 
 
 ARGS_PLAYER_ENV = "--player-env=VAR1=abc", "--player-env=VAR2=def"
@@ -272,6 +272,16 @@ def test_incompatible_options(formatter: Formatter, argv: list, errormsg: str):
         create_output(formatter)
     assert str(excinfo.value) == errormsg
     assert excinfo.value.code == 1
+
+
+@pytest.mark.parametrize("argv", [pytest.param(["--player=mpv", "--player-http"])], indirect=["argv"])
+def test_player_http(monkeypatch: pytest.MonkeyPatch, formatter: Formatter, argv: list):
+    monkeypatch.setattr("streamlink_cli.output.http.HTTPOutput.start_server", Mock())
+    output = create_output(formatter)
+    assert isinstance(output, PlayerOutput)
+    assert isinstance(output.http, HTTPOutput)
+    assert output.http.host == "127.0.0.1"
+    assert output.http.port == 0
 
 
 @pytest.mark.parametrize("argv", [pytest.param([], id="default-player")], indirect=["argv"])

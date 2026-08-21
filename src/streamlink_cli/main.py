@@ -166,7 +166,7 @@ def create_output(formatter: Formatter) -> FileOutput | PlayerOutput:
             except OSError as err:
                 raise StreamlinkCLIError(f"Failed to create pipe: {err}") from err
         elif args.player_http:
-            http = create_http_server()
+            http = create_http_server(host="127.0.0.1", port=0)
 
         if args.record:
             if args.record == "-":
@@ -230,7 +230,7 @@ def output_stream_http(
                 + " You must specify the path to a player executable with --player.",
             )
 
-        server = create_http_server()
+        server = create_http_server(host="127.0.0.1", port=0)
         player = output = PlayerOutput(
             path=args.player,
             args=args.player_args,
@@ -247,7 +247,7 @@ def output_stream_http(
         except OSError as err:
             raise StreamlinkCLIError(f"Failed to start player: {args.player} ({err})") from err
     else:
-        server = create_http_server(args.player_external_http_interface, port)
+        server = create_http_server(host=args.player_external_http_interface, port=port)
         player = None
 
         log.info("Starting server, access with one of:")
