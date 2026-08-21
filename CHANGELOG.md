@@ -1,5 +1,16 @@
 # Changelog
 
+## streamlink 8.6.0 (2026-08-17)
+
+- Added: official support for Python 3.15 ([#7026](https://github.com/streamlink/streamlink/pull/7026))
+- Updated plugins:
+  - cdnbg: fixed player\_url schema ([#7036](https://github.com/streamlink/streamlink/pull/7036))
+  - twitch: fixed optional category breaking all stream metadata ([#7025](https://github.com/streamlink/streamlink/pull/7025))
+- Dependencies: bumped min. version requirement of lxml to `5.0.0` ([#7029](https://github.com/streamlink/streamlink/pull/7029))
+
+[Full changelog](https://github.com/streamlink/streamlink/compare/8.5.0...8.6.0)
+
+
 ## streamlink 8.5.0 (2026-08-01)
 
 - Fixed: named-pipe player inputs not being cleaned up on pre-open failure ([#6935](https://github.com/streamlink/streamlink/pull/6935))
