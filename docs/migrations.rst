@@ -1,6 +1,25 @@
 Migrations
 ==========
 
+streamlink 8.5.0
+----------------
+
+plugins.trovo
+^^^^^^^^^^^^^
+
+The ``trovo`` plugin has been removed, as Trovo has discontinued its live-streaming platform.
+
+| :octicon:`x-circle` #6998
+| :octicon:`git-pull-request` #6999
+
+.. admonition:: Migration
+   :class: hint
+
+   Trovo's live-streaming service ceased operation on June 30, 2026, so the ``trovo`` plugin
+   no longer serves any working streams. Please switch to a different streaming service or
+   platform that is supported by Streamlink.
+
+
 streamlink 8.0.0
 ----------------
 
