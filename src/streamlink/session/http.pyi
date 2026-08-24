@@ -166,6 +166,13 @@ class HTTPSession(Session):
         self,
         url: _requeststypes.UriType,
         params: _requeststypes.ParamsType | None = None,
+        **kwargs: Unpack[_requeststypes.GetKwargs],
+    ) -> Response: ...
+    @overload
+    def get(
+        self,
+        url: _requeststypes.UriType,
+        params: _requeststypes.ParamsType | None = None,
         **kwargs: Unpack[_GetKwargs],
     ) -> Response: ...
     @overload
@@ -178,6 +185,12 @@ class HTTPSession(Session):
     def options(
         self,
         url: _requeststypes.UriType,
+        **kwargs: Unpack[_requeststypes.RequestKwargs],
+    ) -> Response: ...
+    @overload
+    def options(
+        self,
+        url: _requeststypes.UriType,
         **kwargs: Unpack[_RequestKwargs],
     ) -> Response: ...
     @overload
@@ -186,6 +199,12 @@ class HTTPSession(Session):
         url: _requeststypes.UriType,
         **kwargs: Unpack[_RequestKwargsWithSchema],
     ) -> Any: ...
+    @overload
+    def head(
+        self,
+        url: _requeststypes.UriType,
+        **kwargs: Unpack[_requeststypes.RequestKwargs],
+    ) -> Response: ...
     @overload
     def head(
         self,
@@ -206,6 +225,14 @@ class HTTPSession(Session):
         url: _requeststypes.UriType,
         data: _requeststypes.DataType = None,
         json: _requeststypes.JsonType = None,
+        **kwargs: Unpack[_requeststypes.PostKwargs],
+    ) -> Response: ...
+    @overload
+    def post(
+        self,
+        url: _requeststypes.UriType,
+        data: _requeststypes.DataType = None,
+        json: _requeststypes.JsonType = None,
         **kwargs: Unpack[_PostKwargs],
     ) -> Response: ...
     @overload
@@ -220,6 +247,13 @@ class HTTPSession(Session):
         self,
         url: _requeststypes.UriType,
         data: _requeststypes.DataType = None,
+        **kwargs: Unpack[_requeststypes.DataKwargs],
+    ) -> Response: ...
+    @overload
+    def put(
+        self,
+        url: _requeststypes.UriType,
+        data: _requeststypes.DataType = None,
         **kwargs: Unpack[_DataKwargs],
     ) -> Response: ...
     @overload
@@ -234,6 +268,13 @@ class HTTPSession(Session):
         self,
         url: _requeststypes.UriType,
         data: _requeststypes.DataType = None,
+        **kwargs: Unpack[_requeststypes.DataKwargs],
+    ) -> Response: ...
+    @overload
+    def patch(
+        self,
+        url: _requeststypes.UriType,
+        data: _requeststypes.DataType = None,
         **kwargs: Unpack[_DataKwargs],
     ) -> Response: ...
     @overload
@@ -242,6 +283,12 @@ class HTTPSession(Session):
         url: _requeststypes.UriType,
         **kwargs: Unpack[_RequestKwargsWithSchema],
     ) -> Any: ...
+    @overload
+    def delete(
+        self,
+        url: _requeststypes.UriType,
+        **kwargs: Unpack[_requeststypes.RequestKwargs],
+    ) -> Response: ...
     @overload
     def delete(
         self,
