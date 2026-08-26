@@ -1029,7 +1029,8 @@ def main():
         parser = build_parser()
         setup(parser)
     except StreamlinkCLIError as err:
-        sys.stderr.write(f"{err}\n")
+        if sys.stderr:
+            sys.stderr.write(f"{err}\n")
         raise SystemExit(err.code) from None
 
     try:
