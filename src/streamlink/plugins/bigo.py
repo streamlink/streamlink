@@ -8,15 +8,122 @@ $metadata category
 $metadata title
 """
 
+from __future__ import annotations
+
+import ctypes
 import re
+from dataclasses import dataclass
+from typing import TYPE_CHECKING
 
 from streamlink.logger import getLogger
 from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.api import validate
-from streamlink.stream.hls import HLSStream
+from streamlink.stream.hls import HLSSegment, HLSStream, HLSStreamReader, HLSStreamWriter, M3U8Parser, parse_tag
+
+
+if TYPE_CHECKING:
+    from requests import Response
 
 
 log = getLogger(__name__)
+
+
+class ResponseWrapper:
+    def __init__(self, response: Response, seed: int | None):
+        self.response = response
+        self.seed = seed
+
+    def iter_content(self, chunk_size: int):
+        iterator = self.response.iter_content(chunk_size)
+        if self.seed is None:  # pragma: no cover
+            yield from iterator
+            return
+
+        # allocate data for two MPEG-TS packets
+        packets = bytearray(376)
+        view = memoryview(packets)
+        filled = 0
+        remainder = b""
+
+        # read packet contents, keep the remainder and the iterator
+        for chunk in iterator:  # pragma: no branch
+            needed = 376 - filled
+            if len(chunk) <= needed:
+                view[filled : filled + len(chunk)] = chunk
+                filled += len(chunk)
+                if filled == 376:
+                    break
+            else:
+                view[filled:376] = chunk[:needed]
+                remainder = chunk[needed:]
+                break
+
+        self._decrypt_packets(packets, self.seed)
+
+        yield packets
+        yield remainder
+        yield from iterator
+
+    @staticmethod
+    def _decrypt_packets(packets: bytearray, seed: int):
+        # translated to Python from their obfuscated JS
+        for num in range(2):
+            imul = ctypes.c_uint32((num + 1) * 2654435769).value
+            r = ctypes.c_uint32(seed ^ imul).value
+
+            if r == 0:
+                r = 1831565813
+
+            packet_offset = 188 * num
+            for offset in range(16):
+                r ^= ctypes.c_uint32(r << 13).value
+                r ^= r >> 17
+                r ^= ctypes.c_uint32(r << 5).value
+                r = ctypes.c_uint32(r).value
+
+                mask = r & 0xFF
+                if mask == 0:
+                    mask = 165
+
+                packets[packet_offset + offset] ^= mask
+
+
+class BigoHLSStreamWriter(HLSStreamWriter):
+    def _write(self, segment: BigoHLSSegment, result: Response, is_map: bool):  # type: ignore[override, ty:invalid-method-override]
+        return super()._write(segment, ResponseWrapper(result, segment.seed), is_map)  # type: ignore[arg-type, ty:invalid-argument-type]
+
+
+class BigoHLSStreamReader(HLSStreamReader):
+    __writer__ = BigoHLSStreamWriter
+
+
+@dataclass(kw_only=True)
+class BigoHLSSegment(HLSSegment):
+    seed: int = -1
+
+
+class BigoM3U8Parser(M3U8Parser):
+    __segment__ = BigoHLSSegment
+
+    def __init__(self, *args, **kwargs) -> None:
+        super().__init__(*args, **kwargs)
+        self.seed: int | None = None
+
+    @parse_tag("EXT-X-BIGO-WEB-PROTECTION")
+    def parse_bigo_web_protection(self, value):
+        attributes = self.parse_attributes(value)
+        try:
+            self.seed = int(attributes.get("SEED", -1))
+        except ValueError:  # pragma: no cover
+            log.warning("Could not parse SEED value of BIGO-WEB-PROTECTION data")
+
+    def get_segment(self, uri: str, **data):
+        return super().get_segment(uri, seed=self.seed, **data)
+
+
+class BigoHLSStream(HLSStream):
+    __reader__ = BigoHLSStreamReader
+    __parser__ = BigoM3U8Parser
 
 
 @pluginmatcher(
@@ -62,7 +169,7 @@ class Bigo(Plugin):
             log.info("Channel is offline")
             return
 
-        yield "live", HLSStream(self.session, hls_url)
+        yield "live", BigoHLSStream(self.session, hls_url)
 
 
 __plugin__ = Bigo
