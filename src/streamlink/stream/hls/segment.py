@@ -11,7 +11,10 @@ from streamlink.utils.l10n import Language
 
 
 if TYPE_CHECKING:
+    from collections.abc import Iterator
     from datetime import datetime, timedelta
+
+    from requests import Response
 
 
 log = getLogger(".".join(__name__.split(".")[:-1]))
@@ -148,3 +151,10 @@ class HLSSegment(Segment):
     byterange: ByteRange | None
     date: datetime | None
     map: Map | None
+
+    # noinspection PyMethodMayBeStatic
+    def get_content(self, response: Response) -> bytes:
+        return response.content
+
+    def iter_content(self, response: Response, chunk_size: int) -> Iterator[bytes]:
+        yield from response.iter_content(chunk_size)

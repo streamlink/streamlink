@@ -33,7 +33,7 @@ from streamlink.utils.times import now
 
 
 if TYPE_CHECKING:
-    from collections.abc import Mapping
+    from collections.abc import Iterator, Mapping
     from concurrent.futures import Future
     from datetime import datetime
 
@@ -286,7 +286,7 @@ class HLSStreamWriter(SegmentedStreamWriter[HLSSegment, Response]):
             return False
 
         try:
-            encrypted_chunk = response.content
+            encrypted_chunk = self.get_segment_content(segment, response)
         except (ChunkedEncodingError, ContentDecodingError, ConnectionError) as err:
             log.error(f"Download of segment {segment.num} failed: {err}")
             return False
@@ -307,13 +307,20 @@ class HLSStreamWriter(SegmentedStreamWriter[HLSSegment, Response]):
 
     def _write_plain(self, segment: HLSSegment, response: Response) -> bool:
         try:
-            for chunk in response.iter_content(self.WRITE_CHUNK_SIZE):
+            for chunk in self.iter_segment_content(segment, response):
                 self.reader.buffer.write(chunk)
         except (ChunkedEncodingError, ContentDecodingError, ConnectionError) as err:
             log.error(f"Download of segment {segment.num} failed: {err}")
             return False
 
         return True
+
+    # noinspection PyMethodMayBeStatic
+    def get_segment_content(self, segment: HLSSegment, response: Response) -> bytes:
+        return segment.get_content(response)
+
+    def iter_segment_content(self, segment: HLSSegment, response: Response) -> Iterator[bytes]:
+        yield from segment.iter_content(response, self.WRITE_CHUNK_SIZE)
 
 
 class HLSStreamWorker(SegmentedStreamWorker[HLSSegment, Response]):
