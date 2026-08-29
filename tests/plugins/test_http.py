@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 from typing import TYPE_CHECKING
 from unittest.mock import Mock, call
 
@@ -59,6 +60,15 @@ def test_get_streams(
     assert list(result.keys()) == ["live"]
     assert isinstance(result["live"], HTTPStream)
     assert mock_httpstream_init.call_args_list == [call(session, expected)]
+
+
+def test_missing_netloc(caplog: pytest.LogCaptureFixture, session: Streamlink):
+    caplog.set_level(logging.DEBUG, "streamlink")
+    assert not HTTPStreamPlugin(session, "httpstream:///foo/bar").streams()
+    assert [(record.name, record.levelname, record.message) for record in caplog.records] == [
+        ("streamlink.plugins.http", "debug", "URL=https:///foo/bar; params={}"),
+        ("streamlink.plugins.http", "error", "Input URL is missing a host or input file path is missing the file:// scheme"),
+    ]
 
 
 def test_parameters(monkeypatch: pytest.MonkeyPatch, session: Streamlink):

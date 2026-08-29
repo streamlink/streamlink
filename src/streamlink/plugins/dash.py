@@ -1,4 +1,5 @@
 import re
+from urllib.parse import urlparse
 
 from streamlink.logger import getLogger
 from streamlink.plugin import Plugin, pluginmatcher
@@ -36,9 +37,14 @@ class MPEGDASH(Plugin):
 
     def _get_streams(self):
         data = self.match.groupdict()
-        url = update_scheme("https://", str(data.get("url", "")), force=False)
+        url = update_scheme("https://", data.get("url", ""), force=False)
         params = parse_params(data.get("params"))
-        log.debug(f"URL={url}; params={params}")
+        log.debug("URL=%s; params=%r", url, params)
+
+        parsed = urlparse(url)
+        if parsed.scheme != "file" and not parsed.netloc:
+            log.error("Input URL is missing a host or input file path is missing the file:// scheme")
+            return
 
         return DASHStream.parse_manifest(self.session, url, **params)
 
