@@ -105,7 +105,7 @@ class TestBigoHLSStream(TestMixinStreamHLS, unittest.TestCase):
         )
 
         for chunk_size in (16, 47):
-            with patch("streamlink.plugins.bigo.BigoHLSStreamWriter.WRITE_CHUNK_SIZE", chunk_size):
+            with patch("streamlink.stream.hls.HLSStreamWriter.WRITE_CHUNK_SIZE", chunk_size):
                 segment = BigoSegment(0, content=given)
                 self.subject([Playlist(0, [web_protection, segment], end=True)])
                 result = self.await_read(read_all=True)
