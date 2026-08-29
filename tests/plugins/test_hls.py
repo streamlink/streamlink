@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 from typing import TYPE_CHECKING
 from unittest.mock import Mock, call
 
@@ -129,3 +130,12 @@ def test_get_streams(
     assert list(result.keys()) == streams
     assert all(isinstance(s, HLSStream) for s in result.values())
     assert mock_parse_variant_playlist.call_args_list == [call(session, expected)]
+
+
+def test_missing_netloc(caplog: pytest.LogCaptureFixture, session: Streamlink):
+    caplog.set_level(logging.DEBUG, "streamlink")
+    assert not HLSPlugin(session, "hls:///foo/bar").streams()
+    assert [(record.name, record.levelname, record.message) for record in caplog.records] == [
+        ("streamlink.plugins.hls", "debug", "URL=https:///foo/bar; params={}"),
+        ("streamlink.plugins.hls", "error", "Input URL is missing a host or input file path is missing the file:// scheme"),
+    ]

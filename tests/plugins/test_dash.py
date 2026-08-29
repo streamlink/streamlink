@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 from typing import TYPE_CHECKING
 from unittest.mock import Mock, call
 
@@ -92,6 +93,15 @@ def test_get_streams(monkeypatch: pytest.MonkeyPatch, session: Streamlink, url, 
     p.streams()
 
     assert mock_parse_manifest.call_args_list == [call(session, expected)]
+
+
+def test_missing_netloc(caplog: pytest.LogCaptureFixture, session: Streamlink):
+    caplog.set_level(logging.DEBUG, "streamlink")
+    assert not MPEGDASH(session, "dash:///foo/bar").streams()
+    assert [(record.name, record.levelname, record.message) for record in caplog.records] == [
+        ("streamlink.plugins.dash", "debug", "URL=https:///foo/bar; params={}"),
+        ("streamlink.plugins.dash", "error", "Input URL is missing a host or input file path is missing the file:// scheme"),
+    ]
 
 
 @pytest.mark.parametrize(
