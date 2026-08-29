@@ -18,23 +18,24 @@ from typing import TYPE_CHECKING
 from streamlink.logger import getLogger
 from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.api import validate
-from streamlink.stream.hls import HLSSegment, HLSStream, HLSStreamReader, HLSStreamWriter, M3U8Parser, parse_tag
+from streamlink.stream.hls import HLSSegment, HLSStream, M3U8Parser, parse_tag
 
 
 if TYPE_CHECKING:
+    from collections.abc import Iterator
+
     from requests import Response
 
 
 log = getLogger(__name__)
 
 
-class ResponseWrapper:
-    def __init__(self, response: Response, seed: int | None):
-        self.response = response
-        self.seed = seed
+@dataclass(kw_only=True)
+class BigoHLSSegment(HLSSegment):
+    seed: int | None = None
 
-    def iter_content(self, chunk_size: int):
-        iterator = self.response.iter_content(chunk_size)
+    def iter_content(self, response: Response, chunk_size: int) -> Iterator[bytes]:
+        iterator = response.iter_content(chunk_size)
         if self.seed is None:  # pragma: no cover
             yield from iterator
             return
@@ -60,7 +61,7 @@ class ResponseWrapper:
 
         self._decrypt_packets(packets, self.seed)
 
-        yield packets
+        yield bytes(packets)
         yield remainder
         yield from iterator
 
@@ -88,20 +89,6 @@ class ResponseWrapper:
                 packets[packet_offset + offset] ^= mask
 
 
-class BigoHLSStreamWriter(HLSStreamWriter):
-    def _write(self, segment: BigoHLSSegment, result: Response, is_map: bool):  # type: ignore[override, ty:invalid-method-override]
-        return super()._write(segment, ResponseWrapper(result, segment.seed), is_map)  # type: ignore[arg-type, ty:invalid-argument-type]
-
-
-class BigoHLSStreamReader(HLSStreamReader):
-    __writer__ = BigoHLSStreamWriter
-
-
-@dataclass(kw_only=True)
-class BigoHLSSegment(HLSSegment):
-    seed: int = -1
-
-
 class BigoM3U8Parser(M3U8Parser):
     __segment__ = BigoHLSSegment
 
@@ -122,7 +109,6 @@ class BigoM3U8Parser(M3U8Parser):
 
 
 class BigoHLSStream(HLSStream):
-    __reader__ = BigoHLSStreamReader
     __parser__ = BigoM3U8Parser
 
 
