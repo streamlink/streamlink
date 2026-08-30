@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<MPD xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+ xmlns="urn:mpeg:dash:schema:mpd:2011"
+ xsi:schemaLocation="urn:mpeg:dash:schema:mpd:2011 http://standards.iso.org/ittf/PubliclyAvailableStandards/MPEG-DASH_schema_files/DASH-MPD.xsd"
+ minBufferTime="PT1S"
+ profiles="urn:mpeg:dash:profile:isoff-live:2011"
+ type="dynamic"
+ timeShiftBufferDepth="PT16S"
+ minimumUpdatePeriod="PT4S"
+ publishTime="2018-05-04T16:21:16Z"
+ availabilityStartTime="1970-01-01T00:00:00Z">
+  <Period id="1" start="PT0S">
+    <AdaptationSet id="0" mimeType="video/mp4" contentType="video" segmentAlignment="true" startWithSAP="1">
+      <Role schemeIdUri="urn:mpeg:dash:role:2011" value="main"/>
+      <SegmentTemplate presentationTimeOffset="0" media="video-time=$Time$-$Bandwidth$-0.m4s?z32=" initialization="video-$Bandwidth$-0.mp4?z32=" timescale="1000" startNumber="381362716">
+        <SegmentTimeline>
+          <S t="1525450860000" d="4000" r="3"/>
+        </SegmentTimeline>
+      </SegmentTemplate>
+      <Representation id="0" codecs="avc1.4d401f" width="1280" height="720" frameRate="25" bandwidth="2800000"/>
+      <Representation id="1" codecs="avc1.4d401e" width="768" height="432" frameRate="25" bandwidth="1300000"/>
+      <Representation id="2" codecs="avc1.4d4015" width="512" height="288" frameRate="25" bandwidth="700000"/>
+      <Representation id="3" codecs="avc1.4d4015" width="512" height="288" frameRate="25" bandwidth="500000"/>
+    </AdaptationSet>
+    <AdaptationSet id="1" lang="de" mimeType="audio/mp4" contentType="audio" codecs="mp4a.40.2" segmentAlignment="true" startWithSAP="1">
+      <AudioChannelConfiguration schemeIdUri="urn:mpeg:mpegB:cicp:ChannelConfiguration" value="2"/>
+      <SegmentTemplate presentationTimeOffset="0" media="audio-time=$Time$-$Bandwidth$-0.m4s?z32=" initialization="audio-$Bandwidth$-0.mp4?z32=" timescale="1000" startNumber="476703395">
+        <SegmentTimeline>
+          <S t="1525450860800" d="3200" r="3"/>
+        </SegmentTimeline>
+      </SegmentTemplate>
+      <Representation id="4" bandwidth="128000"/>
+    </AdaptationSet>
+    <AdaptationSet id="2" lang="de" mimeType="application/mp4" contentType="text" codecs="stpp">
+      <Role schemeIdUri="urn:mpeg:dash:role:2011" value="alternate"/>
+      <SegmentTemplate presentationTimeOffset="0" media="subs-time=$Time$-3000000-0.m4s?z32=" initialization="subs-3000000-0.mp4?z32=" timescale="1000" startNumber="381362716">
+        <SegmentTimeline>
+          <S t="1525450860000" d="4000" r="3"/>
+        </SegmentTimeline>
+      </SegmentTemplate>
+      <Representation id="5" bandwidth="100"/>
+    </AdaptationSet>
+  </Period>
+</MPD>

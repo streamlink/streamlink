@@ -1,0 +1,14 @@
+{
+    "name": "Streamlink documentation",
+    "short_name": "Streamlink",
+    "display": "standalone",
+    "theme_color": "#121657",
+    "background_color": "#ffffff",
+    "icons": [
+        {
+            "src": "/_static/icon.svg",
+            "sizes": "1x1",
+            "type": "image/svg"
+        }
+    ]
+}

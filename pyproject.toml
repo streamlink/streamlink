@@ -1,0 +1,392 @@
+[build-system]
+requires = [
+  "setuptools >=77",
+  # The versioningit build-requirement gets removed from the source distribution,
+  # as the version string is already built into it (see the onbuild versioningit hook):
+  "versioningit >=2.0.0,<4",  # disabled in sdist
+]
+# setuptools build-backend override
+# https://setuptools.pypa.io/en/stable/build_meta.html
+backend-path = ["build_backend"]
+build-backend = "__init__"
+
+
+# https://peps.python.org/pep-0621/
+# https://packaging.python.org/en/latest/specifications/declaring-project-metadata/
+[project]
+name = "streamlink"
+description = """\
+Streamlink is a command-line utility that extracts streams from various services and pipes them into a video player of choice.\
+"""
+readme = "README.md"
+license = "BSD-2-Clause"
+license-files = ["LICENSE"]
+authors = [
+  { name = "Streamlink" },
+  { email = "streamlink@protonmail.com" }
+]
+classifiers = [
+  "Development Status :: 5 - Production/Stable",
+  "Environment :: Console",
+  "Intended Audience :: End Users/Desktop",
+  "Operating System :: POSIX",
+  "Operating System :: MacOS",
+  "Operating System :: Microsoft :: Windows",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3 :: Only",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3.14",
+  "Programming Language :: Python :: 3.15",
+  "Topic :: Internet :: WWW/HTTP",
+  "Topic :: Multimedia :: Sound/Audio",
+  "Topic :: Multimedia :: Video",
+  "Topic :: Utilities",
+]
+
+dynamic = [
+  "version",
+  "entry-points",
+  "scripts",
+  "gui-scripts",
+]
+
+requires-python = ">=3.10"
+dependencies = [
+  "certifi",
+  "exceptiongroup ; python_version<'3.11'",
+  "isodate",
+  "lxml >=5.0.0,<8",
+  "pycountry",
+  "pycryptodome >=3.4.3,<4",
+  "PySocks >=1.5.6,!=1.5.7",
+  "requests >=2.30.0,<3",
+  "trio >=0.25.0,<1 ; python_version>='3.13'",
+  "trio >=0.22.0,<1 ; python_version<'3.13'",
+  "trio-websocket >=0.9.0,<1",
+  # typing-extensions >=4.6.0 is already a transitive runtime dependency of exceptiongroup >=1.3.0
+  "typing-extensions >=4.1.0 ; python_version<'3.11'",
+  "urllib3 >=2.0.0,<3",
+  "websocket-client >=1.2.1,<2",
+]
+
+[project.optional-dependencies]
+decompress = [
+  # don't define brotli or zstandard library versions here
+  # and instead rely on urllib3's version requirements
+  "urllib3[brotli     ] >=2.0.0,<3 ; python_version>='3.14'",
+  "urllib3[brotli,zstd] >=2.0.0,<3 ; python_version<'3.14'",
+]
+
+[project.urls]
+Homepage = "https://github.com/streamlink/streamlink"
+Documentation = "https://streamlink.github.io/"
+Tracker = "https://github.com/streamlink/streamlink/issues"
+Source = "https://github.com/streamlink/streamlink"
+Funding = "https://streamlink.github.io/latest/support.html"
+
+
+# https://peps.python.org/pep-0735/
+[dependency-groups]
+dev = [
+  # required for being able to run "editable installs" from git
+  # or for reading the version string from git when building the documentation / man-pages
+  "setuptools >=77.0.0",
+  "versioningit >=2.0.0,<4",
+]
+test = [
+  { include-group = "dev" },
+  # pytest and plugins
+  "pytest >=8.4.0",
+  "pytest-cov",
+  "pytest-trio",
+  "requests-mock",
+  # other
+  "coverage[toml]",
+  "freezegun >=1.5.0",
+]
+lint = [
+  "ruff ==0.16.4",
+]
+typing = [
+  { include-group = "test" },
+  { include-group = "docs" },
+  { include-group = "script" },
+  # tools and typing dependencies
+  "ty ==0.0.74",
+  "mypy[faster-cache] ==2.3.1",
+  "typing-extensions >=4.0.0",
+  # dependency overrides
+  "requests >=2.34.0,!=2.34.1",
+  # dependency type-stubs
+  "lxml-stubs",
+  "types-docutils",
+  "types-freezegun",
+  "types-setuptools",
+]
+docs = [
+  { include-group = "dev" },
+  "sphinx >=7.0.0,<9",  # ignore Sphinx v9: sphinx-doc/sphinx#14332
+  "furo ==2025.12.19",
+  "myst-parser >=4.0.0,<6",
+  "sphinx-design >=0.6.0,<0.8",
+]
+build = [
+  { include-group = "dev" },
+  "build",
+]
+script = [
+  "inflection",
+  "jinja2",
+  "requests",
+  "shtab >=1.9.0",
+]
+all = [
+  { include-group = "test" },
+  { include-group = "lint" },
+  { include-group = "typing" },
+  { include-group = "docs" },
+  { include-group = "build" },
+  { include-group = "script" },
+]
+
+
+# https://setuptools.pypa.io/en/stable/userguide/pyproject_config.html
+# https://setuptools.pypa.io/en/stable/userguide/package_discovery.html
+# https://setuptools.pypa.io/en/stable/userguide/datafiles.html
+[tool.setuptools.packages.find]
+where = ["src"]
+namespaces = false
+
+[tool.setuptools.package-data]
+streamlink = [
+  "py.typed",
+]
+"streamlink.plugins" = [
+  "_plugins.json",
+]
+
+
+# https://versioningit.readthedocs.io/en/stable/index.html
+[tool.versioningit]
+# Packagers: don't patch the `default-version` string while using the tarball built by GitHub from the tagged git commit!
+# Instead, use Streamlink's signed source distribution as package source, which has the correct version string built in.
+# This fallback `default-version` string is only used when not building from the sdist or a git repo with at least one tag.
+# See the versioningit comment at the very top of this file!
+default-version = "0.0.0+unknown"
+
+[tool.versioningit.vcs]
+method = "git"
+
+[tool.versioningit.format]
+distance = "{base_version}+{distance}.{vcs}{rev}"
+dirty = "{base_version}+{distance}.{vcs}{rev}.dirty"
+distance-dirty = "{base_version}+{distance}.{vcs}{rev}.dirty"
+
+[tool.versioningit.next-version]
+method = "null"
+
+[tool.versioningit.onbuild]
+# When building the sdist or wheel, remove versioningit build-requirement and set the static version string
+method = { module = "build_backend.onbuild", value = "onbuild" }
+
+
+# https://docs.pytest.org/en/latest/reference/customize.html#configuration
+# https://docs.pytest.org/en/latest/reference/reference.html#ini-options-ref
+[tool.pytest.ini_options]
+minversion = "8.4.0"
+addopts = """
+--disable-plugin-autoload
+-p trio
+-p requests_mock
+"""
+testpaths = [
+  "build_backend",
+  "tests",
+]
+filterwarnings = [
+  "always",
+]
+
+
+# https://coverage.readthedocs.io/en/latest/config.html
+[tool.coverage.run]
+branch = true
+source = [
+  "build_backend",
+  "src",
+  "tests",
+]
+
+[tool.coverage.report]
+omit = [
+  "build_backend/commands.py",
+  "src/streamlink/packages/*",
+  "src/streamlink/webbrowser/cdp/devtools/*",
+  "src/streamlink_cli/packages/*",
+  "src/streamlink_cli/_parser.py",
+]
+exclude_lines = [
+  "pragma: no cover",
+  "def __repr__",
+  "raise NotImplementedError",
+  "if __name__ == \"__main__\":",
+  "if (?:typing\\.)?TYPE_CHECKING:",
+]
+
+
+# https://docs.astral.sh/ruff/configuration/
+[tool.ruff]
+src = [
+  "build_backend",
+  "src",
+  "tests",
+]
+fix = false
+line-length = 128
+output-format = "full"
+preview = true
+extend-exclude = [
+  "src/streamlink/packages/",
+  "src/streamlink_cli/packages/",
+]
+
+[tool.ruff.format]
+preview = true
+line-ending = "lf"
+quote-style = "double"
+skip-magic-trailing-comma = false
+exclude = [
+  "src/streamlink/session/http_useragents.py",
+  "src/streamlink/webbrowser/cdp/devtools/*.py",
+]
+
+[tool.ruff.lint]
+select = [
+  # pycodestyle
+  "E",
+  "W",
+  # pyflakes
+  "F",
+  # pylint
+  "PLC",
+  "PLE",
+  "PLW",
+  # isort
+  "I",
+  # flake8-async
+  "ASYNC",
+  # flake8-builtins
+  "A",
+  # flake8-bugbear
+  "B",
+  # flake8-commas
+  "COM",
+  # flake8-comprehensions
+  "C4",
+  # flake8-datetimez
+  "DTZ",
+  # flake8-implicit-str-concat
+  "ISC",
+  # flake8-no-pep420
+  "INP",
+  # flake8-logging
+  "LOG",
+  # flake8-pie
+  "PIE",
+  # flake8-print
+  "T20",
+  # flake8-type-checking
+  "TC",
+  # flake8-pytest-style
+  "PT",
+  # flake8-use-pathlib
+  "PTH",
+  # flake8-quotes
+  "Q",
+  # flake8-tidy-imports
+  "TID",
+  # pyupgrade
+  "UP",
+  # Ruff-specific rules
+  "RUF",
+]
+ignore = [
+  "async-function-with-timeout",
+  "builtin-attribute-shadowing",
+  "compare-to-empty-string",
+  "explicit-string-concatenation",
+  "missing-f-string-syntax",
+  "missing-trailing-comma",  # already covered by ruff's formatter
+  "parenthesize-chained-operators",
+  "redefined-loop-name",
+  "return-in-generator",
+  "stdlib-module-shadowing",
+  "unnecessary-collection-call",
+  "unnecessary-dunder-call",
+  "unsorted-dunder-all",
+]
+future-annotations = true
+
+[tool.ruff.lint.per-file-ignores]
+"__init__.py" = ["unused-import"]
+"docs/**" = ["INP"]
+"script/**" = ["INP"]
+"src/streamlink/plugins/*" = ["mutable-class-default"]
+"src/streamlink/webbrowser/cdp/devtools/*" = ["TC", "line-too-long", "too-many-blank-lines", "unused-import"]
+"tests/**" = ["mutable-class-default"]
+"tests/**/__init__.py" = ["non-empty-init-module"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["streamlink", "streamlink_cli"]
+lines-after-imports = 2
+combine-as-imports = true
+
+[tool.ruff.lint.flake8-builtins]
+builtins-ignorelist = [
+  "BaseExceptionGroup", # compat import from exceptiongroup pkg
+  "ExceptionGroup", # compat import from exceptiongroup pkg
+]
+
+[tool.ruff.lint.flake8-tidy-imports]
+ban-relative-imports = "all"
+
+[tool.ruff.lint.flake8-pytest-style]
+fixture-parentheses = true
+mark-parentheses = true
+
+[tool.ruff.lint.flake8-quotes]
+avoid-escape = false
+
+[tool.ruff.lint.flake8-implicit-str-concat]
+allow-multiline = false
+
+
+# https://docs.astral.sh/ty/reference/configuration/
+[tool.ty.environment]
+python-platform = "all"
+
+[tool.ty.src]
+exclude = [
+  "src/streamlink/packages/**",
+  "src/streamlink_cli/packages/**",
+]
+
+
+# https://mypy.readthedocs.io/en/stable/config_file.html
+[tool.mypy]
+python_version = "3.10"
+show_error_codes = true
+show_error_context = true
+show_column_numbers = true
+warn_no_return = false
+files = [
+  "build_backend",
+  "script/",
+  "src/streamlink/",
+  "src/streamlink_cli/",
+  "tests/",
+  "setup.py",
+]

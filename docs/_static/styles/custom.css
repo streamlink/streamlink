@@ -1,0 +1,373 @@
+/*
+  Furo CSS variables
+  https://github.com/pradyunsg/furo/blob/main/src/furo/assets/styles/variables/_index.scss
+  https://github.com/pradyunsg/furo/blob/main/src/furo/theme/partials/_head_css_variables.html
+*/
+body, body[data-theme="auto"], body[data-theme="light"], body[data-theme="dark"] {
+  /* adjust font-stack by adding "SF Pro Display" and "SF Mono" */
+  --font-stack: -apple-system, BlinkMacSystemFont, SF Pro Display, Segoe UI, Helvetica, Arial, sans-serif, Apple Color Emoji, Segoe UI Emoji;
+  --font-stack--monospace: SFMono-Regular, SF Mono, Menlo, Consolas, Monaco, Liberation Mono, Lucida Console, monospace;
+  /* Streamlink colors */
+  --color-brand-primary: rgb(18, 22, 87);   /* dark icon color (shadow icon color: rgb(13, 16, 65)) */
+  --color-brand-content: rgb(0, 115, 189);  /* bright icon color */
+  /* misc */
+  --sidebar-width: 15rem;
+  --sidebar-scrollbar-width: .5rem;
+  --sidebar-item-spacing-vertical: .4rem;
+  --admonition-font-size: var(--font-size--small);
+  --admonition-title-font-size: var(--font-size--normal);
+  --custom-thumb-color: var(--color-foreground-border);
+  --custom-track-color: transparent;
+}
+
+body[data-theme="dark"] {
+  --color-brand-primary: rgb(0, 115, 189);  /* bright icon color */
+  --color-brand-content: rgb(0, 115, 189);  /* bright icon color */
+}
+@media (prefers-color-scheme: dark) {
+  body[data-theme="auto"] {
+    --color-brand-primary: rgb(0, 115, 189);  /* bright icon color */
+    --color-brand-content: rgb(0, 115, 189);  /* bright icon color */
+  }
+}
+
+/*
+  Generic style overrides
+*/
+
+html {
+  /* unset @media (min-width: $full-width + $sidebar-width) query which sets font-size to 110% */
+  font-size: 100% !important;
+}
+
+h1, h2 {
+  margin-top: 1.5rem;
+  margin-bottom: 0.75rem;
+  font-weight: 300;
+}
+h3, h4, h5, h6 {
+  margin-top: 1.5rem;
+  margin-bottom: 0.5rem;
+  font-weight: 400;
+}
+h1 {
+  font-size: 2.25rem;
+}
+h2 {
+  font-size: 1.75rem;
+}
+h3 {
+  font-size: 1.25rem;
+}
+h4 {
+  font-size: 1rem;
+}
+h5 {
+  font-size: 0.875rem;
+}
+h6 {
+  font-size: 0.75rem;
+}
+
+code.literal {
+  font-size: var(--font-size--small);
+}
+
+code.literal.xref.std-option {
+  white-space: nowrap;
+}
+
+strong.command {
+  padding: .1em .2em;
+  border-radius: .2em;
+  background: var(--color-background-secondary);
+  color: var(--color-api-name);
+  font: normal var(--font-size--small) var(--font-stack--monospace);
+}
+
+.highlight .go {
+  font-style: normal;
+}
+
+a[href^="http://"]:not(.muted-link):not(.sd-badge),
+a[href^="https://"]:not(.muted-link):not(.sd-badge):not([href^="https://streamlink.github.io/"]) {
+  display: inline-block;
+  word-break: break-word;
+}
+
+a[href^="http://"]:not(.no-external-link-icon):not(.muted-link):not(.sd-badge)::after,
+a[href^="https://"]:not(.no-external-link-icon):not(.muted-link):not(.sd-badge):not([href^="https://streamlink.github.io/"])::after {
+  content: "\f35d";
+  display: inline-block;
+  padding-left: .4em;
+  font: 900 .6em "Font Awesome 6 Free";
+  vertical-align: middle;
+  text-decoration: none;
+}
+
+/*
+  Sidebar/Menubar and related
+*/
+
+.sidebar-scroll, .toc-scroll {
+  overflow: hidden auto;
+}
+
+.toc-scroll:not(:hover) {
+  scrollbar-color: transparent !important;
+}
+.toc-scroll:not(:hover)::-webkit-scrollbar-thumb {
+  background-color: transparent !important;
+}
+
+a.sidebar-brand:visited {
+  color: unset;
+}
+
+.sidebar-brand,
+.sidebar-versions,
+.sidebar-search,
+.github-buttons {
+  box-sizing: border-box;
+  width: calc(var(--sidebar-width) - 2 * var(--sidebar-scrollbar-width)) !important;
+  margin-left: var(--sidebar-scrollbar-width) !important;
+  margin-right: 0 !important;
+}
+.toc-title,
+.toc-tree > ul {
+  padding-right: .5em;
+}
+
+.sidebar-logo-container {
+  margin: 0;
+}
+.sidebar-logo {
+  max-width: 62.5%;
+}
+.sidebar-brand {
+  color: var(--color-sidebar-brand-text);
+}
+.sidebar-brand-text {
+  font-size: 1.75rem;
+  color: unset;
+}
+.sidebar-brand-oneliner {
+  margin: 0;
+  font-size: var(--font-size--small--2);
+  color: unset;
+}
+
+.sidebar-versions {
+  margin: .5rem 0;
+}
+.sidebar-versions a {
+  color: inherit;
+}
+.sidebar-versions-current {
+  font-family: var(--font-stack--monospace);
+  font-size: var(--font-size--small--2);
+}
+.sidebar-versions-others {
+  display: flex;
+  margin: .5rem 0 0;
+  font-size: var(--font-size--small);
+}
+.sidebar-versions-others dd {
+  width: 50%;
+  margin: 0 !important;
+}
+.sidebar-versions-others dd:first-of-type {
+  padding-right: .5rem;
+  text-align: right;
+}
+.sidebar-versions-others dd:last-of-type {
+  padding-left: .5rem;
+  text-align: left;
+}
+.sidebar-versions-others .version-current {
+  font-weight: bold;
+}
+
+.sidebar-search-container {
+  border-top: 1px solid var(--color-sidebar-search-border);
+  border-bottom: 1px solid var(--color-sidebar-search-border);
+}
+.sidebar-search {
+  border: 0;
+  padding-left: calc(
+      var(--sidebar-item-spacing-horizontal)
+    + var(--sidebar-search-input-spacing-horizontal)
+    + var(--sidebar-search-icon-size)
+    - var(--sidebar-scrollbar-width)
+  );
+}
+
+.github-buttons {
+  margin: 1.5rem 0 1rem;
+}
+
+.toc-tree li.scroll-current > .reference {
+  position: relative;
+  font-weight: normal;
+}
+.toc-tree li.scroll-current > .reference::before {
+  content: "\2023";
+  display: inline-block;
+  position: absolute;
+  left: -1em;
+  width: 1em;
+  color: var(--color-toc-item-text);
+  font: normal normal 400 1em var(--font-stack);
+  text-rendering: auto;
+  -webkit-font-smoothing: antialiased;
+  opacity: .75;
+}
+
+/*
+  Components
+*/
+
+.admonition p.admonition-title {
+  font-weight: bold;
+}
+.admonition.version-warning {
+  padding-bottom: 0;
+}
+.admonition.version-warning > .admonition-title {
+  margin-bottom: 0;
+  font-weight: normal;
+}
+
+/* See: table.docutils td p, table.docutils th p */
+table.docutils td div.line, table.docutils th div.line,
+table.docutils td ul, table.docutils th ul {
+  margin: .25rem;
+}
+
+table.table-custom-layout {
+  width: 100%;
+  table-layout: fixed;
+}
+table.table-custom-layout colgroup {
+  display: none;
+}
+table.table-custom-layout colgroup col {
+  width: auto;
+}
+table.table-custom-layout th {
+  text-align: left;
+}
+table.table-custom-layout th:first-of-type {
+  width: 15rem;
+}
+table.table-custom-layout tbody tr td {
+  overflow: unset;
+  white-space: unset;
+}
+table.table-custom-layout tbody tr td:first-of-type {
+  vertical-align: top;
+}
+
+table.table-custom-layout.table-custom-layout-platform-locations th:first-of-type {
+  width: 7rem;
+}
+table.table-custom-layout.table-custom-layout-platform-locations tbody>tr>td:last-of-type {
+  overflow-x: auto;
+}
+table.table-custom-layout.table-custom-layout-platform-locations ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+table.table-custom-layout.table-custom-layout-platform-locations code {
+  white-space: pre;
+}
+
+table.table-custom-layout.table-custom-layout-dependencies th:nth-of-type(1) {
+  width: 5rem;
+}
+table.table-custom-layout.table-custom-layout-dependencies th:nth-of-type(2) {
+  width: 13rem;
+}
+table.table-custom-layout.table-custom-layout-dependencies tbody td {
+  vertical-align: top;
+}
+
+.option .sig-name,
+.option .sig-prename {
+  font-family: var(--font-stack--monospace);
+}
+
+details.sd-dropdown .sd-summary-content {
+  cursor: auto;
+}
+
+/*
+  Content
+*/
+
+.acknowledgements img {
+  max-width: 8rem;
+}
+
+.installation-grid .fab {
+  font-size: clamp(1rem, 10vw, 5rem);
+}
+
+.grid-with-icons .sd-card-header .fas {
+  width: 1em;
+  margin-left: -1.25em;
+  margin-right: .25em;
+}
+
+.grid-with-icons .sd-card-body .fas {
+  padding-right: 0.1em;
+  vertical-align: middle;
+}
+
+.grid-with-images img {
+  width: auto;
+  max-height: 3em;
+  filter: grayscale(1);
+}
+
+.team-members img {
+  width: 100px;
+  height: 100px;
+  margin: 0 auto;
+}
+.team-members a:not(.sd-hide-link-text)::after {
+  display: none !important;
+}
+
+section#plugins dl.field-list {
+  margin: 0 0 0 1rem;
+}
+section#plugins dl.field-list > dt {
+  float: left;
+  width: 8rem;
+  margin: 0;
+}
+section#plugins dl.field-list > dd {
+  margin: 0 0 0 8rem;
+}
+section#plugins dl.field-list ul,
+section#plugins dl.field-list p {
+  margin: 0;
+  padding: 0;
+}
+section#plugins dl.field-list li {
+  list-style: none;
+}
+
+/*
+  Utils
+*/
+
+.clearfix:before, .clearfix:after {
+  display: table;
+  content: "";
+}
+.clearfix:after {
+  clear: both;
+}

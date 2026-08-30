@@ -1,0 +1,95 @@
+name: 🧩 Plugin request
+description: Discuss adding a new plugin to Streamlink.
+title: "Name of the website / streaming provider"
+labels:
+  - plugin request
+body:
+  - type: markdown
+    attributes:
+      value: |
+        # Thanks for filing a plugin request!
+
+        > [!IMPORTANT]
+        > **What is a plugin request?**
+        > The purpose of Streamlink's plugins is to translate input URLs from certain websites to specific stream URLs with optionally required parameters, access tokens, etc.
+        > [READ THE PLUGIN REQUEST REQUIREMENTS IN THE CONTRIBUTION GUIDELINES BEFORE REQUESTING A PLUGIN!](https://github.com/streamlink/streamlink/blob/master/CONTRIBUTING.md#plugin-requests)
+        >
+        > [See the list of already available plugins here.](https://streamlink.github.io/plugins.html)
+
+        > [!CAUTION]
+        > **DO NOT IGNORE this template**
+        > Please fill in all the required details and don't skip any parts.
+        > Issues that don't adhere to our request will be closed and ignored immediately.
+        >
+        > This is because analyzing bugs, issues or requests without proper details and log output is harder than necessary.
+        > Low quality and low effort issues are noise and steal the time of the maintainers and contributors.
+  - type: checkboxes
+    attributes:
+      label: Checklist
+      options:
+        - label: This is a plugin request and not [a different kind of issue](https://github.com/streamlink/streamlink/issues/new/choose)
+          required: true
+        - label: "[I have read the contribution guidelines](https://github.com/streamlink/streamlink/blob/master/CONTRIBUTING.md#contributing-to-streamlink)"
+          required: true
+        - label: "[I have checked the list of open and recently closed plugin requests](https://github.com/streamlink/streamlink/issues?q=is%3Aissue+label%3A%22plugin+request%22)"
+          required: true
+  - type: checkboxes
+    attributes:
+      label: Collaboration
+      options:
+        - label: My request is genuine, in the best interest of the project, and I have access to the stream(s) in my web browser
+          required: true
+        - label: "[I will provide feedback should a pull request be opened with a new plugin implementation](https://github.com/streamlink/streamlink/blob/master/CONTRIBUTING.md#pull-request-feedback)"
+          required: true
+        - label: I will help with reporting future plugin issues should the new plugin be merged and then stop working
+          required: true
+  - type: textarea
+    attributes:
+      label: Description
+      description: |
+        Explain the plugin and site as clearly as you can [according to the plugin request guidelines](https://github.com/streamlink/streamlink/blob/master/CONTRIBUTING.md#plugin-requests).
+
+        Please provide more details if possible, but at least answer the following questions.
+      value: |
+        **What is the site about?**
+        ...
+
+        **Who is it owned and run by?**
+        ...
+
+        **What kind of content does it provide?**
+        ...
+
+        **Are there any access restrictions, like logins or region checks?**
+        ...
+
+        **Further relevant information**
+        ...
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Input URLs
+      description: |
+        Please provide a list of example input URLs from your web browser's address bar.
+
+        **DO NOT post screenshots of the site or your web browser.**
+      value: |
+        1. ...
+        2. ...
+        3. ...
+    validations:
+      required: true
+  - type: markdown
+    attributes:
+      value: |
+        > [!NOTE]
+        > **Before submitting**
+        >
+        > Make sure that you have
+        > - [ ] properly filled in the title of this plugin request (at the very top of this page)
+        > - [ ] checked the rendered text previews to avoid unnecessary formatting errors
+
+        ----
+
+        [❤️ Love Streamlink? Please consider supporting the project maintainers. Thanks! ❤️](https://streamlink.github.io/latest/support.html)

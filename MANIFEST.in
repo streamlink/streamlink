@@ -1,0 +1,18 @@
+include AUTHORS
+include CHANGELOG.md
+include README.md
+include LICENSE*
+include icon.svg
+
+recursive-include build_backend *
+recursive-include completions *
+recursive-include docs *
+recursive-include tests *
+
+prune docs/_build
+include docs/_build/man/*
+
+include script/build-shell-completions.py
+
+prune */__pycache__
+global-exclude *.pyc *~ *.bak *.swp *.pyo

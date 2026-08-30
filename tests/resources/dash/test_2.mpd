@@ -1,0 +1,71 @@
+<MPD xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="urn:mpeg:dash:schema:mpd:2011" xsi:schemaLocation="urn:mpeg:dash:schema:mpd:2011 http://standards.iso.org/ittf/PubliclyAvailableStandards/MPEG-DASH_schema_files/DASH-MPD.xsd" type="static" mediaPresentationDuration="PT0H14M48.00S" timeShiftBufferDepth="PT1S" minimumUpdatePeriod="PT1H" maxSegmentDuration="PT3S" minBufferTime="PT1S" profiles="urn:mpeg:dash:profile:isoff-live:2011,urn:com:dashif:dash264">
+  <Period id="1" start="PT0S">
+    <AdaptationSet group="1" lang="en_stereo" mimeType="audio/mp4" minBandwidth="130358" maxBandwidth="130358" segmentAlignment="true">
+      <Representation id="128kbps en" bandwidth="130358" codecs="mp4a.40.2" audioSamplingRate="48000">
+        <AudioChannelConfiguration schemeIdUri="urn:mpeg:dash:23003:3:audio_channel_configuration:2011" value="2"/>
+        <SegmentTemplate timescale="48000" duration="95232" media="audio/stereo/en/128kbit/segment_$Number$.m4s" initialization="audio/stereo/en/128kbit/init.mp4" startNumber="1"/>
+      </Representation>
+    </AdaptationSet>
+    <AdaptationSet group="2" lang="no-voices_stereo" mimeType="audio/mp4" minBandwidth="130395" maxBandwidth="130395" segmentAlignment="true">
+      <Representation id="128kbps karaoke" bandwidth="130395" codecs="mp4a.40.2" audioSamplingRate="48000">
+        <AudioChannelConfiguration schemeIdUri="urn:mpeg:dash:23003:3:audio_channel_configuration:2011" value="2"/>
+        <SegmentTemplate timescale="48000" duration="95232" media="audio/stereo/none/128kbit/segment_$Number$.m4s" initialization="audio/stereo/none/128kbit/init.mp4" startNumber="1"/>
+      </Representation>
+    </AdaptationSet>
+    <AdaptationSet group="3" lang="en_surround" mimeType="audio/mp4" minBandwidth="321836" maxBandwidth="321836" segmentAlignment="true">
+      <Representation id="320kbps en" bandwidth="321836" codecs="mp4a.40.5" audioSamplingRate="48000">
+        <AudioChannelConfiguration schemeIdUri="urn:mpeg:dash:23003:3:audio_channel_configuration:2011" value="6"/>
+        <SegmentTemplate timescale="48000" duration="95232" media="audio/surround/en/320kbit/segment_$Number$.m4s" initialization="audio/surround/en/320kbit/init.mp4" startNumber="1"/>
+      </Representation>
+    </AdaptationSet>
+    <AdaptationSet group="4" mimeType="video/mp4" par="4096:1744" minBandwidth="258157" maxBandwidth="10285391" minWidth="426" maxWidth="4096" minHeight="180" maxHeight="1744" segmentAlignment="true" startWithSAP="1">
+      <Representation id="240p 250kbps" frameRate="24" bandwidth="258157" codecs="avc1.4d400d" width="426" height="180">
+        <SegmentTemplate timescale="1000" duration="2000" media="video/250kbit/segment_$Number$.m4s" initialization="video/250kbit/init.mp4" startNumber="1"/>
+      </Representation>
+      <Representation id="480p 500kbps" frameRate="24" bandwidth="520929" codecs="avc1.4d4015" width="638" height="272">
+        <SegmentTemplate timescale="1000" duration="2000" media="video/500kbit/segment_$Number$.m4s" initialization="video/500kbit/init.mp4" startNumber="1"/>
+      </Representation>
+      <Representation id="480p 800kbps" frameRate="24" bandwidth="831270" codecs="avc1.4d4015" width="638" height="272">
+        <SegmentTemplate timescale="1000" duration="2000" media="video/800kbit/segment_$Number$.m4s" initialization="video/800kbit/init.mp4" startNumber="1"/>
+      </Representation>
+      <Representation id="576p 1100kbps" frameRate="24" bandwidth="1144430" codecs="avc1.4d401f" width="958" height="408">
+        <SegmentTemplate timescale="1000" duration="2000" media="video/1100kbit/segment_$Number$.m4s" initialization="video/1100kbit/init.mp4" startNumber="1"/>
+      </Representation>
+      <Representation id="720p 1500kbps" frameRate="24" bandwidth="1558322" codecs="avc1.4d401f" width="1277" height="544">
+        <SegmentTemplate timescale="1000" duration="2000" media="video/1500kbit/segment_$Number$.m4s" initialization="video/1500kbit/init.mp4" startNumber="1"/>
+      </Representation>
+      <Representation id="720p 2400kbps" frameRate="24" bandwidth="2487897" codecs="avc1.4d401f" width="1277" height="544">
+        <SegmentTemplate timescale="1000" duration="2000" media="video/2400kbit/segment_$Number$.m4s" initialization="video/2400kbit/init.mp4" startNumber="1"/>
+      </Representation>
+      <Representation id="1080p 3000kbps" frameRate="24" bandwidth="3113198" codecs="avc1.4d4028" width="1920" height="818">
+        <SegmentTemplate timescale="1000" duration="2000" media="video/3000kbit/segment_$Number$.m4s" initialization="video/3000kbit/init.mp4" startNumber="1"/>
+      </Representation>
+      <Representation id="1080p 4000kbps" frameRate="24" bandwidth="4149264" codecs="avc1.4d4028" width="1920" height="818">
+        <SegmentTemplate timescale="1000" duration="2000" media="video/4000kbit/segment_$Number$.m4s" initialization="video/4000kbit/init.mp4" startNumber="1"/>
+      </Representation>
+      <Representation id="1080p 6000kbps" frameRate="24" bandwidth="6214307" codecs="avc1.4d4028" width="1920" height="818">
+        <SegmentTemplate timescale="1000" duration="2000" media="video/6000kbit/segment_$Number$.m4s" initialization="video/6000kbit/init.mp4" startNumber="1"/>
+      </Representation>
+    </AdaptationSet>
+    <AdaptationSet group="14" mimeType="text/vtt" lang="en">
+      <Representation id="caption_en" bandwidth="256">
+        <BaseURL>subtitles/subtitles_en.vtt</BaseURL>
+      </Representation>
+    </AdaptationSet>
+    <AdaptationSet group="15" mimeType="text/vtt" lang="de">
+      <Representation id="caption_de" bandwidth="256">
+        <BaseURL>subtitles/subtitles_de.vtt</BaseURL>
+      </Representation>
+    </AdaptationSet>
+    <AdaptationSet group="16" mimeType="text/vtt" lang="es">
+      <Representation id="caption_es" bandwidth="256">
+        <BaseURL>subtitles/subtitles_es.vtt</BaseURL>
+      </Representation>
+    </AdaptationSet>
+    <AdaptationSet group="17" mimeType="text/vtt" lang="fr">
+      <Representation id="caption_fr" bandwidth="256">
+        <BaseURL>subtitles/subtitles_fr.vtt</BaseURL>
+      </Representation>
+    </AdaptationSet>
+  </Period>
+</MPD>

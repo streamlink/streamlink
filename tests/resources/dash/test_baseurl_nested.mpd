@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<MPD
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xmlns:xlink="http://www.w3.org/1999/xlink"
+  xmlns="urn:mpeg:dash:schema:mpd:2011"
+  xsi:schemaLocation="urn:mpeg:DASH:schema:MPD:2011 http://standards.iso.org/ittf/PubliclyAvailableStandards/MPEG-DASH_schema_files/DASH-MPD.xsd"
+  profiles="urn:mpeg:dash:profile:isoff-live:2011"
+  type="static"
+  availabilityStartTime="2020-01-01T00:00:00Z"
+  mediaPresentationDuration="PT0H0M6.00S"
+  minBufferTime="PT6.0S"
+>
+  <BaseURL>https://hostname/</BaseURL>
+  <Period id="0" start="PT12M34S">
+    <BaseURL>period/</BaseURL>
+    <AdaptationSet
+      id="0"
+      mimeType="video/mp4"
+      maxWidth="1920"
+      maxHeight="1080"
+      par="16:9"
+      frameRate="60"
+      segmentAlignment="true"
+      startWithSAP="1"
+      subsegmentAlignment="true"
+      subsegmentStartsWithSAP="1"
+    >
+      <SegmentTemplate
+        presentationTimeOffset="0"
+        timescale="90000"
+        duration="540000"
+        startNumber="1"
+        media="media_$RepresentationID$-$Number$.m4s"
+        initialization="init_$RepresentationID$.m4s"
+      />
+      <Representation id="video_5000kbps" codecs="avc1.640028" width="1920" height="1080" sar="1:1" bandwidth="5000000"/>
+      <Representation id="video_9000kbps" codecs="avc1.640028" width="1920" height="1080" sar="1:1" bandwidth="9000000">
+        <BaseURL>representation/</BaseURL>
+      </Representation>
+    </AdaptationSet>
+    <AdaptationSet
+      id="1"
+      mimeType="audio/mp4"
+      lang="eng"
+      segmentAlignment="true"
+      startWithSAP="1"
+      subsegmentAlignment="true"
+      subsegmentStartsWithSAP="1"
+    >
+      <BaseURL>adaptationset/</BaseURL>
+      <SegmentTemplate
+        presentationTimeOffset="0"
+        timescale="44100"
+        duration="264600"
+        startNumber="1"
+        media="media_$RepresentationID$-$Number$.m4s"
+        initialization="init_$RepresentationID$.m4s"
+      />
+      <Representation id="audio_128kbps" codecs="mp4a.40.2" audioSamplingRate="44100" sar="1:1" bandwidth="128000"/>
+      <Representation id="audio_256kbps" codecs="mp4a.40.2" audioSamplingRate="44100" sar="1:1" bandwidth="256000">
+        <BaseURL>representation/</BaseURL>
+      </Representation>
+      <Representation id="audio_320kbps" codecs="mp4a.40.2" audioSamplingRate="44100" sar="1:1" bandwidth="320000">
+        <BaseURL>https://other/</BaseURL>
+      </Representation>
+    </AdaptationSet>
+  </Period>
+</MPD>

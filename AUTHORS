@@ -1,0 +1,5 @@
+Thank you to everyone who has contributed to streamlink / livestreamer.
+
+For a list of contributors, see
+https://github.com/streamlink/streamlink/graphs/contributors
+or use the command `git log --format='%aN' | sort -uf`

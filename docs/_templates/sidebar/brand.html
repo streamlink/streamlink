@@ -1,0 +1,15 @@
+<a class="sidebar-brand centered" href="{{ pathto(master_doc) }}">
+  <div class="sidebar-logo-container">
+    <img class="sidebar-logo only-light" src="{{ pathto('_static/' + theme_light_logo, 1) }}" alt="{{ project }}"/>
+    <img class="sidebar-logo only-dark" src="{{ pathto('_static/' + theme_dark_logo, 1) }}" alt="{{ project }}"/>
+  </div>
+  <p class="sidebar-brand-text">{{ project }}</p>
+  <p class="sidebar-brand-oneliner">{{ oneliner }}</p>
+</a>
+<div class="sidebar-versions centered" role="note" aria-label="versions">
+  <pre class="sidebar-versions-current">{{ release }}</pre>
+  <dl class="sidebar-versions-others">
+    <dd><a href="/{{ pagename }}{{ file_suffix }}" class="{% if release == version %}version-current{% endif %}">Stable</a></dd>
+    <dd><a href="/latest/{{ pagename }}{{ file_suffix }}" class="{% if release != version %}version-current{% endif %}">Latest</a></dd>
+  </dl>
+</div>

@@ -1,0 +1,794 @@
+from __future__ import annotations
+
+import socket
+import ssl
+from operator import itemgetter
+from socket import AF_INET, AF_INET6
+from ssl import SSLContext
+from typing import TYPE_CHECKING, Any
+from unittest.mock import Mock, PropertyMock, call
+
+import freezegun
+import pytest
+import requests
+import requests_mock as rm
+import urllib3
+from requests.adapters import HTTPAdapter
+from urllib3.connection import HTTPConnection
+from urllib3.response import HTTPResponse
+
+from streamlink.exceptions import PluginError, StreamlinkDeprecationWarning
+from streamlink.session.http import (
+    HTTPSession,
+    SSLContextAdapter,
+    TLSNoDHAdapter,
+    TLSSecLevel1Adapter,
+    urllib3_set_socket_options,
+)
+from streamlink.session.http_useragents import DEFAULT
+
+
+if TYPE_CHECKING:
+    from pathlib import Path
+
+    from streamlink import Streamlink
+
+
+_original_allowed_gai_family = urllib3.util.connection.allowed_gai_family
+
+
+class TestUrllib3Overrides:
+    # noinspection PyNestedDecorators
+    @pytest.fixture(scope="class")
+    @classmethod
+    def httpsession(cls) -> HTTPSession:
+        return HTTPSession()
+
+    @pytest.mark.parametrize(
+        ("url", "expected"),
+        [
+            pytest.param(
+                "https://foo/bar%3F?baz%21",
+                "https://foo/bar%3F?baz%21",
+                id="keep-encoded-reserved-characters",
+            ),
+            pytest.param(
+                "https://foo/%62%61%72?%62%61%7A",
+                "https://foo/bar?baz",
+                id="decode-encoded-unreserved-characters",
+            ),
+            pytest.param(
+                "https://foo/bär?bäz",
+                "https://foo/b%C3%A4r?b%C3%A4z",
+                id="encode-other-characters",
+            ),
+            pytest.param(
+                "https://foo/b%c3%a4r?b%c3%a4z",
+                "https://foo/b%c3%a4r?b%c3%a4z",
+                id="keep-percent-encodings-with-lowercase-characters",
+            ),
+            pytest.param(
+                "https://foo/b%C3%A4r?b%C3%A4z",
+                "https://foo/b%C3%A4r?b%C3%A4z",
+                id="keep-percent-encodings-with-uppercase-characters",
+            ),
+            pytest.param(
+                "https://foo/%?%",
+                "https://foo/%25?%25",
+                id="empty-percent-encodings-without-valid-encodings",
+            ),
+            pytest.param(
+                "https://foo/%0?%0",
+                "https://foo/%250?%250",
+                id="incomplete-percent-encodings-without-valid-encodings",
+            ),
+            pytest.param(
+                "https://foo/%zz?%zz",
+                "https://foo/%25zz?%25zz",
+                id="invalid-percent-encodings-without-valid-encodings",
+            ),
+            pytest.param(
+                "https://foo/%3F%?%3F%",
+                "https://foo/%253F%25?%253F%25",
+                id="empty-percent-encodings-with-valid-encodings",
+            ),
+            pytest.param(
+                "https://foo/%3F%0?%3F%0",
+                "https://foo/%253F%250?%253F%250",
+                id="incomplete-percent-encodings-with-valid-encodings",
+            ),
+            pytest.param(
+                "https://foo/%3F%zz?%3F%zz",
+                "https://foo/%253F%25zz?%253F%25zz",
+                id="invalid-percent-encodings-with-valid-encodings",
+            ),
+        ],
+    )
+    def test_encode_invalid_chars(self, httpsession: HTTPSession, url: str, expected: str):
+        req = requests.Request(method="GET", url=url)
+        prep = httpsession.prepare_request(req)
+        assert prep.url == expected
+
+    @pytest.mark.parametrize(
+        ("sock", "options", "expected"),
+        [
+            pytest.param(
+                {},
+                [],
+                [],
+                id="no-options",
+            ),
+            pytest.param(
+                {},
+                [(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)],
+                [(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)],
+                id="no-filters",
+            ),
+            # see set_interface() on darwin
+            pytest.param(
+                {},
+                [(socket.IPPROTO_IP, 25, 1), (socket.IPPROTO_IPV6, 125, 1)],
+                [(socket.IPPROTO_IP, 25, 1)],
+                id="inet-filter-ipproto-ipv6",
+            ),
+            # see set_interface() on darwin
+            pytest.param(
+                {"family": socket.AF_INET6},
+                [(socket.IPPROTO_IP, 25, 1), (socket.IPPROTO_IPV6, 125, 1)],
+                [(socket.IPPROTO_IPV6, 125, 1)],
+                id="inet6-filter-ipproto-ip",
+            ),
+        ],
+    )
+    def test_set_socket_options(self, sock: dict, options: list, expected: list):
+        sock.setdefault("family", socket.AF_INET)
+        sock.setdefault("type", socket.SOCK_STREAM)
+        sock.setdefault("proto", socket.IPPROTO_TCP)
+        mock_socket = Mock(**sock)
+        urllib3_set_socket_options(mock_socket, options)
+        assert mock_socket.setsockopt.call_args_list == [call(*item) for item in expected]
+
+
+class TestHTTPSession:
+    def test_session_init(self):
+        session = HTTPSession()
+        assert session.headers.get("User-Agent") == DEFAULT
+        assert session.timeout == 20.0  # ruff: ignore[float-equality-comparison]
+        assert "file://" in session.adapters.keys()
+
+    @pytest.mark.parametrize("verb", ["get", "post", "head", "options", "put", "patch", "delete"])
+    def test_http_verbs(self, requests_mock: rm.Mocker, verb: str):
+        mocked = requests_mock.register_uri(verb, "http://localhost", text="OK")
+        session = HTTPSession()
+        method = getattr(session, verb)
+        assert callable(method)
+        res = method("http://localhost")
+        assert isinstance(res, requests.Response)
+        assert res.text == "OK"
+        assert mocked.called_once
+
+    @pytest.mark.parametrize(
+        ("params", "expected"),
+        [
+            pytest.param(
+                {"one": "three", "foo": "bar"},
+                "http://localhost/path?one=two&foo=bar",
+                id="mapping",
+            ),
+            pytest.param(
+                [("one", "three"), ("foo", "bar")],
+                "http://localhost/path?one=two&foo=bar",
+                id="list",
+            ),
+            pytest.param(
+                (("one", "three"), ("foo", "bar")),
+                "http://localhost/path?one=two&foo=bar",
+                id="tuple",
+            ),
+            pytest.param(
+                "one=three&foo=bar",
+                "http://localhost/path?one=two",
+                id="str",
+            ),
+            pytest.param(
+                b"one=three&foo=bar",
+                "http://localhost/path?one=two",
+                id="bytes",
+            ),
+        ],
+    )
+    def test_session_keyword(self, requests_mock: rm.Mocker, params: Any, expected: str):
+        session_one = HTTPSession()
+        session_two = HTTPSession()
+        requests_mock.register_uri("GET", "http://localhost/path")
+        session_two.headers.update({"User-Agent": "foo"})
+        session_two.params.update({"one": "two"})
+        res = session_one.get(
+            "http://localhost/path",
+            headers={"User-Agent": "bar", "X-Foo": "bar"},
+            params=params,
+            session=session_two,
+        )
+        assert res.request.headers["User-Agent"] == "foo"
+        assert res.request.headers["X-Foo"] == "bar"
+        assert res.request.url == expected
+
+    def test_read_timeout(self, monkeypatch: pytest.MonkeyPatch):
+        mock_sleep = Mock()
+        mock_request = Mock(side_effect=requests.Timeout)
+        monkeypatch.setattr("streamlink.session.http.time.sleep", mock_sleep)
+        monkeypatch.setattr("streamlink.session.http.Session.request", mock_request)
+
+        session = HTTPSession()
+        with pytest.raises(PluginError, match=r"^Unable to open URL: http://localhost/") as err:
+            session.get("http://localhost/", timeout=123, retries=3, retry_backoff=2, retry_max_backoff=5)
+        oerr = getattr(err.value, "err", None)
+        assert isinstance(oerr, requests.Timeout)
+        assert err.value.__context__ is oerr
+
+        assert mock_request.call_args_list == 4 * [
+            call(
+                "GET",
+                "http://localhost/",
+                params=None,
+                data=None,
+                headers=None,
+                cookies=None,
+                files=None,
+                auth=None,
+                timeout=123,
+                allow_redirects=True,
+                proxies=None,
+                hooks=None,
+                stream=None,
+                verify=None,
+                cert=None,
+                json=None,
+            ),
+        ]
+        assert mock_sleep.call_args_list == [
+            call(2),
+            call(4),
+            call(5),
+        ]
+
+    @pytest.mark.parametrize("encoding", ["UTF-32BE", "UTF-32LE", "UTF-16BE", "UTF-16LE", "UTF-8"])
+    def test_determine_json_encoding(self, recwarn: pytest.WarningsRecorder, encoding: str):
+        data = "Hello world, Γειά σου Κόσμε, こんにちは世界".encode(encoding)  # ruff: ignore[ambiguous-unicode-character-string]
+        assert HTTPSession.determine_json_encoding(data) == encoding
+        assert [(record.category, str(record.message)) for record in recwarn.list] == [
+            (StreamlinkDeprecationWarning, "Deprecated HTTPSession.determine_json_encoding() call"),
+        ]
+
+    @pytest.mark.parametrize(
+        ("encoding", "override"),
+        [
+            ("utf-32-be", None),
+            ("utf-32-le", None),
+            ("utf-16-be", None),
+            ("utf-16-le", None),
+            ("utf-8", None),
+            # With byte order mark (BOM)
+            ("utf-16", None),
+            ("utf-32", None),
+            ("utf-8-sig", None),
+            # Override
+            ("utf-8", "utf-8"),
+            ("cp949", "cp949"),
+        ],
+    )
+    def test_json(self, monkeypatch: pytest.MonkeyPatch, encoding: str, override: str | None):
+        mock_content = PropertyMock(return_value='{"test": "Α and Ω"}'.encode(encoding))  # ruff: ignore[ambiguous-unicode-character-string]
+        monkeypatch.setattr("requests.Response.content", mock_content)
+
+        res = requests.Response()
+        res.encoding = override
+
+        assert HTTPSession.json(res) == {"test": "Α and Ω"}  # ruff: ignore[ambiguous-unicode-character-string]
+
+    @pytest.mark.parametrize(
+        ("content_type", "encoding", "content", "expected"),
+        [
+            pytest.param(
+                "text/html",
+                None,
+                b"B\xe4r",
+                "ISO-8859-1",
+                id="default-iso-8859-1-charset-for-text",
+            ),
+            pytest.param(
+                "application/json",
+                None,
+                b"B\xc3\xa4r",
+                "utf-8",
+                id="default-utf-8-charset-for-json",
+            ),
+            pytest.param(
+                'text/html; charset="ISO-8859-1"',
+                None,
+                b"B\xe4r",
+                "ISO-8859-1",
+                id="declared-iso-8859-1-charset",
+            ),
+            pytest.param(
+                'text/html; charset="utf-8"',
+                None,
+                b"B\xc3\xa4r",
+                "utf-8",
+                id="declared-utf-8-charset",
+            ),
+            pytest.param(
+                "text/html",
+                "utf-8",
+                b"B\xc3\xa4r",
+                "utf-8",
+                id="override-missing-charset",
+            ),
+            pytest.param(
+                'text/html; charset="ISO-8859-1"',
+                "utf-8",
+                b"B\xc3\xa4r",
+                "utf-8",
+                id="override-incorrect-charset",
+            ),
+            pytest.param(
+                'text/html; charset="utf-8"',
+                "utf-8",
+                b"B\xc3\xa4r",
+                "utf-8",
+                id="override-same-charset",
+            ),
+        ],
+    )
+    @pytest.mark.parametrize("method", ["get", "post", "head", "put", "patch", "delete"])
+    def test_encoding_override(
+        self,
+        requests_mock: rm.Mocker,
+        method: str,
+        content_type: str,
+        encoding: str,
+        content: bytes,
+        expected: str,
+    ):
+        requests_mock.register_uri(rm.ANY, "http://mocked", headers={"Content-Type": content_type}, content=content)
+        httpsession = HTTPSession()
+        res = getattr(httpsession, method)("http://mocked", encoding=encoding)
+        assert res.encoding == expected
+        assert res.text == "Bär"
+
+    # Linux
+    SOL_SOCKET = getattr(socket, "SOL_SOCKET", 1)
+    SO_BINDTODEVICE = getattr(socket, "SO_BINDTODEVICE", 25)
+
+    # Darwin
+    IPPROTO_IP = getattr(socket, "IPPROTO_IP", 0)
+    IPPROTO_IPV6 = getattr(socket, "IPPROTO_IPV6", 41)
+    IP_BOUND_IF = getattr(socket, "IP_BOUND_IF", 25)
+    IPV6_BOUND_IF = getattr(socket, "IPV6_BOUND_IF", 125)
+
+    @pytest.mark.parametrize(
+        ("interface", "source_address", "socket_options", "log"),
+        [
+            pytest.param(
+                None,
+                None,
+                None,
+                [],
+                id="none",
+            ),
+            pytest.param(
+                "",
+                None,
+                None,
+                [],
+                id="empty",
+            ),
+            pytest.param(
+                "0.0.0.0",
+                ("0.0.0.0", 0),
+                None,
+                [],
+                id="ipv4",
+            ),
+            pytest.param(
+                "::1",
+                ("::1", 0),
+                None,
+                [],
+                id="ipv6",
+            ),
+            pytest.param(
+                "my-interface",
+                None,
+                [
+                    *HTTPConnection.default_socket_options,
+                    (SOL_SOCKET, SO_BINDTODEVICE, b"my-interface"),
+                ],
+                [],
+                id="linux-iface",
+                marks=pytest.mark.linux_only,
+            ),
+            pytest.param(
+                "if!my-interface",
+                None,
+                [
+                    *HTTPConnection.default_socket_options,
+                    (SOL_SOCKET, SO_BINDTODEVICE, b"my-interface"),
+                ],
+                [],
+                id="linux-iface-prefix",
+                marks=pytest.mark.linux_only,
+            ),
+            pytest.param(
+                "my-interface",
+                None,
+                [
+                    *HTTPConnection.default_socket_options,
+                    (IPPROTO_IP, IP_BOUND_IF, 1),
+                    (IPPROTO_IPV6, IPV6_BOUND_IF, 1),
+                ],
+                [],
+                id="darwin-iface",
+                marks=pytest.mark.darwin_only,
+            ),
+            pytest.param(
+                "if!my-interface",
+                None,
+                [
+                    *HTTPConnection.default_socket_options,
+                    (IPPROTO_IP, IP_BOUND_IF, 1),
+                    (IPPROTO_IPV6, IPV6_BOUND_IF, 1),
+                ],
+                [],
+                id="darwin-iface-prefix",
+                marks=pytest.mark.darwin_only,
+            ),
+            pytest.param(
+                "host!0.0.0.0",
+                ("0.0.0.0", 0),
+                None,
+                [],
+                id="unix-host-prefix",
+                marks=pytest.mark.posix_only,
+            ),
+            pytest.param(
+                "host!foo",
+                ("foo", 0),
+                None,
+                [],
+                id="unix-host-prefix-hostname",
+                marks=pytest.mark.posix_only,
+            ),
+            pytest.param(
+                "ifhost!my-interface!0.0.0.0",
+                ("0.0.0.0", 0),
+                [
+                    *HTTPConnection.default_socket_options,
+                    (SOL_SOCKET, SO_BINDTODEVICE, b"my-interface"),
+                ],
+                [],
+                id="linux-ifhost-prefix",
+                marks=pytest.mark.linux_only,
+            ),
+            pytest.param(
+                "ifhost!my-interface",
+                None,
+                [
+                    *HTTPConnection.default_socket_options,
+                    (SOL_SOCKET, SO_BINDTODEVICE, b"ifhost!my-interface"),
+                ],
+                [],
+                id="linux-ifhost-prefix-invalid",
+                marks=pytest.mark.linux_only,
+            ),
+            pytest.param(
+                "ifhost!my-interface!0.0.0.0",
+                ("0.0.0.0", 0),
+                [
+                    *HTTPConnection.default_socket_options,
+                    (IPPROTO_IP, IP_BOUND_IF, 1),
+                    (IPPROTO_IPV6, IPV6_BOUND_IF, 1),
+                ],
+                [],
+                id="darwin-ifhost-prefix",
+                marks=pytest.mark.darwin_only,
+            ),
+            pytest.param(
+                "ifhost!my-interface",
+                None,
+                None,
+                [
+                    ("streamlink.session.http", "error", "Invalid network interface name"),
+                ],
+                id="darwin-ifhost-prefix-invalid",
+                marks=pytest.mark.darwin_only,
+            ),
+            pytest.param(
+                "my-interface",
+                ("my-interface", 0),
+                None,
+                [],
+                id="win32-iface",
+                marks=pytest.mark.windows_only,
+            ),
+            pytest.param(
+                "ifhost!my-interface!0.0.0.0",
+                ("ifhost!my-interface!0.0.0.0", 0),
+                None,
+                [],
+                id="win32-prefix",
+                marks=pytest.mark.windows_only,
+            ),
+        ],
+    )
+    def test_set_interface(
+        self,
+        monkeypatch: pytest.MonkeyPatch,
+        caplog: pytest.LogCaptureFixture,
+        interface: str,
+        source_address: tuple | None,
+        socket_options: list[tuple] | None,
+        log: list,
+    ):
+        def _mock_socket_if_nametoindex(iface: str):
+            match iface:
+                case "my-interface":
+                    return 1
+                case _:
+                    raise OSError("Invalid network interface name")
+
+        monkeypatch.setattr("socket.if_nametoindex", _mock_socket_if_nametoindex)
+
+        session = HTTPSession()
+        session.mount("custom://", TLSNoDHAdapter())
+
+        a_http, a_https, a_custom, a_file = itemgetter("http://", "https://", "custom://", "file://")(session.adapters)
+        assert isinstance(a_http, HTTPAdapter)
+        assert isinstance(a_https, HTTPAdapter)
+        assert isinstance(a_custom, HTTPAdapter)
+        assert not isinstance(a_file, HTTPAdapter)
+
+        for adapter in a_http, a_https, a_custom:
+            assert adapter.poolmanager.connection_pool_kw.get("source_address") is None
+            assert adapter.poolmanager.connection_pool_kw.get("socket_options") is None
+
+        session.set_interface(interface=interface)
+        for adapter in a_http, a_https, a_custom:
+            assert adapter.poolmanager.connection_pool_kw.get("source_address") == source_address
+            assert adapter.poolmanager.connection_pool_kw.get("socket_options") == socket_options
+        assert [(record.name, record.levelname, record.message) for record in caplog.records] == log
+
+        a_new = TLSNoDHAdapter()
+        assert a_new.poolmanager.connection_pool_kw.get("source_address") is None
+        assert a_new.poolmanager.connection_pool_kw.get("socket_options") is None
+        session.mount("new://", a_new)
+        assert a_new.poolmanager.connection_pool_kw.get("source_address") == source_address
+        assert a_new.poolmanager.connection_pool_kw.get("socket_options") == socket_options
+
+        session.set_interface(interface="")
+        for adapter in a_http, a_https, a_custom, a_new:
+            assert adapter.poolmanager.connection_pool_kw.get("source_address") is None
+            assert adapter.poolmanager.connection_pool_kw.get("socket_options") is None
+
+        session.set_interface(interface=None)
+        for adapter in a_http, a_https, a_custom, a_new:
+            assert adapter.poolmanager.connection_pool_kw.get("source_address") is None
+            assert adapter.poolmanager.connection_pool_kw.get("socket_options") is None
+
+        # doesn't raise
+        session.set_interface(interface=None)
+
+    def test_set_address_family(self, monkeypatch: pytest.MonkeyPatch):
+        session = HTTPSession()
+        mock_urllib3_util_connection = Mock(allowed_gai_family=_original_allowed_gai_family)
+        monkeypatch.setattr("streamlink.session.http.urllib3_util_connection", mock_urllib3_util_connection)
+
+        assert mock_urllib3_util_connection.allowed_gai_family is _original_allowed_gai_family
+
+        session.set_address_family(family=AF_INET)
+        assert mock_urllib3_util_connection.allowed_gai_family is not _original_allowed_gai_family
+        assert mock_urllib3_util_connection.allowed_gai_family() is AF_INET
+
+        session.set_address_family(family=None)
+        assert mock_urllib3_util_connection.allowed_gai_family is _original_allowed_gai_family
+
+        session.set_address_family(family=AF_INET6)
+        assert mock_urllib3_util_connection.allowed_gai_family is not _original_allowed_gai_family
+        assert mock_urllib3_util_connection.allowed_gai_family() is AF_INET6
+
+        session.set_address_family(family=None)
+        assert mock_urllib3_util_connection.allowed_gai_family is _original_allowed_gai_family
+
+    def test_disable_dh(self):
+        session = HTTPSession()
+
+        assert isinstance(session.adapters["https://"], HTTPAdapter)
+        assert not isinstance(session.adapters["https://"], TLSNoDHAdapter)
+
+        assert not session.adapters["https://"].poolmanager.connection_pool_kw.get("source_address")
+        session.adapters["https://"].poolmanager.connection_pool_kw.update(source_address=("0.0.0.0", 0))
+
+        session.disable_dh(disable=True)
+        assert isinstance(session.adapters["https://"], TLSNoDHAdapter)
+        assert session.adapters["https://"].poolmanager.connection_pool_kw.get("source_address") == ("0.0.0.0", 0)
+
+        session.disable_dh(disable=False)
+        assert isinstance(session.adapters["https://"], HTTPAdapter)
+        assert not isinstance(session.adapters["https://"], TLSNoDHAdapter)
+        assert session.adapters["https://"].poolmanager.connection_pool_kw.get("source_address") == ("0.0.0.0", 0)
+
+
+class TestHTTPCookies:
+    def test_invalid_file(self, tmp_path: Path):
+        session = HTTPSession()
+        cookies_file = tmp_path / "invalid-file"
+        with pytest.raises(FileNotFoundError, match=r" is not a valid cookies file path$"):
+            session.set_cookies_from_file(cookies_file)
+        assert session.cookies == {}
+
+    def test_invalid_format(self, tmp_path: Path):
+        session = HTTPSession()
+        cookies_file = tmp_path / "invalid-file"
+        cookies_file.write_text("""foo\nbar\n""")
+        with pytest.raises(Exception, match=r" does not look like a Netscape format cookies file$"):
+            session.set_cookies_from_file(cookies_file)
+        assert session.cookies == {}
+
+    @freezegun.freeze_time("2000-01-01T00:00:00Z")
+    def test_cookies(self, tmp_path: Path, requests_mock: rm.Mocker):
+        session = HTTPSession()
+        cookies_file = tmp_path / "cookies.txt"
+        content = "".join([
+            "# Netscape HTTP Cookie File\n",
+            "host.local	FALSE	/a	FALSE	946684801	foo	bar\n",
+            "host.local	FALSE	/b	FALSE	946684801	baz	qux\n",
+            "host.local	FALSE	/	FALSE	946684799	expired	1\n",
+            ".host.tld	TRUE	/	TRUE	946684801	abc	def\n",
+        ])
+        cookies_file.write_text(content)
+        session.set_cookies_from_file(cookies_file)
+        assert session.cookies.get_dict(domain="host.local") == {
+            "foo": "bar",
+            "baz": "qux",
+        }
+        assert session.cookies.get_dict(domain="host.local", path="/a") == {
+            "foo": "bar",
+        }
+        assert session.cookies.get_dict(domain=".host.tld") == {
+            "abc": "def",
+        }
+
+        matcher = requests_mock.register_uri(rm.ANY, rm.ANY, status_code=200)
+
+        # domain, path, expired
+        assert session.get("http://host.local/a").status_code == 200
+        assert matcher.request_history[-1]._request.headers.get("cookie") == "foo=bar"
+        assert session.get("http://host.local/b").status_code == 200
+        assert matcher.request_history[-1]._request.headers.get("cookie") == "baz=qux"
+        assert session.get("http://foo.host.local/").status_code == 200
+        assert matcher.request_history[-1]._request.headers.get("cookie") is None
+
+        # subdomain, secure
+        assert session.get("https://sub.host.tld/").status_code == 200
+        assert matcher.request_history[-1]._request.headers.get("cookie") == "abc=def"
+        assert session.get("http://sub.host.tld/").status_code == 200
+        assert matcher.request_history[-1]._request.headers.get("cookie") is None
+
+    @freezegun.freeze_time("2000-01-01T00:00:00Z")
+    def test_cookies_override(self, tmp_path: Path):
+        session = HTTPSession()
+        file_a = tmp_path / "a"
+        file_b = tmp_path / "b"
+        file_a.write_text(
+            "".join([
+                "# Netscape HTTP Cookie File\n",
+                "host.local	FALSE	/	FALSE	946684801	foo	bar\n",
+                "host.local	FALSE	/	FALSE	946684801	abc	def\n",
+            ]),
+        )
+        file_b.write_text(
+            "".join([
+                "# Netscape HTTP Cookie File\n",
+                "host.local	FALSE	/	FALSE	946684801	foo	baz\n",
+            ]),
+        )
+
+        assert session.cookies.get_dict(domain="host.local") == {}
+        session.set_cookies_from_file(file_a)
+        assert session.cookies.get_dict(domain="host.local") == {
+            "foo": "bar",
+            "abc": "def",
+        }
+        session.set_cookies_from_file(file_b)
+        assert session.cookies.get_dict(domain="host.local") == {
+            "foo": "baz",
+            "abc": "def",
+        }
+
+
+class TestHTTPAdapters:
+    @staticmethod
+    def _has_dh_ciphers(ssl_context: SSLContext):
+        return any(cipher["kea"] == "kx-dhe" for cipher in ssl_context.get_ciphers())
+
+    @staticmethod
+    def _has_weak_digest_ciphers(ssl_context: SSLContext):
+        return any(cipher["digest"] == "sha1" for cipher in ssl_context.get_ciphers())
+
+    def test_sslcontextadapter(self):
+        adapter = SSLContextAdapter()
+        ssl_context = adapter.poolmanager.connection_pool_kw.get("ssl_context")
+        assert isinstance(ssl_context, SSLContext)
+        assert self._has_dh_ciphers(ssl_context)
+        assert not self._has_weak_digest_ciphers(ssl_context)
+
+    def test_tlsnodhadapter(self):
+        adapter = TLSNoDHAdapter()
+        ssl_context = adapter.poolmanager.connection_pool_kw.get("ssl_context")
+        assert isinstance(ssl_context, SSLContext)
+        assert not self._has_dh_ciphers(ssl_context)
+        assert not self._has_weak_digest_ciphers(ssl_context)
+
+    def test_tlsseclevel1adapter(self):
+        adapter = TLSSecLevel1Adapter()
+        ssl_context = adapter.poolmanager.connection_pool_kw.get("ssl_context")
+        assert isinstance(ssl_context, SSLContext)
+        assert self._has_dh_ciphers(ssl_context)
+        assert self._has_weak_digest_ciphers(ssl_context)
+
+    @pytest.mark.parametrize("proxy", ["http", "socks4", "socks5"])
+    def test_proxymanager_ssl_context(self, proxy: str):
+        adapter = SSLContextAdapter()
+        proxymanager = adapter.proxy_manager_for(f"{proxy}://")
+        ssl_context_poolmanager = adapter.poolmanager.connection_pool_kw.get("ssl_context")
+        ssl_context_proxymanager = proxymanager.connection_pool_kw.get("ssl_context")
+        assert ssl_context_poolmanager is ssl_context_proxymanager
+
+
+class TestHTTPSessionVerifyAndCustomSSLContext:
+    @pytest.fixture()
+    def adapter(self, session: Streamlink):
+        # The http-disable-dh session option mounts the TLSNoDHAdapter with a custom SSLContext
+        session.set_option("http-disable-dh", True)
+
+        adapter = session.http.adapters.get("https://")
+        assert isinstance(adapter, TLSNoDHAdapter)
+
+        return adapter
+
+    @pytest.fixture(autouse=True)
+    def _fake_request(self, monkeypatch: pytest.MonkeyPatch, session: Streamlink, adapter: HTTPAdapter):
+        class FakeHTTPResponse(HTTPResponse):
+            def stream(self, *_, **__):
+                yield b"mocked"
+
+        # Can't use requests_mock here, as it monkeypatches the adapter's send() method, which we want to test
+        req = requests.PreparedRequest()
+        resp = FakeHTTPResponse(status=200)
+        # noinspection PyTypeChecker
+        response = adapter.build_response(req, resp)
+        monkeypatch.setattr("requests.adapters.HTTPAdapter.send", Mock(return_value=response))
+
+        assert session.http.get("https://mocked/").text == "mocked"
+
+    @pytest.mark.parametrize(
+        ("session", "check_hostname", "verify_mode"),
+        [
+            pytest.param({"http-ssl-verify": True}, True, ssl.CERT_REQUIRED, id="verify"),
+            pytest.param({"http-ssl-verify": False}, False, ssl.CERT_NONE, id="no-verify"),
+        ],
+        indirect=["session"],
+    )
+    def test_ssl_context_attributes(
+        self,
+        session: Streamlink,
+        adapter: HTTPAdapter,
+        check_hostname: bool,
+        verify_mode: ssl.VerifyMode,
+    ):
+        assert session.http.verify is session.get_option("http-ssl-verify")
+
+        ssl_context = adapter.poolmanager.connection_pool_kw.get("ssl_context")
+        assert isinstance(ssl_context, SSLContext)
+        assert ssl_context.check_hostname is check_hostname
+        assert ssl_context.verify_mode is verify_mode

@@ -1,0 +1,101 @@
+name: 🧩 Plugin issue
+description: One of Streamlink's plugins doesn't work correctly.
+title: "plugins.plugin-name-here: A very brief summary of what's broken"
+labels:
+  - plugin issue
+body:
+  - type: markdown
+    attributes:
+      value: |
+        # Thanks for reporting a plugin issue!
+
+        > [!IMPORTANT]
+        > **What is a plugin issue?**
+        > Plugin issues describe broken functionality within a plugin's code base, e.g. the streaming site has made breaking changes, streams don't get resolved correctly, or authentication has stopped working, etc.
+        >
+        > Use the [bug report template](https://github.com/streamlink/streamlink/issues/new/choose) if your report is about an otherwise generic bug.
+        > [See the list of the available plugins here.](https://streamlink.github.io/plugins.html)
+
+        > [!CAUTION]
+        > **DO NOT IGNORE this template**
+        > Please fill in all the required details and don't skip any parts.
+        > Issues that don't adhere to our request will be closed and ignored immediately.
+        >
+        > This is because analyzing bugs, issues or requests without proper details and log output is harder than necessary.
+        > Low quality and low effort issues are noise and steal the time of the maintainers and contributors.
+  - type: checkboxes
+    attributes:
+      label: Checklist
+      options:
+        - label: This is a [plugin issue](https://streamlink.github.io/plugins.html) and not [a different kind of issue](https://github.com/streamlink/streamlink/issues/new/choose)
+          required: true
+        - label: "[I have read the contribution guidelines](https://github.com/streamlink/streamlink/blob/master/CONTRIBUTING.md#contributing-to-streamlink)"
+          required: true
+        - label: "[I have checked the list of open and recently closed plugin issues](https://github.com/streamlink/streamlink/issues?q=is%3Aissue+label%3A%22plugin+issue%22)"
+          required: true
+        - label: "[I have checked the commit log of the master branch](https://github.com/streamlink/streamlink/commits/master)"
+          required: true
+  - type: checkboxes
+    attributes:
+      label: Collaboration
+      options:
+        - label: "[I will provide feedback should a pull request be opened with a fix for the plugin](https://github.com/streamlink/streamlink/blob/master/CONTRIBUTING.md#pull-request-feedback)"
+          required: true
+  - type: input
+    attributes:
+      label: Streamlink version
+      description: |
+        [Only the **latest stable release or newer** will be accepted!](https://streamlink.github.io/install.html)
+
+        Post the **exact output** of [`streamlink --no-config --version`](https://streamlink.github.io/cli.html#cmdoption-version).
+        Issues without a valid version string will be closed and ignored immediately.
+
+        Before you continue, check the [list of recent releases](https://streamlink.github.io/changelog.html) or run `streamlink --no-config --version-check`.
+
+        The mandatory debug/trace log down below still needs to include the explicit version string.
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Description
+      description: |
+        Explain the plugin issue as thoroughly as you can.
+        Please also provide the exact steps for reproducing the issue, e.g. a list of input URLs.
+        To exclude issues on the streaming website/service itself, all input URLs must be working fine in your web browser.
+
+        Remember that it is impossible for the developers and maintainers of this project to be aware of specific details of every site/plugin.
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Debug/trace log
+      description: |
+        **DEBUG/TRACE LOG OUTPUT IS REQUIRED for plugin issues!**
+
+        INCLUDE THE ENTIRE COMMAND LINE and make sure to **remove all sensitive data from the entire log output, like usernames, passwords, cookies, etc!**
+        Issues that don't include a **full debug/trace log** will be closed and ignored immediately.
+
+        Use the [`--loglevel=debug` / `--loglevel=trace`](https://streamlink.github.io/latest/cli.html#cmdoption-loglevel) parameter and avoid using parameters which suppress log output.
+        Debug/trace log includes important details about the used Python environment. **Don't remove it.**
+
+        If the log output is too long and repetitive parts can't be truncated, or if you have multiple log outputs to share, then please post a link to a [GitHub gist](https://gist.github.com/) with the log output instead.
+
+        **DO NOT post screenshots of the log output and instead copy the text from your terminal application.**
+      placeholder: |
+        The content will be rendered as code block.
+      render: text
+    validations:
+      required: true
+  - type: markdown
+    attributes:
+      value: |
+        > [!NOTE]
+        > **Before submitting**
+        >
+        > Make sure that you have
+        > - [ ] properly filled in the title of this plugin issue (at the very top of this page)
+        > - [ ] checked the rendered text previews to avoid unnecessary formatting errors
+
+        ----
+
+        [❤️ Love Streamlink? Please consider supporting the project maintainers. Thanks! ❤️](https://streamlink.github.io/latest/support.html)

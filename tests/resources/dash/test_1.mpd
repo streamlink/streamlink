@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<MPD id='dash' type="dynamic" xmlns="urn:mpeg:dash:schema:mpd:2011"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="urn:mpeg:DASH:schema:MPD:2011 DASH-MPD.xsd"
+  profiles="urn:mpeg:dash:profile:isoff-live:2011"
+  minBufferTime="PT11S"
+  suggestedPresentationDelay="PT11S"
+  availabilityStartTime="2018-01-01T00:00:00Z"
+  publishTime="2018-05-20T19:56:59Z"
+  minimumUpdatePeriod="PT3.5S"
+  maxSegmentDuration="PT6S"
+  timeShiftBufferDepth='PT30S'>
+    <Location>http://test.se/</Location>
+    <Period id='1526842800' start="PT12078000.272S" >
+        <AdaptationSet mimeType="video/mp4" contentType="video" id="4"
+ maxWidth="1920" maxHeight="1080" maxFrameRate="25" segmentAlignment="true"
+ startWithSAP="1" subsegmentAlignment="true" subsegmentStartsWithSAP="1">
+            <Representation id="tracks-v3" width="512" height="288" bandwidth="505000" codecs="avc1.420015">
+              <SegmentTemplate initialization="$RepresentationID$/init-1526842800.g_m4v" media="$RepresentationID$/dvr-1526842800-$Number$.g_m4v?t=$Time$" timescale="1000"  startNumber="695">
+                 <SegmentTimeline>
+   <S t="3388000" d="5000" r="5"/>
+                 </SegmentTimeline>
+              </SegmentTemplate>
+            </Representation>
+            <Representation id="tracks-v4" width="720" height="404" bandwidth="944000" codecs="avc1.4d001e">
+              <SegmentTemplate initialization="$RepresentationID$/init-1526842800.g_m4v" media="$RepresentationID$/dvr-1526842800-$Number$.g_m4v?t=$Time$" timescale="1000"  startNumber="695">
+                 <SegmentTimeline>
+   <S t="3388000" d="5000" r="5"/>
+                 </SegmentTimeline>
+              </SegmentTemplate>
+            </Representation>
+            <Representation id="tracks-v5" width="1024" height="576" bandwidth="1966000" codecs="avc1.4d001f">
+              <SegmentTemplate initialization="$RepresentationID$/init-1526842800.g_m4v" media="$RepresentationID$/dvr-1526842800-$Number$.g_m4v?t=$Time$" timescale="1000"  startNumber="695">
+                 <SegmentTimeline>
+   <S t="3388000" d="5000" r="5"/>
+                 </SegmentTimeline>
+              </SegmentTemplate>
+            </Representation>
+            <Representation id="tracks-v6" width="1280" height="720" bandwidth="3351000" codecs="avc1.4d001f">
+              <SegmentTemplate initialization="$RepresentationID$/init-1526842800.g_m4v" media="$RepresentationID$/dvr-1526842800-$Number$.g_m4v?t=$Time$" timescale="1000"  startNumber="695">
+                 <SegmentTimeline>
+   <S t="3388000" d="5000" r="5"/>
+                 </SegmentTimeline>
+              </SegmentTemplate>
+            </Representation>
+            <Representation id="tracks-v7" width="1920" height="1080" bandwidth="5870000" codecs="avc1.4d0028">
+              <SegmentTemplate initialization="$RepresentationID$/init-1526842800.g_m4v" media="$RepresentationID$/dvr-1526842800-$Number$.g_m4v?t=$Time$" timescale="1000"  startNumber="695">
+                 <SegmentTimeline>
+   <S t="3388000" d="5000" r="5"/>
+                 </SegmentTimeline>
+              </SegmentTemplate>
+            </Representation>
+        </AdaptationSet>
+        <AdaptationSet id="2" mimeType="audio/mp4" contentType="audio" lang="ces" segmentAlignment="true" startWithSAP="1">
+            <Representation mimeType="audio/mp4" id="tracks-a1" bandwidth="126000" codecs="mp4a.40.2">
+              <AudioChannelConfiguration schemeIdUri="urn:mpeg:dash:23003:3:audio_channel_configuration:2011" value="2"/>
+              <SegmentTemplate initialization="$RepresentationID$/init-1526842800.g_m4v" media="$RepresentationID$/dvr-1526842800-$Number$.g_m4v?t=$Time$" timescale="1000"  startNumber="695">
+                 <SegmentTimeline>
+   <S t="3388000" d="5000" r="5"/>
+                 </SegmentTimeline>
+              </SegmentTemplate>
+            </Representation>
+        </AdaptationSet>
+    </Period>
+    <UTCTiming schemeIdUri="urn:mpeg:dash:utc:direct:2014" value="2018-05-20T19:56:59Z" />
+</MPD>

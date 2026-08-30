@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<MPD xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="urn:mpeg:dash:schema:mpd:2011" profiles="urn:mpeg:dash:profile:isoff-live:2011" type="static" mediaPresentationDuration="PT3M24.320S" minBufferTime="PT6.000S">
+    <BaseURL>../</BaseURL>
+    <Period start="PT0.000S" duration="PT3M24.320S">
+        <AdaptationSet bitstreamSwitching="true">
+            <ContentComponent contentType="video"></ContentComponent>
+            <Representation id="video-574992933" codecs="avc1.64001F" mimeType="video/mp4" width="960" height="540" frameRate="25" startWithSAP="1" bandwidth="1483000">
+                <SegmentTemplate timescale="48000" media="574992933/chop/segment-$Number$.m4s" initialization="574992933/chop/segment-0.mp4">
+                    <SegmentTimeline>
+                        <S t="0" d="288000" r="32"></S>
+                        <S t="9504000" d="303360"></S>
+                    </SegmentTimeline>
+                </SegmentTemplate>
+            </Representation>
+            <Representation id="video-1309483008" codecs="avc1.640815" mimeType="video/mp4" width="426" height="240" frameRate="25" startWithSAP="1" bandwidth="338000">
+                <SegmentTemplate timescale="24000" media="1309483008/chop/segment-$Number$.m4s" initialization="1309483008/chop/segment-0.mp4">
+                    <SegmentTimeline>
+                        <S t="0" d="145920" r="32"></S>
+                        <S t="4815360" d="88320"></S>
+                    </SegmentTimeline>
+                </SegmentTemplate>
+            </Representation>
+            <Representation id="video-574992928" codecs="avc1.4D401E" mimeType="video/mp4" width="640" height="360" frameRate="25" startWithSAP="1" bandwidth="542000">
+                <SegmentTemplate timescale="48000" media="574992928/chop/segment-$Number$.m4s" initialization="574992928/chop/segment-0.mp4">
+                    <SegmentTimeline>
+                        <S t="0" d="288000" r="32"></S>
+                        <S t="9504000" d="303360"></S>
+                    </SegmentTimeline>
+                </SegmentTemplate>
+            </Representation>
+            <Representation id="video-574992937" codecs="avc1.640028" mimeType="video/mp4" width="1920" height="1080" frameRate="25" startWithSAP="1" bandwidth="5002000">
+                <SegmentTemplate timescale="48000" media="574992937/chop/segment-$Number$.m4s" initialization="574992937/chop/segment-0.mp4">
+                    <SegmentTimeline>
+                        <S t="0" d="288000" r="32"></S>
+                        <S t="9504000" d="303360"></S>
+                    </SegmentTimeline>
+                </SegmentTemplate>
+            </Representation>
+            <Representation id="video-574992932" codecs="avc1.640020" mimeType="video/mp4" width="1280" height="720" frameRate="25" startWithSAP="1" bandwidth="2355000">
+                <SegmentTemplate timescale="48000" media="574992932/chop/segment-$Number$.m4s" initialization="574992932/chop/segment-0.mp4">
+                    <SegmentTimeline>
+                        <S t="0" d="288000" r="32"></S>
+                        <S t="9504000" d="303360"></S>
+                    </SegmentTimeline>
+                </SegmentTemplate>
+            </Representation>
+        </AdaptationSet>
+        <AdaptationSet>
+            <ContentComponent contentType="audio"></ContentComponent>
+            <Representation id="audio-1309483008" codecs="mp4a.40.2" mimeType="audio/mp4" startWithSAP="1" bandwidth="52000" audioSamplingRate="24000">
+                <AudioChannelConfiguration schemeIdUri="urn:mpeg:dash:23003:3:audio_channel_configuration:2011" value="1"></AudioChannelConfiguration>
+                <SegmentTemplate timescale="24000" media="../audio/1309483008/chop/segment-$Number$.m4s" initialization="../audio/1309483008/chop/segment-0.mp4">
+                    <SegmentTimeline>
+                        <S t="0" d="146432"></S>
+                        <S t="146432" d="145408"></S>
+                        <S t="291840" d="146432"></S>
+                        <S t="438272" d="145408"></S>
+                        <S t="583680" d="146432"></S>
+                        <S t="730112" d="145408"></S>
+                        <S t="875520" d="146432"></S>
+                        <S t="1021952" d="145408"></S>
+                        <S t="1167360" d="146432"></S>
+                        <S t="1313792" d="145408"></S>
+                        <S t="1459200" d="146432"></S>
+                        <S t="1605632" d="145408"></S>
+                        <S t="1751040" d="146432"></S>
+                        <S t="1897472" d="145408"></S>
+                        <S t="2042880" d="146432"></S>
+                        <S t="2189312" d="145408"></S>
+                        <S t="2334720" d="146432"></S>
+                        <S t="2481152" d="145408"></S>
+                        <S t="2626560" d="146432"></S>
+                        <S t="2772992" d="145408"></S>
+                        <S t="2918400" d="146432"></S>
+                        <S t="3064832" d="145408"></S>
+                        <S t="3210240" d="146432"></S>
+                        <S t="3356672" d="145408"></S>
+                        <S t="3502080" d="146432"></S>
+                        <S t="3648512" d="145408"></S>
+                        <S t="3793920" d="146432"></S>
+                        <S t="3940352" d="145408"></S>
+                        <S t="4085760" d="146432"></S>
+                        <S t="4232192" d="145408"></S>
+                        <S t="4377600" d="146432"></S>
+                        <S t="4524032" d="145408"></S>
+                        <S t="4669440" d="146432"></S>
+                        <S t="4815872" d="89088"></S>
+                    </SegmentTimeline>
+                </SegmentTemplate>
+            </Representation>
+            <Representation id="audio-574992933" codecs="mp4a.40.2" mimeType="audio/mp4" startWithSAP="1" bandwidth="237000" audioSamplingRate="48000">
+                <AudioChannelConfiguration schemeIdUri="urn:mpeg:dash:23003:3:audio_channel_configuration:2011" value="2"></AudioChannelConfiguration>
+                <SegmentTemplate timescale="48000" media="../audio/574992933/chop/segment-$Number$.m4s" initialization="../audio/574992933/chop/segment-0.mp4">
+                    <SegmentTimeline>
+                        <S t="0" d="287744"></S>
+                        <S t="287744" d="288768"></S>
+                        <S t="576512" d="287744" r="2"></S>
+                        <S t="1439744" d="288768"></S>
+                        <S t="1728512" d="287744" r="2"></S>
+                        <S t="2591744" d="288768"></S>
+                        <S t="2880512" d="287744" r="2"></S>
+                        <S t="3743744" d="288768"></S>
+                        <S t="4032512" d="287744" r="2"></S>
+                        <S t="4895744" d="288768"></S>
+                        <S t="5184512" d="287744" r="2"></S>
+                        <S t="6047744" d="288768"></S>
+                        <S t="6336512" d="287744" r="2"></S>
+                        <S t="7199744" d="288768"></S>
+                        <S t="7488512" d="287744" r="2"></S>
+                        <S t="8351744" d="288768"></S>
+                        <S t="8640512" d="287744" r="2"></S>
+                        <S t="9503744" d="307200"></S>
+                    </SegmentTimeline>
+                </SegmentTemplate>
+            </Representation>
+            <Representation id="audio-574992928" codecs="mp4a.40.2" mimeType="audio/mp4" startWithSAP="1" bandwidth="120000" audioSamplingRate="48000">
+                <AudioChannelConfiguration schemeIdUri="urn:mpeg:dash:23003:3:audio_channel_configuration:2011" value="2"></AudioChannelConfiguration>
+                <SegmentTemplate timescale="48000" media="../audio/574992928/chop/segment-$Number$.m4s" initialization="../audio/574992928/chop/segment-0.mp4">
+                    <SegmentTimeline>
+                        <S t="0" d="287744"></S>
+                        <S t="287744" d="288768"></S>
+                        <S t="576512" d="287744" r="2"></S>
+                        <S t="1439744" d="288768"></S>
+                        <S t="1728512" d="287744" r="2"></S>
+                        <S t="2591744" d="288768"></S>
+                        <S t="2880512" d="287744" r="2"></S>
+                        <S t="3743744" d="288768"></S>
+                        <S t="4032512" d="287744" r="2"></S>
+                        <S t="4895744" d="288768"></S>
+                        <S t="5184512" d="287744" r="2"></S>
+                        <S t="6047744" d="288768"></S>
+                        <S t="6336512" d="287744" r="2"></S>
+                        <S t="7199744" d="288768"></S>
+                        <S t="7488512" d="287744" r="2"></S>
+                        <S t="8351744" d="288768"></S>
+                        <S t="8640512" d="287744" r="2"></S>
+                        <S t="9503744" d="307200"></S>
+                    </SegmentTimeline>
+                </SegmentTemplate>
+            </Representation>
+        </AdaptationSet>
+    </Period>
+</MPD>

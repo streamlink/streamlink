@@ -1,0 +1,52 @@
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## Thanks for using the discussions forum!
+
+        **This place is only meant for help and support questions when using Streamlink, which can be answered by the community.**
+
+        Please [open a new thread on the issue tracker](https://github.com/streamlink/streamlink/issues/new/choose) and fill in all the required details if you want to
+
+        - **Report a plugin issue**
+          *One of [Streamlink's plugins](https://streamlink.github.io/plugins.html) doesn't work correctly*
+        - **Report a bug**
+          *A core functionality of Streamlink is broken*
+        - **Request a new plugin**
+          *Discuss adding a new plugin to Streamlink*
+        - **Request a feature**
+          *Discuss adding new functionality to Streamlink*
+
+        ----
+
+        Please keep your support questions within the scope of the project, read [Streamlink's documentation](https://streamlink.github.io/) and use your internet search engine of choice first before asking questions, as it might help you resolve your issue.
+
+        Low quality and low effort threads are noise and steal the time of the maintainers and contributors, so make sure to be as specific and detailed as possible when asking questions, and don't be vague. Don't ask other people to do your work/research, and be respectful.
+
+        Thank you.
+
+        ----
+
+        ## Checklist
+
+        - [ ] This post is not about a plugin issue, a bug report, a plugin request or a feature request
+        - [ ] [I have read the contribution guidelines](https://github.com/streamlink/streamlink/blob/master/CONTRIBUTING.md#contributing-to-streamlink)
+        - [ ] I have validated that I'm using the [latest version of Streamlink](https://streamlink.github.io/changelog.html) via the [`--version`](https://streamlink.github.io/cli.html#cmdoption-version) or [`--loglevel=debug`](https://streamlink.github.io/cli.html#cmdoption-loglevel) parameter
+        - [ ] [I have read the Streamlink documentation and tried looking for answers to my questions](https://streamlink.github.io/)
+  - type: textarea
+    attributes:
+      label: Description
+    validations:
+      required: true
+  - type: markdown
+    attributes:
+      value: |
+        ### Before submitting
+
+        Make sure that you have
+        - [ ] properly filled in the title of this thread (at the very top of this page)
+        - [ ] checked the rendered text previews to avoid unnecessary formatting errors
+
+        ----
+
+        [❤️ Love Streamlink? Please consider supporting the project maintainers. Thanks! ❤️](https://streamlink.github.io/latest/support.html)

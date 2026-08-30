@@ -1,0 +1,95 @@
+import sys
+from textwrap import dedent
+
+
+CURRENT_PYTHON = sys.version_info[:2]
+REQUIRED_PYTHON = (3, 10)
+
+# This check and everything above must remain compatible with older Python versions
+if CURRENT_PYTHON < REQUIRED_PYTHON:
+    raise SystemExit(
+        dedent(
+            """
+                ========================================================
+                               Unsupported Python version
+                ========================================================
+                Streamlink requires at least Python {}.{},
+                but you're trying to install it on Python {}.{}.
+
+                This may be because you are using a version of pip that
+                doesn't understand the python_requires classifier.
+                Make sure you have pip >= 9.0 and setuptools >= 24.2
+            """,
+        )
+        .strip(" \n")
+        .format(*REQUIRED_PYTHON, *CURRENT_PYTHON),
+    )
+
+
+from pathlib import Path  # ruff: ignore[module-import-not-at-top-of-file]
+from typing import TYPE_CHECKING  # ruff: ignore[module-import-not-at-top-of-file]
+
+
+if TYPE_CHECKING:
+    from collections.abc import Sequence
+
+
+def is_wheel_for_windows(argv):
+    if "bdist_wheel" in argv:
+        names = ["win32", "win-amd64", "cygwin"]
+        length = len(argv)
+        for pos in range(argv.index("bdist_wheel") + 1, length):
+            if argv[pos] == "--plat-name" and pos + 1 < length:
+                return argv[pos + 1] in names
+            elif argv[pos][:12] == "--plat-name=":
+                return argv[pos][12:] in names
+    return False
+
+
+entry_points = {
+    "console_scripts": ["streamlink=streamlink_cli.main:main"],
+}
+
+if is_wheel_for_windows(sys.argv):
+    entry_points["gui_scripts"] = ["streamlinkw=streamlink_cli.main:main"]
+
+
+# optional data files
+data_files: "list[tuple[str, Sequence[str]]]" = [  # ruff: ignore[quoted-annotation]
+    # shell completions:
+    #  requires pre-built completion files via shtab ("build" dependency group)
+    #  `./script/build-shell-completions.py`
+    ("share/bash-completion/completions", ["completions/bash/streamlink"]),
+    ("share/fish/vendor_completions.d", ["completions/fish/streamlink.fish"]),
+    ("share/zsh/site-functions", ["completions/zsh/_streamlink"]),
+    # man page:
+    #  requires the pre-built man page file via sphinx ("docs" dependency group)
+    #  `make --directory=docs clean man`
+    ("share/man/man1", ["docs/_build/man/streamlink.1"]),
+]
+data_files = [
+    (destdir, [file for file in srcfiles if Path(file).exists()])
+    for destdir, srcfiles in data_files
+]  # fmt: skip
+
+
+if __name__ == "__main__":
+    sys.path.insert(0, str(Path(__file__).parent))
+
+    from build_backend.commands import cmdclass
+    from setuptools import Command, setup
+
+    try:
+        # versioningit is only required when building from git (see pyproject.toml)
+        from versioningit import get_cmdclasses
+    except ImportError:  # pragma: no cover
+
+        def get_cmdclasses(bases: "dict[str, type[Command]] | None" = None) -> "dict[str, type[Command]]":  # ruff: ignore[quoted-annotation]
+            return bases or {}
+
+    setup(
+        cmdclass=get_cmdclasses(cmdclass),
+        entry_points=entry_points,
+        data_files=data_files,
+        # version="",  # static version string template, uncommented and substituted by versioningit's onbuild hook
+    )

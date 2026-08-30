@@ -1,0 +1,70 @@
+name: ⚙️ Feature request
+description: Discuss adding new functionality to Streamlink.
+title: "A very brief summary of your request"
+labels:
+  - feature request
+body:
+  - type: markdown
+    attributes:
+      value: |
+        # Thanks for filing a feature request!
+
+        > [!IMPORTANT]
+        > **What is a feature request?**
+        > Feature requests are meant for improvements of the core functionality of Streamlink.
+        >
+        > THEY ARE NOT MEANT FOR PLUGIN REQUESTS!
+        > Use the [plugin request template](https://github.com/streamlink/streamlink/issues/new/choose) if you're requesting a new [plugin](https://streamlink.github.io/plugins.html) instead of a new feature.
+
+        > [!CAUTION]
+        > **DO NOT IGNORE this template**
+        > Please fill in all the required details and don't skip any parts.
+        > Issues that don't adhere to our request will be closed and ignored immediately.
+        >
+        > This is because analyzing bugs, issues or requests without proper details and log output is harder than necessary.
+        > Low quality and low effort issues are noise and steal the time of the maintainers and contributors.
+  - type: checkboxes
+    attributes:
+      label: Checklist
+      options:
+        - label: This is a feature request and not [a different kind of issue](https://github.com/streamlink/streamlink/issues/new/choose)
+          required: true
+        - label: "[I have read the contribution guidelines](https://github.com/streamlink/streamlink/blob/master/CONTRIBUTING.md#contributing-to-streamlink)"
+          required: true
+        - label: "[I have checked the list of open and recently closed feature requests](https://github.com/streamlink/streamlink/issues?q=is%3Aissue+label%3A%22feature+request%22)"
+          required: true
+  - type: checkboxes
+    attributes:
+      label: Collaboration
+      options:
+        - label: My request is genuine and in the best interest of the project
+          required: true
+        - label: "[I will provide feedback should a pull request be opened with a new feature implementation](https://github.com/streamlink/streamlink/blob/master/CONTRIBUTING.md#pull-request-feedback)"
+          required: true
+  - type: textarea
+    attributes:
+      label: Description
+      description: |
+        Explain the feature as clearly as you can.
+
+        For example (please provide more details if possible):
+
+        - What is it?
+        - How would you expect it to work?
+        - What value does it bring to Streamlink?
+        - Does it fit into the scope and aims of the project?
+    validations:
+      required: true
+  - type: markdown
+    attributes:
+      value: |
+        > [!NOTE]
+        > **Before submitting**
+        >
+        > Make sure that you have
+        > - [ ] properly filled in the title of this feature request (at the very top of this page)
+        > - [ ] checked the rendered text previews to avoid unnecessary formatting errors
+
+        ----
+
+        [❤️ Love Streamlink? Please consider supporting the project maintainers. Thanks! ❤️](https://streamlink.github.io/latest/support.html)

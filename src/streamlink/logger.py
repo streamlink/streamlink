@@ -1,0 +1,313 @@
+from __future__ import annotations
+
+import logging
+import sys
+import warnings
+from logging import CRITICAL, DEBUG, ERROR, INFO, WARNING
+from pathlib import Path
+from sys import version_info
+from threading import Lock
+from typing import IO, TYPE_CHECKING, Literal, TextIO
+
+# noinspection PyProtectedMember
+from warnings import WarningMessage
+
+from streamlink.exceptions import StreamlinkWarning
+from streamlink.utils.times import fromlocaltimestamp
+
+
+if TYPE_CHECKING:
+    from collections.abc import Callable, Iterator
+
+
+FORMAT_STYLE: Literal["%", "{", "$"] = "{"
+FORMAT_BASE = "[{name}][{levelname}] {message}"
+FORMAT_DATE = "%H:%M:%S"
+REMOVE_BASE = ["streamlink", "streamlink_cli"]
+
+# Make NONE ("none") the highest possible level that suppresses all log messages:
+#  `logging.NOTSET` (equal to 0) can't be used as the "none" level because of `logging.Logger.getEffectiveLevel()`, which
+#  loops through the logger instance's ancestor chain and checks whether the instance's level is NOTSET. If it is NOTSET,
+#  then it continues with the parent logger, which means that if the level of `streamlink.logger.root` was set to "none" and
+#  its value NOTSET, then it would continue with `logging.root` whose default level is `logging.WARNING` (equal to 30).
+NONE = sys.maxsize
+# Add "trace" and "all" to Streamlink's log levels
+TRACE = 5
+ALL = 2
+
+# Define Streamlink's log levels (and register both lowercase and uppercase names)
+_levelToNames = {
+    NONE: "none",
+    CRITICAL: "critical",
+    ERROR: "error",
+    WARNING: "warning",
+    INFO: "info",
+    DEBUG: "debug",
+    TRACE: "trace",
+    ALL: "all",
+}
+
+_custom_levels = TRACE, ALL
+
+
+# noinspection PyPep8Naming
+def getLogger(name: str) -> StreamlinkLogger:
+    """
+    Get a child-node of the root :class:`StreamlinkLogger`.
+    Use this instead of ``logging.getLogger(__name__)`` to ensure that a StreamlinkLogger is created.
+    """
+    return _get_child(root, name.removeprefix("streamlink."))
+
+
+def _get_child(logger: logging.Logger, name: str) -> StreamlinkLogger:
+    manager = logger.manager
+    old_logger_class = manager.loggerClass
+    try:
+        manager.loggerClass = StreamlinkLogger
+        # `Logger.getChild()` doesn't actually return a child logger of its own type (wrong annotation of "-> Self").
+        # It returns whatever was set on its manager, or globally on the logging module (`logging.setLoggerClass()`).
+        # To fix this and to ensure that we always return a `StreamlinkLogger`,
+        # temporarily override the manager's `loggerClass` attribute.
+        # Other libs importing Streamlink can still safely use their own custom `logging.Logger` subclasses.
+        return logger.getChild(name)  # type: ignore
+    finally:
+        manager.loggerClass = old_logger_class
+
+
+if TYPE_CHECKING:
+    _BaseLoggerClass = logging.Logger
+else:
+    _BaseLoggerClass = logging.getLoggerClass()
+
+
+# inherit from `logging.getLoggerClass()`, since we call `logging.setLoggerClass()` down below
+class StreamlinkLogger(_BaseLoggerClass):
+    if TYPE_CHECKING:
+        all = _BaseLoggerClass.info
+        trace = _BaseLoggerClass.info
+
+    def iter(self, level: int, messages: Iterator[str], *args, **kwargs) -> Iterator[str]:
+        """
+        Iterator wrapper for logging multiple items in a single call and checking log level only once
+        """
+
+        if not self.isEnabledFor(level):
+            yield from messages
+
+        for message in messages:
+            self._log(level, message, args, **kwargs)
+            yield message
+
+
+def _logmethodfactory(level: int, name: str):
+    # fix module name that gets read from the call stack in the logging module
+    # https://github.com/python/cpython/commit/5ca6d7469be53960843df39bb900e9c3359f127f
+    if version_info >= (3, 11):
+
+        def method(self, message, *args, **kws):
+            if self.isEnabledFor(level):
+                # increase the stacklevel by one and skip the `trace()` call here
+                kws["stacklevel"] = 2
+                self._log(level, message, args, **kws)
+
+    else:
+
+        def method(self, message, *args, **kws):
+            if self.isEnabledFor(level):
+                self._log(level, message, args, **kws)
+
+    method.__name__ = name
+    return method
+
+
+for _level, _name in _levelToNames.items():
+    logging.addLevelName(_level, _name.upper())
+    logging.addLevelName(_level, _name)
+
+    if _level in _custom_levels:
+        setattr(StreamlinkLogger, _name, _logmethodfactory(_level, _name))
+
+
+_config_lock = Lock()
+
+
+class StringFormatter(logging.Formatter):
+    def __init__(self, *args, remove_base: list[str] | None = None, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._remove_base = remove_base or []
+        self._usesTime = super().usesTime()
+
+        # Validate the format's fields
+        rec = logging.LogRecord("", 1, "", 1, "", None, None)
+        super().format(rec)
+
+    def usesTime(self):
+        return self._usesTime
+
+    def formatTime(self, record, datefmt=None):
+        tdt = fromlocaltimestamp(record.created)
+
+        return tdt.strftime(datefmt or self.default_time_format)
+
+    def format(self, record):
+        for rbase in self._remove_base:
+            record.name = record.name.replace(f"{rbase}.", "")
+        record.levelname = record.levelname.lower()
+
+        return super().format(record)
+
+
+class StreamHandler(logging.StreamHandler):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._stream_reconfigure()
+
+    def flush(self):
+        try:
+            super().flush()
+        except OSError:
+            # Python doesn't raise BrokenPipeError on Windows
+            pass
+
+    def setStream(self, stream):
+        res = super().setStream(stream)
+        if res:  # pragma: no branch
+            self._stream_reconfigure()
+
+        return res
+
+    def _stream_reconfigure(self):
+        # make stream write calls escape unsupported characters (stdout/stderr encoding is not guaranteed to be utf-8)
+        self.stream.reconfigure(errors="backslashreplace")
+
+
+class WarningLogRecord(logging.LogRecord):
+    msg: WarningMessage
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.name = "warnings"
+        self.levelname = self.msg.category.__name__ if self.msg.category else UserWarning.__name__
+        self.pathname = self.msg.filename
+        self._path = Path(self.pathname)
+        self.filename = self._path.name
+        self.module = self._path.stem
+        self.lineno = self.msg.lineno
+
+    def getMessage(self) -> str:
+        if self.msg.category and issubclass(self.msg.category, StreamlinkWarning):
+            return f"{self.msg.message}"
+        return f"{self.msg.message}\n  {self.pathname}:{self.lineno}"
+
+
+def _log_record_factory(name, level, fn, lno, msg, args, exc_info, func=None, sinfo=None, **kwargs):
+    if isinstance(msg, WarningMessage):
+        # noinspection PyTypeChecker
+        return WarningLogRecord(name, level, fn, lno, msg, args, exc_info, func, sinfo)
+
+    return _log_record_factory_default(name, level, fn, lno, msg, args, exc_info, func, sinfo, **kwargs)
+
+
+# borrowed from stdlib and modified, so that `WarningMessage` gets passed as `msg` to the `WarningLogRecord`
+def _showwarning(
+    message: Warning | str,
+    category: type[Warning],
+    filename: str,
+    lineno: int,
+    file: TextIO | None = None,
+    line: str | None = None,
+) -> None:
+    if file is not None:  # pragma: no cover
+        if _showwarning_default is not None:
+            # noinspection PyCallingNonCallable
+            _showwarning_default(message, category, filename, lineno, file, line)
+        return
+
+    warning = WarningMessage(message, category, filename, lineno, None, line)
+    root.log(WARNING, warning, stacklevel=2)
+
+
+def capturewarnings(capture: bool = False) -> None:
+    global _showwarning_default  # ruff: ignore[global-statement]
+
+    if capture:
+        if _showwarning_default is None:
+            _showwarning_default = warnings.showwarning
+            warnings.showwarning = _showwarning  # type: ignore[assignment, ty:invalid-assignment]
+    else:
+        if _showwarning_default is not None:
+            warnings.showwarning = _showwarning_default  # type: ignore[assignment, ty:invalid-assignment]
+            _showwarning_default = None
+
+
+# noinspection PyShadowingBuiltins,PyPep8Naming
+def basicConfig(
+    *,
+    filename: str | Path | None = None,
+    filemode: str = "a",
+    format: str = FORMAT_BASE,  # ruff: ignore[builtin-argument-shadowing]
+    datefmt: str = FORMAT_DATE,
+    style: Literal["%", "{", "$"] = FORMAT_STYLE,
+    level: str | None = None,
+    stream: IO | None = None,
+    remove_base: list[str] | None = None,
+    capture_warnings: bool = False,
+) -> logging.StreamHandler | None:
+    with _config_lock:
+        handler: logging.StreamHandler | None = None
+        if filename is not None:
+            handler = logging.FileHandler(filename, filemode, encoding="utf-8")
+        elif stream is not None:
+            handler = StreamHandler(stream)
+
+        if handler is not None:
+            formatter = StringFormatter(
+                fmt=format,
+                datefmt=datefmt,
+                style=style,
+                remove_base=remove_base or REMOVE_BASE,
+            )
+            handler.setFormatter(formatter)
+
+            root.addHandler(handler)
+
+        if level is not None:
+            root.setLevel(level)
+
+        if capture_warnings:
+            capturewarnings(True)
+
+    return handler
+
+
+_showwarning_default: Callable[[Warning | str, type[Warning], str, int, TextIO | None, str | None], None] | None = None
+_log_record_factory_default = logging.getLogRecordFactory()
+logging.setLogRecordFactory(_log_record_factory)
+
+
+# Keep `logging.setLoggerClass(StreamlinkLogger)` for backward compatibility:
+# Third party plugins could create a logger from `logging.getLogger()` and then call custom `StreamlinkLogger` methods,
+# assuming of course that no one else has changed the logger-class on the manager or the global logging module value.
+logging.setLoggerClass(StreamlinkLogger)
+root: StreamlinkLogger = _get_child(logging.root, "streamlink")
+root.setLevel(WARNING)
+
+levels = list(_levelToNames.values())
+
+
+__all__ = [
+    "NONE",
+    "CRITICAL",
+    "ERROR",
+    "WARNING",
+    "INFO",
+    "DEBUG",
+    "TRACE",
+    "ALL",
+    "getLogger",
+    "StreamlinkLogger",
+    "basicConfig",
+    "root",
+    "levels",
+    "capturewarnings",
+]

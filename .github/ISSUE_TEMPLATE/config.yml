@@ -1,0 +1,14 @@
+blank_issues_enabled: false
+contact_links:
+  - name: "📝 New empty issue (maintainers only)"
+    about: "Create an empty issue without using a form/template. Only accessible by maintainers."
+    url: https://github.com/streamlink/streamlink/issues/new
+  - name: "❓ Help"
+    about: "The issue tracker is only meant for bug reports, feature/plugin requests and plugin issues. Please ask your questions on the discussions forum and look for already existing answers. If you're unsure whether XYZ is a bug or plugin issue, please just open a regular issue thread."
+    url: https://github.com/streamlink/streamlink/discussions
+  - name: "📖 Documentation"
+    about: "Please refer to Streamlink's documentation first before opening new issues or asking questions."
+    url: https://streamlink.github.io/
+  - name: "💬 Gitter Matrix channel"
+    about: "Get in touch with other Streamlink users."
+    url: https://matrix.to/#/#streamlink_streamlink:gitter.im

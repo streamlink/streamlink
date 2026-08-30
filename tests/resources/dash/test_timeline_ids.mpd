@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<MPD
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xmlns="urn:mpeg:dash:schema:mpd:2011"
+  availabilityStartTime="1970-01-01T00:00:00Z"
+  id="Config part of url maybe?"
+  minBufferTime="PT2S"
+  minimumUpdatePeriod="PT0S"
+  profiles="urn:mpeg:dash:profile:isoff-live:2011,http://dashif.org/guidelines/dash-if-simple"
+  publishTime="2000-01-01T00:00:00Z"
+  timeShiftBufferDepth="PT5M"
+  type="dynamic"
+  xsi:schemaLocation="urn:mpeg:dash:schema:mpd:2011 DASH-MPD.xsd"
+>
+  <Period id="period-0" start="PT0S">
+    <AdaptationSet
+      id="0"
+      contentType="audio"
+      lang="en"
+      mimeType="audio/mp4"
+      segmentAlignment="true"
+      startWithSAP="1"
+    >
+      <SegmentTemplate initialization="$RepresentationID$/init.mp4" media="$RepresentationID$/t$Time$.m4s" timescale="48000">
+        <SegmentTimeline>
+          <S t="0" d="1" r="3"/>
+        </SegmentTimeline>
+      </SegmentTemplate>
+      <Representation id="audio1" audioSamplingRate="44100" bandwidth="48000" codecs="mp4a.40.2"/>
+      <Representation id="audio2" audioSamplingRate="48000" bandwidth="96000" codecs="mp4a.40.2"/>
+    </AdaptationSet>
+    <AdaptationSet
+      contentType="video"
+      maxFrameRate="60/2"
+      maxHeight="360"
+      maxWidth="640"
+      mimeType="video/mp4"
+      minHeight="360"
+      minWidth="640"
+      par="16:9"
+      segmentAlignment="true"
+      startWithSAP="1"
+    >
+      <SegmentTemplate initialization="$RepresentationID$/init.mp4" media="$RepresentationID$/t$Time$.m4s" timescale="90000">
+        <SegmentTimeline>
+          <S t="0" d="1" r="3"/>
+        </SegmentTimeline>
+      </SegmentTemplate>
+      <Representation id="video1" bandwidth="300000" codecs="avc1.64001e" frameRate="60/2" height="360" sar="1:1" width="640"/>
+      <Representation id="video2" bandwidth="500000" codecs="avc1.64001e" frameRate="60/2" height="360" sar="1:1" width="640"/>
+    </AdaptationSet>
+  </Period>
+</MPD>

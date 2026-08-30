@@ -1,0 +1,140 @@
+name: Test
+
+on:
+  push:
+    branches-ignore:
+      - "automated/**"
+      - "dependabot/**"
+    tags-ignore:
+      - "**"
+  pull_request: {}
+  schedule:
+    - cron: "0 0 * * *"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  test:
+    name: Test
+    strategy:
+      fail-fast: false
+      # please remember to change the `codecov.notify.after_n_builds` value in .codecov.yml
+      # when changing the build matrix and changing the number of test runners
+      matrix:
+        runs-on:
+          - ubuntu-latest
+          - macos-latest
+          - windows-latest
+        python-version:
+          - "3.10"
+          - "3.11"
+          - "3.12"
+          - "3.13"
+          - "3.14"
+          - "3.14t"
+          - "3.15-dev"
+#        include:
+#          - runs-on: ubuntu-latest
+#            python-version: "3.16-dev"
+#            continue: true
+#          - runs-on: macos-latest
+#            python-version: "3.16-dev"
+#            continue: true
+#          - runs-on: windows-latest
+#            python-version: "3.16-dev"
+#            continue: true
+    runs-on: ${{ matrix.runs-on }}
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 300
+      - name: Fetch tags
+        shell: bash
+        run: ./.github/workflows/scripts/fetch-tags.sh
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: ${{ matrix.python-version }}
+      - uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
+        with:
+          prune-cache: true
+          activate-environment: true
+      - name: Install Python dependencies
+        shell: bash
+        run: |
+          # Can't use a uv.lock or requirements.txt file due to missing environment marker for ABI features (PEP 780)
+          ./.github/workflows/scripts/install-temp-dependencies.sh
+          # Installing temp dependency wheels prevents us from having a uv-managed venv
+          uv export --frozen --all-extras --group test --format requirements-txt | uv pip install -r -
+        continue-on-error: ${{ matrix.continue || false }}
+      - name: Test
+        continue-on-error: ${{ matrix.continue || false }}
+        shell: bash
+        run: |
+          export PYTHON_GIL=$(python -c 'import sysconfig;print(1 - (sysconfig.get_config_var("Py_GIL_DISABLED") or 0))')
+          pytest --trace-config -r a -p pytest_cov --cov --cov-branch --cov-report=xml --durations 10
+      - name: Upload coverage data
+        if: github.event_name != 'schedule'
+        continue-on-error: ${{ matrix.continue || false }}
+        uses: codecov/codecov-action@fb8b3582c8e4def4969c97caa2f19720cb33a72f # v7.0.0
+        with:
+          name: os:${{ matrix.runs-on }} py:${{ matrix.python-version }}
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+
+  test_build:
+    name: Test build
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 300
+      - name: Fetch tags
+        run: ./.github/workflows/scripts/fetch-tags.sh
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.14"
+      - uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
+        with:
+          prune-cache: true
+      - name: Build shell completions
+        continue-on-error: ${{ matrix.continue || false }}
+        run: |
+          uv run --frozen --group script ./script/build-shell-completions.py
+      - name: Build sdist and wheels
+        run: |
+          uv run --frozen --group build ./script/build-and-sign.sh
+      - name: Plugins JSON
+        run: |
+          set -x
+          unzip -p ./dist/streamlink-*-any.whl 'streamlink-*.dist-info/RECORD' | grep 'streamlink/plugins/_plugins.json'
+          unzip -p ./dist/streamlink-*-any.whl 'streamlink/plugins/_plugins.json' | grep -E '^\s*//'
+          unzip -p ./dist/streamlink-*-any.whl 'streamlink/plugins/_plugins.json' | grep -vE '^\s*//' | jq -e 'keys > 0'
+          unzip -p ./dist/streamlink-*-any.whl 'streamlink/plugins/_plugins.json' | grep -vE '^\s*//' | jq
+      - name: Changelog
+        if: github.event_name == 'pull_request'
+        run: |
+          uv run --frozen --only-group script ./script/github-release.py --check=${{ github.event.pull_request.head.sha }}
+
+  documentation:
+    name: Test docs
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 300
+      - name: Fetch tags
+        run: ./.github/workflows/scripts/fetch-tags.sh
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.14"
+      - uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
+        with:
+          prune-cache: true
+      - name: Build
+        run: |
+          uv run --frozen --group docs make --directory=docs html man

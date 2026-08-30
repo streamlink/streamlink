@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<MPD xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+     xmlns="urn:mpeg:dash:schema:mpd:2011"
+     xmlns:xlink="http://www.w3.org/1999/xlink"
+     xsi:schemaLocation="urn:mpeg:DASH:schema:MPD:2011 http://standards.iso.org/ittf/PubliclyAvailableStandards/MPEG-DASH_schema_files/DASH-MPD.xsd"
+     profiles="urn:mpeg:dash:profile:isoff-live:2011"
+     type="dynamic"
+     minimumUpdatePeriod="PT3.502S"
+     publishTime="2018-08-06T10:14:52Z"
+     availabilityStartTime="2018-07-19T09:10:45Z"
+     timeShiftBufferDepth="PT50.0S"
+     suggestedPresentationDelay="PT20.0S"
+     minBufferTime="PT6.0S">
+<ProgramInformation>
+    <Title>ltv9</Title>
+</ProgramInformation>
+<Location>https://595ac1e01d44e.streamlock.net/ltv9/ltv9/manifest_TOKEN.mpd</Location>
+<Period id="0" start="PT0.0S">
+    <AdaptationSet id="0" group="1" mimeType="video/mp4" width="848" height="480" par="16:9" frameRate="25" segmentAlignment="true" startWithSAP="1" subsegmentAlignment="true" subsegmentStartsWithSAP="1">
+        <SegmentTemplate timescale="90000" media="chunk_ctvideo_cfm4s_rid$RepresentationID$_cs$Time$_TOKEN_mpd.m4s" initialization="chunk_ctvideo_cfm4s_rid$RepresentationID$_cinit_TOKEN_mpd.m4s">
+            <SegmentTimeline>
+                <S t="140309188560" d="900000"/>
+                <S d="900000"/>
+                <S d="900000"/>
+                <S d="900000"/>
+                <S d="900000"/>
+            </SegmentTimeline>
+        </SegmentTemplate>
+        <Representation id="p0va0br2467130" codecs="avc1.42c01e" sar="1:1" bandwidth="2467130" />
+    </AdaptationSet>
+    <AdaptationSet id="1" group="2" mimeType="audio/mp4" lang="eng" segmentAlignment="true" startWithSAP="1" subsegmentAlignment="true" subsegmentStartsWithSAP="1">
+        <AudioChannelConfiguration schemeIdUri="urn:mpeg:dash:23003:3:audio_channel_configuration:2011" value="2"/>
+        <SegmentTemplate timescale="48000" media="chunk_ctaudio_cfm4s_rid$RepresentationID$_cs$Time$_TOKEN_mpd.m4s" initialization="chunk_ctaudio_cfm4s_rid$RepresentationID$_cinit_TOKEN_mpd.m4s">
+            <SegmentTimeline>
+                <S t="74831568240" d="479232"/>
+                <S d="480240"/>
+                <S d="480288"/>
+                <S d="480240"/>
+                <S d="479232"/>
+            </SegmentTimeline>
+        </SegmentTemplate>
+        <Representation id="p0aa0br61417" codecs="mp4a.40.2" audioSamplingRate="48000" bandwidth="61417">
+        </Representation>
+    </AdaptationSet>
+</Period>
+<UTCTiming schemeIdUri="urn:mpeg:dash:utc:direct:2014" value="2018-08-06T10:14:52Z"/>
+</MPD>

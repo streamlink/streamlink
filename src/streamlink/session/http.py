@@ -1,0 +1,419 @@
+from __future__ import annotations
+
+import socket
+import ssl
+import time
+import warnings
+from http.cookiejar import MozillaCookieJar
+from ipaddress import ip_address
+from pathlib import Path
+from typing import TYPE_CHECKING, Any, Protocol, TypeVar, cast, runtime_checkable
+
+import urllib3
+import urllib3.util.connection as urllib3_util_connection
+from requests import Request, Session
+from requests.adapters import HTTPAdapter
+from urllib3.connection import HTTPConnection
+from urllib3.util import create_urllib3_context
+
+import streamlink.session.http_useragents as useragents
+from streamlink.compat import is_darwin, is_linux, is_win32
+from streamlink.exceptions import PluginError, StreamlinkDeprecationWarning
+from streamlink.logger import getLogger
+from streamlink.packages.requests_file import FileAdapter
+from streamlink.utils.parse import parse_json, parse_xml
+
+
+if TYPE_CHECKING:
+    import re
+    from collections.abc import Iterable, Iterator, Mapping, Sequence
+    from typing import TypeAlias
+
+    # noinspection PyProtectedMember
+    import requests._types as _rq_t
+    from requests import PreparedRequest
+    from requests.adapters import BaseAdapter
+    from requests.cookies import CookieJar, RequestsCookieJar
+
+    from streamlink.validate import Schema
+
+    _TYPE_SOCKET_OPTION: TypeAlias = tuple[int, int, int | bytes]
+
+
+log = getLogger(__name__)
+
+
+_KT_co = TypeVar("_KT_co", covariant=True)
+_VT_co = TypeVar("_VT_co", covariant=True)
+
+
+@runtime_checkable
+class SupportsItems(Protocol[_KT_co, _VT_co]):
+    def items(self) -> Iterable[tuple[_KT_co, _VT_co]]: ...  # pragma: no cover
+
+
+_original_allowed_gai_family = urllib3_util_connection.allowed_gai_family
+
+
+def allowed_gai_family_inet() -> socket.AddressFamily:
+    return socket.AF_INET
+
+
+def allowed_gai_family_inet6() -> socket.AddressFamily:
+    return socket.AF_INET6
+
+
+# Never convert percent-encoded characters to uppercase in urllib3>=2.0.0.
+# This is required for sites which compare request URLs byte by byte and return different responses depending on that.
+#
+# https://datatracker.ietf.org/doc/html/rfc3986#section-2.1
+# > The uppercase hexadecimal digits 'A' through 'F' are equivalent to
+# > the lowercase digits 'a' through 'f', respectively.  If two URIs
+# > differ only in the case of hexadecimal digits used in percent-encoded
+# > octets, they are equivalent.  For consistency, URI producers and
+# > normalizers should use uppercase hexadecimal digits for all percent-
+# > encodings.
+class Urllib3UtilUrlPercentReOverride:
+    # noinspection PyProtectedMember
+    _re_percent_encoding: re.Pattern = urllib3.util.url._PERCENT_RE  # type: ignore[attr-defined]
+
+    # noinspection PyUnusedLocal
+    # https://github.com/urllib3/urllib3/blob/2.0.0/src/urllib3/util/url.py#L241-L243
+    @classmethod
+    def subn(cls, repl: Any, string: str, count: Any = None) -> tuple[str, int]:
+        return string, len(cls._re_percent_encoding.findall(string))
+
+
+urllib3.util.url._PERCENT_RE = Urllib3UtilUrlPercentReOverride  # type: ignore[assignment, ty:invalid-assignment]
+
+
+# Monkey-patch urllib3's set_socket_options,
+# so we can filter out certain options which are incompatible based on certain socket attributes.
+# The main intention is to filter out socket options on darwin when setting the network interface by name (see down below).
+def urllib3_set_socket_options(sock: socket.socket, options: list[_TYPE_SOCKET_OPTION] | None) -> None:
+    if not options:
+        return
+
+    for opt in _filter_socket_options(sock, options):
+        sock.setsockopt(*opt)
+
+
+def _filter_socket_options(sock: socket.socket, options: list[_TYPE_SOCKET_OPTION]) -> Iterator[_TYPE_SOCKET_OPTION]:
+    for option in options:
+        match sock.family, *option:
+            case socket.AF_INET, socket.IPPROTO_IPV6, *_:
+                pass
+            case socket.AF_INET6, socket.IPPROTO_IP, *_:
+                pass
+            case _:
+                yield option
+
+
+urllib3.util.connection._set_socket_options = urllib3_set_socket_options  # type: ignore[ty:invalid-assignment]
+
+
+# requests.Request.__init__ keywords, except for "hooks"
+_VALID_REQUEST_ARGS = {"method", "url", "headers", "files", "data", "params", "auth", "cookies", "json"}
+
+
+class HTTPSession(Session):
+    def __init__(self):
+        super().__init__()
+
+        self.headers["User-Agent"] = useragents.DEFAULT
+        self.timeout = 20.0
+
+        self.mount("file://", FileAdapter())
+
+    @classmethod
+    def determine_json_encoding(cls, sample: bytes):
+        """
+        Determine which Unicode encoding the JSON text sample is encoded with
+
+        RFC4627 suggests that the encoding of JSON text can be determined
+        by checking the pattern of NULL bytes in first 4 octets of the text.
+        https://datatracker.ietf.org/doc/html/rfc4627#section-3
+
+        :param sample: a sample of at least 4 bytes of the JSON text
+        :return: the most likely encoding of the JSON text
+        """
+        warnings.warn("Deprecated HTTPSession.determine_json_encoding() call", StreamlinkDeprecationWarning, stacklevel=1)
+        data = int.from_bytes(sample[:4], "big")
+
+        if data & 0xFFFFFF00 == 0:
+            return "UTF-32BE"
+        elif data & 0xFF00FF00 == 0:
+            return "UTF-16BE"
+        elif data & 0x00FFFFFF == 0:
+            return "UTF-32LE"
+        elif data & 0x00FF00FF == 0:
+            return "UTF-16LE"
+        else:
+            return "UTF-8"
+
+    @classmethod
+    def json(cls, res, *args, **kwargs):
+        """Parses JSON from a response."""
+        if res.encoding is None:
+            # encoding is unknown: let ``json.loads`` figure it out from the bytes data via ``json.detect_encoding``
+            return parse_json(res.content, *args, **kwargs)
+        else:
+            # encoding is explicitly set: get the decoded string value and let ``json.loads`` parse it
+            return parse_json(res.text, *args, **kwargs)
+
+    @classmethod
+    def xml(cls, res, *args, **kwargs):
+        """Parses XML from a response."""
+        return parse_xml(res.text, *args, **kwargs)
+
+    def set_interface(self, interface: str | None) -> None:
+        connection_pool_kw: dict[str, Any] = {}
+        if interface:
+            iface: str | None = None
+            host: str | None = None
+            if is_win32:
+                host = interface
+            else:
+                if interface.startswith("if!"):
+                    iface = interface[3:]
+                elif interface.startswith("host!"):
+                    host = interface[5:]
+                elif interface.startswith("ifhost!") and "!" in interface[7:]:
+                    iface, host = interface[7:].split("!", 1)
+                else:
+                    try:
+                        host = str(ip_address(interface))
+                    except ValueError:
+                        iface = interface
+
+            if iface:
+                if is_linux:
+                    connection_pool_kw["socket_options"] = [
+                        *HTTPConnection.default_socket_options,
+                        (socket.SOL_SOCKET, socket.SO_BINDTODEVICE, iface.encode()),
+                    ]
+                elif is_darwin:  # pragma: no branch
+                    try:
+                        idx = socket.if_nametoindex(iface)
+                    except OSError as err:
+                        log.error(err)
+                    else:
+                        connection_pool_kw["socket_options"] = [
+                            *HTTPConnection.default_socket_options,
+                            (socket.IPPROTO_IP, getattr(socket, "IP_BOUND_IF", 25), idx),
+                            (socket.IPPROTO_IPV6, getattr(socket, "IPV6_BOUND_IF", 125), idx),
+                        ]
+            if host:
+                connection_pool_kw["source_address"] = (host, 0)
+
+        for adapter in self.adapters.values():
+            if not isinstance(adapter, HTTPAdapter):
+                continue
+            adapter.poolmanager.connection_pool_kw.pop("source_address", None)
+            adapter.poolmanager.connection_pool_kw.pop("socket_options", None)
+            adapter.poolmanager.connection_pool_kw.update(connection_pool_kw)
+
+    def mount(self, prefix: str, adapter: BaseAdapter) -> None:
+        # Update poolmanager connection kwargs for HTTPAdapters mounted after interface options were set
+        if (
+            isinstance(adapter, HTTPAdapter)
+            and "http://" in self.adapters
+            and (https_adapter := self.adapters.get("https://"))
+            and isinstance(https_adapter, HTTPAdapter)
+        ):
+            default_adapter_connection_pool_kw = https_adapter.poolmanager.connection_pool_kw
+            adapter.poolmanager.connection_pool_kw.update({
+                "source_address": default_adapter_connection_pool_kw.get("source_address"),
+                "socket_options": default_adapter_connection_pool_kw.get("socket_options"),
+            })
+        super().mount(prefix, adapter)
+
+    # noinspection PyMethodMayBeStatic
+    def set_address_family(self, family: socket.AddressFamily | None = None) -> None:
+        if family is None:
+            urllib3_util_connection.allowed_gai_family = _original_allowed_gai_family
+        elif family == socket.AF_INET:
+            urllib3_util_connection.allowed_gai_family = allowed_gai_family_inet  # type: ignore[ty:invalid-assignment]
+        elif family == socket.AF_INET6:  # pragma: no branch
+            urllib3_util_connection.allowed_gai_family = allowed_gai_family_inet6  # type: ignore[ty:invalid-assignment]
+
+    def disable_dh(self, disable: bool = True) -> None:
+        adapter: HTTPAdapter
+        if disable:
+            adapter = TLSNoDHAdapter()
+        else:
+            adapter = HTTPAdapter()
+        previous = cast("HTTPAdapter", self.adapters.get("https://", adapter))
+        adapter.poolmanager.connection_pool_kw.update(previous.poolmanager.connection_pool_kw)
+        self.mount("https://", adapter)
+
+    def set_cookies_from_file(self, file: Path | str):
+        path = Path(file).expanduser().resolve()
+        if not path.is_file():
+            raise FileNotFoundError(f"Error while loading cookies from file: '{path}' is not a valid cookies file path")
+
+        try:
+            cookiejar = MozillaCookieJar(filename=str(path), delayload=False)
+            cookiejar.load()
+        except Exception as err:
+            raise OSError(f"Error while loading cookies from file: {err}") from err
+        self.cookies.update(cookiejar)
+
+    def resolve_url(self, url):
+        """Resolves any redirects and returns the final URL."""
+        return self.get(url, stream=True).url
+
+    @staticmethod
+    def valid_request_args(**req_keywords) -> dict:
+        return {k: v for k, v in req_keywords.items() if k in _VALID_REQUEST_ARGS}
+
+    def prepare_new_request(self, **req_keywords) -> PreparedRequest:
+        valid_args = self.valid_request_args(**req_keywords)
+        valid_args.setdefault("method", "GET")
+        request = Request(**valid_args)
+
+        # prepare request with the session context, which might add params, headers, cookies, etc.
+        return self.prepare_request(request)
+
+    def request(
+        self,
+        method: str,
+        url: _rq_t.UriType,
+        params: _rq_t.ParamsType = None,
+        data: _rq_t.DataType = None,
+        headers: Mapping[str, str | bytes] | None = None,
+        cookies: RequestsCookieJar | CookieJar | dict[str, str] | None = None,
+        files: _rq_t.FilesType = None,
+        auth: _rq_t.AuthType = None,
+        timeout: _rq_t.TimeoutType = None,
+        allow_redirects: bool = True,
+        proxies: dict[str, str] | None = None,
+        hooks: _rq_t.HooksInputType | None = None,
+        stream: bool | None = None,
+        verify: _rq_t.VerifyType | None = None,
+        cert: _rq_t.CertType = None,
+        json: _rq_t.JsonType = None,
+        # streamlink options
+        acceptable_status: Sequence[int] | None = None,
+        encoding: str | None = None,
+        exception: type[Exception] | None = None,
+        raise_for_status: bool = True,
+        retries: int = 0,
+        retry_backoff: float = 0.3,
+        retry_max_backoff: float = 10.0,
+        schema: Schema | None = None,
+        session: HTTPSession | None = None,
+    ) -> Any:
+        acceptable_status = acceptable_status or []
+        exception = exception or PluginError
+        timeout = timeout or self.timeout
+
+        if session:
+            headers = dict(headers or {}) | dict(session.headers or {})
+            if isinstance(params, SupportsItems):
+                params = dict(params.items()) | session.params  # type: ignore[ty:unsupported-operator]
+            elif params and not isinstance(params, (str, bytes)):
+                params = dict(params) | session.params  # type: ignore[ty:unsupported-operator]
+            else:
+                params = session.params
+
+        attempt = 0
+        while True:
+            try:
+                res = super().request(
+                    method,
+                    url,
+                    params=params,
+                    data=data,
+                    headers=headers,
+                    cookies=cookies,
+                    files=files,
+                    auth=auth,
+                    timeout=timeout,
+                    allow_redirects=allow_redirects,
+                    proxies=proxies,
+                    hooks=hooks,
+                    stream=stream,
+                    verify=verify,
+                    cert=cert,
+                    json=json,
+                )
+                if raise_for_status and res.status_code not in acceptable_status:
+                    res.raise_for_status()
+                break
+            except KeyboardInterrupt:
+                raise
+            except Exception as rerr:
+                if attempt >= retries:
+                    err = exception(f"Unable to open URL: {url} ({rerr})")
+                    err.err = rerr  # ty:ignore[unresolved-attribute]
+                    raise err from rerr
+                attempt += 1
+                # back off retrying, but only to a maximum sleep time
+                delay = min(retry_max_backoff, retry_backoff * (2 ** (attempt - 1)))
+                time.sleep(delay)
+
+        if encoding is not None:
+            res.encoding = encoding
+
+        if schema:
+            res = schema.validate(res.text, name="response text", exception=PluginError)
+
+        return res
+
+
+class SSLContextAdapter(HTTPAdapter):
+    # noinspection PyMethodMayBeStatic
+    def get_ssl_context(self) -> ssl.SSLContext:
+        ctx = create_urllib3_context()
+        ctx.load_default_certs()
+
+        # disable weak digest ciphers by default
+        ciphers = ":".join(cipher["name"] for cipher in ctx.get_ciphers())
+        ciphers += ":!SHA1"
+        ctx.set_ciphers(ciphers)
+
+        return ctx
+
+    def init_poolmanager(self, *args, **kwargs):
+        kwargs["ssl_context"] = self.get_ssl_context()
+        return super().init_poolmanager(*args, **kwargs)
+
+    def proxy_manager_for(self, *args, **kwargs):
+        kwargs["ssl_context"] = self.poolmanager.connection_pool_kw["ssl_context"]
+        return super().proxy_manager_for(*args, **kwargs)
+
+    def send(self, *args, verify=True, **kwargs):
+        # Always update the `check_hostname` and `verify_mode` attributes of our custom `SSLContext` before sending a request:
+        # If `verify` is `False`, then `requests` will set `cert_reqs=ssl.CERT_NONE` on the `HTTPSConnectionPool` object,
+        # which leads to `SSLContext` incompatibilities later on in `urllib3.connection._ssl_wrap_socket_and_match_hostname()`
+        # due to the default values of our `SSLContext`, namely `check_hostname=True` and `verify_mode=ssl.CERT_REQUIRED`.
+        if ssl_context := self.poolmanager.connection_pool_kw.get("ssl_context"):  # pragma: no branch
+            ssl_context.check_hostname = bool(verify)
+            ssl_context.verify_mode = ssl.CERT_NONE if not verify else ssl.CERT_REQUIRED
+        return super().send(*args, verify=verify, **kwargs)
+
+
+class TLSNoDHAdapter(SSLContextAdapter):
+    def get_ssl_context(self) -> ssl.SSLContext:
+        ctx = super().get_ssl_context()
+
+        # disable DH ciphers
+        ciphers = ":".join(cipher["name"] for cipher in ctx.get_ciphers())
+        ciphers += ":!DH"
+        ctx.set_ciphers(ciphers)
+
+        return ctx
+
+
+class TLSSecLevel1Adapter(SSLContextAdapter):
+    def get_ssl_context(self) -> ssl.SSLContext:
+        ctx = super().get_ssl_context()
+
+        # https://www.openssl.org/docs/manmaster/man3/SSL_CTX_set_security_level.html
+        ctx.set_ciphers("DEFAULT:@SECLEVEL=1")
+
+        return ctx
+
+
+__all__ = ["HTTPSession", "SSLContextAdapter", "TLSNoDHAdapter", "TLSSecLevel1Adapter"]

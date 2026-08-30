@@ -1,0 +1,53 @@
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, BinaryIO
+
+from streamlink.compat import is_win32
+from streamlink_cli.compat import stdout
+from streamlink_cli.output.abc import Output
+
+
+if is_win32:
+    import msvcrt
+    import os
+
+
+if TYPE_CHECKING:
+    from pathlib import Path
+
+
+class FileOutput(Output):
+    fd: BinaryIO
+
+    def __init__(
+        self,
+        filename: Path | None = None,
+        fd: BinaryIO | None = None,
+        record: FileOutput | None = None,
+    ):
+        super().__init__()
+        self.filename = filename
+        self.fd = fd  # type: ignore[assignment, ty:invalid-assignment]
+        self.record = record
+
+    def _open(self):
+        if self.filename:
+            self.filename.parent.mkdir(parents=True, exist_ok=True)
+            self.fd = self.filename.open("wb")
+
+        if self.record:
+            self.record.open()
+
+        if is_win32:
+            msvcrt.setmode(self.fd.fileno(), os.O_BINARY)
+
+    def _close(self):
+        if self.fd is not stdout:
+            self.fd.close()
+        if self.record:
+            self.record.close()
+
+    def _write(self, data):
+        self.fd.write(data)
+        if self.record:
+            self.record.write(data)

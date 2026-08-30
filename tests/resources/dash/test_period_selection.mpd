@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<MPD
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xmlns="urn:mpeg:dash:schema:mpd:2011"
+  availabilityStartTime="1970-01-01T00:00:00Z"
+  minBufferTime="PT2S"
+  minimumUpdatePeriod="PT0S"
+  profiles="urn:mpeg:dash:profile:isoff-live:2011,http://dashif.org/guidelines/dash-if-simple"
+  publishTime="2000-01-01T00:00:00Z"
+  timeShiftBufferDepth="PT5M"
+  type="dynamic"
+  xsi:schemaLocation="urn:mpeg:dash:schema:mpd:2011 DASH-MPD.xsd"
+>
+  <Period start="PT12M34S">
+    <AdaptationSet id="0" mimeType="video/mp4" maxWidth="1920" maxHeight="1080" par="16:9" frameRate="25">
+      <Representation id="0" codecs="avc1.640028" width="1920" height="1080" sar="1:1" bandwidth="10000000">
+        <SegmentList timescale="90000" duration="900000">
+          <Initialization sourceURL="p0-init.m4s"/>
+          <SegmentURL media="p0-1.m4s"/>
+          <SegmentURL media="p0-2.m4s"/>
+          <SegmentURL media="p0-3.m4s"/>
+        </SegmentList>
+      </Representation>
+    </AdaptationSet>
+  </Period>
+  <Period id="p1" start="PT12M34S">
+    <AdaptationSet id="0" mimeType="video/mp4" maxWidth="1920" maxHeight="1080" par="16:9" frameRate="25">
+      <Representation id="0" codecs="avc1.640028" width="1920" height="1080" sar="1:1" bandwidth="10000000">
+        <SegmentList timescale="90000" duration="900000">
+          <Initialization sourceURL="p1-init.m4s"/>
+          <SegmentURL media="p1-1.m4s"/>
+          <SegmentURL media="p1-2.m4s"/>
+          <SegmentURL media="p1-3.m4s"/>
+        </SegmentList>
+      </Representation>
+    </AdaptationSet>
+  </Period>
+  <Period id="p2" start="PT12M34S">
+    <AdaptationSet id="0" mimeType="video/mp4" maxWidth="1920" maxHeight="1080" par="16:9" frameRate="25">
+      <Representation id="0" codecs="avc1.640028" width="1920" height="1080" sar="1:1" bandwidth="10000000">
+        <SegmentList timescale="90000" duration="900000">
+          <Initialization sourceURL="p2-init.m4s"/>
+          <SegmentURL media="p2-1.m4s"/>
+          <SegmentURL media="p2-2.m4s"/>
+          <SegmentURL media="p2-3.m4s"/>
+        </SegmentList>
+      </Representation>
+    </AdaptationSet>
+  </Period>
+</MPD>

@@ -1,0 +1,25 @@
+# .git-blame-ignore-revs
+# commits ordered by commit-date, in descending order
+
+# chore: fix PT0{01,03,22,23} ruff rules
+656ded9d6c0b04afc160d845c10977989dc57d2b
+# chore: add "COM" rules to ruff config
+57fa6f80e8defa12dde4e6bbc7a1df7a3c492a9a
+# chore: add "Q" rules to ruff config
+9fd14e3f9d2ff129e71686c85e21745688531784
+# chore: use yield from where possible
+6700a2f985f0dc43f207052df392794612bac74a
+# chore: inherit from object implicitly
+bf5d3efa6ce8058d769290e4cd64f98a4bd920f7
+# chore: remove u-strings
+fcda5b681422718cc0a95b3de45d3fe2698d8e29
+# chore: implicit py3 super() calls
+778e48f289b705bfa1df587c1f5440bb206b4f2e
+# chore: use new py3 yield from syntax
+ae920e12a7912d4b93be0032b9a20b7cbaa323bf
+# chore: typing: PEP 563, PEP 585, PEP 604, PEP 613
+16a1d84386539c8c8e480b73a519e179fcb8703c
+# webbrowser.cdp.devtools: rebuild modules
+045166b52acb62af4d6e3e3635ffaf4bd23c0e31
+# chore: ruff format
+98991c15f3aa21b9e3ba8f5fe7650abf9e0434de
