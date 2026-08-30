@@ -15,6 +15,7 @@ import logging
 import re
 import sys
 import time
+from email.utils import parsedate_to_datetime
 from urllib.parse import urlparse
 
 from streamlink.plugin import Plugin, pluginmatcher
@@ -101,38 +102,45 @@ class Douyu(Plugin):
             f = hashlib.md5((f + key).encode("utf-8")).hexdigest()
         return hashlib.md5((f + key + suffix).encode("utf-8")).hexdigest()
 
-    def _get_encryption(self, did: str) -> dict | None:
-        enc_response = self.session.http.get(
+    def _get_encryption(self, did: str) -> tuple[int, dict] | None:
+        schema = validate.Schema(
+            validate.parse_json(),
+            {
+                "error": int,
+                "data": validate.any(
+                    None,
+                    {
+                        "key": str,
+                        "rand_str": str,
+                        "enc_time": int,
+                        "enc_data": str,
+                        "is_special": int,
+                    },
+                ),
+            },
+        )
+        res = self.session.http.get(
             self._URL_ENCRYPTION,
             params={"did": did},
-            schema=validate.Schema(
-                validate.parse_json(),
-                {
-                    "error": int,
-                    "data": validate.any(
-                        None,
-                        {
-                            "key": str,
-                            "rand_str": str,
-                            "enc_time": int,
-                            "enc_data": str,
-                            "is_special": int,
-                        },
-                    ),
-                },
-            ),
         )
+        try:
+            ts = int(parsedate_to_datetime(res.headers.get("date", "")).timestamp())
+        except (TypeError, ValueError, OverflowError):
+            ts = int(time.time())
+
+        enc_response = schema.validate(res.text)
         if enc_response["error"] != 0 or not enc_response["data"]:
             return None
-        return enc_response["data"]
+
+        return ts, enc_response["data"]
 
     def _request_stream(self, rid: str, rate: int, did: str) -> dict | None:
-        enc_data = self._get_encryption(did)
-        if not enc_data:
+        enc_res = self._get_encryption(did)
+        if not enc_res:
             log.error("Failed to get encryption parameters")
             return None
 
-        ts = int(time.time())
+        ts, enc_data = enc_res
         auth = self._compute_auth(
             rid=rid,
             ts=ts,
