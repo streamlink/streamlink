@@ -628,9 +628,12 @@ class MuxedHLSStream(MuxedStream[TMuxedHLSStream_co]):
             )
             for idx, url in enumerate(tracks)
         ]
-        ffmpeg_options = ffmpeg_options or {}
 
-        super().__init__(session, *substreams, format="mpegts", maps=maps, **ffmpeg_options)
+        ffmpeg_options = dict(ffmpeg_options or {})
+        ffmpeg_options.setdefault("format", "mpegts")
+        ffmpeg_options["maps"] = maps
+
+        super().__init__(session, *substreams, **ffmpeg_options)
         self.multivariant = multivariant if multivariant and multivariant.is_master else None
 
     def to_manifest_url(self):
