@@ -18,7 +18,7 @@ if TYPE_CHECKING:
     from streamlink.session import Streamlink
 
     class TWSRunForever(TypedDict):
-        sockopt: NotRequired[tuple]
+        sockopt: NotRequired[list]
         sslopt: NotRequired[dict]
         ping_interval: NotRequired[float | int]
         ping_timeout: NotRequired[float | int | None]
@@ -58,7 +58,7 @@ class WebsocketClient(Thread):
         subprotocols: list[str] | None = None,
         header: list[str] | dict[str, str] | None = None,
         cookie: str | None = None,
-        sockopt: tuple | None = None,
+        sockopt: list | None = None,
         sslopt: dict | None = None,
         host: str | None = None,
         origin: str | None = None,
