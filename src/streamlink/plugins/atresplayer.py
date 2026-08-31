@@ -24,6 +24,13 @@ log = getLogger(__name__)
 )
 class AtresPlayer(Plugin):
     _live_api_url = "https://api.atresplayer.com/client/v1/row/live"
+    _stream_priorities = {
+        "application/hls+legacy": 0,
+        "application/vnd.apple.mpegurl": 1,
+        "application/dash+xml": 2,
+        "application/hls+hevc": 3,
+        "application/dash+hevc": 4,
+    }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -107,7 +114,11 @@ class AtresPlayer(Plugin):
             log.error(f"Player API error: {sources['error']} - {sources['error_description']}")
             return
 
-        for streamtype, streamsrc in sources.get("sourcesLive", []):
+        for streamtype, streamsrc in sorted(
+            sources.get("sourcesLive", []),
+            key=lambda source: self._stream_priorities.get(source[0], -1),
+            reverse=True,
+        ):
             log.debug(f"Stream source: {streamsrc} ({streamtype or 'n/a'})")
 
             if streamtype in (
@@ -125,14 +136,20 @@ class AtresPlayer(Plugin):
                 else:
                     yield from streams.items()
 
+                return
+
             elif streamtype in (
                 "application/dash+xml",
                 "application/dash+hevc",
             ):
-                yield from DASHStream.parse_manifest(
+                streams = DASHStream.parse_manifest(
                     self.session,
                     streamsrc,
-                ).items()
+                )
+
+                if streams:
+                    yield from streams.items()
+                    return
 
 
 __plugin__ = AtresPlayer
