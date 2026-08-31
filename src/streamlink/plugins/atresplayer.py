@@ -26,10 +26,13 @@ class AtresPlayer(Plugin):
     _live_api_url = "https://api.atresplayer.com/client/v1/row/live"
     _stream_priorities = {
         "application/hls+legacy": 0,
-        "application/vnd.apple.mpegurl": 1,
-        "application/dash+xml": 2,
-        "application/hls+hevc": 3,
-        "application/dash+hevc": 4,
+        "application/hls+legacyv3": 1,
+        "application/hls+ssai": 2,
+        "application/vnd.apple.mpegurl": 3,
+        "application/dash+ssai": 4,
+        "application/dash+xml": 5,
+        "application/hls+hevc": 6,
+        "application/dash+hevc": 7,
     }
 
     def __init__(self, *args, **kwargs):
@@ -124,6 +127,8 @@ class AtresPlayer(Plugin):
             if streamtype in (
                 "application/vnd.apple.mpegurl",
                 "application/hls+legacy",
+                "application/hls+legacyv3",
+                "application/hls+ssai",
                 "application/hls+hevc",
             ):
                 streams = HLSStream.parse_variant_playlist(
@@ -140,6 +145,7 @@ class AtresPlayer(Plugin):
 
             elif streamtype in (
                 "application/dash+xml",
+                "application/dash+ssai",
                 "application/dash+hevc",
             ):
                 streams = DASHStream.parse_manifest(
