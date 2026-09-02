@@ -3,7 +3,9 @@ from __future__ import annotations
 import re
 import struct
 import warnings
+from dataclasses import dataclass
 from datetime import timedelta
+from struct import unpack
 from typing import TYPE_CHECKING, Any, ClassVar, Literal, TypeVar
 from urllib.parse import urlparse
 
@@ -26,6 +28,7 @@ from streamlink.stream.segmented import SegmentedStreamReader, SegmentedStreamWo
 from streamlink.utils.cache import LRUCache
 from streamlink.utils.crypto import AES, unpad
 from streamlink.utils.formatter import Formatter
+from streamlink.utils.id3v2 import ID3v2, ID3v2FrameError, parse_frame_priv
 from streamlink.utils.l10n import Language
 from streamlink.utils.num import to_float
 from streamlink.utils.times import now
@@ -45,6 +48,34 @@ if TYPE_CHECKING:
 
 
 log = getLogger(".".join(__name__.split(".")[:-1]))
+
+
+@dataclass
+class ID3v2FrameHLSPackedAudioTimestamp:
+    timestamp: float
+
+
+class ID3v2HLSPackedAudio(ID3v2):
+    @parse_frame_priv(b"com.apple.streaming.transportStreamTimestamp", ID3v2FrameHLSPackedAudioTimestamp)
+    def _parse_frame_priv_com_apple_streaming_transport_stream_timestamp(self, owner: bytes, data: bytearray):
+        if len(data) != 8:
+            raise ID3v2FrameError(f"Invalid data size for PRIV frame {owner.decode('ascii')}")
+        if data[0] & 0xFF or data[1] & 0xFF or data[2] & 0xFF or data[3] & 0xFE:
+            raise ID3v2FrameError(f"Invalid timestamp value for PRIV frame {owner.decode('ascii')}")
+
+        return unpack(">Q", data)[0] & 0x1FFFFFFFF
+
+
+def get_packed_audio_timestamp(tags: list[ID3v2HLSPackedAudio]) -> float | None:
+    return next(
+        (
+            frame.result.timestamp / 90000.0
+            for tag in tags
+            for frame in tag.frames
+            if type(frame.result) is ID3v2FrameHLSPackedAudioTimestamp
+        ),
+        None,
+    )
 
 
 class ByteRangeOffset:

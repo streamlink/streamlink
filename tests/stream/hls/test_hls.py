@@ -28,13 +28,21 @@ from streamlink.stream.hls import (
     M3U8Parser,
     MuxedHLSStream,
 )
-from streamlink.stream.hls.hls import log
+from streamlink.stream.hls.hls import (
+    ID3v2FrameHLSPackedAudioTimestamp,
+    ID3v2HLSPackedAudio,
+    get_packed_audio_timestamp,
+    log,
+)
 from streamlink.utils.crypto import AES, pad
+from streamlink.utils.id3v2 import ID3v2FrameError
 from tests.mixins.stream_hls import EventedHLSStreamWorker, EventedHLSStreamWriter, Playlist, Segment, Tag, TestMixinStreamHLS
 from tests.resources import text
 
 
 if TYPE_CHECKING:
+    from collections.abc import Iterator
+
     from streamlink.session import Streamlink
 
 
@@ -1900,3 +1908,68 @@ class TestM3U8ParserLogging:
         parser.parse(data)
 
         assert bool(caplog.records) is has_logs
+
+
+class TestID3v2HLSPackedAudio:
+    @pytest.fixture()
+    def iterator(self):
+        return iter([
+            # first valid tag
+            b"ID3\x04\x00\x00\x00\x00\x00\x3f",
+            b"PRIV\x00\x00\x00\x35\x00\x00",
+            b"com.apple.streaming.transportStreamTimestamp",
+            b"\x00\x00\x00\x00\x00\x00\x00\x00\x01",
+            # second valid tag
+            b"ID3\x04\x00\x00\x00\x00\x00\x3f",
+            b"PRIV\x00\x00\x00\x35\x00\x00",
+            b"com.apple.streaming.transportStreamTimestamp",
+            b"\x00\x00\x00\x00\x00\x00\x00\x00\x02",
+            # packed audio data
+            b"remaining",
+        ])
+
+    def test_get_packed_audio_timestamp(self, iterator: Iterator[bytes]):
+        tags, iterator = ID3v2HLSPackedAudio.parse_tags(iterator)
+        assert get_packed_audio_timestamp(tags) == pytest.approx(1 / 90000)
+
+    def test_frames(self, iterator: Iterator[bytes]):
+        (first, second), iterator = ID3v2HLSPackedAudio.parse_tags(iterator)
+        assert b"".join(iterator) == b"remaining"
+
+        assert first.frames[0].ident == b"PRIV"
+        assert first.frames[0].result == ID3v2FrameHLSPackedAudioTimestamp(1)
+        assert first.frames[0].error is None
+
+        assert second.frames[0].ident == b"PRIV"
+        assert second.frames[0].result == ID3v2FrameHLSPackedAudioTimestamp(2)
+        assert second.frames[0].error is None
+
+    def test_invalid_timestamp(self):
+        iterator = iter([
+            b"ID3\x04\x00\x00\x00\x00\x00\x3f",
+            b"PRIV\x00\x00\x00\x35\x00\x00",
+            b"com.apple.streaming.transportStreamTimestamp",
+            b"\x00\x12\x34\x56\x78\x9a\xbc\xde\xf0",
+            b"remaining",
+        ])
+        (tag,), iterator = ID3v2HLSPackedAudio.parse_tags(iterator)
+        assert b"".join(iterator) == b"remaining"
+
+        assert tag.frames[0].result is None
+        assert isinstance(tag.frames[0].error, ID3v2FrameError)
+        assert str(tag.frames[0].error) == "Invalid timestamp value for PRIV frame com.apple.streaming.transportStreamTimestamp"
+
+    def test_invalid_size(self):
+        iterator = iter([
+            b"ID3\x04\x00\x00\x00\x00\x00\x40",
+            b"PRIV\x00\x00\x00\x36\x00\x00",
+            b"com.apple.streaming.transportStreamTimestamp",
+            b"\x00\x00\x00\x00\x00\x00\x00\x00\x03\x00",
+            b"remaining",
+        ])
+        (tag,), iterator = ID3v2HLSPackedAudio.parse_tags(iterator)
+        assert b"".join(iterator) == b"remaining"
+
+        assert tag.frames[0].result is None
+        assert isinstance(tag.frames[0].error, ID3v2FrameError)
+        assert str(tag.frames[0].error) == "Invalid data size for PRIV frame com.apple.streaming.transportStreamTimestamp"
