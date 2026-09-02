@@ -1041,7 +1041,9 @@ class SegmentTimeline(MPDNode):
     def segments(self) -> Iterator[TimelineSegment]:
         t = 0
         for tsegment in self.timeline_segments:
-            if t == 0 and tsegment.t is not None:
+            # An explicit @t overrides the running time on any segment, not just
+            # the first one, which is how a SegmentTimeline signals a gap.
+            if tsegment.t is not None:
                 t = tsegment.t
             # check the start time from MPD
             for _ in range(tsegment.r + 1):
