@@ -26,7 +26,7 @@ from dataclasses import dataclass, replace as dataclass_replace
 from datetime import timedelta
 from json import dumps as json_dumps
 from random import random
-from typing import TYPE_CHECKING, ClassVar
+from typing import TYPE_CHECKING, ClassVar, cast
 from urllib.parse import urlparse
 
 from requests.exceptions import HTTPError
@@ -46,6 +46,7 @@ from streamlink.stream.hls import (
     HLSStreamWriter,
     M3U8Parser,
     Media,
+    MuxedHLSStream,
     parse_tag,
 )
 from streamlink.stream.http import HTTPStream
@@ -74,7 +75,12 @@ class TwitchHLSSegment(HLSSegment):
     prefetch: bool
 
 
-class TwitchM3U8(M3U8[TwitchHLSSegment, HLSPlaylist]):
+@dataclass(kw_only=True)
+class TwitchHLSPlaylist(HLSPlaylist):
+    vertical: bool = False
+
+
+class TwitchM3U8(M3U8[TwitchHLSSegment, TwitchHLSPlaylist]):
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
         self.dateranges_ads: list[DateRange] = []
@@ -83,6 +89,9 @@ class TwitchM3U8(M3U8[TwitchHLSSegment, HLSPlaylist]):
 class TwitchM3U8Parser(M3U8Parser[TwitchM3U8, TwitchHLSSegment, HLSPlaylist]):
     __m3u8__: ClassVar[type[TwitchM3U8]] = TwitchM3U8
     __segment__: ClassVar[type[TwitchHLSSegment]] = TwitchHLSSegment
+    __playlist__: ClassVar[type[TwitchHLSPlaylist]] = TwitchHLSPlaylist
+
+    PLAYLIST_VERTICAL = "portrait"
 
     @parse_tag("EXT-X-TWITCH-LIVE-SEQUENCE")
     def parse_ext_x_twitch_live_sequence(self, *_):
@@ -154,9 +163,12 @@ class TwitchM3U8Parser(M3U8Parser[TwitchM3U8, TwitchHLSSegment, HLSPlaylist]):
 
         return segment
 
-    def get_playlist(self, *args, **kwargs):
+    def get_playlist(self, *args, **kwargs) -> TwitchHLSPlaylist:
         streaminf = self._streaminf or {}
-        playlist = super().get_playlist(*args, **kwargs)
+
+        kwargs["vertical"] = streaminf.get("IVS-GROUPS", "") == self.PLAYLIST_VERTICAL
+        playlist: TwitchHLSPlaylist = super().get_playlist(*args, **kwargs)  # type: ignore[assignment, ty:invalid-assignment]
+
         # backwards compatibility for stream names on Usher v2
         if not playlist.media and (name := streaminf.get("IVS-NAME")):
             is_audio_only = name in ("audio_only", "audio")  # live + VOD
@@ -285,19 +297,37 @@ class TwitchHLSStream(HLSStream):
     __reader__ = TwitchHLSStreamReader
     __parser__ = TwitchM3U8Parser
 
+    multivariant: TwitchM3U8
+
     def __init__(self, *args, low_latency: bool = False, **kwargs):
         super().__init__(*args, **kwargs)
         self.low_latency = low_latency
+
+    @classmethod
+    def parse_variant_playlist(cls, *args, vertical: bool = False, **kwargs):
+        # noinspection PyTypeChecker
+        streams: dict[str, TwitchHLSStream | MuxedHLSStream[TwitchHLSStream]] = super().parse_variant_playlist(*args, **kwargs)
+
+        # ugliest hack imaginable due to old design of HLSStream
+        streams = {
+            name.removesuffix("_alt"): stream
+            for name, stream in streams.items()
+            for playlist in (stream.multivariant.playlists if isinstance(stream.multivariant, TwitchM3U8) else [])
+            if isinstance(stream, TwitchHLSStream) and playlist.uri == stream.url and playlist.vertical == vertical
+        }
+
+        return streams
 
 
 class UsherService:
     SUPPORTED_CODECS_DEFAULT = ["h264"]
 
-    def __init__(self, session: Streamlink, supported_codecs: list[str] | None = None):
+    def __init__(self, session: Streamlink, supported_codecs: list[str] | None = None, vertical: bool = False):
         self.session = session
         self.supported_codecs = supported_codecs or self.SUPPORTED_CODECS_DEFAULT
+        self.vertical = vertical
 
-    def _create_url(self, endpoint, **extra_params):
+    def _create_url(self, endpoint, **extra_params) -> str:
         url = f"https://usher.ttvnw.net{endpoint}"
         params = {
             "platform": "web",
@@ -308,10 +338,12 @@ class UsherService:
             "supported_codecs": ",".join(self.supported_codecs),
         }
         params.update(extra_params)
+        if self.vertical:
+            params["multigroup_video"] = "true"
 
         req = self.session.http.prepare_new_request(url=url, params=params)
 
-        return req.url
+        return cast("str", req.url)
 
     def channel(self, channel: str, **extra_params) -> str:
         with suppress(PluginError):
@@ -796,6 +828,16 @@ class TwitchClientIntegrity:
     """,
 )
 @pluginargument(
+    "vertical",
+    action="store_true",
+    default=False,
+    help="""
+        Only return vertical / portrait / mobile streams or VODs.
+
+        Note: If the stream or VOD is not available in a vertical format, then no streams will be returned.
+    """,
+)
+@pluginargument(
     "api-header",
     metavar="KEY=VALUE",
     type="keyvalue",
@@ -867,6 +909,7 @@ class Twitch(Plugin):
         self.usher = UsherService(
             session=self.session,
             supported_codecs=self.get_option("supported-codecs"),
+            vertical=self.get_option("vertical"),
         )
 
         self._checked_metadata = False
@@ -986,6 +1029,7 @@ class Twitch(Plugin):
                 # which can be delayed by up to a minute.
                 check_streams=True,
                 low_latency=self.get_option("low-latency"),
+                vertical=self.get_option("vertical"),
                 **extra_params,
             )
         except OSError as err:

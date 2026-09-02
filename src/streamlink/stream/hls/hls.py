@@ -658,7 +658,7 @@ class HLSStream(HTTPStream):
         self,
         session: Streamlink,
         url: str,
-        multivariant: M3U8 | None = None,
+        multivariant: M3U8[HLSSegment, HLSPlaylist] | None = None,
         name: str | None = None,
         force_restart: bool = False,
         start_offset: float = 0.0,
