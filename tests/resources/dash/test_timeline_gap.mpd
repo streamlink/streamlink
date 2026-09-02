@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<MPD type="static" xmlns="urn:mpeg:dash:schema:mpd:2011"
+  minBufferTime="PT2S" mediaPresentationDuration="PT18S"
+  profiles="urn:mpeg:dash:profile:isoff-live:2011">
+  <Period id="0" start="PT0S">
+    <AdaptationSet id="0" mimeType="video/mp4" contentType="video">
+      <Representation id="v" bandwidth="128000">
+        <SegmentTemplate initialization="init.m4s" media="seg-$Number$.m4s?t=$Time$" timescale="1000" startNumber="1">
+          <SegmentTimeline>
+            <S t="0" d="4000" r="1"/>
+            <S t="10000" d="4000"/>
+          </SegmentTimeline>
+        </SegmentTemplate>
+      </Representation>
+    </AdaptationSet>
+  </Period>
+</MPD>

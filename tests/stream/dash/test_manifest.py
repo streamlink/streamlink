@@ -201,6 +201,22 @@ class TestMPDParser:
                 "http://test.se/video/250kbit/segment_5.m4s",
             ]
 
+    def test_segments_timeline_gap(self):
+        with xml("dash/test_timeline_gap.mpd") as mpd_xml:
+            mpd = MPD(mpd_xml, base_url="http://test.se/", url="http://test.se/manifest.mpd")
+
+            segments = mpd.periods[0].adaptationSets[0].representations[0].segments()
+            init_segment = next(segments)
+            assert init_segment.uri == "http://test.se/init.m4s"
+
+            # The second `<S t="10000">` signals a gap: its explicit @t must be
+            # honoured instead of continuing the running time from 8000.
+            assert [segment.uri for segment in itertools.islice(segments, 3)] == [
+                "http://test.se/seg-1.m4s?t=0",
+                "http://test.se/seg-2.m4s?t=4000",
+                "http://test.se/seg-3.m4s?t=10000",
+            ]
+
     def test_segments_dynamic_time(self):
         with xml("dash/test_3.mpd") as mpd_xml:
             mpd = MPD(mpd_xml, base_url="http://test.se/", url="http://test.se/manifest.mpd")
