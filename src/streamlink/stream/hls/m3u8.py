@@ -70,7 +70,7 @@ class M3U8(Generic[THLSSegment_co, THLSPlaylist_co]):
         if daterange.end_date is not None:
             return daterange.start_date <= date < daterange.end_date
 
-        duration = daterange.duration or daterange.planned_duration
+        duration = daterange.duration if daterange.duration is not None else daterange.planned_duration
         if duration is not None:
             end = daterange.start_date + duration
             return daterange.start_date <= date < end

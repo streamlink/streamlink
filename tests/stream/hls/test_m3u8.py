@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING
 import pytest
 
 from streamlink.stream.hls import (
+    M3U8,
     ByteRange,
     DateRange,
     ExtInf,
@@ -21,7 +22,7 @@ from tests.resources import text
 
 
 if TYPE_CHECKING:
-    from streamlink.stream.hls import M3U8, HLSPlaylist
+    from streamlink.stream.hls import HLSPlaylist
 
 
 UTC = timezone.utc
@@ -656,6 +657,24 @@ class TestHLSPlaylist:
                == [None, True, True, True, False, False, False, True, True, None]  # fmt: skip
         assert [playlist.is_date_in_daterange(playlist.segments[3].date, daterange) for daterange in playlist.dateranges] \
                == [None, True, True, True, False, False, False, False, False, None]  # fmt: skip
+
+    def test_is_date_in_daterange_zero_duration(self) -> None:
+        start = datetime(2000, 1, 1, tzinfo=UTC)
+        # A DATERANGE with an explicit DURATION of 0 is an empty interval, so no
+        # date falls inside it. The zero must not be treated as unset and fall
+        # back to PLANNED-DURATION.
+        daterange = DateRange(
+            id="zero",
+            start_date=start,
+            classname=None,
+            end_date=None,
+            duration=timedelta(0),
+            planned_duration=timedelta(seconds=30),
+            end_on_next=False,
+            x={},
+        )
+        assert M3U8.is_date_in_daterange(start, daterange) is False
+        assert M3U8.is_date_in_daterange(start + timedelta(seconds=10), daterange) is False
 
     def test_parse_bandwidth(self) -> None:
         with text("hls/test_multivariant_bandwidth.m3u8") as m3u8_fh:
