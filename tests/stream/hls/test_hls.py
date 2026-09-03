@@ -3,6 +3,7 @@ from __future__ import annotations
 import itertools
 import logging
 import os
+import struct
 import unittest
 from contextlib import nullcontext
 from datetime import datetime, timedelta, timezone
@@ -1973,3 +1974,45 @@ class TestID3v2HLSPackedAudio:
         assert tag.frames[0].result is None
         assert isinstance(tag.frames[0].error, ID3v2FrameError)
         assert str(tag.frames[0].error) == "Invalid data size for PRIV frame com.apple.streaming.transportStreamTimestamp"
+
+
+@patch("streamlink.stream.hls.hls.HLSStreamWorker.wait", Mock(return_value=True))
+class TestHlsPackedAudio(TestMixinStreamHLS, unittest.TestCase):
+    class PASegment(Segment):
+        def __init__(self, *args, ts: int = 0, **kwargs):
+            super().__init__(*args, **kwargs)
+            self.audio_content = self.content
+            self.content = b"".join([
+                b"ID3\x04\x00\x00\x00\x00\x00\x3f",
+                b"PRIV\x00\x00\x00\x35\x00\x00",
+                b"com.apple.streaming.transportStreamTimestamp",
+                b"\x00",
+                struct.pack(">Q", ts),
+                self.content,
+            ])
+
+    def test_packed_audio_stream(self):
+        mocked_get_packed_audio_timestamp = Mock(side_effect=get_packed_audio_timestamp)
+        with patch("streamlink.stream.hls.hls.get_packed_audio_timestamp", mocked_get_packed_audio_timestamp):
+            segments = self.subject([
+                Playlist(0, [self.PASegment(0, ts=1234), self.PASegment(1, ts=1235)], end=True),
+            ])
+            data = self.await_read(read_all=True)
+
+        assert data == self.content(segments, prop="audio_content")
+        assert self.stream.packed_audio_timestamp == pytest.approx(1234 / 90000)
+        assert self.stream.parse_packed_audio
+        assert mocked_get_packed_audio_timestamp.call_count == 1
+
+    def test_no_packed_audio_stream(self):
+        mocked_get_packed_audio_timestamp = Mock(side_effect=get_packed_audio_timestamp)
+        with patch("streamlink.stream.hls.hls.get_packed_audio_timestamp", mocked_get_packed_audio_timestamp):
+            segments = self.subject([
+                Playlist(0, [Segment(0), Segment(1)], end=True),
+            ])
+            data = self.await_read(read_all=True)
+
+        assert data == self.content(segments, prop="content")
+        assert self.stream.packed_audio_timestamp is None
+        assert not self.stream.parse_packed_audio
+        assert mocked_get_packed_audio_timestamp.call_count == 0
