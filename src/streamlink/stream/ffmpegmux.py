@@ -57,29 +57,33 @@ class MuxedStream(Stream, Generic[TSubstreams_co]):
         self.subtitles: dict[str, Stream] = options.pop("subtitles", {})
         self.options: dict[str, Any] = options
 
-    def open(self):
-        fds = []
+    def _open_streams(self) -> list[StreamIO]:
+        fds: list[StreamIO] = []
         metadata = self.options.get("metadata", {})
         maps = self.options.get("maps", [])
         # only update the maps values if they haven't been set
         update_maps = not maps
-        for substream in self.substreams:
-            log.debug("Opening %s substream", substream.shortname())
+        for stream in self.substreams:
+            log.debug("Opening %s substream", stream.shortname())
             if update_maps:
                 maps.append(len(fds))
-            fds.append(substream and substream.open())
+            fds.append(stream.open())
 
         for i, subtitle in enumerate(self.subtitles.items()):
-            language, substream = subtitle
-            log.debug("Opening %s subtitle stream", substream.shortname())
+            language, subtitle_stream = subtitle
+            log.debug("Opening %s subtitle stream", subtitle_stream.shortname())
             if update_maps:
                 maps.append(len(fds))
-            fds.append(substream and substream.open())
+            fds.append(subtitle_stream.open())
             metadata[f"s:s:{i}"] = [f"language={language}"]
 
         self.options["metadata"] = metadata
         self.options["maps"] = maps
 
+        return fds
+
+    def open(self):
+        fds = self._open_streams()
         return FFMPEGMuxer(self.session, *fds, **self.options).open()
 
     @classmethod
