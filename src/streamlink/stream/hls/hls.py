@@ -345,9 +345,25 @@ class HLSStreamWriter(SegmentedStreamWriter[HLSSegment, Response]):
         return True
 
     def _write_into_buffer(self, iterator: Iterator[bytes]) -> None:
+        if self.stream.parse_packed_audio:
+            iterator = self._parse_packed_audio_timestamp(iterator)
+
         buffer = self.reader.buffer
         for chunk in iterator:
             buffer.write(chunk)
+
+    def _parse_packed_audio_timestamp(self, iterator: Iterator[bytes]) -> Iterator[bytes]:
+        # strip and parse ID3v2 tags at the beginning of each segment
+        tags, iterator = ID3v2HLSPackedAudio.parse_tags(iterator)
+
+        # don't expect tags in any following segments if no tags were found, e.g. if it's no packed audio stream
+        if not tags:
+            self.stream.parse_packed_audio = False
+
+        elif self.stream.packed_audio_timestamp is None and (timestamp := get_packed_audio_timestamp(tags)):
+            self.stream.packed_audio_timestamp = timestamp
+
+        return iterator
 
     # noinspection PyMethodMayBeStatic
     def get_segment_content(self, segment: HLSSegment, response: Response) -> bytes:
@@ -716,6 +732,9 @@ class HLSStream(HTTPStream):
         self.force_restart = force_restart
         self.start_offset = start_offset
         self.duration = duration
+
+        self.parse_packed_audio: bool = True
+        self.packed_audio_timestamp: float | None = None
 
     def __json__(self):  # ruff: ignore[bad-dunder-method-name]
         json = super().__json__()
