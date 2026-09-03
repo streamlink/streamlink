@@ -31,6 +31,7 @@ from streamlink.utils.formatter import Formatter
 from streamlink.utils.id3v2 import ID3v2, ID3v2FrameError, parse_frame_priv
 from streamlink.utils.l10n import Language
 from streamlink.utils.num import to_float
+from streamlink.utils.thread import wait_for_all_events
 from streamlink.utils.times import now
 
 
@@ -685,6 +686,20 @@ class MuxedHLSStream(MuxedStream[TMuxedHLSStream_co]):
 
         super().__init__(session, *substreams, **ffmpeg_options)
         self.multivariant = multivariant if multivariant and multivariant.is_master else None
+
+    def _open_streams(self) -> list[HLSStreamReader]:  # type: ignore[override, ty:invalid-method-override]
+        fds: list[HLSStreamReader] = super()._open_streams()  # type: ignore[assignment, ty:invalid-assignment]
+        timeout = self.session.options.get("stream-timeout")
+
+        # wait for data to arrive in all streams
+        wait_for_all_events(*[fd.buffer.event_used for fd in fds], timeout=timeout)
+
+        itsoffset = [substream.packed_audio_timestamp for substream in self.substreams[1:]]
+        if any(o for o in itsoffset if o is not None):
+            self.options["itsoffset"] = [None, *itsoffset]
+            self.options["copyts"] = True
+
+        return fds
 
     def to_manifest_url(self):
         url = self.multivariant.uri if self.multivariant and self.multivariant.uri else None
