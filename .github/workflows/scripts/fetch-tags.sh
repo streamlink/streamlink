@@ -1,6 +1,13 @@
 #!/usr/bin/env bash
 set -euxo pipefail
 
+TARGET_DEPTH=300
+CURRENT_DEPTH=$(git rev-list --count HEAD)
+
+if [[ $(git rev-parse --is-shallow-repository) == "true" && CURRENT_DEPTH -lt TARGET_DEPTH ]]; then
+  git fetch --no-tags --deepen=$((TARGET_DEPTH - CURRENT_DEPTH))
+fi
+
 # Fetch only the tags within our shallow-clone depth (set to 300 commits by @actions/checkout),
 # so we can avoid fetching the entire repo, as it includes a BLOB that was committed years ago:
 # 1. Query the remote
