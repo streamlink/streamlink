@@ -2016,3 +2016,43 @@ class TestHlsPackedAudio(TestMixinStreamHLS, unittest.TestCase):
         assert self.stream.packed_audio_timestamp is None
         assert not self.stream.parse_packed_audio
         assert mocked_get_packed_audio_timestamp.call_count == 0
+
+
+@pytest.mark.parametrize(
+    ("timestamps", "itsoffset", "copyts"),
+    [
+        pytest.param([], [], None, id="no-packed-audio"),
+        pytest.param([None, 123], [None, 123, None], True, id="first"),
+        pytest.param([None, None, 123], [None, None, 123], True, id="second"),
+        pytest.param([None, 123, 456], [None, 123, 456], True, id="both"),
+    ],
+)
+def test_muxedhlsstream_packed_audio_ffmpeg_options(
+    monkeypatch: pytest.MonkeyPatch,
+    session: Streamlink,
+    timestamps: list,
+    itsoffset: list,
+    copyts: bool,
+):
+    def reader_open(reader: HLSStreamReader):
+        reader.buffer.event_used.set()
+
+    fake_streamio = object()
+    fake_ffmpegmuxer = Mock(open=Mock(return_value=fake_streamio))
+    monkeypatch.setattr("streamlink.stream.segmented.segmented.SegmentedStreamReader.open", reader_open)
+    monkeypatch.setattr("streamlink.stream.ffmpegmux.FFMPEGMuxer", Mock(return_value=fake_ffmpegmuxer))
+
+    packed_audio_stream = MuxedHLSStream[HLSStream](
+        session,
+        "mocked://video/1",
+        ["mocked://audio/1", "mocked://audio/2"],
+    )
+    assert len(packed_audio_stream.substreams) == 3
+
+    for idx, timestamp in enumerate(timestamps):
+        packed_audio_stream.substreams[idx].packed_audio_timestamp = timestamp
+
+    assert packed_audio_stream.open() is fake_streamio
+    assert packed_audio_stream.options.get("format") == "mpegts"
+    assert packed_audio_stream.options.get("itsoffset", []) == itsoffset
+    assert packed_audio_stream.options.get("copyts") is copyts
