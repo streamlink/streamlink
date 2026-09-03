@@ -7,6 +7,7 @@ import sys
 import threading
 from contextlib import suppress
 from functools import lru_cache
+from itertools import zip_longest
 from pathlib import Path
 from shutil import which
 from typing import TYPE_CHECKING, Any, ClassVar, Generic, TextIO, TypeVar
@@ -210,6 +211,7 @@ class FFMPEGMuxer(StreamIO):
         audiocodec = session.options.get("ffmpeg-audio-transcode") or options.pop("acodec", self.DEFAULT_AUDIO_CODEC)
         metadata = options.pop("metadata", {})
         maps = options.pop("maps", [])
+        itsoffset = options.get("itsoffset", [])
         copyts = session.options.get("ffmpeg-copyts") or options.pop("copyts", False)
         start_at_zero = session.options.get("ffmpeg-start-at-zero") or options.pop("start_at_zero", False)
 
@@ -221,7 +223,12 @@ class FFMPEGMuxer(StreamIO):
             loglevel,
         ]
 
-        for np in self.pipes:
+        for np, itsoffset_item in zip_longest(self.pipes, itsoffset, fillvalue=None):
+            if np is None:
+                break
+            # align tracks by provided PTS
+            if itsoffset_item is not None:
+                self._cmd.extend(["-itsoffset", f"{itsoffset_item}"])
             self._cmd.extend(["-i", str(np.path)])
 
         self._cmd.extend(["-c:v", videocodec])

@@ -7,6 +7,7 @@ from unittest.mock import Mock, call
 import pytest
 
 from streamlink.stream.ffmpegmux import FFMPEGMuxer, FFmpegVersionOutput
+from streamlink.stream.stream import StreamIO
 
 
 if TYPE_CHECKING:
@@ -226,6 +227,7 @@ class TestFFmpegVersionOutput:
 class TestOpen:
     FFMPEG_ARGS_DEFAULT_BASE = ["-y", "-nostats"]
     FFMPEG_ARGS_DEFAULT_LOGLEVEL = ["-loglevel", "info"]
+    FFMPEG_ARGS_DEFAULT_INPUTS = ["-i", "one", "-i", "two", "-i", "three"]
     FFMPEG_ARGS_DEFAULT_CODECS = ["-c:v", FFMPEGMuxer.DEFAULT_VIDEO_CODEC, "-c:a", FFMPEGMuxer.DEFAULT_AUDIO_CODEC]
     FFMPEG_ARGS_DEFAULT_FORMAT = ["-f", FFMPEGMuxer.DEFAULT_OUTPUT_FORMAT]
     FFMPEG_ARGS_DEFAULT_OUTPUT = ["pipe:1"]
@@ -236,6 +238,21 @@ class TestOpen:
         monkeypatch.setattr("streamlink.stream.ffmpegmux.which", mock)
 
         return mock
+
+    @pytest.fixture(autouse=True)
+    def _fake_named_pipe(self, monkeypatch: pytest.MonkeyPatch):
+        class FakeNamedPipe:
+            paths = iter(["one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten"])
+
+            @property
+            def path(self) -> str:
+                return next(self.paths, "")
+
+        monkeypatch.setattr("streamlink.stream.ffmpegmux.NamedPipe", FakeNamedPipe)
+
+    @pytest.fixture(autouse=True)
+    def _no_copy_to_pipe_thread(self, monkeypatch: pytest.MonkeyPatch):
+        monkeypatch.setattr("streamlink.stream.ffmpegmux.threading", Mock())
 
     @pytest.fixture()
     def popen(self, monkeypatch: pytest.MonkeyPatch):
@@ -253,6 +270,7 @@ class TestOpen:
                 [
                     *FFMPEG_ARGS_DEFAULT_BASE,
                     *FFMPEG_ARGS_DEFAULT_LOGLEVEL,
+                    *FFMPEG_ARGS_DEFAULT_INPUTS,
                     *FFMPEG_ARGS_DEFAULT_CODECS,
                     *FFMPEG_ARGS_DEFAULT_FORMAT,
                     *FFMPEG_ARGS_DEFAULT_OUTPUT,
@@ -266,6 +284,7 @@ class TestOpen:
                     *FFMPEG_ARGS_DEFAULT_BASE,
                     "-loglevel",
                     "verbose",
+                    *FFMPEG_ARGS_DEFAULT_INPUTS,
                     *FFMPEG_ARGS_DEFAULT_CODECS,
                     *FFMPEG_ARGS_DEFAULT_FORMAT,
                     *FFMPEG_ARGS_DEFAULT_OUTPUT,
@@ -279,6 +298,7 @@ class TestOpen:
                     *FFMPEG_ARGS_DEFAULT_BASE,
                     "-loglevel",
                     "error",
+                    *FFMPEG_ARGS_DEFAULT_INPUTS,
                     *FFMPEG_ARGS_DEFAULT_CODECS,
                     *FFMPEG_ARGS_DEFAULT_FORMAT,
                     *FFMPEG_ARGS_DEFAULT_OUTPUT,
@@ -291,6 +311,7 @@ class TestOpen:
                 [
                     *FFMPEG_ARGS_DEFAULT_BASE,
                     *FFMPEG_ARGS_DEFAULT_LOGLEVEL,
+                    *FFMPEG_ARGS_DEFAULT_INPUTS,
                     *FFMPEG_ARGS_DEFAULT_CODECS,
                     "-f",
                     "mpegts",
@@ -304,6 +325,7 @@ class TestOpen:
                 [
                     *FFMPEG_ARGS_DEFAULT_BASE,
                     *FFMPEG_ARGS_DEFAULT_LOGLEVEL,
+                    *FFMPEG_ARGS_DEFAULT_INPUTS,
                     *FFMPEG_ARGS_DEFAULT_CODECS,
                     "-f",
                     "avi",
@@ -317,6 +339,7 @@ class TestOpen:
                 [
                     *FFMPEG_ARGS_DEFAULT_BASE,
                     *FFMPEG_ARGS_DEFAULT_LOGLEVEL,
+                    *FFMPEG_ARGS_DEFAULT_INPUTS,
                     *FFMPEG_ARGS_DEFAULT_CODECS,
                     "-copyts",
                     *FFMPEG_ARGS_DEFAULT_FORMAT,
@@ -330,6 +353,7 @@ class TestOpen:
                 [
                     *FFMPEG_ARGS_DEFAULT_BASE,
                     *FFMPEG_ARGS_DEFAULT_LOGLEVEL,
+                    *FFMPEG_ARGS_DEFAULT_INPUTS,
                     *FFMPEG_ARGS_DEFAULT_CODECS,
                     "-copyts",
                     *FFMPEG_ARGS_DEFAULT_FORMAT,
@@ -343,6 +367,7 @@ class TestOpen:
                 [
                     *FFMPEG_ARGS_DEFAULT_BASE,
                     *FFMPEG_ARGS_DEFAULT_LOGLEVEL,
+                    *FFMPEG_ARGS_DEFAULT_INPUTS,
                     *FFMPEG_ARGS_DEFAULT_CODECS,
                     "-copyts",
                     *FFMPEG_ARGS_DEFAULT_FORMAT,
@@ -356,6 +381,7 @@ class TestOpen:
                 [
                     *FFMPEG_ARGS_DEFAULT_BASE,
                     *FFMPEG_ARGS_DEFAULT_LOGLEVEL,
+                    *FFMPEG_ARGS_DEFAULT_INPUTS,
                     *FFMPEG_ARGS_DEFAULT_CODECS,
                     "-copyts",
                     *FFMPEG_ARGS_DEFAULT_FORMAT,
@@ -369,6 +395,7 @@ class TestOpen:
                 [
                     *FFMPEG_ARGS_DEFAULT_BASE,
                     *FFMPEG_ARGS_DEFAULT_LOGLEVEL,
+                    *FFMPEG_ARGS_DEFAULT_INPUTS,
                     *FFMPEG_ARGS_DEFAULT_CODECS,
                     "-copyts",
                     "-start_at_zero",
@@ -383,6 +410,7 @@ class TestOpen:
                 [
                     *FFMPEG_ARGS_DEFAULT_BASE,
                     *FFMPEG_ARGS_DEFAULT_LOGLEVEL,
+                    *FFMPEG_ARGS_DEFAULT_INPUTS,
                     *FFMPEG_ARGS_DEFAULT_CODECS,
                     "-copyts",
                     "-start_at_zero",
@@ -397,6 +425,7 @@ class TestOpen:
                 [
                     *FFMPEG_ARGS_DEFAULT_BASE,
                     *FFMPEG_ARGS_DEFAULT_LOGLEVEL,
+                    *FFMPEG_ARGS_DEFAULT_INPUTS,
                     *FFMPEG_ARGS_DEFAULT_CODECS,
                     "-copyts",
                     *FFMPEG_ARGS_DEFAULT_FORMAT,
@@ -410,6 +439,7 @@ class TestOpen:
                 [
                     *FFMPEG_ARGS_DEFAULT_BASE,
                     *FFMPEG_ARGS_DEFAULT_LOGLEVEL,
+                    *FFMPEG_ARGS_DEFAULT_INPUTS,
                     *FFMPEG_ARGS_DEFAULT_CODECS,
                     "-copyts",
                     *FFMPEG_ARGS_DEFAULT_FORMAT,
@@ -423,6 +453,7 @@ class TestOpen:
                 [
                     *FFMPEG_ARGS_DEFAULT_BASE,
                     *FFMPEG_ARGS_DEFAULT_LOGLEVEL,
+                    *FFMPEG_ARGS_DEFAULT_INPUTS,
                     *FFMPEG_ARGS_DEFAULT_CODECS,
                     "-copyts",
                     "-start_at_zero",
@@ -437,6 +468,7 @@ class TestOpen:
                 [
                     *FFMPEG_ARGS_DEFAULT_BASE,
                     *FFMPEG_ARGS_DEFAULT_LOGLEVEL,
+                    *FFMPEG_ARGS_DEFAULT_INPUTS,
                     *FFMPEG_ARGS_DEFAULT_CODECS,
                     "-copyts",
                     "-start_at_zero",
@@ -451,6 +483,7 @@ class TestOpen:
                 [
                     *FFMPEG_ARGS_DEFAULT_BASE,
                     *FFMPEG_ARGS_DEFAULT_LOGLEVEL,
+                    *FFMPEG_ARGS_DEFAULT_INPUTS,
                     "-c:v",
                     "avc",
                     "-c:a",
@@ -466,6 +499,7 @@ class TestOpen:
                 [
                     *FFMPEG_ARGS_DEFAULT_BASE,
                     *FFMPEG_ARGS_DEFAULT_LOGLEVEL,
+                    *FFMPEG_ARGS_DEFAULT_INPUTS,
                     "-c:v",
                     "divx",
                     "-c:a",
@@ -481,6 +515,7 @@ class TestOpen:
                 [
                     *FFMPEG_ARGS_DEFAULT_BASE,
                     *FFMPEG_ARGS_DEFAULT_LOGLEVEL,
+                    *FFMPEG_ARGS_DEFAULT_INPUTS,
                     "-c:v",
                     FFMPEGMuxer.DEFAULT_VIDEO_CODEC,
                     "-c:a",
@@ -496,6 +531,7 @@ class TestOpen:
                 [
                     *FFMPEG_ARGS_DEFAULT_BASE,
                     *FFMPEG_ARGS_DEFAULT_LOGLEVEL,
+                    *FFMPEG_ARGS_DEFAULT_INPUTS,
                     "-c:v",
                     FFMPEGMuxer.DEFAULT_VIDEO_CODEC,
                     "-c:a",
@@ -511,6 +547,7 @@ class TestOpen:
                 [
                     *FFMPEG_ARGS_DEFAULT_BASE,
                     *FFMPEG_ARGS_DEFAULT_LOGLEVEL,
+                    *FFMPEG_ARGS_DEFAULT_INPUTS,
                     "-c:v",
                     "avc",
                     "-c:a",
@@ -526,6 +563,7 @@ class TestOpen:
                 [
                     *FFMPEG_ARGS_DEFAULT_BASE,
                     *FFMPEG_ARGS_DEFAULT_LOGLEVEL,
+                    *FFMPEG_ARGS_DEFAULT_INPUTS,
                     "-c:v",
                     "divx",
                     "-c:a",
@@ -541,6 +579,7 @@ class TestOpen:
                 [
                     *FFMPEG_ARGS_DEFAULT_BASE,
                     *FFMPEG_ARGS_DEFAULT_LOGLEVEL,
+                    *FFMPEG_ARGS_DEFAULT_INPUTS,
                     *FFMPEG_ARGS_DEFAULT_CODECS,
                     "-map",
                     "test",
@@ -557,6 +596,7 @@ class TestOpen:
                 [
                     *FFMPEG_ARGS_DEFAULT_BASE,
                     *FFMPEG_ARGS_DEFAULT_LOGLEVEL,
+                    *FFMPEG_ARGS_DEFAULT_INPUTS,
                     *FFMPEG_ARGS_DEFAULT_CODECS,
                     "-metadata:s:a:0",
                     "language=eng",
@@ -571,6 +611,7 @@ class TestOpen:
                 [
                     *FFMPEG_ARGS_DEFAULT_BASE,
                     *FFMPEG_ARGS_DEFAULT_LOGLEVEL,
+                    *FFMPEG_ARGS_DEFAULT_INPUTS,
                     *FFMPEG_ARGS_DEFAULT_CODECS,
                     "-metadata",
                     "title=test",
@@ -578,6 +619,34 @@ class TestOpen:
                     *FFMPEG_ARGS_DEFAULT_OUTPUT,
                 ],
                 id="metadata-title",
+            ),
+            pytest.param(
+                {},
+                {"itsoffset": [None, 1.2]},
+                [
+                    *FFMPEG_ARGS_DEFAULT_BASE,
+                    *FFMPEG_ARGS_DEFAULT_LOGLEVEL,
+                    *["-i", "one"],
+                    *["-itsoffset", "1.2", "-i", "two"],
+                    *["-i", "three"],
+                    *FFMPEG_ARGS_DEFAULT_CODECS,
+                    *FFMPEG_ARGS_DEFAULT_FORMAT,
+                    *FFMPEG_ARGS_DEFAULT_OUTPUT,
+                ],
+                id="itsoffset",
+            ),
+            pytest.param(
+                {},
+                {"itsoffset": [None, None, None, None]},
+                [
+                    *FFMPEG_ARGS_DEFAULT_BASE,
+                    *FFMPEG_ARGS_DEFAULT_LOGLEVEL,
+                    *["-i", "one", "-i", "two", "-i", "three"],
+                    *FFMPEG_ARGS_DEFAULT_CODECS,
+                    *FFMPEG_ARGS_DEFAULT_FORMAT,
+                    *FFMPEG_ARGS_DEFAULT_OUTPUT,
+                ],
+                id="itsoffset-more-values-than-pipes",
             ),
         ],
     )
@@ -590,7 +659,7 @@ class TestOpen:
         expected: list,
     ):
         session.options.update(options)
-        streamio = FFMPEGMuxer(session, **muxer_args)
+        streamio = FFMPEGMuxer(session, *(StreamIO() for _ in range(3)), **muxer_args)
 
         streamio.open()
         assert popen.call_args_list == [
