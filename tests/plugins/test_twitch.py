@@ -172,30 +172,53 @@ class _TwitchHLSStream(TwitchHLSStream):
     __reader__ = _TwitchHLSStreamReader
 
 
-def test_stream_weight(requests_mock: rm.Mocker, session: Streamlink):
+@pytest.mark.parametrize(
+    ("sorting_excludes", "worst", "best"),
+    [
+        pytest.param(None, "160p30", "1440p60", id="no-exclusion"),
+        pytest.param(["<1p"], "160p30", "1440p60", id="exclude-all-portraits"),
+        pytest.param([">1p"], "284p30_portrait", "1920p60_portrait", id="exclude-all-landscapes"),
+        pytest.param(["<720p60"], "720p60", "1440p60", id="exclude-low-landscapes"),
+        pytest.param(["<1280p60_portrait"], "1280p60_portrait", "1440p60", id="exclude-low-portraits"),
+    ],
+)
+def test_multivariant_and_weights(
+    monkeypatch: pytest.MonkeyPatch,
+    requests_mock: rm.Mocker,
+    session: Streamlink,
+    sorting_excludes: list[str] | None,
+    worst: str,
+    best: str,
+):
     plugin = Twitch(session, "http://twitch.tv/foo")
 
-    with text("hls/test_master_twitch_vod.m3u8") as fh:
-        playlist = fh.read()
+    with text("hls/test_multivariant_twitch_usher_v2.m3u8") as fd:
+        playlist = fd.read()
 
     requests_mock.request(method="GET", url="http://mocked/master.m3u8", text=playlist)
     streams = TwitchHLSStream.parse_variant_playlist(session, "http://mocked/master.m3u8")
 
-    with patch.object(plugin, "_get_streams", return_value=streams):
-        data = plugin.streams()
+    monkeypatch.setattr(plugin, "_get_streams", Mock(return_value=streams))
+    result = plugin.streams(sorting_excludes=sorting_excludes)
 
-    assert list(data.keys()) == ["audio", "160p30", "360p30", "480p30", "720p30", "720p60", "source", "worst", "best"]
-    assert data["best"] is data["source"]
-    assert data["worst"] is data["160p30"]
-
-
-def test_multivariant(session: Streamlink, requests_mock: rm.Mocker):
-    with text("hls/test_multivariant_twitch_usher_v2.m3u8") as fd:
-        content = fd.read()
-        requests_mock.get("http://mocked/multivariant.m3u8", text=content)
-        streams = TwitchHLSStream.parse_variant_playlist(session, "http://mocked/multivariant.m3u8")
-
-    assert sorted(streams.keys()) == ["1080p60", "160p", "360p", "480p", "720p60", "audio_only"]
+    assert list(result.keys()) == [
+        "audio_only",
+        "284p30_portrait",
+        "640p30_portrait",
+        "852p30_portrait",
+        "1280p60_portrait",
+        "1920p60_portrait",
+        "160p30",
+        "360p30",
+        "480p30",
+        "720p60",
+        "1080p60",
+        "1440p60",
+        "worst",
+        "best",
+    ]
+    assert result["worst"] is result[worst]
+    assert result["best"] is result[best]
 
 
 @patch("streamlink.stream.hls.HLSStreamWorker.wait", MagicMock(return_value=True))
@@ -674,6 +697,10 @@ class TestUsherService:
     def test_supported_codecs(self, plugin: Twitch, endpoint: str, expected: str):
         qs = dict(parse_qsl(urlparse(endpoint).query))
         assert qs.get("supported_codecs") == expected
+
+    def test_multigroup_video(self, endpoint: str):
+        qs = dict(parse_qsl(urlparse(endpoint).query))
+        assert qs.get("multigroup_video") == "true"
 
 
 class TestTwitchAPIAccessToken:

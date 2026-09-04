@@ -152,7 +152,20 @@ class TestHLSVariantPlaylist:
 
     @pytest.mark.parametrize("streams", [{"multivariant": "hls/test_multivariant_twitch_usher_v2.m3u8"}], indirect=True)
     def test_framerate(self, streams: dict[str, HLSStream]):
-        assert sorted(streams.keys()) == ["1080p60", "160k", "160p", "360p", "480p", "720p60"]
+        assert sorted(streams.keys()) == [
+            "1080p60",
+            "1280p60",
+            "1440p60",
+            "160p",
+            "1920p60",
+            "210k",
+            "284p",
+            "360p",
+            "480p",
+            "640p",
+            "720p60",
+            "852p",
+        ]
 
     @pytest.mark.parametrize(
         ("streams", "expected"),
