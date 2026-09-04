@@ -9,12 +9,13 @@ $metadata title
 """
 
 import re
-import sys
+from urllib.parse import urlparse
 
 from streamlink.logger import getLogger
 from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.api import validate
 from streamlink.stream.hls import HLSStream
+from streamlink.utils.parse import parse_qsd
 
 
 log = getLogger(__name__)
@@ -36,11 +37,6 @@ class GoodGame(Plugin):
     _API_PLAYER = "https://goodgame.ru/api/player"
     _API_STREAM = "https://goodgame.ru/api/4/users/{channel}/stream"
 
-    @classmethod
-    def stream_weight(cls, stream: str) -> tuple[float, str]:
-        if stream == "source":
-            return sys.maxsize, stream
-        return super().stream_weight(stream)
 
     def _get_channel_from_player(self):
         return self.session.http.get(
@@ -77,7 +73,7 @@ class GoodGame(Plugin):
                                 "username": str,
                             },
                             "sources": {
-                                str: validate.url(),
+                                "master": validate.url(),
                             },
                             "gameObj": {
                                 "title": validate.none_or_all(str),
@@ -90,7 +86,7 @@ class GoodGame(Plugin):
                             ("streamer", "username"),
                             ("gameObj", "title"),
                             "title",
-                            "sources",
+                            ("sources", "master"),
                         ),
                         validate.transform(lambda data: ("data", *data)),
                     ),
@@ -109,20 +105,14 @@ class GoodGame(Plugin):
             log.error(data[0] or "Unknown error")
             return
 
-        online, self.id, self.author, self.category, self.title, sources = data
+        online, self.id, self.author, self.category, self.title, stream_url = data
 
         if not online:
             return
 
-        streams = {}
-        for name, hls_url in sources.items():
-            if str.isnumeric(name):
-                name = f"{name}p"
-            elif name != "source":
-                continue
-            streams[name] = HLSStream(self.session, hls_url)
-
-        return streams
+        parsed = urlparse(stream_url)
+        params = parse_qsd(parsed.query)
+        return HLSStream.parse_variant_playlist(self.session, stream_url, params=params)
 
 
 __plugin__ = GoodGame
