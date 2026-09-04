@@ -37,6 +37,9 @@ class GoodGame(Plugin):
     _API_PLAYER = "https://goodgame.ru/api/player"
     _API_STREAM = "https://goodgame.ru/api/4/users/{channel}/stream"
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.session.set_option("hls-playlist-reload-time", "segment")
 
     def _get_channel_from_player(self):
         return self.session.http.get(
