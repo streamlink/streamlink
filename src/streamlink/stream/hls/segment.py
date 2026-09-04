@@ -1,8 +1,9 @@
 from __future__ import annotations
 
+import math
 import re
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, NamedTuple
+from typing import TYPE_CHECKING, ClassVar, NamedTuple
 
 from streamlink.logger import getLogger
 from streamlink.stream.segmented.segment import Segment
@@ -142,6 +143,32 @@ class HLSPlaylist:
     stream_info: StreamInfo | IFrameStreamInfo
     media: list[Media]
     is_iframe: bool
+
+    MIN_FRAMERATE: ClassVar[float] = 30.0
+
+    def get_name_pixels(self, with_framerate: bool | None = None) -> str | None:
+        stream_info = self.stream_info
+
+        if not stream_info.resolution or not stream_info.resolution.height:
+            return None
+
+        if (
+            isinstance(stream_info, StreamInfo)
+            and stream_info.framerate is not None
+            and (with_framerate or with_framerate is None and stream_info.framerate > self.MIN_FRAMERATE)
+        ):
+            return f"{stream_info.resolution.height}p{math.ceil(stream_info.framerate)}"
+
+        return f"{stream_info.resolution.height}p"
+
+    def get_name_bandwidth(self) -> str | None:
+        if not (bw := self.stream_info.bandwidth):
+            return None
+
+        if bw >= 1000:
+            return f"{int(bw / 1000.0)}k"
+        else:
+            return f"{bw / 1000.0}k"
 
 
 @dataclass(kw_only=True)

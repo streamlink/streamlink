@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import math
 import re
 import struct
 import warnings
@@ -21,7 +20,7 @@ from streamlink.logger import getLogger
 from streamlink.stream.ffmpegmux import FFMPEGMuxer, MuxedStream
 from streamlink.stream.filtered import FilteredStream
 from streamlink.stream.hls.m3u8 import M3U8Parser, parse_m3u8
-from streamlink.stream.hls.segment import HLSSegment, StreamInfo
+from streamlink.stream.hls.segment import HLSSegment
 from streamlink.stream.http import HTTPStream
 from streamlink.stream.segmented import SegmentedStreamReader, SegmentedStreamWorker, SegmentedStreamWriter
 from streamlink.utils.cache import LRUCache
@@ -880,22 +879,8 @@ class HLSStream(HTTPStream):
             if not fallback_audio and audio_streams and audio_streams[0].uri:
                 fallback_audio = [audio_streams[0]]
 
-            if playlist.stream_info.resolution and playlist.stream_info.resolution.height:
-                if (
-                    isinstance(playlist.stream_info, StreamInfo)
-                    and playlist.stream_info.framerate is not None
-                    and playlist.stream_info.framerate > 30.0
-                ):
-                    names["pixels"] = f"{playlist.stream_info.resolution.height}p{math.ceil(playlist.stream_info.framerate)}"
-                else:
-                    names["pixels"] = f"{playlist.stream_info.resolution.height}p"
-
-            if playlist.stream_info.bandwidth:
-                bw = playlist.stream_info.bandwidth
-                if bw >= 1000:
-                    names["bitrate"] = f"{int(bw / 1000.0)}k"
-                else:
-                    names["bitrate"] = f"{bw / 1000.0}k"
+            names["pixels"] = playlist.get_name_pixels()
+            names["bitrate"] = playlist.get_name_bandwidth()
 
             if name_fmt:
                 stream_name = name_fmt.format(**names)
