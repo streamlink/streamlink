@@ -26,7 +26,7 @@ from dataclasses import dataclass, replace as dataclass_replace
 from datetime import timedelta
 from json import dumps as json_dumps
 from random import random
-from typing import TYPE_CHECKING, ClassVar
+from typing import TYPE_CHECKING, ClassVar, cast
 from urllib.parse import urlparse
 
 from requests.exceptions import HTTPError
@@ -154,25 +154,34 @@ class TwitchM3U8Parser(M3U8Parser[TwitchM3U8, TwitchHLSSegment, HLSPlaylist]):
 
         return segment
 
-    def get_playlist(self, *args, **kwargs):
+    def get_playlist(self, *args, **kwargs) -> HLSPlaylist:
         streaminf = self._streaminf or {}
         playlist = super().get_playlist(*args, **kwargs)
-        # backwards compatibility for stream names on Usher v2
-        if not playlist.media and (name := streaminf.get("IVS-NAME")):
-            is_audio_only = name in ("audio_only", "audio")  # live + VOD
-            media = Media(
-                uri=None,
-                type="VIDEO",
-                group_id=name,
-                language=None,
-                name=name,
-                default=not is_audio_only,
-                autoselect=not is_audio_only,
-                forced=False,
-                characteristics=None,
-            )
-            playlist.stream_info.video = name
-            playlist.media.append(media)
+
+        name = playlist.get_name_pixels(with_framerate=True)
+        variant_id = streaminf.get("STABLE-VARIANT-ID", "").lower()
+        is_audio_only = False
+        if name and streaminf.get("IVS-GROUPS", "").lower() == "portrait":
+            name = f"{name}_portrait"
+        elif variant_id.startswith("audio"):
+            name = "audio_only"
+            is_audio_only = True
+        else:
+            name = variant_id
+
+        media = Media(
+            uri=None,
+            type="VIDEO",
+            group_id=name,
+            language=None,
+            name=name,
+            default=not is_audio_only,
+            autoselect=not is_audio_only,
+            forced=False,
+            characteristics=None,
+        )
+        playlist.stream_info.video = name
+        playlist.media = [media]
 
         return playlist
 
@@ -297,7 +306,7 @@ class UsherService:
         self.session = session
         self.supported_codecs = supported_codecs or self.SUPPORTED_CODECS_DEFAULT
 
-    def _create_url(self, endpoint, **extra_params):
+    def _create_url(self, endpoint, **extra_params) -> str:
         url = f"https://usher.ttvnw.net{endpoint}"
         params = {
             "platform": "web",
@@ -305,13 +314,14 @@ class UsherService:
             "allow_source": "true",
             "allow_audio_only": "true",
             "playlist_include_framerate": "true",
+            "multigroup_video": "true",
             "supported_codecs": ",".join(self.supported_codecs),
         }
         params.update(extra_params)
 
         req = self.session.http.prepare_new_request(url=url, params=params)
 
-        return req.url
+        return cast("str", req.url)
 
     def channel(self, channel: str, **extra_params) -> str:
         with suppress(PluginError):
@@ -837,9 +847,14 @@ class Twitch(Plugin):
 
     @classmethod
     def stream_weight(cls, stream: str) -> tuple[float, str]:
-        if stream == "source":
-            return sys.maxsize, stream
-        return super().stream_weight(stream)
+        if stream.startswith("audio"):
+            return 0, "audio"
+
+        weight, group = super().stream_weight(stream.removesuffix("_portrait"))
+        if stream.endswith("_portrait"):
+            return weight, group
+
+        return (sys.maxsize >> 16) + weight, group
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -884,6 +899,15 @@ class Twitch(Plugin):
         for metadata in "id", "author", "category", "title":
             method = f"get_{metadata}"
             setattr(self, method, method_factory(getattr(parent, method)))
+
+    def streams(self, stream_types=None, sorting_excludes=None):
+        def sorting_excludes_default(stream: str):
+            return not (stream.startswith("audio") or stream.endswith("_portrait"))
+
+        return super().streams(
+            stream_types,
+            sorting_excludes=sorting_excludes_default if sorting_excludes is None else sorting_excludes,
+        )
 
     def _get_metadata(self):
         with suppress(PluginError, TypeError):
