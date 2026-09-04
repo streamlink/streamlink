@@ -70,8 +70,12 @@ class M3U8(Generic[THLSSegment_co, THLSPlaylist_co]):
         if daterange.end_date is not None:
             return daterange.start_date <= date < daterange.end_date
 
-        duration = daterange.duration if daterange.duration is not None else daterange.planned_duration
-        if duration is not None:
+        # A DURATION of 0 is a valid single instant in time and must not fall back to
+        # PLANNED-DURATION. Negative values are forbidden by the spec, so treat them as unset.
+        duration = daterange.duration
+        if duration is None or duration.total_seconds() < 0:
+            duration = daterange.planned_duration
+        if duration is not None and duration.total_seconds() >= 0:
             end = daterange.start_date + duration
             return daterange.start_date <= date < end
 
