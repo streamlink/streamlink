@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING
 import pytest
 
 from streamlink.stream.hls import (
+    M3U8,
     ByteRange,
     DateRange,
     ExtInf,
@@ -21,7 +22,7 @@ from tests.resources import text
 
 
 if TYPE_CHECKING:
-    from streamlink.stream.hls import M3U8, HLSPlaylist
+    from streamlink.stream.hls import HLSPlaylist
 
 
 UTC = timezone.utc
@@ -656,6 +657,39 @@ class TestHLSPlaylist:
                == [None, True, True, True, False, False, False, True, True, None]  # fmt: skip
         assert [playlist.is_date_in_daterange(playlist.segments[3].date, daterange) for daterange in playlist.dateranges] \
                == [None, True, True, True, False, False, False, False, False, None]  # fmt: skip
+
+    @pytest.mark.parametrize(
+        ("duration", "planned_duration", "expected"),
+        [
+            pytest.param(timedelta(0), timedelta(seconds=30), False, id="zero-duration"),
+            pytest.param(timedelta(seconds=-10), timedelta(seconds=30), True, id="negative-duration"),
+            pytest.param(timedelta(seconds=-10), None, True, id="negative-duration-without-planned"),
+            pytest.param(None, timedelta(seconds=-10), True, id="negative-planned-duration"),
+            pytest.param(timedelta(seconds=-10), timedelta(seconds=-30), True, id="both-negative"),
+            pytest.param(None, timedelta(seconds=30), True, id="planned-duration"),
+        ],
+    )
+    def test_is_date_in_daterange_duration(
+        self,
+        duration: timedelta | None,
+        planned_duration: timedelta | None,
+        expected: bool,
+    ) -> None:
+        # A DURATION of 0 is a single instant in time, so no date falls inside it: the zero must
+        # not be treated as unset and fall back to PLANNED-DURATION. Negative durations are
+        # forbidden by the spec, so they are treated as if the attribute wasn't set at all.
+        start = datetime(2000, 1, 1, tzinfo=UTC)
+        daterange = DateRange(
+            id="duration",
+            start_date=start,
+            classname=None,
+            end_date=None,
+            duration=duration,
+            planned_duration=planned_duration,
+            end_on_next=False,
+            x={},
+        )
+        assert M3U8.is_date_in_daterange(start + timedelta(seconds=10), daterange) is expected
 
     def test_parse_bandwidth(self) -> None:
         with text("hls/test_multivariant_bandwidth.m3u8") as m3u8_fh:
