@@ -328,7 +328,7 @@ class HLSStreamWriter(SegmentedStreamWriter[HLSSegment, Response]):
             # we defer the buffer writes by one read call and apply the unpad call only to the last read call.
             decrypted_chunk = decryptor.decrypt(encrypted_chunk)
             chunk = unpad(decrypted_chunk, AES.block_size, style="pkcs7")
-            self.reader.buffer.write(chunk)
+            self._write_into_buffer(iter([chunk]))
         except ValueError as err:
             log.error(f"Error while decrypting segment {segment.num}: {err}")
             return False
@@ -337,13 +337,17 @@ class HLSStreamWriter(SegmentedStreamWriter[HLSSegment, Response]):
 
     def _write_plain(self, segment: HLSSegment, response: Response) -> bool:
         try:
-            for chunk in self.iter_segment_content(segment, response):
-                self.reader.buffer.write(chunk)
+            self._write_into_buffer(self.iter_segment_content(segment, response))
         except (ChunkedEncodingError, ContentDecodingError, ConnectionError) as err:
             log.error(f"Download of segment {segment.num} failed: {err}")
             return False
 
         return True
+
+    def _write_into_buffer(self, iterator: Iterator[bytes]) -> None:
+        buffer = self.reader.buffer
+        for chunk in iterator:
+            buffer.write(chunk)
 
     # noinspection PyMethodMayBeStatic
     def get_segment_content(self, segment: HLSSegment, response: Response) -> bytes:
