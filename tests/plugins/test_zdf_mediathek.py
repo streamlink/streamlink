@@ -5,16 +5,25 @@ from tests.plugins import PluginCanHandleUrl
 class TestPluginCanHandleUrlZDFMediathek(PluginCanHandleUrl):
     __plugin__ = ZDFMediathek
 
-    should_match = [
-        "http://www.zdf.de/live-tv",
-        "https://www.zdf.de/sender/zdf/zdf-live-beitrag-100.html",
-        "https://www.zdf.de/sender/zdfneo/zdfneo-live-beitrag-100.html",
-        "https://www.zdf.de/sender/3sat/3sat-live-beitrag-100.html",
-        "https://www.zdf.de/sender/phoenix/phoenix-live-beitrag-100.html",
-        "https://www.zdf.de/sender/arte/arte-livestream-100.html",
-        "https://www.zdf.de/sender/kika/kika-live-beitrag-100.html",
-        "https://www.zdf.de/dokumentation/zdfinfo-doku/zdfinfo-live-beitrag-100.html",
-        "https://www.zdf.de/comedy/heute-show/videos/diy-hazel-habeck-100.html",
-        "https://www.zdf.de/nachrichten/heute-sendungen/so-wird-das-wetter-102.html",
-        "https://www.3sat.de/wissen/nano",
+    should_match_groups = [
+        (
+            "https://www.zdf.de/play/live-tv/sender/zdf-live-beitrag-100",
+            {"category": "live-tv", "video_id": "zdf-live-beitrag-100"},
+        ),
+        (
+            "https://www.zdf.de/play/live-tv/sender/zdfinfo-live-beitrag-100",
+            {"category": "live-tv", "video_id": "zdfinfo-live-beitrag-100"},
+        ),
+        (
+            "https://www.zdf.de/play/live-tv/sender/arte-livestream-100",
+            {"category": "live-tv", "video_id": "arte-livestream-100"},
+        ),
+        (
+            "https://www.zdf.de/play/magazine/heute-106/260906-heute-sendung-17-uhr-100",
+            {"category": "magazine", "video_id": "260906-heute-sendung-17-uhr-100"},
+        ),
+        (
+            "https://www.zdf.de/play/dokus/terra-x-unsere-waelder-100/unsere-waelder-ein-jahr-unter-baeumen-100",
+            {"category": "dokus", "video_id": "unsere-waelder-ein-jahr-unter-baeumen-100"},
+        ),
     ]
