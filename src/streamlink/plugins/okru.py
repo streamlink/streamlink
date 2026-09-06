@@ -74,9 +74,9 @@ class OKru(Plugin):
             self._canonicalize_mobile_url()
 
         schema_metadata = validate.Schema(
-            validate.parse_json(),
             {
                 validate.optional("author"): validate.all({validate.optional("name"): str}, validate.get("name")),
+                validate.optional("compilationTitle"): str,
                 validate.optional("movie"): validate.all(
                     {
                         validate.optional("id"): str,
@@ -108,7 +108,7 @@ class OKru(Plugin):
                 validate.parse_json(),
                 {
                     "flashvars": {
-                        validate.optional("metadata"): str,
+                        validate.optional("metadata"): dict,
                         validate.optional("metadataUrl"): validate.all(
                             validate.transform(unquote),
                             validate.url(),
@@ -129,7 +129,7 @@ class OKru(Plugin):
 
         data = schema_metadata.validate(metadata)
 
-        self.author = data.get("author")
+        self.author = data.get("author") or data.get("compilationTitle")
         self.id, self.title = data.get("movie", (None, None))
 
         for hls_url in data.get("hlsManifestUrl"), data.get("hlsMasterPlaylistUrl"):
