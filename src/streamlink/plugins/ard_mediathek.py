@@ -3,6 +3,8 @@ $description Live TV channels and video on-demand service from ARD, a German pub
 $url ardmediathek.de
 $url mediathek.daserste.de
 $type live, vod
+$metadata id
+$metadata author
 $metadata title
 $region Germany
 """
@@ -21,7 +23,7 @@ log = getLogger(__name__)
 
 @pluginmatcher(
     name="live",
-    pattern=re.compile(r"https?://(\w+\.)?ardmediathek\.de/live/(?:[^/]+/)?(?P<id_live>\w+)(?:\?|$)"),
+    pattern=re.compile(r"https?://(\w+\.)?ardmediathek\.de/live(?:/(?:[^/]+/)?(?P<id_live>\w+))?(?:\?|$)"),
 )
 @pluginmatcher(
     name="video",
@@ -29,117 +31,110 @@ log = getLogger(__name__)
 )
 class ARDMediathek(Plugin):
     _URL_API = "https://api.ardmediathek.de/page-gateway/pages/ard/item/{item}"
-    _QUALITY_MAP = {
-        4: "1080p",
-        3: "720p",
-        2: "540p",
-        1: "360p",
-        0: "270p",
-    }
+    _URL_NOW = "https://programm-api.ard.de/nownext/api/now"
 
-    def _get_streams(self):
-        data_json = self.session.http.get(
-            self.url,
-            schema=validate.Schema(
-                validate.parse_html(),
-                validate.xml_xpath_string(".//script[@type='application/json'][@id='fetchedContextValue2'][1]/text()"),
-                validate.none_or_all(
-                    validate.parse_json(),
-                    [validate.list(str, {"data": dict})],
-                    validate.filter(lambda item: item[0].startswith("https://api.ardmediathek.de/page-gateway/pages/")),
-                    validate.any(
-                        validate.get((0, 1, "data")),
-                        [],
-                    ),
-                ),
-            ),
-        )
-        if not data_json:
-            data_json = self.session.http.get(
-                self._URL_API.format(item=self.match["id_live"] if self.matches["live"] else self.match["id_video"]),
-                params={
-                    "devicetype": "pc",
-                    "embedded": "false",
-                },
-                schema=validate.Schema(validate.parse_json()),
-            )
-        if not data_json:
-            return
-
-        schema_data = validate.Schema({
+    _SCHEMA_DATA = validate.Schema(
+        validate.parse_json(),
+        {
             "id": str,
             "widgets": validate.all(
                 [dict],
                 validate.filter(lambda item: item.get("mediaCollection")),
                 validate.get(0),
-                validate.any(
-                    None,
-                    validate.all(
-                        {
-                            "geoblocked": bool,
-                            "publicationService": {
-                                "name": str,
-                            },
-                            "show": validate.any(
-                                None,
-                                validate.all(
-                                    {"title": str},
-                                    validate.get("title"),
-                                ),
-                            ),
-                            "title": str,
-                            "mediaCollection": {
-                                "embedded": {
-                                    "_mediaArray": [
-                                        validate.all(
-                                            {
-                                                "_mediaStreamArray": [
-                                                    validate.all(
-                                                        {
-                                                            "_quality": validate.any(str, int),
-                                                            "_stream": validate.url(),
-                                                        },
-                                                        validate.union_get("_quality", "_stream"),
-                                                    ),
-                                                ],
-                                            },
-                                            validate.get("_mediaStreamArray"),
-                                            validate.transform(dict),
-                                        ),
-                                    ],
-                                },
+                validate.none_or_all(
+                    {
+                        "geoblocked": bool,
+                        "publicationService": {
+                            "name": str,
+                        },
+                        "show": validate.none_or_all(
+                            {"title": str},
+                            validate.get("title"),
+                        ),
+                        "title": str,
+                        "mediaCollection": {
+                            "embedded": {
+                                "streams": [
+                                    validate.all(
+                                        {
+                                            "media": [
+                                                {
+                                                    "mimeType": str,
+                                                    "url": validate.url(),
+                                                    "maxVResolutionPx": int,
+                                                },
+                                            ],
+                                        },
+                                        validate.get("media"),
+                                    ),
+                                ],
                             },
                         },
-                        validate.union_get(
-                            "geoblocked",
-                            ("mediaCollection", "embedded", "_mediaArray", 0),
-                            ("publicationService", "name"),
-                            "title",
-                            "show",
-                        ),
+                    },
+                    validate.union_get(
+                        "geoblocked",
+                        ("mediaCollection", "embedded", "streams"),
+                        ("publicationService", "name"),
+                        "title",
+                        "show",
                     ),
                 ),
             ),
-        })
-        data = schema_data.validate(data_json)
+        },
+    )
 
-        log.debug(f"Found media id: {data['id']}")
+    def _get_streams(self):
+        self.id = media_id = self.match["id_live"] if self.matches["live"] else self.match["id_video"]
+
+        if self.matches["live"] and not media_id:
+            media_id = self.session.http.get(
+                self._URL_NOW,
+                schema=validate.Schema(
+                    validate.parse_json(),
+                    {"channels": {str: dict}},
+                    validate.get("channels"),
+                    validate.transform(dict.keys),
+                    validate.transform(list),
+                    validate.get(0),
+                ),
+            )
+
+        data = self.session.http.get(
+            self._URL_API.format(item=media_id),
+            params={
+                "devicetype": "pc",
+                "embedded": "false",
+            },
+            schema=self._SCHEMA_DATA,
+        )
+        if not data:
+            return
+
         if not data["widgets"]:
             log.info("The content is unavailable")
             return
 
-        geoblocked, media, self.author, self.title, show = data["widgets"]
+        geoblocked, streams, self.author, self.title, show = data["widgets"]
         if geoblocked:
             log.info("The content is not available in your region")
             return
-        if show:
-            self.title = f"{show}: {self.title}"
 
-        if media.get("auto"):
-            yield from HLSStream.parse_variant_playlist(self.session, media.get("auto")).items()
-        else:
-            for quality, stream in media.items():
-                yield self._QUALITY_MAP.get(quality, quality), HTTPStream(self.session, stream)
+        if show:
+            show = show.strip()
+            if not self.title:
+                self.title = show
+            elif show != self.title:
+                self.title = f"{show}: {self.title}"
+
+        result = []
+        for stream in streams:
+            for media in stream:
+                match media["mimeType"]:
+                    case "application/vnd.apple.mpegurl":
+                        return HLSStream.parse_variant_playlist(self.session, media["url"])
+                    case "video/mp4":
+                        result.append((f"{media['maxVResolutionPx']}p", HTTPStream(self.session, media["url"])))
+        return result
 
 
 __plugin__ = ARDMediathek

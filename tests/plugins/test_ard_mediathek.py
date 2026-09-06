@@ -30,22 +30,22 @@ class TestPluginCanHandleUrlARDMediathek(PluginCanHandleUrl):
         (
             (
                 "video",
-                "https://www.ardmediathek.de/video/Y3JpZDovL2Rhc2Vyc3RlLmRlL3RhZ2Vzc2NoYXUvOWE4NGIzODgtZDEzNS00ZWU0LWI4ODEtZDYyNTQzYjg3ZmJlLzE",
+                "https://www.ardmediathek.de/video/Y3JpZDovL3dkci5kZS9CZWl0cmFnLXNvcGhvcmEtZTJkYWIwMTEtZWRjOC00YTkwLThhOGQtOGMxNTJjMTFmOTVj",
             ),
-            {"id_video": "Y3JpZDovL2Rhc2Vyc3RlLmRlL3RhZ2Vzc2NoYXUvOWE4NGIzODgtZDEzNS00ZWU0LWI4ODEtZDYyNTQzYjg3ZmJlLzE"},
+            {"id_video": "Y3JpZDovL3dkci5kZS9CZWl0cmFnLXNvcGhvcmEtZTJkYWIwMTEtZWRjOC00YTkwLThhOGQtOGMxNTJjMTFmOTVj"},
         ),
         (
             (
                 "video",
-                "https://www.ardmediathek.de/video/arte/blackfish-der-killerwal/arte/Y3JpZDovL2FydGUudHYvdmlkZW9zLzA1MDMyNy0wMDAtQQ",
+                "https://www.ardmediathek.de/video/maerchen-in-der-ard/hans-im-glueck/ndr/Y3JpZDovL25kci5kZS80NDI2XzIwMjItMTItMjUtMDktMjA?isChildContent",
             ),
-            {"id_video": "Y3JpZDovL2FydGUudHYvdmlkZW9zLzA1MDMyNy0wMDAtQQ"},
+            {"id_video": "Y3JpZDovL25kci5kZS80NDI2XzIwMjItMTItMjUtMDktMjA"},
         ),
         (
             (
                 "video",
-                "https://www.ardmediathek.de/video/expeditionen-ins-tierreich/die-revolte-der-schimpansen/ndr/Y3JpZDovL25kci5kZS9jY2E3M2MzZS00ZTljLTRhOWItODE3MC05MjhjM2MwNWEyMDM?toolbarType=default",
+                "https://www.ardmediathek.de/video/heimatflimmern/wild-im-westen-die-eifel/wdr/Y3JpZDovL3dkci5kZS9CZWl0cmFnLXNvcGhvcmEtM2VlOGUzYWUtNTliNy00M2RiLWIyZTMtNTY3OWFkMjQyYWU1",
             ),
-            {"id_video": "Y3JpZDovL25kci5kZS9jY2E3M2MzZS00ZTljLTRhOWItODE3MC05MjhjM2MwNWEyMDM"},
+            {"id_video": "Y3JpZDovL3dkci5kZS9CZWl0cmFnLXNvcGhvcmEtM2VlOGUzYWUtNTliNy00M2RiLWIyZTMtNTY3OWFkMjQyYWU1"},
         ),
     ]
