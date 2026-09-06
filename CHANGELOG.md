@@ -27,7 +27,7 @@
 
 ## streamlink 8.4.0 (2026-05-06)
 
-- SECURITY: fixed arbitrary local file read via `file://` URI in HLS and DASH ([`CVE-2026-44353`](https://nvd.nist.gov/vuln/detail/CVE-2026-44353) / [`GHSA-hgqw-6m45-hw5f`](https://github.com/streamlink/streamlink/security/advisories/GHSA-hgqw-6m45-hw5f))
+- SECURITY: fixed arbitrary local file read via `file://` URI in HLS and DASH ([`CVE-2026-44353`](https://nvd.nist.gov/vuln/detail/CVE-2026-44353) / [`GHSA-hgqw-6m45-hw5f`](https://github.com/streamlink/streamlink/security/advisories/GHSA-hgqw-6m45-hw5f)) ([`ef56b4f8`](https://github.com/streamlink/streamlink/commit/ef56b4f8626afaf2ddbfb1ebe0cf471b9b7c47af), [`c9f3f0df`](https://github.com/streamlink/streamlink/commit/c9f3f0dfc8d80fca885b42a1436110bb07a5ddbe))
 - Added: `--stream-passthrough-encrypted` for passing through encrypted HLS/DASH segments to the output stream without any checks ([#6896](https://github.com/streamlink/streamlink/pull/6896))
 - Fixed: `--interface` selection by name on macOS ([#6908](https://github.com/streamlink/streamlink/pull/6908))
 - Fixed: `--interface` not being applied to adapters mounted after session init ([#6915](https://github.com/streamlink/streamlink/pull/6915))
