@@ -881,7 +881,6 @@ class HLSStream(HTTPStream):
         except ValueError as err:
             raise OSError(f"Failed to parse playlist: {err}") from err
 
-        stream_name: str | None
         stream: Self | MuxedHLSStream[Self]
         streams: dict[str, Self | MuxedHLSStream[Self]] = {}
 
@@ -891,16 +890,13 @@ class HLSStream(HTTPStream):
             if playlist.is_iframe:
                 continue
 
-            names: dict[str, str | None] = dict(name=None, pixels=None, bitrate=None)
             audio_streams = []
             fallback_audio: list[Media] = []
             default_audio: list[Media] = []
             preferred_audio: list[Media] = []
 
             for media in playlist.media:
-                if media.type == "VIDEO" and media.name:
-                    names["name"] = media.name
-                elif media.type == "AUDIO":
+                if media.type == "AUDIO":
                     audio_streams.append(media)
 
             for media in audio_streams:
@@ -948,28 +944,12 @@ class HLSStream(HTTPStream):
             if not fallback_audio and audio_streams and audio_streams[0].uri:
                 fallback_audio = [audio_streams[0]]
 
-            names["pixels"] = playlist.get_name_pixels()
-            names["bitrate"] = playlist.get_name_bandwidth()
-
-            if name_fmt:
-                stream_name = name_fmt.format(**names)
-            else:
-                stream_name = (
-                    names.get(name_key)
-                    or names.get("name")
-                    or names.get("pixels")
-                    or names.get("bitrate")
-                )  # fmt: skip
-
+            stream_name = playlist.get_name(key=name_key, fmt=name_fmt, prefix=name_prefix)
             if not stream_name:
                 continue
-            if name_prefix:
-                stream_name = f"{name_prefix}{stream_name}"
-
             if stream_name in streams:  # rename duplicate streams
                 stream_name = f"{stream_name}_alt"
                 num_alts = len([k for k in streams.keys() if k.startswith(stream_name)])
-
                 # We shouldn't need more than 2 alt streams
                 if num_alts >= 2:
                     continue
