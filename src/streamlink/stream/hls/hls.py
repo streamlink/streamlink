@@ -45,7 +45,7 @@ if TYPE_CHECKING:
     from streamlink.buffers import RingBuffer
     from streamlink.session import Streamlink
     from streamlink.stream.hls.m3u8 import M3U8
-    from streamlink.stream.hls.segment import ByteRange, HLSPlaylist, Key, Map, Media
+    from streamlink.stream.hls.segment import ByteRange, HLSPlaylist, Key, Map
 
 
 log = getLogger(".".join(__name__.split(".")[:-1]))
@@ -890,60 +890,6 @@ class HLSStream(HTTPStream):
             if playlist.is_iframe:
                 continue
 
-            audio_streams = []
-            fallback_audio: list[Media] = []
-            default_audio: list[Media] = []
-            preferred_audio: list[Media] = []
-
-            for media in playlist.media:
-                if media.type == "AUDIO":
-                    audio_streams.append(media)
-
-            for media in audio_streams:
-                # Media without a URI is not relevant as external audio
-                if not media.uri:
-                    continue
-
-                if not fallback_audio and media.default:
-                    fallback_audio = [media]
-
-                # if the media is "autoselect" and it better matches the users preferences, use that
-                # instead of default
-                if not default_audio and (media.autoselect and locale.equivalent(language=media.parsed_language)):
-                    default_audio = [media]
-
-                # select the first audio stream that matches the user's explict language selection
-                if (
-                    # user has selected all languages
-                    audio_select_any
-                    # compare plain language codes first
-                    or (
-                        media.language is not None
-                        and media.language in audio_select_codes
-                    )
-                    # then compare parsed language codes and user input
-                    or (
-                        media.parsed_language is not None
-                        and media.parsed_language in audio_select_langs
-                    )
-                    # then compare media name attribute
-                    or (
-                        media.name
-                        and media.name.lower() in audio_select_codes
-                    )
-                    # fallback: find first media playlist matching the user's locale
-                    or (
-                        (not preferred_audio or media.default)
-                        and locale.explicit
-                        and locale.equivalent(language=media.parsed_language)
-                    )
-                ):  # fmt: skip
-                    preferred_audio.append(media)
-
-            # final fallback on the first audio stream listed
-            if not fallback_audio and audio_streams and audio_streams[0].uri:
-                fallback_audio = [audio_streams[0]]
-
             stream_name = playlist.get_name(key=name_key, fmt=name_fmt, prefix=name_prefix)
             if not stream_name:
                 continue
@@ -967,8 +913,12 @@ class HLSStream(HTTPStream):
                 if not check_streams_success:
                     continue
 
-            external_audio = preferred_audio or default_audio or fallback_audio
-
+            external_audio = playlist.get_external_audio(
+                locale=locale,
+                any_language=audio_select_any,
+                languages=audio_select_langs,
+                codes=audio_select_codes,
+            )
             if external_audio and FFMPEGMuxer.is_usable(session):
                 external_audio_msg = ", ".join([
                     f"(language={x.language}, name={x.name or 'N/A'})"
