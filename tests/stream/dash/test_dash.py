@@ -55,7 +55,7 @@ class TestDASHStreamParseManifest:
     @pytest.fixture()
     def mpd(self, monkeypatch: pytest.MonkeyPatch, parse_xml: Mock):
         mpd = Mock()
-        monkeypatch.setattr("streamlink.stream.dash.dash.MPD", mpd)
+        monkeypatch.setattr(DASHStream, "__parser__", mpd)
         return mpd
 
     @pytest.mark.parametrize(
@@ -408,7 +408,7 @@ class TestDASHStreamOpen:
     @pytest.fixture()
     def reader(self, monkeypatch: pytest.MonkeyPatch):
         reader = Mock()
-        monkeypatch.setattr("streamlink.stream.dash.dash.DASHStreamReader", reader)
+        monkeypatch.setattr(DASHStream, "__reader__", reader)
         return reader
 
     @pytest.fixture()
