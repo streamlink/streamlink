@@ -926,7 +926,8 @@ class HLSStream(HTTPStream):
                 ])  # fmt: skip
                 log.debug(f"Using external audio tracks for stream {stream_name} {external_audio_msg}")
 
-                stream = MuxedHLSStream(
+                # TODO: py310 support end: from typing import Self (runtime)
+                stream = MuxedHLSStream["Self"](
                     session,
                     video=playlist.uri,
                     audio=[x.uri for x in external_audio if x.uri],
