@@ -17,6 +17,8 @@ if TYPE_CHECKING:
 
     from requests import Response
 
+    from streamlink.utils.l10n import Localization
+
 
 log = getLogger(".".join(__name__.split(".")[:-1]))
 
@@ -204,6 +206,69 @@ class HLSPlaylist:
             return f"{int(bw / 1000.0)}k"
         else:
             return f"{bw / 1000.0}k"
+
+    def get_external_audio(
+        self,
+        *,
+        locale: Localization,
+        any_language: bool,
+        languages: list[Language],
+        codes: list[str],
+    ) -> list[Media]:
+        audio_streams = []
+        fallback_audio: list[Media] = []
+        default_audio: list[Media] = []
+        preferred_audio: list[Media] = []
+
+        for media in self.media:
+            if media.type == "AUDIO":
+                audio_streams.append(media)
+
+        for media in audio_streams:
+            # Media without a URI is not relevant as external audio
+            if not media.uri:
+                continue
+
+            if not fallback_audio and media.default:
+                fallback_audio = [media]
+
+            # if the media is "autoselect" and it better matches the user's preferences, use that instead of default
+            if not default_audio and (media.autoselect and locale.equivalent(language=media.parsed_language)):
+                default_audio = [media]
+
+            # select the first audio stream that matches the user's explict language selection
+            if (
+                # user has selected all languages
+                any_language
+                # compare plain language codes first
+                or (
+                    media.language is not None
+                    and media.language in codes
+                )
+                # then compare parsed language codes and user input
+                or (
+                    media.parsed_language is not None
+                    and media.parsed_language in languages
+                )
+                # then compare media name attribute
+                or (
+                    media.name
+                    and media.name.lower() in codes
+                )
+                # fallback: find first media playlist matching the user's locale
+                or (
+                    (not preferred_audio or media.default)
+                    and locale.explicit
+                    and locale.equivalent(language=media.parsed_language)
+                )
+            ):  # fmt: skip
+                preferred_audio.append(media)
+
+        # final fallback on the first audio stream listed
+        if not fallback_audio and audio_streams and audio_streams[0].uri:
+            fallback_audio = audio_streams[:1]
+
+        return preferred_audio or default_audio or fallback_audio
 
 
 @dataclass(kw_only=True)
