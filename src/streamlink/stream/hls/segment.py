@@ -146,6 +146,41 @@ class HLSPlaylist:
 
     MIN_FRAMERATE: ClassVar[float] = 30.0
 
+    def get_name(self, *, key: str = "", fmt: str | None = None, prefix: str | None = None) -> str | None:
+        name: str | None
+        names = {
+            "name": self.get_name_name(),
+            "pixels": self.get_name_pixels(),
+            "bitrate": self.get_name_bandwidth(),
+        }
+
+        if fmt:
+            name = fmt.format(**names)
+        else:
+            name = (
+                names.get(key)
+                or names.get("name")
+                or names.get("pixels")
+                or names.get("bitrate")
+            )  # fmt: skip
+
+        if not name:
+            return None
+
+        if prefix:
+            name = f"{prefix}{name}"
+
+        return name
+
+    def get_name_name(self) -> str | None:
+        res = None
+        for media in self.media:
+            if media.type == "VIDEO" and media.name:
+                # apparently, we don't return the first name (kept old logic after refactoring this)
+                res = media.name
+
+        return res
+
     def get_name_pixels(self, with_framerate: bool | None = None) -> str | None:
         stream_info = self.stream_info
 
