@@ -146,7 +146,7 @@ class Pluto(Plugin):
         data = self._graphql_request(
             "https://pluto.tv/api/tn/hubs/graphql/",
             "FullEpisodesData",
-            {"tnPersistedDocumentHash": "c33226b006b70748f919b5a1ea58d4f07c28cce943d1d2cc0a86fe10fd761b27"},
+            {"tnPersistedDocumentHash": "c42c1d0736825cd1f43e28b71dfa6f4955a1b3003a92e42edf99fcae885ea1fe"},
             {
                 "showId": self.match["id_s"],
                 "apiRawContentId": None,
