@@ -2,6 +2,7 @@
 $description Global live-streaming platform for live video game broadcasts and individual live streams.
 $url bigo.tv
 $type live
+$webbrowser Required for acquiring an API token for access to streams.
 $metadata id
 $metadata author
 $metadata category
@@ -116,14 +117,56 @@ class BigoHLSStream(HLSStream):
     re.compile(r"https?://(?:www\.)?bigo\.tv/(?P<site_id>[^/]+)$"),
 )
 class Bigo(Plugin):
+    _URL_TOKEN = "https://sec.bigo.sg/v1/webjs/status"
     _URL_API = "https://ta.bigo.tv/official_website/studio/getInternalStudioInfo"
 
+    def _acquire_token(self) -> str | None:
+        # ruff: disable[import-outside-top-level]
+        import trio
+
+        from streamlink.compat import BaseExceptionGroup
+        from streamlink.webbrowser.cdp import CDPClient, CDPClientSession, devtools
+        # ruff: enable[import-outside-top-level]
+
+        sender: trio.MemorySendChannel[str]
+        receiver: trio.MemoryReceiveChannel[str]
+        sender, receiver = trio.open_memory_channel(1)
+
+        async def on_token_response(client_session: CDPClientSession, response: devtools.fetch.RequestPaused):
+            async with client_session.alter_request(response) as cm:
+                await sender.send(cm.body)
+
+        async def intercept_token_response(client: CDPClient):
+            async with client.session() as client_session:
+                client_session.add_request_handler(on_token_response, url_pattern=f"{self._URL_TOKEN}?*", on_request=False)
+                async with client_session.navigate(self.url) as frame_id:
+                    await client_session.loaded(frame_id)
+                    return await receiver.receive()
+
+        try:
+            token = CDPClient.launch(self.session, intercept_token_response)
+        except BaseExceptionGroup:
+            log.exception("Failed intercepting token response")
+        except Exception as err:
+            log.error(err)
+        else:
+            return validate.Schema(
+                re.compile(r"jsonp\w+\((?P<json>.+?)\);"),
+                validate.get("json"),
+                validate.parse_json(),
+                {"token": str},
+                validate.get("token"),
+            ).validate(token)
+
     def _get_streams(self):
+        token = self._acquire_token()
+
         self.id, self.author, self.category, self.title, hls_url = self.session.http.post(
             self._URL_API,
             params={
                 "siteId": self.match["site_id"],
                 "verify": "",
+                "token": token,
             },
             schema=validate.Schema(
                 validate.parse_json(),
