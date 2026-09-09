@@ -76,4 +76,40 @@ OBS-Streamlink
   embedding streams directly as a scene source. This is useful for broadcasters of
   multi-platform live streams and for live commentators.
 
+Lurkiti
+-------
+
+.. image:: https://github.com/user-attachments/assets/25ae6d3c-f2d1-4303-b686-d9d703d38661
+  :align: center
+  :alt: Lurkiti settings window
+
+:Description: Monitors livestreams from the system tray and opens them with
+  Streamlink
+:Type: GUI (system tray application)
+:OS: :fab:`windows;fa-xl` :fab:`apple;fa-xl` :fab:`linux;fa-xl`
+:Author: `tarzasai <https://github.com/tarzasai>`_
+:Website: https://github.com/tarzasai/Lurkiti
+:Info: Lurkiti is a system-tray app that monitors a list of livestreams (Twitch,
+  YouTube and any other Streamlink-supported site) and notifies you when they go
+  live. Streams open in your preferred player (mpv, VLC, Clippiti, etc.) with
+  per-stream quality, notification, Streamlink and player option overrides.
+  Quick install from PyPi.
+
+Clippiti
+--------
+
+.. image:: https://github.com/user-attachments/assets/de6bed0e-dfa1-4119-8f37-ffac7e3f6470
+  :align: center
+  :alt: Clippiti main window with OSD help and pinned toolbar
+
+:Description: Livestream player with a rolling buffer, clipping, and recording
+:Type: GUI (graphical user interface)
+:OS: :fab:`windows;fa-xl` :fab:`apple;fa-xl` :fab:`linux;fa-xl`
+:Author: `tarzasai <https://github.com/tarzasai>`_
+:Website: https://github.com/tarzasai/clippiti
+:Info: Clippiti is a PyQt6 desktop player that opens a livestream and keeps a
+  rolling local HLS buffer, letting you take snapshots, save past moments as
+  clips, and record with optional auto-remux to MP4. It uses the Streamlink
+  Python API for stream resolution and ffmpeg for buffering and export.
+
 .. content list end
