@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from datetime import datetime, timezone
 from typing import TYPE_CHECKING
-from unittest.mock import patch
+from unittest.mock import Mock
 
 import freezegun
 import pytest
@@ -18,70 +18,63 @@ if TYPE_CHECKING:
 class TestPluginCanHandleUrlFilmon(PluginCanHandleUrl):
     __plugin__ = Filmon
 
-    should_match = [
-        "http://www.filmon.tv/channel/grandstand-show",
-        "http://www.filmon.tv/index/popout?channel_id=5510&quality=low",
-        "http://www.filmon.tv/tv/channel/export?channel_id=5510&autoPlay=1",
-        "http://www.filmon.tv/tv/channel/grandstand-show",
-        "http://www.filmon.tv/tv/channel-4",
-        "https://www.filmon.com/tv/bbc-news",
-        "https://www.filmon.tv/tv/55",
-        "http://www.filmon.tv/vod/view/10250-0-crime-boss",
-        "http://www.filmon.tv/group/comedy",
-    ]
-
     should_match_groups = [
-        ("http://www.filmon.tv/channel/grandstand-show", (None, "grandstand-show", None)),
-        ("http://www.filmon.tv/index/popout?channel_id=5510&quality=low", (None, "5510", None)),
-        ("http://www.filmon.tv/tv/channel/export?channel_id=5510&autoPlay=1", (None, "5510", None)),
-        ("http://www.filmon.tv/tv/channel/grandstand-show", (None, "grandstand-show", None)),
-        ("https://www.filmon.com/tv/bbc-news", (None, "bbc-news", None)),
-        ("https://www.filmon.com/tv/channel-4", (None, "channel-4", None)),
-        ("https://www.filmon.tv/tv/55", (None, "55", None)),
-        ("http://www.filmon.tv/group/comedy", ("group/", "comedy", None)),
-        ("http://www.filmon.tv/vod/view/10250-0-crime-boss", (None, None, "10250-0-crime-boss")),
-        ("http://www.filmon.tv/vod/view/10250-0-crime-boss/extra", (None, None, "10250-0-crime-boss")),
-        ("http://www.filmon.tv/vod/view/10250-0-crime-boss?extra", (None, None, "10250-0-crime-boss")),
-        ("http://www.filmon.tv/vod/view/10250-0-crime-boss&extra", (None, None, "10250-0-crime-boss")),
+        ("https://filmon.com/v2/tv/bbc-news", {"alias": "bbc-news"}),
+        ("https://filmon.tv/v2/tv/bbc-news", {"alias": "bbc-news"}),
+        ("https://filmon.com/tv/bbc-news", {"alias": "bbc-news"}),
+        ("https://filmon.tv/tv/bbc-news", {"alias": "bbc-news"}),
     ]
 
 
-@pytest.fixture()
-def filmonhls(session: Streamlink):
-    with (
-        freezegun.freeze_time("2000-01-01T00:00:00Z"),
-        patch("streamlink.plugins.filmon.FilmOnHLS._get_stream_data", return_value=[]),
-    ):
-        api = FilmOnAPI(session)
-        yield FilmOnHLS(session, "http://fake/one.m3u8", api=api, channel="test")
+class TestFilmOnHLS:
+    @pytest.fixture(autouse=True)
+    def frozen_time(self):
+        with freezegun.freeze_time("1970-01-01T00:00:00Z") as frozen_time:
+            yield frozen_time
 
+    @pytest.fixture(autouse=True)
+    def get_stream_data(self, monkeypatch: pytest.MonkeyPatch):
+        mock = Mock(
+            side_effect=[
+                [
+                    ("high", "http://fake/playlist.m3u8?id=456", 30.0),
+                    ("low", "http://fake/playlist.m3u8?id=def", 30.0),
+                ],
+                [
+                    ("high", "http://fake/playlist.m3u8?id=789", 30.0),
+                    ("low", "http://fake/playlist.m3u8?id=ghi", 30.0),
+                ],
+            ],
+        )
+        monkeypatch.setattr(FilmOnAPI, "get_stream_data", mock)
+        return mock
 
-def test_filmonhls_to_url(filmonhls):
-    filmonhls.watch_timeout = datetime(2000, 1, 1, 0, 0, 0, 0, timezone.utc).timestamp()
-    assert filmonhls.to_url() == "http://fake/one.m3u8"
+    @pytest.fixture()
+    def filmonhls(self, session: Streamlink):
+        return FilmOnHLS(
+            session,
+            "http://fake/720p.m3u8?id=123",
+            api=FilmOnAPI(session),
+            channel="test",
+            quality="high",
+            watch_timeout=30.0,
+        )
 
+    def test_to_url(self, filmonhls: FilmOnHLS):
+        assert filmonhls.to_url() == "http://fake/720p.m3u8?id=123"
 
-def test_filmonhls_to_url_updated(filmonhls):
-    filmonhls.watch_timeout = datetime(1999, 12, 31, 23, 59, 59, 9999, timezone.utc).timestamp()
+    def test_to_url_updated(self, filmonhls: FilmOnHLS, frozen_time):
+        assert filmonhls.to_url() == "http://fake/720p.m3u8?id=123"
 
-    filmonhls._get_stream_data.return_value = [
-        ("high", "http://fake/two.m3u8", datetime(2000, 1, 1, 0, 0, 0, 0, timezone.utc).timestamp()),
-    ]
-    assert filmonhls.to_url() == "http://fake/two.m3u8"
+        frozen_time.move_to(datetime.fromtimestamp(filmonhls._next_reload, tz=timezone.utc))
+        assert filmonhls.to_url() == "http://fake/720p.m3u8?id=456"
 
-    filmonhls.watch_timeout = datetime(1999, 12, 31, 23, 59, 59, 9999, timezone.utc).timestamp()
-    filmonhls._get_stream_data.return_value = [
-        ("high", "http://another-fake/three.m3u8", datetime(2000, 1, 1, 0, 0, 0, 0, timezone.utc).timestamp()),
-    ]
-    assert filmonhls.to_url() == "http://fake/three.m3u8"
+        frozen_time.move_to(datetime.fromtimestamp(filmonhls._next_reload, tz=timezone.utc))
+        assert filmonhls.to_url() == "http://fake/720p.m3u8?id=789"
 
-
-def test_filmonhls_to_url_missing_quality(filmonhls):
-    filmonhls.watch_timeout = datetime(1999, 12, 31, 23, 59, 59, 9999, timezone.utc).timestamp()
-
-    filmonhls._get_stream_data.return_value = [
-        ("low", "http://fake/two.m3u8", datetime(2000, 1, 1, 0, 0, 0, 0, timezone.utc).timestamp()),
-    ]
-    with pytest.raises(TypeError) as cm:
-        filmonhls.to_url()
-    assert str(cm.value) == "Stream has expired and cannot be translated to a URL"
+    def test_to_url_missing_quality(self, filmonhls: FilmOnHLS, frozen_time):
+        filmonhls.quality = "doesnotexist"
+        frozen_time.move_to(datetime.fromtimestamp(filmonhls._next_reload, tz=timezone.utc))
+        with pytest.raises(TypeError) as cm:
+            filmonhls.to_url()
+        assert str(cm.value) == "Stream has expired and cannot be translated to a URL"
