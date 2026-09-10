@@ -92,7 +92,7 @@ class Streann(Plugin):
         log.debug("passphrase")
         res = self.session.http.get(self.url)
         passphrase_m = self.passphrase_re.search(res.text)
-        return passphrase_m and passphrase_m.group("passphrase").encode("utf8")
+        return passphrase_m.group("passphrase").encode("utf8") if passphrase_m else None
 
     def get_token(self, **config):
         log.debug("get_token")
@@ -165,7 +165,8 @@ class Streann(Plugin):
         passphrase = self.passphrase()
         if passphrase:
             log.debug("Found passphrase")
-            params = decrypt_openssl(data, passphrase)
+            if not (params := decrypt_openssl(data, passphrase)):
+                return
             config = parse_qsd(params.decode("utf8"))
             log.trace("config: %r", config)
             token = self.get_token(**config)
