@@ -12,13 +12,18 @@ from __future__ import annotations
 
 import ctypes
 import re
+from base64 import b64encode
 from dataclasses import dataclass
+from json import dumps as json_dumps
+from random import randint
+from time import time
 from typing import TYPE_CHECKING
 
 from streamlink.logger import getLogger
 from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.api import validate
 from streamlink.stream.hls import HLSSegment, HLSStream, M3U8Parser, parse_tag
+from streamlink.utils.crypto import encrypt_openssl
 
 
 if TYPE_CHECKING:
@@ -117,13 +122,67 @@ class BigoHLSStream(HLSStream):
 )
 class Bigo(Plugin):
     _URL_API = "https://ta.bigo.tv/official_website/studio/getInternalStudioInfo"
+    _URL_TOKEN_T = "https://sec.bigo.sg/v1/webjs/t"
+    _URL_TOKEN_STATUS = "https://sec.bigo.sg/v1/webjs/status"
+
+    _TOKEN_ENCRYPTION_KEY = b"undefinedval0x01"
+
+    _SCHEMA_JSONP = validate.Schema(
+        validate.regex(re.compile(r"jsonp\w+\((?P<json>.+?)\);")),
+        validate.get("json"),
+        validate.parse_json(),
+    )
+
+    @staticmethod
+    def _fake_jsonp_callback():
+        return f"jsonpcallback_{int(time() * 1000)}_{randint(0, 1000000)}"
+
+    def _get_timestamp(self):
+        return self.session.http.get(
+            self._URL_TOKEN_T,
+            params={"callback": self._fake_jsonp_callback()},
+            schema=validate.Schema(
+                self._SCHEMA_JSONP,
+                {"code": int, "time": str},
+                validate.get("time"),
+            ),
+        )
+
+    def _get_token(self):
+        timestamp = self._get_timestamp()
+        payload = {
+            "dr": "00000000000000000000000000000000",
+            "business": "bigolive-video",
+            "scene": "",
+            "at_time": timestamp,
+            "ver": "2.0",
+        }
+        stringified = json_dumps(payload, separators=(",", ":")).encode("utf-8")
+        encrypted = encrypt_openssl(stringified, self._TOKEN_ENCRYPTION_KEY)
+        data = b64encode(encrypted)
+
+        return self.session.http.get(
+            self._URL_TOKEN_STATUS,
+            params={
+                "callback": self._fake_jsonp_callback(),
+                "data": data,
+            },
+            schema=validate.Schema(
+                self._SCHEMA_JSONP,
+                {"token": str},
+                validate.get("token"),
+            ),
+        )
 
     def _get_streams(self):
+        token = self._get_token()
+
         self.id, self.author, self.category, self.title, hls_url = self.session.http.post(
             self._URL_API,
             params={
                 "siteId": self.match["site_id"],
                 "verify": "",
+                "token": token,
             },
             schema=validate.Schema(
                 validate.parse_json(),
