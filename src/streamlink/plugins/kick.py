@@ -32,6 +32,7 @@ from streamlink.stream.hls import (
     M3U8Parser,
     parse_tag,
 )
+from streamlink.utils.data import search_dict
 
 
 log = getLogger(__name__)
@@ -138,7 +139,7 @@ class KickAdapter(SSLContextAdapter):
 )
 @pluginmatcher(
     name="vod",
-    pattern=re.compile(r"https?://(?:\w+\.)?kick\.com/(?:video/|[^/]+/videos/)(?P<vod>[^/?]+)"),
+    pattern=re.compile(r"https?://(?:\w+\.)?kick\.com/(?P<channel>[^/?]+)/videos/(?P<vod>[^/?]+)"),
 )
 @pluginmatcher(
     name="clip",
@@ -166,7 +167,7 @@ class Kick(Plugin):
     _CACHE_EXPIRATION = 3600 * 24 * 30
 
     _URL_API_LIVESTREAM = "https://kick.com/api/v2/channels/{channel}/livestream"
-    _URL_API_VOD = "https://kick.com/api/v1/video/{vod}"
+    _URL_API_VOD = "https://web.kick.com/api/v1/channels/{channel}/videos/{vod}"
     _URL_API_CLIP = "https://kick.com/api/v2/clips/{clip}"
 
     def __init__(self, *args, **kwargs):
@@ -260,7 +261,9 @@ class Kick(Plugin):
             validate.any(
                 validate.all(
                     {"message": str},
-                    validate.transform(lambda obj: ("error", obj["message"])),
+                    validate.get("message"),
+                    lambda msg: msg.lower() != "success",
+                    validate.transform(lambda msg: ("error", msg)),
                 ),
                 validate.all(
                     {"data": None},
@@ -310,24 +313,47 @@ class Kick(Plugin):
     def _get_streams_vod(self):
         self.id = self.match["vod"]
 
-        hls_url, self.author, self.title = self._query_api(
-            self._URL_API_VOD.format(vod=self.id),
+        channel_id = self.session.http.get(
+            self.url,
+            schema=validate.Schema(
+                validate.parse_html(),
+                validate.xml_xpath_string(".//script[contains(text(),'channel_id')][1]/text()"),
+                validate.none_or_all(
+                    validate.regex(re.compile(r"""self\.__next_f\.push\(\[\d+,\s*(?P<data>".+?")]\)""")),
+                    validate.get("data"),
+                    validate.parse_json(),
+                    validate.transform(lambda s: s.split("\n")),
+                    validate.map(lambda s: re.sub(r"^[^\[]+", "", s)),
+                    validate.filter(bool),
+                    [validate.parse_json()],
+                    validate.transform(lambda data: next(search_dict(data, "channel_id"), None)),
+                ),
+            ),
+        )
+        if not channel_id:
+            return
+
+        hls_url, self.author, self.category, self.title = self._query_api(
+            self._URL_API_VOD.format(channel=channel_id, vod=self.id),
             schema=validate.Schema(
                 {
-                    "source": validate.url(path=validate.endswith(".m3u8")),
-                    "livestream": {
-                        "session_title": str,
+                    "data": {
+                        "recording_url": validate.url(path=validate.endswith(".m3u8")),
                         "channel": {
-                            "user": {
-                                "username": str,
-                            },
+                            "username": str,
                         },
+                        "category": {
+                            "name": str,
+                        },
+                        "title": str,
                     },
                 },
+                validate.get("data"),
                 validate.union_get(
-                    "source",
-                    ("livestream", "channel", "user", "username"),
-                    ("livestream", "session_title"),
+                    "recording_url",
+                    ("channel", "username"),
+                    ("category", "name"),
+                    "title",
                 ),
             ),
         )
