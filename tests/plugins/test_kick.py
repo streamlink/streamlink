@@ -17,12 +17,8 @@ class TestPluginCanHandleUrlKick(PluginCanHandleUrl):
             {"channel": "LIVE_CHANNEL"},
         ),
         (
-            ("vod", "https://kick.com/video/VIDEO_ID"),
-            {"vod": "VIDEO_ID"},
-        ),
-        (
             ("vod", "https://kick.com/VIDEO_CHANNEL/videos/VIDEO_ID"),
-            {"vod": "VIDEO_ID"},
+            {"channel": "VIDEO_CHANNEL", "vod": "VIDEO_ID"},
         ),
         (
             ("clip", "https://kick.com/CLIP_CHANNEL?clip=CLIP_ID&foo=bar"),
