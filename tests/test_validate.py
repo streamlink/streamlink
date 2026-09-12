@@ -1628,6 +1628,56 @@ class TestParseQsdValidator:
         )
 
 
+class TestNextJSInlineRSCValidator:
+    def test_chunk_newline_no_tag(self):
+        assert validate.validate(
+            validate.nextjs_inline_rsc(),
+            r"""
+                self.__next_f.push([1, "a0:[\"$\",\"$L6c\",null,[{\"a\":\"b\"}]]\n\na1:[\"$\",\"$L6c\",null,[{\"c\":\"d\"}]]"])
+            """,
+        ) == [["$", "$L6c", None, [{"a": "b"}]], ["$", "$L6c", None, [{"c": "d"}]]]
+
+    def test_chunk_newline_ignored_tag(self):
+        assert validate.validate(
+            validate.nextjs_inline_rsc(),
+            r"""
+                self.__next_f.push([1, "a0:I[123,[{\"a\":\"b\"}]]\n\na1:Idiscarded-because-no-json\na2:Z[456,[{\"c\":\"d\"}]]"])
+            """,
+        ) == [[123, [{"a": "b"}]], [456, [{"c": "d"}]]]
+
+    def test_chunk_newline_length_tag(self):
+        assert validate.validate(
+            validate.nextjs_inline_rsc(),
+            r"""
+                self.__next_f.push([1, "a0:T10,[\"foobarfoobar\"]\n\na1:T10,foobar0123456789\na2:Ta0,[\"foobar\"]"])
+            """,
+        ) == [["foobarfoobar"], ["foobar"]]
+
+    def test_failure_data_type(self):
+        with pytest.raises(ValidationError) as cm:
+            validate.validate(validate.nextjs_inline_rsc(), 'self.__next_f.push([0, "foo"])')
+        assert_validationerror(
+            cm.value,
+            """
+                ValidationError(nextjs_inline_rsc):
+                  Unsupported data type: 0
+            """,
+        )
+
+    def test_failure_parse(self):
+        with pytest.raises(ValidationError) as cm:
+            validate.validate(validate.nextjs_inline_rsc(), 'self.__next_f.push([1, "a0:Tfoo,bar"])')
+        assert_validationerror(
+            cm.value,
+            """
+                ValidationError(nextjs_inline_rsc):
+                  Could not parse Next.js inline React Server Component Flight Stream data
+                  Context:
+                    invalid literal for int() with base 16: b'foo'
+            """,
+        )
+
+
 class TestValidationError:
     def test_subclass(self):
         assert issubclass(ValidationError, ValueError)

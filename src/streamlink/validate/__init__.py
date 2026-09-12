@@ -43,4 +43,5 @@ from streamlink.validate._validators import (
     validator_xml_findtext as xml_findtext,
     validator_xml_xpath as xml_xpath,
     validator_xml_xpath_string as xml_xpath_string,
+    validator_nextjs_inline_rsc as nextjs_inline_rsc,
 )
