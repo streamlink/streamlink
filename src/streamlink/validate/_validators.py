@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import operator
+import re
 from collections.abc import Container
 from typing import TYPE_CHECKING, Any, Literal
 from urllib.parse import urlparse
@@ -14,7 +15,7 @@ from streamlink.utils.parse import (
     parse_xml as _parse_xml,
 )
 from streamlink.validate._exception import ValidationError
-from streamlink.validate._schemas import AllSchema, AnySchema, TransformSchema
+from streamlink.validate._schemas import AllSchema, AnySchema, RegexSchema, TransformSchema
 from streamlink.validate._validate import validate
 
 
@@ -684,3 +685,118 @@ def validator_parse_qsd(*args, **kwargs) -> TransformSchema:
         return _parse_qsd(*_args, **_kwargs)
 
     return TransformSchema(parser, *args, **kwargs)
+
+
+# Special parser validators
+
+
+def validator_nextjs_inline_rsc() -> AllSchema:
+    """
+    Utility function for parsing Next.js's inline React Server Component (RSC) Flight stream data.
+
+    Example:
+
+    .. code-block:: python
+
+        script_contents = r'''
+            self.__next_f.push([1, "a0:[\\\"$\\\",\\\"$L6c\\\",null,[{\\\"key\\\":\\\"value\\\"}]]"])
+        '''
+
+        schema = validate.Schema(
+            validate.nextjs_inline_rsc(),
+        )
+        assert schema.validate(script_contents) == [["$", "$L6c", None, [{"key": "value"}]]]
+        schema.validate(None)  # raises ValidationError
+        schema.validate('{"something":"else"}')  # raises ValidationError
+
+        schema = validate.Schema(
+            validate.nextjs_inline_rsc(),
+            validate.transform(lambda data: next(streamlink.utils.data.search_dict(data, "key"), None)),
+        )
+        assert schema.validate(script_contents) == "value"
+
+    :raise ValidationError: If input is not Next.js inline RSC Flight stream data
+    :raise ValidationError: On parsing error
+    """
+
+    # Reconstructed from the client parser, with slight modifications for our JSON-parsing goals:
+    # - processStringChunk()
+    #   https://github.com/react/react/blob/v19.3.0/packages/react-client/src/ReactFlightClient.js#L5457-L5609
+    # - processFullStringRow()
+    #   https://github.com/react/react/blob/v19.3.0/packages/react-client/src/ReactFlightClient.js#L5189-L5290
+
+    row_id = 0
+    row_tag = 1
+    row_chunk_by_newline = 2
+    row_length = 3
+
+    tags_length = set(b"TAOoUSsLlGgMmV")
+    tags_ignored = set(b"rx") | set(range(65, 91))
+    likely_json = set(b'"[{')  # set(b'"[{tfn0123456789')  # only parse JSON strings, arrays and objects
+
+    def get_payload(match: re.Match) -> str:
+        # 0 = Bootstrap, 1 = Non-Bootstrap, 2 = Form-State, 3 = Binary
+        if match["type"] != "1":
+            raise ValidationError("Unsupported data type: {type}", type=match["type"], schema="nextjs_inline_rsc")
+        return match["payload"]
+
+    def parse_flight_data(flightdata: str | bytes) -> list[str]:
+        data = flightdata if isinstance(flightdata, bytes) else flightdata.encode("utf-8")
+        res: list[str] = []
+
+        pos = 0
+        end = len(data)
+        state: int = row_id
+
+        try:  # ruff: ignore[too-many-statements-in-try-clause]
+            while pos < end:
+                if state == row_id:
+                    pos = data.index(b":", pos) + 1
+                    state = row_tag
+
+                elif state == row_tag:
+                    tag = data[pos]
+                    if tag in tags_length:
+                        state = row_length
+                        pos += 1
+                    else:
+                        if tag in tags_ignored:
+                            pos += 1
+                        state = row_chunk_by_newline
+
+                elif state == row_chunk_by_newline:
+                    try:
+                        new_pos = data.index(b"\n", pos)
+                    except ValueError:
+                        new_pos = end
+                    if data[pos] in likely_json:
+                        res.append(data[pos:new_pos].decode("utf-8", errors="replace"))
+                    pos = new_pos + 1
+                    state = row_id
+
+                elif state == row_length:  # pragma: no branch
+                    new_pos = data.index(b",", pos)
+                    length = int(data[pos:new_pos], 16)
+                    pos = new_pos + 1
+                    if data[pos] in likely_json:
+                        res.append(data[pos : pos + length].decode("utf-8", errors="replace"))
+                    pos += length
+                    state = row_id
+
+        except (ValueError, IndexError) as err:
+            raise ValidationError(
+                "Could not parse Next.js inline React Server Component Flight Stream data",
+                schema="nextjs_inline_rsc",
+            ) from err
+
+        return res
+
+    return AllSchema(
+        str,
+        RegexSchema(re.compile(r'^\s*self\.__next_f\.push\s*\(\s*\[\s*(?P<type>\d+)\s*,\s*(?P<payload>".+?")\s*]\s*\)\s*;?')),
+        TransformSchema(get_payload),
+        validator_parse_json(),
+        TransformSchema(parse_flight_data),
+        [validator_parse_json()],
+        validator_filter(bool),
+    )
