@@ -81,11 +81,7 @@ class VidioAPI:
                 validate.parse_html(),
                 validate.xml_xpath_string(".//script[contains(text(),'streamSignature')][1]/text()"),
                 validate.none_or_all(
-                    validate.regex(re.compile(r"""self\.__next_f\.push\(\[\d+,\s*(?P<data>".+?")]\)""")),
-                    validate.get("data"),
-                    validate.parse_json(),
-                    validate.transform(lambda s: re.sub(r"^[^\[]+", "", s)),
-                    validate.parse_json(),
+                    validate.nextjs_inline_rsc(),
                     validate.transform(lambda data: next(search_dict(data, "streamSignature"), None)),
                     {
                         "clientId": str,
