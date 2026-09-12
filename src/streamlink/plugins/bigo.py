@@ -24,6 +24,7 @@ from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.api import validate
 from streamlink.stream.hls import HLSSegment, HLSStream, M3U8Parser, parse_tag
 from streamlink.utils.crypto import encrypt_openssl
+from streamlink.utils.random import CHOICES_HEX_LOWER, random_token
 
 
 if TYPE_CHECKING:
@@ -151,7 +152,7 @@ class Bigo(Plugin):
     def _get_token(self):
         timestamp = self._get_timestamp()
         payload = {
-            "dr": "00000000000000000000000000000000",
+            "dr": random_token(length=32, choices=CHOICES_HEX_LOWER),
             "business": "bigolive-video",
             "scene": "",
             "at_time": timestamp,
