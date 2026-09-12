@@ -16,6 +16,7 @@ from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.api import validate
 from streamlink.stream.hls import HLSStream
 from streamlink.stream.http import HTTPStream
+from streamlink.utils.data import search_dict
 
 
 log = getLogger(__name__)
@@ -169,11 +170,8 @@ class ZDFMediathek(Plugin):
                 validate.parse_html(),
                 validate.xml_xpath_string(".//script[contains(text(),'apiAuthToken')][1]/text()"),
                 validate.none_or_all(
-                    validate.regex(re.compile(r"""self\.__next_f\.push\(\[\d+,\s*(?P<data>".+?")]\)""")),
-                    validate.get("data"),
-                    validate.parse_json(),
-                    validate.regex(re.compile(r'''"apiAuthToken":"(?P<token>.+?)"''')),
-                    validate.get("token"),
+                    validate.nextjs_inline_rsc(),
+                    validate.transform(lambda d: next(search_dict(d, "apiAuthToken"), None)),
                 ),
             ),
         )

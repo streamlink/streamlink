@@ -12,6 +12,7 @@ from urllib.parse import urlparse
 from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.api import validate
 from streamlink.stream.hls import HLSStream
+from streamlink.utils.data import search_dict
 
 
 @pluginmatcher(
@@ -26,17 +27,11 @@ class LRT(Plugin):
             schema=validate.Schema(
                 validate.parse_html(),
                 validate.xml_xpath_string(".//script[contains(text(),'/get_live_url.php?channel=')][1]/text()"),
-                re.compile(r"""\s*self\.__next_f\.push\(\[\d+,\s*(?P<payload>"\d+:\[.+")]\)"""),
                 validate.none_or_all(
-                    validate.get("payload"),
-                    validate.parse_json(),
-                    str,
-                    validate.transform(lambda data: data.split(":", maxsplit=1)[-1]),
-                    validate.parse_json(),
-                    list,
-                    validate.get(3),
-                    {
-                        "channels": [
+                    validate.nextjs_inline_rsc(),
+                    validate.transform(lambda d: next(search_dict(d, "channels"), None)),
+                    validate.none_or_all(
+                        [
                             {
                                 "href": str,
                                 "channel": str,
@@ -46,8 +41,7 @@ class LRT(Plugin):
                                 validate.optional("get_streams_url"): schema_get_live_url,
                             },
                         ],
-                    },
-                    validate.get("channels"),
+                    ),
                 ),
             ),
         )
