@@ -706,6 +706,10 @@ class TestRedirect:
         assert mocked.call_count == 0
 
     def test_no_redirect_file(self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path):
+        # fix macOS py310 failure: "UnicodeError: encoding with 'idna' codec failed (UnicodeError: label empty or too long)"
+        # caused by proxy bypass lookups, which is irrelevant for this
+        monkeypatch.setattr("requests.utils.should_bypass_proxies", Mock(return_value=True))
+
         monkeypatch.chdir(tmp_path)
         one = tmp_path / "one"
         two = tmp_path / "two"
