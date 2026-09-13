@@ -360,7 +360,7 @@ install it first, either with a system package manager, or using ``pip``, as det
 
 .. _venv: https://docs.python.org/3/library/venv.html
 .. _virtualenv: https://virtualenv.pypa.io/en/stable/
-.. _pipx: https://pypa.github.io/pipx/
+.. _pipx: https://pipx.pypa.io/
 
 
 Source distribution
