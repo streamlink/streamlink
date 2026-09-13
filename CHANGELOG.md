@@ -1,5 +1,42 @@
 # Changelog
 
+## streamlink 8.6.0 (2026-09-13)
+
+- SECURITY: fixed arbitrary local file read via HTTP(S) redirection to `file://` URL (`CVE-2026-TO-BE-ASSIGNED` / [`GHSA-vf2x-4v53-pm7v`](https://github.com/streamlink/streamlink/security/advisories/GHSA-vf2x-4v53-pm7v)) ([`4b99c64d`](https://github.com/streamlink/streamlink/commit/4b99c64dde21ea70c24d9ffdbd15849b05f465c6))
+- SECURITY: fixed insecure cross-scheme redirection (HTTPS -> HTTP) (`CVE-2026-TO-BE-ASSIGNED` / [`GHSA-vf2x-4v53-pm7v`](https://github.com/streamlink/streamlink/security/advisories/GHSA-vf2x-4v53-pm7v)) ([`4b99c64d`](https://github.com/streamlink/streamlink/commit/4b99c64dde21ea70c24d9ffdbd15849b05f465c6))
+- Added: official support for Python 3.15 ([#7026](https://github.com/streamlink/streamlink/pull/7026))
+- Added: support for HLS packed audio streams ([#7083](https://github.com/streamlink/streamlink/pull/7083), [#7082](https://github.com/streamlink/streamlink/pull/7082))
+- Added: `HLSSegment.{get,iter}_content()` and `HLSStreamWriter.{get,iter}_segment_content()` for being able to modify segment data ([#7059](https://github.com/streamlink/streamlink/pull/7059))
+- Added: `itsoffset` option to `FFMPEGMuxer` ([#7081](https://github.com/streamlink/streamlink/pull/7081))
+- Added: `nextjs_inline_rsc()` to `validate` API ([#7110](https://github.com/streamlink/streamlink/pull/7110))
+- Fixed: HTTP server of `--player-http`/`--player-continuous-http` binding to all interfaces ([#7051](https://github.com/streamlink/streamlink/pull/7051))
+- Fixed: zero or negative duration values in HLS dateranges ([#7074](https://github.com/streamlink/streamlink/pull/7074))
+- Fixed: incorrect `t` attribute evaluation in DASH `SegmentTimeline.S` nodes ([#7075](https://github.com/streamlink/streamlink/pull/7075))
+- Updated plugins:
+  - ard_live: removed plugin ([#7091](https://github.com/streamlink/streamlink/pull/7091))
+  - ard_mediathek: rewritten and fixed plugin ([#7090](https://github.com/streamlink/streamlink/pull/7090))
+  - atresplayer: refactored stream retrieval ([#7062](https://github.com/streamlink/streamlink/pull/7062))
+  - bigo: added MPEG-TS packet header decryption due to Bigo's web-protection ([#7056](https://github.com/streamlink/streamlink/pull/7056), [#7059](https://github.com/streamlink/streamlink/pull/7059))
+  - bigo: worked around account requirements ([#7106](https://github.com/streamlink/streamlink/pull/7106), [#7109](https://github.com/streamlink/streamlink/pull/7109))
+  - cdnbg: fixed player\_url schema ([#7036](https://github.com/streamlink/streamlink/pull/7036))
+  - douyu: fixed API call failures on systems with unsynced clocks ([#7065](https://github.com/streamlink/streamlink/pull/7065))
+  - filmon: updated URL matcher and switched to v2 APIs ([#7105](https://github.com/streamlink/streamlink/pull/7105))
+  - goodgame: fixed stream retrieval ([#7086](https://github.com/streamlink/streamlink/pull/7086))
+  - kick: fixed VODs ([#7108](https://github.com/streamlink/streamlink/pull/7108))
+  - nimotv: fixed access to streams ([#7111](https://github.com/streamlink/streamlink/pull/7111))
+  - okru: fixed metadata schema ([#7092](https://github.com/streamlink/streamlink/pull/7092))
+  - piczel: removed plugin ([#7102](https://github.com/streamlink/streamlink/pull/7102))
+  - pluto: fixed URL matcher, channel ID resolver and VODs ([#7048](https://github.com/streamlink/streamlink/pull/7048), [#7100](https://github.com/streamlink/streamlink/pull/7100))
+  - tiktok: rewritten and fixed stream data schema for access to origin streams ([#7077](https://github.com/streamlink/streamlink/pull/7077))
+  - twitch: added support for portrait-format streams ([#7087](https://github.com/streamlink/streamlink/pull/7087))
+  - twitch: fixed missing category stream metadata breaking all stream metadata ([#7025](https://github.com/streamlink/streamlink/pull/7025))
+  - vidio: rewritten and fixed plugin ([#7063](https://github.com/streamlink/streamlink/pull/7063))
+  - zdf_mediathek: rewritten and fixed plugin ([#7093](https://github.com/streamlink/streamlink/pull/7093))
+- Dependencies: bumped min. version requirement of lxml to `5.0.0` ([#7029](https://github.com/streamlink/streamlink/pull/7029))
+
+[Full changelog](https://github.com/streamlink/streamlink/compare/8.5.0...8.6.0)
+
+
 ## streamlink 8.5.0 (2026-08-01)
 
 - Fixed: named-pipe player inputs not being cleaned up on pre-open failure ([#6935](https://github.com/streamlink/streamlink/pull/6935))
