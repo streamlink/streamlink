@@ -24,7 +24,7 @@ log = getLogger(__name__)
 
 
 @pluginmatcher(
-    re.compile(r"https?://(?:www\.|m\.)?nimo\.tv/(?P<username>.*)"),
+    re.compile(r"https?://(?:www\.|m\.)?nimo\.tv/(?P<channel>(?:live/\d+)?[^/?#]+)"),
 )
 class NimoTV(Plugin):
     data_url = "https://m.nimo.tv/{0}"
@@ -64,7 +64,7 @@ class NimoTV(Plugin):
         })
 
         data = self.session.http.get(
-            self.data_url.format(self.match["username"]),
+            self.data_url.format(self.match["channel"]),
             schema=validate.Schema(
                 re.compile(r"<script>var G_roomBaseInfo = ({.*?});</script>"),
                 validate.none_or_all(
