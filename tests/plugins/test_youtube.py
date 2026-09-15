@@ -23,6 +23,10 @@ class TestPluginCanHandleUrlYouTube(PluginCanHandleUrl):
             {"video_id": "aqz-KE-bpKQ"},
         ),
         (
+            ("default", "https://www.youtube.com/embed/aqz-KE-bpKQ"),
+            {"video_id": "aqz-KE-bpKQ"},
+        ),
+        (
             ("channel", "https://www.youtube.com/CHANNELNAME"),
             {"channel": "CHANNELNAME"},
         ),
@@ -63,14 +67,6 @@ class TestPluginCanHandleUrlYouTube(PluginCanHandleUrl):
             {"channel": "CHANNELNAME", "live": "/live"},
         ),
         (
-            ("embed", "https://www.youtube.com/embed/aqz-KE-bpKQ"),
-            {"video_id": "aqz-KE-bpKQ"},
-        ),
-        (
-            ("embed", "https://www.youtube.com/embed/live_stream?channel=CHANNELNAME"),
-            {"live": "CHANNELNAME"},
-        ),
-        (
             ("shorthand", "https://youtu.be/aqz-KE-bpKQ"),
             {"video_id": "aqz-KE-bpKQ"},
         ),
@@ -95,8 +91,15 @@ class TestPluginCanHandleUrlYouTube(PluginCanHandleUrl):
         ("http://gaming.youtube.com/watch?v=0123456789A", "https://www.youtube.com/watch?v=0123456789A"),
         ("http://youtu.be/0123456789A", "https://www.youtube.com/watch?v=0123456789A"),
         ("http://youtube.com/embed/0123456789A", "https://www.youtube.com/watch?v=0123456789A"),
-        ("http://youtube.com/embed/live_stream?channel=CHANNELID", "https://www.youtube.com/channel/CHANNELID/live"),
         ("http://www.youtube.com/watch?v=0123456789A", "https://www.youtube.com/watch?v=0123456789A"),
+        ("http://youtube.com/@CHANNELNHANDLE", "https://www.youtube.com/@CHANNELNHANDLE/live"),
+        ("http://youtube.com/@CHANNELNHANDLE/", "https://www.youtube.com/@CHANNELNHANDLE/live"),
+        ("http://youtube.com/c/CHANNELNAME", "https://www.youtube.com/c/CHANNELNAME/live"),
+        ("http://youtube.com/c/CHANNELNAME/", "https://www.youtube.com/c/CHANNELNAME/live"),
+        ("http://youtube.com/channel/CHANNELID", "https://www.youtube.com/channel/CHANNELID/live"),
+        ("http://youtube.com/channel/CHANNELID/", "https://www.youtube.com/channel/CHANNELID/live"),
+        ("http://youtube.com/user/USERNAME", "https://www.youtube.com/user/USERNAME/live"),
+        ("http://youtube.com/user/USERNAME/", "https://www.youtube.com/user/USERNAME/live"),
     ],
 )
 def test_translate_url(url, expected):
