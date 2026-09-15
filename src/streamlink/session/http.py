@@ -79,14 +79,17 @@ class Urllib3UtilUrlPercentReOverride:
     # noinspection PyProtectedMember
     _re_percent_encoding: re.Pattern = urllib3.util.url._PERCENT_RE  # type: ignore[attr-defined]
 
+    def __getattr__(self, item):
+        return getattr(self._re_percent_encoding, item)
+
+    # via `_encode_invalid_chars()`:
+    # https://github.com/urllib3/urllib3/blob/2.8.0/src/urllib3/util/url.py#L303-L305
     # noinspection PyUnusedLocal
-    # https://github.com/urllib3/urllib3/blob/2.0.0/src/urllib3/util/url.py#L241-L243
-    @classmethod
-    def subn(cls, repl: Any, string: str, count: Any = None) -> tuple[str, int]:
-        return string, len(cls._re_percent_encoding.findall(string))
+    def subn(self, repl: Any, string: str, count: Any = None) -> tuple[str, int]:
+        return string, len(self._re_percent_encoding.findall(string))
 
 
-urllib3.util.url._PERCENT_RE = Urllib3UtilUrlPercentReOverride  # type: ignore[assignment, ty:invalid-assignment]
+urllib3.util.url._PERCENT_RE = Urllib3UtilUrlPercentReOverride()  # type: ignore[assignment, ty:invalid-assignment]
 
 
 # Monkey-patch urllib3's set_socket_options,
