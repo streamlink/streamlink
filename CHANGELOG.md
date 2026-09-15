@@ -1,5 +1,12 @@
 # Changelog
 
+## streamlink 8.6.1 (2026-09-16)
+
+- Fixed: compatiblity with urllib3 2.8.0 ([#7117](https://github.com/streamlink/streamlink/pull/7117))
+
+[Full changelog](https://github.com/streamlink/streamlink/compare/8.6.0...8.6.1)
+
+
 ## streamlink 8.6.0 (2026-09-13)
 
 - SECURITY: fixed arbitrary local file read via HTTP(S) redirection to `file://` URL (`CVE-2026-TO-BE-ASSIGNED` / [`GHSA-vf2x-4v53-pm7v`](https://github.com/streamlink/streamlink/security/advisories/GHSA-vf2x-4v53-pm7v)) ([`4b99c64d`](https://github.com/streamlink/streamlink/commit/4b99c64dde21ea70c24d9ffdbd15849b05f465c6))
