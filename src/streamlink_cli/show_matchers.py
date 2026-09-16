@@ -24,7 +24,7 @@ PRIORITY_NAMES = {
 PATTERN_FLAG_NAMES: dict[int, str] = {
     flag.value: flag.name
     for flag in (re.IGNORECASE, re.VERBOSE)
-    if flag.name
+    if flag.name  # type: ignore[ty:redundant-condition]
 }  # fmt: skip
 
 

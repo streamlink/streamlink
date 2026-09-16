@@ -347,7 +347,7 @@ class Plugin(abc.ABC, metaclass=_PluginMeta):
             return
 
         self.matcher, self.match = self.matches.update(self.matchers, value)  # type: ignore[assignment, ty:invalid-assignment]
-        if not self.matcher or not self.match:
+        if not self.matcher or not self.match:  # type: ignore[ty:redundant-condition]
             raise PluginError("The input URL did not match any of this plugin's matchers")
 
     def set_option(self, key: str, value: Any) -> None:
