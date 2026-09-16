@@ -2,7 +2,7 @@
 
 ## streamlink 8.6.1 (2026-09-16)
 
-- Fixed: compatiblity with urllib3 2.8.0 ([#7117](https://github.com/streamlink/streamlink/pull/7117))
+- Fixed: compatibility with urllib3 2.8.0 ([#7117](https://github.com/streamlink/streamlink/pull/7117))
 
 [Full changelog](https://github.com/streamlink/streamlink/compare/8.6.0...8.6.1)
 
