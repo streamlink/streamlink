@@ -9,8 +9,8 @@
 
 ## streamlink 8.6.0 (2026-09-13)
 
-- SECURITY: fixed arbitrary local file read via HTTP(S) redirection to `file://` URL (`CVE-2026-TO-BE-ASSIGNED` / [`GHSA-vf2x-4v53-pm7v`](https://github.com/streamlink/streamlink/security/advisories/GHSA-vf2x-4v53-pm7v)) ([`4b99c64d`](https://github.com/streamlink/streamlink/commit/4b99c64dde21ea70c24d9ffdbd15849b05f465c6))
-- SECURITY: fixed insecure cross-scheme redirection (HTTPS -> HTTP) (`CVE-2026-TO-BE-ASSIGNED` / [`GHSA-vf2x-4v53-pm7v`](https://github.com/streamlink/streamlink/security/advisories/GHSA-vf2x-4v53-pm7v)) ([`4b99c64d`](https://github.com/streamlink/streamlink/commit/4b99c64dde21ea70c24d9ffdbd15849b05f465c6))
+- SECURITY: fixed arbitrary local file read via HTTP(S) redirection to `file://` URL ([`CVE-2026-92164`](https://nvd.nist.gov/vuln/detail/CVE-2026-92164) / [`GHSA-vf2x-4v53-pm7v`](https://github.com/streamlink/streamlink/security/advisories/GHSA-vf2x-4v53-pm7v)) ([`4b99c64d`](https://github.com/streamlink/streamlink/commit/4b99c64dde21ea70c24d9ffdbd15849b05f465c6))
+- SECURITY: fixed insecure cross-scheme redirection (HTTPS -> HTTP) ([`CVE-2026-92164`](https://nvd.nist.gov/vuln/detail/CVE-2026-92164) / [`GHSA-vf2x-4v53-pm7v`](https://github.com/streamlink/streamlink/security/advisories/GHSA-vf2x-4v53-pm7v)) ([`4b99c64d`](https://github.com/streamlink/streamlink/commit/4b99c64dde21ea70c24d9ffdbd15849b05f465c6))
 - Added: official support for Python 3.15 ([#7026](https://github.com/streamlink/streamlink/pull/7026))
 - Added: support for HLS packed audio streams ([#7083](https://github.com/streamlink/streamlink/pull/7083), [#7082](https://github.com/streamlink/streamlink/pull/7082))
 - Added: `HLSSegment.{get,iter}_content()` and `HLSStreamWriter.{get,iter}_segment_content()` for being able to modify segment data ([#7059](https://github.com/streamlink/streamlink/pull/7059))
