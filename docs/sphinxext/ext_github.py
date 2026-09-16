@@ -28,7 +28,7 @@ class GithubReferences(Transform):
     def _replace_pattern(self, pattern, url_format):
         project = self.document.settings.env.config.github_project
 
-        for node in self.document.traverse(nodes.Text):
+        for node in self.document.findall(nodes.Text):
             parent = node.parent
             if isinstance(parent, (nodes.reference, nodes.literal, nodes.FixedTextElement)):
                 continue

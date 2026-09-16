@@ -129,8 +129,8 @@ class TestLogging:
     )
     def test_level_names(self, name: str, level: int):
         assert logging.getLevelName(level) == name
-        assert logging.getLevelName(name) == level
-        assert logging.getLevelName(name.upper()) == level
+        assert logging.getLevelName(name) == level  # type: ignore[ty:deprecated]
+        assert logging.getLevelName(name.upper()) == level  # type: ignore[ty:deprecated]
 
     def test_levels_list(self):
         assert logger.levels == ["none", "critical", "error", "warning", "info", "debug", "trace", "all"]
