@@ -16,7 +16,8 @@ if TYPE_CHECKING:
 @pytest.fixture(autouse=True)
 def argv(request: pytest.FixtureRequest, monkeypatch: pytest.MonkeyPatch):
     argv = getattr(request, "param", [])
-    monkeypatch.setattr("sys.argv", ["streamlink", *argv])
+    argv = ["streamlink", *argv]  # copy
+    monkeypatch.setattr("sys.argv", argv)
 
     return argv
 
