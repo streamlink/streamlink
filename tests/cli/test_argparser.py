@@ -3,7 +3,7 @@ from __future__ import annotations
 import gettext
 
 # noinspection PyProtectedMember
-from argparse import SUPPRESS, ArgumentError, Namespace, _StoreConstAction, _VersionAction  # ruff: ignore[import-private-name]
+from argparse import SUPPRESS, ArgumentError, BooleanOptionalAction, Namespace, _StoreConstAction, _VersionAction  # ruff: ignore[import-private-name]
 from typing import TYPE_CHECKING, Any
 from unittest.mock import Mock, call
 
@@ -51,10 +51,48 @@ def parser():
     return build_parser()
 
 
+PLAYER_HTTP_FLAGS = (
+    pytest.param("--player-http", "player_http", id="player-http"),
+    pytest.param("--player-continuous-http", "player_continuous_http", id="player-continuous-http"),
+    pytest.param("--player-external-http", "player_external_http", id="player-external-http"),
+)
+
+
+@pytest.mark.parametrize(("flag", "destination"), PLAYER_HTTP_FLAGS)
+def test_player_http_boolean_optional_regression(parser: ArgumentParser, tmp_path: Path, flag: str, destination: str):
+    negative = "--no-" + flag[2:]
+    default = parser.parse_args([])
+    assert getattr(default, destination) is False
+
+    positional = parser.parse_args([flag, "https://example.invalid/stream", "best"])
+    assert getattr(positional, destination) is True
+    assert positional.url == "https://example.invalid/stream"
+    assert positional.stream == ["best"]
+
+    config = tmp_path / destination
+    config.write_text(flag[2:] + "\n", encoding="utf-8")
+    configured = parser.parse_args([f"@{config}"])
+    assert getattr(configured, destination) is True
+
+    try:
+        config_disabled = parser.parse_args([f"@{config}", negative])
+    except SystemExit as exc:
+        pytest.fail(f"negative option unrecognized: {negative} (exit={exc.code})")
+    assert getattr(config_disabled, destination) is False
+
+    disabled = parser.parse_args([negative, "https://example.invalid/stream", "best"])
+    assert getattr(disabled, destination) is False
+    assert disabled.url == "https://example.invalid/stream"
+    assert disabled.stream == ["best"]
+
+    assert getattr(parser.parse_args([negative, flag]), destination) is True
+    assert getattr(parser.parse_args([flag, negative]), destination) is False
+
+
 def test_metavar_or_noargumentvalue(action: Action):
     assert (
         action.metavar  # has an explicit metavar description
-        or isinstance(action, (_StoreConstAction, _VersionAction))  # doesn't expect a value
+        or isinstance(action, (_StoreConstAction, _VersionAction, BooleanOptionalAction))  # doesn't expect a value
     )
 
 

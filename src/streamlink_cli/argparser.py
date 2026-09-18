@@ -594,14 +594,16 @@ def build_parser():
     )
     player.add_argument(
         "--player-http",
-        action="store_true",
+        action=argparse.BooleanOptionalAction,
+        default=False,
         help="""
             Make the --player read the stream through HTTP instead of the stdin pipe.
         """,
     )
     player.add_argument(
         "--player-continuous-http",
-        action="store_true",
+        action=argparse.BooleanOptionalAction,
+        default=False,
         help="""
             Make the --player read the stream through HTTP, but unlike --player-http,
             it will continuously try to open the stream if the player requests it.
@@ -613,7 +615,8 @@ def build_parser():
     )
     player.add_argument(
         "--player-external-http",
-        action="store_true",
+        action=argparse.BooleanOptionalAction,
+        default=False,
         help="""
             Serve stream data through HTTP without opening the --player. This is
             useful to allow external devices like smartphones or streaming boxes to
