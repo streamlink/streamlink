@@ -1,6 +1,7 @@
 # ruff: file-ignore[global-statement]
 from __future__ import annotations
 
+import argparse
 import importlib.metadata
 import logging
 import os
@@ -49,7 +50,6 @@ from streamlink_cli.utils.versioncheck import check_version
 
 
 if TYPE_CHECKING:
-    import argparse
     from collections.abc import Mapping
 
     from streamlink.plugin import Plugin
@@ -748,7 +748,11 @@ def setup_args(
     prefix = parser.fromfile_prefix_chars or "@"
     configs = [f"{prefix}{config_file}" for config_file in config_files or []]
 
-    args, unknown = parser.parse_known_args(configs + arglist)
+    try:
+        args, unknown = parser.parse_known_args(configs + arglist)
+    except argparse.ArgumentError as err:
+        raise StreamlinkCLIError(f"{parser.prog}: error: {err}", code=2) from err
+
     if unknown and not ignore_unknown:
         # output the same text as parser.error(), but raise a StreamlinkCLIError
         usage = parser.format_usage()

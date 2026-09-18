@@ -44,6 +44,7 @@ class ArgumentParser(argparse.ArgumentParser):
         self.NESTED_ARGUMENT_GROUPS = {}
         self.color = True  # pre 3.14 compat
         super().__init__(*args, **kwargs)
+        self.exit_on_error = False
 
     # noinspection PyUnresolvedReferences,PyProtectedMember
     def add_argument_group(
