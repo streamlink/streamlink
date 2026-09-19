@@ -3,6 +3,7 @@ from __future__ import annotations
 import argparse
 import numbers
 import re
+import sys
 import warnings
 from gettext import gettext as _, ngettext
 from pathlib import Path
@@ -31,6 +32,9 @@ if TYPE_CHECKING:
 
 
 log = getLogger(__name__)
+
+# TODO: py312 support end: remove this workaround
+deprecated: dict[Any, Any] = dict(deprecated=True) if sys.version_info[:2] >= (3, 13) else {}
 
 
 class ArgumentParser(argparse.ArgumentParser):
@@ -696,16 +700,27 @@ def build_parser():
         """,
     )
     player.add_argument(
-        "--player-no-close",
-        action="store_true",
+        "--player-close",
+        action="boolean",
+        default=True,
         help="""
-            By default, Streamlink will close the --player when the stream ends.
+            Allow or prevent Streamlink from closing the --player when the stream output ends.
             This is to avoid "dead" GUI players lingering after Streamlink has exited.
+            Disable this to let the player decide itself when to exit.
 
-            It does however have the side-effect of sometimes closing a
-            player before it has played back all of its cached data.
+            A side-effect of the option enabled is that the player may be closed
+            before it has played back all of its cached data. For VOD content, this option should therefore be disabled.
 
-            This option will instead let the player decide when to exit.
+            Default is true.
+        """,
+    )
+    player.add_argument(
+        "--player-no-close",
+        action="store_false",
+        dest="player_close",
+        **deprecated,
+        help="""
+            Deprecated in favor of --no-player-close.
         """,
     )
     # noinspection PyTypeChecker
