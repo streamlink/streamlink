@@ -705,16 +705,27 @@ def build_parser():
         """,
     )
     player.add_argument(
-        "--player-no-close",
-        action="store_true",
+        "--player-close",
+        action="boolean",
+        default=True,
         help="""
-            By default, Streamlink will close the --player when the stream ends.
+            Allow or prevent Streamlink from closing the --player when the stream output ends.
             This is to avoid "dead" GUI players lingering after Streamlink has exited.
+            Disable this to let the player decide itself when to exit.
 
-            It does however have the side-effect of sometimes closing a
-            player before it has played back all of its cached data.
+            A side-effect of the option enabled is that the player may be closed
+            before it has played back all of its cached data. For VOD content, this option should therefore be disabled.
 
-            This option will instead let the player decide when to exit.
+            Default is true.
+        """,
+    )
+    player.add_argument(
+        "--player-no-close",
+        action="store_false",
+        dest="player_close",
+        **deprecated,
+        help="""
+            Deprecated in favor of --no-player-close.
         """,
     )
     # noinspection PyTypeChecker

@@ -182,7 +182,7 @@ def create_output(formatter: Formatter) -> FileOutput | PlayerOutput:
             args=args.player_args,
             env=args.player_env,
             quiet=not args.player_verbose,
-            kill=not args.player_no_close,
+            kill=args.player_close,
             namedpipe=namedpipe,
             http=http,
             record=record,

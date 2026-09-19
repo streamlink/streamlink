@@ -20,7 +20,8 @@ ARGS_PLAYER_ENV = "--player-env=VAR1=abc", "--player-env=VAR2=def"
 
 
 @pytest.fixture(autouse=True)
-def argv(argv: list):
+def argv(argv: list, recwarn: pytest.WarningsRecorder):
+    # request the recwarn fixture, so the recorder will have recorded warnings in tests when parsing the argv
     parser = build_parser()
     setup_args(parser)
 
@@ -128,13 +129,65 @@ def test_player_record(check_file_output: Mock, formatter: Formatter, argv: list
 )
 def test_player_record_stdout(formatter: Formatter, argv: list):
     output = create_output(formatter)
-    assert type(output) is PlayerOutput
+    assert isinstance(output, PlayerOutput)
     assert output.playerargs.title == "foo - bar"
     assert output.env == {"VAR1": "abc", "VAR2": "def"}
-    assert type(output.record) is FileOutput
+    assert isinstance(output.record, FileOutput)
     assert output.record.filename is None
     assert output.record.fd is stdout
     assert output.record.record is None
+
+
+@pytest.mark.parametrize(
+    ("argv", "expected", "warnings"),
+    [
+        pytest.param(
+            ["--player=foo"],
+            True,
+            [],
+            id="default",
+        ),
+        pytest.param(
+            ["--player=foo", "--player-close"],
+            True,
+            [],
+            id="enabled",
+        ),
+        pytest.param(
+            ["--player=foo", "--no-player-close"],
+            False,
+            [],
+            id="disabled",
+        ),
+        pytest.param(
+            ["--player=foo", "--player-no-close"],
+            False,
+            [(StreamlinkDeprecationWarning, "option '--player-no-close' is deprecated")],
+            id="disabled-deprecated",
+            marks=pytest.mark.python(3, 13),
+        ),
+        pytest.param(
+            ["--player=foo", "--player-close", "--player-no-close"],
+            False,
+            [(StreamlinkDeprecationWarning, "option '--player-no-close' is deprecated")],
+            id="enabled-with-disabled-deprecated",
+            marks=pytest.mark.python(3, 13),
+        ),
+        pytest.param(
+            ["--player=foo", "--player-no-close", "--player-close"],
+            True,
+            [(StreamlinkDeprecationWarning, "option '--player-no-close' is deprecated")],
+            id="disabled-deprecated-with-enabled",
+            marks=pytest.mark.python(3, 13),
+        ),
+    ],
+    indirect=["argv"],
+)
+def test_player_close(recwarn: pytest.WarningsRecorder, formatter: Formatter, argv: list, expected: bool, warnings: list):
+    output = create_output(formatter)
+    assert isinstance(output, PlayerOutput)
+    assert output.kill is expected
+    assert [(record.category, str(record.message)) for record in recwarn.list] == warnings
 
 
 @pytest.mark.parametrize(
