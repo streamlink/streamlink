@@ -234,10 +234,10 @@ def test_warnings(recwarn: pytest.WarningsRecorder):
             id="Arg with action=store_true",
         ),
         pytest.param(
-            ["--http-no-ssl-verify"],
+            ["--no-http-ssl-verify"],
             "http-ssl-verify",
             False,
-            id="Arg with action=store_false",
+            id="Arg with action=boolean",
         ),
         pytest.param(
             ["--http-query-param", "foo=bar", "--http-query-param", "baz=qux"],

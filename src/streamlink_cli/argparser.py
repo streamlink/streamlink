@@ -1453,13 +1453,25 @@ def build_parser():
         """,
     )
     http.add_argument(
-        "--http-no-ssl-verify",
-        action="store_false",
+        "--http-ssl-verify",
+        action="boolean",
         default=None,
         help="""
-            Don't attempt to verify TLS/SSL certificates.
+            Enable or disable the verification of TLS/SSL certificates.
 
             Use with caution, as it has TLS/SSL security implications.
+
+            Default is true.
+        """,
+    )
+    http.add_argument(
+        "--http-no-ssl-verify",
+        action="store_false",
+        dest="http_ssl_verify",
+        default=None,
+        **deprecated,
+        help="""
+            Deprecated in favor of --no-http-ssl-verify.
         """,
     )
     http.add_argument(
@@ -1600,7 +1612,7 @@ _ARGUMENT_TO_SESSIONOPTION: list[tuple[str, str, Callable[[Any], Any] | type | N
     ("http_header", "http-headers", dict),
     ("http_query_param", "http-query-params", dict),
     ("http_ignore_env", "http-trust-env", None),
-    ("http_no_ssl_verify", "http-ssl-verify", None),
+    ("http_ssl_verify", "http-ssl-verify", None),
     ("http_disable_dh", "http-disable-dh", None),
     ("http_ssl_cert", "http-ssl-cert", None),
     ("http_ssl_cert_crt_key", "http-ssl-cert", tuple),
