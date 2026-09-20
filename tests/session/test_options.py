@@ -71,6 +71,13 @@ def test_session_wrapper_methods(session: Streamlink):
             123.456,
             id="hls-segment-queue-threshold",
         ),
+        pytest.param(
+            "ffmpeg-no-validation",
+            "ffmpeg-validation",
+            True,
+            False,
+            id="ffmpeg-no-validation",
+        ),
     ],
 )
 def test_session_option_set_deprecated(

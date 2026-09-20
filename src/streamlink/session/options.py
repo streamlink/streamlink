@@ -226,7 +226,11 @@ class StreamlinkOptions(Options):
           - ``None``
           - Override for the ``ffmpeg``/``ffmpeg.exe`` binary path,
             which by default gets looked up via the ``PATH`` env var
-        * - ffmpeg-no-validation
+        * - ffmpeg-validation
+          - ``bool``
+          - ``True``
+          - Enable or disable FFmpeg validation and version logging
+        * - ffmpeg-no-validation *(deprecated)*
           - ``bool``
           - ``False``
           - Disable FFmpeg validation and version logging
@@ -324,7 +328,7 @@ class StreamlinkOptions(Options):
             "hls-audio-select": [],
             "dash-manifest-reload-attempts": 3,
             "ffmpeg-ffmpeg": None,
-            "ffmpeg-no-validation": False,
+            "ffmpeg-validation": True,
             "ffmpeg-validation-timeout": 4.0,
             "ffmpeg-verbose": False,
             "ffmpeg-verbose-path": None,
@@ -475,4 +479,5 @@ class StreamlinkOptions(Options):
         "http-timeout": _set_http_attr,
         "hls-duration": _factory_set_deprecated("stream-segmented-duration", float),
         "hls-segment-queue-threshold": _factory_set_deprecated("stream-segmented-queue-deadline", float),
+        "ffmpeg-no-validation": _factory_set_deprecated("ffmpeg-validation", lambda val: not val),
     }

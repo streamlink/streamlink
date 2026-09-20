@@ -331,6 +331,15 @@ def test_setup_session_options_deprecation_override(
             ["`hls-segment-queue-threshold` has been deprecated in favor of the `stream-segmented-queue-deadline` option"],
             id="hls-segment-queue-threshold",
         ),
+        pytest.param(
+            [
+                "--ffmpeg-no-validation",
+            ],
+            "ffmpeg-validation",
+            False,
+            ["`ffmpeg-no-validation` has been deprecated in favor of the `ffmpeg-validation` option"],
+            id="ffmpeg-no-validation",
+        ),
     ],
 )
 def test_setup_session_options_deprecations(

@@ -29,7 +29,7 @@ def _logger(caplog: pytest.LogCaptureFixture):
 
 @pytest.fixture()
 def session(session: Streamlink):
-    session.set_option("ffmpeg-no-validation", True)
+    session.set_option("ffmpeg-validation", False)
 
     return session
 
@@ -110,9 +110,10 @@ class TestCommand:
         assert len(caplog.records) == 0
 
     def test_validate_success(self, monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture, session: Streamlink):
-        session.options.update({"ffmpeg-no-validation": False})
+        session.options.update({"ffmpeg-validation": True})
 
         class MyFFmpegVersionOutput(FFmpegVersionOutput):
+            # noinspection PyMethodOverriding
             def run(self, *_, **__):
                 self.onstdout(0, "ffmpeg version 0.0.0 suffix")
                 self.onstdout(1, "foo")
@@ -144,11 +145,12 @@ class TestCommand:
     )
     def test_validate_timeout(self, monkeypatch: pytest.MonkeyPatch, session: Streamlink, timeout_value, expected_timeout):
         session.options.update({
-            "ffmpeg-no-validation": False,
+            "ffmpeg-validation": True,
             "ffmpeg-validation-timeout": timeout_value,
         })
 
         class MyFFmpegVersionOutput(FFmpegVersionOutput):
+            # noinspection PyMethodOverriding
             def run(self, *_, **__):
                 self.onstdout(0, "ffmpeg version 0.0.0 custom")
                 return True
@@ -164,9 +166,10 @@ class TestCommand:
         ]
 
     def test_validate_failure(self, monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture, session: Streamlink):
-        session.options.update({"ffmpeg-no-validation": False})
+        session.options.update({"ffmpeg-validation": True})
 
         class MyFFmpegVersionOutput(FFmpegVersionOutput):
+            # noinspection PyMethodOverriding
             def run(self, *_, **__):
                 return False
 

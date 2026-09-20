@@ -1254,11 +1254,21 @@ def build_parser():
         """,
     )
     transport_ffmpeg.add_argument(
-        "--ffmpeg-no-validation",
-        action="store_true",
+        "--no-ffmpeg-validation",
+        action="store_false",
+        dest="ffmpeg_validation",
         default=None,
         help="""
             Disable FFmpeg validation and version logging.
+        """,
+    )
+    transport_ffmpeg.add_argument(
+        "--ffmpeg-no-validation",
+        action="store_true",
+        default=None,
+        # deprecated=True,  # deprecation warning via session option mapping
+        help="""
+            Deprecated in favor of --no-ffmpeg-validation.
         """,
     )
     transport_ffmpeg.add_argument(
@@ -1599,7 +1609,8 @@ _ARGUMENT_TO_SESSIONOPTION: list[tuple[str, str, Callable[[Any], Any] | type | N
     ("hls_audio_select", "hls-audio-select", None),
     ("dash_manifest_reload_attempts", "dash-manifest-reload-attempts", None),
     ("ffmpeg_ffmpeg", "ffmpeg-ffmpeg", None),
-    ("ffmpeg_no_validation", "ffmpeg-no-validation", None),
+    ("ffmpeg_no_validation", "ffmpeg-no-validation", None),  # deprecated options must come first
+    ("ffmpeg_validation", "ffmpeg-validation", None),
     ("ffmpeg_verbose", "ffmpeg-verbose", None),
     ("ffmpeg_verbose_path", "ffmpeg-verbose-path", None),
     ("ffmpeg_loglevel", "ffmpeg-loglevel", None),
