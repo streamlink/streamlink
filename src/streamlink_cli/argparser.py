@@ -593,9 +593,12 @@ def build_parser():
     player.add_argument(
         "-v",
         "--player-verbose",
-        action="store_true",
+        action="boolean",
+        default=False,
         help="""
             Write the --player's stdout/stderr output to Streamlink's stdout/stderr output.
+
+            Default is false.
         """,
     )
     player.add_argument(
@@ -610,9 +613,12 @@ def build_parser():
     player.add_argument(
         "-n",
         "--player-fifo",
-        action="store_true",
+        action="boolean",
+        default=False,
         help="""
             Make the --player read the stream through a named pipe instead of the stdin pipe.
+
+            Default is false.
         """,
     )
     player.add_argument(
@@ -626,14 +632,18 @@ def build_parser():
     )
     player.add_argument(
         "--player-http",
-        action="store_true",
+        action="boolean",
+        default=False,
         help="""
             Make the --player read the stream through HTTP instead of the stdin pipe.
+
+            Default is false.
         """,
     )
     player.add_argument(
         "--player-continuous-http",
-        action="store_true",
+        action="boolean",
+        default=False,
         help="""
             Make the --player read the stream through HTTP, but unlike --player-http,
             it will continuously try to open the stream if the player requests it.
@@ -641,11 +651,14 @@ def build_parser():
             This enables the handling of stream disconnects if the player is
             capable of reconnecting to a HTTP stream. This is usually done by
             setting the player to a "repeat mode".
+
+            Default is false.
         """,
     )
     player.add_argument(
         "--player-external-http",
-        action="store_true",
+        action="boolean",
+        default=False,
         help="""
             Serve stream data through HTTP without opening the --player. This is
             useful to allow external devices like smartphones or streaming boxes to
@@ -663,6 +676,8 @@ def build_parser():
 
             The URLs that can be used to access the stream will be printed to the
             console, and the server can be interrupted using CTRL-C.
+
+            Default is false.
         """,
     )
     player.add_argument(
