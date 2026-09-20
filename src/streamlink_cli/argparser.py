@@ -14,7 +14,7 @@ from streamlink import __version__ as streamlink_version, logger
 from streamlink.exceptions import StreamlinkDeprecationWarning
 from streamlink.logger import getLogger
 from streamlink.options import Options
-from streamlink.utils.args import boolean, comma_list, comma_list_filter, filesize, keyvalue, num
+from streamlink.utils.args import Boolean, boolean, comma_list, comma_list_filter, filesize, keyvalue, num
 from streamlink.utils.times import hours_minutes_seconds_float
 from streamlink_cli.constants import STREAM_PASSTHROUGH
 from streamlink_cli.exceptions import StreamlinkCLIError
@@ -45,6 +45,8 @@ class ArgumentParser(argparse.ArgumentParser):
         self.color = True  # pre 3.14 compat
         super().__init__(*args, **kwargs)
         self.exit_on_error = False
+
+        self.register("action", "boolean", Boolean)
 
     # noinspection PyUnresolvedReferences,PyProtectedMember
     def add_argument_group(

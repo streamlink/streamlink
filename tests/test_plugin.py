@@ -33,6 +33,7 @@ from streamlink.plugin.plugin import (
     parse_params,
     stream_weight,
 )
+from streamlink.utils.args import Boolean
 
 
 if TYPE_CHECKING:
@@ -410,6 +411,29 @@ class TestPluginArguments:
             parser.add_argument(pluginarg.argument_name("myplugin"), **pluginarg.options)
             namespace = parser.parse_args(args)
             assert namespace.myplugin_foo == expected
+
+    def test_boolean_action(self):
+        class MyPlugin(FakePlugin):
+            pass
+
+        class MyArgumentParser(argparse.ArgumentParser):
+            def __init__(self, *args, **kwargs):
+                super().__init__(*args, exit_on_error=False, **kwargs)
+                self.register("action", "boolean", Boolean)
+
+        pluginargument("foo", action="boolean")(MyPlugin)
+        assert MyPlugin.arguments is not None
+        pluginarg = MyPlugin.arguments.get("foo")
+        assert pluginarg
+
+        parser = MyArgumentParser()
+        parser.add_argument(pluginarg.argument_name("myplugin"), **pluginarg.options)
+        namespace = parser.parse_args([])
+        assert namespace.myplugin_foo is None
+        namespace = parser.parse_args(["--myplugin-foo"])
+        assert namespace.myplugin_foo is True
+        namespace = parser.parse_args(["--no-myplugin-foo"])
+        assert namespace.myplugin_foo is False
 
     def test_decorator_typeerror(self):
         class NotAPluginMeta(type):

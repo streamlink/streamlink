@@ -474,11 +474,13 @@ def test_pluginmatcher(code: str, expected: list, raises: nullcontext):
             dedent("""
                 @pluginargument("foo", action=None)
                 @pluginargument("bar", action="store_true")
+                @pluginargument("baz", action="boolean")
                 class TestPlugin(Plugin): pass
             """),
             [
                 PluginArgument(name="foo", action=None),
                 PluginArgument(name="bar", action="store_true"),
+                PluginArgument(name="baz", action="boolean"),
             ],
             does_not_raise,
             id="action",

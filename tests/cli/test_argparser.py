@@ -11,6 +11,7 @@ import pytest
 
 from streamlink.exceptions import StreamlinkDeprecationWarning as SDW
 from streamlink.plugin import Plugin, pluginargument
+from streamlink.utils.args import Boolean
 from streamlink_cli.argparser import (
     ArgumentParser,
     build_parser,
@@ -53,6 +54,7 @@ def parser():
 def test_metavar_or_noargumentvalue(action: Action):
     assert (
         action.metavar  # has an explicit metavar description
+        or isinstance(action, Boolean)  # automatic metadata description via specific action
         or isinstance(action, (_StoreConstAction, _VersionAction))  # doesn't expect a value
     )
 
