@@ -751,7 +751,8 @@ def build_parser():
     output.add_argument(
         "-O",
         "--stdout",
-        action="store_true",
+        action="boolean",
+        default=False,
         help="""
             Write stream data to `stdout` instead of playing it in the --player.
         """,
@@ -833,14 +834,16 @@ def build_parser():
     output.add_argument(
         "-f",
         "--force",
-        action="store_true",
+        action="boolean",
+        default=False,
         help="""
             When using --output or --record, always write to file even if it already exists (overwrite).
         """,
     )
     output.add_argument(
         "--skip",
-        action="store_true",
+        action="boolean",
+        default=False,
         help="""
             When using --output or --record, never write to file if it already exists (don't prompt).
 
