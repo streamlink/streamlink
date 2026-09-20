@@ -1095,7 +1095,7 @@ def build_parser():
     )
     transport.add_argument(
         "--stream-passthrough-encrypted",
-        action="store_true",
+        action="boolean",
         default=None,
         help="""
             Pass through data from encrypted streams without decryption or encryption checks.
@@ -1105,7 +1105,7 @@ def build_parser():
     )
     transport.add_argument(
         "--mux-subtitles",
-        action="store_true",
+        action="boolean",
         default=None,
         help="""
             Automatically mux available subtitles into the output stream.
@@ -1136,7 +1136,7 @@ def build_parser():
     )
     transport_hls.add_argument(
         "--hls-segment-stream-data",
-        action="store_true",
+        action="boolean",
         default=None,
         help="""
             Immediately write segment data into output buffer while downloading.
@@ -1247,7 +1247,7 @@ def build_parser():
     )
     transport_hls.add_argument(
         "--hls-live-restart",
-        action="store_true",
+        action="boolean",
         default=None,
         help="""
             Skip to the beginning of a live stream, or as far back as possible.
