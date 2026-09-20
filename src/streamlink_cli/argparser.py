@@ -442,12 +442,15 @@ def build_parser():
         """,
     )
     plugin.add_argument(
-        "--no-plugin-sideloading",
-        action="store_true",
+        "--plugin-sideloading",
+        action="boolean",
+        default=True,
         help="""
-            Disable automatic sideloading of third-party plugins from the default location.
+            Enable or disable automatic sideloading of third-party plugins from the default location.
 
             See the plugin-sideloading documentation for where third-party plugins are loaded from.
+
+            Default is true.
         """,
     )
     plugin.add_argument(
