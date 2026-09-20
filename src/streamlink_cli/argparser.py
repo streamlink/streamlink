@@ -15,7 +15,7 @@ from streamlink import __version__ as streamlink_version, logger
 from streamlink.exceptions import StreamlinkDeprecationWarning
 from streamlink.logger import getLogger
 from streamlink.options import Options
-from streamlink.utils.args import Boolean, boolean, comma_list, comma_list_filter, filesize, keyvalue, num
+from streamlink.utils.args import Boolean, comma_list, comma_list_filter, filesize, keyvalue, num
 from streamlink.utils.times import hours_minutes_seconds_float
 from streamlink_cli.constants import STREAM_PASSTHROUGH
 from streamlink_cli.exceptions import StreamlinkCLIError
@@ -258,13 +258,12 @@ def build_parser():
     )
     general.add_argument(
         "--auto-version-check",
-        type=boolean,
-        metavar="{yes,true,1,on,no,false,0,off}",
-        default=False,
+        action="boolean",
+        nargs="?",
         help="""
             Enable or disable the automatic check for a new version of Streamlink.
 
-            Default is "no".
+            Default is false.
         """,
     )
     general.add_argument(
@@ -651,8 +650,8 @@ def build_parser():
     )
     player.add_argument(
         "--player-external-http-continuous",
-        type=boolean,
-        metavar="{yes,true,1,on,no,false,0,off}",
+        action="boolean",
+        nargs="?",
         default=True,
         help="""
             Set the run-mode of --player-external-http to continuous or non-continuous.
@@ -1536,8 +1535,8 @@ def build_parser():
     webbrowser = parser.add_argument_group("Web browser options")
     webbrowser.add_argument(
         "--webbrowser",
-        type=boolean,
-        metavar="{yes,true,1,on,no,false,0,off}",
+        action="boolean",
+        nargs="?",
         default=None,
         help="""
             Enable or disable support for Streamlink's webbrowser API.
@@ -1601,8 +1600,8 @@ def build_parser():
     )
     webbrowser.add_argument(
         "--webbrowser-headless",
-        type=boolean,
-        metavar="{yes,true,1,on,no,false,0,off}",
+        action="boolean",
+        nargs="?",
         default=None,
         help="""
             Whether to launch the web browser in headless mode or not.
