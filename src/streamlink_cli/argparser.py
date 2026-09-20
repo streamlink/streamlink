@@ -429,14 +429,16 @@ def build_parser():
         """,
     )
     plugin.add_argument(
-        "--no-plugin-cache",
-        action="store_true",
+        "--plugin-cache",
+        action="boolean",
         default=None,
         help="""
-            Disable I/O of the plugin key-value store.
+            Enable or disable I/O of the plugin key-value store.
 
             If disabled, plugins won't be able to load or store data like cookies, authentication data, etc.
             The data which is loaded or stored depends on each plugin implementation.
+
+            Default is true.
         """,
     )
     plugin.add_argument(
@@ -1555,7 +1557,7 @@ def build_parser():
 # NOTE: arguments with `action=store_{true,false}` must set `default=None`
 _ARGUMENT_TO_SESSIONOPTION: list[tuple[str, str, Callable[[Any], Any] | type | None]] = [
     # generic arguments
-    ("no_plugin_cache", "no-plugin-cache", None),
+    ("plugin_cache", "plugin-cache", None),
     ("locale", "locale", None),
     # network arguments
     ("interface", "interface", None),

@@ -51,6 +51,13 @@ def test_session_wrapper_methods(session: Streamlink):
     ("old", "new", "value", "expected"),
     [
         pytest.param(
+            "no-plugin-cache",
+            "plugin-cache",
+            True,
+            False,
+            id="no-plugin-cache",
+        ),
+        pytest.param(
             "hls-duration",
             "stream-segmented-duration",
             123.456,

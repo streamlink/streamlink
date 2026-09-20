@@ -114,12 +114,14 @@ class TestPlugin:
         ("session", "expected"),
         [
             pytest.param({}, False, id="default"),
-            pytest.param({"no-plugin-cache": False}, False, id="not-disabled"),
-            pytest.param({"no-plugin-cache": True}, True, id="disabled"),
+            pytest.param({"plugin-cache": True}, False, id="enabled"),
+            pytest.param({"plugin-cache": False}, True, id="disabled"),
+            pytest.param({"no-plugin-cache": False}, False, id="enabled-deprecated"),
+            pytest.param({"no-plugin-cache": True}, True, id="disabled-deprecated"),
         ],
         indirect=["session"],
     )
-    def test_disabled_cache(self, session: Streamlink, expected: bool):
+    def test_disabled_cache(self, recwarn: pytest.WarningsRecorder, session: Streamlink, expected: bool):
         plugin = FakePlugin(session, "https://mocked")
         assert plugin.cache._disabled is expected
 

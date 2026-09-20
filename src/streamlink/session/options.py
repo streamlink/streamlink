@@ -56,7 +56,11 @@ class StreamlinkOptions(Options):
           - ``UserInputRequester | None``
           - ``None``
           - Instance of ``UserInputRequester`` to collect input from the user at runtime
-        * - no-plugin-cache
+        * - plugin-cache
+          - ``bool``
+          - ``True``
+          - Enable or disable the plugin key-value store
+        * - no-plugin-cache *(deprecated)*
           - ``bool``
           - ``False``
           - Disable the plugin key-value store
@@ -295,7 +299,7 @@ class StreamlinkOptions(Options):
     def __init__(self, session: Streamlink) -> None:
         super().__init__({
             "user-input-requester": None,
-            "no-plugin-cache": False,
+            "plugin-cache": True,
             "locale": None,
             "interface": None,
             "ipv4": False,
@@ -454,6 +458,7 @@ class StreamlinkOptions(Options):
     }
 
     _MAP_SETTERS: ClassVar[Mapping[str, Callable[[StreamlinkOptions, str, Any], None]]] = {
+        "no-plugin-cache": _factory_set_deprecated("plugin-cache", lambda val: not val),
         "interface": _set_interface,
         "ipv4": _set_ipv4_ipv6,
         "ipv6": _set_ipv4_ipv6,
