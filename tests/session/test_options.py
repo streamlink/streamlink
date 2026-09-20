@@ -3,13 +3,13 @@ from __future__ import annotations
 import re
 from inspect import currentframe, getframeinfo
 from socket import AF_INET, AF_INET6
+from typing import Any
 from unittest.mock import Mock, call
 
 import pytest
 
 from streamlink.exceptions import StreamlinkDeprecationWarning
 from streamlink.session import Streamlink
-from streamlink.session.options import StreamlinkOptions
 
 
 class TestOptionsDocumentation:
@@ -47,29 +47,48 @@ def test_session_wrapper_methods(session: Streamlink):
     assert session.get_option("non_existing") is None
 
 
-def test_session_option_set_deprecated(recwarn: pytest.WarningsRecorder, session: Streamlink):
+@pytest.mark.parametrize(
+    ("old", "new", "value", "expected"),
+    [
+        pytest.param(
+            "hls-duration",
+            "stream-segmented-duration",
+            123.456,
+            123.456,
+            id="hls-duration",
+        ),
+        pytest.param(
+            "hls-segment-queue-threshold",
+            "stream-segmented-queue-deadline",
+            123.456,
+            123.456,
+            id="hls-segment-queue-threshold",
+        ),
+    ],
+)
+def test_session_option_set_deprecated(
+    recwarn: pytest.WarningsRecorder,
+    session: Streamlink,
+    old: str,
+    new: str,
+    value: Any,
+    expected: Any,
+):
     def get_lineno():
         frame = currentframe()
         assert frame
         assert frame.f_back
         return getframeinfo(frame.f_back).lineno
 
-    class FakeStreamlinkOptions(StreamlinkOptions):
-        _MAP_SETTERS = {
-            "deprecated": StreamlinkOptions._factory_set_deprecated("new", int),
-        }
-
-    session.options = FakeStreamlinkOptions(session)
-    assert session.get_option("new") is None
+    session.get_option(new)
     assert recwarn.list == []
 
-    session.set_option("deprecated", 123)
+    session.set_option(old, value)
     lineno = get_lineno() - 1
-
-    assert session.get_option("new") == 123
     assert [(item.filename, item.lineno, item.category, str(item.message)) for item in recwarn.list] == [
-        (__file__, lineno, StreamlinkDeprecationWarning, "`deprecated` has been deprecated in favor of the `new` option"),
+        (__file__, lineno, StreamlinkDeprecationWarning, f"`{old}` has been deprecated in favor of the `{new}` option"),
     ]
+    assert session.get_option(new) == expected
 
 
 def test_options_locale(monkeypatch: pytest.MonkeyPatch, session: Streamlink):
