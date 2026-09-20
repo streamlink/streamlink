@@ -1346,10 +1346,12 @@ def build_parser():
     )
     transport_ffmpeg.add_argument(
         "--ffmpeg-verbose",
-        action="store_true",
+        action="boolean",
         default=None,
         help="""
             Write FFmpeg's stderr output to Streamlink's stderr output.
+
+            Default is false.
         """,
     )
     transport_ffmpeg.add_argument(
@@ -1408,19 +1410,23 @@ def build_parser():
     )
     transport_ffmpeg.add_argument(
         "--ffmpeg-copyts",
-        action="store_true",
+        action="boolean",
         default=None,
         help="""
             Set the `-copyts` FFmpeg option, so input timestamps won't be processed
             and the initial start time offset value be kept.
+
+            Default is false.
         """,
     )
     transport_ffmpeg.add_argument(
         "--ffmpeg-start-at-zero",
-        action="store_true",
+        action="boolean",
         default=None,
         help="""
             Enable the `-start_at_zero` FFmpeg option when using --ffmpeg-copyts.
+
+            Default is false.
         """,
     )
     transport_ffmpeg.add_argument(
