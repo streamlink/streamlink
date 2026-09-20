@@ -1132,22 +1132,26 @@ def build_parser():
     )
     transport.add_argument(
         "--stream-passthrough-encrypted",
-        action="store_true",
+        action="boolean",
         default=None,
         help="""
             Pass through data from encrypted streams without decryption or encryption checks.
 
             This applies to DASH and HLS streams, and will likely result in garbage output.
+
+            Default is false.
         """,
     )
     transport.add_argument(
         "--mux-subtitles",
-        action="store_true",
+        action="boolean",
         default=None,
         help="""
             Automatically mux available subtitles into the output stream.
 
             Needs to be supported by the used plugin.
+
+            Default is false.
         """,
     )
 
@@ -1173,10 +1177,12 @@ def build_parser():
     )
     transport_hls.add_argument(
         "--hls-segment-stream-data",
-        action="store_true",
+        action="boolean",
         default=None,
         help="""
             Immediately write segment data into output buffer while downloading.
+
+            Default is false.
         """,
     )
     transport_hls.add_argument(
@@ -1286,10 +1292,12 @@ def build_parser():
     )
     transport_hls.add_argument(
         "--hls-live-restart",
-        action="store_true",
+        action="boolean",
         default=None,
         help="""
             Skip to the beginning of a live stream, or as far back as possible.
+
+            Default is false.
         """,
     )
 
