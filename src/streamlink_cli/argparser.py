@@ -1254,12 +1254,13 @@ def build_parser():
         """,
     )
     transport_ffmpeg.add_argument(
-        "--no-ffmpeg-validation",
-        action="store_false",
-        dest="ffmpeg_validation",
+        "--ffmpeg-validation",
+        action="boolean",
         default=None,
         help="""
-            Disable FFmpeg validation and version logging.
+            Enable or disable FFmpeg validation and version logging.
+
+            Default is true.
         """,
     )
     transport_ffmpeg.add_argument(
