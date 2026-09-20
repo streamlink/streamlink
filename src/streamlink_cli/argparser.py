@@ -15,7 +15,7 @@ from streamlink import __version__ as streamlink_version, logger
 from streamlink.exceptions import StreamlinkDeprecationWarning
 from streamlink.logger import getLogger
 from streamlink.options import Options
-from streamlink.utils.args import Boolean, boolean, comma_list, comma_list_filter, filesize, keyvalue, num
+from streamlink.utils.args import Boolean, comma_list, comma_list_filter, filesize, keyvalue, num
 from streamlink.utils.times import hours_minutes_seconds_float
 from streamlink_cli.constants import STREAM_PASSTHROUGH
 from streamlink_cli.exceptions import StreamlinkCLIError
@@ -258,13 +258,16 @@ def build_parser():
     )
     general.add_argument(
         "--auto-version-check",
-        type=boolean,
-        metavar="{yes,true,1,on,no,false,0,off}",
+        action="boolean",
+        nargs="?",
         default=False,
         help="""
             Enable or disable the automatic check for a new version of Streamlink.
 
-            Default is "no".
+            Note: Explicit values are deprecated.
+            Set --auto-version-check or --no-auto-version-check instead.
+
+            Default is false.
         """,
     )
     general.add_argument(
@@ -656,8 +659,8 @@ def build_parser():
     )
     player.add_argument(
         "--player-external-http-continuous",
-        type=boolean,
-        metavar="{yes,true,1,on,no,false,0,off}",
+        action="boolean",
+        nargs="?",
         default=True,
         help="""
             Set the run-mode of --player-external-http to continuous or non-continuous.
@@ -666,6 +669,9 @@ def build_parser():
             and will wait for the next HTTP request being made unless it gets shut down via CTRL-C.
 
             If set to non-continuous, Streamlink will stop once the stream has ended.
+
+            Note: Explicit values are deprecated.
+            Set --player-external-http-continuous or --no-player-external-http-continuous instead.
 
             Default is true.
         """,
@@ -1544,8 +1550,8 @@ def build_parser():
     webbrowser = parser.add_argument_group("Web browser options")
     webbrowser.add_argument(
         "--webbrowser",
-        type=boolean,
-        metavar="{yes,true,1,on,no,false,0,off}",
+        action="boolean",
+        nargs="?",
         default=None,
         help="""
             Enable or disable support for Streamlink's webbrowser API.
@@ -1558,6 +1564,9 @@ def build_parser():
             Streamlink currently only supports Chromium-based web browsers using the Chrome Devtools Protocol (CDP).
             This includes Chromium itself, Google Chrome, Microsoft Edge, Brave, Vivaldi, and others, but full support for
             third party Chromium forks is not guaranteed. Please try Chromium or Google Chrome when encountering any issues.
+
+            Note: Explicit values are deprecated.
+            Set --webbrowser or --no-webbrowser instead.
 
             Default is true.
         """,
@@ -1609,14 +1618,17 @@ def build_parser():
     )
     webbrowser.add_argument(
         "--webbrowser-headless",
-        type=boolean,
-        metavar="{yes,true,1,on,no,false,0,off}",
+        action="boolean",
+        nargs="?",
         default=None,
         help="""
             Whether to launch the web browser in headless mode or not.
             When enabled, it stays completely hidden and doesn't require a desktop environment to run.
 
             Please be aware that headless mode might be blocked by websites which implement bot detections.
+
+            Note: Explicit values are deprecated.
+            Set --webbrowser-headless or --no-webbrowser-headless instead.
 
             Default is false.
         """,
