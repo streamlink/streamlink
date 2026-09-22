@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import argparse
 import gettext
 
 # noinspection PyProtectedMember
@@ -204,6 +205,16 @@ class TestMatchArgumentOverride:
         with pytest.raises(ArgumentError) as exc_info:
             parser.parse_known_args(argv)
         assert str(exc_info.value) == errormsg
+
+
+@pytest.mark.python(3, 13)
+def test_warnings(recwarn: pytest.WarningsRecorder):
+    parser = ArgumentParser()
+    parser.add_argument("--foo", action="store_true", deprecated=True)
+    parser.parse_args(["--foo"])
+    assert [(record.category, record.filename, str(record.message)) for record in recwarn.list] == [
+        (SDW, argparse.__file__, "option '--foo' is deprecated"),
+    ]
 
 
 @pytest.mark.parametrize(
