@@ -472,6 +472,7 @@ def build_parser():
         metavar="DIRECTORY",
         type=comma_list,
         action="extend",
+        **deprecated,
         help="""
             Load additional plugins from a list of comma-separated directories. (deprecated)
         """,
@@ -586,8 +587,9 @@ def build_parser():
     )
     player.add_argument(
         "--verbose-player",
-        dest="player_verbose",
         action="store_true",
+        dest="player_verbose",
+        **deprecated,
         help="""
             Deprecated in favor of --player-verbose.
         """,
@@ -603,8 +605,9 @@ def build_parser():
     )
     player.add_argument(
         "--fifo",
-        dest="player_fifo",
         action="store_true",
+        dest="player_fifo",
+        **deprecated,
         help="""
             Deprecated in favor of --player-fifo.
         """,
@@ -807,6 +810,7 @@ def build_parser():
         "-R",
         "--record-and-pipe",
         metavar="FILENAME",
+        # deprecated=True,  # deprecation warning via streamlink_cli.main.create_output()
         help="""
             Deprecated in favor of --stdout --record=FILENAME.
         """,
@@ -1169,6 +1173,7 @@ def build_parser():
         "--hls-segment-queue-threshold",
         metavar="FACTOR",
         type=num(float, ge=0.0),
+        # deprecated=True,  # deprecation warning via session option mapping
         help="""
             Deprecated in favor of --stream-segmented-queue-deadline.
         """,
@@ -1241,6 +1246,7 @@ def build_parser():
         "--hls-duration",
         type=hours_minutes_seconds_float,
         metavar="[[XX:]XX:]XX[.XX] | [XXh][XXm][XX[.XX]s]",
+        # deprecated=True,  # deprecation warning via session option mapping
         help="""
             Deprecated in favor of --stream-segmented-duration.
         """,
