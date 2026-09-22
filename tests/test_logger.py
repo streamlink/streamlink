@@ -410,13 +410,58 @@ class TestCaptureWarnings:
 
     @pytest.mark.parametrize("log", [{"capture_warnings": True}], indirect=["log"])
     @pytest.mark.parametrize(
-        ("warning", "expected", "origin"),
+        ("level", "warning", "expected"),
         [
-            (("Test warning", UserWarning), "[warnings][userwarning] Test warning\n", True),
-            (("Test warning", DeprecationWarning), "[warnings][deprecationwarning] Test warning\n", True),
-            (("Test warning", FutureWarning), "[warnings][futurewarning] Test warning\n", True),
-            (("Test warning", StreamlinkWarning), "[warnings][streamlinkwarning] Test warning\n", False),
-            (("Test warning", StreamlinkDeprecationWarning), "[warnings][streamlinkdeprecation] Test warning\n", False),
+            pytest.param(
+                logging.INFO,
+                ("Test warning", UserWarning),
+                "[userwarning][warning] Test warning\n",
+            ),
+            pytest.param(
+                logging.INFO,
+                ("Test warning", DeprecationWarning),
+                "[deprecationwarning][warning] Test warning\n",
+            ),
+            pytest.param(
+                logging.INFO,
+                ("Test warning", FutureWarning),
+                "[futurewarning][warning] Test warning\n",
+            ),
+            pytest.param(
+                logging.INFO,
+                ("Test warning", StreamlinkWarning),
+                "[streamlink][warning] Test warning\n",
+            ),
+            pytest.param(
+                logging.INFO,
+                ("Test warning", StreamlinkDeprecationWarning),
+                "[streamlinkdeprecation][warning] Test warning\n",
+            ),
+            pytest.param(
+                logging.DEBUG,
+                ("Test warning", UserWarning),
+                "[userwarning][warning] Test warning (%file%:%lineno%)\n",
+            ),
+            pytest.param(
+                logging.DEBUG,
+                ("Test warning", DeprecationWarning),
+                "[deprecationwarning][warning] Test warning (%file%:%lineno%)\n",
+            ),
+            pytest.param(
+                logging.DEBUG,
+                ("Test warning", FutureWarning),
+                "[futurewarning][warning] Test warning (%file%:%lineno%)\n",
+            ),
+            pytest.param(
+                logging.DEBUG,
+                ("Test warning", StreamlinkWarning),
+                "[streamlink][warning] Test warning (%file%:%lineno%)\n",
+            ),
+            pytest.param(
+                logging.DEBUG,
+                ("Test warning", StreamlinkDeprecationWarning),
+                "[streamlinkdeprecation][warning] Test warning (%file%:%lineno%)\n",
+            ),
         ],
     )
     def test_capture(
@@ -424,14 +469,14 @@ class TestCaptureWarnings:
         recwarn: pytest.WarningsRecorder,
         log: StreamlinkLogger,
         output: TextIOWrapper,
+        level: int,
         warning: tuple[str, type[Warning]],
         expected: str,
-        origin: bool,
     ):
+        log.setLevel(level)
         lineno = self._warn([warning])
-        expected += f"  {__file__}:{lineno}\n" if origin else ""
         assert recwarn.list == []
-        assert getvalue(output) == expected
+        assert getvalue(output) == expected.replace("%file%", __file__).replace("%lineno%", str(lineno))
 
     @pytest.mark.parametrize("log", [{"capture_warnings": True}], indirect=["log"])
     def test_capture_logrecord(
@@ -456,13 +501,13 @@ class TestCaptureWarnings:
             for r in caplog.records
         ] == [
             (
-                "warnings",
                 "userwarning",
+                "warning",
                 __file__,
                 path.name,
                 path.stem,
                 lineno,
-                f"Test warning\n  {__file__}:{lineno}",
+                f"Test warning ({__file__}:{lineno})",
             ),
         ]
 
@@ -475,10 +520,10 @@ class TestCaptureWarnings:
     ):
         lineno = self._warn([("foo", DeprecationWarning), ("bar", FutureWarning)])
         assert recwarn.list == []
-        assert getvalue(output) == (
-            f"[warnings][deprecationwarning] foo\n  {__file__}:{lineno}\n"
-            + f"[warnings][futurewarning] bar\n  {__file__}:{lineno}\n"
-        )
+        assert getvalue(output) == "".join([
+            f"[deprecationwarning][warning] foo ({__file__}:{lineno})\n",
+            f"[futurewarning][warning] bar ({__file__}:{lineno})\n",
+        ])
 
     @pytest.mark.parametrize("log", [{"capture_warnings": True}], indirect=["log"])
     def test_capture_consecutive_once(
@@ -489,7 +534,7 @@ class TestCaptureWarnings:
     ):
         lineno = self._warn([("foo", UserWarning), ("foo", UserWarning)], "once")
         assert recwarn.list == []
-        assert getvalue(output) == f"[warnings][userwarning] foo\n  {__file__}:{lineno}\n"
+        assert getvalue(output) == f"[userwarning][warning] foo ({__file__}:{lineno})\n"
 
     @pytest.mark.parametrize("log", [{"capture_warnings": True}], indirect=["log"])
     @pytest.mark.parametrize(
