@@ -1444,12 +1444,24 @@ def build_parser():
         """,
     )
     http.add_argument(
-        "--http-ignore-env",
-        action="store_false",
+        "--http-trust-env",
+        action="boolean",
         default=None,
         help="""
-            Ignore HTTP settings set in the environment, such as environment variables (`HTTP_PROXY`, etc)
+            Enable or disable HTTP settings to be read form the environment, such as environment variables (`HTTP_PROXY`, etc.)
             or `~/.netrc` authentication.
+
+            Default is true.
+        """,
+    )
+    http.add_argument(
+        "--http-ignore-env",
+        action="store_false",
+        dest="http_trust_env",
+        default=None,
+        **deprecated,
+        help="""
+            Deprecated in favor of --no-http-trust-env.
         """,
     )
     http.add_argument(
@@ -1611,7 +1623,7 @@ _ARGUMENT_TO_SESSIONOPTION: list[tuple[str, str, Callable[[Any], Any] | type | N
     ("http_cookie", "http-cookies", dict),
     ("http_header", "http-headers", dict),
     ("http_query_param", "http-query-params", dict),
-    ("http_ignore_env", "http-trust-env", None),
+    ("http_trust_env", "http-trust-env", None),
     ("http_ssl_verify", "http-ssl-verify", None),
     ("http_disable_dh", "http-disable-dh", None),
     ("http_ssl_cert", "http-ssl-cert", None),
