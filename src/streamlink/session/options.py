@@ -117,7 +117,11 @@ class StreamlinkOptions(Options):
           - ``bool``
           - ``True``
           - Verify TLS/SSL certificates
-        * - http-disable-dh
+        * - http-ssl-dh
+          - ``bool``
+          - ``True``
+          - Enable or disable TLS/SSL Diffie-Hellman key exchange
+        * - http-disable-dh *(deprecated)*
           - ``bool``
           - ``False``
           - Disable TLS/SSL Diffie-Hellman key exchange
@@ -412,9 +416,16 @@ class StreamlinkOptions(Options):
     def _set_http_attr(self, key, value):
         setattr(self.session.http, self._OPTIONS_HTTP_ATTRS[key], value)
 
-    def _set_http_disable_dh(self, key, value):
-        self.session.http.disable_dh(disable=bool(value))
-        self.set_explicit(key, value)
+    def _set_http_ssl_dh(self, key, value):
+        if key == "http-disable-dh":
+            value = not value
+            warnings.warn(
+                "`http-disable-dh` has been deprecated in favor of the `http-ssl-dh` option",
+                StreamlinkDeprecationWarning,
+                stacklevel=_get_deprecation_stacklevel_offset(2),
+            )
+        self.session.http.disable_dh(disable=not value)
+        self.set_explicit("http-ssl-dh", value)
 
     @staticmethod
     def _factory_set_http_attr_key_equals_value(delimiter: str) -> Callable[[StreamlinkOptions, str, Any], None]:
@@ -472,7 +483,8 @@ class StreamlinkOptions(Options):
         "http-cookies": _factory_set_http_attr_key_equals_value(";"),
         "http-headers": _factory_set_http_attr_key_equals_value(";"),
         "http-query-params": _factory_set_http_attr_key_equals_value("&"),
-        "http-disable-dh": _set_http_disable_dh,
+        "http-ssl-dh": _set_http_ssl_dh,
+        "http-disable-dh": _set_http_ssl_dh,
         "http-ssl-cert": _set_http_attr,
         "http-ssl-verify": _set_http_attr,
         "http-trust-env": _set_http_attr,

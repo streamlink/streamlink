@@ -854,8 +854,8 @@ class TestHTTPAdapters:
 class TestHTTPSessionVerifyAndCustomSSLContext:
     @pytest.fixture()
     def adapter(self, session: Streamlink):
-        # The http-disable-dh session option mounts the TLSNoDHAdapter with a custom SSLContext
-        session.set_option("http-disable-dh", True)
+        # The http-ssl-dh=False session option mounts the TLSNoDHAdapter with a custom SSLContext
+        session.set_option("http-ssl-dh", False)
 
         adapter = session.http.adapters.get("https://")
         assert isinstance(adapter, TLSNoDHAdapter)

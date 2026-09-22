@@ -228,8 +228,8 @@ def test_warnings(recwarn: pytest.WarningsRecorder):
             id="Arg+value without mapper",
         ),
         pytest.param(
-            ["--http-disable-dh"],
-            "http-disable-dh",
+            ["--ffmpeg-verbose"],
+            "ffmpeg-verbose",
             True,
             id="Arg with action=store_true",
         ),

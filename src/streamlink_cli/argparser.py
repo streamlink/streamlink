@@ -1487,13 +1487,24 @@ def build_parser():
         """,
     )
     http.add_argument(
+        "--http-ssl-dh",
+        action="boolean",
+        default=None,
+        help="""
+            Enable or disable Diffie Hellman key exchange.
+
+            Use with caution, as it has TLS/SSL security implications.
+
+            Default is true.
+        """,
+    )
+    http.add_argument(
         "--http-disable-dh",
         action="store_true",
         default=None,
+        # deprecated=True,  # deprecation warning via session option mapping
         help="""
-            Disable Diffie Hellman key exchange.
-
-            Use with caution, as it has TLS/SSL security implications.
+            Deprecated in favor of --no-http-ssl-dh.
         """,
     )
     http.add_argument(
@@ -1625,7 +1636,8 @@ _ARGUMENT_TO_SESSIONOPTION: list[tuple[str, str, Callable[[Any], Any] | type | N
     ("http_query_param", "http-query-params", dict),
     ("http_trust_env", "http-trust-env", None),
     ("http_ssl_verify", "http-ssl-verify", None),
-    ("http_disable_dh", "http-disable-dh", None),
+    ("http_disable_dh", "http-disable-dh", None),  # deprecated options must come first
+    ("http_ssl_dh", "http-ssl-dh", None),
     ("http_ssl_cert", "http-ssl-cert", None),
     ("http_ssl_cert_crt_key", "http-ssl-cert", tuple),
     ("http_timeout", "http-timeout", None),
