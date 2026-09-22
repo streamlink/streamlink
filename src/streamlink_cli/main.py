@@ -972,9 +972,13 @@ def setup_logger() -> None:
 
 
 def setup(parser: ArgumentParser) -> None:
-    setup_args(parser, ignore_unknown=True)
-    # call argument set up as early as possible to load args from config files
-    setup_config_args(parser, ignore_unknown=True)
+    # TODO: py310 support end: set filter in warnings.catch_warnings()
+    with warnings.catch_warnings(record=True):
+        warnings.simplefilter(action="ignore", category=StreamlinkDeprecationWarning)
+
+        setup_args(parser, ignore_unknown=True)
+        # call argument set up as early as possible to load args from config files
+        setup_config_args(parser, ignore_unknown=True)
 
     setup_console()
     setup_logger()
@@ -984,6 +988,7 @@ def setup(parser: ArgumentParser) -> None:
     setup_plugins(streamlink, not args.no_plugin_sideloading, args.plugin_dirs)
     setup_plugin_args(streamlink, parser)
     # call setup args again once the plugin specific args have been added
+    # deprecation warnings are emitted here
     setup_args(parser)
     setup_config_args(parser)
 
