@@ -206,6 +206,16 @@ class TestMatchArgumentOverride:
         assert str(exc_info.value) == errormsg
 
 
+@pytest.mark.python(3, 13)
+def test_warnings(recwarn: pytest.WarningsRecorder):
+    parser = ArgumentParser()
+    parser.add_argument("--foo", action="store_true", deprecated=True)
+    parser.parse_args(["--foo"])
+    assert [(record.category, str(record.message)) for record in recwarn.list] == [
+        (SDW, "option '--foo' is deprecated"),
+    ]
+
+
 @pytest.mark.parametrize(
     ("argv", "option", "expected"),
     [

@@ -111,6 +111,10 @@ class ArgumentParser(argparse.ArgumentParser):
         # return the number of arguments matched
         return len(match.group(1))
 
+    # noinspection PyMethodMayBeStatic
+    def _warning(self, message):
+        warnings.warn(str(message), StreamlinkDeprecationWarning, stacklevel=1)
+
     # disable color output for the "usage" text
     def format_usage(self):
         color = self.color
