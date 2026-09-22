@@ -199,19 +199,33 @@ def test_options_ipv4_ipv6(monkeypatch: pytest.MonkeyPatch, session: Streamlink)
     assert session.get_option("ipv6") is False
 
 
-def test_options_http_disable_dh(monkeypatch: pytest.MonkeyPatch, session: Streamlink):
+def test_options_http_ssl_dh(monkeypatch: pytest.MonkeyPatch, session: Streamlink):
     mock = Mock()
     monkeypatch.setattr(session.http, "disable_dh", mock)
 
-    assert not session.get_option("http-disable-dh")
+    assert session.get_option("http-ssl-dh") is None
 
-    session.set_option("http-disable-dh", True)
+    session.set_option("http-ssl-dh", False)
     assert mock.call_args_list.pop() == call(disable=True)
-    assert session.get_option("http-disable-dh")
+    assert session.get_option("http-ssl-dh") is False
 
-    session.set_option("http-disable-dh", False)
+    session.set_option("http-ssl-dh", True)
     assert mock.call_args_list.pop() == call(disable=False)
-    assert not session.get_option("http-disable-dh")
+    assert session.get_option("http-ssl-dh") is True
+
+    warns = pytest.warns(
+        StreamlinkDeprecationWarning,
+        match=r"`http-disable-dh` has been deprecated in favor of the `http-ssl-dh` option",
+    )
+    with warns:
+        session.set_option("http-disable-dh", True)
+    assert mock.call_args_list.pop() == call(disable=True)
+    assert session.get_option("http-ssl-dh") is False
+
+    with warns:
+        session.set_option("http-disable-dh", False)
+    assert mock.call_args_list.pop() == call(disable=False)
+    assert session.get_option("http-ssl-dh") is True
 
 
 class TestOptionsHttpProxy:
