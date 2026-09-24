@@ -8,7 +8,7 @@ Setting up the repository
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
 In order to start working on Streamlink, you must first install the latest stable version of ``git``, optionally fork the
-repository on Github onto your account if you want to submit changes in a pull request, and then locally clone the repository.
+repository on GitHub onto your account if you want to submit changes in a pull request, and then locally clone the repository.
 
 .. code-block:: bash
 
@@ -34,88 +34,84 @@ When submitting a pull request, commit and push your changes onto a different br
 Setting up a new environment
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-While working on any kind of python-based project, it is usually best to do this in a virtual environment which is isolated from
+Before starting any work on the project, a virtual environment must be set up which is isolated from
 the Python environment of the host system. This ensures that development can be done in a clean space which is free of version
 conflicts and other unrelated packages.
 
-First, make sure that you have the latest stable versions of Python and `pip`_ installed:
+First, make sure that you have the latest stable versions of Python and `uv`_ installed.
+Depending on the host system and developer preferences, `uv`_ may be used to install Python itself (see its own docs).
+
+`uv`_ is not a strict requirement. Other Python package managers like `pip`_ for example can be used,
+but since Streamlink pins its dependencies in a `uv`_ lock file, dependency issues can be fully avoided this way.
 
 .. code-block:: bash
 
     python --version
-    pip --version
+    uv --version
 
-Then set up a new virtual environment using `venv`_ of the Python standard library:
+Now create a virtual environment by syncing all dependencies from Streamlink's ``uv.lock`` dependency lock file:
+
+.. code-block:: bash
+
+    uv sync --all-extras --all-groups
+
+Alternatively, a custom, self-managed Python environment can be set up by using Python's own `venv`_ and then activating it:
 
 .. code-block:: bash
 
     # replace ~/venvs/streamlink with your path of choice and give it a proper name
     python -m venv ~/venvs/streamlink
 
-Now activate the virtual environment by sourcing the activation shell script:
-
-.. code-block:: bash
-
+    # POSIX compliant shells on non-Windows systems
     source ~/venvs/streamlink/bin/activate
-
     # non-POSIX shells have their own activation script, e.g. FISH
     source ~/venvs/streamlink/bin/activate.fish
-
-.. code-block:: pwsh
-
     # on Windows, activation scripts are located in the Scripts/ subdirectory instead of bin/
     ~\venvs\streamlink\Scripts\Activate.ps1
 
-.. _pip: https://pip.pypa.io/en/stable/
-.. _venv: https://docs.python.org/3/library/venv.html
+    # sync to the active environment instead (--active)
+    uv sync --active --all-extras --all-groups
 
-
-Installing Streamlink
-^^^^^^^^^^^^^^^^^^^^^
-
-After activating the new virtual environment, Streamlink's development dependencies and Streamlink itself need to be installed.
-Regular development dependencies and documentation related dependencies are listed in the text files shown below and need to
-be installed separately.
+Verify that Streamlink is working and that all dependencies have been installed:
 
 .. code-block:: bash
 
-    # upgrade to the latest version of pip
-    python -m pip install -U pip
-
-    # install Streamlink in "editable" mode
-    python -m pip install -U --upgrade-strategy=eager -e .
-
-    # install additional dependencies (see pyproject.toml for individual dependency groups)
-    python -m pip install -U --upgrade-strategy=eager --group all
-
-    # validate that Streamlink is working
     streamlink --loglevel=debug
+
+Please remember to always re-sync the environment when fetching/pulling new commits or when switching branches.
+
+.. _uv: https://docs.astral.sh/uv/
+.. _pip: https://pip.pypa.io/en/stable/
+.. _venv: https://docs.python.org/3/library/venv.html
 
 
 Validating changes
 ------------------
 
-Before submitting a pull request, run tests, perform code linting and build the documentation on your system first, to see if
-your changes contain any mistakes or errors. This will be done automatically for each pull request on each change, but
-performing these checks locally avoids unnecessary build failures.
+Before submitting a pull request, please run tests, perform code linting and build the documentation on your system first,
+to see if your changes contain any mistakes or errors. This will be done automatically for each pull request on each change,
+but performing these checks locally avoids unnecessary build failures.
+
+The ``uv run`` command prefix will ensure that all dependency requirements are met before running the actual command.
+In an activated custom environment, the ``uv run`` command wrapper must be removed, or `uv`_ will use its own environment.
 
 .. code-block:: bash
 
     # run automated tests
-    pytest
+    uv run pytest
     # or just run a subset of all tests
-    pytest path/to/test-file.py::TestClassName::test_method_name ...
+    uv run pytest path/to/test-file.py::TestClassName::test_method_name ...
 
     # check code for linting errors
-    ruff check .
+    uv run ruff check
     # check code for formatting errors
-    ruff format --diff .
+    uv run ruff format --diff
     # check code for typing errors
-    ty check
-    mypy
+    uv run ty check
+    uv run mypy
 
     # build the documentation
-    make --directory=docs clean html
+    uv run make --directory=docs clean html
 
     # check the documentation
     python -m http.server 8000 --bind '127.0.0.1' --directory 'docs/_build/html/'
@@ -174,7 +170,12 @@ Optional message bodies must be separated from the subject by a blank line, with
 Markdown formatting is supported. Standardized footers (e.g. ``Co-Authored-By: name <email-address>``)
 may be included at the end of the body.
 
+``@`` user-references must not be included in commit messages.
+
 .. _conventional commits: https://www.conventionalcommits.org/
+
+.. Commit subject format:
+   All commit message subjects must end with a formatting delimiter mark (U+200B) for downstream git log parser compatibility.
 
 
 Plugins
