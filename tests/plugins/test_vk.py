@@ -26,6 +26,8 @@ class TestPluginCanHandleUrlVK(PluginCanHandleUrl):
         # vod
         (("video", "https://vk.com/video-9944999_456239622"), {"id": "-9944999_456239622"}),
         (("video", "https://vk.ru/video-9944999_456239622"), {"id": "-9944999_456239622"}),
+        (("video", "https://vkvideo.ru/video-9944999_456239622"), {"id": "-9944999_456239622"}),
+        (("video", "https://vksport.vkvideo.ru/video-16202769_456290280"), {"id": "-16202769_456290280"}),
         # live
         (("video", "https://www.vk.com/video-143491903_456240010"), {"id": "-143491903_456240010"}),
         (("video", "https://www.vk.ru/video-143491903_456240010"), {"id": "-143491903_456240010"}),
@@ -38,6 +40,7 @@ class TestPluginCanHandleUrlVK(PluginCanHandleUrl):
         # other paths / formats
         (("default", "https://vk.com/videos-24136539?z=video-24136539_456241155%2Fpl_-24136539_-2"), {}),
         (("default", "https://vk.com/video/@vesti?z=video-24136539_456241155%2Fpl_-24136539_-2"), {}),
+        (("default", "https://vkvideo.ru/@vesti?z=video-24136539_456241155%2Fpl_-24136539_-2"), {}),
         (("default", "https://vk.com/video?z=video-15755094_456245149%2Fpl_cat_lives"), {}),
         (("default", "https://vk.com/video?z=video132886594_167211693%2Fpl_cat_8"), {}),
         # search
@@ -48,6 +51,7 @@ class TestPluginCanHandleUrlVK(PluginCanHandleUrl):
     should_not_match = [
         "https://vk.com/",
         "https://vk.ru/",
+        "https://vkvideo.ru/",
     ]
 
 
