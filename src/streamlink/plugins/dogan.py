@@ -4,7 +4,6 @@ $url cnnturk.com
 $url dreamturk.com.tr
 $url dreamtv.com.tr
 $url kanald.com.tr
-$url teve2.com.tr
 $type live, vod
 """
 
@@ -20,26 +19,45 @@ from streamlink.stream.hls import HLSStream
 log = getLogger(__name__)
 
 
-@pluginmatcher(re.compile(r"https?://(?:www\.)?cnnturk\.com/"))
-@pluginmatcher(re.compile(r"https?://(?:www\.)?(dreamturk|dreamtv)\.com\.tr/"))
-@pluginmatcher(re.compile(r"https?://(?:www\.)?teve2\.com\.tr/"))
-@pluginmatcher(re.compile(r"https?://(?:www\.)?kanald\.com\.tr/"))
+@pluginmatcher(
+    name="cnnturk",
+    pattern=re.compile(r"https?://(?:www\.)?cnnturk\.com/"),
+)
+@pluginmatcher(
+    name="dreamturk",
+    pattern=re.compile(r"https?://(?:www\.)?(dreamturk|dreamtv)\.com\.tr/"),
+)
+@pluginmatcher(
+    name="kanald",
+    pattern=re.compile(r"https?://(?:www\.)?kanald\.com\.tr/"),
+)
 class Dogan(Plugin):
-    # based on the order of matchers
-    API_URLS = [
-        "/api/media?id={id}",
-        "/actions/content/media/{id}",
-        "/action/media/{id}",
-    ]
-    API_URL_OLD = "/actions/media?id={id}"
+    API_URLS = {
+        "cnnturk": "/api/cnnvideo/media?id={id}&isMobile=false",
+        "dreamturk": "/actions/content/media/{id}",
+    }
+    DAILYMOTION_URL = "https://www.dailymotion.com/embed/video/{id}"
 
     @staticmethod
-    def _get_hls_url(root):
+    def _get_content_url(root):
         schema = validate.Schema(
-            validate.xml_xpath_string(".//*[@data-live][contains(@data-url,'.m3u8')]/@data-url"),
+            validate.xml_xpath_string(
+                ".//script[@type='application/ld+json'][contains(text(),'\"contentUrl\"')][1]/text()",
+            ),
+            validate.none_or_all(
+                validate.parse_json(),
+                {
+                    # the same JSON schema is used on CNNTurk, so check for .m3u8 ending and fail silently otherwise
+                    "contentUrl": validate.url(path=validate.endswith(".m3u8")),
+                },
+                validate.get("contentUrl"),
+            ),
         )
 
-        return schema.validate(root)
+        try:
+            return schema.validate(root, exception=ValueError)
+        except ValueError:
+            return None
 
     @staticmethod
     def _get_content_id(root):
@@ -68,7 +86,7 @@ class Dogan(Plugin):
 
         return schema.validate(root)
 
-    def _api_query_new(self, content_id, api_url):
+    def _api_query(self, content_id, api_url):
         url = urljoin(self.url, api_url.format(id=content_id))
         data = self.session.http.get(
             url,
@@ -85,9 +103,9 @@ class Dogan(Plugin):
                         {
                             "Media": {
                                 "Link": {
-                                    "ContentId": str,
-                                    validate.optional("DefaultServiceUrl"): validate.any(validate.url(), ""),
-                                    validate.optional("ServiceUrl"): validate.any(validate.url(), ""),
+                                    "ContentId": validate.any(str, None),
+                                    validate.optional("DefaultServiceUrl"): validate.any(validate.url(), "", None),
+                                    validate.optional("ServiceUrl"): validate.any(validate.url(), "", None),
                                     "SecurePath": str,
                                 },
                             },
@@ -104,51 +122,23 @@ class Dogan(Plugin):
 
         service_url, default_service_url, secure_path, content_id = data
 
-        if default_service_url == "https://www.kanald.com.tr":
-            self.url = default_service_url
-            return self._api_query_old(content_id)
+        if re.match(r"^https?://(?:www\.)?dailymotion\.com/", service_url or ""):
+            return self.DAILYMOTION_URL.format(id=secure_path)
 
         if re.match(r"^https?://", secure_path):
             return secure_path
 
         return urljoin(service_url or default_service_url, secure_path)
 
-    def _api_query_old(self, content_id):
-        url = urljoin(self.url, self.API_URL_OLD.format(id=content_id))
-        service_url, default_service_url, secure_path = self.session.http.get(
-            url,
-            schema=validate.Schema(
-                validate.parse_json(),
-                {
-                    "data": {
-                        "id": str,
-                        "media": {
-                            "link": {
-                                validate.optional("defaultServiceUrl"): validate.any(validate.url(), ""),
-                                validate.optional("serviceUrl"): validate.any(validate.url(), ""),
-                                "securePath": str,
-                            },
-                        },
-                    },
-                },
-                validate.get(("data", "media", "link")),
-                validate.union_get("serviceUrl", "defaultServiceUrl", "securePath"),
-            ),
-        )
-
-        return urljoin(service_url or default_service_url, secure_path)
-
     def _query_hls_url(self, content_id):
-        for idx, match in enumerate(self.matches[: len(self.API_URLS)]):
-            if match:
-                return self._api_query_new(content_id, self.API_URLS[idx])
-
-        return self._api_query_old(content_id)
+        for matcher in self.matchers:
+            if matcher.pattern is self.matcher and matcher.name:
+                return self._api_query(content_id, self.API_URLS[matcher.name])
 
     def _get_streams(self):
         root = self.session.http.get(self.url, schema=validate.Schema(validate.parse_html()))
 
-        hls_url = self._get_hls_url(root)
+        hls_url = self._get_content_url(root)
         if not hls_url:
             try:
                 content_id = self._get_content_id(root)
@@ -159,8 +149,14 @@ class Dogan(Plugin):
             log.debug(f"Loading content: {content_id}")
             hls_url = self._query_hls_url(content_id)
 
-        if hls_url:
-            return HLSStream.parse_variant_playlist(self.session, hls_url)
+        if not hls_url:
+            return
+
+        if hls_url.startswith(self.DAILYMOTION_URL.format(id="")):
+            log.debug(f"Loading Dailymotion video: {hls_url}")
+            return self.session.streams(hls_url)
+
+        return HLSStream.parse_variant_playlist(self.session, hls_url)
 
 
 __plugin__ = Dogan
