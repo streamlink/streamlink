@@ -25,7 +25,8 @@ class TV360(Plugin):
             ),
         )
         if hls_url:
-            return HLSStream.parse_variant_playlist(self.session, hls_url)
+            # The stream can be a media playlist of a single quality instead of a multivariant playlist
+            return HLSStream.parse_variant_playlist(self.session, hls_url) or {"live": HLSStream(self.session, hls_url)}
 
 
 __plugin__ = TV360
