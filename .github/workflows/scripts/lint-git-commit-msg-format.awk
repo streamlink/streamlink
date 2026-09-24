@@ -10,8 +10,14 @@ NF > 1 {
             gha_escape(subj)
         err = 1
     }
-    if (subj !~ /^[0-9]{4}$|^[a-z0-9_-]+(\.[a-z0-9_-]+)*: / || subj !~ /^[ -~]+$/ || subj ~ /[.?!:;]$/) {
+    if (subj !~ RE_SUBJ_FORMAT || subj !~ RE_SUBJ_CHARS || subj ~ RE_SUBJ_SUFFIX) {
         printf "::error title=\"Commit %s\"::Invalid format%%0A%s\n",
+            hash,
+            gha_escape(subj)
+        err = 1
+    }
+    if (subj ~ RE_MENTION) {
+        printf "::error title=\"Commit %s\"::Subject includes @-mention%%0A%s\n",
             hash,
             gha_escape(subj)
         err = 1
@@ -29,14 +35,24 @@ NF > 1 {
         body = body (i > 4 ? "\n" : "") $i
 
         if (length($i) > MAX_LENGTH_BODY) {
-            body_err = 1
+            body_err = or(body_err, 1)
+        }
+        if (strip_inline_code($i) ~ RE_MENTION) {
+            body_err = or(body_err, 2)
         }
     }
 
-    if (body_err == 1) {
+    if (and(body_err, 1)) {
         printf "::error title=\"Commit %s\"::Body includes at least one line with >%d chars%%0A%s%%0A%%0A%s\n",
             hash,
             MAX_LENGTH_BODY,
+            gha_escape(subj),
+            gha_escape(body)
+        err = 1
+    }
+    if (and(body_err, 2)) {
+        printf "::error title=\"Commit %s\"::Body includes @-mention%%0A%s%%0A%%0A%s\n",
+            hash,
             gha_escape(subj),
             gha_escape(body)
         err = 1
