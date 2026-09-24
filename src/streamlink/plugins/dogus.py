@@ -16,11 +16,34 @@ from streamlink.stream.hls import HLSStream
 
 @pluginmatcher(re.compile(r"https?://(?:www\.)?eurostartv\.com\.tr/canli-izle"))
 @pluginmatcher(re.compile(r"https?://(?:www\.)?kralmuzik\.com\.tr/tv/.+"))
-@pluginmatcher(re.compile(r"https?://(?:www\.)?ntv\.com\.tr/canli-yayin/ntv"))
-@pluginmatcher(re.compile(r"https?://(?:www\.)?startv\.com\.tr/canli-yayin"))
+@pluginmatcher(
+    name="ntv",
+    pattern=re.compile(r"https?://(?:www\.)?ntv\.com\.tr/canli-yayin/ntv"),
+)
+@pluginmatcher(
+    name="startv",
+    pattern=re.compile(r"https?://(?:www\.)?startv\.com\.tr/canli-yayin"),
+)
 class Dogus(Plugin):
-    _re_live_hls = re.compile(r"'(https?://[^']+/live/hls/[^']+)'")
+    _re_live_hls = re.compile(r"""["'](?P<url>https?://[^"']+/live/hls/[^"']+)["']""")
     _re_yt_script = re.compile(r"youtube\.init\('([\w-]{11})'")
+
+    # The live player of these sites looks up the stream URL by site name in its own script
+    LIVE_PLAYER_URL = "https://player-live.dygdigital.com/js/build.js"
+    LIVE_PLAYER_SITES = {
+        "ntv": "Ntv",
+        "startv": "Startv",
+    }
+
+    def _get_live_player_stream(self, site):
+        re_stream = re.compile(rf'\b{site}:\{{development:"[^"]*",production:"(?P<url>[^"]+)"')
+        return self.session.http.get(
+            self.LIVE_PLAYER_URL,
+            schema=validate.Schema(
+                validate.transform(re_stream.search),
+                validate.any(None, validate.get("url")),
+            ),
+        )
 
     def _get_streams(self):
         root = self.session.http.get(self.url, schema=validate.Schema(validate.parse_html()))
@@ -42,11 +65,20 @@ class Dogus(Plugin):
             return self.session.streams(iframe)
 
         # http://eurostartv.com.tr/canli-izle
+        # https://www.kralmuzik.com.tr/tv/kral-pop-tv
         dd_script = root.xpath("string(.//script[contains(text(), '/live/hls/')][1]/text())")
         if dd_script:
             m = self._re_live_hls.search(dd_script)
             if m:
-                return HLSStream.parse_variant_playlist(self.session, m.group(1))
+                return HLSStream.parse_variant_playlist(self.session, m["url"])
+
+        # https://www.startv.com.tr/canli-yayin
+        # https://www.ntv.com.tr/canli-yayin/ntv
+        for name, site in self.LIVE_PLAYER_SITES.items():
+            if self.matches[name]:
+                url = self._get_live_player_stream(site)
+                if url:
+                    return HLSStream.parse_variant_playlist(self.session, url)
 
 
 __plugin__ = Dogus

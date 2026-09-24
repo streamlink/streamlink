@@ -9,6 +9,7 @@ class TestPluginCanHandleUrlDogus(PluginCanHandleUrl):
         "http://eurostartv.com.tr/canli-izle",
         "https://www.kralmuzik.com.tr/tv/kral-pop-tv",
         "https://www.kralmuzik.com.tr/tv/kral-tv",
-        "https://www.ntv.com.tr/canli-yayin/ntv?youtube=true",
-        "https://www.startv.com.tr/canli-yayin",
+        ("ntv", "https://www.ntv.com.tr/canli-yayin/ntv"),
+        ("ntv", "https://www.ntv.com.tr/canli-yayin/ntv?youtube=true"),
+        ("startv", "https://www.startv.com.tr/canli-yayin"),
     ]
