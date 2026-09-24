@@ -29,9 +29,12 @@ jobs:
       - name: Line terminators
         if: ${{ !cancelled() }}
         run: "! grep 'with CRLF line terminators' <(git ls-files | file -nNf-)"
-      - name: No unicode bidirectional control characters
+      - name: No bidirectional Unicode control characters
         if: ${{ !cancelled() }}
-        run: "! git grep -EIn $'[\\u2066\\u2067\\u2068\\u2069\\u202A\\u202B\\u202C\\u202D\\u202E]'"
+        run: '! git grep -PIn "[\x{061C}\x{200E}\x{200F}\x{202A}-\x{202E}\x{2066}-\x{2069}]"'
+      - name: No invisible zero-width Unicode control characters
+        if: ${{ !cancelled() }}
+        run: '! git grep -PIn "[\x{00AD}\x{034F}\x{200B}-\x{200D}\x{2060}-\x{2064}\x{FEFF}]"'
       - name: Linear git history
         if: ${{ !cancelled() }}
         run: |
