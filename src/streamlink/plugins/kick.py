@@ -147,7 +147,7 @@ class KickAdapter(SSLContextAdapter):
 )
 @pluginargument(
     "low-latency",
-    action="store_true",
+    action="boolean",
     help="""
         Enables low latency streaming by prefetching HLS segments.
         Sets --hls-segment-stream-data to true and --hls-live-edge to 2, if it is higher.
