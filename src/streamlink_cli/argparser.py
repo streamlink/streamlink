@@ -384,19 +384,23 @@ def build_parser():
     logging.add_argument(
         "-Q",
         "--quiet",
-        action="store_true",
+        action="boolean",
+        default=False,
         help="""
             Suppress all console and log output, and also disable user prompts.
+
+            Default is false.
         """,
     )
     logging.add_argument(
         "-j",
         "--json",
-        action="store_true",
+        action="boolean",
+        default=False,
         help="""
-            Output JSON representations instead of the normal text output.
+            Output JSON representations instead of the normal text output. Useful for external scripting.
 
-            Useful for external scripting.
+            Default is false.
         """,
     )
 
