@@ -508,19 +508,23 @@ def build_parser():
     network.add_argument(
         "-4",
         "--ipv4",
-        action="store_true",
+        action="boolean",
         default=None,
         help="""
             Resolve address names to IPv4 only. This option overrides --ipv6.
+
+            Default is false.
         """,
     )
     network.add_argument(
         "-6",
         "--ipv6",
-        action="store_true",
+        action="boolean",
         default=None,
         help="""
             Resolve address names to IPv6 only. This option overrides --ipv4.
+
+            Default is false.
         """,
     )
 
