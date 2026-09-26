@@ -2,6 +2,7 @@
 $description Russian live-streaming and video hosting social platform.
 $url vk.com
 $url vk.ru
+$url vkvideo.ru
 $type live, vod
 $metadata id
 $metadata author
@@ -26,11 +27,11 @@ log = getLogger(__name__)
 
 @pluginmatcher(
     name="video",
-    pattern=re.compile(r"https?://(?:\w+\.)?vk\.(?:com|ru)/video(?P<id>-?\d+_\d+)"),
+    pattern=re.compile(r"https?://(?:\w+\.)?(?:vk\.(?:com|ru)|vkvideo\.ru)/video(?P<id>-?\d+_\d+)"),
 )
 @pluginmatcher(
     name="default",
-    pattern=re.compile(r"https?://(\w+\.)?vk\.(?:com|ru)/(?!video-?\d+_\d+).+"),
+    pattern=re.compile(r"https?://(\w+\.)?(?:vk\.(?:com|ru)|vkvideo\.ru)/(?!video-?\d+_\d+).+"),
 )
 class VK(Plugin):
     API_URL = "https://vk.com/al_video.php"
