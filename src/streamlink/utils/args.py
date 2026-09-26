@@ -1,7 +1,15 @@
 from __future__ import annotations
 
+import argparse
 import re
-from typing import Any, Generic, TypeVar
+import warnings
+from typing import TYPE_CHECKING, Any, Generic, Literal, TypeVar
+
+from streamlink.exceptions import StreamlinkDeprecationWarning
+
+
+if TYPE_CHECKING:
+    from collections.abc import Sequence
 
 
 _BOOLEAN_TRUE = "yes", "1", "true", "on"
@@ -14,6 +22,41 @@ _FILESIZE_UNITS = {
 }
 
 _KEYVALUE_RE = re.compile(r"^(?P<key>[^=\s]+)\s*=\s*(?P<value>.*)$")
+
+
+class Boolean(argparse.BooleanOptionalAction):
+    def __init__(self, *args, nargs: Literal[0, "?"] = 0, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.nargs = nargs
+        self.metavar = None if nargs == 0 else f"{{{','.join(_BOOLEAN_TRUE + _BOOLEAN_FALSE)}}}"
+
+    def __call__(
+        self,
+        parser: argparse.ArgumentParser,
+        namespace: argparse.Namespace,
+        values: str | Sequence[Any] | None,
+        option_string: str | None = None,
+    ):
+        if not option_string or option_string not in self.option_strings:  # pragma: no cover
+            return
+
+        negated = option_string.startswith("--no-")
+        if not values and values != "":
+            setattr(namespace, self.dest, not negated)
+            return
+
+        if negated:
+            raise argparse.ArgumentError(self, "Argument value set on a negated argument name")
+        if not isinstance(values, str) or values.lower() not in _BOOLEAN_TRUE + _BOOLEAN_FALSE:
+            raise argparse.ArgumentError(self, "Invalid argument value")
+        if self.nargs != 0:
+            warnings.warn(
+                f"{option_string}={values} is deprecated. Use {option_string}/--no-{option_string[2:]} instead.",
+                StreamlinkDeprecationWarning,
+                stacklevel=1,
+            )
+
+        setattr(namespace, self.dest, values.lower() in _BOOLEAN_TRUE)
 
 
 def boolean(value: str) -> bool:
@@ -99,6 +142,7 @@ class num(Generic[_TNum]):
 
 
 __all__ = [
+    "Boolean",
     "boolean",
     "comma_list",
     "comma_list_filter",

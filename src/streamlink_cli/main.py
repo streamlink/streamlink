@@ -182,7 +182,7 @@ def create_output(formatter: Formatter) -> FileOutput | PlayerOutput:
             args=args.player_args,
             env=args.player_env,
             quiet=not args.player_verbose,
-            kill=not args.player_no_close,
+            kill=args.player_close,
             namedpipe=namedpipe,
             http=http,
             record=record,
@@ -972,18 +972,23 @@ def setup_logger() -> None:
 
 
 def setup(parser: ArgumentParser) -> None:
-    setup_args(parser, ignore_unknown=True)
-    # call argument set up as early as possible to load args from config files
-    setup_config_args(parser, ignore_unknown=True)
+    # TODO: py310 support end: set filter in warnings.catch_warnings()
+    with warnings.catch_warnings(record=True):
+        warnings.simplefilter(action="ignore", category=StreamlinkDeprecationWarning)
+
+        setup_args(parser, ignore_unknown=True)
+        # call argument set up as early as possible to load args from config files
+        setup_config_args(parser, ignore_unknown=True)
 
     setup_console()
     setup_logger()
 
     setup_streamlink()
     # load additional plugins
-    setup_plugins(streamlink, not args.no_plugin_sideloading, args.plugin_dirs)
+    setup_plugins(streamlink, args.plugin_sideloading, args.plugin_dirs)
     setup_plugin_args(streamlink, parser)
     # call setup args again once the plugin specific args have been added
+    # deprecation warnings are emitted here
     setup_args(parser)
     setup_config_args(parser)
 

@@ -1,6 +1,51 @@
 Deprecations
 ============
 
+streamlink 8.7.0
+----------------
+
+Boolean type CLI argument values
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Setting a value on the :option:`--auto-version-check`, :option:`--player-external-http-continuous`,
+:option:`--webbrowser`, or :option:`--webbrowser-headless` CLI arguments has been deprecated. Instead, simply set the regular
+CLI arguments for enabling the options, or set their ``--no-`` prefixed counterparts for disabling them.
+
+--player-no-close
+^^^^^^^^^^^^^^^^^
+
+The ``--player-no-close`` CLI argument has been deprecated in favor of :option:`--no-player-close`.
+
+--http-ignore-env
+^^^^^^^^^^^^^^^^^
+
+The ``--http-ignore-env`` CLI argument has been deprecated in favor of :option:`--no-http-trust-env`.
+
+--http-no-ssl-verify
+^^^^^^^^^^^^^^^^^^^^
+
+The ``--http-no-ssl-verify`` CLI argument has been deprecated in favor of :option:`--no-http-ssl-verify`.
+
+--http-disable-dh and session option
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The ``--http-disable-dh`` CLI argument has been deprecated in favor of :option:`--no-http-ssl-dh`.
+
+Similarly, the ``http-disable-dh`` session option has been deprecated in favor of ``http-ssl-dh``.
+
+--ffmpeg-no-validate and session option
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The ``--ffmpeg-no-validation`` CLI argument has been deprecated in favor of :option:`--no-ffmpeg-validation`.
+
+Similarly, the ``ffmpeg-no-validation`` session option has been deprecated in favor of ``ffmpeg-validation``.
+
+no-plugin-cache session option
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The ``no-plugin-cache`` session option has been deprecated in favor of ``plugin-cache``.
+
+
 streamlink 8.1.0
 ----------------
 

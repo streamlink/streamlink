@@ -11,6 +11,7 @@ import pytest
 
 from streamlink.exceptions import StreamlinkDeprecationWarning as SDW
 from streamlink.plugin import Plugin, pluginargument
+from streamlink.utils.args import Boolean
 from streamlink_cli.argparser import (
     ArgumentParser,
     build_parser,
@@ -53,6 +54,7 @@ def parser():
 def test_metavar_or_noargumentvalue(action: Action):
     assert (
         action.metavar  # has an explicit metavar description
+        or isinstance(action, Boolean)  # automatic metadata description via specific action
         or isinstance(action, (_StoreConstAction, _VersionAction))  # doesn't expect a value
     )
 
@@ -206,6 +208,16 @@ class TestMatchArgumentOverride:
         assert str(exc_info.value) == errormsg
 
 
+@pytest.mark.python(3, 13)
+def test_warnings(recwarn: pytest.WarningsRecorder):
+    parser = ArgumentParser()
+    parser.add_argument("--foo", action="store_true", deprecated=True)
+    parser.parse_args(["--foo"])
+    assert [(record.category, str(record.message)) for record in recwarn.list] == [
+        (SDW, "option '--foo' is deprecated"),
+    ]
+
+
 @pytest.mark.parametrize(
     ("argv", "option", "expected"),
     [
@@ -216,16 +228,16 @@ class TestMatchArgumentOverride:
             id="Arg+value without mapper",
         ),
         pytest.param(
-            ["--http-disable-dh"],
-            "http-disable-dh",
+            ["--ffmpeg-verbose"],
+            "ffmpeg-verbose",
             True,
             id="Arg with action=store_true",
         ),
         pytest.param(
-            ["--http-no-ssl-verify"],
+            ["--no-http-ssl-verify"],
             "http-ssl-verify",
             False,
-            id="Arg with action=store_false",
+            id="Arg with action=boolean",
         ),
         pytest.param(
             ["--http-query-param", "foo=bar", "--http-query-param", "baz=qux"],
@@ -318,6 +330,15 @@ def test_setup_session_options_deprecation_override(
             0.0,
             ["`hls-segment-queue-threshold` has been deprecated in favor of the `stream-segmented-queue-deadline` option"],
             id="hls-segment-queue-threshold",
+        ),
+        pytest.param(
+            [
+                "--ffmpeg-no-validation",
+            ],
+            "ffmpeg-validation",
+            False,
+            ["`ffmpeg-no-validation` has been deprecated in favor of the `ffmpeg-validation` option"],
+            id="ffmpeg-no-validation",
         ),
     ],
 )

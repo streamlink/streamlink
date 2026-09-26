@@ -12,7 +12,6 @@ from typing import IO, TYPE_CHECKING, Literal, TextIO
 # noinspection PyProtectedMember
 from warnings import WarningMessage
 
-from streamlink.exceptions import StreamlinkWarning
 from streamlink.utils.times import fromlocaltimestamp
 
 
@@ -186,8 +185,8 @@ class WarningLogRecord(logging.LogRecord):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.name = "warnings"
-        self.levelname = self.msg.category.__name__ if self.msg.category else UserWarning.__name__
+        categoryname = (self.msg.category.__name__ if self.msg.category else UserWarning.__name__).lower()
+        self.name = categoryname.removesuffix("warning") if categoryname.startswith("streamlink") else categoryname
         self.pathname = self.msg.filename
         self._path = Path(self.pathname)
         self.filename = self._path.name
@@ -195,9 +194,7 @@ class WarningLogRecord(logging.LogRecord):
         self.lineno = self.msg.lineno
 
     def getMessage(self) -> str:
-        if self.msg.category and issubclass(self.msg.category, StreamlinkWarning):
-            return f"{self.msg.message}"
-        return f"{self.msg.message}\n  {self.pathname}:{self.lineno}"
+        return f"{self.msg.message}{f' ({self.pathname}:{self.lineno})' if root.level <= DEBUG else ''}"
 
 
 def _log_record_factory(name, level, fn, lno, msg, args, exc_info, func=None, sinfo=None, **kwargs):

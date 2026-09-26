@@ -769,7 +769,7 @@ class TwitchClientIntegrity:
 )
 @pluginargument(
     "low-latency",
-    action="store_true",
+    action="boolean",
     help="""
         Enables low latency streaming by prefetching HLS segments.
         Sets --hls-segment-stream-data to true and --hls-live-edge to 2, if it is higher.
@@ -831,7 +831,7 @@ class TwitchClientIntegrity:
 )
 @pluginargument(
     "force-client-integrity",
-    action="store_true",
+    action="boolean",
     help="Don't attempt requesting the streaming access token without a client-integrity token.",
 )
 @pluginargument(
