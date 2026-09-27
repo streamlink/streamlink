@@ -79,8 +79,10 @@ def mock_load_path(request: pytest.FixtureRequest, monkeypatch: pytest.MonkeyPat
             ],
             [
                 ("cli", "warning", "Plugin path custom2 does not exist or is not a directory!"),
+                ("streamlinkdeprecation", "warning", "option '--plugin-dirs' is deprecated"),
             ],
             id="custom-paths-deprecated",
+            marks=pytest.mark.python(3, 13),
         ),
         pytest.param(
             ["--no-plugin-sideloading", "--plugin-dir=custom1", "--plugin-dir=custom2"],
