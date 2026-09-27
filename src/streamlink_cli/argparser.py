@@ -3,6 +3,7 @@ from __future__ import annotations
 import argparse
 import numbers
 import re
+import sys
 import warnings
 from gettext import gettext as _, ngettext
 from pathlib import Path
@@ -31,6 +32,9 @@ if TYPE_CHECKING:
 
 
 log = getLogger(__name__)
+
+# TODO: py312 support end: remove this workaround
+deprecated: dict[Any, Any] = dict(deprecated=True) if sys.version_info[:2] >= (3, 13) else {}
 
 
 class ArgumentParser(argparse.ArgumentParser):
@@ -462,8 +466,11 @@ def build_parser():
         metavar="DIRECTORY",
         type=comma_list,
         action="extend",
+        **deprecated,
         help="""
-            Load additional plugins from a list of comma-separated directories. (deprecated)
+            Load additional plugins from a list of comma-separated directories.
+
+            Deprecated in favor of --plugin-dir.
         """,
     )
 
@@ -575,8 +582,9 @@ def build_parser():
     )
     player.add_argument(
         "--verbose-player",
-        dest="player_verbose",
         action="store_true",
+        dest="player_verbose",
+        **deprecated,
         help="""
             Deprecated in favor of --player-verbose.
         """,
@@ -591,8 +599,9 @@ def build_parser():
     )
     player.add_argument(
         "--fifo",
-        dest="player_fifo",
         action="store_true",
+        dest="player_fifo",
+        **deprecated,
         help="""
             Deprecated in favor of --player-fifo.
         """,
@@ -780,6 +789,7 @@ def build_parser():
         "-R",
         "--record-and-pipe",
         metavar="FILENAME",
+        # deprecated=True,  # deprecation warning via streamlink_cli.main.create_output()
         help="""
             Deprecated in favor of --stdout --record=FILENAME.
         """,
@@ -1140,6 +1150,7 @@ def build_parser():
         "--hls-segment-queue-threshold",
         metavar="FACTOR",
         type=num(float, ge=0.0),
+        # deprecated=True,  # deprecation warning via session option mapping
         help="""
             Deprecated in favor of --stream-segmented-queue-deadline.
         """,
@@ -1212,6 +1223,7 @@ def build_parser():
         "--hls-duration",
         type=hours_minutes_seconds_float,
         metavar="[[XX:]XX:]XX[.XX] | [XXh][XXm][XX[.XX]s]",
+        # deprecated=True,  # deprecation warning via session option mapping
         help="""
             Deprecated in favor of --stream-segmented-duration.
         """,
