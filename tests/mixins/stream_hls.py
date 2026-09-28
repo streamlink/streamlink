@@ -4,6 +4,7 @@ import unittest
 from binascii import hexlify
 from functools import partial
 from threading import Event, Thread
+from typing import TYPE_CHECKING
 from unittest.mock import patch
 
 import requests_mock
@@ -11,6 +12,10 @@ import requests_mock
 from streamlink import Streamlink
 from streamlink.stream.hls import HLSStream, HLSStreamWorker as _HLSStreamWorker, HLSStreamWriter as _HLSStreamWriter
 from tests.testutils.handshake import Handshake
+
+
+if TYPE_CHECKING:
+    import pytest
 
 
 TIMEOUT_AWAIT_READ = 5
@@ -194,6 +199,8 @@ class TestMixinStreamHLS(unittest.TestCase):
     session: Streamlink
     stream: HLSStream
     thread: HLSStreamReadThread
+
+    caplog: pytest.LogCaptureFixture
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

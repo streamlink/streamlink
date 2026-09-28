@@ -1,6 +1,6 @@
 import unittest
 from threading import Event
-from unittest.mock import MagicMock, call, patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -53,8 +53,7 @@ class TestFilteredHLSStream(TestMixinStreamHLS, unittest.TestCase):
         assert self.thread.reader.filter_wait(timeout=0)
 
     @patch("streamlink.stream.hls.HLSStreamWriter.should_filter_segment", new=filter_segment)
-    @patch("streamlink.stream.hls.hls.log")
-    def test_filtered_logging(self, mock_log):
+    def test_filtered_logging(self):
         segments = self.subject([
             Playlist(0, [SegmentFiltered(0), SegmentFiltered(1)]),
             Playlist(2, [Segment(2), Segment(3)]),
@@ -66,41 +65,40 @@ class TestFilteredHLSStream(TestMixinStreamHLS, unittest.TestCase):
         assert not self.thread.reader.is_paused(), "Doesn't let the reader wait if not filtering"
 
         self.await_write(2)
-        assert mock_log.info.call_args_list == [
-            call("Filtering out segments and pausing stream output"),
+        assert [(record.name, record.levelname, record.getMessage()) for record in self.caplog.records] == [
+            ("streamlink.stream.hls", "info", "Filtering out segments and pausing stream output"),
         ]
-        assert mock_log.warning.call_args_list == [], "Doesn't warn about discontinuities when filtering pre-rolls"
         assert self.thread.reader.is_paused(), "Lets the reader wait if filtering"
 
         self.await_write(2)
-        assert mock_log.info.call_args_list == [
-            call("Filtering out segments and pausing stream output"),
-            call("Resuming stream output"),
+        assert [(record.name, record.levelname, record.getMessage()) for record in self.caplog.records] == [
+            ("streamlink.stream.hls", "info", "Filtering out segments and pausing stream output"),
+            ("streamlink.stream.hls", "info", "Resuming stream output"),
         ]
-        assert mock_log.warning.call_args_list == [], "Doesn't warn about discontinuities when resuming after pre-rolls"
         assert not self.thread.reader.is_paused(), "Doesn't let the reader wait if not filtering"
 
         data += self.await_read()
 
         self.await_write(2)
-        assert mock_log.info.call_args_list == [
-            call("Filtering out segments and pausing stream output"),
-            call("Resuming stream output"),
-            call("Filtering out segments and pausing stream output"),
+        assert [(record.name, record.levelname, record.getMessage()) for record in self.caplog.records] == [
+            ("streamlink.stream.hls", "info", "Filtering out segments and pausing stream output"),
+            ("streamlink.stream.hls", "info", "Resuming stream output"),
+            ("streamlink.stream.hls", "info", "Filtering out segments and pausing stream output"),
         ]
-        assert mock_log.warning.call_args_list == [], "Doesn't warn about discontinuities when filtering mid-rolls"
         assert self.thread.reader.is_paused(), "Lets the reader wait if filtering"
 
         self.await_write(2)
-        assert mock_log.info.call_args_list == [
-            call("Filtering out segments and pausing stream output"),
-            call("Resuming stream output"),
-            call("Filtering out segments and pausing stream output"),
-            call("Resuming stream output"),
+        assert [(record.name, record.levelname, record.getMessage()) for record in self.caplog.records] == [
+            ("streamlink.stream.hls", "info", "Filtering out segments and pausing stream output"),
+            ("streamlink.stream.hls", "info", "Resuming stream output"),
+            ("streamlink.stream.hls", "info", "Filtering out segments and pausing stream output"),
+            (
+                "streamlink.stream.hls",
+                "warning",
+                "Encountered a stream discontinuity. This is unsupported and will result in incoherent output data.",
+            ),
+            ("streamlink.stream.hls", "info", "Resuming stream output"),
         ]
-        assert mock_log.warning.call_args_list == [
-            call("Encountered a stream discontinuity. This is unsupported and will result in incoherent output data."),
-        ], "Warns about discontinuities when resuming after mid-rolls"
         assert not self.thread.reader.is_paused(), "Doesn't let the reader wait if not filtering"
 
         data += self.await_read()
