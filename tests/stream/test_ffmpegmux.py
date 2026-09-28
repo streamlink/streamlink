@@ -22,11 +22,6 @@ def _resolve_command_cache_clear():
     FFMPEGMuxer._resolve_command.cache_clear()
 
 
-@pytest.fixture(autouse=True)
-def _logger(caplog: pytest.LogCaptureFixture):
-    caplog.set_level(1, "streamlink")
-
-
 @pytest.fixture()
 def session(session: Streamlink):
     session.set_option("ffmpeg-no-validation", True)
@@ -35,6 +30,11 @@ def session(session: Streamlink):
 
 
 class TestCommand:
+    @pytest.fixture()
+    def caplog(self, caplog: pytest.LogCaptureFixture):
+        caplog.set_level(1, "streamlink.stream.ffmpegmux")
+        return caplog
+
     def test_cache(self, monkeypatch: pytest.MonkeyPatch, session: Streamlink):
         mock = Mock()
         monkeypatch.setattr("streamlink.stream.ffmpegmux.which", mock)
