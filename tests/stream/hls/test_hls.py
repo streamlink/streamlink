@@ -757,10 +757,13 @@ class TestHLSStreamWorkerOptions:
     ):
         stream = HLSStream(session, "https://foo/", **options)
         reader = HLSStreamReader(stream)
-        worker = HLSStreamWorker(reader)
+        try:
+            worker = HLSStreamWorker(reader)
 
-        assert worker.duration_limit == expected
-        assert [(record.category, str(record.message)) for record in recwarn.list] == warning
+            assert worker.duration_limit == expected
+            assert [(record.category, str(record.message)) for record in recwarn.list] == warning
+        finally:
+            reader.close()
 
     @pytest.mark.parametrize(
         ("session", "expected", "warning"),
@@ -801,10 +804,13 @@ class TestHLSStreamWorkerOptions:
     ):
         stream = HLSStream(session, "https://foo/")
         reader = HLSStreamReader(stream)
-        worker = HLSStreamWorker(reader)
+        try:
+            worker = HLSStreamWorker(reader)
 
-        assert worker._queue_deadline_factor == expected
-        assert [(record.category, str(record.message)) for record in recwarn.list] == warning
+            assert worker._queue_deadline_factor == expected
+            assert [(record.category, str(record.message)) for record in recwarn.list] == warning
+        finally:
+            reader.close()
 
 
 duration_to_segments_data = [1.0, 2.0, 3.0, 5.0, 7.0]
@@ -859,7 +865,11 @@ class TestHLSStreamWorkerPlaylistSequenceWarning:
     @pytest.fixture()
     def reader(self, session: Streamlink):
         stream = HLSStream(session, "")
-        return HLSStreamReader(stream)
+        reader = HLSStreamReader(stream)
+        try:
+            yield reader
+        finally:
+            reader.close()
 
     @pytest.fixture(autouse=True)
     def _assert_warning(self, request: pytest.FixtureRequest, recwarn: pytest.WarningsRecorder):

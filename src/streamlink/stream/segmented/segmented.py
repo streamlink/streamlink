@@ -88,7 +88,8 @@ class SegmentedStreamWriter(AwaitableMixin, NamedThread, Generic[TSegment, TResu
         if self.closed:  # pragma: no cover
             return
 
-        log.debug("Closing writer thread")
+        if self.ident is not None:
+            log.debug("Closing writer thread")
 
         self.closed = True
         self._wait.set()
@@ -212,7 +213,8 @@ class SegmentedStreamWorker(AwaitableMixin, NamedThread, Generic[TSegment, TResu
         if self.closed:  # pragma: no cover
             return
 
-        log.debug("Closing worker thread")
+        if self.ident is not None:
+            log.debug("Closing worker thread")
 
         self.closed = True
         self._wait.set()
