@@ -843,6 +843,100 @@ class TestMPDParser:
         with raises:
             list(itertools.islice(rep.segments(), 0, 2))
 
+    @pytest.mark.parametrize(
+        ("base_url", "location", "mpd_url_expected", "segment_url_expected", "raises"),
+        [
+            pytest.param(
+                "http://foo/bar/baz",
+                "http://bar/foo/baz",
+                "http://bar/foo/baz",
+                "http://bar/foo/init_0.m4s",
+                does_not_raise,
+                id="same-scheme",
+            ),
+            pytest.param(
+                "file:///a/b/c",
+                "file:///d/e/f",
+                "file:///d/e/f",
+                "file:///d/e/init_0.m4s",
+                does_not_raise,
+                id="same-scheme-file",
+            ),
+            pytest.param(
+                "https://foo/",
+                "http://bar/",
+                None,
+                None,
+                pytest.raises(
+                    MPDParsingError,
+                    match=r"^Prevented access to insecure MPD location: base_scheme='https' scheme='http'$",
+                ),
+                id="https-to-http",
+            ),
+            pytest.param(
+                "https://foo/",
+                "file:///path",
+                None,
+                None,
+                pytest.raises(
+                    MPDParsingError,
+                    match=r"^Prevented access to insecure MPD location: base_scheme='https' scheme='file'$",
+                ),
+                id="https-to-file",
+            ),
+        ],
+    )
+    def test_location_insecure_scheme(
+        self,
+        base_url: str,
+        location: str,
+        mpd_url_expected: str,
+        segment_url_expected: str,
+        raises: nullcontext,
+    ):
+        with xml("dash/test_location_scheme_mismatch.mpd") as mpd_xml:
+            element = mpd_xml.xpath(".//Location[1]")[0]
+            assert iselement(element)
+            element.text = location
+
+        with raises:
+            mpd = MPD(mpd_xml, base_url=base_url, url=f"{base_url}/manifest.mpd")
+            assert mpd.url == mpd_url_expected
+            rep = mpd.get_representation(("0", "0", "0"))
+            assert rep
+            assert next(rep.segments()).uri == segment_url_expected
+
+    @pytest.mark.parametrize(
+        ("location", "raises"),
+        [
+            pytest.param(
+                "https://foo/",
+                does_not_raise,
+                id="non-file-scheme",
+            ),
+            pytest.param(
+                "file:///path",
+                pytest.raises(
+                    MPDParsingError,
+                    match=r"^Prevented access to insecure MPD location: base_scheme='' scheme='file'$",
+                ),
+                id="file-scheme",
+            ),
+        ],
+    )
+    def test_location_without_url(
+        self,
+        location: str,
+        raises: nullcontext,
+    ):
+        with xml("dash/test_location_scheme_mismatch.mpd") as mpd_xml:
+            element = mpd_xml.xpath(".//Location[1]")[0]
+            assert iselement(element)
+            element.text = location
+
+        with raises:
+            assert MPD(mpd_xml, base_url=None, url=None)
+
     def test_timeline_ids(self):
         with xml("dash/test_timeline_ids.mpd") as mpd_xml, freeze_time("2000-01-01T00:00:00Z"):
             mpd = MPD(mpd_xml, base_url="http://test/", url="http://test/manifest.mpd")

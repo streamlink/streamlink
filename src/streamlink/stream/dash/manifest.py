@@ -8,7 +8,7 @@ from contextlib import contextmanager
 from datetime import timedelta
 from itertools import count, repeat
 from typing import TYPE_CHECKING, Any, ClassVar, Literal, TypeAlias, TypeVar, overload
-from urllib.parse import urljoin, urlparse, urlunparse
+from urllib.parse import urljoin, urlparse
 
 from isodate import Duration, parse_datetime, parse_duration  # type: ignore[import]
 
@@ -404,14 +404,18 @@ class MPD(MPDNode):
         )
 
         # parse children
-        location = self.children(Location)
-        self.location = location[0] if location else None
-        if self.location:
-            self.url = self.location.text or ""
-            urlp = list(urlparse(self.url))
-            if urlp[2]:
-                urlp[2], _ = urlp[2].rsplit("/", 1)
-            self._base_url = urlunparse(urlp)
+
+        locations = self.children(Location)
+        self.location = next(iter(locations), None)
+        if self.location and (location_url := self.location.text):
+            location_parsed = urlparse(location_url)
+            base_scheme = urlparse(url).scheme if url else ""
+            scheme = location_parsed.scheme
+            if is_insecure_scheme(base_scheme, scheme):
+                raise MPDParsingError(f"Prevented access to insecure MPD location: {base_scheme=!r} {scheme=!r}")
+
+            self.url = location_url
+            self._base_url = location_url
 
         self.baseURLs = self.children(BaseURL)
         self.periods = self.children(Period, minimum=1)
