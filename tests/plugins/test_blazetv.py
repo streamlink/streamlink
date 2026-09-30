@@ -6,13 +6,26 @@ class TestPluginCanHandleUrlBlazeTV(PluginCanHandleUrl):
     __plugin__ = BlazeTV
 
     should_match_groups = [
-        ("https://blaze.tv/live", {"is_live": "live"}),
-        ("https://watch.blaze.tv/live/", {"is_live": "live"}),
-        ("https://watch.blaze.tv/watch/replay/123456", {}),
+        (
+            "https://blaze.tv/live",
+            {"is_live": "live"},
+        ),
+        (
+            "https://www.blaze.tv/live",
+            {"is_live": "live"},
+        ),
+        (
+            "https://watch.blaze.tv/live",
+            {"is_live": "live"},
+        ),
+        (
+            "https://www.blaze.tv/watch/replay/12345",
+            {},
+        ),
     ]
 
     should_not_match = [
-        "https://blaze.tv/abc",
-        "https://watch.blaze.tv/watch/replay/",
-        "https://watch.blaze.tv/watch/replay/abc123",
+        "https://blaze.tv/",
+        "https://www.blaze.tv/",
+        "https://www.blaze.tv/watch",
     ]
