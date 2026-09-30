@@ -21,9 +21,7 @@ log = getLogger(__name__)
 
 
 @pluginmatcher(
-    re.compile(
-        r"https?://(?:(?:www|watch)\.)?blaze\.tv/(?:(?P<is_live>live)|watch/replay/\d+)"
-    ),
+    re.compile(r"https?://(?:(?:www|watch)\.)?blaze\.tv/(?:(?P<is_live>live)|watch/replay/\d+)"),
 )
 class BlazeTV(Plugin):
     @staticmethod
@@ -70,10 +68,7 @@ class BlazeTV(Plugin):
         return schema.validate(parsed_html)
 
     def _get_stream(self, uvid, key, token, expiry):
-        url = (
-            f"https://v2-streams-elb.simplestreamcdn.com/api"
-            f"/live/stream/{uvid}?key={key}&platform=chrome"
-        )
+        url = f"https://v2-streams-elb.simplestreamcdn.com/api/live/stream/{uvid}?key={key}&platform=chrome"
 
         return self.session.http.post(
             url,

@@ -87,11 +87,7 @@ https://example.com/live/720p.m3u8
         assert "360p" in streams
         assert "720p" in streams
 
-        post_request = next(
-            request
-            for request in requests_mock.request_history
-            if request.method == "POST"
-        )
+        post_request = next(request for request in requests_mock.request_history if request.method == "POST")
 
         assert post_request.headers["Accept"] == "application/json"
         assert post_request.headers["Token"] == "test-token"
