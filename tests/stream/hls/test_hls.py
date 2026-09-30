@@ -714,8 +714,14 @@ class TestHLSStreamWorker(TestMixinStreamHLS, unittest.TestCase):
 
 
 class TestHLSStreamWorkerOptions:
+    @pytest.fixture()
+    def reader(self, request: pytest.FixtureRequest, session: Streamlink):
+        options = getattr(request, "param", {})
+        stream = HLSStream(session, "https://foo/", **options)
+        return HLSStreamReader(stream)
+
     @pytest.mark.parametrize(
-        ("options", "session", "expected", "warning"),
+        ("reader", "session", "expected", "warning"),
         [
             pytest.param(
                 {},
@@ -758,39 +764,38 @@ class TestHLSStreamWorkerOptions:
                 id="duration-priority",
             ),
         ],
-        indirect=["session"],
+        indirect=["reader", "session"],
     )
     def test_duration(
         self,
         recwarn: pytest.WarningsRecorder,
         session: Streamlink,
-        options: dict,
+        reader: HLSStreamReader,
         expected: float | None,
         warning: list,
     ):
-        stream = HLSStream(session, "https://foo/", **options)
-        reader = HLSStreamReader(stream)
-        worker = HLSStreamWorker(reader)
-
-        assert worker.duration_limit == expected
+        assert reader.worker.duration_limit == expected
         assert [(record.category, str(record.message)) for record in recwarn.list] == warning
 
     @pytest.mark.parametrize(
-        ("session", "expected", "warning"),
+        ("reader", "session", "expected", "warning"),
         [
             pytest.param(
+                {},
                 {},
                 3.0,
                 [],
                 id="default-value",
             ),
             pytest.param(
+                {},
                 {"stream-segmented-queue-deadline": 5.0},
                 5.0,
                 [],
                 id="stream-segmented-queue-deadline",
             ),
             pytest.param(
+                {},
                 {"hls-segment-queue-threshold": 5.0},
                 5.0,
                 [
@@ -803,20 +808,17 @@ class TestHLSStreamWorkerOptions:
                 id="hls-segment-queue-threshold",
             ),
         ],
-        indirect=["session"],
+        indirect=["reader", "session"],
     )
     def test_queue_deadline(
         self,
         recwarn: pytest.WarningsRecorder,
         session: Streamlink,
+        reader: HLSStreamReader,
         expected: float,
         warning: list,
     ):
-        stream = HLSStream(session, "https://foo/")
-        reader = HLSStreamReader(stream)
-        worker = HLSStreamWorker(reader)
-
-        assert worker._queue_deadline_factor == expected
+        assert reader.worker._queue_deadline_factor == expected
         assert [(record.category, str(record.message)) for record in recwarn.list] == warning
 
 
