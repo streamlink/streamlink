@@ -43,6 +43,9 @@ class VK(Plugin):
                 if not res.headers.get("X-WAF-Backend-Status"):
                     log.debug("Getting WAF cookie")
                     cookie = res.cookies.get(self.HASH_COOKIE)
+                    if not cookie:
+                        log.debug("Missing WAF cookie")
+                        return None
                     key = md5(cookie.encode("utf-8")).hexdigest()
                     res.headers["Location"] = update_qsd(res.headers["Location"], qsd={"key": key})
                     return res
