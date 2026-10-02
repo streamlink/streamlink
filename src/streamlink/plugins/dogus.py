@@ -25,7 +25,7 @@ from streamlink.stream.hls import HLSStream
     pattern=re.compile(r"https?://(?:www\.)?startv\.com\.tr/canli-yayin"),
 )
 class Dogus(Plugin):
-    _re_live_hls = re.compile(r"""["'](?P<url>https?://[^"']+/live/hls/[^"']+)["']""")
+    _re_live_hls = re.compile(r"""(?P<q>["'])(?P<url>https?://[^"']+/live/hls/[^"']+)(?P=q)""")
     _re_yt_script = re.compile(r"youtube\.init\('([\w-]{11})'")
 
     # The live player of these sites looks up the stream URL by site name in its own script
@@ -40,8 +40,8 @@ class Dogus(Plugin):
         return self.session.http.get(
             self.LIVE_PLAYER_URL,
             schema=validate.Schema(
-                validate.transform(re_stream.search),
-                validate.any(None, validate.get("url")),
+                re_stream,
+                validate.get("url"),
             ),
         )
 
