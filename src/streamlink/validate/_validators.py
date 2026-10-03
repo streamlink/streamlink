@@ -531,6 +531,9 @@ def validator_xml_xpath(
     :raise ValidationError: On XPath evaluation error
     """
 
+    namespaces = dict(namespaces) if namespaces else {}
+    namespaces.setdefault("re", "http://exslt.org/regular-expressions")
+
     def transform_xpath(value):
         validate(iselement, value)
         try:

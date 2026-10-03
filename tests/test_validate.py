@@ -1462,6 +1462,20 @@ class TestXmlXpathValidator:
             root.append(child)
         assert validate.validate(validate.xml_xpath("./b:child", namespaces=nsmap), root)[0] is root[1]
 
+    def test_re_namespace(self):
+        root = Element("root")
+        for child in Element("foo", {"value": "foo"}), Element("bar", {"value": "123"}), Element("baz", {"value": ".!?"}):
+            root.append(child)
+        assert validate.validate(validate.xml_xpath("./*[re:test(@value,'[0-9]')]"), root)[0] is root[1]
+        assert validate.validate(validate.xml_xpath("string(re:match(name(//*[@value='.!?']), '(.)$')[2])"), root) == "z"
+        assert validate.validate(validate.xml_xpath("re:replace(//foo/@value, '(FOO)', 'i', 'not \\1')"), root) == "not foo"
+
+    def test_re_namespace_override(self):
+        root = Element("root")
+        child = Element("{http://a}foo")
+        root.append(child)
+        assert validate.validate(validate.xml_xpath("./re:foo", namespaces={"re": "http://a"}), root)[0] is child
+
     def test_extensions(self, element):
         def foo(context, a, b):
             return float(context.context_node.attrib.get("val")) + a + b
