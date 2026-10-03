@@ -24,30 +24,37 @@ log = getLogger(__name__)
     re.compile(r"https?://(?:(?:www|watch)\.)?blaze\.tv/(?:(?P<is_live>live)|watch/replay/\d+)"),
 )
 class BlazeTV(Plugin):
-    @staticmethod
-    def _get_live_data(parsed_html):
+    API_URL = "https://v2-streams-elb.simplestreamcdn.com/api/live/stream/{uvid}"
+
+    def _get_live_data(self):
+        parsed_html = self.session.http.get(
+            self.url,
+            schema=validate.Schema(validate.parse_html()),
+        )
+
         schema = validate.Schema(
             validate.xml_xpath(
-                ".//*[@data-type='live' and @data-uvid]",
+                ".//*[@data-type='live'][re:test(@data-uvid,'^[0-9]+$')][1]",
+                namespaces={"re": "http://exslt.org/regular-expressions"},
+            ),
+            validate.get(0),
+            validate.none_or_all(
+                validate.union_get(
+                    "data-uvid",
+                    "data-key",
+                    "data-token",
+                    "data-expiry",
+                ),
             ),
         )
 
-        elements = schema.validate(parsed_html)
+        return schema.validate(parsed_html)
 
-        if not elements:
-            return
-
-        for element in elements:
-            if element.get("data-uvid", "").isdecimal():
-                return {
-                    "uvid": element.get("data-uvid"),
-                    "key": element.get("data-key"),
-                    "token": element.get("data-token"),
-                    "expiry": element.get("data-expiry"),
-                }
-
-    @staticmethod
-    def _get_vod_uvid(parsed_html):
+    def _get_vod_uvid(self):
+        parsed_html = self.session.http.get(
+            self.url,
+            schema=validate.Schema(validate.parse_html()),
+        )
         schema = validate.Schema(
             validate.xml_xpath_string(".//script[contains(text(), 'window.nowPlaying.setData')]"),
             validate.none_or_all(
@@ -68,10 +75,12 @@ class BlazeTV(Plugin):
         return schema.validate(parsed_html)
 
     def _get_stream(self, uvid, key, token, expiry):
-        url = f"https://v2-streams-elb.simplestreamcdn.com/api/live/stream/{uvid}?key={key}&platform=chrome"
-
         return self.session.http.post(
-            url,
+            self.API_URL.format(uvid=uvid),
+            params={
+                "key": key,
+                "platform": "chrome",
+            },
             headers={
                 "Accept": "application/json",
                 "Token": token,
@@ -107,33 +116,44 @@ class BlazeTV(Plugin):
             ),
         )
 
-    def _get_streams(self):
-        is_live = self.match.group("is_live")
-        parsed_html = self.session.http.get(
-            self.url,
-            schema=validate.Schema(validate.parse_html()),
+    def _get_hls_url(self, token_data):
+        return self.session.http.get(
+            token_data["url"],
+            headers={
+                "Token": token_data["token"],
+                "Token-Expiry": str(token_data["expiry"]),
+                "Uvid": token_data["uvid"],
+            },
+            schema=validate.Schema(
+                validate.parse_json(),
+                {"Streams": {"Adaptive": validate.url()}},
+                validate.get(("Streams", "Adaptive")),
+            ),
         )
 
-        if is_live:
-            data = self._get_live_data(parsed_html)
+    def _get_streams(self):
+        is_live = self.match.group("is_live")
 
+        if is_live:
+            data = self._get_live_data()
             if not data:
                 return
 
-            self.id = data["uvid"]
+            uvid, key, token, expiry = data
+
+            self.id = uvid
             self.author = "Blaze"
             self.title = "Live TV"
             self.category = "Live"
 
             hls_url = self._get_stream(
-                data["uvid"],
-                data["key"],
-                data["token"],
-                data["expiry"],
+                uvid,
+                key,
+                token,
+                expiry,
             )
         else:
-            data = self._get_vod_uvid(parsed_html)
-
+            data = self._get_vod_uvid()
             if not data or not data["id"] or not data["id"].isdecimal():
                 return
 
@@ -146,19 +166,7 @@ class BlazeTV(Plugin):
 
             log.trace("token_data=%r", token_data)
 
-            hls_url = self.session.http.get(
-                token_data["url"],
-                headers={
-                    "Token": token_data["token"],
-                    "Token-Expiry": str(token_data["expiry"]),
-                    "Uvid": token_data["uvid"],
-                },
-                schema=validate.Schema(
-                    validate.parse_json(),
-                    {"Streams": {"Adaptive": validate.url()}},
-                    validate.get(("Streams", "Adaptive")),
-                ),
-            )
+            hls_url = self._get_hls_url(token_data)
 
         return HLSStream.parse_variant_playlist(self.session, hls_url)
 
