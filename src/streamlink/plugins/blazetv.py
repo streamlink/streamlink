@@ -21,18 +21,40 @@ log = getLogger(__name__)
 
 
 @pluginmatcher(
-    re.compile(r"https?://(?:watch\.)?blaze\.tv/(?:(?P<is_live>live)|watch/replay/\d+)"),
+    re.compile(r"https?://(?:(?:www|watch)\.)?blaze\.tv/(?:(?P<is_live>live)|watch/replay/\d+)"),
 )
 class BlazeTV(Plugin):
-    @staticmethod
-    def _get_live_uvid(parsed_html):
-        schema = validate.Schema(
-            validate.xml_xpath_string(".//div[@id='live-player-root']/@data-player-uvid"),
+    API_URL = "https://v2-streams-elb.simplestreamcdn.com/api/live/stream/{uvid}"
+
+    def _get_live_data(self):
+        parsed_html = self.session.http.get(
+            self.url,
+            schema=validate.Schema(validate.parse_html()),
         )
+
+        schema = validate.Schema(
+            validate.xml_xpath(
+                ".//*[@data-type='live'][re:test(@data-uvid,'^[0-9]+$')][1]",
+                namespaces={"re": "http://exslt.org/regular-expressions"},
+            ),
+            validate.get(0),
+            validate.none_or_all(
+                validate.union_get(
+                    "data-uvid",
+                    "data-key",
+                    "data-token",
+                    "data-expiry",
+                ),
+            ),
+        )
+
         return schema.validate(parsed_html)
 
-    @staticmethod
-    def _get_vod_uvid(parsed_html):
+    def _get_vod_uvid(self):
+        parsed_html = self.session.http.get(
+            self.url,
+            schema=validate.Schema(validate.parse_html()),
+        )
         schema = validate.Schema(
             validate.xml_xpath_string(".//script[contains(text(), 'window.nowPlaying.setData')]"),
             validate.none_or_all(
@@ -52,6 +74,31 @@ class BlazeTV(Plugin):
         )
         return schema.validate(parsed_html)
 
+    def _get_stream(self, uvid, key, token, expiry):
+        return self.session.http.post(
+            self.API_URL.format(uvid=uvid),
+            params={
+                "key": key,
+                "platform": "chrome",
+            },
+            headers={
+                "Accept": "application/json",
+                "Token": token,
+                "Token-Expiry": expiry,
+                "Userid": "123456",
+                "Uvid": uvid,
+            },
+            schema=validate.Schema(
+                validate.parse_json(),
+                {
+                    "response": {
+                        "stream": validate.url(),
+                    },
+                },
+                validate.get(("response", "stream")),
+            ),
+        )
+
     def _get_tokenizer(self, streamtype, uvid):
         return self.session.http.get(
             f"https://watch.blaze.tv/stream/{streamtype}/widevine/{uvid}",
@@ -69,32 +116,8 @@ class BlazeTV(Plugin):
             ),
         )
 
-    def _get_streams(self):
-        is_live = self.match.group("is_live")
-        parsed_html = self.session.http.get(self.url, schema=validate.Schema(validate.parse_html()))
-
-        if is_live:
-            uvid = self._get_live_uvid(parsed_html)
-            if not uvid or not uvid.isdecimal():
-                return
-            token_data = self._get_tokenizer("live", uvid)
-            self.id = uvid
-            self.author = "Blaze"
-            self.title = "Live TV"
-            self.category = "Live"
-        else:
-            data = self._get_vod_uvid(parsed_html)
-            if not data or not data["id"] or not data["id"].isdecimal():
-                return
-            token_data = self._get_tokenizer("replay", data["id"])
-            self.id = data["id"]
-            self.author = data["series_title"]
-            self.title = data["title"]
-            self.category = f"S{data['season']}E{data['episode']}"
-
-        log.trace("token_data=%r", token_data)
-
-        hls_url = self.session.http.get(
+    def _get_hls_url(self, token_data):
+        return self.session.http.get(
             token_data["url"],
             headers={
                 "Token": token_data["token"],
@@ -107,6 +130,44 @@ class BlazeTV(Plugin):
                 validate.get(("Streams", "Adaptive")),
             ),
         )
+
+    def _get_streams(self):
+        is_live = self.match.group("is_live")
+
+        if is_live:
+            data = self._get_live_data()
+            if not data:
+                return
+
+            uvid, key, token, expiry = data
+
+            self.id = uvid
+            self.author = "Blaze"
+            self.title = "Live TV"
+            self.category = "Live"
+
+            hls_url = self._get_stream(
+                uvid,
+                key,
+                token,
+                expiry,
+            )
+        else:
+            data = self._get_vod_uvid()
+            if not data or not data["id"] or not data["id"].isdecimal():
+                return
+
+            token_data = self._get_tokenizer("replay", data["id"])
+
+            self.id = data["id"]
+            self.author = data["series_title"]
+            self.title = data["title"]
+            self.category = f"S{data['season']}E{data['episode']}"
+
+            log.trace("token_data=%r", token_data)
+
+            hls_url = self._get_hls_url(token_data)
+
         return HLSStream.parse_variant_playlist(self.session, hls_url)
 
 
