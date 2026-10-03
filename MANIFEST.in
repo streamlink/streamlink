@@ -9,6 +9,8 @@ recursive-include completions *
 recursive-include docs *
 recursive-include tests *
 
+include conftest.py
+
 prune docs/_build
 include docs/_build/man/*
 
