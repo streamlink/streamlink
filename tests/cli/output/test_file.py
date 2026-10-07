@@ -10,12 +10,12 @@ from streamlink_cli.output import FileOutput
 
 
 if TYPE_CHECKING:
-    from collections.abc import Iterator
+    from collections.abc import Generator
     from pathlib import Path
 
 
 @contextmanager
-def _create_fd(root: Path, name: str) -> Iterator[BufferedRandom]:
+def _create_fd(root: Path, name: str) -> Generator[BufferedRandom, None, None]:
     fd = (root / name).open("w+b")
     try:
         yield fd
