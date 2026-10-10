@@ -15,7 +15,7 @@ from streamlink import __version__ as streamlink_version, logger
 from streamlink.exceptions import StreamlinkDeprecationWarning
 from streamlink.logger import getLogger
 from streamlink.options import Options
-from streamlink.utils.args import boolean, comma_list, comma_list_filter, filesize, keyvalue, num
+from streamlink.utils.args import Boolean, comma_list, comma_list_filter, filesize, keyvalue, num
 from streamlink.utils.times import hours_minutes_seconds_float
 from streamlink_cli.constants import STREAM_PASSTHROUGH
 from streamlink_cli.exceptions import StreamlinkCLIError
@@ -49,6 +49,8 @@ class ArgumentParser(argparse.ArgumentParser):
         self.color = True  # pre 3.14 compat
         super().__init__(*args, **kwargs)
         self.exit_on_error = False
+
+        self.register("action", "boolean", Boolean)
 
     # noinspection PyUnresolvedReferences,PyProtectedMember
     def add_argument_group(
@@ -256,13 +258,16 @@ def build_parser():
     )
     general.add_argument(
         "--auto-version-check",
-        type=boolean,
-        metavar="{yes,true,1,on,no,false,0,off}",
+        action="boolean",
+        nargs="?",
         default=False,
         help="""
             Enable or disable the automatic check for a new version of Streamlink.
 
-            Default is "no".
+            Note: Explicit values are deprecated.
+            Set --auto-version-check or --no-auto-version-check instead.
+
+            Default is false.
         """,
     )
     general.add_argument(
@@ -379,19 +384,23 @@ def build_parser():
     logging.add_argument(
         "-Q",
         "--quiet",
-        action="store_true",
+        action="boolean",
+        default=False,
         help="""
             Suppress all console and log output, and also disable user prompts.
+
+            Default is false.
         """,
     )
     logging.add_argument(
         "-j",
         "--json",
-        action="store_true",
+        action="boolean",
+        default=False,
         help="""
-            Output JSON representations instead of the normal text output.
+            Output JSON representations instead of the normal text output. Useful for external scripting.
 
-            Useful for external scripting.
+            Default is false.
         """,
     )
 
@@ -431,23 +440,28 @@ def build_parser():
         """,
     )
     plugin.add_argument(
-        "--no-plugin-cache",
-        action="store_true",
+        "--plugin-cache",
+        action="boolean",
         default=None,
         help="""
-            Disable I/O of the plugin key-value store.
+            Enable or disable I/O of the plugin key-value store.
 
             If disabled, plugins won't be able to load or store data like cookies, authentication data, etc.
             The data which is loaded or stored depends on each plugin implementation.
+
+            Default is true.
         """,
     )
     plugin.add_argument(
-        "--no-plugin-sideloading",
-        action="store_true",
+        "--plugin-sideloading",
+        action="boolean",
+        default=True,
         help="""
-            Disable automatic sideloading of third-party plugins from the default location.
+            Enable or disable automatic sideloading of third-party plugins from the default location.
 
             See the plugin-sideloading documentation for where third-party plugins are loaded from.
+
+            Default is true.
         """,
     )
     plugin.add_argument(
@@ -494,19 +508,23 @@ def build_parser():
     network.add_argument(
         "-4",
         "--ipv4",
-        action="store_true",
+        action="boolean",
         default=None,
         help="""
             Resolve address names to IPv4 only. This option overrides --ipv6.
+
+            Default is false.
         """,
     )
     network.add_argument(
         "-6",
         "--ipv6",
-        action="store_true",
+        action="boolean",
         default=None,
         help="""
             Resolve address names to IPv6 only. This option overrides --ipv4.
+
+            Default is false.
         """,
     )
 
@@ -575,9 +593,12 @@ def build_parser():
     player.add_argument(
         "-v",
         "--player-verbose",
-        action="store_true",
+        action="boolean",
+        default=False,
         help="""
             Write the --player's stdout/stderr output to Streamlink's stdout/stderr output.
+
+            Default is false.
         """,
     )
     player.add_argument(
@@ -592,9 +613,12 @@ def build_parser():
     player.add_argument(
         "-n",
         "--player-fifo",
-        action="store_true",
+        action="boolean",
+        default=False,
         help="""
             Make the --player read the stream through a named pipe instead of the stdin pipe.
+
+            Default is false.
         """,
     )
     player.add_argument(
@@ -608,14 +632,18 @@ def build_parser():
     )
     player.add_argument(
         "--player-http",
-        action="store_true",
+        action="boolean",
+        default=False,
         help="""
             Make the --player read the stream through HTTP instead of the stdin pipe.
+
+            Default is false.
         """,
     )
     player.add_argument(
         "--player-continuous-http",
-        action="store_true",
+        action="boolean",
+        default=False,
         help="""
             Make the --player read the stream through HTTP, but unlike --player-http,
             it will continuously try to open the stream if the player requests it.
@@ -623,11 +651,14 @@ def build_parser():
             This enables the handling of stream disconnects if the player is
             capable of reconnecting to a HTTP stream. This is usually done by
             setting the player to a "repeat mode".
+
+            Default is false.
         """,
     )
     player.add_argument(
         "--player-external-http",
-        action="store_true",
+        action="boolean",
+        default=False,
         help="""
             Serve stream data through HTTP without opening the --player. This is
             useful to allow external devices like smartphones or streaming boxes to
@@ -645,12 +676,14 @@ def build_parser():
 
             The URLs that can be used to access the stream will be printed to the
             console, and the server can be interrupted using CTRL-C.
+
+            Default is false.
         """,
     )
     player.add_argument(
         "--player-external-http-continuous",
-        type=boolean,
-        metavar="{yes,true,1,on,no,false,0,off}",
+        action="boolean",
+        nargs="?",
         default=True,
         help="""
             Set the run-mode of --player-external-http to continuous or non-continuous.
@@ -659,6 +692,9 @@ def build_parser():
             and will wait for the next HTTP request being made unless it gets shut down via CTRL-C.
 
             If set to non-continuous, Streamlink will stop once the stream has ended.
+
+            Note: Explicit values are deprecated.
+            Set --player-external-http-continuous or --no-player-external-http-continuous instead.
 
             Default is true.
         """,
@@ -698,16 +734,27 @@ def build_parser():
         """,
     )
     player.add_argument(
-        "--player-no-close",
-        action="store_true",
+        "--player-close",
+        action="boolean",
+        default=True,
         help="""
-            By default, Streamlink will close the --player when the stream ends.
+            Allow or prevent Streamlink from closing the --player when the stream output ends.
             This is to avoid "dead" GUI players lingering after Streamlink has exited.
+            Disable this to let the player decide itself when to exit.
 
-            It does however have the side-effect of sometimes closing a
-            player before it has played back all of its cached data.
+            A side-effect of the option enabled is that the player may be closed
+            before it has played back all of its cached data. For VOD content, this option should therefore be disabled.
 
-            This option will instead let the player decide when to exit.
+            Default is true.
+        """,
+    )
+    player.add_argument(
+        "--player-no-close",
+        action="store_false",
+        dest="player_close",
+        **deprecated,
+        help="""
+            Deprecated in favor of --no-player-close.
         """,
     )
     # noinspection PyTypeChecker
@@ -734,9 +781,12 @@ def build_parser():
     output.add_argument(
         "-O",
         "--stdout",
-        action="store_true",
+        action="boolean",
+        default=False,
         help="""
             Write stream data to `stdout` instead of playing it in the --player.
+
+            Default is false.
         """,
     )
     output.add_argument(
@@ -817,18 +867,24 @@ def build_parser():
     output.add_argument(
         "-f",
         "--force",
-        action="store_true",
+        action="boolean",
+        default=False,
         help="""
             When using --output or --record, always write to file even if it already exists (overwrite).
+
+            Default is false.
         """,
     )
     output.add_argument(
         "--skip",
-        action="store_true",
+        action="boolean",
+        default=False,
         help="""
             When using --output or --record, never write to file if it already exists (don't prompt).
 
             Takes precedence over --force.
+
+            Default is false.
         """,
     )
     output.add_argument(
@@ -1076,22 +1132,26 @@ def build_parser():
     )
     transport.add_argument(
         "--stream-passthrough-encrypted",
-        action="store_true",
+        action="boolean",
         default=None,
         help="""
             Pass through data from encrypted streams without decryption or encryption checks.
 
             This applies to DASH and HLS streams, and will likely result in garbage output.
+
+            Default is false.
         """,
     )
     transport.add_argument(
         "--mux-subtitles",
-        action="store_true",
+        action="boolean",
         default=None,
         help="""
             Automatically mux available subtitles into the output stream.
 
             Needs to be supported by the used plugin.
+
+            Default is false.
         """,
     )
 
@@ -1117,10 +1177,12 @@ def build_parser():
     )
     transport_hls.add_argument(
         "--hls-segment-stream-data",
-        action="store_true",
+        action="boolean",
         default=None,
         help="""
             Immediately write segment data into output buffer while downloading.
+
+            Default is false.
         """,
     )
     transport_hls.add_argument(
@@ -1230,10 +1292,12 @@ def build_parser():
     )
     transport_hls.add_argument(
         "--hls-live-restart",
-        action="store_true",
+        action="boolean",
         default=None,
         help="""
             Skip to the beginning of a live stream, or as far back as possible.
+
+            Default is false.
         """,
     )
 
@@ -1262,19 +1326,32 @@ def build_parser():
         """,
     )
     transport_ffmpeg.add_argument(
+        "--ffmpeg-validation",
+        action="boolean",
+        default=None,
+        help="""
+            Enable or disable FFmpeg validation and version logging.
+
+            Default is true.
+        """,
+    )
+    transport_ffmpeg.add_argument(
         "--ffmpeg-no-validation",
         action="store_true",
         default=None,
+        # deprecated=True,  # deprecation warning via session option mapping
         help="""
-            Disable FFmpeg validation and version logging.
+            Deprecated in favor of --no-ffmpeg-validation.
         """,
     )
     transport_ffmpeg.add_argument(
         "--ffmpeg-verbose",
-        action="store_true",
+        action="boolean",
         default=None,
         help="""
             Write FFmpeg's stderr output to Streamlink's stderr output.
+
+            Default is false.
         """,
     )
     transport_ffmpeg.add_argument(
@@ -1333,19 +1410,23 @@ def build_parser():
     )
     transport_ffmpeg.add_argument(
         "--ffmpeg-copyts",
-        action="store_true",
+        action="boolean",
         default=None,
         help="""
             Set the `-copyts` FFmpeg option, so input timestamps won't be processed
             and the initial start time offset value be kept.
+
+            Default is false.
         """,
     )
     transport_ffmpeg.add_argument(
         "--ffmpeg-start-at-zero",
-        action="store_true",
+        action="boolean",
         default=None,
         help="""
             Enable the `-start_at_zero` FFmpeg option when using --ffmpeg-copyts.
+
+            Default is false.
         """,
     )
     transport_ffmpeg.add_argument(
@@ -1423,32 +1504,67 @@ def build_parser():
         """,
     )
     http.add_argument(
-        "--http-ignore-env",
-        action="store_false",
+        "--http-trust-env",
+        action="boolean",
         default=None,
         help="""
-            Ignore HTTP settings set in the environment, such as environment variables (`HTTP_PROXY`, etc)
+            Enable or disable HTTP settings to be read form the environment, such as environment variables (`HTTP_PROXY`, etc.)
             or `~/.netrc` authentication.
+
+            Default is true.
+        """,
+    )
+    http.add_argument(
+        "--http-ignore-env",
+        action="store_false",
+        dest="http_trust_env",
+        default=None,
+        **deprecated,
+        help="""
+            Deprecated in favor of --no-http-trust-env.
+        """,
+    )
+    http.add_argument(
+        "--http-ssl-verify",
+        action="boolean",
+        default=None,
+        help="""
+            Enable or disable the verification of TLS/SSL certificates.
+
+            Use with caution, as it has TLS/SSL security implications.
+
+            Default is true.
         """,
     )
     http.add_argument(
         "--http-no-ssl-verify",
         action="store_false",
+        dest="http_ssl_verify",
+        default=None,
+        **deprecated,
+        help="""
+            Deprecated in favor of --no-http-ssl-verify.
+        """,
+    )
+    http.add_argument(
+        "--http-ssl-dh",
+        action="boolean",
         default=None,
         help="""
-            Don't attempt to verify TLS/SSL certificates.
+            Enable or disable Diffie Hellman key exchange.
 
             Use with caution, as it has TLS/SSL security implications.
+
+            Default is true.
         """,
     )
     http.add_argument(
         "--http-disable-dh",
         action="store_true",
         default=None,
+        # deprecated=True,  # deprecation warning via session option mapping
         help="""
-            Disable Diffie Hellman key exchange.
-
-            Use with caution, as it has TLS/SSL security implications.
+            Deprecated in favor of --no-http-ssl-dh.
         """,
     )
     http.add_argument(
@@ -1480,8 +1596,8 @@ def build_parser():
     webbrowser = parser.add_argument_group("Web browser options")
     webbrowser.add_argument(
         "--webbrowser",
-        type=boolean,
-        metavar="{yes,true,1,on,no,false,0,off}",
+        action="boolean",
+        nargs="?",
         default=None,
         help="""
             Enable or disable support for Streamlink's webbrowser API.
@@ -1494,6 +1610,9 @@ def build_parser():
             Streamlink currently only supports Chromium-based web browsers using the Chrome Devtools Protocol (CDP).
             This includes Chromium itself, Google Chrome, Microsoft Edge, Brave, Vivaldi, and others, but full support for
             third party Chromium forks is not guaranteed. Please try Chromium or Google Chrome when encountering any issues.
+
+            Note: Explicit values are deprecated.
+            Set --webbrowser or --no-webbrowser instead.
 
             Default is true.
         """,
@@ -1545,14 +1664,17 @@ def build_parser():
     )
     webbrowser.add_argument(
         "--webbrowser-headless",
-        type=boolean,
-        metavar="{yes,true,1,on,no,false,0,off}",
+        action="boolean",
+        nargs="?",
         default=None,
         help="""
             Whether to launch the web browser in headless mode or not.
             When enabled, it stays completely hidden and doesn't require a desktop environment to run.
 
             Please be aware that headless mode might be blocked by websites which implement bot detections.
+
+            Note: Explicit values are deprecated.
+            Set --webbrowser-headless or --no-webbrowser-headless instead.
 
             Default is false.
         """,
@@ -1565,7 +1687,7 @@ def build_parser():
 # NOTE: arguments with `action=store_{true,false}` must set `default=None`
 _ARGUMENT_TO_SESSIONOPTION: list[tuple[str, str, Callable[[Any], Any] | type | None]] = [
     # generic arguments
-    ("no_plugin_cache", "no-plugin-cache", None),
+    ("plugin_cache", "plugin-cache", None),
     ("locale", "locale", None),
     # network arguments
     ("interface", "interface", None),
@@ -1578,9 +1700,10 @@ _ARGUMENT_TO_SESSIONOPTION: list[tuple[str, str, Callable[[Any], Any] | type | N
     ("http_cookie", "http-cookies", dict),
     ("http_header", "http-headers", dict),
     ("http_query_param", "http-query-params", dict),
-    ("http_ignore_env", "http-trust-env", None),
-    ("http_no_ssl_verify", "http-ssl-verify", None),
-    ("http_disable_dh", "http-disable-dh", None),
+    ("http_trust_env", "http-trust-env", None),
+    ("http_ssl_verify", "http-ssl-verify", None),
+    ("http_disable_dh", "http-disable-dh", None),  # deprecated options must come first
+    ("http_ssl_dh", "http-ssl-dh", None),
     ("http_ssl_cert", "http-ssl-cert", None),
     ("http_ssl_cert_crt_key", "http-ssl-cert", tuple),
     ("http_timeout", "http-timeout", None),
@@ -1607,7 +1730,8 @@ _ARGUMENT_TO_SESSIONOPTION: list[tuple[str, str, Callable[[Any], Any] | type | N
     ("hls_audio_select", "hls-audio-select", None),
     ("dash_manifest_reload_attempts", "dash-manifest-reload-attempts", None),
     ("ffmpeg_ffmpeg", "ffmpeg-ffmpeg", None),
-    ("ffmpeg_no_validation", "ffmpeg-no-validation", None),
+    ("ffmpeg_no_validation", "ffmpeg-no-validation", None),  # deprecated options must come first
+    ("ffmpeg_validation", "ffmpeg-validation", None),
     ("ffmpeg_verbose", "ffmpeg-verbose", None),
     ("ffmpeg_verbose_path", "ffmpeg-verbose-path", None),
     ("ffmpeg_loglevel", "ffmpeg-loglevel", None),
