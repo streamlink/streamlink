@@ -265,6 +265,9 @@ def output_stream_http(
         user_agent = server.request.headers.get("User-Agent") or "unknown player"
         log.info(f"Got HTTP request from {user_agent}")
 
+        retry_streams = args.retry_streams or 10
+        retry_max = args.retry_max or 0
+        retry_attempts = 0
         stream_fd = prebuffer = None
         while not stream_fd and (not player or player.running):
             try:  # ruff: ignore[too-many-statements-in-try-clause]
@@ -277,20 +280,35 @@ def output_stream_http(
                 for stream_name in (resolve_stream_name(streams, s) for s in args.stream):
                     if stream_name in streams:
                         stream = streams[stream_name]
+                        retry_attempts = 0
                         break
                 else:
-                    log.info("Stream not available, will re-fetch streams in 10 sec")
-                    sleep(10)
+                    if retry_attempts >= retry_max > 0:
+                        continuous = False
+                        break
+                    log.info(f"Stream not available, re-fetching streams in {retry_streams:.1f} second(s)")
+                    retry_attempts += 1
+                    sleep(retry_streams)
                     continue
             except PluginError as err:
-                log.error(f"Unable to fetch new streams: {err}")
+                if retry_attempts >= retry_max > 0:
+                    continuous = False
+                    break
+                log.error(f"Unable to fetch new streams, retrying in {retry_streams:.1f} second(s): {err}")
+                retry_attempts += 1
+                sleep(retry_streams)
                 continue
 
-            try:
-                log.info(f"Opening stream: {stream_name} ({type(stream).shortname()})")
-                stream_fd, prebuffer = open_stream(stream)
-            except StreamError as err:
-                log.error(err)
+            for i in range(args.retry_open):
+                try:
+                    log.info(f"Opening stream: {stream_name} ({type(stream).shortname()})")
+                    stream_fd, prebuffer = open_stream(stream)
+                    break
+                except StreamError as err:
+                    log.error(f"Try {i + 1}/{args.retry_open}: Could not open stream {stream} ({err})")
+            else:
+                server.shutdown()
+                raise StreamlinkCLIError(f"Could not open stream {stream}, tried {args.retry_open} times, exiting")
 
         if stream_fd and prebuffer:
             log.debug("Writing stream to player")
@@ -298,6 +316,7 @@ def output_stream_http(
             try:
                 stream_runner.run(prebuffer)
             except OSError as err:
+                server.shutdown()
                 raise StreamlinkCLIError() from err
 
         if not continuous:
@@ -525,7 +544,7 @@ def fetch_streams_with_retry(plugin: Plugin, interval: float, count: int) -> Map
         streams = None
 
     if not streams:
-        log.info(f"Waiting for streams, retrying every {interval} second(s)")
+        log.info(f"Waiting for streams, retrying every {interval:.1f} second(s)")
     attempts = 0
 
     while not streams:
