@@ -380,7 +380,7 @@ def test_handle_url_text_output(
             (
                 "[cli][info] Found matching plugin plugin for URL plugin\n"
                 + "[plugins.plugin][info] plugin log message\n"
-                + "[cli][info] Waiting for streams, retrying every 1 second(s)\n"
+                + "[cli][info] Waiting for streams, retrying every 1.0 second(s)\n"
                 + "error: No playable streams found on this URL: plugin\n"
             ),
             id="no-streams",
@@ -476,7 +476,7 @@ def test_handle_url_text_output(
             (
                 "[cli][info] Found matching plugin plugin for URL plugin\n"
                 + "[plugins.plugin][info] plugin log message\n"
-                + "[cli][info] Waiting for streams, retrying every 1 second(s)\n"
+                + "[cli][info] Waiting for streams, retrying every 1.0 second(s)\n"
                 + "error: fatal\n"
             ),
             id="fatal-plugin-error-on-second-attempt",
