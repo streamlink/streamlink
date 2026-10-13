@@ -115,7 +115,8 @@ class _WebbrowserLauncher:
                         log.debug("Waiting for web browser process to terminate")
                     # once the application logic is done, cancel the entire task group and terminate/kill the process
                     nursery.cancel_scope.cancel()
-        except BaseExceptionGroup as exc_grp:  # TODO: py310 support end: use except*
+        except BaseExceptionGroup as exc_grp:
+            # unwrap group and raise bare KeyboardInterrupt and SystemExit exceptions
             exc: BaseException | BaseExceptionGroup | None = exc_grp.subgroup((KeyboardInterrupt, SystemExit))
             if not exc:  # not a KeyboardInterrupt or SystemExit
                 raise
