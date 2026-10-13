@@ -34,7 +34,6 @@ classifiers = [
   "Operating System :: Microsoft :: Windows",
   "Programming Language :: Python :: 3",
   "Programming Language :: Python :: 3 :: Only",
-  "Programming Language :: Python :: 3.10",
   "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: 3.12",
   "Programming Language :: Python :: 3.13",
@@ -53,7 +52,7 @@ dynamic = [
   "gui-scripts",
 ]
 
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 dependencies = [
   "certifi",
   "exceptiongroup ; python_version<'3.11'",
@@ -377,7 +376,7 @@ exclude = [
 
 # https://mypy.readthedocs.io/en/stable/config_file.html
 [tool.mypy]
-python_version = "3.10"
+python_version = "3.11"
 show_error_codes = true
 show_error_context = true
 show_column_numbers = true
