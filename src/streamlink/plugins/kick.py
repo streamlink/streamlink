@@ -180,7 +180,6 @@ class Kick(Plugin):
 
     def _get_cookies_from_webbrowser(self) -> bool:
         # ruff: disable[import-outside-top-level]
-        from streamlink.compat import BaseExceptionGroup
         from streamlink.webbrowser.cdp import CDPClient, CDPClientSession
         from streamlink.webbrowser.cdp.devtools import fetch  # ruff: ignore[typing-only-first-party-import]
         # ruff: enable[import-outside-top-level]

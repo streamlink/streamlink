@@ -1,6 +1,7 @@
 import datetime
 import itertools
 from contextlib import nullcontext
+from datetime import UTC
 from unittest.mock import Mock
 
 import pytest
@@ -13,7 +14,6 @@ from tests.resources import xml
 
 
 EPOCH_START = fromtimestamp(0)
-UTC = datetime.timezone.utc
 
 
 does_not_raise = nullcontext()

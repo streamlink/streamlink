@@ -6,7 +6,7 @@ import warnings
 from dataclasses import dataclass
 from datetime import timedelta
 from struct import unpack
-from typing import TYPE_CHECKING, Any, ClassVar, Literal, TypeVar
+from typing import TYPE_CHECKING, Any, ClassVar, Literal, Self, TypeVar
 from urllib.parse import urlparse
 
 from requests import Response
@@ -39,8 +39,6 @@ if TYPE_CHECKING:
     from collections.abc import Iterator, Mapping
     from concurrent.futures import Future
     from datetime import datetime
-
-    from typing_extensions import Self
 
     from streamlink.buffers import RingBuffer
     from streamlink.session import Streamlink
@@ -926,8 +924,7 @@ class HLSStream(HTTPStream):
                 ])  # fmt: skip
                 log.debug(f"Using external audio tracks for stream {stream_name} {external_audio_msg}")
 
-                # TODO: py310 support end: from typing import Self (runtime)
-                stream = MuxedHLSStream["Self"](
+                stream = MuxedHLSStream[Self](
                     session,
                     video=playlist.uri,
                     audio=[x.uri for x in external_audio if x.uri],

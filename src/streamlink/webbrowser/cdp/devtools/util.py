@@ -8,13 +8,11 @@
 from __future__ import annotations
 
 from abc import ABC, ABCMeta, abstractmethod
-from typing import TYPE_CHECKING, Any, TypeAlias, cast
+from typing import TYPE_CHECKING, Any, Self, TypeAlias, cast
 
 
 if TYPE_CHECKING:
     from collections.abc import MutableMapping
-
-    from typing_extensions import Self
 
 
 T_JSON_DICT: TypeAlias = dict[str, Any]

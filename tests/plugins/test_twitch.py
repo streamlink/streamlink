@@ -3,7 +3,7 @@ from __future__ import annotations
 import json
 import unittest
 from contextlib import nullcontext
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from typing import TYPE_CHECKING
 from unittest.mock import MagicMock, Mock, call, patch
 from urllib.parse import parse_qsl, urlparse
@@ -129,7 +129,7 @@ class TestPluginCanHandleUrlTwitch(PluginCanHandleUrl):
     ]
 
 
-DATETIME_BASE = datetime(2000, 1, 1, 0, 0, 0, 0, timezone.utc)
+DATETIME_BASE = datetime(2000, 1, 1, 0, 0, 0, 0, tzinfo=UTC)
 DATETIME_FORMAT = "%Y-%m-%dT%H:%M:%S.%fZ"
 
 

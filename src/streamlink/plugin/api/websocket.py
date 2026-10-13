@@ -13,7 +13,7 @@ from streamlink.logger import TRACE, getLogger, root as rootlogger
 
 
 if TYPE_CHECKING:
-    from typing_extensions import NotRequired
+    from typing import NotRequired
 
     from streamlink.session import Streamlink
 

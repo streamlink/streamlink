@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import TYPE_CHECKING
 from unittest.mock import Mock
 
@@ -66,15 +66,15 @@ class TestFilmOnHLS:
     def test_to_url_updated(self, filmonhls: FilmOnHLS, frozen_time):
         assert filmonhls.to_url() == "http://fake/720p.m3u8?id=123"
 
-        frozen_time.move_to(datetime.fromtimestamp(filmonhls._next_reload, tz=timezone.utc))
+        frozen_time.move_to(datetime.fromtimestamp(filmonhls._next_reload, tz=UTC))
         assert filmonhls.to_url() == "http://fake/720p.m3u8?id=456"
 
-        frozen_time.move_to(datetime.fromtimestamp(filmonhls._next_reload, tz=timezone.utc))
+        frozen_time.move_to(datetime.fromtimestamp(filmonhls._next_reload, tz=UTC))
         assert filmonhls.to_url() == "http://fake/720p.m3u8?id=789"
 
     def test_to_url_missing_quality(self, filmonhls: FilmOnHLS, frozen_time):
         filmonhls.quality = "doesnotexist"
-        frozen_time.move_to(datetime.fromtimestamp(filmonhls._next_reload, tz=timezone.utc))
+        frozen_time.move_to(datetime.fromtimestamp(filmonhls._next_reload, tz=UTC))
         with pytest.raises(TypeError) as cm:
             filmonhls.to_url()
         assert str(cm.value) == "Stream has expired and cannot be translated to a URL"

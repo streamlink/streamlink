@@ -972,10 +972,7 @@ def setup_logger() -> None:
 
 
 def setup(parser: ArgumentParser) -> None:
-    # TODO: py310 support end: set filter in warnings.catch_warnings()
-    with warnings.catch_warnings(record=True):
-        warnings.simplefilter(action="ignore", category=StreamlinkDeprecationWarning)
-
+    with warnings.catch_warnings(action="ignore", category=StreamlinkDeprecationWarning):
         setup_args(parser, ignore_unknown=True)
         # call argument set up as early as possible to load args from config files
         setup_config_args(parser, ignore_unknown=True)

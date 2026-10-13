@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import re
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import TYPE_CHECKING, Generic, TypeVar
 
 from isodate import LOCAL, parse_datetime  # type: ignore[import]
@@ -10,9 +10,6 @@ from isodate import LOCAL, parse_datetime  # type: ignore[import]
 if TYPE_CHECKING:
     from collections.abc import Callable
     from datetime import tzinfo
-
-
-UTC = timezone.utc
 
 
 def now(tz: tzinfo = UTC) -> datetime:

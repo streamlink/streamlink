@@ -12,7 +12,6 @@ import trio
 from trio.testing import wait_all_tasks_blocked
 from trio_websocket import CloseReason, ConnectionClosed, ConnectionTimeout
 
-from streamlink.compat import ExceptionGroup
 from streamlink.webbrowser.cdp.connection import MAX_BUFFER_SIZE, CDPConnection, CDPSession
 from streamlink.webbrowser.cdp.devtools.target import SessionID, TargetID
 from streamlink.webbrowser.cdp.devtools.util import CDPEvent
@@ -22,9 +21,9 @@ from tests.webbrowser.cdp import FakeWebsocketConnection
 
 if TYPE_CHECKING:
     from collections.abc import Generator
+    from typing import Self
 
     from trio.testing import MockClock
-    from typing_extensions import Self
 
     from streamlink.webbrowser.cdp.connection import CDPEventListener
     from streamlink.webbrowser.cdp.devtools.util import T_JSON_DICT

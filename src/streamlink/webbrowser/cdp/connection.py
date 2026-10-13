@@ -5,7 +5,7 @@ import itertools
 import json
 from collections import defaultdict
 from contextlib import asynccontextmanager
-from typing import TYPE_CHECKING, Generic, TypeVar, cast
+from typing import TYPE_CHECKING, Generic, Self, TypeVar, cast
 
 import trio
 from trio_websocket import ConnectionClosed, connect_websocket_url
@@ -20,7 +20,6 @@ if TYPE_CHECKING:
     from collections.abc import AsyncGenerator, Generator, MutableMapping
 
     from trio_websocket import WebSocketConnection
-    from typing_extensions import Self
 
     from streamlink.webbrowser.cdp.devtools.target import TargetID
     from streamlink.webbrowser.cdp.devtools.util import T_JSON_DICT

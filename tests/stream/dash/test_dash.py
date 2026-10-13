@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from contextlib import nullcontext
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import TYPE_CHECKING
 from unittest.mock import ANY, Mock, call
 
@@ -31,7 +31,7 @@ does_not_raise = nullcontext()
 @pytest.fixture()
 def timestamp():
     with freezegun.freeze_time("2000-01-01T00:00:00Z"):
-        yield datetime.now(timezone.utc)
+        yield datetime.now(UTC)
 
 
 def test_logger_name():

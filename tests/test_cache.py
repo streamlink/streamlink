@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import json
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from io import BytesIO, TextIOWrapper
 from json import JSONDecodeError
 from pathlib import Path
@@ -267,7 +267,7 @@ class TestExpiration:
     )
     def test_expires_at(self, cache: Cache, delta: timedelta, expected):
         with freezegun.freeze_time("2000-01-01T00:00:00Z"):
-            cache.set("key", "value", expires_at=datetime.now(tz=timezone.utc) + delta)
+            cache.set("key", "value", expires_at=datetime.now(UTC) + delta)
             assert cache.get("key") == expected
 
     def test_expires_at_overflowerror(self, cache: Cache):

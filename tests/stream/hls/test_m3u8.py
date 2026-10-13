@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from typing import TYPE_CHECKING
 
 import pytest
@@ -23,9 +23,6 @@ from tests.resources import text
 
 if TYPE_CHECKING:
     from streamlink.stream.hls import HLSPlaylist
-
-
-UTC = timezone.utc
 
 
 def test_parse_tag_mapping():

@@ -3,13 +3,11 @@ from __future__ import annotations
 from dataclasses import dataclass
 from itertools import chain
 from struct import unpack
-from typing import TYPE_CHECKING, Any, ClassVar, TypeAlias
+from typing import TYPE_CHECKING, Any, ClassVar, Self, TypeAlias
 
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Iterator, Mapping
-
-    from typing_extensions import Self
 
     TFrameParser: TypeAlias = "Callable[[ID3v2, bytes, bytearray], Any]"
 

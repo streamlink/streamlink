@@ -8,13 +8,13 @@ $region Vietnam
 """
 
 import re
-from datetime import datetime, timezone
 from hashlib import md5
 
 from streamlink.logger import getLogger
 from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.api import validate
 from streamlink.stream.hls import HLSStream
+from streamlink.utils.times import now
 
 
 log = getLogger(__name__)
@@ -30,9 +30,9 @@ class VinhLongTV(Plugin):
     _API_KEY_SECRET = "Kh0aAnT0an"
 
     def _get_headers(self):
-        now = datetime.now(tz=timezone.utc)
-        date = now.strftime("%Y%m%d")
-        time = now.strftime("%H%M%S")
+        ts = now()
+        date = ts.strftime("%Y%m%d")
+        time = ts.strftime("%H%M%S")
         dtstr = f"{date}{time}"
         dthash = md5(dtstr.encode()).hexdigest()
         key_value = f"{dthash[:3]}{dthash[-3:]}"

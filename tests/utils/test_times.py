@@ -1,13 +1,13 @@
 import argparse
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta, timezone
 
 import freezegun
 import isodate  # type: ignore[import]
 import pytest
 
 from streamlink.utils.times import (
-    LOCAL,
-    UTC,
+    LOCAL as TZ_LOCAL,
+    UTC as TZ_UTC,
     fromlocaltimestamp,
     fromtimestamp,
     hours_minutes_seconds,
@@ -29,28 +29,28 @@ class TestDatetime:
         return chatham_islands
 
     def test_constants(self):
-        assert UTC is timezone.utc
-        assert LOCAL is isodate.LOCAL
+        assert TZ_UTC is UTC
+        assert TZ_LOCAL is isodate.LOCAL
 
     def test_now(self):
         with freezegun.freeze_time("2000-01-01T00:00:00Z"):
-            assert now() == datetime(2000, 1, 1, 0, 0, 0, 0, timezone.utc)
+            assert now() == datetime(2000, 1, 1, 0, 0, 0, 0, tzinfo=UTC)
 
     def test_localnow(self, chatham_islands: timezone):
         with freezegun.freeze_time("2000-01-01T00:00:00+1245"):
-            assert localnow() == datetime(2000, 1, 1, 0, 0, 0, 0, chatham_islands)
+            assert localnow() == datetime(2000, 1, 1, 0, 0, 0, 0, tzinfo=chatham_islands)
 
     def test_fromtimestamp(self):
-        assert fromtimestamp(self.TS_Y2K) == datetime(2000, 1, 1, 0, 0, 0, 0, timezone.utc)
+        assert fromtimestamp(self.TS_Y2K) == datetime(2000, 1, 1, 0, 0, 0, 0, tzinfo=UTC)
 
     def test_fromlocaltimestamp(self, chatham_islands: timezone):
-        assert fromlocaltimestamp(self.TS_Y2K) == datetime(2000, 1, 1, 12, 45, 0, 0, chatham_islands)
-        assert fromlocaltimestamp(self.TS_Y2K) == datetime(2000, 1, 1, 0, 0, 0, 0, timezone.utc)
+        assert fromlocaltimestamp(self.TS_Y2K) == datetime(2000, 1, 1, 12, 45, 0, 0, tzinfo=chatham_islands)
+        assert fromlocaltimestamp(self.TS_Y2K) == datetime(2000, 1, 1, 0, 0, 0, 0, tzinfo=UTC)
 
     def test_parse_datetime(self, chatham_islands: timezone):
         assert parse_datetime("2000-01-01T00:00:00") == datetime(2000, 1, 1, 0, 0, 0, 0)  # ruff: ignore[call-datetime-without-tzinfo]
-        assert parse_datetime("2000-01-01T00:00:00Z") == datetime(2000, 1, 1, 0, 0, 0, 0, timezone.utc)
-        assert parse_datetime("2000-01-01T00:00:00+1245") == datetime(2000, 1, 1, 0, 0, 0, 0, chatham_islands)
+        assert parse_datetime("2000-01-01T00:00:00Z") == datetime(2000, 1, 1, 0, 0, 0, 0, tzinfo=UTC)
+        assert parse_datetime("2000-01-01T00:00:00+1245") == datetime(2000, 1, 1, 0, 0, 0, 0, tzinfo=chatham_islands)
         with pytest.raises(isodate.ISO8601Error):
             parse_datetime("2000-01-01")
 

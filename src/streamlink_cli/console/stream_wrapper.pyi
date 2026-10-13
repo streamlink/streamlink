@@ -1,6 +1,5 @@
 from io import TextIOWrapper
-
-from typing_extensions import Self
+from typing import Self
 
 # Fake TextIOWrapper inheritance
 class StreamWrapper(TextIOWrapper):

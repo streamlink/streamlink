@@ -5,7 +5,6 @@ import sys
 import warnings
 from logging import CRITICAL, DEBUG, ERROR, INFO, WARNING
 from pathlib import Path
-from sys import version_info
 from threading import Lock
 from typing import IO, TYPE_CHECKING, Literal, TextIO
 
@@ -101,21 +100,14 @@ class StreamlinkLogger(_BaseLoggerClass):
 def _logmethodfactory(level: int, name: str):
     # fix module name that gets read from the call stack in the logging module
     # https://github.com/python/cpython/commit/5ca6d7469be53960843df39bb900e9c3359f127f
-    if version_info >= (3, 11):
-
-        def method(self, message, *args, **kws):
-            if self.isEnabledFor(level):
-                # increase the stacklevel by one and skip the `trace()` call here
-                kws["stacklevel"] = 2
-                self._log(level, message, args, **kws)
-
-    else:
-
-        def method(self, message, *args, **kws):
-            if self.isEnabledFor(level):
-                self._log(level, message, args, **kws)
+    def method(self, message, *args, **kws):
+        if self.isEnabledFor(level):
+            # increase the stacklevel by one and skip the `trace()` call here
+            kws["stacklevel"] = 2
+            self._log(level, message, args, **kws)
 
     method.__name__ = name
+
     return method
 
 

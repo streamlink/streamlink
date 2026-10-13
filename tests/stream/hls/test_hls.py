@@ -6,7 +6,7 @@ import os
 import struct
 import unittest
 from contextlib import nullcontext
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from threading import Event
 from typing import TYPE_CHECKING, NamedTuple
 from unittest.mock import Mock, patch
@@ -47,7 +47,7 @@ if TYPE_CHECKING:
     from streamlink.session import Streamlink
 
 
-EPOCH = datetime(2000, 1, 1, 0, 0, 0, 0, tzinfo=timezone.utc)
+EPOCH = datetime(2000, 1, 1, 0, 0, 0, 0, tzinfo=UTC)
 ONE_SECOND = timedelta(seconds=1.0)
 
 

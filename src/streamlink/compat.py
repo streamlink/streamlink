@@ -7,12 +7,6 @@ import sys
 import warnings
 from typing import TYPE_CHECKING, Any
 
-
-try:
-    from builtins import BaseExceptionGroup, ExceptionGroup  # type: ignore[attr-defined, ty:unresolved-import]
-except ImportError:  # pragma: no cover
-    from exceptiongroup import BaseExceptionGroup, ExceptionGroup  # type: ignore[import, ty:unresolved-import]
-
 from requests.compat import chardet as charset_normalizer
 
 from streamlink.exceptions import StreamlinkDeprecationWarning
@@ -63,7 +57,8 @@ def deprecated(items: Mapping[str, tuple[str | None, Any, Any]]) -> None:
                   3. a custom warning message
     """
 
-    mod_globals = inspect.stack()[1].frame.f_globals
+    stack_item = inspect.stack()[1]
+    mod_globals = stack_item.frame.f_globals
     orig_getattr: Callable[[str], Any] | None = mod_globals.get("__getattr__", None)
 
     def __getattr__(name: str) -> Any:
@@ -90,14 +85,20 @@ def deprecated(items: Mapping[str, tuple[str | None, Any, Any]]) -> None:
     mod_globals["__getattr__"] = __getattr__
 
     # delete the deprecated module attributes and the imported `deprecated` function
-    for item in items.keys() | [deprecated.__name__]:
+    for item in items.keys() | ([deprecated.__name__] if stack_item.filename != __file__ else []):
         if item in mod_globals:
             del mod_globals[item]
 
 
+deprecated({
+    "BaseExceptionGroup": ("builtins.BaseExceptionGroup", None, None),
+    "ExceptionGroup": ("builtins.ExceptionGroup", None, None),
+})
+
+
 __all__ = [
-    "BaseExceptionGroup",
     "ExceptionGroup",
+    "BaseExceptionGroup",
     "deprecated",
     "detect_encoding",
     "is_linux",
