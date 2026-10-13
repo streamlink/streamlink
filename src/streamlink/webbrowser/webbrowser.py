@@ -8,7 +8,6 @@ from typing import TYPE_CHECKING
 
 import trio
 
-from streamlink.compat import BaseExceptionGroup
 from streamlink.logger import getLogger
 from streamlink.utils.path import resolve_executable
 from streamlink.webbrowser.exceptions import WebbrowserError

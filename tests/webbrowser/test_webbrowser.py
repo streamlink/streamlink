@@ -7,7 +7,7 @@ from signal import SIGTERM
 import pytest
 import trio
 
-from streamlink.compat import BaseExceptionGroup, is_win32
+from streamlink.compat import is_win32
 from streamlink.webbrowser.exceptions import WebbrowserError
 from streamlink.webbrowser.webbrowser import Webbrowser
 

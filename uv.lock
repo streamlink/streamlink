@@ -1871,7 +1871,6 @@ typing = [
 [package.metadata]
 requires-dist = [
     { name = "certifi" },
-    { name = "exceptiongroup", marker = "python_full_version < '3.11'" },
     { name = "isodate" },
     { name = "lxml", specifier = ">=5.0.0,<8" },
     { name = "pycountry" },
@@ -1881,7 +1880,6 @@ requires-dist = [
     { name = "trio", marker = "python_full_version < '3.13'", specifier = ">=0.22.0,<1" },
     { name = "trio", marker = "python_full_version >= '3.13'", specifier = ">=0.25.0,<1" },
     { name = "trio-websocket", specifier = ">=0.9.0,<1" },
-    { name = "typing-extensions", marker = "python_full_version < '3.11'", specifier = ">=4.1.0" },
     { name = "urllib3", specifier = ">=2.0.0,<3" },
     { name = "urllib3", extras = ["brotli"], marker = "python_full_version >= '3.14' and extra == 'decompress'", specifier = ">=2.0.0,<3" },
     { name = "urllib3", extras = ["brotli", "zstd"], marker = "python_full_version < '3.14' and extra == 'decompress'", specifier = ">=2.0.0,<3" },

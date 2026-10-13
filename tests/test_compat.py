@@ -148,3 +148,23 @@ class TestDeprecated:
         with raises_on_missing:
             # noinspection PyStatementEffect
             module.does_not_exist  # ruff: ignore[useless-expression]
+
+
+@pytest.mark.parametrize(
+    ("attr", "exception"),
+    [
+        pytest.param("BaseExceptionGroup", BaseExceptionGroup, id="BaseExceptionGroup"),
+        pytest.param("ExceptionGroup", ExceptionGroup, id="ExceptionGroup"),
+    ],
+)
+def test_deprecated_exceptiongroup_reexport(attr: str, exception: type[BaseExceptionGroup]):
+    spec = importlib.util.find_spec("streamlink.compat", "streamlink")
+    assert spec
+    assert spec.loader
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+
+    with pytest.warns(StreamlinkDeprecationWarning):
+        item = getattr(module, attr)
+
+    assert item is exception

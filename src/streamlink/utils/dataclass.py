@@ -2,14 +2,8 @@ from __future__ import annotations
 
 import dataclasses
 from datetime import datetime, timedelta
-from typing import TYPE_CHECKING, TypeAlias, TypeVar
+from typing import TYPE_CHECKING, TypeAlias, TypeVar, dataclass_transform
 from weakref import WeakKeyDictionary
-
-
-try:
-    from typing import dataclass_transform  # type: ignore[attr-defined, ty:unresolved-import]
-except ImportError:  # pragma: no cover
-    from typing_extensions import dataclass_transform
 
 
 if TYPE_CHECKING:
@@ -31,7 +25,11 @@ _DEFAULT_FORMATTERS: _TFormatters = {
 _FORMATTER_REFS: WeakKeyDictionary[FormattedDataclass, tuple[_TFormatters, list[str]] | None] = WeakKeyDictionary()
 
 
-@dataclass_transform()
+@dataclass_transform(
+    # mypy doesn't understand the kw_only decorator argument on dataclass subclasses,
+    # so set a default value here and make mypy happy
+    kw_only_default=True,
+)
 class FormattedDataclass(type):
     def __new__(
         cls,

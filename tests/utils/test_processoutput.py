@@ -9,7 +9,6 @@ import pytest
 import trio
 from trio.testing import wait_all_tasks_blocked
 
-from streamlink.compat import ExceptionGroup
 from streamlink.utils.processoutput import ProcessOutput
 
 

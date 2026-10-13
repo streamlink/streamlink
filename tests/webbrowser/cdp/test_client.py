@@ -8,7 +8,6 @@ import pytest
 import trio
 from trio.testing import wait_all_tasks_blocked
 
-from streamlink.compat import ExceptionGroup
 from streamlink.webbrowser.cdp.client import CDPClient, CDPClientSession, RequestPausedHandler
 from streamlink.webbrowser.cdp.connection import CDPConnection, CDPSession
 from streamlink.webbrowser.cdp.devtools.fetch import RequestPaused

@@ -684,7 +684,6 @@ class TwitchClientIntegrity:
         device_id: str,
     ) -> tuple[str, int] | None:
         # ruff: disable[import-outside-top-level]
-        from streamlink.compat import BaseExceptionGroup
         from streamlink.webbrowser.cdp import CDPClient, CDPClientSession, devtools
         # ruff: enable[import-outside-top-level]
 
