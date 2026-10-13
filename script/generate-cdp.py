@@ -39,7 +39,7 @@ from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
 from textwrap import dedent, indent as tw_indent
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING, Self, cast
 
 import inflection
 import requests
@@ -47,8 +47,6 @@ import requests
 
 if TYPE_CHECKING:
     from collections.abc import Iterator
-
-    from typing_extensions import Self
 
 
 URL_API_NPMJS_LATEST = "https://registry.npmjs.org/devtools-protocol/latest"
@@ -104,13 +102,11 @@ UTIL = f"""{SHARED_HEADER}
 from __future__ import annotations
 
 from abc import ABC, ABCMeta, abstractmethod
-from typing import TYPE_CHECKING, Any, TypeAlias, cast
+from typing import TYPE_CHECKING, Any, Self, TypeAlias, cast
 
 
 if TYPE_CHECKING:
     from collections.abc import MutableMapping
-
-    from typing_extensions import Self
 
 
 T_JSON_DICT: TypeAlias = dict[str, Any]
