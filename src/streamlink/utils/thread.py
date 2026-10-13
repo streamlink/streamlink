@@ -11,8 +11,6 @@ if TYPE_CHECKING:
     from collections.abc import Iterator
     from concurrent.futures import Future
 
-    from typing_extensions import Unpack
-
 
 _threadname_lock = RLock()
 _threadname_counters: defaultdict[str, Iterator[int]] = defaultdict(count)
@@ -31,7 +29,7 @@ class NamedThread(Thread):
         super().__init__(*args, **kwargs)
 
 
-def wait_for_all_events(*events: Unpack[tuple[Event]], timeout: int | None = None) -> bool:
+def wait_for_all_events(*events: *tuple[Event], timeout: int | None = None) -> bool:
     with ThreadPoolExecutor(max_workers=len(events)) as executor:
         futures: list[Future[bool]] = [executor.submit(event.wait, timeout) for event in events]
         # future result blocks until event is set or times out
