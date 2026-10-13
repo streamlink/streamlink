@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import logging
 import warnings
-from datetime import timezone
+from datetime import UTC
 from errno import EINVAL, EPIPE
 from inspect import currentframe, getframeinfo
 from io import BytesIO, TextIOWrapper
@@ -53,7 +53,7 @@ def log(request: pytest.FixtureRequest, monkeypatch: pytest.MonkeyPatch, output:
     fakeroot = getLogger("streamlink.test")
 
     monkeypatch.setattr("streamlink.logger.root", fakeroot)
-    monkeypatch.setattr("streamlink.utils.times.LOCAL", timezone.utc)
+    monkeypatch.setattr("streamlink.utils.times.LOCAL", UTC)
 
     stream: TextIOWrapper | None = output if params.pop("stream", True) else None
     handler = logger.basicConfig(stream=stream, **params)

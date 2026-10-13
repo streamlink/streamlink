@@ -10,7 +10,7 @@ from __future__ import annotations
 import re
 from collections import deque
 from dataclasses import dataclass
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta
 from random import randint
 from threading import Event, RLock
 from typing import TYPE_CHECKING, Any
@@ -27,6 +27,7 @@ from streamlink.stream.ffmpegmux import MuxedStream
 from streamlink.stream.segmented import Segment, SegmentedStreamReader, SegmentedStreamWorker, SegmentedStreamWriter
 from streamlink.stream.stream import Stream
 from streamlink.utils.parse import parse_json
+from streamlink.utils.times import now
 
 
 if TYPE_CHECKING:
@@ -307,7 +308,7 @@ class UStreamTVWsClient(WebsocketClient):
         if self.stream_initial_id is None:
             self.stream_initial_id = current_id
 
-        current_time = datetime.now(timezone.utc)
+        current_time = now()
 
         # lock the stream segments deques for the worker threads
         with self.stream_segments_lock:
@@ -377,9 +378,9 @@ class UStreamTVStreamWriter(SegmentedStreamWriter[UStreamTVSegment, Response]):
         if self.closed:  # pragma: no cover
             return
 
-        now = datetime.now(timezone.utc)
-        if segment.available_at > now:
-            time_to_wait = (segment.available_at - now).total_seconds()
+        ts = now()
+        if segment.available_at > ts:
+            time_to_wait = (segment.available_at - ts).total_seconds()
             log.debug(f"Waiting for {self.stream.kind} segment: {segment.num} ({time_to_wait:.01f}s)")
             if not self.reader.worker.wait(time_to_wait):
                 return
