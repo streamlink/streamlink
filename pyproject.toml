@@ -60,7 +60,7 @@ dependencies = [
   "isodate",
   "lxml >=5.0.0,<8",
   "pycountry",
-  "pycryptodome >=3.4.3,<4",
+  "pycryptodome >=3.4.3,<5",
   "PySocks >=1.5.6,!=1.5.7",
   "requests >=2.30.0,<3",
   "trio >=0.25.0,<1 ; python_version>='3.13'",

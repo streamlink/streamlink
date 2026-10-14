@@ -14,6 +14,8 @@ try:
     from Crypto.Util.Padding import pad, unpad
 except ImportError:  # pragma: no cover
     # pycryptodomex (independent of the old PyCrypto library)
+    # Support for pycryptodomex ended with pycryptodome 4.0.0.
+    # Keep the fallback imports until pycryptodomex is not packaged by major distros anymore.
     from Cryptodome.Cipher import AES, PKCS1_v1_5  # type: ignore
     from Cryptodome.Hash import MD5, SHA256  # type: ignore
     from Cryptodome.PublicKey import RSA  # type: ignore
