@@ -265,6 +265,9 @@ def output_stream_http(
         user_agent = server.request.headers.get("User-Agent") or "unknown player"
         log.info(f"Got HTTP request from {user_agent}")
 
+        retry_streams = args.retry_streams or 10
+        retry_max = args.retry_max or 0
+        retry_attempts = 0
         stream_fd = prebuffer = None
         while not stream_fd and (not player or player.running):
             try:  # ruff: ignore[too-many-statements-in-try-clause]
@@ -277,10 +280,15 @@ def output_stream_http(
                 for stream_name in (resolve_stream_name(streams, s) for s in args.stream):
                     if stream_name in streams:
                         stream = streams[stream_name]
+                        retry_attempts = 0
                         break
                 else:
-                    log.info("Stream not available, will re-fetch streams in 10 sec")
-                    sleep(10)
+                    if retry_max > 0 and retry_attempts >= retry_max:
+                        log.info(f"Cannot open stream, retries exceeded")
+                        break
+                    log.info(f"Stream not available, will re-fetch streams in {retry_streams:.0f} sec")
+                    retry_attempts += 1
+                    sleep(retry_streams)
                     continue
             except PluginError as err:
                 log.error(f"Unable to fetch new streams: {err}")
@@ -300,7 +308,7 @@ def output_stream_http(
             except OSError as err:
                 raise StreamlinkCLIError() from err
 
-        if not continuous:
+        if not continuous or (retry_max > 0 and retry_attempts >= retry_max):
             break
 
         server.close()
@@ -525,7 +533,7 @@ def fetch_streams_with_retry(plugin: Plugin, interval: float, count: int) -> Map
         streams = None
 
     if not streams:
-        log.info(f"Waiting for streams, retrying every {interval} second(s)")
+        log.info(f"Waiting for streams, retrying every {interval:.0f} second(s)")
     attempts = 0
 
     while not streams:
