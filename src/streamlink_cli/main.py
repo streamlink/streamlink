@@ -182,7 +182,7 @@ def create_output(formatter: Formatter) -> FileOutput | PlayerOutput:
             args=args.player_args,
             env=args.player_env,
             quiet=not args.player_verbose,
-            kill=not args.player_no_close,
+            kill=args.player_close,
             namedpipe=namedpipe,
             http=http,
             record=record,
@@ -985,7 +985,7 @@ def setup(parser: ArgumentParser) -> None:
 
     setup_streamlink()
     # load additional plugins
-    setup_plugins(streamlink, not args.no_plugin_sideloading, args.plugin_dirs)
+    setup_plugins(streamlink, args.plugin_sideloading, args.plugin_dirs)
     setup_plugin_args(streamlink, parser)
     # call setup args again once the plugin specific args have been added
     # deprecation warnings are emitted here

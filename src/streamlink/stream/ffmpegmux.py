@@ -22,6 +22,7 @@ from streamlink.utils.processoutput import ProcessOutput
 if TYPE_CHECKING:
     from collections.abc import Sequence
 
+    from streamlink.session import Streamlink
     from streamlink.utils.named_pipe import NamedPipeBase
 
 
@@ -112,14 +113,13 @@ class FFMPEGMuxer(StreamIO):
         return cls.command(session) is not None
 
     @classmethod
-    def command(cls, session):
+    def command(cls, session: Streamlink):
         with _lock_resolve_command:
-            timeout = session.options.get("ffmpeg-validation-timeout") or cls.FFMPEG_VERSION_TIMEOUT
-            return cls._resolve_command(
-                session.options.get("ffmpeg-ffmpeg"),
-                not session.options.get("ffmpeg-no-validation"),
-                timeout,
-            )
+            command: str | None = session.options.get("ffmpeg-ffmpeg")
+            validate: bool = session.options.get("ffmpeg-validation")
+            timeout: float = max(0.0, session.options.get("ffmpeg-validation-timeout") or cls.FFMPEG_VERSION_TIMEOUT)
+
+            return cls._resolve_command(command, validate, timeout)
 
     @classmethod
     @lru_cache(maxsize=128)
