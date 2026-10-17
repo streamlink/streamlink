@@ -330,7 +330,7 @@ class MPD(MPDNode):
 
     __tag__ = "MPD"
 
-    parent: None  # type: ignore[assignment]
+    parent: None  # type: ignore[assignment, ty:invalid-attribute-override]
     timelines: dict[TTimelineIdent, int]
 
     DEFAULT_MINBUFFERTIME = 3.0
