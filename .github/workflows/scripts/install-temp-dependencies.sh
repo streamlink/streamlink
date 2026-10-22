@@ -20,13 +20,12 @@ DEPS=()
 
 if [[ "${PY}" == cp314-cp314t ]]; then
     DEPS+=(
-        "${BASE}/brotli-20260523-1/brotli-1.2.0-${PY}-${PLATFORM}.whl"
+        "${BASE}/brotli-20261022-1/brotli-1.2.1-${PY}-${PLATFORM}.whl"
         "${BASE}/pycryptodome-20261020-1/pycryptodome-4.1.0-${PY}-${PLATFORM}.whl"
     )
 
 elif [[ "${PY}" == cp315-cp315 ]]; then
     DEPS+=(
-        "${BASE}/brotli-20260523-1/brotli-1.2.0-${PY}-${PLATFORM}.whl"
     )
     if [[ "${PLATFORM}" == win_amd64 ]]; then
         DEPS+=(
