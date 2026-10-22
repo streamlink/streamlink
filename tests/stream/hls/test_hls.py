@@ -608,14 +608,13 @@ class TestHLSStreamWorker(TestMixinStreamHLS, unittest.TestCase):
             self.await_playlist_wait(1)
             self.await_reload(1)
 
-            # FIXME: NO-GIL
-            #   Closing only the worker thread when no new segments were queued keeps the writer thread and buffer still open,
-            #   which is why the test's reader thread keeps running until the test teardown,
-            #   but this somehow breaks the assertion down below, so close everything manually...
-            #   These tests will have to be rewritten eventually in pytest-style, without having to mock log calls.
-            self.close()
-            self.await_close()
+            # wait for writer and worker threads to terminate first
+            self.thread.reader.writer.join(1)
+            self.thread.reader.worker.join(1)
+            assert not self.thread.reader.writer.is_alive()
+            assert not self.thread.reader.worker.is_alive()
 
+            # then make an assertion about the log record from the check_queue_deadline() call which terminated the worker
             assert [(record.name, record.levelname, record.getMessage()) for record in self.caplog.records] == [
                 ("streamlink.stream.segmented", "warning", "No new segments for more than 5.00s. Stopping..."),
             ]
