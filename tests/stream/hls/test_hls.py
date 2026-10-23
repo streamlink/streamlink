@@ -7,7 +7,6 @@ import struct
 import unittest
 from contextlib import nullcontext
 from datetime import datetime, timedelta, timezone
-from threading import Event
 from typing import TYPE_CHECKING, NamedTuple
 from unittest.mock import Mock, patch
 
@@ -1601,115 +1600,139 @@ def test_hls_insecure_scheme_multivariant(
         HLSStream.parse_variant_playlist(session, multivariant)
 
 
-@patch("streamlink.stream.hls.hls.HLSStreamWorker.wait", Mock(return_value=True))
-class TestHlsReloadTime(TestMixinStreamHLS, unittest.TestCase):
-    segments = [
-        Segment(0, duration=11),
-        Segment(1, duration=7),
-        Segment(2, duration=5),
-        Segment(3, duration=3),
-    ]
-
-    def get_session(self, options=None, *args, **kwargs):
-        return super().get_session(
-            dict(
-                options or {},
-                **{
-                    "hls-live-edge": 3,
-                    "hls-playlist-reload-time": kwargs.pop("reload_time", None),
-                },
-            ),
-        )
-
-    def subject(self, *args, **kwargs):
-        kwargs["start"] = False
-        super().subject(*args, **kwargs)
-
-        # mock the worker thread's _playlist_reload_time method, so that the main thread can wait on its call
-        get_reload_time_called = Event()
-        orig_get_reload_time = self.thread.reader.worker._get_reload_time
-
-        def mocked_get_reload_time(*args2, **kwargs2):
-            get_reload_time_called.set()
-            return orig_get_reload_time(*args2, **kwargs2)
-
-        # immediately kill the writer thread as we don't need it and don't want to wait for its queue polling to end
-        def mocked_queue_get():
-            return None
-
-        with (
-            patch.object(self.thread.reader.worker, "_get_reload_time", side_effect=mocked_get_reload_time),
-            patch.object(self.thread.reader.writer, "_queue_get", side_effect=mocked_queue_get),
-        ):
-            self.start()
-
-            if not get_reload_time_called.wait(timeout=5):  # pragma: no cover
-                raise RuntimeError("Missing _get_reload_time() call")
-
-            # close threads first, so that deterministic assertions can be done about the reload time
-            self.close()
-            self.await_close()
-
-            return self.thread.reader.worker._reload_time
-
-    def test_default(self):
-        time = self.subject([Playlist(0, self.segments, end=True, targetduration=4)], reload_time="default")
-        assert time == 4, "default sets the reload time to the playlist's target duration"
-
-    def test_segment(self):
-        time = self.subject([Playlist(0, self.segments, end=True, targetduration=4)], reload_time="segment")
-        assert time == 3, "segment sets the reload time to the playlist's last segment"
-
-    def test_segment_no_segments(self):
-        time = self.subject([Playlist(0, [], end=True, targetduration=4)], reload_time="segment")
-        assert time == 4, "segment sets the reload time to the targetduration if no segments are available"
-
-    def test_segment_no_segments_no_targetduration(self):
-        time = self.subject([Playlist(0, [], end=True, targetduration=0)], reload_time="segment")
-        assert time == 6, "sets reload time to 6 seconds when no segments and no targetduration are available"
-
-    def test_live_edge(self):
-        time = self.subject([Playlist(0, self.segments, end=True, targetduration=4)], reload_time="live-edge")
-        assert time == 8, "live-edge sets the reload time to the sum of the number of segments of the live-edge"
-
-    def test_live_edge_no_segments(self):
-        time = self.subject([Playlist(0, [], end=True, targetduration=4)], reload_time="live-edge")
-        assert time == 4, "live-edge sets the reload time to the targetduration if no segments are available"
-
-    def test_live_edge_no_segments_no_targetduration(self):
-        time = self.subject([Playlist(0, [], end=True, targetduration=0)], reload_time="live-edge")
-        assert time == 6, "sets reload time to 6 seconds when no segments and no targetduration are available"
-
-    def test_number_int(self):
-        time = self.subject([Playlist(0, self.segments, end=True, targetduration=4)], reload_time="2")
-        assert time == 2, "number values override the reload time"
-
-    def test_number_float(self):
-        time = self.subject([Playlist(0, self.segments, end=True, targetduration=4)], reload_time="2.5")
-        assert time == pytest.approx(2.5), "number values override the reload time"
-
-    def test_number_invalid(self):
-        time = self.subject([Playlist(0, self.segments, end=True, targetduration=4)], reload_time="0")
-        assert time == 4, "invalid number values set the reload time to the playlist's targetduration"
-
-    def test_number_error(self):
-        time = self.subject([Playlist(0, self.segments, end=True, targetduration=4)], reload_time="foo")
-        assert time == 4, "invalid number values set the reload time to the playlist's targetduration"
-        assert [(record.name, record.levelname, record.getMessage()) for record in self.caplog.records] == [
-            (
-                "streamlink.stream.hls",
-                "error",
-                "Failed parsing hls-playlist-reload-time value: could not convert string to float: 'foo'",
-            ),
+class TestHlsReloadTime:
+    @pytest.fixture()
+    def playlist(self, request: pytest.FixtureRequest):
+        param = getattr(request, "param", {})
+        playlist = M3U8[HLSSegment, HLSPlaylist]()
+        playlist.targetduration = param.get("targetduration")
+        playlist.segments = [
+            HLSSegment(uri="", num=idx, init=False, duration=duration, title="", key=None, byterange=None, date=None, map=None)
+            for idx, duration in enumerate(param.get("segments", [11, 7, 5, 3]))
         ]
 
-    def test_no_target_duration(self):
-        time = self.subject([Playlist(0, self.segments, end=True, targetduration=0)], reload_time="default")
-        assert time == 8, "uses the live-edge sum if the playlist is missing the targetduration data"
+        return playlist
 
-    def test_no_data(self):
-        time = self.subject([Playlist(0, [], end=True, targetduration=0)], reload_time="default")
-        assert time == 6, "sets reload time to 6 seconds when no data is available"
+    @pytest.mark.parametrize(
+        ("reload_time", "playlist", "expected", "logs"),
+        [
+            pytest.param(
+                "default",
+                {"targetduration": 4.0},
+                4.0,  # sets the reload time to the playlist's target duration
+                [],
+                id="default",
+            ),
+            pytest.param(
+                "segment",
+                {"targetduration": 4.0},
+                3.0,  # sets the reload time to the playlist's last segment
+                [],
+                id="segment",
+            ),
+            pytest.param(
+                "segment",
+                {"targetduration": 4.0, "segments": []},
+                4.0,  # sets the reload time to the targetduration if no segments are available
+                [],
+                id="segment-no-segments",
+            ),
+            pytest.param(
+                "segment",
+                {"targetduration": 0.0, "segments": []},
+                6.0,  # sets reload time to 6 seconds if no segments and no targetduration are available
+                [],
+                id="segment-no-segments-no-targetduration",
+            ),
+            pytest.param(
+                "live-edge",
+                {"targetduration": 4.0},
+                8.0,  # sets the reload time to the sum of the number of segments of the live-edge
+                [],
+                id="live-edge",
+            ),
+            pytest.param(
+                "live-edge",
+                {"targetduration": 4.0, "segments": []},
+                4.0,  # sets the reload time to the targetduration if no segments are available
+                [],
+                id="live-edge-no-segments",
+            ),
+            pytest.param(
+                "live-edge",
+                {"targetduration": 0.0, "segments": []},
+                6.0,  # sets reload time to 6 seconds when no segments and no targetduration are available
+                [],
+                id="live-edge-no-segments-no-targetduration",
+            ),
+            pytest.param(
+                "2",
+                {"targetduration": 4.0},
+                2.0,  # number values override the reload time
+                [],
+                id="number-int",
+            ),
+            pytest.param(
+                "2.5",
+                {"targetduration": 4.0},
+                2.5,  # number values override the reload time
+                [],
+                id="number-float",
+            ),
+            pytest.param(
+                "0",
+                {"targetduration": 4.0},
+                4.0,  # invalid number values set the reload time to the playlist's targetduration
+                [],
+                id="number-invalid",
+            ),
+            pytest.param(
+                "foo",
+                {"targetduration": 4.0},
+                4.0,  # invalid number values set the reload time to the playlist's targetduration
+                [
+                    (
+                        "streamlink.stream.hls",
+                        "error",
+                        "Failed parsing hls-playlist-reload-time value: could not convert string to float: 'foo'",
+                    ),
+                ],
+                id="number-error",
+            ),
+            pytest.param(
+                "default",
+                {"targetduration": 0.0},
+                8.0,  # uses the live-edge sum if the playlist is missing the targetduration data
+                [],
+                id="no-targetduration",
+            ),
+            pytest.param(
+                "default",
+                {"targetduration": 0.0, "segments": []},
+                6.0,  # sets reload time to 6 seconds when no data is available
+                [],
+                id="no-data",
+            ),
+        ],
+        indirect=["playlist"],
+    )
+    def test_reload_time(
+        self,
+        caplog: pytest.LogCaptureFixture,
+        session: Streamlink,
+        reload_time: str | float,
+        playlist: M3U8,
+        expected: float,
+        logs: list[tuple],
+    ):
+        session.options.update({
+            "hls-live-edge": 3,
+            "hls-playlist-reload-time": reload_time,
+        })
+        stream = HLSStream(session, "")
+        reader = HLSStreamReader(stream)
+        assert reader.worker._get_reload_time(playlist) == expected
+        assert [(record.name, record.levelname, record.getMessage()) for record in caplog.records] == logs
 
 
 @patch("streamlink.stream.hls.hls.HLSStreamWorker.wait", Mock(return_value=True))
