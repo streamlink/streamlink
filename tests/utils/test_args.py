@@ -1,18 +1,125 @@
 from __future__ import annotations
 
+import argparse
 from contextlib import nullcontext
+from operator import attrgetter
 from typing import TYPE_CHECKING
 
 import pytest
 
-from streamlink.utils.args import boolean, comma_list, comma_list_filter, filesize, keyvalue, num
+from streamlink.exceptions import StreamlinkDeprecationWarning
+from streamlink.utils.args import Boolean, boolean, comma_list, comma_list_filter, filesize, keyvalue, num
 
 
 if TYPE_CHECKING:
-    from collections.abc import Sequence
+    from collections.abc import Callable, Sequence
 
 
 does_not_raise = nullcontext()
+
+
+class TestBooleanAction:
+    @pytest.fixture()
+    def parser(self):
+        return argparse.ArgumentParser(exit_on_error=False)
+
+    @pytest.mark.parametrize(
+        ("argv", "one", "two"),
+        [
+            pytest.param([], None, True, id="defaults"),
+            pytest.param(["--one", "--two"], True, True, id="positive"),
+            pytest.param(["--other", "--two"], True, True, id="positive-alt"),
+            pytest.param(["--no-one", "--no-two"], False, False, id="negative"),
+            pytest.param(["--no-other", "--no-two"], False, False, id="negative-alt"),
+        ],
+    )
+    def test_no_values(self, parser: argparse.ArgumentParser, argv: list[str], one: bool, two: bool):
+        parser.add_argument("--one", "--other", action=Boolean)
+        parser.add_argument("--two", action=Boolean, default=True)
+        namespace = parser.parse_args(argv)
+        assert namespace.one is one
+        assert namespace.two is two
+
+    @pytest.mark.parametrize(
+        "transform",
+        [
+            pytest.param(str.lower, id="lower"),
+            pytest.param(str.upper, id="upper"),
+        ],
+    )
+    @pytest.mark.parametrize(
+        ("value", "expected"),
+        [
+            ("1", True),
+            ("on", True),
+            ("true", True),
+            ("yes", True),
+            ("0", False),
+            ("off", False),
+            ("false", False),
+            ("no", False),
+        ],
+    )
+    def test_value(
+        self,
+        recwarn: pytest.WarningsRecorder,
+        parser: argparse.ArgumentParser,
+        value: str,
+        transform: Callable,
+        expected: bool,
+    ):
+        parser.add_argument("--param", action=Boolean, nargs="?")
+        namespace = parser.parse_args(["--param", transform(value)])
+        assert namespace.param is expected
+        assert [(record.category, str(record.message)) for record in recwarn.list] == [
+            (StreamlinkDeprecationWarning, f"--param={transform(value)} is deprecated. Use --param/--no-param instead."),
+        ]
+
+    def test_value_empty(self, parser: argparse.ArgumentParser):
+        parser.add_argument("--param", action=Boolean, nargs="?")
+        namespace = parser.parse_args(["--param"])
+        assert namespace.param is True
+
+    @pytest.mark.parametrize(
+        ("argv", "raises"),
+        [
+            pytest.param(
+                ["--param="],
+                pytest.raises(argparse.ArgumentError, match=r"Invalid argument value"),
+                id="missing-value",
+            ),
+            pytest.param(
+                ["--param=foo"],
+                pytest.raises(argparse.ArgumentError, match=r"Invalid argument value"),
+                id="invalid-value",
+            ),
+            pytest.param(
+                ["--no-param=on"],
+                pytest.raises(argparse.ArgumentError, match=r"Argument value set on a negated argument name"),
+                id="negated-value",
+            ),
+        ],
+    )
+    def test_value_errors(self, parser: argparse.ArgumentParser, argv: list[str], raises: nullcontext):
+        parser.add_argument("--param", action=Boolean, nargs="?")
+        with raises:
+            parser.parse_args(argv)
+
+    def test_optional_value_with_positional_after(self, parser: argparse.ArgumentParser):
+        """
+        argparse optionals with nargs='?', '*' or '+' can't be followed by positionals
+        https://github.com/python/cpython/issues/53584
+        """
+        parser.add_argument("--foo", action=Boolean, nargs="?")
+        parser.add_argument("bar")
+
+        attrs = attrgetter("foo", "bar")
+        for argv in (["--foo", "1", "value"], ["--foo=1", "value"]):
+            with pytest.warns(StreamlinkDeprecationWarning, match=r"^--foo=1 is deprecated\. Use --foo/--no-foo instead\.$"):
+                assert attrs(parser.parse_args(argv)) == (True, "value")
+
+        with pytest.raises(argparse.ArgumentError, match=r"Invalid argument value"):
+            parser.parse_args(["--foo", "value"])
 
 
 @pytest.mark.parametrize(
