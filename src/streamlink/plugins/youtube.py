@@ -89,9 +89,7 @@ class YouTube(Plugin):
         # translate input URLs to be able to find embedded data and to avoid unnecessary HTTP redirects
         if parsed.netloc == "gaming.youtube.com":
             self.url = urlunparse(parsed._replace(scheme="https", netloc="www.youtube.com"))
-        elif self.matches["shorthand"]:
-            self.url = self._url_canonical.format(video_id=self.match["video_id"])
-        elif self.matches["embed"] and self.match["video_id"]:
+        elif self.matches["shorthand"] or self.matches["embed"] and self.match["video_id"]:
             self.url = self._url_canonical.format(video_id=self.match["video_id"])
         elif self.matches["embed"] and self.match["live"]:
             self.url = self._url_channelid_live.format(channel_id=self.match["live"])

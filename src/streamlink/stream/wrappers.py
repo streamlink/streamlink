@@ -1,4 +1,5 @@
 import io
+from contextlib import suppress
 from threading import Thread
 
 from streamlink.buffers import Buffer, RingBuffer
@@ -81,10 +82,8 @@ class StreamIOThreadWrapper(io.IOBase):
             self.buffer.close()
 
             if hasattr(self.fd, "close"):
-                try:
+                with suppress(Exception):
                     self.fd.close()
-                except Exception:
-                    pass
 
     def __init__(self, session, fd, timeout=30):
         self.buffer = RingBuffer(session.get_option("ringbuffer-size"))

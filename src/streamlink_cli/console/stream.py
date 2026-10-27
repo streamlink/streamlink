@@ -19,7 +19,7 @@ class ConsoleStatusMessage(str):
 
 
 class ConsoleOutputStream(StreamWrapper):
-    def __new__(cls, stream: TextIOWrapper) -> ConsoleOutputStream:
+    def __new__(cls, stream: TextIOWrapper) -> ConsoleOutputStream:  # ruff: ignore[non-self-return-type]
         if stream.isatty():
             if (
                 is_win32

@@ -94,7 +94,7 @@ class ProgressFormatter:
                 try:
                     for idx, fn, _ in variable:
                         static[idx] = fn(max_width)
-                except Exception:
+                except Exception:  # ruff: ignore[try-except-continue]
                     continue
                 break
 
