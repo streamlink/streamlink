@@ -271,7 +271,7 @@ class Arguments(dict[str, Argument]):
         # iterate in reverse order due to add() being called by multiple pluginargument decorators in reverse order
         return reversed(self.values())
 
-    def __hash__(self):  # type: ignore[ty:invalid-attribute-override]
+    def __hash__(self):
         return hash(tuple(self.items()))
 
     def __eq__(self, other):
