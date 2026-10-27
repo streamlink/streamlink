@@ -265,6 +265,12 @@ exclude = [
 
 [tool.ruff.lint]
 select = [
+  "correctness",
+#  "suspicious",
+#  "complexity",
+  "performance",
+#  "style",
+
   # pycodestyle
   "E",
   "W",
