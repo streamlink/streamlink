@@ -12,7 +12,7 @@ def _console_output_stream(monkeypatch: pytest.MonkeyPatch):
 
 
 def test_wrap_error():
-    with pytest.raises(AttributeError):
+    with pytest.raises(TypeError):
         ConsoleOutputStream.wrap(sys, "version")
 
 

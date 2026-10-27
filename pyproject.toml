@@ -269,7 +269,7 @@ select = [
   "suspicious",
 #  "complexity",
   "performance",
-#  "style",
+  "style",
 
   # pycodestyle
   "E",
@@ -330,6 +330,7 @@ ignore = [
   "missing-f-string-syntax",
   "missing-trailing-comma",  # already covered by ruff's formatter
   "parenthesize-chained-operators",
+  "raise-vanilla-class",
   "redefined-loop-name",
   "return-in-generator",
   "stdlib-module-shadowing",

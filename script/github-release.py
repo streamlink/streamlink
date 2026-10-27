@@ -582,7 +582,7 @@ if __name__ == "__main__":
     except KeyboardInterrupt:
         sys.exit(130)
     except Exception:
-        log.exception("Error", exc_info=True)
+        log.exception("Error")
         sys.exit(1)
     else:
         sys.exit(0)
