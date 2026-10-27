@@ -17,10 +17,8 @@ if TYPE_CHECKING:
 
     from _typeshed import DataclassInstance
 
-    _Ta = TypeVar("_Ta")
-    _Tb = TypeVar("_Tb")
-
-    _TFormatters: TypeAlias = dict[type[_Tb], Callable[[_Tb], str]]
+    _T = TypeVar("_T")
+    _TFormatters: TypeAlias = dict[type[_T], Callable[[_T], str]]
 
 
 _DEFAULT_FORMATTERS: _TFormatters = {

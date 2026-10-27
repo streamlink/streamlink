@@ -4,6 +4,7 @@ import unittest
 from binascii import hexlify
 from functools import partial
 from threading import Event, Thread
+from types import SimpleNamespace
 from typing import TYPE_CHECKING
 from unittest.mock import patch
 
@@ -206,7 +207,7 @@ class TestMixinStreamHLS(unittest.TestCase):
         super().__init__(*args, **kwargs)
         # FIXME: fix HTTPSession.request()
         # don't sleep on mocked HTTP request failures
-        self._patch_http_retry_sleep = patch("streamlink.session.http.time.sleep")
+        self._patch_http_retry_sleep = patch("streamlink.session.http.time", SimpleNamespace(sleep=lambda _: None))
         self.mocker = requests_mock.Mocker()
         self.mocks = {}
 

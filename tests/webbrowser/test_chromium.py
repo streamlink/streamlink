@@ -3,6 +3,7 @@ from __future__ import annotations
 from contextlib import nullcontext
 from pathlib import Path, PurePosixPath, PureWindowsPath
 from signal import SIGTERM
+from types import SimpleNamespace
 from typing import TYPE_CHECKING, Any
 
 import pytest
@@ -201,7 +202,7 @@ def test_get_websocket_address(
     num: int,
     raises: nullcontext,
 ):
-    monkeypatch.setattr("time.sleep", lambda _: None)
+    monkeypatch.setattr("streamlink.session.http.time", SimpleNamespace(sleep=lambda _: None))
     hostaddr = f"[{host}]" if ":" in host else host
 
     payload = {

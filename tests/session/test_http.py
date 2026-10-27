@@ -6,6 +6,7 @@ from contextlib import closing, nullcontext
 from operator import itemgetter
 from socket import AF_INET, AF_INET6
 from ssl import SSLContext
+from types import SimpleNamespace
 from typing import TYPE_CHECKING, Any
 from unittest.mock import Mock, PropertyMock, call
 
@@ -169,7 +170,7 @@ class TestHTTPSession:
         res = method("http://localhost")
         assert isinstance(res, requests.Response)
         assert res.text == "OK"
-        assert mocked.called_once
+        assert mocked.call_count == 1
 
     @pytest.mark.parametrize(
         ("params", "expected"),
@@ -220,7 +221,7 @@ class TestHTTPSession:
     def test_read_timeout(self, monkeypatch: pytest.MonkeyPatch):
         mock_sleep = Mock()
         mock_request = Mock(side_effect=requests.Timeout)
-        monkeypatch.setattr("streamlink.session.http.time.sleep", mock_sleep)
+        monkeypatch.setattr("streamlink.session.http.time", SimpleNamespace(sleep=mock_sleep))
         monkeypatch.setattr("streamlink.session.http.Session.request", mock_request)
 
         session = HTTPSession()
