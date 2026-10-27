@@ -199,8 +199,8 @@ def test_parse_sequence_or_mapping(parser: type[ast.NodeVisitor], code: str, exp
                 PluginMatcher(pattern="bar", flags=re.IGNORECASE, priority=None, name=None),
                 PluginMatcher(pattern="bar", flags=re.IGNORECASE, priority=None, name=None),
                 PluginMatcher(pattern="bar", flags=re.IGNORECASE, priority=None, name=None),
-                PluginMatcher(pattern="baz", flags=re.I | re.S | re.X, priority=None, name=None),
-                PluginMatcher(pattern="baz", flags=re.I | re.S | re.X, priority=None, name=None),
+                PluginMatcher(pattern="baz", flags=re.I | re.S | re.X, priority=None, name=None),  # ruff: ignore[regex-flag-alias]
+                PluginMatcher(pattern="baz", flags=re.I | re.S | re.X, priority=None, name=None),  # ruff: ignore[regex-flag-alias]
             ],
             does_not_raise,
             id="pattern",
@@ -1092,7 +1092,7 @@ def test_plugin(test_plugin_code: str):
     assert pluginvisitor.matchers == [
         PluginMatcher(pattern="https://a", flags=None, priority=None, name=None),
         PluginMatcher(pattern="https://b", flags=re.IGNORECASE, priority=PluginMatcher.LOW_PRIORITY, name="b"),
-        PluginMatcher(pattern="https://c", flags=re.I | re.X, priority=20, name="c"),
+        PluginMatcher(pattern="https://c", flags=re.IGNORECASE | re.VERBOSE, priority=20, name="c"),
     ]
     assert pluginvisitor.arguments == [
         PluginArgument(name="a", type="comma_list_filter", type_kwargs={"acceptable": ["a", "b"]}, default=["a"], help="a"),

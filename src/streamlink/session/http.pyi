@@ -26,29 +26,14 @@ class _StreamlinkKwargs(TypedDict, total=False):
 class _SchemaKwargs(TypedDict):
     schema: Schema
 
-class _RequestKwargs(_requeststypes.RequestKwargs, _StreamlinkKwargs):
-    pass
-
-class _RequestKwargsWithSchema(_requeststypes.RequestKwargs, _StreamlinkKwargs, _SchemaKwargs):
-    pass
-
-class _GetKwargs(_requeststypes.GetKwargs, _StreamlinkKwargs):
-    pass
-
-class _GetKwargsWithSchema(_requeststypes.GetKwargs, _StreamlinkKwargs, _SchemaKwargs):
-    pass
-
-class _PostKwargs(_requeststypes.PostKwargs, _StreamlinkKwargs):
-    pass
-
-class _PostKwargsWithSchema(_requeststypes.PostKwargs, _StreamlinkKwargs, _SchemaKwargs):
-    pass
-
-class _DataKwargs(_requeststypes.DataKwargs, _StreamlinkKwargs):
-    pass
-
-class _DataKwargsWithSchema(_requeststypes.DataKwargs, _StreamlinkKwargs, _SchemaKwargs):
-    pass
+class _RequestKwargs(_requeststypes.RequestKwargs, _StreamlinkKwargs): ...
+class _RequestKwargsWithSchema(_requeststypes.RequestKwargs, _StreamlinkKwargs, _SchemaKwargs): ...
+class _GetKwargs(_requeststypes.GetKwargs, _StreamlinkKwargs): ...
+class _GetKwargsWithSchema(_requeststypes.GetKwargs, _StreamlinkKwargs, _SchemaKwargs): ...
+class _PostKwargs(_requeststypes.PostKwargs, _StreamlinkKwargs): ...
+class _PostKwargsWithSchema(_requeststypes.PostKwargs, _StreamlinkKwargs, _SchemaKwargs): ...
+class _DataKwargs(_requeststypes.DataKwargs, _StreamlinkKwargs): ...
+class _DataKwargsWithSchema(_requeststypes.DataKwargs, _StreamlinkKwargs, _SchemaKwargs): ...
 
 # ----
 

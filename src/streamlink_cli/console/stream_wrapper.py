@@ -13,7 +13,7 @@ class StreamWrapper:
     def wrap(cls, obj, attr):
         stream = getattr(obj, attr)
         if not isinstance(stream, TextIOWrapper):
-            raise AttributeError(f"{stream!r} is not a TextIOWrapper object ({obj!r}, {attr!r})")
+            raise TypeError(f"{stream!r} is not a TextIOWrapper object ({obj!r}, {attr!r})")
 
         console_output_stream = cls(stream)
         console_output_stream._wrap(obj, attr)
