@@ -151,8 +151,10 @@ class TestMatchArgumentOverride:
         monkeypatch.setattr("argparse._", null_translations.gettext)
         monkeypatch.setattr("argparse.ngettext", null_translations.ngettext)
 
-    @pytest.fixture(scope="module")
-    def parser(self):
+    # noinspection nested-decorators
+    @pytest.fixture(scope="class")
+    @classmethod
+    def parser(cls):
         parser = ArgumentParser(exit_on_error=False)
         parser.add_argument("-a", "--one", dest="arg")
         parser.add_argument("-b", "--two", nargs=2)
