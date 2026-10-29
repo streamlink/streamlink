@@ -1,5 +1,15 @@
 # Changelog
 
+## streamlink 8.6.3 (2026-10-29)
+
+- SECURITY: new minor release primarily for Streamlink's Windows / Linux AppImages builds, with `brotli 1.2.1` (via uv.lock) ([`CVE-2026-111497`](https://nvd.nist.gov/vuln/detail/CVE-2026-111497))
+- Fixed: `--retry-streams` and `--retry-max` in external/continuous HTTP output mode when re-fetching ([#7165](https://github.com/streamlink/streamlink/pull/7165))
+- Build: bumped `pycryptodome` version requirements to `>=3.4.3,<5` ([#7167](https://github.com/streamlink/streamlink/pull/7167))
+- Tests: fixed race-conditions in HLS tests ([#7174](https://github.com/streamlink/streamlink/pull/7174), [#7176](https://github.com/streamlink/streamlink/pull/7176))
+
+[Full changelog](https://github.com/streamlink/streamlink/compare/8.6.2...8.6.3)
+
+
 ## streamlink 8.6.2 (2026-10-07)
 
 - SECURITY: fixed arbitrary local file read via `file://` URLs in DASH `Location` tags (`CVE-2026-TO-BE-ASSIGNED` / [`GHSA-j7pf-m7gx-jr33`](https://github.com/streamlink/streamlink/security/advisories/GHSA-j7pf-m7gx-jr33)) ([`98781761`](https://github.com/streamlink/streamlink/commit/987817618f57b6def852693e4e0a95fd9c8437f2))
