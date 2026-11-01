@@ -1,12 +1,15 @@
 from __future__ import annotations
 
 import re
+from typing import TYPE_CHECKING
 
-import requests
-
-from streamlink import __version__ as streamlink_version
+from streamlink import __version__ as streamlink_version, validate
 from streamlink.cache import Cache
 from streamlink.logger import getLogger
+
+
+if TYPE_CHECKING:
+    from streamlink.session import Streamlink
 
 
 log = getLogger("streamlink.cli")
@@ -22,25 +25,31 @@ def _parse_version(version: str) -> tuple[int, int, int, int]:
     return int(major), int(minor), int(patch), (0 if distance is None else int(distance))
 
 
-def get_latest() -> str:
+def get_latest(session: Streamlink) -> str:
     try:
-        res = requests.get("https://pypi.python.org/pypi/streamlink/json")
-        res.raise_for_status()
-        data = res.json()
-        return str(data.get("info").get("version"))
-    except requests.exceptions.JSONDecodeError:
-        log.error("Could not parse JSON data from PyPI API response")
+        return session.http.get(
+            "https://pypi.python.org/pypi/streamlink/json",
+            schema=validate.Schema(
+                validate.parse_json(),
+                {
+                    "info": {
+                        "version": str,
+                    },
+                },
+                validate.get(("info", "version")),
+            ),
+        )
     except Exception as err:
-        log.error(f"Error while retrieving version data from PyPI API: {err}")
+        log.error(f"Error while retrieving version data from PyPI API: {getattr(err, 'err', err)}")
     return ""
 
 
-def check_version(force: bool = False) -> bool:
+def check_version(session: Streamlink, force: bool = False) -> bool:
     cache = Cache(filename="cli.json")
     latest_version = cache.get("latest_version")
 
     if force or not latest_version:
-        latest_version = get_latest()
+        latest_version = get_latest(session)
         if not latest_version:
             return False
         try:

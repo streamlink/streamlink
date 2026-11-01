@@ -711,7 +711,7 @@ def check_version_wrapper() -> int:
     force = args.version_check
 
     try:
-        latest = check_version(force=force)
+        latest = check_version(session=streamlink, force=force)
         if not force:
             return 0
         if latest:

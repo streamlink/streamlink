@@ -11,6 +11,8 @@ from streamlink_cli.utils.versioncheck import check_version, get_latest, log
 if TYPE_CHECKING:
     import requests_mock as rm
 
+    from streamlink.session import Streamlink
+
 
 @pytest.fixture(autouse=True)
 def _logger(caplog: pytest.LogCaptureFixture):
@@ -42,22 +44,28 @@ class TestGetLatest:
             ),
             (
                 {"text": "no JSON"},
-                "Could not parse JSON data from PyPI API response",
+                (
+                    "Error while retrieving version data from PyPI API: Unable to validate response text: "
+                    + "ValidationError:\n  Unable to parse JSON: Expecting value: line 1 column 1 (char 0) ('no JSON')"
+                ),
             ),
             (
                 {"json": {"foo": "bar"}},
-                "Error while retrieving version data from PyPI API: 'NoneType' object has no attribute 'get'",
+                (
+                    "Error while retrieving version data from PyPI API: Unable to validate response text: "
+                    + "ValidationError(dict):\n  Key 'info' not found in {'foo': 'bar'}"
+                ),
             ),
         ],
         indirect=["pypi"],
     )
-    def test_request_error(self, caplog: pytest.LogCaptureFixture, pypi, error):
-        assert not get_latest()
+    def test_request_error(self, caplog: pytest.LogCaptureFixture, session: Streamlink, pypi, error):
+        assert not get_latest(session)
         assert [(record.levelname, str(record.message)) for record in caplog.records] == [("error", error)]
 
     @pytest.mark.parametrize("pypi", [{"json": {"info": {"version": "1.2.3"}}}], indirect=True)
-    def test_request_success(self, caplog: pytest.LogCaptureFixture, pypi):
-        assert get_latest() == "1.2.3"
+    def test_request_success(self, caplog: pytest.LogCaptureFixture, session: Streamlink, pypi):
+        assert get_latest(session) == "1.2.3"
         assert not caplog.records
 
 
@@ -67,7 +75,7 @@ class TestVersionCheck:
         monkeypatch.setattr("streamlink_cli.utils.versioncheck.streamlink_version", "1.0.0")
 
     @pytest.fixture()
-    def latest(self, request, monkeypatch: pytest.MonkeyPatch):
+    def latest(self, request: pytest.FixtureRequest, monkeypatch: pytest.MonkeyPatch):
         mock_get_latest = Mock(return_value=getattr(request, "param", "1.2.3"))
         monkeypatch.setattr("streamlink_cli.utils.versioncheck.get_latest", mock_get_latest)
         return mock_get_latest
@@ -82,9 +90,9 @@ class TestVersionCheck:
         assert MockCache.call_args_list == [call(filename="cli.json")]
 
     @pytest.mark.parametrize("cache", [{}], indirect=True)
-    def test_auto_uncached_outdated(self, caplog: pytest.LogCaptureFixture, cache: Mock, latest: Mock):
-        assert not check_version()
-        assert latest.call_args_list == [call()]
+    def test_auto_uncached_outdated(self, caplog: pytest.LogCaptureFixture, session: Streamlink, cache: Mock, latest: Mock):
+        assert not check_version(session)
+        assert latest.call_args_list == [call(session)]
         assert cache.set.call_args_list == [
             call("latest_version", "1.2.3", 86400),
             call("version_info_printed", True, 21600),
@@ -94,17 +102,17 @@ class TestVersionCheck:
         ]
 
     @pytest.mark.parametrize(("cache", "latest"), [({}, "1.0.0")], indirect=True)
-    def test_auto_uncached_uptodate(self, caplog: pytest.LogCaptureFixture, cache: Mock, latest: Mock):
-        assert check_version()
-        assert latest.call_args_list == [call()]
+    def test_auto_uncached_uptodate(self, caplog: pytest.LogCaptureFixture, session: Streamlink, cache: Mock, latest: Mock):
+        assert check_version(session)
+        assert latest.call_args_list == [call(session)]
         assert cache.set.call_args_list == [
             call("latest_version", "1.0.0", 86400),
         ]
         assert not caplog.records
 
     @pytest.mark.parametrize("cache", [{"latest_version": "1.2.3", "version_info_printed": False}], indirect=True)
-    def test_auto_cached_outdated(self, caplog: pytest.LogCaptureFixture, cache: Mock, latest: Mock):
-        assert not check_version()
+    def test_auto_cached_outdated(self, caplog: pytest.LogCaptureFixture, session: Streamlink, cache: Mock, latest: Mock):
+        assert not check_version(session)
         assert not latest.call_args_list
         assert cache.set.call_args_list == [call("version_info_printed", True, 21600)]
         assert [(record.levelname, str(record.message)) for record in caplog.records] == [
@@ -112,8 +120,8 @@ class TestVersionCheck:
         ]
 
     @pytest.mark.parametrize("cache", [{"latest_version": "1.2.3", "version_info_printed": True}], indirect=True)
-    def test_auto_cached_printed(self, caplog: pytest.LogCaptureFixture, cache: Mock, latest: Mock):
-        assert check_version()
+    def test_auto_cached_printed(self, caplog: pytest.LogCaptureFixture, session: Streamlink, cache: Mock, latest: Mock):
+        assert check_version(session)
         assert not latest.call_args_list
         assert not cache.set.call_args_list
         assert not caplog.records
@@ -126,9 +134,9 @@ class TestVersionCheck:
         ],
         indirect=True,
     )
-    def test_forced_outdated(self, caplog: pytest.LogCaptureFixture, cache: Mock, latest: Mock):
-        assert not check_version(True)
-        assert latest.call_args_list == [call()]
+    def test_forced_outdated(self, caplog: pytest.LogCaptureFixture, session: Streamlink, cache: Mock, latest: Mock):
+        assert not check_version(session, True)
+        assert latest.call_args_list == [call(session)]
         assert cache.set.call_args_list == [
             call("latest_version", "1.2.3", 86400),
             call("version_info_printed", True, 21600),
@@ -145,9 +153,9 @@ class TestVersionCheck:
         ],
         indirect=True,
     )
-    def test_forced_uptodate(self, caplog: pytest.LogCaptureFixture, cache: Mock, latest: Mock):
-        assert check_version(True)
-        assert latest.call_args_list == [call()]
+    def test_forced_uptodate(self, caplog: pytest.LogCaptureFixture, session: Streamlink, cache: Mock, latest: Mock):
+        assert check_version(session, True)
+        assert latest.call_args_list == [call(session)]
         assert cache.set.call_args_list == [
             call("latest_version", "1.0.0", 86400),
         ]
@@ -156,16 +164,16 @@ class TestVersionCheck:
         ]
 
     @pytest.mark.parametrize(("cache", "latest"), [({}, "")], indirect=True)
-    def test_error_get_latest(self, caplog: pytest.LogCaptureFixture, cache: Mock, latest: Mock):
-        assert not check_version(True)
-        assert latest.call_args_list == [call()]
+    def test_error_get_latest(self, caplog: pytest.LogCaptureFixture, session: Streamlink, cache: Mock, latest: Mock):
+        assert not check_version(session, True)
+        assert latest.call_args_list == [call(session)]
         assert not cache.set.call_args_list
         assert not caplog.records  # error gets logged by get_latest()
 
     @pytest.mark.parametrize(("cache", "latest"), [({}, "not a semver version string")], indirect=True)
-    def test_error_get_latest_version(self, caplog: pytest.LogCaptureFixture, cache: Mock, latest: Mock):
-        assert not check_version(True)
-        assert latest.call_args_list == [call()]
+    def test_error_get_latest_version(self, caplog: pytest.LogCaptureFixture, session: Streamlink, cache: Mock, latest: Mock):
+        assert not check_version(session, True)
+        assert latest.call_args_list == [call(session)]
         assert not cache.set.call_args_list
         assert [(record.levelname, str(record.message)) for record in caplog.records] == [
             ("error", f"Error while parsing version: Invalid version string: '{latest.return_value}'"),
