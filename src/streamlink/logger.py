@@ -266,6 +266,7 @@ def basicConfig(
             )
             handler.setFormatter(formatter)
 
+            root.removeHandler(_nullhandler)
             root.addHandler(handler)
 
         if level is not None:
@@ -281,12 +282,14 @@ _showwarning_default: Callable[[Warning | str, type[Warning], str, int, TextIO |
 _log_record_factory_default = logging.getLogRecordFactory()
 logging.setLogRecordFactory(_log_record_factory)
 
+_nullhandler = logging.NullHandler()
 
 # Keep `logging.setLoggerClass(StreamlinkLogger)` for backward compatibility:
 # Third party plugins could create a logger from `logging.getLogger()` and then call custom `StreamlinkLogger` methods,
 # assuming of course that no one else has changed the logger-class on the manager or the global logging module value.
 logging.setLoggerClass(StreamlinkLogger)
 root: StreamlinkLogger = _get_child(logging.root, "streamlink")
+root.addHandler(_nullhandler)
 root.setLevel(WARNING)
 
 levels = list(_levelToNames.values())

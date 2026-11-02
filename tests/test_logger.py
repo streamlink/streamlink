@@ -51,6 +51,8 @@ def log(request: pytest.FixtureRequest, monkeypatch: pytest.MonkeyPatch, output:
         params["filename"] = request.getfixturevalue("logfile")
 
     fakeroot = getLogger("streamlink.test")
+    assert fakeroot.parent is logger.root
+    fakeroot.handlers = fakeroot.parent.handlers.copy()
 
     monkeypatch.setattr("streamlink.logger.root", fakeroot)
     monkeypatch.setattr("streamlink.utils.times.LOCAL", timezone.utc)
@@ -61,6 +63,7 @@ def log(request: pytest.FixtureRequest, monkeypatch: pytest.MonkeyPatch, output:
         assert handler is None
     else:
         assert isinstance(handler, logging.StreamHandler)
+        assert not any(type(handler) is logging.NullHandler for handler in fakeroot.handlers)
 
     yield fakeroot
 
@@ -69,7 +72,7 @@ def log(request: pytest.FixtureRequest, monkeypatch: pytest.MonkeyPatch, output:
     if handler:
         handler.close()
         fakeroot.removeHandler(handler)
-    assert not fakeroot.handlers
+    assert all(type(handler) is logging.NullHandler for handler in fakeroot.handlers)
 
 
 class TestLogging:
@@ -92,6 +95,7 @@ class TestLogging:
         assert isinstance(logger.root, StreamlinkLogger)
         assert logger.root.name == "streamlink"
         assert logger.root.parent is logging.root
+        assert [type(handler) for handler in logger.root.handlers] == [logging.NullHandler]
 
     def test_get_logger(self):
         child_a = getLogger("streamlink.test")
@@ -347,7 +351,7 @@ class TestLogging:
 
     @pytest.mark.parametrize("log", [pytest.param({"stream": None}, id="no-stdout")], indirect=["log"])
     def test_no_stream(self, log: StreamlinkLogger):
-        assert not log.handlers
+        assert all(type(handler) is logging.NullHandler for handler in log.handlers)
 
     @pytest.mark.parametrize(
         "errno",
