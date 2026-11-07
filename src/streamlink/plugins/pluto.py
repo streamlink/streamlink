@@ -88,6 +88,14 @@ class PlutoHLSStream(HLSStream):
     ),
 )
 class Pluto(Plugin):
+    RE_GQL_HASH = re.compile(
+        r"""
+                    __meta__:\{hash:"(?P<hash>[0-9a-f]{64})"},kind:"Document",definitions:\[\{kind:"OperationDefinition"
+                    ,operation:"(?:query|mutation|subscription)"(?:,name:\{kind:"Name",value:"(?P<op>[\w$]+)"})?
+                """,
+        re.VERBOSE,
+    )
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.session.http.headers.update({"User-Agent": useragents.FIREFOX})
@@ -142,11 +150,36 @@ class Pluto(Plugin):
             schema=schema,
         )
 
+    def _get_gql_hash(self, operation: str) -> dict[str, str]:
+        app_chunk_src = self.session.http.get(
+            self.url,
+            schema=validate.Schema(
+                validate.parse_html(),
+                validate.xml_xpath_string(".//script[contains(@src,'/_next/static/chunks/pages/_app-')][1]/@src"),
+            ),
+        )
+        if not app_chunk_src:
+            raise PluginError("Could not find the Pluto TV app chunk URL")
+
+        gql_hash = self.session.http.get(
+            urljoin(self.url, app_chunk_src),
+            schema=validate.Schema(
+                validate.all(
+                    validate.regex(self.RE_GQL_HASH, method="findall"),
+                    [(str, str)],
+                    validate.filter(lambda match: match[1] == operation),
+                    validate.get((0, 0)),
+                ),
+            ),
+        )
+        log.trace("Found hash for %s: %s", operation, gql_hash)
+        return gql_hash
+
     def _get_series_metadata(self) -> dict:
         data = self._graphql_request(
             "https://pluto.tv/api/tn/hubs/graphql/",
             "FullEpisodesData",
-            {"tnPersistedDocumentHash": "c42c1d0736825cd1f43e28b71dfa6f4955a1b3003a92e42edf99fcae885ea1fe"},
+            {"tnPersistedDocumentHash": self._get_gql_hash("FullEpisodesData")},
             {
                 "showId": self.match["id_s"],
                 "apiRawContentId": None,
@@ -184,7 +217,7 @@ class Pluto(Plugin):
         return self._graphql_request(
             "https://pluto.tv/api/tn/video/graphql/",
             "ChannelsOne",
-            {"tnPersistedDocumentHash": "b9c2b93c341345b0c990fa85bd9b596944c7f343d11ed066d2e1e2db42b1f7ca"},
+            {"tnPersistedDocumentHash": self._get_gql_hash("ChannelsOne")},
             {
                 "params": {
                     "userRegistrationCountry": "US",
