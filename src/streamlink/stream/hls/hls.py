@@ -128,7 +128,7 @@ class HLSStreamWriter(SegmentedStreamWriter[HLSSegment, Response]):
         self.stream_data = options.get("hls-segment-stream-data")
 
         self.ignore_names: re.Pattern | None = None
-        ignore_names = {*options.get("hls-segment-ignore-names")}
+        ignore_names: set[str] = {*options.get("hls-segment-ignore-names")}
         if ignore_names:
             segments = "|".join(map(re.escape, ignore_names))
             self.ignore_names = re.compile(segments, re.IGNORECASE)

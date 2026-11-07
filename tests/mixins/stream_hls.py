@@ -161,7 +161,7 @@ class HLSStreamReadThread(Thread):
             return self.writer_close()
 
         self.writer_close = self.reader.writer.close
-        self.reader.writer.close = _await_read_then_close  # type: ignore[assignment, ty:invalid-assignment]
+        self.reader.writer.close = _await_read_then_close  # type: ignore[assignment]
 
     def run(self):
         while not self.reader.buffer.closed:

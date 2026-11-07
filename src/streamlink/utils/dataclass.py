@@ -7,7 +7,7 @@ from weakref import WeakKeyDictionary
 
 
 try:
-    from typing import dataclass_transform  # type: ignore[attr-defined, ty:unresolved-import]
+    from typing import dataclass_transform  # type: ignore[attr-defined, ty:import-not-found]
 except ImportError:  # pragma: no cover
     from typing_extensions import dataclass_transform
 
