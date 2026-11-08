@@ -26,6 +26,7 @@ def build_stream(params: dict, wrap: bool = False):
         return None
 
     isatty = params.pop("isatty", True)
+    closed = params.pop("closed", False)
     params.setdefault("encoding", "utf-8")
     params.setdefault("errors", "backslashreplace")
     stream: TextIO
@@ -36,6 +37,8 @@ def build_stream(params: dict, wrap: bool = False):
         stream = orig
 
     setattr(stream, "isatty", lambda: isatty)  # ruff: ignore[set-attr-with-constant]
+    if closed:
+        stream.close()
 
     return stream
 
@@ -329,8 +332,10 @@ class TestPrompts:
         ("stdin", "console_output", "expected"),
         [
             pytest.param({"exists": False}, {}, "^No input TTY available$", id="no-stdin"),
+            pytest.param({"closed": True}, {}, "^No input TTY available$", id="closed-stdin"),
             pytest.param({"isatty": False}, {}, "^No input TTY available$", id="stdin-no-tty"),
             pytest.param({}, {"exists": False}, "^No output TTY available$", id="no-output"),
+            pytest.param({}, {"closed": True}, "^No output TTY available$", id="closed-output"),
             pytest.param({}, {"isatty": False}, "^No output TTY available$", id="output-no-tty"),
         ],
         indirect=["stdin", "console_output"],
@@ -369,8 +374,10 @@ class TestPrompts:
         ("stdin", "console_output", "expected"),
         [
             pytest.param({"exists": False}, {}, "^No input TTY available$", id="no-stdin"),
+            pytest.param({"closed": True}, {}, "^No input TTY available$", id="closed-stdin"),
             pytest.param({"isatty": False}, {}, "^No input TTY available$", id="stdin-no-tty"),
             pytest.param({}, {"exists": False}, "^No output TTY available$", id="no-output"),
+            pytest.param({}, {"closed": True}, "^No output TTY available$", id="closed-output"),
             pytest.param({}, {"isatty": False}, "^No output TTY available$", id="output-no-tty"),
         ],
         indirect=["stdin", "console_output"],
