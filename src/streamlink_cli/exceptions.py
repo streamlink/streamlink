@@ -4,4 +4,4 @@ class StreamlinkCLIError(Exception):
         self.code = code
 
     def __str__(self):
-        return super().__str__() or str(self.__context__ or "")
+        return super().__str__() or str(self.__cause__ or self.__context__ or "")
