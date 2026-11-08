@@ -77,9 +77,9 @@ class ConsoleOutput:
 
     @contextmanager
     def _prompt(self):
-        if not sys.stdin or not sys.stdin.isatty():
+        if not sys.stdin or sys.stdin.closed or not sys.stdin.isatty():
             raise OSError("No input TTY available")
-        if not self._console_output or not self._console_output.isatty():
+        if not self._console_output or self._console_output.closed or not self._console_output.isatty():
             raise OSError("No output TTY available")
 
         try:
