@@ -43,6 +43,7 @@ from streamlink_cli.constants import (
 )
 from streamlink_cli.exceptions import StreamlinkCLIError
 from streamlink_cli.output import FileOutput, HTTPOutput, PlayerOutput
+from streamlink_cli.setup_args import setup_args_from_stdin
 from streamlink_cli.show_matchers import show_matchers
 from streamlink_cli.streamrunner import StreamRunner
 from streamlink_cli.utils import Formatter, datetime
@@ -755,8 +756,9 @@ def load_plugins(session: Streamlink, dirs: list[Path], showwarning: bool = True
 
 
 def setup_args(
-    parser: argparse.ArgumentParser,
+    parser: ArgumentParser,
     config_files: list[Path] | None = None,
+    args_from_stdin: list[str] | None = None,
     ignore_unknown: bool = False,
 ):
     """Parses arguments."""
@@ -768,7 +770,7 @@ def setup_args(
     configs = [f"{prefix}{config_file}" for config_file in config_files or []]
 
     try:
-        args, unknown = parser.parse_known_args(configs + arglist)
+        args, unknown = parser.parse_known_args(configs + (args_from_stdin or []) + arglist)
     except argparse.ArgumentError as err:
         raise StreamlinkCLIError(f"{parser.prog}: error: {err}", code=2) from err
 
@@ -789,11 +791,15 @@ def setup_args(
     args.silent_log = any(getattr(args, attr) for attr in QUIET_OPTIONS)
 
 
-def setup_config_args(parser, ignore_unknown=False):
+def setup_config_args(
+    parser: ArgumentParser,
+    args_from_stdin: list[str] | None = None,
+    ignore_unknown: bool = False,
+):
     if args.no_config:
         return
 
-    config_files = []
+    config_files: list[Path] = []
 
     if args.config:
         # We want the config specified last to get the highest priority
@@ -821,7 +827,12 @@ def setup_config_args(parser, ignore_unknown=False):
                 break
 
     if config_files:
-        setup_args(parser, config_files, ignore_unknown=ignore_unknown)
+        setup_args(
+            parser,
+            config_files=config_files,
+            args_from_stdin=args_from_stdin,
+            ignore_unknown=ignore_unknown,
+        )
 
 
 def setup_signals():
@@ -996,8 +1007,11 @@ def setup(parser: ArgumentParser) -> None:
         warnings.simplefilter(action="ignore", category=StreamlinkDeprecationWarning)
 
         setup_args(parser, ignore_unknown=True)
-        # call argument set up as early as possible to load args from config files
-        setup_config_args(parser, ignore_unknown=True)
+        if args_from_stdin := setup_args_from_stdin(parser, args.args_from_stdin):
+            setup_args(parser, args_from_stdin=args_from_stdin, ignore_unknown=True)
+
+        # call argument setup as early as possible to load args from config files
+        setup_config_args(parser, args_from_stdin=args_from_stdin, ignore_unknown=True)
 
     setup_console()
     setup_logger()
@@ -1008,8 +1022,8 @@ def setup(parser: ArgumentParser) -> None:
     setup_plugin_args(streamlink, parser)
     # call setup args again once the plugin specific args have been added
     # deprecation warnings are emitted here
-    setup_args(parser)
-    setup_config_args(parser)
+    setup_args(parser, args_from_stdin=args_from_stdin)
+    setup_config_args(parser, args_from_stdin=args_from_stdin)
 
     # update the logging level if changed by a plugin specific config
     logger.root.setLevel(args.loglevel if not args.silent_log else logger.NONE)

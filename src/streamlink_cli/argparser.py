@@ -284,6 +284,23 @@ def build_parser():
         """,
     )
     general.add_argument(
+        "--args-from-stdin",
+        action="store_true",
+        help="""
+            Make Streamlink additionally read CLI arguments from standard input.
+
+            Arguments from stdin have a higher priority than arguments read from config files,
+            but a lower priority than arguments provided via the command-line.
+
+            The format is one argument per line without leading dashes, similar to the config file format,
+            with a mandatory newline character at the end.
+
+            The input stream is read until two consecutive newline characters are found or until EOF is reached.
+
+            When using this option, user prompts and data passthrough to players will be disabled.
+        """,
+    )
+    general.add_argument(
         "--locale",
         type=str,
         metavar="LOCALE",
