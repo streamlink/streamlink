@@ -286,6 +286,8 @@ def test_setup_config_args(
     parser = Mock()
     setup_config_args(parser, ignore_unknown=ignore_unknown)
     if expected is not None:
-        assert setup_args.call_args_list == [call(parser, expected, ignore_unknown=ignore_unknown)]
+        assert setup_args.call_args_list == [
+            call(parser, config_files=expected, args_from_stdin=None, ignore_unknown=ignore_unknown),
+        ]
     else:
         assert setup_args.call_args_list == []

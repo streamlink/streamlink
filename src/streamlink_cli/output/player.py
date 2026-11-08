@@ -257,7 +257,7 @@ class PlayerOutput(Output):
             http=http,
         )
 
-        if self.namedpipe or self.filename or self.http:
+        if sys.stdin and not sys.stdin.closed and (self.namedpipe or self.filename or self.http):
             self.stdin = sys.stdin
         else:
             self.stdin = subprocess.PIPE
