@@ -347,12 +347,20 @@ class UsherService:
 class TwitchAPI:
     CLIENT_ID = "kimne78kx3ncx6brgo4mv6wki5h1ko"
 
-    def __init__(self, session, api_header=None, access_token_param=None):
+    def __init__(
+        self,
+        session: Streamlink,
+        auth_token: str | None = None,
+        api_header: list[tuple[str, str]] | None = None,
+        access_token_param: list[tuple[str, str]] | None = None,
+    ):
         self.session = session
         self.headers = {
             "Client-ID": self.CLIENT_ID,
         }
         self.headers.update(**dict(api_header or []))
+        if auth_token:
+            self.headers.update({"Authorization": f"OAuth {auth_token}"})
         self.access_token_params = dict(access_token_param or [])
         self.access_token_params.setdefault("playerType", "embed")
         self.access_token_params.setdefault("platform", "site")
@@ -806,6 +814,16 @@ class TwitchClientIntegrity:
     """,
 )
 @pluginargument(
+    "auth-token",
+    metavar="TOKEN",
+    sensitive=True,
+    help="""
+        Add authentication data that can prevent ads. See the plugin-specific documentation for more information.
+
+        This is an alias for --twitch-api-header="Authorization=OAuth TOKEN", but treated as sensitive data.
+    """,
+)
+@pluginargument(
     "api-header",
     metavar="KEY=VALUE",
     type="keyvalue",
@@ -876,6 +894,7 @@ class Twitch(Plugin):
 
         self.api = TwitchAPI(
             session=self.session,
+            auth_token=self.get_option("auth-token"),
             api_header=self.get_option("api-header"),
             access_token_param=self.get_option("access-token-param"),
         )
