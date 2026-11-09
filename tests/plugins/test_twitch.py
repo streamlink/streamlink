@@ -757,7 +757,7 @@ class TestTwitchAPIAccessToken:
     @pytest.mark.parametrize(
         ("plugin", "exp_headers", "exp_variables"),
         [
-            (
+            pytest.param(
                 {},
                 {"Client-ID": TwitchAPI.CLIENT_ID},
                 {
@@ -768,8 +768,9 @@ class TestTwitchAPIAccessToken:
                     "playerType": "embed",
                     "platform": "site",
                 },
+                id="no-plugin-arguments",
             ),
-            (
+            pytest.param(
                 {
                     "api-header": [
                         ("Authorization", "invalid data"),
@@ -794,6 +795,25 @@ class TestTwitchAPIAccessToken:
                     "platform": "other",
                     "specialVariable": "specialValue",
                 },
+                id="plugin-arguments",
+            ),
+            pytest.param(
+                {
+                    "auth-token": "0123456789abcdefghijklmnopqrst",
+                },
+                {
+                    "Client-ID": TwitchAPI.CLIENT_ID,
+                    "Authorization": "OAuth 0123456789abcdefghijklmnopqrst",
+                },
+                {
+                    "isLive": True,
+                    "isVod": False,
+                    "login": "channelname",
+                    "vodID": "",
+                    "playerType": "embed",
+                    "platform": "site",
+                },
+                id="auth-token-argument",
             ),
         ],
         indirect=["plugin"],

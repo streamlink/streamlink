@@ -14,23 +14,14 @@ the ``auth-token`` cookie, if it exists:
     document.cookie.split("; ").find(item=>item.startsWith("auth-token="))?.split("=")[1]
 
 Copy the resulting string consisting of 30 alphanumerical characters without any quotations.
+Then use this token as the value of the :option:`--twitch-auth-token` plugin argument.
 
-The final ``Authorization`` header which will identify your account while requesting a streaming access token can then be set
-via Streamlink's :option:`--twitch-api-header` or :option:`--http-header` CLI arguments.
-
-The value of the ``Authorization`` header must be in the format of ``OAuth YOUR_TOKEN``. Notice the space character in the
-argument value, which requires quotation on command line shells:
-
-.. code-block:: console
-
-    $ streamlink "--twitch-api-header=Authorization=OAuth abcdefghijklmnopqrstuvwxyz0123" twitch.tv/CHANNEL best
-
-The entire argument can optionally be added to Streamlink's (Twitch plugin specific)
-:ref:`config file <cli/config:Plugin specific configuration file>`, which :ref:`doesn't require quotes <cli/config:Syntax>`:
+The argument can optionally be added to Streamlink's (Twitch plugin specific)
+:ref:`config file <cli/config:Plugin specific configuration file>`, :ref:`without leading dashes <cli/config:Syntax>`:
 
 .. code-block:: text
 
-    twitch-api-header=Authorization=OAuth abcdefghijklmnopqrstuvwxyz0123
+    twitch-auth-token=abcdefghijklmnopqrstuvwxyz0123
 
 .. caution::
 
