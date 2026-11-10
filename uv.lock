@@ -2038,7 +2038,7 @@ wheels = [
 
 [[package]]
 name = "sphinx-design"
-version = "0.7.0"
+version = "0.8.0"
 source = { registry = "https://pypi.org/simple" }
 resolution-markers = [
     "python_full_version >= '3.15'",
@@ -2051,9 +2051,9 @@ resolution-markers = [
 dependencies = [
     { name = "sphinx", version = "8.2.3", source = { registry = "https://pypi.org/simple" } },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/13/7b/804f311da4663a4aecc6cf7abd83443f3d4ded970826d0c958edc77d4527/sphinx_design-0.7.0.tar.gz", hash = "sha256:d2a3f5b19c24b916adb52f97c5f00efab4009ca337812001109084a740ec9b7a", size = 2203582, upload-time = "2026-01-19T13:12:53.297Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/b0/c3/5d0f3aff52337edea9fe1d3f35ecba8a235b0490afb185544299a03a97d0/sphinx_design-0.8.0.tar.gz", hash = "sha256:57fa4d96378525122947ab6109c6e490190e3119dc10f3e3adf6b71444bf3bb4", size = 2254778, upload-time = "2026-11-10T17:16:39.673Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/30/cf/45dd359f6ca0c3762ce0490f681da242f0530c49c81050c035c016bfdd3a/sphinx_design-0.7.0-py3-none-any.whl", hash = "sha256:f82bf179951d58f55dca78ab3706aeafa496b741a91b1911d371441127d64282", size = 2220350, upload-time = "2026-01-19T13:12:51.077Z" },
+    { url = "https://files.pythonhosted.org/packages/b9/9a/e929b7fb9497d8e12bcda1777a7076f7c38d644216e91665bcfff6cab90d/sphinx_design-0.8.0-py3-none-any.whl", hash = "sha256:861fecb064c3da5ff48031a237692ccb7c2e671f8c4aa84d4b9eef3cb8fd9c91", size = 2288922, upload-time = "2026-11-10T17:16:37.538Z" },
 ]
 
 [[package]]
@@ -2158,7 +2158,7 @@ all = [
     { name = "sphinx", version = "8.1.3", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11'" },
     { name = "sphinx", version = "8.2.3", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11'" },
     { name = "sphinx-design", version = "0.6.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11'" },
-    { name = "sphinx-design", version = "0.7.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11'" },
+    { name = "sphinx-design", version = "0.8.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11'" },
     { name = "ty" },
     { name = "types-docutils" },
     { name = "typing-extensions" },
@@ -2181,7 +2181,7 @@ docs = [
     { name = "sphinx", version = "8.1.3", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11'" },
     { name = "sphinx", version = "8.2.3", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11'" },
     { name = "sphinx-design", version = "0.6.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11'" },
-    { name = "sphinx-design", version = "0.7.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11'" },
+    { name = "sphinx-design", version = "0.8.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11'" },
     { name = "versioningit" },
 ]
 lint = [
@@ -2223,7 +2223,7 @@ typing = [
     { name = "sphinx", version = "8.1.3", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11'" },
     { name = "sphinx", version = "8.2.3", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11'" },
     { name = "sphinx-design", version = "0.6.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11'" },
-    { name = "sphinx-design", version = "0.7.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11'" },
+    { name = "sphinx-design", version = "0.8.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11'" },
     { name = "ty" },
     { name = "types-docutils" },
     { name = "typing-extensions" },
@@ -2272,7 +2272,7 @@ all = [
     { name = "setuptools", specifier = ">=77.0.0" },
     { name = "shtab", specifier = ">=1.9.0" },
     { name = "sphinx", specifier = ">=7.0.0,<9" },
-    { name = "sphinx-design", specifier = ">=0.6.0,<0.8" },
+    { name = "sphinx-design", specifier = ">=0.6.0,<0.9" },
     { name = "ty", specifier = "==0.0.98" },
     { name = "types-docutils" },
     { name = "typing-extensions", specifier = ">=4.0.0" },
@@ -2292,7 +2292,7 @@ docs = [
     { name = "myst-parser", specifier = ">=4.0.0,<6" },
     { name = "setuptools", specifier = ">=77.0.0" },
     { name = "sphinx", specifier = ">=7.0.0,<9" },
-    { name = "sphinx-design", specifier = ">=0.6.0,<0.8" },
+    { name = "sphinx-design", specifier = ">=0.6.0,<0.9" },
     { name = "versioningit", specifier = ">=2.0.0,<4" },
 ]
 lint = [{ name = "ruff", specifier = "==0.17.4" }]
@@ -2330,7 +2330,7 @@ typing = [
     { name = "setuptools", specifier = ">=77.0.0" },
     { name = "shtab", specifier = ">=1.9.0" },
     { name = "sphinx", specifier = ">=7.0.0,<9" },
-    { name = "sphinx-design", specifier = ">=0.6.0,<0.8" },
+    { name = "sphinx-design", specifier = ">=0.6.0,<0.9" },
     { name = "ty", specifier = "==0.0.98" },
     { name = "types-docutils" },
     { name = "typing-extensions", specifier = ">=4.0.0" },

@@ -129,7 +129,7 @@ docs = [
   "sphinx >=7.0.0,<9",  # ignore Sphinx v9: sphinx-doc/sphinx#14332
   "furo ==2025.12.19",
   "myst-parser >=4.0.0,<6",
-  "sphinx-design >=0.6.0,<0.8",
+  "sphinx-design >=0.6.0,<0.9",
 ]
 build = [
   { include-group = "dev" },

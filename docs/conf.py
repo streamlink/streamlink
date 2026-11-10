@@ -49,6 +49,10 @@ exclude_patterns = ["_build", "_applications.rst"]
 
 templates_path = ["_templates"]
 
+suppress_warnings = [
+    "design.card_legacy",
+]
+
 
 # -- Options for autodoc -------------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/extensions/autodoc.html
