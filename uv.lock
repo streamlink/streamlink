@@ -2135,8 +2135,6 @@ all = [
     { name = "sphinx-design", version = "0.7.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11'" },
     { name = "ty" },
     { name = "types-docutils" },
-    { name = "types-freezegun" },
-    { name = "types-setuptools" },
     { name = "typing-extensions" },
     { name = "versioningit" },
 ]
@@ -2202,8 +2200,6 @@ typing = [
     { name = "sphinx-design", version = "0.7.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11'" },
     { name = "ty" },
     { name = "types-docutils" },
-    { name = "types-freezegun" },
-    { name = "types-setuptools" },
     { name = "typing-extensions" },
     { name = "versioningit" },
 ]
@@ -2253,8 +2249,6 @@ all = [
     { name = "sphinx-design", specifier = ">=0.6.0,<0.8" },
     { name = "ty", specifier = "==0.0.98" },
     { name = "types-docutils" },
-    { name = "types-freezegun" },
-    { name = "types-setuptools" },
     { name = "typing-extensions", specifier = ">=4.0.0" },
     { name = "versioningit", specifier = ">=2.0.0,<4" },
 ]
@@ -2313,8 +2307,6 @@ typing = [
     { name = "sphinx-design", specifier = ">=0.6.0,<0.8" },
     { name = "ty", specifier = "==0.0.98" },
     { name = "types-docutils" },
-    { name = "types-freezegun" },
-    { name = "types-setuptools" },
     { name = "typing-extensions", specifier = ">=4.0.0" },
     { name = "versioningit", specifier = ">=2.0.0,<4" },
 ]
@@ -2438,24 +2430,6 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/dd/91/093dd26df8f008367c6d0ae66592fca57e985b91aac3c7242b24594473a7/types_docutils-0.23.0.20261030.tar.gz", hash = "sha256:cc8fcc4c24320263d54158fc0914464fc9b0210992c5bdd24acf01b273b9adf1", size = 58600, upload-time = "2026-10-30T07:50:16.743Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/5c/69/e64310cd286616e060fa7e25aa3953a1ded3fb158cb3c3853fee273c5262/types_docutils-0.23.0.20261030-py3-none-any.whl", hash = "sha256:1e19e751868a108d2a96b72013fe3aac29d7f0b8737dd0722cbc8c92ce398352", size = 92178, upload-time = "2026-10-30T07:50:15.706Z" },
-]
-
-[[package]]
-name = "types-freezegun"
-version = "1.1.10"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/31/0d/2a0485b7f693437570da1b005cbc06748252d24a5a24e521a0bcf4f8912e/types-freezegun-1.1.10.tar.gz", hash = "sha256:cb3a2d2eee950eacbaac0673ab50499823365ceb8c655babb1544a41446409ec", size = 2861, upload-time = "2022-06-09T09:19:19.568Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/96/48/3380ecdafe5646f4e9e31814297073aeb6929c474212377189cbee228b50/types_freezegun-1.1.10-py3-none-any.whl", hash = "sha256:fadebe72213e0674036153366205038e1f95c8ca96deb4ef9b71ddc15413543e", size = 2904, upload-time = "2022-06-09T09:19:17.892Z" },
-]
-
-[[package]]
-name = "types-setuptools"
-version = "84.0.0.20260812"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/4f/cd/3b2a3362a526f91c33f785a291462b2ec448ae531101c62372fc30a21f53/types_setuptools-84.0.0.20260812.tar.gz", hash = "sha256:09bedc248ebbb7a232c9419dfcdca329706e61bf2aa5743e9424d027f1d956b4", size = 46545, upload-time = "2026-08-12T03:52:42.316Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/8a/e5/3a41cab4066465593facd660b2683c017f3d88d3297cdd26db0677b8e479/types_setuptools-84.0.0.20260812-py3-none-any.whl", hash = "sha256:799c08e4bc6a288e8a0b538afb5f5ff320a08927ba8dbedb30c74ee3ba5d867b", size = 70320, upload-time = "2026-08-12T03:52:41.154Z" },
 ]
 
 [[package]]
