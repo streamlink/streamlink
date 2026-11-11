@@ -48,6 +48,7 @@ coverage:
         target: 100
         paths:
           - "tests/"
+          - "!tests/plugins_remote/"
       build_backend:
         # build_backend should always be fully covered
         target: 100
