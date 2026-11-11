@@ -1,6 +1,6 @@
 import signal
 
-import freezegun.config  # type: ignore[import, ty:import-not-found]
+import freezegun
 import pytest
 
 # import streamlink_cli as early as possible to execute its default signal overrides
@@ -16,7 +16,7 @@ signal.signal(signal.SIGTERM, signal.default_int_handler)
 # make freezegun ignore the following pytest modules, so it doesn't mess with pytest's --duration=N report
 # when freezing time in fixtures, even though ["_pytest.runner.", "_pytest.terminal."] is already included
 # in freezegun's default module ignore list (notice the trailing dots).
-freezegun.config.configure(extend_ignore_list=["_pytest.runner", "_pytest.terminal"])
+freezegun.configure(extend_ignore_list=["_pytest.runner", "_pytest.terminal"])
 
 
 # make pytest rewrite assertions in dynamically parametrized plugin tests
