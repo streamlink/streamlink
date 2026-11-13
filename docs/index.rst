@@ -1,6 +1,26 @@
 Streamlink
 ==========
 
+.. toctree::
+    :maxdepth: 2
+    :hidden:
+
+    Overview <self>
+    install
+    cli
+    plugins
+    players
+    deprecations
+    migrations
+    developing
+    api_guide
+    api
+    changelog
+    changelog/index
+    support
+    applications
+    thirdparty
+
 Overview
 --------
 
@@ -65,25 +85,3 @@ See their respective sections for more information on how to use them.
 .. only:: not no_acknowledgements
 
     .. include:: acknowledgements.rst
-
-
-Table of contents
------------------
-
-.. toctree::
-    :maxdepth: 2
-
-    Overview <self>
-    install
-    cli
-    plugins
-    players
-    deprecations
-    migrations
-    developing
-    api_guide
-    api
-    changelog
-    support
-    applications
-    thirdparty
