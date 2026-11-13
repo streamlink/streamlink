@@ -16,6 +16,7 @@ Streamlink
     api_guide
     api
     changelog
+    changelog/index
     support
     applications
     thirdparty
