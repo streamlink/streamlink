@@ -36,8 +36,8 @@ The argument can optionally be added to Streamlink's (Twitch plugin specific)
     :icon: log
 
     Official authentication support for Twitch via the ``--twitch-oauth-token`` and ``--twitch-oauth-authenticate``
-    CLI arguments had to be disabled in :ref:`streamlink 1.3.0 <changelog:streamlink 1.3.0 (2019-11-22)>` (November 2019)
-    and both arguments were finally removed in :ref:`streamlink 2.0.0 <changelog:streamlink 2.0.0 (2020-12-22)>` (December 2020)
+    CLI arguments had to be disabled in :ref:`streamlink 1.3.0 <changelog/v1:streamlink 1.3.0 (2019-11-22)>` (November 2019)
+    and both arguments were finally removed in :ref:`streamlink 2.0.0 <changelog/v2:streamlink 2.0.0 (2020-12-22)>` (December 2020)
     due to `restrictive changes`_ on Twitch's private REST API which prevented proper authentication flows
     from third party applications like Streamlink.
 
@@ -85,8 +85,8 @@ of such loop-holes. See :option:`--twitch-api-header` and :option:`--twitch-acce
     an ad transition. One of the problematic players is :ref:`VLC <players:Players>`, which is known to crash during these
     stream discontinuities in certain cases.
 
-    Prior releases between :ref:`streamlink 1.1.0 <changelog:streamlink 1.1.0 (2019-03-31)>` (March 2019)
-    and :ref:`streamlink 7.5.0 <changelog:streamlink 7.5.0 (2025-07-08)>` (July 2025) required the ``--twitch-disable-ads``
+    Prior releases between :ref:`streamlink 1.1.0 <changelog/v1:streamlink 1.1.0 (2019-03-31)>` (March 2019)
+    and :ref:`streamlink 7.5.0 <changelog/v7:streamlink 7.5.0 (2025-07-08)>` (July 2025) required the ``--twitch-disable-ads``
     plugin argument, as filtering out ads was deemed optional. Ad filtering became mandatory when Twitch changed the stream's
     format from MPEG-TS to MPEG-4, to prevent playback issues during stream discontinuities between the stream and ads.
 
@@ -159,7 +159,7 @@ CI tokens will be cached for as long as they are valid, to prevent having to lau
 
     Since the only sensible solution for Streamlink to calculate CI tokens was using a web browser,
     the :ref:`streamlink.webbrowser <api/webbrowser:Webbrowser>` API was implemented in
-    :ref:`streamlink 6.0.0 <changelog:streamlink 6.0.0 (2023-07-20)>` (July 2023).
+    :ref:`streamlink 6.0.0 <changelog/v6:streamlink 6.0.0 (2023-07-20)>` (July 2023).
 
 
 Low latency streaming
