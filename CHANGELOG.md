@@ -1,5 +1,7 @@
 # Changelog
 
+This document only contains changelogs for releases of the current major version. Please see [Streamlink's documentation](https://streamlink.github.io/changelog/index.html) for changelogs of old major version releases, or check the `docs/changelog` directory of [Streamlink's git repository](https://github.com/streamlink/streamlink/tree/master/docs/changelog).
+
 ## streamlink 8.6.3 (2026-10-29)
 
 - SECURITY: new minor release primarily for Streamlink's Windows / Linux AppImages builds, with `brotli 1.2.1` (via uv.lock) ([`CVE-2026-111497`](https://nvd.nist.gov/vuln/detail/CVE-2026-111497))
