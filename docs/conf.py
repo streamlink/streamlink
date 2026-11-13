@@ -38,6 +38,7 @@ extensions = [
     # custom
     "ext_html_template_vars",
     "ext_argparse",
+    "ext_changelog",
     "ext_github",
     "ext_plugins",
     "ext_releaseref",
