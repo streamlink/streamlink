@@ -56,7 +56,11 @@ class StreamlinkOptions(Options):
           - ``UserInputRequester | None``
           - ``None``
           - Instance of ``UserInputRequester`` to collect input from the user at runtime
-        * - no-plugin-cache
+        * - plugin-cache
+          - ``bool``
+          - ``True``
+          - Enable or disable the plugin key-value store
+        * - no-plugin-cache *(deprecated)*
           - ``bool``
           - ``False``
           - Disable the plugin key-value store
@@ -113,7 +117,11 @@ class StreamlinkOptions(Options):
           - ``bool``
           - ``True``
           - Verify TLS/SSL certificates
-        * - http-disable-dh
+        * - http-ssl-dh
+          - ``bool``
+          - ``True``
+          - Enable or disable TLS/SSL Diffie-Hellman key exchange
+        * - http-disable-dh *(deprecated)*
           - ``bool``
           - ``False``
           - Disable TLS/SSL Diffie-Hellman key exchange
@@ -222,7 +230,11 @@ class StreamlinkOptions(Options):
           - ``None``
           - Override for the ``ffmpeg``/``ffmpeg.exe`` binary path,
             which by default gets looked up via the ``PATH`` env var
-        * - ffmpeg-no-validation
+        * - ffmpeg-validation
+          - ``bool``
+          - ``True``
+          - Enable or disable FFmpeg validation and version logging
+        * - ffmpeg-no-validation *(deprecated)*
           - ``bool``
           - ``False``
           - Disable FFmpeg validation and version logging
@@ -295,7 +307,7 @@ class StreamlinkOptions(Options):
     def __init__(self, session: Streamlink) -> None:
         super().__init__({
             "user-input-requester": None,
-            "no-plugin-cache": False,
+            "plugin-cache": True,
             "locale": None,
             "interface": None,
             "ipv4": False,
@@ -320,7 +332,7 @@ class StreamlinkOptions(Options):
             "hls-audio-select": [],
             "dash-manifest-reload-attempts": 3,
             "ffmpeg-ffmpeg": None,
-            "ffmpeg-no-validation": False,
+            "ffmpeg-validation": True,
             "ffmpeg-validation-timeout": 4.0,
             "ffmpeg-verbose": False,
             "ffmpeg-verbose-path": None,
@@ -404,9 +416,16 @@ class StreamlinkOptions(Options):
     def _set_http_attr(self, key, value):
         setattr(self.session.http, self._OPTIONS_HTTP_ATTRS[key], value)
 
-    def _set_http_disable_dh(self, key, value):
-        self.session.http.disable_dh(disable=bool(value))
-        self.set_explicit(key, value)
+    def _set_http_ssl_dh(self, key, value):
+        if key == "http-disable-dh":
+            value = not value
+            warnings.warn(
+                "`http-disable-dh` has been deprecated in favor of the `http-ssl-dh` option",
+                StreamlinkDeprecationWarning,
+                stacklevel=_get_deprecation_stacklevel_offset(2),
+            )
+        self.session.http.disable_dh(disable=not value)
+        self.set_explicit("http-ssl-dh", value)
 
     @staticmethod
     def _factory_set_http_attr_key_equals_value(delimiter: str) -> Callable[[StreamlinkOptions, str, Any], None]:
@@ -454,6 +473,7 @@ class StreamlinkOptions(Options):
     }
 
     _MAP_SETTERS: ClassVar[Mapping[str, Callable[[StreamlinkOptions, str, Any], None]]] = {
+        "no-plugin-cache": _factory_set_deprecated("plugin-cache", lambda val: not val),
         "interface": _set_interface,
         "ipv4": _set_ipv4_ipv6,
         "ipv6": _set_ipv4_ipv6,
@@ -463,11 +483,13 @@ class StreamlinkOptions(Options):
         "http-cookies": _factory_set_http_attr_key_equals_value(";"),
         "http-headers": _factory_set_http_attr_key_equals_value(";"),
         "http-query-params": _factory_set_http_attr_key_equals_value("&"),
-        "http-disable-dh": _set_http_disable_dh,
+        "http-ssl-dh": _set_http_ssl_dh,
+        "http-disable-dh": _set_http_ssl_dh,
         "http-ssl-cert": _set_http_attr,
         "http-ssl-verify": _set_http_attr,
         "http-trust-env": _set_http_attr,
         "http-timeout": _set_http_attr,
         "hls-duration": _factory_set_deprecated("stream-segmented-duration", float),
         "hls-segment-queue-threshold": _factory_set_deprecated("stream-segmented-queue-deadline", float),
+        "ffmpeg-no-validation": _factory_set_deprecated("ffmpeg-validation", lambda val: not val),
     }

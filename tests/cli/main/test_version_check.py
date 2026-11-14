@@ -30,14 +30,14 @@ import streamlink_cli.main
             id="outdated",
         ),
         pytest.param(
-            ["--auto-version-check=True"],
+            ["--auto-version-check"],
             True,
             False,
             0,
             id="auto-latest",
         ),
         pytest.param(
-            ["--auto-version-check=True"],
+            ["--auto-version-check"],
             False,
             False,
             0,
