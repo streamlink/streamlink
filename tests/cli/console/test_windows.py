@@ -49,7 +49,7 @@ class EqSimpleCData(_CTypesComparable[_SimpleCData]):
 
     def _get_data(self, data: _SimpleCData) -> tuple:
         # noinspection PyProtectedMember
-        return data._type_, data.value  # type: ignore[attr-defined, ty:unresolved-attribute]
+        return data._type_, data.value  # type: ignore[attr-defined, ty:missing-attribute]
 
 
 class EqStructure(_CTypesComparable[Structure]):

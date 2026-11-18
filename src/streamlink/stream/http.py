@@ -60,7 +60,7 @@ class HTTPStream(Stream):
         The URL to the stream, prepared by :mod:`requests` with parameters read from :attr:`args`.
         """
 
-        return self.session.http.prepare_new_request(**self.args).url  # type: ignore[return-value, ty:invalid-return-type]
+        return self.session.http.prepare_new_request(**self.args).url  # type: ignore[return-value, ty:invalid-explicit-return]
 
     def open(self):
         reqargs = self.session.http.valid_request_args(**self.args)

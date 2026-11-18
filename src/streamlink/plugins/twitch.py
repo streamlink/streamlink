@@ -211,7 +211,7 @@ class TwitchHLSStreamWorker(HLSStreamWorker):
         if self.stream.low_latency:
             self.reload_time = "segment"
 
-    def process_segments(self, playlist: TwitchM3U8):  # type: ignore[override, ty:invalid-method-override]
+    def process_segments(self, playlist: TwitchM3U8):  # type: ignore[override, ty:incompatible-method-override]
         # ignore prefetch segments if not LL streaming
         if not self.stream.low_latency:
             playlist.segments = [segment for segment in playlist.segments if not segment.prefetch]
@@ -267,7 +267,7 @@ class TwitchHLSStreamWriter(HLSStreamWriter):
     reader: TwitchHLSStreamReader
     stream: TwitchHLSStream
 
-    def should_filter_segment(self, segment: TwitchHLSSegment) -> bool:  # type: ignore[override, ty:invalid-method-override]
+    def should_filter_segment(self, segment: TwitchHLSSegment) -> bool:  # type: ignore[override, ty:incompatible-method-override]
         return segment.ad
 
 

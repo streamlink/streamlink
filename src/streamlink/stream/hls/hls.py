@@ -687,7 +687,7 @@ class MuxedHLSStream(MuxedStream[TMuxedHLSStream_co]):
         super().__init__(session, *substreams, **ffmpeg_options)
         self.multivariant = multivariant if multivariant and multivariant.is_master else None
 
-    def _open_streams(self) -> list[HLSStreamReader]:  # type: ignore[override, ty:invalid-method-override]
+    def _open_streams(self) -> list[HLSStreamReader]:  # type: ignore[override, ty:incompatible-method-override]
         fds: list[HLSStreamReader] = super()._open_streams()  # type: ignore[assignment, ty:invalid-assignment]
         timeout = self.session.options.get("stream-timeout")
 
