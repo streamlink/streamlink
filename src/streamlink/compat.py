@@ -9,7 +9,7 @@ from typing import TYPE_CHECKING, Any
 
 
 try:
-    from builtins import BaseExceptionGroup, ExceptionGroup  # type: ignore[attr-defined, ty:import-not-found]
+    from builtins import BaseExceptionGroup, ExceptionGroup  # type: ignore[attr-defined, ty:missing-module-member]
 except ImportError:  # pragma: no cover
     from exceptiongroup import BaseExceptionGroup, ExceptionGroup  # type: ignore[import, ty:import-not-found]
 

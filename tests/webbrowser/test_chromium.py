@@ -102,7 +102,7 @@ class TestFallbacks:
         monkeypatch.setattr("streamlink.webbrowser.chromium.is_win32", False)
         monkeypatch.setattr("streamlink.webbrowser.chromium.is_darwin", True)
         monkeypatch.setattr("streamlink.webbrowser.chromium.Path", PurePosixPath)
-        PurePosixPath.home = lambda: PurePosixPath("/Users/user")  # type: ignore[attr-defined, ty:unresolved-attribute]
+        PurePosixPath.home = lambda: PurePosixPath("/Users/user")  # type: ignore[attr-defined, ty:missing-attribute]
         assert ChromiumWebbrowser.fallback_paths() == [
             "/Applications/Chromium.app/Contents/MacOS/Chromium",
             "/Users/user/Applications/Chromium.app/Contents/MacOS/Chromium",

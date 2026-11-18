@@ -115,7 +115,7 @@ typing = [
   { include-group = "docs" },
   { include-group = "script" },
   # tools and typing dependencies
-  "ty ==0.0.98",
+  "ty ==0.0.106",
   "mypy[faster-cache] ==2.4.1",
   "typing-extensions >=4.0.0",
   # dependency overrides
@@ -381,7 +381,7 @@ python-platform = "all"
 include = ["build_backend", "docs", "src", "tests"]
 
 [tool.ty.overrides.rules]
-invalid-mutable-override = "ignore"  # TODO: don't ignore this rule
+incompatible-mutable-override = "ignore"  # TODO: don't ignore this rule
 
 [tool.ty.src]
 exclude = [

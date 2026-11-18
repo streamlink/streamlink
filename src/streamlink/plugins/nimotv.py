@@ -102,14 +102,15 @@ class NimoTV(Plugin):
             return
 
         mStreamPkg = bytes.fromhex(mStreamPkg)
+        # ty: stop
         try:  # ruff: ignore[too-many-statements-in-try-clause]
-            appid = self._re_appid.search(mStreamPkg).group(1).decode("utf-8")  # type: ignore[ty:unresolved-attribute]
-            domain = self._re_domain.search(mStreamPkg).group(1).decode("utf-8")  # type: ignore[ty:unresolved-attribute]
-            id_ = self._re_id.search(mStreamPkg).group(1).decode("utf-8")  # type: ignore[ty:unresolved-attribute]
-            tp = self._re_tp.search(mStreamPkg).group(1).decode("utf-8")  # type: ignore[ty:unresolved-attribute]
-            fm = self._re_fm.search(mStreamPkg).group(1).decode("utf-8")  # type: ignore[ty:unresolved-attribute]
-            ctype = self._re_ctype.search(mStreamPkg).group(1).decode("utf-8")  # type: ignore[ty:unresolved-attribute]
-            ws_time = self._re_wsTime.search(mStreamPkg).group(1).decode("utf-8")  # type: ignore[ty:unresolved-attribute]
+            appid = self._re_appid.search(mStreamPkg).group(1).decode("utf-8")  # type: ignore[ty:missing-union-attribute]
+            domain = self._re_domain.search(mStreamPkg).group(1).decode("utf-8")  # type: ignore[ty:missing-union-attribute]
+            id_ = self._re_id.search(mStreamPkg).group(1).decode("utf-8")  # type: ignore[ty:missing-union-attribute]
+            tp = self._re_tp.search(mStreamPkg).group(1).decode("utf-8")  # type: ignore[ty:missing-union-attribute]
+            fm = self._re_fm.search(mStreamPkg).group(1).decode("utf-8")  # type: ignore[ty:missing-union-attribute]
+            ctype = self._re_ctype.search(mStreamPkg).group(1).decode("utf-8")  # type: ignore[ty:missing-union-attribute]
+            ws_time = self._re_wsTime.search(mStreamPkg).group(1).decode("utf-8")  # type: ignore[ty:missing-union-attribute]
         except AttributeError:
             log.error("invalid mStreamPkg")
             return

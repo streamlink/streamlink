@@ -207,7 +207,7 @@ class ZDFMediathek(Plugin):
             (path for path, *media_types in media if "DEFAULT" in media_types),
             next((path for path, *_ in media), None),
         )
-        if not path:
+        if not path:  # type: ignore[ty:redundant-condition]
             return None
 
         stream_data = self._get_stream_data(auth=api_token, path=path.replace("{playerId}", player_id, 1))
