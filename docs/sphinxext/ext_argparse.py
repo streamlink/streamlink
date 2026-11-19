@@ -135,12 +135,18 @@ class ArgparseDirective(Directive):
 
             options = []
             # parameter(s) with metavar
-            if action.option_strings and metavar:
+            if metavar and action.option_strings:
+                count = len(action.option_strings)
+                meta_shown = False
                 for arg in action.option_strings:
-                    # optional parameter value
-                    if action.nargs == "?":
-                        metavar = f"[{metavar}]"
-                    options.append(f"{arg} {metavar}")
+                    if count == 1 or not meta_shown and arg.startswith("--") and not arg.startswith("--no-"):
+                        meta_shown = True
+                        if action.nargs == "?":
+                            options.append(f"{arg} [{metavar}]")
+                        else:
+                            options.append(f"{arg} {metavar}")
+                    else:
+                        options.append(f"{arg}")
             # positional parameter
             elif metavar:
                 options.append(metavar)
