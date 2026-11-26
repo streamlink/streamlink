@@ -9,7 +9,6 @@ from struct import unpack
 from typing import TYPE_CHECKING, Any, ClassVar, Literal, TypeVar
 from urllib.parse import urlparse
 
-from requests import Response
 from requests.exceptions import (
     ChunkedEncodingError,
     ConnectionError,  # ruff: ignore[builtin-import-shadowing]
@@ -22,7 +21,6 @@ from streamlink.logger import getLogger
 from streamlink.stream.ffmpegmux import FFMPEGMuxer, MuxedStream
 from streamlink.stream.filtered import FilteredStream
 from streamlink.stream.hls.m3u8 import M3U8Parser, parse_m3u8
-from streamlink.stream.hls.segment import HLSSegment
 from streamlink.stream.http import HTTPStream
 from streamlink.stream.segmented import SegmentedStreamReader, SegmentedStreamWorker, SegmentedStreamWriter
 from streamlink.utils.cache import LRUCache
@@ -40,12 +38,13 @@ if TYPE_CHECKING:
     from concurrent.futures import Future
     from datetime import datetime
 
+    from requests import Response
     from typing_extensions import Self
 
     from streamlink.buffers import RingBuffer
     from streamlink.session import Streamlink
     from streamlink.stream.hls.m3u8 import M3U8
-    from streamlink.stream.hls.segment import ByteRange, HLSPlaylist, Key, Map
+    from streamlink.stream.hls.segment import ByteRange, HLSPlaylist, HLSSegment, Key, Map
 
 
 log = getLogger(".".join(__name__.split(".")[:-1]))
@@ -110,14 +109,18 @@ class ByteRangeOffset:
         return bytes_start, self._calc_end(bytes_start, byterange.range)
 
 
-class HLSStreamWriter(SegmentedStreamWriter[HLSSegment, Response]):
+class HLSStreamWriter(
+    SegmentedStreamWriter[
+        "HLSStream",
+        "HLSStreamReader",
+        "HLSSegment",
+        "Response",
+    ],
+):
     WRITE_CHUNK_SIZE = 8192
 
-    reader: HLSStreamReader
-    stream: HLSStream
-
-    def __init__(self, *args, **kwargs) -> None:
-        super().__init__(*args, **kwargs)
+    def __init__(self, **kwargs) -> None:
+        super().__init__(**kwargs)
         options = self.session.options
 
         self.byterange: ByteRangeOffset = ByteRangeOffset()
@@ -374,19 +377,23 @@ class HLSStreamWriter(SegmentedStreamWriter[HLSSegment, Response]):
         yield from segment.iter_content(response, self.WRITE_CHUNK_SIZE)
 
 
-class HLSStreamWorker(SegmentedStreamWorker[HLSSegment, Response]):
-    reader: HLSStreamReader
-    writer: HLSStreamWriter
-    stream: HLSStream
-
+class HLSStreamWorker(
+    SegmentedStreamWorker[
+        "HLSStream",
+        "HLSStreamReader",
+        "HLSStreamWriter",
+        "HLSSegment",
+        "Response",
+    ],
+):
     reload_attempts: int
     reload_time: float | Literal["segment", "live-edge"]
 
     _RELOAD_TIME_MIN = 2.0
     _RELOAD_TIME_DEFAULT = 6.0
 
-    def __init__(self, *args, **kwargs) -> None:
-        super().__init__(*args, **kwargs)
+    def __init__(self, **kwargs) -> None:
+        super().__init__(**kwargs)
 
         self.playlist_changed = False
         self.playlist_end: int | None = None
@@ -605,13 +612,16 @@ class HLSStreamWorker(SegmentedStreamWorker[HLSSegment, Response]):
             self.wait_and_reload()
 
 
-class HLSStreamReader(FilteredStream, SegmentedStreamReader[HLSSegment, Response]):
-    __worker__ = HLSStreamWorker
-    __writer__ = HLSStreamWriter
-
-    worker: HLSStreamWorker
-    writer: HLSStreamWriter
-    stream: HLSStream
+class HLSStreamReader(
+    FilteredStream,
+    SegmentedStreamReader[
+        "HLSStream",
+        "HLSStreamWriter",
+        "HLSStreamWorker",
+        "HLSSegment",
+        "Response",
+    ],
+):
     buffer: RingBuffer
 
     def __init__(self, stream: HLSStream, name: str | None = None):
@@ -623,6 +633,12 @@ class HLSStreamReader(FilteredStream, SegmentedStreamReader[HLSSegment, Response
         self.request_params.pop("url", None)
 
         super().__init__(stream, name=name)
+
+    def _create_writer(self, **kwargs):
+        return HLSStreamWriter(**kwargs)
+
+    def _create_worker(self, **kwargs):
+        return HLSStreamWorker(**kwargs)
 
 
 TMuxedHLSStream_co = TypeVar("TMuxedHLSStream_co", bound="HLSStream", covariant=True)

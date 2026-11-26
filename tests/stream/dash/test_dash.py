@@ -519,8 +519,8 @@ class TestDASHStreamWorker:
         )
 
     @pytest.fixture()
-    def worker(self, reader: DASHStreamReader):
-        return DASHStreamWorker(reader)
+    def worker(self, stream: DASHStream, reader: DASHStreamReader):
+        return DASHStreamWorker(stream=stream, reader=reader, writer=reader.writer)
 
     @staticmethod
     def _iter_segments(iter_segments: Generator[DASHSegment, bool, None]) -> Iterator[DASHSegment]:
