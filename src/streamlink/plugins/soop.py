@@ -30,7 +30,8 @@ class SoopHLSStreamWriter(HLSStreamWriter):
 
 
 class SoopHLSStreamReader(HLSStreamReader):
-    __writer__ = SoopHLSStreamWriter
+    def _create_writer(self, **kwargs):
+        return SoopHLSStreamWriter(**kwargs)
 
 
 class SoopHLSStream(HLSStream):

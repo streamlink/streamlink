@@ -204,10 +204,10 @@ class TwitchHLSStreamWorker(HLSStreamWorker):
     writer: TwitchHLSStreamWriter
     stream: TwitchHLSStream
 
-    def __init__(self, reader, *args, **kwargs) -> None:
+    def __init__(self, **kwargs) -> None:
         self.had_content: bool = False
         self.logged_ads: deque[str] = deque(maxlen=10)
-        super().__init__(reader, *args, **kwargs)
+        super().__init__(**kwargs)
         if self.stream.low_latency:
             self.reload_time = "segment"
 
@@ -272,9 +272,6 @@ class TwitchHLSStreamWriter(HLSStreamWriter):
 
 
 class TwitchHLSStreamReader(HLSStreamReader):
-    __worker__ = TwitchHLSStreamWorker
-    __writer__ = TwitchHLSStreamWriter
-
     worker: TwitchHLSStreamWorker
     writer: TwitchHLSStreamWriter
     stream: TwitchHLSStream
@@ -288,6 +285,12 @@ class TwitchHLSStreamReader(HLSStreamReader):
             log.info(f"Low latency streaming (HLS live edge: {live_edge})")
 
         super().__init__(stream, **kwargs)
+
+    def _create_writer(self, **kwargs):
+        return TwitchHLSStreamWriter(**kwargs)
+
+    def _create_worker(self, **kwargs):
+        return TwitchHLSStreamWorker(**kwargs)
 
 
 class TwitchHLSStream(HLSStream):

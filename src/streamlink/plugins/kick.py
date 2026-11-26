@@ -28,7 +28,6 @@ from streamlink.stream.hls import (
     HLSStream,
     HLSStreamReader,
     HLSStreamWorker,
-    HLSStreamWriter,
     M3U8Parser,
     parse_tag,
 )
@@ -77,7 +76,6 @@ class KickM3U8Parser(M3U8Parser[KickM3U8, KickHLSSegment, HLSPlaylist]):
 
 class KickHLSStreamWorker(HLSStreamWorker):
     reader: KickHLSStreamReader
-    writer: KickHLSStreamWriter
     stream: KickHLSStream
 
     def __init__(self, *args, **kwargs):
@@ -93,17 +91,8 @@ class KickHLSStreamWorker(HLSStreamWorker):
         return super().process_segments(playlist)
 
 
-class KickHLSStreamWriter(HLSStreamWriter):
-    reader: KickHLSStreamReader
-    stream: KickHLSStream
-
-
 class KickHLSStreamReader(HLSStreamReader):
-    __worker__ = KickHLSStreamWorker
-    __writer__ = KickHLSStreamWriter
-
     worker: KickHLSStreamWorker
-    writer: KickHLSStreamWriter
     stream: KickHLSStream
 
     def __init__(self, stream: KickHLSStream, **kwargs):
@@ -114,6 +103,9 @@ class KickHLSStreamReader(HLSStreamReader):
             log.info(f"Low latency streaming (HLS live edge: {live_edge})")
 
         super().__init__(stream, **kwargs)
+
+    def _create_worker(self, **kwargs):
+        return KickHLSStreamWorker(**kwargs)
 
 
 class KickHLSStream(HLSStream):
