@@ -45,8 +45,12 @@ log = getLogger(__name__)
 )
 @pluginargument(
     "hd",
-    action="store_true",
-    help="Prefer HD streams over local SD streams, some live programmes may not be broadcast in HD.",
+    action="boolean",
+    help="""
+        Prefer HD streams over local SD streams, some live programmes may not be broadcast in HD.
+
+        Default is false.
+    """,
 )
 class BBCiPlayer(Plugin):
     """
