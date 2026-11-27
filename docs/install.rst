@@ -407,7 +407,7 @@ Dependencies
 
 To install Streamlink from source, you will need these dependencies.
 
-Since :ref:`4.0.0 <changelog:streamlink 4.0.0 (2022-05-01)>`,
+Since :ref:`4.0.0 <changelog/v4:streamlink 4.0.0 (2022-05-01)>`,
 Streamlink defines a `build system <pyproject.toml_>`__ according to `PEP-517`_ / `PEP-518`_.
 
 .. list-table::
