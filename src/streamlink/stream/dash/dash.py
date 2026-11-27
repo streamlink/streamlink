@@ -7,12 +7,9 @@ from contextlib import contextmanager, suppress
 from time import time
 from typing import TYPE_CHECKING, Any, ClassVar, cast
 
-from requests import Response
-
 from streamlink.exceptions import PluginError, StreamError
 from streamlink.logger import getLogger
 from streamlink.stream.dash.manifest import MPD, freeze_timeline
-from streamlink.stream.dash.segment import DASHSegment
 from streamlink.stream.ffmpegmux import FFMPEGMuxer
 from streamlink.stream.segmented import SegmentedStreamReader, SegmentedStreamWorker, SegmentedStreamWriter
 from streamlink.stream.stream import Stream
@@ -25,18 +22,25 @@ if TYPE_CHECKING:
     from collections.abc import Mapping
     from datetime import datetime
 
+    from requests import Response
+
     from streamlink.session import Streamlink
     from streamlink.stream.dash.manifest import Representation
+    from streamlink.stream.dash.segment import DASHSegment
 
 
 log = getLogger(".".join(__name__.split(".")[:-1]))
 
 
-class DASHStreamWriter(SegmentedStreamWriter[DASHSegment, Response]):
+class DASHStreamWriter(
+    SegmentedStreamWriter[
+        "DASHStream",
+        "DASHStreamReader",
+        "DASHSegment",
+        "Response",
+    ],
+):
     WRITE_CHUNK_SIZE: int = 8192
-
-    reader: DASHStreamReader
-    stream: DASHStream
 
     def fetch(self, segment: DASHSegment):
         if self.closed:
@@ -81,11 +85,15 @@ class DASHStreamWriter(SegmentedStreamWriter[DASHSegment, Response]):
         log.debug(f"{self.reader.mime_type} segment {segment.name}: completed")
 
 
-class DASHStreamWorker(SegmentedStreamWorker[DASHSegment, Response]):
-    reader: DASHStreamReader
-    writer: DASHStreamWriter
-    stream: DASHStream
-
+class DASHStreamWorker(
+    SegmentedStreamWorker[
+        "DASHStream",
+        "DASHStreamReader",
+        "DASHStreamWriter",
+        "DASHSegment",
+        "Response",
+    ],
+):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.mpd = self.stream.mpd
@@ -192,14 +200,15 @@ class DASHStreamWorker(SegmentedStreamWorker[DASHSegment, Response]):
         return changed
 
 
-class DASHStreamReader(SegmentedStreamReader[DASHSegment, Response]):
-    __worker__ = DASHStreamWorker
-    __writer__ = DASHStreamWriter
-
-    worker: DASHStreamWorker
-    writer: DASHStreamWriter
-    stream: DASHStream
-
+class DASHStreamReader(
+    SegmentedStreamReader[
+        "DASHStream",
+        "DASHStreamWriter",
+        "DASHStreamWorker",
+        "DASHSegment",
+        "Response",
+    ],
+):
     def __init__(
         self,
         stream: DASHStream,
@@ -211,6 +220,14 @@ class DASHStreamReader(SegmentedStreamReader[DASHSegment, Response]):
         self.ident = representation.ident
         self.mime_type = representation.mimeType
         self.timestamp = timestamp
+
+    # noinspection method-overriding
+    def _create_writer(self, **kwargs) -> DASHStreamWriter:
+        return DASHStreamWriter(**kwargs)
+
+    # noinspection method-overriding
+    def _create_worker(self, **kwargs) -> DASHStreamWorker:
+        return DASHStreamWorker(**kwargs)
 
 
 class DASHStream(Stream):

@@ -1,15 +1,17 @@
 from __future__ import annotations
 
+import inspect
 import queue
+import warnings
 from concurrent import futures
 from concurrent.futures import ThreadPoolExecutor
 from datetime import timedelta
 from threading import Event, current_thread
-from typing import TYPE_CHECKING, ClassVar, Generic, TypeAlias, TypeVar
+from typing import TYPE_CHECKING, ClassVar, Generic, TypeAlias, TypeVar, cast
 
 from streamlink.buffers import RingBuffer
+from streamlink.exceptions import StreamlinkDeprecationWarning
 from streamlink.logger import getLogger
-from streamlink.stream.segmented.segment import Segment
 from streamlink.stream.stream import StreamIO
 from streamlink.utils.thread import NamedThread
 from streamlink.utils.times import now
@@ -20,6 +22,10 @@ if TYPE_CHECKING:
     from concurrent.futures import Future
     from datetime import datetime
 
+    # noinspection unused-imports
+    from typing_extensions import Self  # ruff: ignore[unused-import]
+
+    from streamlink.stream.segmented.segment import Segment
     from streamlink.stream.stream import Stream
 
 
@@ -39,7 +45,11 @@ class AwaitableMixin:
         return not self._wait.wait(time)
 
 
-TSegment = TypeVar("TSegment", bound=Segment)
+TStream = TypeVar("TStream", bound="Stream")
+TReader = TypeVar("TReader", bound="SegmentedStreamReader")
+TWriter = TypeVar("TWriter", bound="SegmentedStreamWriter")
+TWorker = TypeVar("TWorker", bound="SegmentedStreamWorker")
+TSegment = TypeVar("TSegment", bound="Segment")
 TResult = TypeVar("TResult")
 
 if TYPE_CHECKING:
@@ -47,30 +57,70 @@ if TYPE_CHECKING:
     TQueueItem: TypeAlias = tuple[TSegment, TResultFuture, tuple]
 
 
-class SegmentedStreamWriter(AwaitableMixin, NamedThread, Generic[TSegment, TResult]):
+class WriterWorkerInitCompatMeta(type):
+    """
+    Fix constructor signatures of Writer and Worker subclasses with positional reader arguments
+    by injecting a wrapper into the MRO.
+    """
+
+    def __new__(mcls, name, bases, namespaces, **kwargs) -> type:
+        cls = super().__new__(mcls, name, bases, namespaces, **kwargs)
+        if (
+            bases
+            and (init := getattr(cls, "__init__", None))
+            and callable(init)
+            and (reader_arg := inspect.signature(init).parameters.get("reader"))
+            and reader_arg.kind != reader_arg.KEYWORD_ONLY
+        ):
+
+            def __init__(self, reader, **kw):
+                bases[0].__init__(self, reader=reader, **kw)
+
+            compat = type(f"_{name}InitCompat", (), {"__init__": __init__})
+            cls = super().__new__(mcls, name, (compat, *bases), namespaces, **kwargs)
+            warnings.warn(
+                f"The constructor of `{name}` uses a deprecated signature. Arguments are keyword-only!",
+                StreamlinkDeprecationWarning,
+                stacklevel=2,
+            )
+
+        return cls
+
+
+class SegmentedStreamWriter(
+    AwaitableMixin,
+    NamedThread,
+    Generic[
+        TStream,
+        TReader,
+        TSegment,
+        TResult,
+    ],
+    metaclass=WriterWorkerInitCompatMeta,
+):
     """
     The base writer thread.
     This thread is responsible for fetching segments, processing them and finally writing the data to the buffer.
     """
 
-    reader: SegmentedStreamReader[TSegment, TResult]
-    stream: Stream
-
     def __init__(
         self,
-        reader: SegmentedStreamReader,
+        *,
+        stream: TStream,
+        reader: TReader,
         size: int = 20,
         retries: int | None = None,
         threads: int | None = None,
         timeout: float | None = None,
         name: str | None = None,
+        **_,
     ) -> None:
         super().__init__(daemon=True, name=name)
 
         self.closed = False
 
+        self.stream = stream
         self.reader = reader
-        self.stream = reader.stream
         self.session = reader.session
 
         self.retries = retries or self.session.options.get("stream-segment-attempts")
@@ -175,26 +225,41 @@ class SegmentedStreamWriter(AwaitableMixin, NamedThread, Generic[TSegment, TResu
         self.close()
 
 
-class SegmentedStreamWorker(AwaitableMixin, NamedThread, Generic[TSegment, TResult]):
+class SegmentedStreamWorker(
+    AwaitableMixin,
+    NamedThread,
+    Generic[
+        TStream,
+        TReader,
+        TWriter,
+        TSegment,
+        TResult,
+    ],
+    metaclass=WriterWorkerInitCompatMeta,
+):
     """
     The base worker thread.
     This thread is responsible for queueing up segments in the writer thread.
     """
 
-    reader: SegmentedStreamReader[TSegment, TResult]
-    writer: SegmentedStreamWriter[TSegment, TResult]
-    stream: Stream
-
     _QUEUE_DEADLINE_MIN = 5.0
 
-    def __init__(self, reader: SegmentedStreamReader, name: str | None = None, **kwargs) -> None:
+    def __init__(
+        self,
+        *,
+        stream: TStream,
+        reader: TReader,
+        writer: TWriter,
+        name: str | None = None,
+        **_,
+    ) -> None:
         super().__init__(daemon=True, name=name)
 
         self.closed = False
 
+        self.stream = stream
         self.reader = reader
-        self.writer = reader.writer
-        self.stream = reader.stream
+        self.writer = writer
         self.session = reader.session
 
         self.sequence: int = -1
@@ -305,15 +370,43 @@ class SegmentedStreamWorker(AwaitableMixin, NamedThread, Generic[TSegment, TResu
         self.close()
 
 
-class SegmentedStreamReader(StreamIO, Generic[TSegment, TResult]):
-    __worker__: ClassVar[type[SegmentedStreamWorker]] = SegmentedStreamWorker
-    __writer__: ClassVar[type[SegmentedStreamWriter]] = SegmentedStreamWriter
+class SegmentedStreamReader(
+    StreamIO,
+    Generic[
+        TStream,
+        TWriter,
+        TWorker,
+        TSegment,
+        TResult,
+    ],
+):
+    __writer__: ClassVar[type[SegmentedStreamWriter] | None] = None
+    __worker__: ClassVar[type[SegmentedStreamWorker] | None] = None
 
-    worker: SegmentedStreamWorker[TSegment, TResult]
-    writer: SegmentedStreamWriter[TSegment, TResult]
-    stream: Stream
+    writer: TWriter
+    worker: TWorker
 
-    def __init__(self, stream: Stream, name: str | None = None) -> None:
+    def __init_subclass__(cls, **kwargs) -> None:
+        super().__init_subclass__(**kwargs)
+
+        def build_method(name, fn):
+            def factory_method(_self, **kw):
+                return fn(**kw)
+
+            factory_method.__name__ = name
+            return factory_method
+
+        for attr, method in (("__writer__", "_create_writer"), ("__worker__", "_create_worker")):
+            if factory := getattr(cls, attr, None):
+                setattr(cls, method, build_method(method, factory))
+                delattr(cls, attr)
+                warnings.warn(
+                    f"`{cls.__name__}.{attr}` is deprecated. Implement `{method}()` instead!",
+                    StreamlinkDeprecationWarning,
+                    stacklevel=3,
+                )
+
+    def __init__(self, stream: TStream, name: str | None = None) -> None:
         super().__init__()
 
         self.stream = stream
@@ -324,10 +417,20 @@ class SegmentedStreamReader(StreamIO, Generic[TSegment, TResult]):
         buffer_size = self.session.get_option("ringbuffer-size")
         self.buffer = RingBuffer(buffer_size)
 
-        self.writer = self.__writer__(self, name=name)
-        self.worker = self.__worker__(self, name=name)
-
         self._opened = False
+
+        # noinspection unnecessary-cast
+        self.writer = cast("TWriter", self._create_writer(name=name, stream=stream, reader=self))
+        # noinspection unnecessary-cast
+        self.worker = cast("TWorker", self._create_worker(name=name, stream=stream, reader=self, writer=self.writer))
+
+    # noinspection method-may-be-static
+    def _create_writer(self, **kwargs):
+        return SegmentedStreamWriter["TStream", "Self", "TSegment", "TResult"](**kwargs)
+
+    # noinspection method-may-be-static
+    def _create_worker(self, **kwargs):
+        return SegmentedStreamWorker["TStream", "Self", "TWriter", "TSegment", "TResult"](**kwargs)
 
     def open(self) -> None:
         if self._opened:

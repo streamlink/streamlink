@@ -165,7 +165,8 @@ class _TwitchHLSStreamWriter(EventedHLSStreamWriter, TwitchHLSStreamWriter):
 
 
 class _TwitchHLSStreamReader(TwitchHLSStreamReader):
-    __writer__ = _TwitchHLSStreamWriter
+    def _create_writer(self, **kwargs):
+        return _TwitchHLSStreamWriter(**kwargs)
 
 
 class _TwitchHLSStream(TwitchHLSStream):

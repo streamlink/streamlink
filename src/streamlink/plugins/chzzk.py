@@ -44,10 +44,11 @@ class ChzzkHLSStreamWorker(HLSStreamWorker):
 
 
 class ChzzkHLSStreamReader(HLSStreamReader):
-    __worker__ = ChzzkHLSStreamWorker
-
     worker: ChzzkHLSStreamWorker
     stream: ChzzkHLSStream
+
+    def _create_worker(self, **kwargs):
+        return ChzzkHLSStreamWorker(**kwargs)
 
 
 class ChzzkHLSStream(HLSStream):

@@ -36,7 +36,8 @@ class TwitCastingHLSStreamWriter(HLSStreamWriter):
 
 
 class TwitCastingHLSStreamReader(HLSStreamReader):
-    __writer__ = TwitCastingHLSStreamWriter
+    def _create_writer(self, **kwargs):
+        return TwitCastingHLSStreamWriter(**kwargs)
 
 
 class TwitCastingHLSStream(HLSStream):

@@ -19,7 +19,8 @@ class SegmentFiltered(Segment):
 
 
 class _TestSubjectHLSReader(HLSStreamReader):
-    __writer__ = EventedHLSStreamWriter
+    def _create_writer(self, **kwargs):
+        return EventedHLSStreamWriter(**kwargs)
 
 
 class _TestSubjectHLSStream(HLSStream):

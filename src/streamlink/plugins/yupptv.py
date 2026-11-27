@@ -23,7 +23,8 @@ class HLSStreamWriterYupptv(HLSStreamWriter):
 
 
 class HLSStreamReaderYupptv(HLSStreamReader):
-    __writer__ = HLSStreamWriterYupptv
+    def _create_writer(self, **kwargs):
+        return HLSStreamWriterYupptv(**kwargs)
 
 
 class HLSStreamYupptv(HLSStream):

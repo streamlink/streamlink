@@ -23,7 +23,8 @@ class TV8HLSStreamWriter(HLSStreamWriter):
 
 
 class TV8HLSStreamReader(HLSStreamReader):
-    __writer__ = TV8HLSStreamWriter
+    def _create_writer(self, **kwargs):
+        return TV8HLSStreamWriter(**kwargs)
 
 
 class TV8HLSStream(HLSStream):

@@ -178,10 +178,11 @@ class NicoLiveHLSStreamWriter(HLSStreamWriter):
 
 
 class NicoLiveHLSStreamReader(HLSStreamReader):
-    __writer__ = NicoLiveHLSStreamWriter
-
     writer: NicoLiveHLSStreamWriter
     stream: NicoLiveHLSStream
+
+    def _create_writer(self, **kwargs):
+        return NicoLiveHLSStreamWriter(**kwargs)
 
     def open(self):
         self.stream.wsclient.opened.set()

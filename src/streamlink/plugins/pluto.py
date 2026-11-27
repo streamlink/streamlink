@@ -60,7 +60,8 @@ class PlutoHLSStreamWriter(HLSStreamWriter):
 
 
 class PlutoHLSStreamReader(HLSStreamReader):
-    __writer__ = PlutoHLSStreamWriter
+    def _create_writer(self, **kwargs):
+        return PlutoHLSStreamWriter(**kwargs)
 
 
 class PlutoHLSStream(HLSStream):

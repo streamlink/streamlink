@@ -16,8 +16,6 @@ from threading import Event, RLock
 from typing import TYPE_CHECKING, Any
 from urllib.parse import urljoin, urlunparse
 
-from requests import Response
-
 from streamlink.exceptions import PluginError, StreamError
 from streamlink.logger import getLogger
 from streamlink.plugin import Plugin, pluginargument, pluginmatcher
@@ -31,6 +29,8 @@ from streamlink.utils.parse import parse_json
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Mapping
+
+    from requests import Response
 
 
 log = getLogger(__name__)
@@ -352,10 +352,14 @@ class UStreamTVWsClient(WebsocketClient):
     }
 
 
-class UStreamTVStreamWriter(SegmentedStreamWriter[UStreamTVSegment, Response]):
-    reader: UStreamTVStreamReader
-    stream: UStreamTVStream
-
+class UStreamTVStreamWriter(
+    SegmentedStreamWriter[
+        "UStreamTVStream",
+        "UStreamTVStreamReader",
+        "UStreamTVSegment",
+        "Response",
+    ],
+):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._has_init = False
@@ -408,11 +412,15 @@ class UStreamTVStreamWriter(SegmentedStreamWriter[UStreamTVSegment, Response]):
             log.error(f"Failed to read {self.stream.kind} segment {segment.num}: {err}")
 
 
-class UStreamTVStreamWorker(SegmentedStreamWorker[UStreamTVSegment, Response]):
-    reader: UStreamTVStreamReader
-    writer: UStreamTVStreamWriter
-    stream: UStreamTVStream
-
+class UStreamTVStreamWorker(
+    SegmentedStreamWorker[
+        "UStreamTVStream",
+        "UStreamTVStreamReader",
+        "UStreamTVStreamWriter",
+        "UStreamTVSegment",
+        "Response",
+    ],
+):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.wsclient = self.stream.wsclient
@@ -442,13 +450,20 @@ class UStreamTVStreamWorker(SegmentedStreamWorker[UStreamTVSegment, Response]):
             self.sequence = segment.num + 1
 
 
-class UStreamTVStreamReader(SegmentedStreamReader[UStreamTVSegment, Response]):
-    __worker__ = UStreamTVStreamWorker
-    __writer__ = UStreamTVStreamWriter
+class UStreamTVStreamReader(
+    SegmentedStreamReader[
+        "UStreamTVStream",
+        "UStreamTVStreamWriter",
+        "UStreamTVStreamWorker",
+        "UStreamTVSegment",
+        "Response",
+    ],
+):
+    def _create_writer(self, **kwargs):
+        return UStreamTVStreamWriter(**kwargs)
 
-    stream: UStreamTVStream
-    worker: UStreamTVStreamWorker
-    writer: UStreamTVStreamWriter
+    def _create_worker(self, **kwargs):
+        return UStreamTVStreamWorker(**kwargs)
 
     def open(self):
         self.stream.wsclient.opened.set()

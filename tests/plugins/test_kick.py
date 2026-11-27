@@ -3,7 +3,8 @@ from unittest.mock import MagicMock, call, patch
 
 import pytest
 
-from streamlink.plugins.kick import Kick, KickHLSStream, KickHLSStreamReader, KickHLSStreamWriter
+from streamlink.plugins.kick import Kick, KickHLSStream, KickHLSStreamReader
+from streamlink.stream.hls import HLSStreamWriter
 from tests.mixins.stream_hls import EventedHLSStreamWriter, Playlist, Segment, TestMixinStreamHLS
 from tests.plugins import PluginCanHandleUrl
 
@@ -40,12 +41,13 @@ class SegmentPrefetch(Segment):
         return f"#EXT-X-PREFETCH:{self.url(namespace)}"
 
 
-class _KickHLSStreamWriter(EventedHLSStreamWriter, KickHLSStreamWriter):
+class _KickHLSStreamWriter(EventedHLSStreamWriter, HLSStreamWriter):
     pass
 
 
 class _KickHLSStreamReader(KickHLSStreamReader):
-    __writer__ = _KickHLSStreamWriter
+    def _create_writer(self, **kwargs):
+        return _KickHLSStreamWriter(**kwargs)
 
 
 class _KickHLSStream(KickHLSStream):

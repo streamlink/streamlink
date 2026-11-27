@@ -35,7 +35,8 @@ class AbemaTVHLSStreamWriter(HLSStreamWriter):
 
 
 class AbemaTVHLSStreamReader(HLSStreamReader):
-    __writer__ = AbemaTVHLSStreamWriter
+    def _create_writer(self, **kwargs):
+        return AbemaTVHLSStreamWriter(**kwargs)
 
 
 class AbemaTVHLSStream(HLSStream):

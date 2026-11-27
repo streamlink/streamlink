@@ -255,11 +255,13 @@ class TestHLSVariantPlaylist:
 
 
 class EventedWorkerHLSStreamReader(HLSStreamReader):
-    __worker__ = EventedHLSStreamWorker
+    def _create_worker(self, **kwargs):
+        return EventedHLSStreamWorker(**kwargs)
 
 
 class EventedWriterHLSStreamReader(HLSStreamReader):
-    __writer__ = EventedHLSStreamWriter
+    def _create_writer(self, **kwargs):
+        return EventedHLSStreamWriter(**kwargs)
 
 
 class EventedWorkerHLSStream(HLSStream):
